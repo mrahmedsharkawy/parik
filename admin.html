@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>لوحة التحكم - X2 Shopping</title>
+<style>
+  :root{
+    --navy:#152546;
+    --navy-dark:#0d1c38;
+    --gold:#D4AF37;
+    --bg:#f4f6fb;
+    --line:#e3e7ef;
+    --danger:#c0392b;
+    --ok:#1e8e4e;
+  }
+  *{box-sizing:border-box;font-family:'Segoe UI','Cairo',Tahoma,sans-serif}
+  body{margin:0;background:var(--bg);color:#1c2233}
+  a{color:var(--gold)}
+
+  /* شريط علوي */
+  .topbar{
+    background:var(--navy);color:#fff;padding:14px 22px;
+    display:flex;align-items:center;justify-content:space-between;
+    position:sticky;top:0;z-index:20;box-shadow:0 2px 8px rgba(0,0,0,.15)
+  }
+  .topbar h1{margin:0;font-size:1.15rem;display:flex;align-items:center;gap:10px}
+  .topbar .badge{background:var(--gold);color:var(--navy);padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:700}
+  .topbar .actions{display:flex;gap:8px;flex-wrap:wrap}
+
+  /* أزرار */
+  button,.btn{
+    cursor:pointer;border:none;border-radius:8px;padding:9px 16px;font-size:.9rem;font-weight:600;
+    transition:.15s;display:inline-flex;align-items:center;gap:6px
+  }
+  .btn-gold{background:var(--gold);color:var(--navy)}
+  .btn-gold:hover{background:#c39f2f}
+  .btn-navy{background:var(--navy);color:#fff}
+  .btn-navy:hover{background:var(--navy-dark)}
+  .btn-ghost{background:#fff;color:var(--navy);border:1px solid var(--line)}
+  .btn-ghost:hover{background:#eef1f7}
+  .btn-danger{background:#fdecec;color:var(--danger);border:1px solid #f5c6c6}
+  .btn-danger:hover{background:#f9dede}
+  .btn-sm{padding:5px 10px;font-size:.8rem}
+
+  /* تبويبات */
+  .tabs{display:flex;gap:6px;padding:14px 22px 0;flex-wrap:wrap}
+  .tab{background:#fff;border:1px solid var(--line);border-bottom:none;border-radius:10px 10px 0 0;
+    padding:10px 18px;font-weight:700;color:#5a6478;cursor:pointer}
+  .tab.active{color:var(--navy);border-color:var(--navy);position:relative;top:1px;background:#fff}
+
+  .wrap{max-width:1150px;margin:0 auto;padding:18px 22px 60px}
+  .panel{display:none}
+  .panel.active{display:block}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  @media(max-width:820px){.grid{grid-template-columns:1fr}}
+
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:0 1px 4px rgba(20,37,70,.05)}
+  .card h2{margin:0 0 14px;font-size:1.05rem;color:var(--navy);display:flex;align-items:center;gap:8px}
+
+  label{display:block;font-weight:600;font-size:.85rem;margin:12px 0 5px;color:#3a4256}
+  input[type=text],input[type=number],input[type=datetime-local],textarea,select{
+    width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-size:.9rem;background:#fbfcfe
+  }
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--gold);background:#fff}
+  textarea{min-height:80px;resize:vertical}
+  .row{display:flex;gap:10px}
+  .row>*{flex:1}
+
+  /* اختيار الفئات */
+  .cat-box{max-height:190px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:8px;background:#fbfcfe}
+  .cat-item{display:flex;align-items:center;gap:7px;padding:4px 6px;border-radius:6px;font-size:.86rem}
+  .cat-item:hover{background:#eef1f7}
+  .cat-item.sub{padding-inline-start:26px;color:#5a6478;font-size:.8rem}
+  .cat-item input{width:auto}
+
+  /* صور */
+  .media-drop{border:2px dashed var(--gold);border-radius:10px;padding:16px;text-align:center;background:#fffdf5;color:#8a7530;cursor:pointer}
+  .media-previews{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+  .media-thumb{position:relative;width:78px;height:78px;border-radius:8px;overflow:hidden;border:1px solid var(--line);background:#000}
+  .media-thumb img,.media-thumb video{width:100%;height:100%;object-fit:cover}
+  .media-thumb .rm{position:absolute;top:2px;inset-inline-end:2px;background:rgba(192,57,43,.92);color:#fff;border-radius:50%;
+    width:20px;height:20px;font-size:12px;line-height:20px;text-align:center;cursor:pointer}
+  .media-thumb .tag{position:absolute;bottom:0;inset-inline-start:0;background:rgba(21,37,70,.8);color:#fff;font-size:9px;padding:1px 4px}
+
+  /* قائمة المنتجات */
+  .plist{display:flex;flex-direction:column;gap:10px}
+  .prod-row{display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff}
+  .prod-row img,.prod-row video{width:56px;height:56px;object-fit:cover;border-radius:8px;flex-shrink:0;background:#eef1f7}
+  .prod-row .info{flex:1;min-width:0}
+  .prod-row .info b{display:block;font-size:.92rem;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .prod-row .info small{color:#7a8296}
+  .price-now{color:var(--navy);font-weight:700}
+  .price-old{color:#aaa;text-decoration:line-through;font-size:.8rem;margin-inline-start:6px}
+  .chip{display:inline-block;background:rgba(212,175,55,.15);color:#8a7530;border-radius:20px;padding:1px 8px;font-size:.72rem;margin:2px 2px 0 0}
+
+  .empty{text-align:center;color:#9aa2b4;padding:30px}
+  .hint{font-size:.8rem;color:#7a8296;background:#eef1f7;border-radius:8px;padding:10px 12px;margin-bottom:14px;line-height:1.6}
+  .toast{position:fixed;bottom:20px;inset-inline-start:50%;transform:translateX(-50%);
+    background:var(--navy);color:#fff;padding:12px 22px;border-radius:10px;opacity:0;pointer-events:none;transition:.3s;z-index:50}
+  .toast.show{opacity:1}
+  .stars{color:var(--gold)}
+
+  /* إحصائيات المبيعات */
+  .stats-cards{display:flex;flex-wrap:nowrap;gap:10px;width:100%;overflow-x:auto;padding-bottom:6px}
+  .stat{flex:1 1 0;min-width:120px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;position:relative;overflow:hidden}
+  .stat .v{font-size:1.55rem;font-weight:800;color:var(--navy);line-height:1}
+  .stat .l{font-size:.8rem;color:#7a8296;margin-top:6px}
+  .stat .ic{position:absolute;inset-inline-end:12px;top:12px;font-size:1.4rem;opacity:.25}
+  .stat.gold{border-top:3px solid var(--gold)}
+  .stat.green{border-top:3px solid #1e8e4e}
+  .stat.orange{border-top:3px solid #e08e0b}
+  .stat.red{border-top:3px solid #c0392b}
+  .stat.navy{border-top:3px solid var(--navy)}
+
+  .period-tabs{display:inline-flex;background:#eef1f7;border-radius:10px;padding:3px;gap:3px;margin-bottom:14px}
+  .period-tabs button{background:transparent;color:#5a6478;padding:7px 16px;border-radius:8px}
+  .period-tabs button.active{background:var(--navy);color:#fff}
+
+  .mini-chart{display:flex;align-items:flex-end;gap:6px;height:130px;padding:10px 4px;border-top:1px solid var(--line);margin-top:12px}
+  .mini-chart .bar{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
+  .mini-chart .bar .fill{width:70%;background:linear-gradient(180deg,var(--gold),#e9cf7a);border-radius:5px 5px 0 0;min-height:2px;transition:.3s}
+  .mini-chart .bar .cap{font-size:.62rem;color:#7a8296;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .mini-chart .bar .val{font-size:.6rem;color:var(--navy);font-weight:700}
+
+  /* حالة الطلب */
+  .status-badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.72rem;font-weight:700}
+  .st-pending{background:#fff3d6;color:#a06c00}
+  .st-confirmed{background:#e0ecff;color:#1552a8}
+  .st-shipped{background:#e6f0ff;color:#0d3b82}
+  .st-delivered{background:#e2f6e9;color:#1e8e4e}
+  .st-cancelled{background:#fdecec;color:#c0392b}
+  .st-returned{background:#f0e6ff;color:#6b3fa0}
+  .ord-row{display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff;flex-wrap:wrap}
+  .ord-row .oinfo{flex:1;min-width:150px}
+  .ord-row .oinfo b{color:var(--navy);font-size:.92rem}
+  .ord-row select{width:auto;padding:5px 8px;font-size:.8rem}
+
+  /* ترقيم الصفحات */
+  .pager{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-top:16px}  .pager button{min-width:34px;padding:6px 10px;border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:8px;font-weight:700}
+  .pager button:hover:not(:disabled){background:#eef1f7}
+  .pager button.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .pager button:disabled{opacity:.4;cursor:default}
+  .pager .dots{padding:6px 4px;color:#9aa2b4}
+
+  /* خانات عدد المنتجات في كل قسم */
+  .cat-counts{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px;width:100%}
+  .cc-box{flex:1 1 110px;min-width:110px;background:#fff;border:1px solid var(--line);border-top:3px solid var(--gold);border-radius:12px;padding:10px 12px;
+    display:flex;align-items:center;gap:8px;cursor:pointer;transition:.15s}
+  .cc-box:hover{background:#fffdf5;box-shadow:0 2px 8px rgba(212,175,55,.15)}
+  .cc-box.active{border-color:var(--gold);box-shadow:0 0 0 2px rgba(212,175,55,.35)}
+  .cc-box .cc-ic{font-size:1.2rem}
+  .cc-box .cc-info{min-width:0}
+  .cc-box .cc-name{font-size:.78rem;color:#5a6478;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cc-box .cc-num{font-size:1.2rem;font-weight:800;color:var(--navy);line-height:1}
+  .cc-box.total{border-top-color:var(--navy);background:#f7f9ff}
+
+  /* بوابة الدخول */
+  #gate{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:100}
+  #gate .box{background:#fff;border-radius:16px;padding:34px;width:320px;max-width:90%;text-align:center}
+  #gate h2{margin:0 0 6px;color:var(--navy)}
+  #gate p{color:#7a8296;font-size:.85rem;margin:0 0 18px}
+</style>
+</head>
+<body>
+
+<!-- بوابة دخول بسيطة (حماية شكلية فقط) -->
+<div id="gate">
+  <div class="box">
+    <h2>🔒 لوحة التحكم</h2>
+    <p>أدخل كلمة المرور للدخول</p>
+    <input type="password" id="gatePass" placeholder="كلمة المرور" style="text-align:center;margin-bottom:12px">
+    <button class="btn-gold" style="width:100%" onclick="checkGate()">دخول</button>
+    <p style="margin-top:14px;font-size:.72rem;color:#b0b6c4">ملاحظة: هذه حماية بسيطة من جهة المتصفح فقط.</p>
+  </div>
+</div>
+
+<div class="topbar">
+  <h1>⚙️ لوحة التحكم <span class="badge">X2 Shopping</span></h1>
+  <div class="actions">
+    <button class="btn-ghost btn-sm" onclick="reloadFromFile()">↻ تحميل من الملف</button>
+    <button class="btn-gold btn-sm" onclick="exportProducts()">⬇ تنزيل Products.json</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="products" onclick="switchTab('products')">🛍️ المنتجات</div>
+  <div class="tab" data-tab="orders" onclick="switchTab('orders')">📊 الطلبات والمبيعات</div>
+  <div class="tab" data-tab="comments" onclick="switchTab('comments')">💬 التعليقات</div>
+</div>
+
+<div class="wrap">
+
+  <!-- ============ المنتجات ============ -->
+  <div class="panel active" id="panel-products">
+    <div class="cat-counts" id="catCounts"></div>
+    <div class="grid">
+
+      <!-- نموذج المنتج -->
+      <div class="card">
+        <h2 id="formTitle">➕ إضافة منتج</h2>
+        <input type="hidden" id="p-id" />
+
+        <div class="row">
+          <div>
+            <label>الاسم (عربي)</label>
+            <input type="text" id="p-name-ar" placeholder="مثال: استاند مواليد">
+          </div>
+          <div>
+            <label>الاسم (إنجليزي)</label>
+            <input type="text" id="p-name-en" placeholder="Newborn stand">
+          </div>
+        </div>
+
+        <label>الوصف</label>
+        <textarea id="p-desc" placeholder="وصف المنتج..."></textarea>
+
+        <div class="row">
+          <div>
+            <label>السعر</label>
+            <input type="number" id="p-price" placeholder="100" min="0" step="any">
+          </div>
+          <div>
+            <label>السعر قبل الخصم (اختياري)</label>
+            <input type="number" id="p-oldprice" placeholder="150" min="0" step="any">
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>المخزون</label>
+            <input type="text" id="p-stock" placeholder="Available أو رقم">
+          </div>
+          <div>
+            <label>التقييم (0-5)</label>
+            <input type="number" id="p-rating" placeholder="5" min="0" max="5" step="0.1">
+          </div>
+          <div>
+            <label>عدد التقييمات</label>
+            <input type="number" id="p-ratingcount" placeholder="1200" min="0">
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>⏰ وقت انتهاء العرض (العداد)</label>
+            <input type="datetime-local" id="p-timerend">
+          </div>
+          <div style="flex:0 0 auto;display:flex;align-items:flex-end">
+            <button class="btn-ghost btn-sm" type="button" onclick="clearTimer()">مسح العداد</button>
+          </div>
+        </div>
+
+        <label>الأقسام (اختر واحداً أو أكثر)</label>
+        <div class="cat-box" id="catBox"><div class="empty">جاري تحميل الأقسام…</div></div>
+
+        <label>الصور والفيديوهات</label>
+        <div class="media-drop" id="mediaDrop">
+          📷 اضغط لرفع صور/فيديوهات (يمكن اختيار أكثر من ملف)
+          <input type="file" id="mediaInput" accept="image/*,video/*" multiple hidden>
+        </div>
+        <div style="margin-top:8px">
+          <div class="row">
+            <input type="text" id="mediaUrl" placeholder="أو الصق مسار/رابط صورة أو فيديو">
+            <button class="btn-navy btn-sm" type="button" onclick="addMediaUrl()">إضافة</button>
+          </div>
+        </div>
+        <div class="media-previews" id="mediaPreviews"></div>
+
+        <div style="display:flex;gap:8px;margin-top:18px">
+          <button class="btn-gold" onclick="saveProduct()" style="flex:1">💾 حفظ المنتج</button>
+          <button class="btn-ghost" onclick="resetForm()">إلغاء</button>
+        </div>
+      </div>
+
+      <!-- قائمة المنتجات -->
+      <div class="card" style="display:flex;flex-direction:column">
+        <h2>📦 المنتجات (<span id="prodCount">0</span>)</h2>
+        <div class="hint">
+          الحفظ يتم في متصفحك تلقائياً. لتظهر التعديلات على الموقع الفعلي اضغط
+          <b>⬇ تنزيل Products.json</b> ثم ضع الملف مكان <code>java/Products.json</code>.
+        </div>
+        <input type="text" id="searchProd" placeholder="🔍 بحث بالاسم…" oninput="prodPage=1;renderProducts()" style="margin-bottom:12px">
+        <div class="plist" id="prodList" style="flex:1"><div class="empty">لا توجد منتجات</div></div>
+        <div class="pager" id="prodPager"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============ الطلبات والمبيعات ============ -->
+  <div class="panel" id="panel-orders">
+
+    <div class="stats-cards" id="statsCards"></div>
+
+    <div class="card" style="margin-top:16px">
+      <h2>📈 إحصائيات المبيعات</h2>
+      <div class="period-tabs">
+        <button class="active" data-p="day"   onclick="setPeriod('day')">يومي</button>
+        <button data-p="month" onclick="setPeriod('month')">شهري</button>
+        <button data-p="year"  onclick="setPeriod('year')">سنوي</button>
+      </div>
+      <div id="periodStats" style="font-size:.9rem;color:#3a4256"></div>
+      <div class="mini-chart" id="miniChart"></div>
+    </div>
+
+    <div class="grid" style="margin-top:16px">
+
+      <!-- إضافة/تعديل طلب -->
+      <div class="card">
+        <h2 id="orderFormTitle">➕ إضافة طلب</h2>
+        <input type="hidden" id="o-id">
+        <div class="row">
+          <div>
+            <label>اسم العميل</label>
+            <input type="text" id="o-customer" placeholder="اسم العميل">
+          </div>
+          <div>
+            <label>الهاتف</label>
+            <input type="text" id="o-phone" placeholder="05xxxxxxxx">
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>المنتج (اختياري)</label>
+            <select id="o-product" onchange="orderProductChanged()"></select>
+          </div>
+          <div style="flex:0 0 90px">
+            <label>الكمية</label>
+            <input type="number" id="o-qty" value="1" min="1" oninput="recalcOrderTotal()">
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>سعر الوحدة</label>
+            <input type="number" id="o-unit" placeholder="0" min="0" step="any" oninput="recalcOrderTotal()">
+          </div>
+          <div>
+            <label>الإجمالي</label>
+            <input type="number" id="o-total" placeholder="0" min="0" step="any">
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>حالة الطلب</label>
+            <select id="o-status">
+              <option value="pending">⏳ قيد الانتظار</option>
+              <option value="confirmed">✅ مؤكد</option>
+              <option value="shipped">🚚 تم الشحن</option>
+              <option value="delivered">📦 تم التسليم</option>
+              <option value="cancelled">✖ ملغى</option>
+              <option value="returned">↩ مرتجع</option>
+            </select>
+          </div>
+          <div>
+            <label>التاريخ</label>
+            <input type="datetime-local" id="o-date">
+          </div>
+        </div>
+
+        <label>ملاحظات</label>
+        <textarea id="o-notes" placeholder="ملاحظات عن الطلب..."></textarea>
+
+        <div style="display:flex;gap:8px;margin-top:16px">
+          <button class="btn-gold" onclick="saveOrder()" style="flex:1">💾 حفظ الطلب</button>
+          <button class="btn-ghost" onclick="resetOrderForm()">إلغاء</button>
+        </div>
+      </div>
+
+      <!-- قائمة الطلبات -->
+      <div class="card">
+        <h2>🧾 الطلبات (<span id="ordCount">0</span>)</h2>
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+          <select id="ordFilter" onchange="ordPage=1;renderOrders()" style="flex:1">
+            <option value="all">كل الحالات</option>
+            <option value="pending">⏳ قيد الانتظار</option>
+            <option value="confirmed">✅ مؤكد</option>
+            <option value="shipped">🚚 تم الشحن</option>
+            <option value="delivered">📦 تم التسليم</option>
+            <option value="cancelled">✖ ملغى</option>
+            <option value="returned">↩ مرتجع</option>
+          </select>
+          <button class="btn-navy btn-sm" onclick="syncStoreOrders()">↻ مزامنة طلبات المتجر</button>
+          <button class="btn-gold btn-sm" onclick="exportOrders()">⬇ تنزيل orders.json</button>
+        </div>
+        <div class="plist" id="ordList"><div class="empty">لا توجد طلبات</div></div>
+        <div class="pager" id="ordPager"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============ التعليقات ============ -->
+  <div class="panel" id="panel-comments">    <div class="grid">
+
+      <!-- إضافة تعليق -->
+      <div class="card">
+        <h2>➕ إضافة تعليق</h2>
+        <label>المنتج</label>
+        <select id="c-product"></select>
+
+        <div class="row">
+          <div>
+            <label>اسم العميل</label>
+            <input type="text" id="c-name" placeholder="اسم العميل">
+          </div>
+          <div>
+            <label>التقييم</label>
+            <select id="c-rating">
+              <option value="5">★★★★★ (5)</option>
+              <option value="4">★★★★ (4)</option>
+              <option value="3">★★★ (3)</option>
+              <option value="2">★★ (2)</option>
+              <option value="1">★ (1)</option>
+            </select>
+          </div>
+        </div>
+
+        <label>نص التعليق</label>
+        <textarea id="c-text" placeholder="اكتب التعليق..."></textarea>
+
+        <div style="display:flex;gap:8px;margin-top:16px">
+          <button class="btn-gold" onclick="addComment()" style="flex:1">💾 حفظ التعليق</button>
+          <button class="btn-ghost btn-sm" onclick="exportComments()">⬇ تنزيل reviews.json</button>
+        </div>
+      </div>
+
+      <!-- قائمة التعليقات -->
+      <div class="card">
+        <h2>💬 تعليقات المنتج</h2>
+        <label>عرض تعليقات المنتج</label>
+        <select id="c-filter" onchange="renderComments()"></select>
+        <div class="plist" id="commentList" style="margin-top:14px"><div class="empty">لا توجد تعليقات</div></div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================= الحالة ================= */
+let products = [];
+let categories = [];
+let currentMedia = []; // [{type:'image'|'video', src}]
+let prodPage = 1;              // صفحة المنتجات الحالية
+const PROD_PAGE_SIZE = 7;     // عدد المنتجات في كل صفحة
+let catFilter = '';            // القسم المختار لتصفية المنتجات ('' = الكل)
+const LS_PRODUCTS = 'admin_products';
+const LS_REVIEWS  = 'admin_reviews';
+const GATE_PASS   = '123456789'; // غيّر كلمة المرور من هنا
+
+/* ================= أدوات ================= */
+const $ = id => document.getElementById(id);
+const isVideo = s => /\.(mp4|webm|ogg|ogv|mov|m4v)(\?|#|$)/i.test(String(s||'')) || String(s||'').startsWith('data:video');
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+function getT(v){ if(!v) return ''; if(typeof v==='object') return v.ar||v.en||''; return String(v); }
+
+/* ================= البوابة ================= */
+function checkGate(){
+  if($('gatePass').value === GATE_PASS){ sessionStorage.setItem('admin_ok','1'); $('gate').style.display='none'; }
+  else toast('كلمة المرور غير صحيحة');
+}
+if(sessionStorage.getItem('admin_ok')==='1') $('gate').style.display='none';
+$('gatePass').addEventListener('keydown',e=>{ if(e.key==='Enter') checkGate(); });
+
+/* ================= التبويبات ================= */
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  $('panel-'+name).classList.add('active');
+  if(name==='comments'){ fillProductSelects(); renderComments(); }
+  if(name==='orders'){ fillProductSelects(); syncStoreOrders(true); renderStats(); renderOrders(); if(!$('o-date').value) $('o-date').value = isoToLocalInput(new Date().toISOString()); }
+}
+
+/* ================= تحميل البيانات ================= */
+async function loadCategories(){
+  try{
+    const res = await fetch('java/Categories.json',{cache:'no-store'});
+    categories = await res.json();
+  }catch(e){ categories=[]; }
+  renderCatBox();
+}
+
+async function loadProducts(){
+  const saved = localStorage.getItem(LS_PRODUCTS);
+  if(saved){
+    try{ products = JSON.parse(saved); }catch(e){ products=[]; }
+  } else {
+    await reloadFromFile(true);
+  }
+  renderProducts();
+}
+
+async function reloadFromFile(silent){
+  try{
+    const res = await fetch('java/Products.json',{cache:'no-store'});
+    products = await res.json();
+    saveLocal();
+    renderProducts();
+    if(!silent) toast('تم التحميل من الملف');
+  }catch(e){ if(!silent) toast('تعذّر تحميل Products.json'); }
+}
+
+function saveLocal(){ localStorage.setItem(LS_PRODUCTS, JSON.stringify(products)); }
+
+/* ================= الأقسام ================= */
+function renderCatBox(){
+  const box = $('catBox');
+  if(!categories.length){ box.innerHTML='<div class="empty">لا توجد أقسام</div>'; return; }
+  let html='';
+  categories.forEach(c=>{
+    const nameAr = c.name?.ar || c.name?.en || c.categorySlug;
+    html += `<label class="cat-item"><input type="checkbox" class="cat-cb" value="${escAttr(nameAr)}" data-slug="${escAttr(c.categorySlug||'')}"> <b>${esc(nameAr)}</b></label>`;
+    (c.subcategories||[]).forEach(s=>{
+      const sn = s.name?.ar || s.name?.en || s.categorySlug;
+      html += `<label class="cat-item sub"><input type="checkbox" class="cat-cb" value="${escAttr(sn)}" data-slug="${escAttr(s.categorySlug||'')}"> ${esc(sn)}</label>`;
+    });
+  });
+  box.innerHTML = html;
+}
+function getSelectedCats(){ return Array.from(document.querySelectorAll('.cat-cb:checked')).map(cb=>cb.value); }
+function setSelectedCats(arr){
+  const set = new Set((arr||[]).map(x=>String(x)));
+  document.querySelectorAll('.cat-cb').forEach(cb=>{ cb.checked = set.has(cb.value); });
+}
+
+/* ================= الوسائط ================= */
+$('mediaDrop').addEventListener('click',()=> $('mediaInput').click());
+$('mediaInput').addEventListener('change',e=>{
+  const files = Array.from(e.target.files||[]);
+  files.forEach(f=>{
+    const reader = new FileReader();
+    reader.onload = ()=>{ currentMedia.push({ type: f.type.startsWith('video')?'video':'image', src: reader.result }); renderMedia(); };
+    reader.readAsDataURL(f);
+  });
+  e.target.value='';
+});
+function addMediaUrl(){
+  const v = $('mediaUrl').value.trim();
+  if(!v) return;
+  currentMedia.push({ type: isVideo(v)?'video':'image', src: v });
+  $('mediaUrl').value='';
+  renderMedia();
+}
+function renderMedia(){
+  const box = $('mediaPreviews');
+  box.innerHTML = currentMedia.map((m,i)=>{
+    const el = m.type==='video'
+      ? `<video src="${escAttr(m.src)}" muted></video>`
+      : `<img src="${escAttr(m.src)}">`;
+    return `<div class="media-thumb">${el}<span class="tag">${m.type==='video'?'فيديو':'صورة'}</span><span class="rm" onclick="removeMedia(${i})">×</span></div>`;
+  }).join('');
+}
+function removeMedia(i){ currentMedia.splice(i,1); renderMedia(); }
+
+/* ================= حفظ / تعديل منتج ================= */
+function saveProduct(){
+  const nameAr = $('p-name-ar').value.trim();
+  const nameEn = $('p-name-en').value.trim();
+  if(!nameAr && !nameEn){ toast('اكتب اسم المنتج'); return; }
+  const cats = getSelectedCats();
+  if(!cats.length){ toast('اختر قسماً واحداً على الأقل'); return; }
+
+  const idField = $('p-id').value;
+  const editing = idField !== '';
+  const id = editing ? Number(idField) : (products.reduce((m,p)=>Math.max(m, Number(p.id)||0),0)+1);
+
+  // فصل الصور عن الفيديوهات مع الحفاظ على الترتيب داخل img
+  const imgArr = currentMedia.map(m=>m.src);
+
+  const prod = {
+    id,
+    name: { ar: nameAr, en: nameEn || nameAr },
+    desc: $('p-desc').value.trim(),
+    img: imgArr,
+    category: cats,
+    price: numOrUndef($('p-price').value),
+    oldPrice: numOrUndef($('p-oldprice').value),
+    stock: $('p-stock').value.trim() || undefined,
+    rating: numOrUndef($('p-rating').value),
+    ratingCount: numOrUndef($('p-ratingcount').value),
+    timerEnd: $('p-timerend').value ? new Date($('p-timerend').value).toISOString() : undefined
+  };
+  // إزالة الحقول الفارغة
+  Object.keys(prod).forEach(k=>{ if(prod[k]===undefined) delete prod[k]; });
+
+  if(editing){
+    const idx = products.findIndex(p=>Number(p.id)===id);
+    if(idx>=0){
+      products[idx] = { ...products[idx], ...prod };
+      // لو تم مسح العداد أثناء التعديل، احذفه
+      if(!$('p-timerend').value) delete products[idx].timerEnd;
+    }
+  } else {
+    products.unshift(prod);
+  }
+  saveLocal();
+  renderProducts();
+  resetForm();
+  toast(editing?'تم تحديث المنتج':'تمت إضافة المنتج');
+}
+
+function editProduct(id){
+  const p = products.find(x=>Number(x.id)===Number(id));
+  if(!p) return;
+  $('formTitle').textContent = '✏️ تعديل منتج';
+  $('p-id').value = p.id;
+  $('p-name-ar').value = p.name?.ar || (typeof p.name==='string'?p.name:'') || '';
+  $('p-name-en').value = p.name?.en || '';
+  $('p-desc').value = p.desc || '';
+  $('p-price').value = p.price ?? '';
+  $('p-oldprice').value = p.oldPrice ?? '';
+  $('p-stock').value = p.stock ?? '';
+  $('p-rating').value = p.rating ?? '';
+  $('p-ratingcount').value = p.ratingCount ?? '';
+  $('p-timerend').value = isoToLocalInput(p.timerEnd);
+  // الأقسام
+  let cats = p.category; if(!Array.isArray(cats)) cats = cats?[cats]:[];
+  setSelectedCats(cats.map(getT));
+  // الوسائط
+  let media = [];
+  const push = v => { if(Array.isArray(v)) v.forEach(push); else if(v) media.push({type:isVideo(v)?'video':'image',src:v}); };
+  push(p.images); push(p.img); push(p.image); push(p.videos); push(p.video);
+  currentMedia = media;
+  renderMedia();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function deleteProduct(id){
+  if(!confirm('حذف هذا المنتج؟')) return;
+  products = products.filter(p=>Number(p.id)!==Number(id));
+  saveLocal();
+  renderProducts();
+  toast('تم الحذف');
+}
+
+function resetForm(){
+  $('formTitle').textContent='➕ إضافة منتج';
+  ['p-id','p-name-ar','p-name-en','p-desc','p-price','p-oldprice','p-stock','p-rating','p-ratingcount','p-timerend']
+    .forEach(id=>$(id).value='');
+  setSelectedCats([]);
+  currentMedia=[]; renderMedia();
+}
+
+/* ================= عرض المنتجات ================= */
+function catIcon(slug){
+  const m = {Occasions:'🎉',Acrylic:'💎',paper:'📄',Forex:'🖼️',wood:'🪵',leather:'👜',sticker:'🏷️',ramadan:'🌙'};
+  return m[slug] || '📁';
+}
+// جمع كل قيم فئات المنتج كنصوص (يدعم النص/المصفوفة/الكائن)
+function productCatValues(p){
+  const out = [];
+  const push = v => { if(v==null) return; if(Array.isArray(v)){v.forEach(push);return;}
+    if(typeof v==='object'){ if(v.ar)out.push(String(v.ar).toLowerCase().trim()); if(v.en)out.push(String(v.en).toLowerCase().trim()); return; }
+    out.push(String(v).toLowerCase().trim()); };
+  push(p.category); push(p.categorySlug); push(p.mainCategory); push(p.categoryName);
+  return out;
+}
+function renderCatCounts(){
+  const box = $('catCounts');
+  if(!box) return;
+  if(!categories.length){ box.innerHTML=''; return; }
+  let html = `<div class="cc-box total ${catFilter===''?'active':''}" onclick="filterByCat('')">
+    <span class="cc-ic">🧮</span><div class="cc-info"><div class="cc-name">كل المنتجات</div><div class="cc-num">${products.length}</div></div></div>`;
+  categories.forEach(c=>{
+    const ar = (c.name?.ar||'').toLowerCase().trim();
+    const en = (c.name?.en||'').toLowerCase().trim();
+    const slug = (c.categorySlug||'').toLowerCase().trim();
+    const count = products.filter(p=>{
+      const vals = productCatValues(p);
+      return vals.includes(ar) || vals.includes(en) || vals.includes(slug);
+    }).length;
+    const name = c.name?.ar || c.name?.en || c.categorySlug;
+    const active = catFilter===slug ? 'active' : '';
+    html += `<div class="cc-box ${active}" onclick="filterByCat('${escAttr(slug)}')">
+      <span class="cc-ic">${catIcon(c.categorySlug)}</span>
+      <div class="cc-info"><div class="cc-name">${esc(name)}</div><div class="cc-num">${count}</div></div></div>`;
+  });
+  box.innerHTML = html;
+}
+
+// تصفية المنتجات حسب القسم عند الضغط على خانته
+function filterByCat(slug){
+  catFilter = slug;
+  prodPage = 1;
+  renderProducts();
+}
+
+function firstMedia(p){
+  let arr=[]; const push=v=>{ if(Array.isArray(v))v.forEach(push); else if(v)arr.push(v); };
+  push(p.images);push(p.img);push(p.image);push(p.videos);push(p.video);
+  return arr[0]||'';
+}
+function renderProducts(){
+  const q = ($('searchProd')?.value||'').toLowerCase().trim();
+  $('prodCount').textContent = products.length;
+  renderCatCounts();
+  const cat = catFilter ? categories.find(c => (c.categorySlug||'').toLowerCase().trim()===catFilter) : null;
+  const catAr = (cat?.name?.ar||'').toLowerCase().trim();
+  const catEn = (cat?.name?.en||'').toLowerCase().trim();
+  const all = products.filter(p=>{
+    if(catFilter){
+      const vals = productCatValues(p);
+      if(!(vals.includes(catAr) || vals.includes(catEn) || vals.includes(catFilter))) return false;
+    }
+    if(q && !getT(p.name).toLowerCase().includes(q)) return false;
+    return true;
+  });
+  if(!all.length){ $('prodList').innerHTML='<div class="empty">لا توجد منتجات</div>'; $('prodPager').innerHTML=''; return; }
+
+  // ترقيم الصفحات
+  const totalPages = Math.max(1, Math.ceil(all.length / PROD_PAGE_SIZE));
+  if(prodPage > totalPages) prodPage = totalPages;
+  if(prodPage < 1) prodPage = 1;
+  const start = (prodPage-1) * PROD_PAGE_SIZE;
+  const list = all.slice(start, start + PROD_PAGE_SIZE);
+
+  $('prodList').innerHTML = list.map(p=>{
+    const m = firstMedia(p);
+    const thumb = isVideo(m) ? `<video src="${escAttr(m)}" muted></video>` : `<img src="${escAttr(m)}" onerror="this.style.opacity=.3">`;
+    const cats = (Array.isArray(p.category)?p.category:[p.category]).filter(Boolean).map(c=>`<span class="chip">${esc(getT(c))}</span>`).join('');
+    const old = p.oldPrice ? `<span class="price-old">${p.oldPrice}</span>` : '';
+    return `<div class="prod-row">
+      ${thumb}
+      <div class="info">
+        <b>${esc(getT(p.name))||'—'}</b>
+        <small><span class="price-now">${p.price??'—'}</span> ${old}</small>
+        <div>${cats}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <button class="btn-ghost btn-sm" onclick="editProduct(${p.id})">تعديل</button>
+        <button class="btn-danger btn-sm" onclick="deleteProduct(${p.id})">حذف</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  renderProdPager(totalPages);
+}
+
+function renderProdPager(totalPages){
+  const pager = $('prodPager');
+  if(totalPages<=1){ pager.innerHTML=''; return; }
+  const pages = [];
+  const add = n => pages.push(n);
+  // نافذة صفحات مع نقاط اختصار
+  const win = 1;
+  for(let i=1;i<=totalPages;i++){
+    if(i===1 || i===totalPages || (i>=prodPage-win && i<=prodPage+win)) add(i);
+    else if(pages[pages.length-1] !== '…') add('…');
+  }
+  let html = `<button onclick="gotoProdPage(${prodPage-1})" ${prodPage===1?'disabled':''}>‹</button>`;
+  html += pages.map(n=> n==='…'
+    ? `<span class="dots">…</span>`
+    : `<button class="${n===prodPage?'active':''}" onclick="gotoProdPage(${n})">${n}</button>`
+  ).join('');
+  html += `<button onclick="gotoProdPage(${prodPage+1})" ${prodPage===totalPages?'disabled':''}>›</button>`;
+  pager.innerHTML = html;
+}
+function gotoProdPage(p){ prodPage = p; renderProducts(); $('prodList').scrollIntoView({behavior:'smooth',block:'nearest'}); }
+
+/* ================= التصدير ================= */
+function download(filename, text){
+  const blob = new Blob([text],{type:'application/json;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function exportProducts(){ download('Products.json', JSON.stringify(products,null,2)); toast('تم تنزيل Products.json'); }
+
+/* ================= التعليقات ================= */
+function getReviews(){ try{ return JSON.parse(localStorage.getItem(LS_REVIEWS)||'{}'); }catch(e){ return {}; } }
+function saveReviews(r){ localStorage.setItem(LS_REVIEWS, JSON.stringify(r)); }
+
+function fillProductSelects(){
+  const opts = products.map(p=>`<option value="${p.id}">${esc(getT(p.name))||('#'+p.id)}</option>`).join('');
+  $('c-product').innerHTML = opts || '<option value="">لا توجد منتجات</option>';
+  $('c-filter').innerHTML = opts || '<option value="">لا توجد منتجات</option>';
+  const oProd = $('o-product');
+  if(oProd) oProd.innerHTML = '<option value="">— بدون —</option>' + opts;
+}
+function addComment(){
+  const pid = $('c-product').value;
+  const name = $('c-name').value.trim();
+  const text = $('c-text').value.trim();
+  if(!pid){ toast('اختر منتجاً'); return; }
+  if(!name || !text){ toast('اكتب الاسم والتعليق'); return; }
+  const reviews = getReviews();
+  (reviews[pid] = reviews[pid]||[]).unshift({
+    name, rating:Number($('c-rating').value), text, date:new Date().toISOString()
+  });
+  saveReviews(reviews);
+  $('c-name').value=''; $('c-text').value='';
+  $('c-filter').value = pid;
+  renderComments();
+  toast('تمت إضافة التعليق');
+}
+function deleteComment(pid, idx){
+  const reviews = getReviews();
+  if(reviews[pid]){ reviews[pid].splice(idx,1); saveReviews(reviews); renderComments(); toast('تم حذف التعليق'); }
+}
+function renderComments(){
+  const pid = $('c-filter').value;
+  const reviews = getReviews();
+  const list = reviews[pid]||[];
+  if(!list.length){ $('commentList').innerHTML='<div class="empty">لا توجد تعليقات لهذا المنتج</div>'; return; }
+  $('commentList').innerHTML = list.map((r,i)=>`
+    <div class="prod-row" style="align-items:flex-start">
+      <div class="info">
+        <b>${esc(r.name)} <span class="stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</span></b>
+        <div style="font-size:.88rem;color:#3a4256;margin:4px 0">${esc(r.text)}</div>
+        <small>${new Date(r.date).toLocaleString('ar')}</small>
+      </div>
+      <button class="btn-danger btn-sm" onclick="deleteComment('${pid}',${i})">حذف</button>
+    </div>`).join('');
+}
+function exportComments(){ download('reviews.json', JSON.stringify(getReviews(),null,2)); toast('تم تنزيل reviews.json'); }
+
+/* ================= الطلبات والمبيعات ================= */
+const LS_ORDERS = 'admin_orders';
+let currentPeriod = 'day';
+let ordPage = 1;               // صفحة الطلبات الحالية
+const ORDER_PAGE_SIZE = 3;     // عدد الطلبات في كل صفحة
+const STATUS = {
+  pending:  {label:'قيد الانتظار', cls:'st-pending'},
+  confirmed:{label:'مؤكد',        cls:'st-confirmed'},
+  shipped:  {label:'تم الشحن',     cls:'st-shipped'},
+  delivered:{label:'تم التسليم',   cls:'st-delivered'},
+  cancelled:{label:'ملغى',        cls:'st-cancelled'},
+  returned: {label:'مرتجع',       cls:'st-returned'}
+};
+// الحالات التي تُحتسب كمبيعات محققة
+const REALIZED = ['confirmed','shipped','delivered'];
+
+function getOrders(){ try{ return JSON.parse(localStorage.getItem(LS_ORDERS)||'[]'); }catch(e){ return []; } }
+function saveOrders(o){ localStorage.setItem(LS_ORDERS, JSON.stringify(o)); }
+
+/* استيراد طلبات المتجر المكتملة (من صفحة الدفع) تلقائياً */
+const LS_STORE_ORDERS = 'x2_orders';
+function syncStoreOrders(silent){
+  let store=[];
+  try{ store = JSON.parse(localStorage.getItem(LS_STORE_ORDERS)||'[]'); }catch(e){ store=[]; }
+  const orders = getOrders();
+  const existing = new Set(orders.map(o=>o.srcId).filter(Boolean));
+  let maxId = orders.reduce((m,o)=>Math.max(m,Number(o.id)||0),0);
+  let added = 0;
+  store.forEach(s=>{
+    if(!s || existing.has(s.id)) return;
+    const items = Array.isArray(s.items)?s.items:[];
+    const qty = items.reduce((n,it)=>n+(Number(it.qty)||1),0) || 1;
+    const productName = items.map(it=>`${it.title||'منتج'}×${it.qty||1}`).join('، ');
+    const sh = s.shipping||{};
+    orders.unshift({
+      id: ++maxId,
+      srcId: s.id,
+      customer: sh.name || 'عميل',
+      phone: sh.phone || '',
+      productId: null,
+      productName,
+      qty,
+      unit: 0,
+      total: Number(s.total)||0,
+      status: s.status || 'pending',
+      date: s.date || new Date().toISOString(),
+      notes: [sh.city?('المدينة: '+sh.city):'', sh.address?('العنوان: '+sh.address):'', s.payment?('الدفع: '+s.payment):'']
+              .filter(Boolean).join(' — '),
+      items
+    });
+    added++;
+  });
+  if(added){ saveOrders(orders); renderStats(); renderOrders(); }
+  if(!silent) toast(added ? `تم استيراد ${added} طلب من المتجر` : 'لا توجد طلبات جديدة من المتجر');
+}
+
+function orderProductChanged(){
+  const pid = $('o-product').value;
+  const p = products.find(x=>String(x.id)===String(pid));
+  if(p){ $('o-unit').value = p.price ?? ''; }
+  recalcOrderTotal();
+}
+function recalcOrderTotal(){
+  const unit = Number($('o-unit').value)||0;
+  const qty = Number($('o-qty').value)||0;
+  if(unit && qty) $('o-total').value = +(unit*qty).toFixed(2);
+}
+
+function saveOrder(){
+  const customer = $('o-customer').value.trim();
+  const total = Number($('o-total').value)||0;
+  if(!customer){ toast('اكتب اسم العميل'); return; }
+  if(total<=0){ toast('أدخل إجمالي الطلب'); return; }
+
+  const idField = $('o-id').value;
+  const editing = idField !== '';
+  const orders = getOrders();
+  const pid = $('o-product').value;
+  const prod = products.find(x=>String(x.id)===String(pid));
+
+  const order = {
+    id: editing ? Number(idField) : (orders.reduce((m,o)=>Math.max(m,Number(o.id)||0),0)+1),
+    customer, phone: $('o-phone').value.trim(),
+    productId: pid || null,
+    productName: prod ? getT(prod.name) : '',
+    qty: Number($('o-qty').value)||1,
+    unit: Number($('o-unit').value)||0,
+    total,
+    status: $('o-status').value,
+    date: $('o-date').value ? new Date($('o-date').value).toISOString() : new Date().toISOString(),
+    notes: $('o-notes').value.trim()
+  };
+
+  if(editing){
+    const idx = orders.findIndex(o=>Number(o.id)===order.id);
+    if(idx>=0){ order.srcId = orders[idx].srcId; orders[idx] = order; updateStoreOrderStatus(order.srcId, order.status); }
+  } else {
+    orders.unshift(order);
+  }
+  saveOrders(orders);
+  renderOrders(); renderStats();
+  resetOrderForm();
+  toast(editing?'تم تحديث الطلب':'تمت إضافة الطلب');
+}
+
+function editOrder(id){
+  const o = getOrders().find(x=>Number(x.id)===Number(id));
+  if(!o) return;
+  $('orderFormTitle').textContent='✏️ تعديل طلب';
+  $('o-id').value=o.id;
+  $('o-customer').value=o.customer||'';
+  $('o-phone').value=o.phone||'';
+  $('o-product').value=o.productId||'';
+  $('o-qty').value=o.qty||1;
+  $('o-unit').value=o.unit||'';
+  $('o-total').value=o.total||'';
+  $('o-status').value=o.status||'pending';
+  $('o-date').value=isoToLocalInput(o.date);
+  $('o-notes').value=o.notes||'';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function changeOrderStatus(id, status){
+  const orders = getOrders();
+  const o = orders.find(x=>Number(x.id)===Number(id));
+  if(o){
+    o.status=status;
+    saveOrders(orders);
+    updateStoreOrderStatus(o.srcId, status); // مزامنة الحالة مع حساب العميل
+    renderStats(); renderOrders();
+    toast('تم تحديث الحالة');
+  }
+}
+
+/* تحديث حالة الطلب في مخزن المتجر (x2_orders) ليظهر في صفحة حساب العميل */
+function updateStoreOrderStatus(srcId, status){
+  if(!srcId) return;
+  try{
+    const store = JSON.parse(localStorage.getItem(LS_STORE_ORDERS)||'[]');
+    const s = store.find(o=>o && o.id===srcId);
+    if(s){ s.status=status; localStorage.setItem(LS_STORE_ORDERS, JSON.stringify(store)); }
+  }catch(e){}
+}
+function deleteOrder(id){
+  if(!confirm('حذف هذا الطلب؟')) return;
+  saveOrders(getOrders().filter(o=>Number(o.id)!==Number(id)));
+  renderOrders(); renderStats();
+  toast('تم حذف الطلب');
+}
+function resetOrderForm(){
+  $('orderFormTitle').textContent='➕ إضافة طلب';
+  ['o-id','o-customer','o-phone','o-unit','o-total','o-notes'].forEach(id=>$(id).value='');
+  $('o-qty').value=1; $('o-product').value=''; $('o-status').value='pending';
+  $('o-date').value = isoToLocalInput(new Date().toISOString());
+}
+
+/* ---- الإحصائيات ---- */
+function renderStats(){
+  const orders = getOrders();
+  const money = n => (Math.round(n*100)/100).toLocaleString('ar-EG');
+  const sum = arr => arr.reduce((s,o)=>s+(Number(o.total)||0),0);
+
+  const realized = orders.filter(o=>REALIZED.includes(o.status));
+  const pending  = orders.filter(o=>o.status==='pending');
+  const cancelled= orders.filter(o=>o.status==='cancelled');
+  const delivered= orders.filter(o=>o.status==='delivered');
+  const returned = orders.filter(o=>o.status==='returned');
+
+  const cards = [
+    {c:'gold',  ic:'💰', v: money(sum(realized)), l:'إجمالي المبيعات المحققة'},
+    {c:'green', ic:'📦', v: delivered.length,     l:'تم التسليم'},
+    {c:'orange',ic:'⏳', v: pending.length,       l:'قيد الانتظار'},
+    {c:'red',   ic:'✖',  v: cancelled.length,     l:'طلبات ملغاة'},
+    {c:'navy',  ic:'🧾', v: orders.length,         l:'إجمالي الطلبات'},
+    {c:'navy',  ic:'↩',  v: returned.length,       l:'مرتجعات'},
+    {c:'gold',  ic:'💵', v: money(sum(pending)),   l:'قيمة الطلبات المعلّقة'}
+  ];
+  $('statsCards').innerHTML = cards.map(k=>`
+    <div class="stat ${k.c}"><span class="ic">${k.ic}</span>
+      <div class="v">${k.v}</div><div class="l">${k.l}</div>
+    </div>`).join('');
+
+  renderPeriod();
+}
+
+function periodKey(d, p){
+  const dt = new Date(d);
+  if(p==='day')   return `${dt.getFullYear()}-${dt.getMonth()+1}-${dt.getDate()}`;
+  if(p==='month') return `${dt.getFullYear()}-${dt.getMonth()+1}`;
+  return `${dt.getFullYear()}`;
+}
+function setPeriod(p){
+  currentPeriod=p;
+  document.querySelectorAll('.period-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.p===p));
+  renderPeriod();
+}
+function renderPeriod(){
+  const orders = getOrders().filter(o=>o.status!=='cancelled');
+  const now = new Date();
+  const money = n => (Math.round(n*100)/100).toLocaleString('ar-EG');
+
+  // نطاق الفترة الحالية
+  let inCurrent, curLabel;
+  if(currentPeriod==='day'){
+    inCurrent = o=>{ const d=new Date(o.date); return d.toDateString()===now.toDateString(); };
+    curLabel='اليوم';
+  } else if(currentPeriod==='month'){
+    inCurrent = o=>{ const d=new Date(o.date); return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth(); };
+    curLabel='هذا الشهر';
+  } else {
+    inCurrent = o=>{ const d=new Date(o.date); return d.getFullYear()===now.getFullYear(); };
+    curLabel='هذه السنة';
+  }
+  const curOrders = orders.filter(inCurrent);
+  const curSales = curOrders.reduce((s,o)=>s+(Number(o.total)||0),0);
+  $('periodStats').innerHTML =
+    `مبيعات ${curLabel}: <b style="color:var(--navy)">${money(curSales)}</b> — عدد الطلبات: <b>${curOrders.length}</b>`;
+
+  // رسم بياني بسيط: آخر فترات
+  const buckets = [];
+  const N = currentPeriod==='day'?7:(currentPeriod==='month'?12:5);
+  for(let i=N-1;i>=0;i--){
+    const d = new Date(now);
+    let label;
+    if(currentPeriod==='day'){ d.setDate(now.getDate()-i); label = d.toLocaleDateString('ar-EG',{day:'numeric',month:'numeric'}); }
+    else if(currentPeriod==='month'){ d.setMonth(now.getMonth()-i); label = d.toLocaleDateString('ar-EG',{month:'short'}); }
+    else { d.setFullYear(now.getFullYear()-i); label = String(d.getFullYear()); }
+    const key = periodKey(d, currentPeriod);
+    const val = orders.filter(o=>periodKey(o.date,currentPeriod)===key).reduce((s,o)=>s+(Number(o.total)||0),0);
+    buckets.push({label,val});
+  }
+  const max = Math.max(1, ...buckets.map(b=>b.val));
+  $('miniChart').innerHTML = buckets.map(b=>`
+    <div class="bar" title="${money(b.val)}">
+      <span class="val">${b.val?money(b.val):''}</span>
+      <div class="fill" style="height:${Math.round(b.val/max*100)}%"></div>
+      <span class="cap">${b.label}</span>
+    </div>`).join('');
+}
+
+/* ---- عرض الطلبات ---- */
+function renderOrders(){
+  const filter = $('ordFilter')?.value || 'all';
+  let orders = getOrders();
+  if(filter!=='all') orders = orders.filter(o=>o.status===filter);
+  $('ordCount').textContent = getOrders().length;
+  if(!orders.length){ $('ordList').innerHTML='<div class="empty">لا توجد طلبات</div>'; if($('ordPager')) $('ordPager').innerHTML=''; return; }
+
+  // ترقيم الصفحات
+  const totalPages = Math.max(1, Math.ceil(orders.length / ORDER_PAGE_SIZE));
+  if(ordPage>totalPages) ordPage=totalPages;
+  if(ordPage<1) ordPage=1;
+  const pageOrders = orders.slice((ordPage-1)*ORDER_PAGE_SIZE, (ordPage-1)*ORDER_PAGE_SIZE + ORDER_PAGE_SIZE);
+
+  const money = n => (Math.round(n*100)/100).toLocaleString('ar-EG');
+  $('ordList').innerHTML = pageOrders.map(o=>{
+    const st = STATUS[o.status]||STATUS.pending;
+    const opts = Object.keys(STATUS).map(k=>`<option value="${k}" ${k===o.status?'selected':''}>${STATUS[k].label}</option>`).join('');
+    return `<div class="ord-row">
+      <div class="oinfo">
+        <b>${esc(o.customer)}</b> ${o.phone?`<small style="color:#7a8296"> · ${esc(o.phone)}</small>`:''}
+        <div style="font-size:.82rem;color:#5a6478;margin-top:2px">
+          ${o.productName?esc(o.productName)+' × '+o.qty+' — ':''}<b style="color:var(--navy)">${money(o.total)}</b>
+        </div>
+        <div style="font-size:.72rem;color:#9aa2b4;margin-top:2px">${new Date(o.date).toLocaleString('ar-EG')}</div>
+        ${o.notes?`<div style="font-size:.75rem;color:#7a8296;margin-top:3px">📝 ${esc(o.notes)}</div>`:''}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+        <span class="status-badge ${st.cls}">${st.label}</span>
+        <select onchange="changeOrderStatus(${o.id}, this.value)">${opts}</select>
+        <div style="display:flex;gap:6px">
+          <button class="btn-ghost btn-sm" onclick="editOrder(${o.id})">تعديل</button>
+          <button class="btn-danger btn-sm" onclick="deleteOrder(${o.id})">حذف</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  renderOrdPager(totalPages);
+}
+function renderOrdPager(totalPages){
+  const pager = $('ordPager');
+  if(!pager) return;
+  if(totalPages<=1){ pager.innerHTML=''; return; }
+  const pages = [];
+  for(let i=1;i<=totalPages;i++){
+    if(i===1 || i===totalPages || (i>=ordPage-1 && i<=ordPage+1)) pages.push(i);
+    else if(pages[pages.length-1] !== '…') pages.push('…');
+  }
+  let html = `<button onclick="gotoOrderPage(${ordPage-1})" ${ordPage===1?'disabled':''}>‹</button>`;
+  html += pages.map(n=> n==='…'
+    ? `<span class="dots">…</span>`
+    : `<button class="${n===ordPage?'active':''}" onclick="gotoOrderPage(${n})">${n}</button>`
+  ).join('');
+  html += `<button onclick="gotoOrderPage(${ordPage+1})" ${ordPage===totalPages?'disabled':''}>›</button>`;
+  pager.innerHTML = html;
+}
+function gotoOrderPage(p){ ordPage=p; renderOrders(); $('ordList').scrollIntoView({behavior:'smooth',block:'nearest'}); }
+function exportOrders(){ download('orders.json', JSON.stringify(getOrders(),null,2)); toast('تم تنزيل orders.json'); }
+
+/* ================= أدوات نص ================= */
+function esc(s){ return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function escAttr(s){ return esc(s).replace(/'/g,'&#39;'); }
+function numOrUndef(v){ if(v===''||v===null||v===undefined) return undefined; const n=Number(v); return isNaN(n)?undefined:n; }
+
+/* تحويل تاريخ ISO إلى صيغة input datetime-local بالتوقيت المحلي */
+function isoToLocalInput(iso){
+  if(!iso) return '';
+  const d = new Date(iso);
+  if(isNaN(d)) return '';
+  const pad = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function clearTimer(){ $('p-timerend').value=''; }
+
+/* ================= بدء ================= */
+(async function init(){
+  await loadCategories();
+  await loadProducts();
+  fillProductSelects();
+  syncStoreOrders(true);
+})();
+</script>
+</body>
+</html>

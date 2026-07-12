@@ -1,0 +1,1239 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+  <meta charset="UTF-8" />
+  <title data-i18n="عربة التسوق- X2 Shopping">عربة التسوق- X2 Shopping</title>
+  <meta name="theme-color" content="#007bff">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+  <meta name="description" content="X2 Shopping - متجر إلكتروني شامل يقدم آلاف المنتجات بأفضل الأسعار. تسوق الآن ملابس، إلكترونيات، مستلزمات منزلية، أدوات تجميل، وأكثر. شحن سريع، دفع آمن، وضمان جودة المنتجات مع إمكانية الإرجاع. اكتشف عالم التسوق المميز معنا!">
+  <meta name="description-en" content="X2 Shopping - A comprehensive online store offering thousands of products at the best prices. Shop now for clothing, electronics, home essentials, beauty products, and more. Fast shipping, secure payment, and quality assurance with easy returns. Discover a world of exceptional shopping with us!">
+  <meta name="keywords" content="متجر إلكتروني، تسوق اونلاين، ملابس، إلكترونيات، مستلزمات منزلية، أدوات تجميل، موضة، صحة وجمال، هواتف ذكية، أجهزة كمبيوتر، أثاث منزلي، ألعاب أطفال، مجوهرات، ساعات، حقائب، أحذية، رياضة، مستلزمات حيوانات أليفة، إكسسوارات سيارات، دفع آمن، شحن سريع، أفضل الأسعار، عروض خاصة، خصومات">
+  <meta name="keywords-en" content="online shopping, e-commerce, clothing, electronics, home essentials, beauty products, fashion, health and beauty, smartphones, computers, furniture, toys, jewelry, watches, bags, shoes, sports, pet supplies, car accessories, secure payment, fast shipping, best prices, special offers, discounts">
+  <meta name="robots" content="index, follow">
+  <meta name="author" content="X2 Shopping">
+  <meta property="og:title" content="X2-Shopping">
+  <meta property="og:description" content="متجر إلكتروني شامل يقدم آلاف المنتجات بأفضل الأسعار. شحن سريع، دفع آمن، وضمان جودة.">
+  <meta property="og:image" content="assets/logo.png">
+  <meta property="og:url" content="https://x2shopping.com">
+  <meta property="og:type" content="website">
+  <link rel="stylesheet" href="style/style.css" />
+</head>
+
+<style>
+  
+main#main {
+  width: 100% !important; /* تجاهل العرض المحدد بـ 70% */
+  max-width: 75%; /* تحديد أقصى عرض للمحتوى ليتوسط الشاشة */
+  margin: 0 auto !important;
+  padding: 0 15px;
+  margin-top: 120px !important; /* مسافة من الهيدر */
+  margin-bottom: 50px !important;
+  display: block !important; /* إلغاء flexbox من النمط العام */
+}
+
+/* 2. الحاوية الرئيسية للتخطيط */
+.cart-layout-container {
+  display: flex;
+  flex-direction: row-reverse; /* القائمة الجانبية على اليسار */
+  gap: 25px;
+  align-items: flex-start;
+}
+
+/* 3. العمود الأيسر (ملخص الطلب) - ثابت وقابل للتمرير */
+.cart-left {
+  width: 30%;
+  flex-shrink: 0;
+  position: sticky;
+  top:0px; /* مسافة من الأعلى لتجنب الهيدر */
+  height: calc(110vh - 200px);
+  overflow-y: auto;
+  background-color: #ffffff00;
+  border-radius: 8px;
+  border: 1px solid #e5e5e500;
+  margin-top: -180px;
+  padding: 5px; /* مسافة داخلية بسيطة لشريط التمرير */
+}
+
+.order-summary {
+  padding: 20px;
+}
+
+/* تخصيص شريط التمرير (اختياري) */
+.cart-left::-webkit-scrollbar { width: 8px; }
+.cart-left::-webkit-scrollbar-track { background: transparent; }
+.cart-left::-webkit-scrollbar-thumb { background-color: #e0e0e000; border-radius: 10px; }
+
+
+/* 5. شريط الشحن المجاني */
+div.free-shipping-bar  {
+  display: flex;
+  align-items: center;
+  background-color: #f1ffea;
+  padding: 0px 2px;
+  border-radius: 20px;
+  margin-bottom: 20px;
+  max-width: 68.5%;
+  font-size: 30px;
+  font-weight: 700;
+}
+
+/* 6. تنسيقات نصوص وأزرار الملخص (مطابقة للصورة) */
+.summary-title { font-size: 18px; font-weight: 700; margin-bottom: 15px; }
+.summary-line { display: flex; justify-content: space-between; padding: 8px 0; font-size: 15px; border-bottom: 1px solid #f0f0f0; }
+.summary-line.total-line { font-size: 16px; border-bottom: none; padding-top: 12px; }
+.summary-line strong { font-weight: 700; }
+.summary-note { font-size: 13px; color: #666; margin: 5px 0 20px; }
+.checkout-btn { background-color: #152546; color: white; border: 1px solid #ffffff00; }
+.paypal-btn { background-color: #ffffff00; color: #003087; border: 1px solid #022fc2; }
+.checkout-btn, .paypal-btn { width: 100%; padding: 13px; border-radius: 25px; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+.small-note { font-size: 13px; color: #555; margin-top: 15px; display: flex; align-items: center; gap: 8px; }
+.lock-icon { color: #34a853; }
+
+/* 7. أقسام السياسات والدفع */
+.policy-section { margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; }
+.policy-section h4, .policy-section strong { font-size: 15px; margin-bottom: 10px; display: block; font-weight: 700; }
+.policy-section h5 { font-size: 14px; margin: 15px 0 8px; color: #333; }
+.policy-section p { font-size: 13px; color: #666; line-height: 1.6; }
+.financing-row, .badges { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+.financing-row img { height: 28px; }
+.badges img { height: 24px; }
+
+/* 8. قسم السلة الفارغة */
+.empty-cart-wrap { text-align: center; padding: 40px 20px; }
+.empty-cart-card { background-color: #fff; padding: 30px; border-radius: 12px; max-width: 100%; margin: auto; border: 1px solid #e5e5e5; }
+.empty-cart-illustration { width: 100px; height: 100px; margin: 0 auto 20px; }
+.empty-cart-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+.empty-cart-sub { font-size: 15px; color: #666; margin-bottom: 25px; }
+.empty-cart-card .btn-primary { background-color: #152546; color: white; padding: 12px 30px; border-radius: 25px; text-decoration: none; font-weight: 600; display: inline-block; }
+
+
+/* بطاقة المنتج بشكل أفقي مطابق لصورة  */
+.product-card-cart {
+display: flex;
+  align-items: flex-start;
+  flex-direction: row; /* الصورة يسار والمحتوى يمين */
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  width: 100%;
+  max-width: none;
+  margin-bottom: 18px;
+  padding: 8px 8px 8px 0;
+  position: relative;
+  box-sizing: border-box;
+  min-height: 140px;
+  gap: 10px;
+}
+
+/* شريط التحديد العلوي */
+.card-checkbox {
+ display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  z-index: 1;
+  align-self: center; /* يضمن التوسيط عموديًا داخل بطاقة المنتج */
+}
+.card-checkbox input[type="checkbox"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  border: 2px solid #ddd;
+  background: #fff;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, box-shadow .15s, transform .12s;
+  display: inline-block;
+  vertical-align: middle;
+  position: relative;
+}
+.card-checkbox input[type="checkbox"]::after{
+  content: "";
+  display: block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  margin: auto;
+  transform: scale(0);
+  transition: transform .12s ease;
+  background: #ffffff;
+}
+.card-checkbox input[type="checkbox"]:checked {
+  background: #152546;
+  border-color: #D4AF37;
+  box-shadow: 0 0 0 2px rgba(249,115,22,0.12);
+}
+.card-checkbox input[type="checkbox"]:checked::after {
+  transform: scale(1);
+}
+/* زر الحذف */
+.remove-btn {
+position: absolute;
+  top: 18px;
+  left: 18px;
+  right: auto;
+}
+
+/* صورة المنتج */
+.product-card-cart .image {
+  width: 150px;
+  height: 150px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  margin-left: 0;
+  margin-right: 0px;
+  background: #fafafa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  order: 1; /* الصورة أول عنصر من جهة اليسار */
+}
+
+/* تفاصيل المنتج */
+.product-card-cart .details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  order: 2;
+}
+/* عنوان المنتج */
+.product-card-cart .title {
+  font-weight: 600;
+  font-size: 15px;
+  color: #222;
+  margin-bottom: -30px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* وصف مختصر */
+.product-card-cart .meta {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* شريط العروض */
+.product-card-cart .discount-info {
+  font-size: 14px;
+  color: #D4AF37;
+  font-weight: 700;
+  margin-bottom: 2px;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.product-card-cart .discount-info .dot {
+  font-size: 18px;
+  line-height: 0.5;
+  margin: 0 2px;
+}
+.product-card-cart .discount-info .since {
+  font-weight: 400;
+  color: #D4AF37;
+}
+
+/* الأسعار */
+.product-card-cart .price-container {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+.product-card-cart .current-price {
+  font-size: 18px;
+  font-weight: 700;
+  color: #D4AF37;
+}
+.product-card-cart .old-price {
+  font-size: 14px;
+  color: #999;
+  text-decoration: line-through;
+}
+.product-card-cart .discount-badge {
+  background: #fff3e7;
+  color: #D4AF37;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* محدد الكمية */
+.product-card-cart { position: relative; }
+
+/* الحاوية الخارجية */
+.product-card-cart .qty-container {
+  position: absolute;
+  bottom: 18px;
+  left: 0;
+  margin: 0;
+  background: transparent;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  pointer-events: auto;
+}
+
+/* الواجهة الظاهرة (الزر/الحقل الذي يفتح المنسدلات) */
+.product-card-cart .qty-dropdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  border: 1px solid #e8e8e8;
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 14px;
+  color: #222;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(18,24,40,0.06);
+  min-width: 80px;
+  user-select: none;
+  transition: box-shadow .12s ease, transform .08s ease;
+}
+
+/* عنوان صغير "الكمية" أقل بروزاً */
+.product-card-cart .qty-dropdown > span:first-child {
+  color: #777;
+  font-size: 12px;
+  font-weight: 600;
+  margin-inline-start: 4px;
+}
+
+/* أيقونة السهم */
+.product-card-cart .qty-dropdown .dropdown-icon {
+  font-size: 12px;
+  color: #666;
+  margin-inline-start: 6px;
+}
+
+/* قيمة الكمية (مرئية للمستخدم) */
+.product-card-cart .qty-dropdown .qty-value {
+  min-width: 34px;
+  text-align: center;
+  font-weight: 800;
+  font-size: 14px;
+  color: #111;
+  background: transparent;
+  padding: 0 4px;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* حالة التفاعل */
+.product-card-cart .qty-dropdown:active { transform: translateY(1px); }
+.product-card-cart .qty-dropdown:focus { outline: none; box-shadow: 0 0 0 6px rgba(249,115,22,0.08); }
+
+/* القائمة المنسدلة التي تُنشئها JS */
+.qty-options {
+  position: absolute !important;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 10px;
+  box-shadow: 0 12px 34px rgba(18,24,40,0.12);
+  overflow: hidden;
+  z-index: 9999;
+  min-width: 120px;
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 6px 6px;
+  direction: rtl; /* متناغم مع صفحة Arabic (RTL) */
+  transform-origin: top right;
+  transition: opacity .12s ease, transform .12s ease;
+  opacity: 1;
+}
+
+/* كل خيار داخل القائمة */
+.qty-option {
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin: 4px 0;
+  font-weight: 700;
+  font-size: 14px;
+  color: #111;
+  cursor: pointer;
+  white-space: nowrap;
+  text-align: center;
+  user-select: none;
+}
+
+/* تفاعل hover / active */
+.qty-option:hover {
+  background: rgba(249,115,22,0.08);
+  color: #D4AF37;
+}
+.qty-option:active {
+  transform: scale(.995);
+}
+
+/* خيار محدد */
+.qty-option.selected {
+  background: rgba(249,115,22,0.12);
+  color: #d95300;
+  box-shadow: inset 0 0 0 1px rgba(249,115,22,0.08);
+}
+
+/* تحسين للتمرير مهم على الهواتف */
+.qty-options::-webkit-scrollbar { width: 8px; }
+.qty-options::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.08); border-radius: 8px; }
+
+.qty-options { box-shadow: 0 12px 34px rgba(18,24,40,0.12); border-radius:10px; padding:6px; min-width:120px; max-height:240px; overflow:auto; background:#fff; border:1px solid rgba(0,0,0,0.06); }
+.qty-option { display:flex; align-items:center; justify-content:center; gap:8px; padding:8px 12px; margin:4px 0; border-radius:8px; cursor:pointer; font-weight:700; font-size:14px; color:#111; user-select:none; direction: rtl; }
+.qty-option .label { min-width:20px; text-align:center; }
+.qty-option .check { width:18px; color:#D4AF37; font-weight:900; display:inline-block; }
+.qty-option:hover { background: rgba(212,175,55,0.1); color:#D4AF37; }
+.qty-option.selected { background: rgba(249,115,22,0.12); color:#d95300; }
+
+h3 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: -30px;
+  margin-top: 30px;
+  text-align: start;
+}
+
+/* شريط التحديد أعلى منتجات السلة */
+.cart-selection-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: white;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  padding: 12px 15px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  max-width: 68.5%;
+}
+
+.select-all-option {
+  display: flex;
+  align-items: center;
+}
+
+.select-all-checkbox {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  user-select: none;
+}
+
+.select-all-checkbox input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkmark {
+  position: relative;
+  display: inline-block;
+  height: 18px;
+  width: 18px;
+  background-color: #fff;
+  border: 2px solid #ddd;
+  border-radius: 50%;
+  margin-left: 8px;
+  transition: all 0.2s ease;
+}
+
+.select-all-checkbox:hover input ~ .checkmark {
+  border-color: #ccc;
+}
+
+.select-all-checkbox input:checked ~ .checkmark {
+  background-color: #152546;
+  border-color: #D4AF37;
+}
+
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+  left: 50%;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: white;
+  transform: translate(-50%, -50%);
+}
+
+.select-all-checkbox input:checked ~ .checkmark:after {
+  display: block;
+}
+
+.selection-info {
+  font-size: 14px;
+  color: #555;
+}
+
+.selection-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.action-btn {
+  background: transparent;
+  border: none;
+  color: #D4AF37;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+.action-btn:disabled {
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+.action-btn:not(:disabled):hover {
+  background: rgba(249, 115, 22, 0.1);
+}
+
+.delete-selected {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.delete-selected:before {
+  content: "🗑️";
+  font-size: 14px;
+}
+
+
+
+
+
+/* 12. تصميم متجاوب للشاشات الصغيرة */
+@media (max-width: 992px) {
+  main#main { padding: 0 10px; }
+  .cart-layout-container { flex-direction: column-reverse; }
+  .cart-left { width: 100%; position: relative; top: 160px; height: auto; overflow-y: visible; margin-bottom: 100px; }
+/* 5. شريط الشحن المجاني */
+div.free-shipping-bar  {
+  display: flex;
+  align-items: center;
+  background-color: #f1ffea;
+  padding: 0px 0px;
+  border-radius: 0px;
+  margin-top: -30px;
+  margin-bottom: 20px;
+  max-width: 100%;
+  font-size: 11px;
+  font-weight: 300;
+}
+/* شريط التحديد أعلى منتجات السلة */
+.cart-selection-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: white;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  padding: 3px 7px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  max-width: 100%;
+}
+/* بطاقة المنتج بشكل أفقي مطابق لصورة  */
+.product-card-cart {
+display: flex;
+  align-items: flex-start;
+  flex-direction: row; /* الصورة يسار والمحتوى يمين */
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  width: 100%;
+  max-width: none;
+  margin-bottom: 18px;
+  padding: 8px 8px 8px 0;
+  position: relative;
+  box-sizing: border-box;
+  min-height: 140px;
+  gap: 10px;
+}
+/* صورة المنتج */
+.product-card-cart .image {
+  width: 120px;
+  height: 140px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  margin-left: 0;
+  margin-right: 0px;
+ padding: 0px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  order: 1; /* الصورة أول عنصر من جهة اليسار */
+  
+  
+}
+
+/* تفاصيل المنتج */
+.product-card-cart .details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  order: 2;
+}
+/* عنوان المنتج */
+.product-card-cart .title {
+  font-weight: 600;
+  font-size: 13px;
+  color: #222;
+  margin-bottom: -30px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* وصف مختصر */
+.product-card-cart .meta {
+  font-size: 11px;
+  color: #666;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.delete-selected:before {
+  content: "🗑️";
+  font-size: 11px;
+}
+/* زر الحذف */
+.remove-btn {
+position: absolute;
+  top: 18px;
+  left: 18px;
+  right: auto;
+  font-size: 10px;
+}
+
+/* وصف مختصر */
+.product-card-cart .meta {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* شريط العروض */
+.product-card-cart .discount-info {
+  font-size: 11px;
+  color: #D4AF37;
+  font-weight: 700;
+  margin-bottom: -4px;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.product-card-cart .discount-info .dot {
+  font-size: 11px;
+  line-height: 0.5;
+  margin: 0 2px;
+  margin-bottom: -7px;
+}
+.product-card-cart .discount-info .since {
+  font-weight: 400;
+  color: #D4AF37;
+  margin-bottom: -7px;
+}
+
+/* الأسعار */
+.product-card-cart .price-container {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 0px;
+}
+.product-card-cart .current-price {
+  font-size: 13px;
+  font-weight: 700;
+  color: #D4AF37;
+}
+.product-card-cart .old-price {
+  font-size: 11px;
+  color: #999;
+  text-decoration: line-through;
+}
+.product-card-cart .discount-badge {
+  background: #fff3e7;
+  color: #D4AF37;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* محدد الكمية */
+.product-card-cart { position: relative;  font-size: 11px;}
+/* الواجهة الظاهرة (الزر/الحقل الذي يفتح المنسدلات) */
+.product-card-cart .qty-dropdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  border: 1px solid #e8e8e8;
+  border-radius: 10px;
+  padding: 1px 10px;
+  font-size: 11px;
+  color: #222;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(18,24,40,0.06);
+  min-width: 30px;
+  user-select: none;
+  transition: box-shadow .12s ease, transform .08s ease;
+  margin-bottom: -15px;
+}
+
+/* عنوان صغير "الكمية" أقل بروزاً */
+.product-card-cart .qty-dropdown > span:first-child {
+  color: #777;
+  font-size: 10px;
+  font-weight: 200;
+  margin-inline-start: 4px;
+}
+
+/* أيقونة السهم */
+.product-card-cart .qty-dropdown .dropdown-icon {
+  font-size: 10px;
+  color: #666;
+  margin-inline-start: 6px;
+}
+
+/* قيمة الكمية (مرئية للمستخدم) */
+.product-card-cart .qty-dropdown .qty-value {
+  min-width: 30px;
+  text-align: center;
+  font-weight: 800;
+  font-size: 12px;
+  color: #111;
+  background: transparent;
+  padding: 0 4px;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: -30px;
+  margin-top: 150px;
+  text-align: start;
+}
+
+
+}
+
+</style>
+
+<body>
+
+  <div class="page">
+    <header class="main-header" id="mainHeader">
+      <div class="header-content">
+
+    <!-- الشعار -->
+    <div class="logo">
+      <a href="index.html"><img src="assets/logo.png" alt="X2 Logo" /></a>
+    </div>
+
+<!-- القائمة الجانبية للفئات -->
+<div class="dropdown">
+  <a href="categories.html" class="dropbtn-link" style="text-decoration:none;">
+    <button class="dropbtn" style="border:none;outline:none;background:transparent;padding:0;margin:0;box-shadow:none;">
+      ≣ <span data-i18n="جميع الفئات">جميع الفئات</span>
+    </button>
+  </a>
+
+  <div class="dropdown-content categories-menu">
+
+    <!-- 1.  مناسابات-->
+    <li class="category-item">
+      <a href="/categories/Occasions">🎉<span data-i18n=" مناسابات">مناسابات </span><span class="arrow">›</span></a>
+      <div class="flyout category-flyout">
+        <ul class="subcategories">
+          <li><a href="/categories/Occasions/National Day"><img src="assets/categories/Occasions/National Day.png" alt="اليوم الوطني"><span data-i18n="اليوم الوطني  ">اليوم الوطني  </span></a></li>
+          <li><a href="/categories/women/Haq Al-Laila"><img src="assets/categories/Occasions/Haq Al-Laila.png" alt="حق الليلة"><span data-i18n="حق الليلة ">حق الليلة </span></a></li>
+          <li><a href="/categories/women/Mother's Day"><img src="assets/categories/Occasions/Mother's Day.png" alt="عيد الام"><span data-i18n="عيد الام ">عيد الام </span></a></li>
+          <li><a href="/categories/women/Graduation"><img src="assets/categories/Occasions/Graduation.png" alt="تخرج"><span data-i18n="تخرج ">تخرج </span></a></li>
+          <li><a href="/categories/women/Eid"><img src="assets/categories/Occasions/Eid.png" alt="العيد"><span data-i18n="العيد ">العيد </span></a></li>
+          <li><a href="/categories/women/Hajj"><img src="assets/categories/Occasions/Hajj.png" alt="حج"><span data-i18n="حج ">حج </span></a></li>
+        </ul>
+      </div>
+    </li>
+
+    <!-- 2.  اكريلك -->
+    <li class="category-item">
+      <a href="/categories/Acrylic">💎<span data-i18n=" اكريلك">اكريلك </span><span class="arrow">›</span></a>
+      <div class="flyout category-flyout">
+        <ul class="subcategories">
+          <li><a href="/categories/Acrylic/Box"><img src="assets/categories/Acrylic/Box.png" alt="بوكس"><span data-i18n="بوكس">بوكس</span></a></li>
+          <li><a href="/categories/Acrylic/Tables"><img src="assets/categories/Acrylic/Tables.png" alt="طولات "><span data-i18n="طولات ">طولات </span></a></li>
+          <li><a href="/categories/Acrylic/Born in"><img src="assets/categories/Acrylic/Born in.png" alt="مواليد "><span data-i18n="مواليد ">مواليد </span></a></li>
+          <li><a href="/categories/Acrylic/censer"><img src="assets/categories/Acrylic/censer.png" alt="مباخر "><span data-i18n="مباخر ">مباخر </span></a></li>
+          <li><a href="/categories/Acrylic/Trays"><img src="assets/categories/Acrylic/Trays.png" alt="صواني "><span data-i18n="صواني ">صواني </span></a></li>
+          <li><a href="/categories/Acrylic/Stand"><img src="assets/categories/Acrylic/Stand.png" alt="استاند "><span data-i18n="استاند ">استاند </span></a></li>
+        </ul>
+      </div>
+    </li>
+
+    <!-- 3.  ورق -->
+    <li class="category-item">
+      <a href="/categories/paper">📄<span data-i18n="ورق ">ورق </span><span class="arrow">›</span></a>
+      <div class="flyout category-flyout">
+        <ul class="subcategories">
+          <li><a href="/categories/paper/Bags"><img src="assets/categories/paper/Bags.png" alt="شنط  "><span data-i18n="شنط  ">شنط  </span></a></li>
+          <li><a href="/categories/paper/Cups"><img src="assets/categories/paper/Cups.png" alt="كوب "><span data-i18n="كوب ">كوب </span></a></li>
+          <li><a href="/categories/paper/Tissues"><img src="assets/categories/paper/Tissues.png" alt="تيشو "><span data-i18n="تيشو ">تيشو </span></a></li>
+          <li><a href="/categories/paper/Stickers"><img src="assets/categories/paper/Stickers.png" alt="استيكر "><span data-i18n="استيكر ">استيكر </span></a></li>
+        </ul>
+      </div>
+    </li>
+
+    <!-- 4.  فوركس -->
+    <li class="category-item">
+      <a href="/categories/forex">🪙<span data-i18n="فوركس ">فوركس </span><span class="arrow">›</span></a>
+      <div class="flyout category-flyout">
+        <ul class="subcategories">
+          <li><a href="/categories/forex/tables"><img src="assets/categories/forex/tables.png" alt="طولات "><span data-i18n="طولات ">طولات </span></a></li>
+          <li><a href="/categories/forex/stands"><img src="assets/categories/forex/stands.png" alt="استاند  "><span data-i18n="استاند  ">استاند  </span></a></li>
+          <li><a href="/categories/forex/models"><img src="assets/categories/forex/models.png" alt="مجسم "><span data-i18n="مجسم ">مجسم </span></a></li>
+          <li><a href="/categories/forex/rotations"><img src="assets/categories/forex/rotations.png" alt="دوران "><span data-i18n="دوران ">دوران </span></a></li>
+        </ul>
+      </div>
+    </li>
+
+    <!-- 5.  خشب   -->
+    <li class="category-item">
+      <a href="/categories/wood">🪵<span data-i18n="خشب  "> خشب  </span><span class="arrow">›</span></a>
+      <div class="flyout category-flyout">
+        <ul class="subcategories">
+          <li><a href="/categories/wood/tables"><img src="assets/categories/wood/tables.png" alt="طولات "><span data-i18n="طولات">طولات </span></a></li>
+          <li><a href="/categories/wood/chairs"><img src="assets/categories/wood/chairs.png" alt="دوران "><span data-i18n="دوران  ">دوران  </span></a></li>
+          <li><a href="/categories/wood/benches"><img src="assets/categories/wood/benches.png" alt="مجسم "><span data-i18n="مجسم ">مجسم </span></a></li>
+          <li><a href="/categories/wood/cabinets"><img src="assets/categories/wood/cabinets.png" alt="استاند  "><span data-i18n="استاند  ">استاند  </span></a></li>
+        </ul>
+      </div>
+    </li>
+
+    <!-- 6.   جلد -->
+    <li class="category-item">
+      <a href="/categories/leather">👞<span data-i18n="جلد  ">جلد  </span><span class="arrow">›</span></a>
+      <div class="flyout category-flyout">
+        <ul class="subcategories">
+          <li><a href="/categories/leather/boxes"><img src="assets/categories/leather/boxes.png" alt="بوكسات "><span data-i18n="بوكسات ">بوكسات</span></a></li>
+          <li><a href="/categories/leather/born-in"><img src="assets/categories/leather/born-in.png" alt="مواليد "><span data-i18n="مواليد ">مواليد</span></a></li>
+          <li><a href="/categories/leather/trays"><img src="assets/categories/leather/trays.png" alt="صواني "><span data-i18n="صواني ">صواني</span></a></li>
+          <li><a href="/categories/leather/tables"><img src="assets/categories/leather/tables.png" alt="طولات "><span data-i18n="طولات ">طولات</span></a></li>
+        </ul>
+      </div>
+    </li>
+
+
+    <!-- 7.   استيكر -->
+    <li class="category-item">
+      <a href="/categories/sticker">🏷️<span data-i18n="استيكر">استيكر</span><span class="arrow">›</span></a>
+      <div class="flyout category-flyout">
+        <ul class="subcategories">
+          <li><a href="/categories/sticker/born-in"><img src="assets/categories/sticker/born-in.png" alt="مواليد "><span data-i18n="مواليد ">مواليد</span></a></li>
+          <li><a href="/categories/sticker/empty"><img src="assets/categories/sticker/empty.png" alt="مفرغ "><span data-i18n="مفرغ ">مفرغ</span></a></li>
+          <li><a href="/categories/sticker/full"><img src="assets/categories/sticker/full.png" alt="كامل "><span data-i18n="كامل ">كامل</span></a></li>
+          <li><a href="/categories/sticker/occasions"><img src="assets/categories/sticker/occasions.png" alt="المناسبات"><span data-i18n="المناسبات">المناسبات</span></a></li>
+        </ul>
+      </div>
+    </li>
+
+
+        <!-- 8.   رمضان -->
+    <li class="category-item">
+      <a href="/categories/ramadan">🌙<span data-i18n="رمضان">رمضان</span><span class="arrow">›</span></a>
+      <div class="flyout category-flyout">
+        <ul class="subcategories">
+          <li><a href="/categories/ramadan/wood"><img src="assets/categories/ramadan/wood.png" alt="خشب"><span data-i18n="خشب">خشب</span></a></li>
+          <li><a href="/categories/ramadan/acrylic"><img src="assets/categories/ramadan/acrylic.png" alt="اكريلك "><span data-i18n="اكريلك ">اكريلك</span></a></li>
+          <li><a href="/categories/ramadan/forex"><img src="assets/categories/ramadan/forex.png" alt="فوركس "><span data-i18n="فوركس ">فوركس </span></a></li>
+          <li><a href="/categories/ramadan/leather"><img src="assets/categories/ramadan/leather.png" alt="جلد "><span data-i18n="جلد "> جلد</span></a></li>
+        </ul>
+      </div>
+    </li>
+
+  </div>
+</div>
+
+
+
+    <!-- داخل شريط البحث -->
+<div class="search-container">
+<input type="text" id="textSearch"
+  placeholder="ابحث في x2-shopping"
+  data-i18n-placeholder="ابحث في x2-shopping">
+  <!-- أيقونة البحث -->
+  <span class="icon search" onclick="performTextSearch()">
+    🔍
+  </span>
+
+  <!-- أيقونة الكاميرا -->
+  <label class="icon camera" for="imageSearchInput">
+    📷
+  </label>
+  <input type="file" id="imageSearchInput" accept="image/*" style="display:none;">
+</div>
+
+
+    <!-- الحساب -->
+    <div class="dropdown">
+      <button class="dropbtn">🗣 <span data-i18n="الحساب">الحساب</span> </button>
+      <div class="dropdown-content">
+        <a href="#">🔑<span data-i18n="تسجيل الدخول"> تسجيل الدخول</span></a>
+        <a href="#">📝<span data-i18n="إنشاء حساب"> إنشاء حساب</span></a>
+      </div>
+    </div>
+
+   <!-- الدعم -->
+    <div class="dropdown">
+      <button class="dropbtn">☎<span data-i18n="الدعم">الدعم</span> </button>
+      <div class="dropdown-content">
+        <a href="/policy.html?page=contact">📘<span data-i18n="تواصل معنا"> تواصل معنا</span></a>
+        <a href="/policy.html?page=security-center">🛡️<span data-i18n="مركز الأمان"> مركز الأمان</span></a>
+        <a href="/policy.html?page=returns">📜<span data-i18n="سياسة الإرجاع والاسترداد"> سياسة الإرجاع والاسترداد</span></a>
+        <a href="/policy.html?page=shipping-info">📦 <span data-i18n="معلومات الشحن">معلومات الشحن</span></a>
+        <a href="/policy.html?page=work-with-x2-shopping">💱 <span data-i18n="اعمل مع x2-shopping">اعمل مع x2-shopping</span></a>
+      </div>
+    </div>
+
+    <!-- البلد -->
+    <div class="dropdown">
+      <button class="dropbtn">🏳️<span data-i18n="البلد">البلد</span> </button>
+      <div class="dropdown-content lang-country">
+        <label for="language">🌐<span data-i18n="اللغة"> اللغة</span></label>
+        <select id="language">
+          <option value="ar">العربية</option>
+          <option value="en">English</option>
+        </select>
+
+        <label for="currency">💱<span data-i18n="العملة"> العملة</span></label>
+        <select id="currency">
+          <option value="AED"><span data-i18n="درهم">درهم</span></option>
+          <option value="USD"><span data-i18n="دولار">دولار</span></option>
+          <option value="EUR"><span data-i18n="يورو">يورو</span></option>
+          <option value="SAR"><span data-i18n="ريال سعودي">ريال سعودي</span></option>
+          <option value="EGP"><span data-i18n="جنيه مصري">جنيه مصري</span></option>
+          <option value="KWD"><span data-i18n="دينار كويتي">دينار كويتي</span></option>
+          <option value="JOD"><span data-i18n="دينار أردني">دينار أردني</span></option>
+          <option value="GBP"><span data-i18n="جنيه إسترليني">جنيه إسترليني</span></option>
+        </select><br>
+
+        <div class="country-info">
+          🏳️ <span data-i18n="أنت الآن تتسوق في">أنت الآن تتسوق في</span> <span data-i18n="الإمارات"> الإمارات</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- السلة -->
+    <div class="cart">
+      <a href="#" title="سلة التسوق">
+        <svg class="cart-icon" xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-shopping-cart">
+          <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+          <path d="M6 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+          <path d="M17 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+          <path d="M17 17h-11v-14h-2" />
+          <path d="M6 5l14 1l-1 7h-13" />
+        </svg>
+        <span data-i18n=""></span>
+      </a>
+    </div>
+  </div>
+</header>
+
+<!-- ==== بداية قسم MAIN المعدل بالكامل ==== -->
+<main class="main" id="main">
+  <div class="free-shipping-bar" role="status" aria-live="polite">
+    <div class="truck" aria-hidden="true">🚚</div>
+    <div style="flex:1;text-align:right;font-size:13px" data-i18n="free_shipping_note">شحن مجاني (باستثناء العناصر التي يتم شحنها بواسطة المستودعات المحلية)</div>
+  </div>
+
+<!-- أضف هذا الكود في Cart.html قبل مباشرة div.cart-items-list -->
+<div class="cart-selection-bar">
+  <div class="select-all-option">
+    <label class="select-all-checkbox">
+      <input type="checkbox" id="selectAllCheckbox">
+      <span class="checkmark"></span>
+      <span data-i18n="تحديد الكل">تحديد الكل</span>
+    </label>
+  </div>
+  <div class="selection-info">
+    <span class="selected-count" data-i18n="المحدد">المحدد</span>: <span id="selectedItemsCount">0</span>
+  </div>
+  <div class="selection-actions">
+    <button id="deleteSelectedBtn" class="action-btn delete-selected" disabled>
+      <span data-i18n="حذف المحدد">حذف المحدد</span>
+    </button>
+  </div>
+</div>
+
+  <!-- الحاوية الرئيسية للتخطيط (عمود يمين وعمود يسار) -->
+  <div class="cart-layout-container">
+    
+    <!-- العمود الأيسر: ملخص الطلب (ثابت وقابل للتمرير) -->
+    <aside class="cart-left" aria-labelledby="order-summary">
+      <div class="order-summary">
+        <div class="summary-title" id="order-summary" data-i18n="ملخص الطلب">ملخص الطلب</div>
+
+        <div class="summary-line">
+          <span data-i18n="السعر الفرعي">السعر الفرعي</span>
+          <span class="subtotal" data-amount="" aria-live="polite">0.00 د.إ</span>
+        </div>
+
+        <div class="summary-line">
+          <span data-i18n="الخصم">الخصم</span>
+          <span class="discount discount-value" data-amount="" aria-live="polite">0.00 د.إ</span>
+        </div>
+
+        <div class="summary-line">
+          <span data-i18n="رسوم الشحن">رسوم الشحن</span>
+          <span class="shipping" data-amount="" aria-live="polite">مجاني</span>
+        </div>
+
+        <div class="summary-line total-line">
+          <strong data-i18n="الإجمالي">الإجمالي</strong>
+          <strong class="summary-total" data-amount="" aria-live="polite">0.00 د.إ</strong>
+        </div>
+        
+        <p class="summary-note" data-i18n="summary_note">يرجى الرجوع إلى مبلغ الدفعة الفعلي النهائي الخاص بك.</p>
+
+        <button class="checkout-btn" id="checkoutBtn" data-i18n="checkout_min_purchase">الحد الأدنى لإتمام الشراء 60 د.إ</button>
+
+        <button class="paypal-btn" aria-label="PayPal" data-i18n="paypal_checkout">إتمام الشراء السريع مع <strong style="margin-left:8px">PayPal</strong></button>
+
+        <div class="small-note" data-i18n="payment_note">
+          <span class="lock-icon">🔒</span> لن يتم تحصيل رسوم منك حتى تقوم بمراجعة هذا الطلب في الصفحة التالية.
+        </div>
+
+        <!-- قسم خيارات الدفع -->
+        <div class="policy-section">
+          <h4 data-i18n="secure_payment_options">خيارات الدفع الآمنة</h4>
+          <p data-i18n="pci_compliance_note">يلتزم x2-shopping بحماية معلومات الدفع الخاصة بك. نمتثل لمعايير أمن البيانات في صناعة بطاقات الدفع (PCI DSS)، ونستخدم تشفيراً قوياً، ونجري مراجعات منتظمة لنظامنا لحماية خصوصيتك.</p>
+          
+          <h5 data-i18n="payment_methods_title">1. طرق الدفع</h5>
+          <div class="financing-row" aria-hidden="true">
+            <img src="assets/pay/tamara.webp" alt="Tamara" title="Tamara">
+            <img src="assets/pay/tabby.webp" alt="Tabby" title="Tabby">
+            <img src="assets/pay/visa.webp" alt="Visa" title="Visa">
+            <img src="assets/pay/mastercard.webp" alt="Mastercard" title="Mastercard">
+            <img src="assets/pay/amex.webp" alt="American Express" title="American Express">
+            <img src="assets/pay/applepay.webp" alt="Apple Pay" title="Apple Pay">
+            <img src="assets/pay/googlepay.webp" alt="Google Pay" title="Google Pay">
+          </div>
+
+          <h5 data-i18n="security_certs_title">2. شهادة الأمان</h5>
+          <div class="badges" aria-hidden="true">
+            <img src="assets/secure/pci.webp" alt="PCI DSS" title="PCI DSS">
+            <img src="assets/secure/apwg.webp" alt="APWG" title="APWG">
+            <img src="assets/secure/protectbuy.webp" alt="ProtectBuy" title="ProtectBuy">
+            <img src="assets/secure/safekey.webp" alt="SafeKey" title="SafeKey">
+            <img src="assets/secure/idcheck.webp" alt="ID Check" title="ID Check">
+          </div>
+        </div>
+
+        <!-- قسم تأمين الخصوصية -->
+        <div class="policy-section">
+          <strong data-i18n="تأمين الخصوصية">تأمين الخصوصية</strong>
+          <p data-i18n="privacy_note">حماية خصوصيتك أمر بالغ الأهمية بالنسبة لنا. سيُحتفظ بمعلوماتك الشخصية آمنة ولن نشاركها إلا حسب سياسة الخصوصية.</p>
+        </div>
+        
+        <!-- بنود السياسة -->
+        <div class="policy-section">
+          <strong data-i18n="سياسة الإرجاع">سياسة الإرجاع</strong>
+          <p data-i18n="returns_note">نقبل إرجاع المنتجات ضمن شروطنا. سيتم توضيح خطوات الإرجاع وكيفية استرداد المبلغ في صفحة سياسة الإرجاع.</p>
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- العمود الأيمن: محتوى السلة أو المنتجات الموصى بها -->
+    <div class="cart-right">
+      
+      <!-- المنتجات الفعلية في السلة ستظهر هنا بواسطة JS -->
+      <div class="cart-items-list">
+        <!-- Product cards go here -->
+      </div>
+
+      <!-- قسم السلة الفارغة (يتم التحكم به عبر JS) -->
+      <div class="empty-cart-wrap">
+        <div class="empty-cart-card" role="region" aria-label="Empty cart">
+          <div class="empty-cart-illustration" aria-hidden="true">
+            <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect x="6" y="12" width="44" height="28" rx="4" fill="#f3f6fb"/>
+              <path d="M12 20h30l6 12H18" stroke="#cfd8e6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="22" cy="46" r="4" fill="#e9eef8"/>
+              <circle cx="42" cy="46" r="4" fill="#e9eef8"/>
+              <path d="M20 46h4" stroke="#cfd8e6" stroke-width="2" stroke-linecap="round"/>
+              <path d="M38 46h4" stroke="#cfd8e6" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h2 id="empty-cart-title" class="empty-cart-title" data-i18n="cart_empty_title">عربة التسوق الخاصة بك فارغة</h2>
+          <p class="empty-cart-sub" data-i18n="cart_empty_sub">إضافة سلعك المفضلة.</p>
+          <a href="index.html" class="btn-primary" data-i18n="view_trending">رؤية المنتجات الرائجة</a>
+        </div>
+      </div>
+
+      <!-- منتجات موصى بها -->
+       <h3 class="recommended-title" data-i18n="x2-shopping_picks">استكشف اختيارات x2-shopping لك</h3>
+      <div id="category-products" style="margin-top: 40px;">
+        <div class="product-grid">
+          <!-- Product items will be loaded here -->
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+<!-- ==== نهاية قسم MAIN المعدل بالكامل ==== -->
+
+
+<footer class="site-footer">
+  <div class="footer-info-bar">
+    <div class="footer-columns">
+      <!-- معلومات عن x2-shopping -->
+      <div class="footer-column">
+        <strong data-i18n="معلومات عن x2-shopping">معلومات عن x2-shopping</strong>
+        <ul>
+          <li><a href="/policy/about" data-i18n="نبذة عن x2-shopping">نبذة عن x2-shopping</a></li>
+          <li><a href="/policy/shop-like-pro" data-i18n="تسوق مثل المحترفين">تسوق مثل المحترفين</a></li>
+          <li><a href="/policy/affiliate-commission" data-i18n="التابع والمكافآت: اكسب عمولة">التابع والمكافآت: اكسب عمولة</a></li>
+          <li><a href="/policy/contact" data-i18n="تواصل معنا">تواصل معنا</a></li>
+          <li><a href="/policy/media-outlets" data-i18n="المنافذ الإعلامية">المنافذ الإعلامية</a></li>
+          <li><a href="/policy/tree-planting" data-i18n="برنامج زراعة الأشجار في x2-shopping">برنامج زراعة الأشجار في x2-shopping</a></li>
+        </ul>
+      </div>
+      <!-- خدمة العملاء -->
+      <div class="footer-column">
+        <strong data-i18n="خدمة العملاء">خدمة العملاء</strong>
+        <ul>
+          <li><a href="/policy/customer-service" data-i18n="خدمة العملاء">خدمة العملاء</a></li>
+          <li><a href="/policy/returns" data-i18n="سياسة الإرجاع والاسترداد">سياسة الإرجاع والاسترداد</a></li>
+          <li><a href="/policy/intellectual-property" data-i18n="سياسة الملكية الفكرية">سياسة الملكية الفكرية</a></li>
+          <li><a href="/policy/shipping-info" data-i18n="معلومات الشحن">معلومات الشحن</a></li>
+          <li><a href="/policy/report-abuse" data-i18n="الإبلاغ عن النشاط المشبوه">الإبلاغ عن النشاط المشبوه</a></li>
+        </ul>
+      </div>
+      <!-- المساعدة -->
+      <div class="footer-column">
+        <strong data-i18n="المساعدة">المساعدة</strong>
+        <ul>
+          <li><a href="/policy/support-faq" data-i18n="مركز الدعم والأسئلة الشائعة">مركز الدعم والأسئلة الشائعة</a></li>
+          <li><a href="/policy/security-center" data-i18n="مركز الأمان">مركز الأمان</a></li>
+          <li><a href="/policy/buyer-protection" data-i18n="حماية المشتري في x2-shopping">حماية المشتري في x2-shopping</a></li>
+          <li><a href="/policy/work-with-x2-shopping" data-i18n="اعمل مع x2-shopping">اعمل مع x2-shopping</a></li>
+        </ul>
+      </div>
+      <!-- تنزيل تطبيق x2-shopping -->
+      <div class="footer-app-section">
+        <strong data-i18n="تنزيل تطبيق x2-shopping">تنزيل تطبيق x2-shopping</strong>
+        <ul>
+          <li data-i18n="تنبيهات انخفاض الأسعار، العروض، الخصومات">تنبيهات انخفاض الأسعار، العروض، الخصومات</li>
+          <li data-i18n="عملية دفع آمنة وإرجاع آمن">عملية دفع آمنة وإرجاع آمن</li>
+          <li data-i18n="تتبع الطلبات في أي وقت">تتبع الطلبات في أي وقت</li>
+          <li data-i18n="تنبيهات توفر المنتج بكميات">تنبيهات توفر المنتج بكميات</li>
+        </ul>
+        <div class="footer-app-buttons">
+          <a href="#"><img src="assets/app/Google Play.png" alt="Google Play"></a>
+          <a href="#"><img src="assets/app/App Store.png" alt="App Store"></a>
+        </div>
+      </div>
+    </div>
+    <!-- تواصل معنا -->
+    <div class="footer-social">
+      <strong data-i18n="تواصل معنا">تواصل معنا</strong>
+      <div class="footer-social-icons">
+        <a href="#" aria-label="Instagram">
+          <img src="assets/social/instagram.png" alt="Instagram" style="width:30px;height:30px;">
+        </a>
+        <a href="https://www.facebook.com/x2shopping.store" aria-label="Facebook">
+          <img src="assets/social/facebook.png" alt="Facebook" style="width:30px;height:30px;">
+        </a>
+        <a href="#" aria-label="Twitter">
+          <img src="assets/social/twitter.png" alt="Twitter" style="width:30px;height:30px;">
+        </a>
+        <a href="#" aria-label="YouTube">
+          <img src="assets/social/youtube.png" alt="YouTube" style="width:30px;height:30px;">
+        </a>
+        <a href="#" aria-label="TikTok">
+          <img src="assets/social/tiktok.png" alt="TikTok" style="width:30px;height:30px;">
+        </a>
+        <a href="#" aria-label="Pinterest">
+          <img src="assets/social/pinterest.png" alt="Pinterest" style="width:30px;height:30px;">
+        </a>
+        <a href="#" aria-label="Snapchat">
+          <img src="assets/social/snapchat.png" alt="Snapchat" style="width:30px;height:30px;">
+        </a>
+      </div>
+    </div>
+    <!-- صف الدفع وشهادة الأمان -->
+    <div class="footer-bottom-row">
+      <div class="footer-pay-methods">
+        <div class="footer-pay-methods-title" data-i18n="نحن نقبل">نحن نقبل</div>
+        <div class="footer-pay-icons">
+          <img src="assets/pay/visa.webp" alt="Visa">
+          <img src="assets/pay/mastercard.webp" alt="MasterCard">
+          <img src="assets/pay/amex.webp" alt="American Express">
+          <img src="assets/pay/paypal.webp" alt="PayPal">
+          <img src="assets/pay/applepay.webp" alt="Apple Pay">
+          <img src="assets/pay/googlepay.webp" alt="Google Pay">
+          <img src="assets/pay/miza.webp" alt="miza">
+          <img src="assets/pay/tamara.webp" alt="Tamara">
+          <img src="assets/pay/tabby.webp" alt="Tabby">
+          <img src="assets/pay/fawri.webp" alt="fawri">
+          <img src="assets/pay/Knet.webp" alt="Knet">
+          <img src="assets/pay/Benefit Pay.webp" alt="Benefit Pay">
+          <img src="assets/pay/Oman Net.webp" alt="Oman Net">
+        </div>
+      </div>
+      <div class="footer-security-badges">
+        <div class="footer-security-badges-title" data-i18n="شهادة الأمان">شهادة الأمان</div>
+        <div class="footer-security-icons">
+          <img src="assets/secure/apwg.webp" alt="APWG">
+          <img src="assets/secure/protectbuy.webp" alt="ProtectBuy">
+          <img src="assets/secure/safekey.webp" alt="SafeKey">
+          <img src="assets/secure/idcheck.webp" alt="ID Check">
+          <img src="assets/secure/pci.webp" alt="PCI DSS">
+        </div>
+      </div>
+    </div>
+       <p data-i18n="جميع الحقوق محفوظة © x2-shopping">جميع الحقوق محفوظة © x2-shopping</p>
+</div>
+  </div>
+</footer>
+<script src="java/main.js" defer></script>
+<script type="module" src="./java/Cart.js"></script>
+<script src="translations/translation.js" defer></script>
+<script src="java/footer-pages.js" defer></script>
+<script src="mobile-nav-bar/main-navbar.js" defer></script> 
+<script type="module" src="./java/Products.js"></script> <!-- ده يفضل يفضل في الآخر -->
+</body>
+</html>
+

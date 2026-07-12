@@ -1,0 +1,298 @@
+[
+  {
+    "name": { "ar": "مناسبات", "en": "Occasions" },
+    "categorySlug": "Occasions",
+    "image": "assets/categories/Occasions/National Day.png",
+    "description": { "ar": "منتجات وهدايا لكل المناسبات.", "en": "Products and gifts for all occasions." },
+    "url": "/categories/Occasions",
+    "order": 1,
+    "subcategories": [
+      {
+        "name": { "ar": "اليوم الوطني", "en": "National Day" },
+        "categorySlug": "National Day",
+        "image": "assets/categories/Occasions/National Day.png",
+        "url": "/categories/Occasions/National Day"
+      },
+      {
+        "name": { "ar": "حق الليلة", "en": "Haq Al-Laila" },
+        "categorySlug": "Haq Al-Laila",
+        "image": "assets/categories/Occasions/Haq Al-Laila.png",
+        "url": "/categories/Occasions/Haq Al-Laila"
+      },
+      {
+        "name": { "ar": "عيد الأم", "en": "Mother's Day" },
+        "categorySlug": "Mother's Day",
+        "image": "assets/categories/Occasions/Mother's Day.png",
+        "url": "/categories/Occasions/Mother's Day"
+      },
+      {
+        "name": { "ar": "تخرج", "en": "Graduation" },
+        "categorySlug": "Graduation",
+        "image": "assets/categories/Occasions/Graduation.png",
+        "url": "/categories/Occasions/Graduation"
+      },
+      {
+        "name": { "ar": "العيد", "en": "Eid" },
+        "categorySlug": "Eid",
+        "image": "assets/categories/Occasions/Eid.png",
+        "url": "/categories/Occasions/Eid"
+      },
+      {
+        "name": { "ar": "حج", "en": "Hajj" },
+        "categorySlug": "Hajj",
+        "image": "assets/categories/Occasions/Hajj.png",
+        "url": "/categories/Occasions/Hajj"
+      }
+    ]
+  },
+  {
+    "name": { "ar": "اكريلك", "en": "Acrylic" },
+    "categorySlug": "Acrylic",
+    "image": "assets/categories/Acrylic/Box.png",
+    "description": { "ar": "منتجات الأكريلك.", "en": "Acrylic products." },
+    "url": "/categories/Acrylic",
+    "order": 2,
+    "subcategories": [
+      {
+        "name": { "ar": "بوكس", "en": "Box" },
+        "categorySlug": "Box",
+        "image": "assets/categories/Acrylic/Box.png",
+        "url": "/categories/Acrylic/Box"
+      },
+      {
+        "name": { "ar": "طولات", "en": "Tables" },
+        "categorySlug": "Tables",
+        "image": "assets/categories/Acrylic/Tables.png",
+        "url": "/categories/Acrylic/Tables"
+      },
+      {
+        "name": { "ar": "مواليد", "en": "Born in" },
+        "categorySlug": "Born in",
+        "image": "assets/categories/Acrylic/Born in.png",
+        "url": "/categories/Acrylic/Born in"
+      },
+      {
+        "name": { "ar": "مباخر", "en": "Censer" },
+        "categorySlug": "censer",
+        "image": "assets/categories/Acrylic/censer.png",
+        "url": "/categories/Acrylic/censer"
+      },
+      {
+        "name": { "ar": "صواني", "en": "Trays" },
+        "categorySlug": "Trays",
+        "image": "assets/categories/Acrylic/Trays.png",
+        "url": "/categories/Acrylic/Trays"
+      },
+      {
+        "name": { "ar": "استاند", "en": "Stand" },
+        "categorySlug": "Stand",
+        "image": "assets/categories/Acrylic/Stand.png",
+        "url": "/categories/Acrylic/Stand"
+      }
+    ]
+  },
+  {
+    "name": { "ar": "ورق", "en": "Paper" },
+    "categorySlug": "paper",
+    "image": "assets/categories/paper/Bags.png",
+    "description": { "ar": "منتجات الورق.", "en": "Paper products." },
+    "url": "/categories/paper",
+    "order": 3,
+    "subcategories": [
+      {
+        "name": { "ar": "شنط", "en": "Bags" },
+        "categorySlug": "Bags",
+        "image": "assets/categories/paper/Bags.png",
+        "url": "/categories/paper/Bags"
+      },
+      {
+        "name": { "ar": "كوب", "en": "Cups" },
+        "categorySlug": "Cups",
+        "image": "assets/categories/paper/Cups.png",
+        "url": "/categories/paper/Cups"
+      },
+      {
+        "name": { "ar": "تيشو", "en": "Tissues" },
+        "categorySlug": "Tissues",
+        "image": "assets/categories/paper/Tissues.png",
+        "url": "/categories/paper/Tissues"
+      },
+      {
+        "name": { "ar": "استيكر", "en": "Stickers" },
+        "categorySlug": "Stickers",
+        "image": "assets/categories/paper/Stickers.png",
+        "url": "/categories/paper/Stickers"
+      }
+    ]
+  },
+  {
+    "name": { "ar": "فوركس", "en": "Forex" },
+    "categorySlug": "Forex",
+    "image": "assets/categories/forex/tables.png",
+    "description": { "ar": "منتجات الفوركس.", "en": "Forex board products." },
+    "url": "/categories/Forex",
+    "order": 4,
+    "subcategories": [
+      {
+        "name": { "ar": "طولات", "en": "Tables" },
+        "categorySlug": "tables",
+        "image": "assets/categories/forex/tables.png",
+        "url": "/categories/forex/tables"
+      },
+      {
+        "name": { "ar": "استاند", "en": "Stands" },
+        "categorySlug": "stands",
+        "image": "assets/categories/forex/stands.png",
+        "url": "/categories/forex/stands"
+      },
+      {
+        "name": { "ar": "مجسم", "en": "Models" },
+        "categorySlug": "models",
+        "image": "assets/categories/forex/models.png",
+        "url": "/categories/forex/models"
+      },
+      {
+        "name": { "ar": "دوران", "en": "Rotations" },
+        "categorySlug": "rotations",
+        "image": "assets/categories/forex/rotations.png",
+        "url": "/categories/forex/rotations"
+      }
+    ]
+  },
+  {
+    "name": { "ar": "خشب", "en": "Wood" },
+    "categorySlug": "wood",
+    "image": "assets/categories/wood/tables.png",
+    "description": { "ar": "منتجات الخشب.", "en": "Wood products." },
+    "url": "/categories/wood",
+    "order": 5,
+    "subcategories": [
+      {
+        "name": { "ar": "طولات", "en": "Tables" },
+        "categorySlug": "tables",
+        "image": "assets/categories/wood/tables.png",
+        "url": "/categories/wood/tables"
+      },
+      {
+        "name": { "ar": "دوران", "en": "Chairs" },
+        "categorySlug": "chairs",
+        "image": "assets/categories/wood/chairs.png",
+        "url": "/categories/wood/chairs"
+      },
+      {
+        "name": { "ar": "مجسم", "en": "Benches" },
+        "categorySlug": "benches",
+        "image": "assets/categories/wood/benches.png",
+        "url": "/categories/wood/benches"
+      },
+      {
+        "name": { "ar": "استاند", "en": "Cabinets" },
+        "categorySlug": "cabinets",
+        "image": "assets/categories/wood/cabinets.png",
+        "url": "/categories/wood/cabinets"
+      }
+    ]
+  },
+  {
+    "name": { "ar": "جلد", "en": "Leather" },
+    "categorySlug": "leather",
+    "image": "assets/categories/leather/boxes.png",
+    "description": { "ar": "منتجات الجلد.", "en": "Leather products." },
+    "url": "/categories/leather",
+    "order": 6,
+    "subcategories": [
+      {
+        "name": { "ar": "بوكسات", "en": "Boxes" },
+        "categorySlug": "boxes",
+        "image": "assets/categories/leather/boxes.png",
+        "url": "/categories/leather/boxes"
+      },
+      {
+        "name": { "ar": "مواليد", "en": "Born in" },
+        "categorySlug": "born-in",
+        "image": "assets/categories/leather/born-in.png",
+        "url": "/categories/leather/born-in"
+      },
+      {
+        "name": { "ar": "صواني", "en": "Trays" },
+        "categorySlug": "trays",
+        "image": "assets/categories/leather/trays.png",
+        "url": "/categories/leather/trays"
+      },
+      {
+        "name": { "ar": "طولات", "en": "Tables" },
+        "categorySlug": "tables",
+        "image": "assets/categories/leather/tables.png",
+        "url": "/categories/leather/tables"
+      }
+    ]
+  },
+  {
+    "name": { "ar": "استيكر", "en": "Sticker" },
+    "categorySlug": "sticker",
+    "image": "assets/categories/sticker/full.png",
+    "description": { "ar": "منتجات الاستيكر.", "en": "Sticker products." },
+    "url": "/categories/sticker",
+    "order": 7,
+    "subcategories": [
+      {
+        "name": { "ar": "مواليد", "en": "Born in" },
+        "categorySlug": "born-in",
+        "image": "assets/categories/sticker/born-in.png",
+        "url": "/categories/sticker/born-in"
+      },
+      {
+        "name": { "ar": "مفرغ", "en": "Empty" },
+        "categorySlug": "empty",
+        "image": "assets/categories/sticker/empty.png",
+        "url": "/categories/sticker/empty"
+      },
+      {
+        "name": { "ar": "كامل", "en": "Full" },
+        "categorySlug": "full",
+        "image": "assets/categories/sticker/full.png",
+        "url": "/categories/sticker/full"
+      },
+      {
+        "name": { "ar": "المناسبات", "en": "Occasions" },
+        "categorySlug": "occasions",
+        "image": "assets/categories/sticker/occasions.png",
+        "url": "/categories/sticker/occasions"
+      }
+    ]
+  },
+  {
+    "name": { "ar": "رمضان", "en": "Ramadan" },
+    "categorySlug": "ramadan",
+    "image": "assets/categories/ramadan/wood.png",
+    "description": { "ar": "منتجات رمضان.", "en": "Ramadan products." },
+    "url": "/categories/ramadan",
+    "order": 8,
+    "subcategories": [
+      {
+        "name": { "ar": "خشب", "en": "Wood" },
+        "categorySlug": "wood",
+        "image": "assets/categories/ramadan/wood.png",
+        "url": "/categories/ramadan/wood"
+      },
+      {
+        "name": { "ar": "اكريلك", "en": "Acrylic" },
+        "categorySlug": "acrylic",
+        "image": "assets/categories/ramadan/acrylic.png",
+        "url": "/categories/ramadan/acrylic"
+      },
+      {
+        "name": { "ar": "فوركس", "en": "Forex" },
+        "categorySlug": "forex",
+        "image": "assets/categories/ramadan/forex.png",
+        "url": "/categories/ramadan/forex"
+      },
+      {
+        "name": { "ar": "جلد", "en": "Leather" },
+        "categorySlug": "leather",
+        "image": "assets/categories/ramadan/leather.png",
+        "url": "/categories/ramadan/leather"
+      }
+    ]
+  }
+]

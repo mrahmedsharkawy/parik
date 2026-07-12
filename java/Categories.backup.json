@@ -1,0 +1,1783 @@
+[
+  {
+    "name": {
+      "ar": "ملابس نسائية",
+      "en": "Women's Clothing"
+    },
+    "categorySlug": "women",
+    "image": "assets/categories/Women's Clothing/main.webp",
+    "description": {
+      "ar": "كل ما يخص الموضة النسائية.",
+      "en": "Everything related to women's fashion."
+    },
+    "url": "/categories/women",
+    "order": 1,
+    "seoKeywords": {
+      "ar": ["ملابس نسائية", "فساتين", "بلوزات", "اكسسوارات نسائية"],
+      "en": ["women's clothing", "dresses", "blouses", "women's accessories"]
+    },
+    "seoTitle": {
+      "ar": "ملابس نسائية - أحدث صيحات الموضة",
+      "en": "Women's Clothing - Latest Fashion Trends"
+    },
+    "subcategories": [
+      {
+        "name": {
+          "ar": "الملابس الخارجية والسترات نسائية",
+          "en": "Outerwear & Jackets"
+        },
+        "categorySlug": "outerwear-jackets",
+        "image": "assets/categories/Women's Clothing/Outerwear & Jackets.webp",
+        "description": {
+          "ar": "جاكيتات وسترات نسائية.",
+          "en": "Women's jackets and coats."
+        },
+        "url": "/categories/women/outerwear-jackets",
+        "seoTitle": {
+          "ar": "الملابس الخارجية والسترات نسائية",
+          "en": "Women's Outerwear & Jackets"
+        }
+      },
+      {
+        "name": {
+          "ar": "حفلات الزفاف والمناسبات",
+          "en": "Weddings & Events"
+        },
+        "categorySlug": "weddings-events",
+        "image": "assets/categories/Women's Clothing/Weddings & Events.webp",
+        "description": {
+          "ar": "فساتين ومستلزمات المناسبات النسائية.",
+          "en": "Dresses and accessories for women's events."
+        },
+        "url": "/categories/women/weddings-events",
+        "seoTitle": {
+          "ar": "فساتين حفلات الزفاف والمناسبات",
+          "en": "Wedding & Event Dresses"
+        }
+      },
+      {
+        "name": {
+          "ar": "بناطيل نسائية",
+          "en": "Women's Bottoms"
+        },
+        "categorySlug": "bottoms",
+        "image": "assets/categories/Women's Clothing/Bottoms.webp",
+        "description": {
+          "ar": "تشكيلة بناطيل نسائية.",
+          "en": "Collection of women's pants and bottoms."
+        },
+        "url": "/categories/women/bottoms",
+        "seoTitle": {
+          "ar": "بناطيل نسائية",
+          "en": "Women's Bottoms"
+        }
+      },
+      {
+        "name": {
+          "ar": "ترنج وبدله",
+          "en": "Tops & Sets"
+        },
+        "categorySlug": "tops-sets",
+        "image": "assets/categories/Women's Clothing/Tops & Sets.webp",
+        "description": {
+          "ar": "أطقم رياضية وبدل نسائية.",
+          "en": "Women's sportswear and sets."
+        },
+        "url": "/categories/women/tops-sets",
+        "seoTitle": {
+          "ar": "ترنج وبدله نسائي",
+          "en": "Women's Tops & Sets"
+        }
+      },
+      {
+        "name": {
+          "ar": "ملابس للأزواج والآباء والأطفال",
+          "en": "Couple & Parent-Child Clothing"
+        },
+        "categorySlug": "couple-parent-child-clothing",
+        "image": "assets/categories/Women's Clothing/Couple&Parent-Child Clothing.webp",
+        "description": {
+          "ar": "ملابس متطابقة للأزواج والآباء والأطفال.",
+          "en": "Matching outfits for couples, parents and children."
+        },
+        "url": "/categories/women/couple-parent-child-clothing",
+        "seoTitle": {
+          "ar": "ملابس للأزواج والآباء والأطفال",
+          "en": "Couple & Parent-Child Clothing"
+        }
+      },
+      {
+        "name": {
+          "ar": "اكسسوارات نسائية",
+          "en": "Women's Accessories"
+        },
+        "categorySlug": "accessories",
+        "image": "assets/categories/Women's Clothing/Accessories.webp",
+        "description": {
+          "ar": "إكسسوارات مكملة لإطلالتك النسائية.",
+          "en": "Accessories to complement your women's look."
+        },
+        "url": "/categories/women/accessories",
+        "seoTitle": {
+          "ar": "اكسسوارات نسائية",
+          "en": "Women's Accessories"
+        }
+      }
+    ]
+  },
+  {
+    "name": {
+      "ar": "ملابس رجالية",
+      "en": "Men's Clothing"
+    },
+    "categorySlug": "men",
+    "image": "assets/categories/Men's Clothing/main.webp",
+    "description": {
+      "ar": "أحدث صيحات الموضة الرجالية.",
+      "en": "Latest men's fashion trends."
+    },
+    "url": "/categories/men",
+    "order": 2,
+    "seoKeywords": {
+      "ar": ["ملابس رجالية", "تيشيرتات", "بناطيل", "اكسسوارات رجالية"],
+      "en": ["men's clothing", "t-shirts", "pants", "men's accessories"]
+    },
+    "seoTitle": {
+      "ar": "ملابس رجالية - موضة وأزياء",
+      "en": "Men's Clothing - Fashion & Style"
+    },
+    "subcategories": [
+      {
+        "name": {
+          "ar": "تيشيرتات",
+          "en": "T-Shirts"
+        },
+        "categorySlug": "t-shirts",
+        "image": "assets/categories/Men's Clothing/T-Shirts.webp",
+        "description": {
+          "ar": "تيشيرتات رجالية عصرية.",
+          "en": "Modern men's t-shirts."
+        },
+        "url": "/categories/men/t-shirts",
+        "seoTitle": {
+          "ar": "تيشيرتات رجالية",
+          "en": "Men's T-Shirts"
+        }
+      },
+      {
+        "name": {
+          "ar": "بناطيل رجالية",
+          "en": "Men's Bottoms"
+        },
+        "categorySlug": "bottoms",
+        "image": "assets/categories/Men's Clothing/Bottoms.webp",
+        "description": {
+          "ar": "بناطيل رجالية لجميع الإطلالات.",
+          "en": "Men's pants for all looks."
+        },
+        "url": "/categories/men/bottoms",
+        "seoTitle": {
+          "ar": "بناطيل رجالية",
+          "en": "Men's Bottoms"
+        }
+      },
+      {
+        "name": {
+          "ar": "القبعات والطاقيات",
+          "en": "Hats & Caps"
+        },
+        "categorySlug": "hats-caps",
+        "image": "assets/categories/Men's Clothing/Hats & Caps.webp",
+        "description": {
+          "ar": "قبعات وطاقيات رجالية.",
+          "en": "Men's hats and caps."
+        },
+        "url": "/categories/men/hats-caps",
+        "seoTitle": {
+          "ar": "القبعات والطاقيات",
+          "en": "Hats & Caps"
+        }
+      },
+      {
+        "name": {
+          "ar": "الملابس الخارجية والسترات رجالية",
+          "en": "Men's Outerwear & Jackets"
+        },
+        "categorySlug": "outerwear-jackets",
+        "image": "assets/categories/Men's Clothing/Outerwear & Jackets.webp",
+        "description": {
+          "ar": "سترات وجاكيتات رجالية.",
+          "en": "Men's coats and jackets."
+        },
+        "url": "/categories/men/outerwear-jackets",
+        "seoTitle": {
+          "ar": "الملابس الخارجية والسترات رجالية",
+          "en": "Men's Outerwear & Jackets"
+        }
+      },
+      {
+        "name": {
+          "ar": "اكسسوارات رجالية",
+          "en": "Men's Accessories"
+        },
+        "categorySlug": "accessories",
+        "image": "assets/categories/Men's Clothing/Accessories.webp",
+        "description": {
+          "ar": "إكسسوارات رجالية متنوعة.",
+          "en": "Various men's accessories."
+        },
+        "url": "/categories/men/accessories",
+        "seoTitle": {
+          "ar": "اكسسوارات رجالية",
+          "en": "Men's Accessories"
+        }
+      },
+      {
+        "name": {
+          "ar": "الملابس الداخلية وملابس النوم",
+          "en": "Underwear & Loungewear"
+        },
+        "categorySlug": "underwear-loungewear",
+        "image": "assets/categories/Men's Clothing/Underwear & Loungewear.webp",
+        "description": {
+          "ar": "ملابس داخلية وبيجامات رجالية.",
+          "en": "Men's underwear and pajamas."
+        },
+        "url": "/categories/men/underwear-loungewear",
+        "seoTitle": {
+          "ar": "الملابس الداخلية وملابس النوم رجالي",
+          "en": "Men's Underwear & Loungewear"
+        }
+      }
+    ]
+  },
+  {
+    "name": {
+      "ar": "الصحة والجمال",
+      "en": "Health & Beauty"
+    },
+    "categorySlug": "health-beauty",
+    "image": "assets/categories/Health, Beauty & Hair/main.webp",
+    "description": {
+      "ar": "منتجات الصحة والجمال والعناية الشخصية.",
+      "en": "Health, beauty and personal care products."
+    },
+    "url": "/categories/health-beauty",
+    "order": 3,
+    "seoKeywords": {
+      "ar": ["الصحة", "الجمال", "العناية بالبشرة", "مكياج", "العناية بالشعر"],
+      "en": ["health", "beauty", "skincare", "makeup", "hair care"]
+    },
+    "seoTitle": {
+      "ar": "الصحة والجمال - منتجات العناية الشخصية",
+      "en": "Health & Beauty - Personal Care Products"
+    },
+    "subcategories": [
+      {
+        "name": {
+          "ar": "فن الأظافر والأدوات",
+          "en": "Nail Art & Tools"
+        },
+        "categorySlug": "nail-art-tools",
+        "image": "assets/categories/Health, Beauty & Hair/Nail Art & Tools.webp",
+        "description": {
+          "ar": "منتجات وأدوات فن الأظافر.",
+          "en": "Nail art products and tools."
+        },
+        "url": "/categories/health-beauty/nail-art-tools",
+        "seoTitle": {
+          "ar": "منتجات فن الأظافر والأدوات",
+          "en": "Nail Art & Tools"
+        }
+      },
+      {
+        "name": {
+          "ar": "الغذاء والصحة",
+          "en": "Food & Health"
+        },
+        "categorySlug": "food-health",
+        "image": "assets/categories/Health, Beauty & Hair/Food & Health.webp",
+        "description": {
+          "ar": "منتجات غذائية وصحية مختارة.",
+          "en": "Selected food and health products."
+        },
+        "url": "/categories/health-beauty/food-health",
+        "seoTitle": {
+          "ar": "الغذاء والصحة",
+          "en": "Food & Health"
+        }
+      },
+      {
+        "name": {
+          "ar": "الشعر والاكسسوارات",
+          "en": "Hair & Accessories"
+        },
+        "categorySlug": "hair-accessories",
+        "image": "assets/categories/Health, Beauty & Hair/Hair & Accessories.webp",
+        "description": {
+          "ar": "إكسسوارات ومنتجات للعناية بالشعر.",
+          "en": "Hair care products and accessories."
+        },
+        "url": "/categories/health-beauty/hair-accessories",
+        "seoTitle": {
+          "ar": "الشعر والاكسسوارات",
+          "en": "Hair & Accessories"
+        }
+      },
+      {
+        "name": {
+          "ar": "شعر صناعي",
+          "en": "Synthetic Hair"
+        },
+        "categorySlug": "synthetic-hair",
+        "image": "assets/categories/Health, Beauty & Hair/Synthetic Hair.webp",
+        "description": {
+          "ar": "شعر صناعي بموديلات متعددة.",
+          "en": "Synthetic hair in multiple styles."
+        },
+        "url": "/categories/health-beauty/synthetic-hair",
+        "seoTitle": {
+          "ar": "شعر صناعي",
+          "en": "Synthetic Hair"
+        }
+      },
+      {
+        "name": {
+          "ar": "العناية بالبشرة",
+          "en": "Skin Care"
+        },
+        "categorySlug": "skin-care",
+        "image": "assets/categories/Health, Beauty & Hair/Skin Care.webp",
+        "description": {
+          "ar": "منتجات العناية بالبشرة.",
+          "en": "Skin care products."
+        },
+        "url": "/categories/health-beauty/skin-care",
+        "seoTitle": {
+          "ar": "العناية بالبشرة",
+          "en": "Skin Care"
+        }
+      },
+      {
+        "name": {
+          "ar": "نسج الشعر",
+          "en": "Wigs & Extensions"
+        },
+        "categorySlug": "wigs-extensions",
+        "image": "assets/categories/Health, Beauty & Hair/Wigs & Extensions.webp",
+        "description": {
+          "ar": "باروكات ووصلات شعر.",
+          "en": "Wigs and hair extensions."
+        },
+        "url": "/categories/health-beauty/wigs-extensions",
+        "seoTitle": {
+          "ar": "الشعر المستعار والوصلات",
+          "en": "Wigs & Hair Extensions"
+        }
+      },
+      {
+        "name": {
+          "ar": "ماكياج",
+          "en": "Makeup"
+        },
+        "categorySlug": "makeup",
+        "image": "assets/categories/Health, Beauty & Hair/Makeup.webp",
+        "description": {
+          "ar": "مكياج ومستحضرات تجميل.",
+          "en": "Makeup and cosmetics."
+        },
+        "url": "/categories/health-beauty/makeup",
+        "seoTitle": {
+          "ar": "مكياج ومستحضرات التجميل",
+          "en": "Makeup & Cosmetics"
+        }
+      },
+      {
+        "name": {
+          "ar": "الشعر المستعار والوصلات",
+          "en": "Hair Weaves"
+        },
+        "categorySlug": "hair-weaves",
+        "image": "assets/categories/Health, Beauty & Hair/Hair Weaves.webp",
+        "description": {
+          "ar": "وصلات وأطوال شعر طبيعية وصناعية.",
+          "en": "Natural and synthetic hair extensions."
+        },
+        "url": "/categories/health-beauty/hair-weaves",
+        "seoTitle": {
+          "ar": "وصلات الشعر",
+          "en": "Hair Weaves"
+        }
+      },
+      {
+        "name": {
+          "ar": "أدوات التجميل",
+          "en": "Beauty Tools"
+        },
+        "categorySlug": "beauty-tools",
+        "image": "assets/categories/Health, Beauty & Hair/Beauty Tools.webp",
+        "description": {
+          "ar": "أدوات وأجهزة تجميل.",
+          "en": "Beauty tools and devices."
+        },
+        "url": "/categories/health-beauty/beauty-tools",
+        "seoTitle": {
+          "ar": "أدوات التجميل",
+          "en": "Beauty Tools"
+        }
+      }
+    ]
+  },
+  {
+    "name": {
+      "ar": "الإلكترونيات الاستهلاكية",
+      "en": "Consumer Electronics"
+    },
+    "categorySlug": "consumer-electronics",
+    "image": "assets/categories/Consumer Electronics/main.webp",
+    "description": {
+      "ar": "إلكترونيات واكسسوارات للمستهلك.",
+      "en": "Electronics and accessories for consumers."
+    },
+    "url": "/categories/consumer-electronics",
+    "order": 4,
+    "seoKeywords": {
+      "ar": ["إلكترونيات", "أجهزة ذكية", "كاميرات", "ألعاب فيديو"],
+      "en": ["electronics", "smart devices", "cameras", "video games"]
+    },
+    "seoTitle": {
+      "ar": "الإلكترونيات الاستهلاكية - أجهزة وملحقات",
+      "en": "Consumer Electronics - Devices & Accessories"
+    },
+    "subcategories": [
+      {
+        "name": {
+          "ar": "الملحقات والأجزاء",
+          "en": "Accessories & Parts"
+        },
+        "categorySlug": "accessories-parts",
+        "image": "assets/categories/Consumer Electronics/Accessories & Parts.webp",
+        "description": {
+          "ar": "ملحقات وأجزاء للأجهزة الإلكترونية.",
+          "en": "Accessories and parts for electronic devices."
+        },
+        "url": "/categories/consumer-electronics/accessories-parts",
+        "seoTitle": {
+          "ar": "ملحقات وأجزاء الإلكترونيات",
+          "en": "Electronics Accessories & Parts"
+        }
+      },
+      {
+        "name": {
+          "ar": "الصوت والفيديو المنزلي",
+          "en": "Home Audio & Video"
+        },
+        "categorySlug": "home-audio-video",
+        "image": "assets/categories/Consumer Electronics/Home Audio & Video.webp",
+        "description": {
+          "ar": "أنظمة صوت وفيديو للمنزل.",
+          "en": "Audio and video systems for home."
+        },
+        "url": "/categories/consumer-electronics/home-audio-video",
+        "seoTitle": {
+          "ar": "الصوت والفيديو المنزلي",
+          "en": "Home Audio & Video"
+        }
+      },
+      {
+        "name": {
+          "ar": "الإلكترونيات الذكية",
+          "en": "Smart Electronics"
+        },
+        "categorySlug": "smart-electronics",
+        "image": "assets/categories/Consumer Electronics/Smart Electronics.webp",
+        "description": {
+          "ar": "أجهزة ذكية حديثة.",
+          "en": "Modern smart devices."
+        },
+        "url": "/categories/consumer-electronics/smart-electronics",
+        "seoTitle": {
+          "ar": "الإلكترونيات الذكية",
+          "en": "Smart Electronics"
+        }
+      },
+      {
+        "name": {
+          "ar": "الكاميرا والصور",
+          "en": "Camera & Photo"
+        },
+        "categorySlug": "camera-photo",
+        "image": "assets/categories/Consumer Electronics/Camera & Photo.webp",
+        "description": {
+          "ar": "كاميرات وإكسسوارات تصوير.",
+          "en": "Cameras and photography accessories."
+        },
+        "url": "/categories/consumer-electronics/camera-photo",
+        "seoTitle": {
+          "ar": "كاميرات وتصوير",
+          "en": "Cameras & Photography"
+        }
+      },
+      {
+        "name": {
+          "ar": "ألعاب الفيديو",
+          "en": "Video Games"
+        },
+        "categorySlug": "video-games",
+        "image": "assets/categories/Consumer Electronics/Video Games.webp",
+        "description": {
+          "ar": "ألعاب فيديو وإكسسوارات.",
+          "en": "Video games and accessories."
+        },
+        "url": "/categories/consumer-electronics/video-games",
+        "seoTitle": {
+          "ar": "ألعاب الفيديو",
+          "en": "Video Games"
+        }
+      },
+      {
+        "name": {
+          "ar": "الصوت والفيديو المحمول",
+          "en": "Portable Audio & Video"
+        },
+        "categorySlug": "portable-audio-video",
+        "image": "assets/categories/Consumer Electronics/Portable Audio & Video.webp",
+        "description": {
+          "ar": "مشغلات صوت وفيديو محمولة.",
+          "en": "Portable audio and video players."
+        },
+        "url": "/categories/consumer-electronics/portable-audio-video",
+        "seoTitle": {
+          "ar": "الصوت والفيديو المحمول",
+          "en": "Portable Audio & Video"
+        }
+      }
+    ]
+  },
+  {
+    "name": {
+      "ar": "المنزل والحديقة والاثاث",
+      "en": "Home, Garden & Furniture"
+    },
+    "categorySlug": "home-garden-furniture",
+    "image": "assets/categories/Home, Garden & Furniture/main.webp",
+    "description": {
+      "ar": "منتجات المنزل والحديقة والأثاث.",
+      "en": "Home, garden, and furniture products."
+    },
+    "url": "/categories/home-garden-furniture",
+    "order": 5,
+    "seoKeywords": {
+      "ar": ["منزل", "حديقة", "أثاث", "ديكور"],
+      "en": ["home", "garden", "furniture", "decor"]
+    },
+    "seoTitle": {
+      "ar": "المنزل والحديقة والأثاث",
+      "en": "Home, Garden & Furniture"
+    },
+    "subcategories": [
+      {
+        "name": {
+          "ar": "المنسوجات المنزلية",
+          "en": "Home Textiles"
+        },
+        "categorySlug": "home-textiles",
+        "image": "assets/categories/Home, Garden & Furniture/Home Textiles.webp",
+        "description": {
+          "ar": "مفروشات ومنسوجات منزلية.",
+          "en": "Home furnishings and textiles."
+        },
+        "url": "/categories/home-garden-furniture/home-textiles",
+        "seoTitle": {
+          "ar": "المنسوجات المنزلية",
+          "en": "Home Textiles"
+        }
+      },
+      {
+        "name": {
+          "ar": "الفنون والحرف والخياطة",
+          "en": "Arts, Crafts & Sewing"
+        },
+        "categorySlug": "arts-crafts-sewing",
+        "image": "assets/categories/Home, Garden & Furniture/Arts, Crafts & Sewing.webp",
+        "description": {
+          "ar": "مستلزمات الفنون والحرف والخياطة.",
+          "en": "Supplies for arts, crafts, and sewing."
+        },
+        "url": "/categories/home-garden-furniture/arts-crafts-sewing",
+        "seoTitle": {
+          "ar": "الفنون والحرف والخياطة",
+          "en": "Arts, Crafts & Sewing"
+        }
+      },
+      {
+        "name": {
+          "ar": "الآلات الموسيقية",
+          "en": "Musical Instruments"
+        },
+        "categorySlug": "musical-instruments",
+        "image": "assets/categories/Home, Garden & Furniture/Musical Instruments.webp",
+        "description": {
+          "ar": "آلات موسيقية واكسسواراتها.",
+          "en": "Musical instruments and accessories."
+        },
+        "url": "/categories/home-garden-furniture/musical-instruments",
+        "seoTitle": {
+          "ar": "الآلات الموسيقية",
+          "en": "Musical Instruments"
+        }
+      },
+      {
+        "name": {
+          "ar": "مستلزمات الاحتفالات والحفلات",
+          "en": "Festive & Party Supplies"
+        },
+        "categorySlug": "festive-party-supplies",
+        "image": "assets/categories/Home, Garden & Furniture/Festive & Party Supplies.webp",
+        "description": {
+          "ar": "مستلزمات المناسبات والحفلات.",
+          "en": "Supplies for celebrations and parties."
+        },
+        "url": "/categories/home-garden-furniture/festive-party-supplies",
+        "seoTitle": {
+          "ar": "مستلزمات الحفلات",
+          "en": "Party Supplies"
+        }
+      },
+      {
+        "name": {
+          "ar": "المطبخ وغرفة الطعام والبار",
+          "en": "Kitchen, Dining & Bar"
+        },
+        "categorySlug": "kitchen-dining-bar",
+        "image": "assets/categories/Home, Garden & Furniture/Kitchen, Dining & Bar.webp",
+        "description": {
+          "ar": "مستلزمات المطبخ والطعام والبار.",
+          "en": "Kitchen, dining, and bar supplies."
+        },
+        "url": "/categories/home-garden-furniture/kitchen-dining-bar",
+        "seoTitle": {
+          "ar": "المطبخ وغرفة الطعام والبار",
+          "en": "Kitchen, Dining & Bar"
+        }
+      },
+      {
+        "name": {
+          "ar": "تخزين منزلي",
+          "en": "Home Storage"
+        },
+        "categorySlug": "home-storage",
+        "image": "assets/categories/Home, Garden & Furniture/Home Storage.webp",
+        "description": {
+          "ar": "حلول التخزين المنزلي.",
+          "en": "Home storage solutions."
+        },
+        "url": "/categories/home-garden-furniture/home-storage",
+        "seoTitle": {
+          "ar": "تخزين منزلي",
+          "en": "Home Storage"
+        }
+      }
+    ]
+  },
+  {
+    "name": {
+      "ar": "ألعاب الأطفال والرضع",
+      "en": "Toys, Kids & Babies"
+    },
+    "categorySlug": "kids-babies",
+    "image": "assets/categories/Toys, Kids & Babies/main.webp",
+    "description": {
+      "ar": "كل ما يخص الأطفال والرضع.",
+      "en": "Everything for kids and babies."
+    },
+    "url": "/categories/kids-babies",
+    "order": 6,
+    "seoKeywords": {
+      "ar": ["ألعاب", "أطفال", "رضع", "ملابس أطفال"],
+      "en": ["toys", "kids", "babies", "children's clothing"]
+    },
+    "seoTitle": {
+      "ar": "ألعاب الأطفال والرضع",
+      "en": "Toys, Kids & Babies"
+    },
+    "subcategories": [
+      {
+        "name": {
+          "ar": "الألعاب والهوايات",
+          "en": "Toys & Hobbies"
+        },
+        "categorySlug": "toys-hobbies",
+        "image": "assets/categories/Toys, Kids & Babies/Toys & Hobbies.webp",
+        "description": {
+          "ar": "ألعاب وهوايات تعليمية وترفيهية.",
+          "en": "Educational and entertaining toys and hobbies."
+        },
+        "url": "/categories/kids-babies/toys-hobbies",
+        "seoTitle": {
+          "ar": "الألعاب والهوايات",
+          "en": "Toys & Hobbies"
+        }
+      },
+      {
+        "name": {
+          "ar": "الأحذية والحقائب",
+          "en": "Shoes & Bags"
+        },
+        "categorySlug": "shoes-bags",
+        "image": "assets/categories/Toys, Kids & Babies/Shoes & Bags.webp",
+        "description": {
+          "ar": "أحذية وحقائب للأطفال.",
+          "en": "Shoes and bags for children."
+        },
+        "url": "/categories/kids-babies/shoes-bags",
+        "seoTitle": {
+          "ar": "أحذية وحقائب للأطفال",
+          "en": "Shoes & Bags for Kids"
+        }
+      },
+      {
+        "name": {
+          "ar": "ملابس الأولاد",
+          "en": "Boys Clothing"
+        },
+        "categorySlug": "boys-clothing",
+        "image": "assets/categories/Toys, Kids & Babies/Boys Clothing.webp",
+        "description": {
+          "ar": "ملابس للأولاد.",
+          "en": "Clothing for boys."
+        },
+        "url": "/categories/kids-babies/boys-clothing",
+        "seoTitle": {
+          "ar": "ملابس الأولاد",
+          "en": "Boys Clothing"
+        }
+      },
+      {
+        "name": {
+          "ar": "ملابس الأطفال",
+          "en": "Baby Clothing"
+        },
+        "categorySlug": "baby-clothing",
+        "image": "assets/categories/Toys, Kids & Babies/Baby Clothing.webp",
+        "description": {
+          "ar": "ملابس للرضع.",
+          "en": "Clothing for infants."
+        },
+        "url": "/categories/kids-babies/baby-clothing",
+        "seoTitle": {
+          "ar": "ملابس الرضع",
+          "en": "Baby Clothing"
+        }
+      },
+      {
+        "name": {
+          "ar": "الطفل والأم",
+          "en": "Baby & Mother"
+        },
+        "categorySlug": "baby-mother",
+        "image": "assets/categories/Toys, Kids & Babies/Baby & Mother.webp",
+        "description": {
+          "ar": "مستلزمات للأم والطفل.",
+          "en": "Supplies for mothers and babies."
+        },
+        "url": "/categories/kids-babies/baby-mother",
+        "seoTitle": {
+          "ar": "الطفل والأم",
+          "en": "Baby & Mother"
+        }
+      },
+      {
+        "name": {
+          "ar": "ملابس البنات",
+          "en": "Girls Clothing"
+        },
+        "categorySlug": "girls-clothing",
+        "image": "assets/categories/Toys, Kids & Babies/Girls Clothing.webp",
+        "description": {
+          "ar": "ملابس للبنات.",
+          "en": "Clothing for girls."
+        },
+        "url": "/categories/kids-babies/girls-clothing",
+        "seoTitle": {
+          "ar": "ملابس البنات",
+          "en": "Girls Clothing"
+        }
+      }
+    ]
+  },
+  {
+    "name": {
+      "ar": "المجوهرات والساعات",
+      "en": "Jewelry & Watches"
+    },
+    "categorySlug": "jewelry-watches",
+    "image": "assets/categories/Jewelry & Watches/main.webp",
+    "description": {
+      "ar": "مجوهرات وساعات مميزة.",
+      "en": "Distinctive jewelry and watches."
+    },
+    "url": "/categories/jewelry-watches",
+    "order": 7,
+    "seoKeywords": {
+      "ar": ["مجوهرات", "ساعات", "خواتم", "قلادات"],
+      "en": ["jewelry", "watches", "rings", "necklaces"]
+    },
+    "seoTitle": {
+      "ar": "المجوهرات والساعات",
+      "en": "Jewelry & Watches"
+    },
+    "subcategories": [
+      {
+        "name": {
+          "ar": "حفلات الزفاف والخطوبة",
+          "en": "Fashion Jewelry"
+        },
+        "categorySlug": "fashion-jewelry",
+        "image": "assets/categories/Jewelry & Watches/Fashion Jewelry.webp",
+        "description": {
+          "ar": "إكسسوارات ومجوهرات مناسبات.",
+          "en": "Accessories and jewelry for occasions."
+        },
+        "url": "/categories/jewelry-watches/fashion-jewelry",
+        "seoTitle": {
+          "ar": "مجوهرات الزفاف والخطوبة",
+          "en": "Wedding & Engagement Jewelry"
+        }
+      },
+      {
+        "name": {
+          "ar": "مجوهرات الأزياء",
+          "en": "Fine Jewelry"
+        },
+        "categorySlug": "fine-jewelry",
+        "image": "assets/categories/Jewelry & Watches/Fine Jewelry.webp",
+        "description": {
+          "ar": "مجوهرات أزياء عصرية.",
+          "en": "Trendy fashion jewelry."
+        },
+        "url": "/categories/jewelry-watches/fine-jewelry",
+        "seoTitle": {
+          "ar": "مجوهرات الأزياء",
+          "en": "Fashion Jewelry"
+        }
+      },
+      {
+        "name": {
+          "ar": "المجوهرات الفاخرة",
+          "en": "Wedding & Engagement"
+        },
+        "categorySlug": "wedding-engagement",
+        "image": "assets/categories/Jewelry & Watches/Wedding & Engagement.webp",
+        "description": {
+          "ar": "مجوهرات فاخرة للمناسبات.",
+          "en": "Luxury jewelry for special occasions."
+        },
+        "url": "/categories/jewelry-watches/wedding-engagement",
+        "seoTitle": {
+          "ar": "مجوهرات فاخرة",
+          "en": "Luxury Jewelry"
+        }
+      },
+      {
+        "name": {
+          "ar": "ساعات رجالية",
+          "en": "Men's Watches"
+        },
+        "categorySlug": "mens-watches",
+        "image": "assets/categories/Jewelry & Watches/Men's Watches.webp",
+        "description": {
+          "ar": "ساعات رجالية أنيقة.",
+          "en": "Elegant men's watches."
+        },
+        "url": "/categories/jewelry-watches/mens-watches",
+        "seoTitle": {
+          "ar": "ساعات رجالية",
+          "en": "Men's Watches"
+        }
+      },
+      {
+        "name": {
+          "ar": "ساعات نسائية",
+          "en": "Women's Watches"
+        },
+        "categorySlug": "womens-watches",
+        "image": "assets/categories/Jewelry & Watches/Women's Watches.webp",
+        "description": {
+          "ar": "ساعات نسائية عصرية.",
+          "en": "Trendy women's watches."
+        },
+        "url": "/categories/jewelry-watches/womens-watches",
+        "seoTitle": {
+          "ar": "ساعات نسائية",
+          "en": "Women's Watches"
+        }
+      }
+    ]
+  },
+  {
+    "name": {
+      "ar": "الحقائب والأحذية",
+      "en": "Bags & Shoes"
+    },
+    "categorySlug": "bags-shoes",
+    "image": "assets/categories/Bags & Shoes/main.webp",
+    "description": {
+      "ar": "أحذية وحقائب لجميع الأذواق.",
+      "en": "Shoes and bags for all tastes."
+    },
+    "url": "/categories/bags-shoes",
+    "order": 8,
+    "seoKeywords": {
+      "ar": ["أحذية", "حقائب", "أمتعة"],
+      "en": ["shoes", "bags", "luggage"]
+    },
+    "seoTitle": {
+      "ar": "الحقائب والأحذية",
+      "en": "Bags & Shoes"
+    },
+    "subcategories": [
+      {
+        "name": {
+          "ar": "حقائب وأمتعة رجالية",
+          "en": "Men's Luggage & Bags"
+        },
+        "categorySlug": "mens-luggage-bags",
+        "image": "assets/categories/Bags & Shoes/Men's Luggage & Bags.webp",
+        "description": {
+          "ar": "حقائب وأمتعة للرجال.",
+          "en": "Bags and luggage for men."
+        },
+        "url": "/categories/bags-shoes/mens-luggage-bags",
+        "seoTitle": {
+          "ar": "حقائب وأمتعة رجالية",
+          "en": "Men's Luggage & Bags"
+        }
+      },
+      {
+        "name": {
+          "ar": "أحذية نسائية",
+          "en": "Women's Shoes"
+        },
+        "categorySlug": "womens-shoes",
+        "image": "assets/categories/Bags & Shoes/Women's Shoes.webp",
+        "description": {
+          "ar": "أحذية نسائية متنوعة.",
+          "en": "Various women's shoes."
+        },
+        "url": "/categories/bags-shoes/womens-shoes",
+        "seoTitle": {
+          "ar": "أحذية نسائية",
+          "en": "Women's Shoes"
+        }
+      },
+      {
+        "name": {
+          "ar": "حقائب وأمتعة نسائية",
+          "en": "Women's Luggage & Bags"
+        },
+        "categorySlug": "womens-luggage-bags",
+        "image": "assets/categories/Bags & Shoes/Women's Luggage & Bags.webp",
+        "description": {
+          "ar": "حقائب نسائية وأمتعة.",
+          "en": "Women's bags and luggage."
+        },
+        "url": "/categories/bags-shoes/womens-luggage-bags",
+        "seoTitle": {
+          "ar": "حقائب وأمتعة نسائية",
+          "en": "Women's Luggage & Bags"
+        }
+      },
+      {
+        "name": {
+          "ar": "أحذية رجالية",
+          "en": "Men's Shoes"
+        },
+        "categorySlug": "mens-shoes",
+        "image": "assets/categories/Bags & Shoes/Men's Shoes.webp",
+        "description": {
+          "ar": "أحذية رجالية متنوعة.",
+          "en": "Various men's shoes."
+        },
+        "url": "/categories/bags-shoes/mens-shoes",
+        "seoTitle": {
+          "ar": "أحذية رجالية",
+          "en": "Men's Shoes"
+        }
+      }
+    ]
+  },
+  {
+    "name": {
+      "ar": "الرياضة والهواء الطلق",
+      "en": "Sports & Outdoors"
+    },
+    "categorySlug": "sports-outdoors",
+    "image": "assets/categories/Sports & Outdoors/main.webp",
+    "description": {
+      "ar": "مستلزمات الرياضة والأنشطة الخارجية.",
+      "en": "Sports and outdoor activity supplies."
+    },
+    "url": "/categories/sports-outdoors",
+    "order": 9,
+    "seoKeywords": {
+      "ar": ["رياضة", "هواء طلق", "ملابس رياضية", "معدات رياضية"],
+      "en": ["sports", "outdoors", "sportswear", "sports equipment"]
+    },
+    "seoTitle": {
+      "ar": "الرياضة والهواء الطلق",
+      "en": "Sports & Outdoors"
+    },
+    "subcategories": [
+      {
+        "name": {
+          "ar": "أحذية رياضية",
+          "en": "Sneakers"
+        },
+        "categorySlug": "sneakers",
+        "image": "assets/categories/Sports & Outdoors/Sneakers.webp",
+        "description": {
+          "ar": "أحذية رياضية لمختلف الأنشطة.",
+          "en": "Sports shoes for various activities."
+        },
+        "url": "/categories/sports-outdoors/sneakers",
+        "seoTitle": {
+          "ar": "أحذية رياضية",
+          "en": "Sneakers"
+        }
+      },
+      {
+        "name": {
+          "ar": "معدات رياضية أخرى",
+          "en": "Other Sports Equipment"
+        },
+        "categorySlug": "other-sports-equipment",
+        "image": "assets/categories/Sports & Outdoors/Other Sports Equipment.webp",
+        "description": {
+          "ar": "معدات رياضية متنوعة.",
+          "en": "Various sports equipment."
+        },
+        "url": "/categories/sports-outdoors/other-sports-equipment",
+        "seoTitle": {
+          "ar": "معدات رياضية",
+          "en": "Sports Equipment"
+        }
+      },
+      {
+        "name": {
+          "ar": "سباحة",
+          "en": "Swimming"
+        },
+        "categorySlug": "swimming",
+        "image": "assets/categories/Sports & Outdoors/Swimming.webp",
+        "description": {
+          "ar": "مستلزمات السباحة.",
+          "en": "Swimming supplies."
+        },
+        "url": "/categories/sports-outdoors/swimming",
+        "seoTitle": {
+          "ar": "مستلزمات السباحة",
+          "en": "Swimming Supplies"
+        }
+      },
+      {
+        "name": {
+          "ar": "ركوب الدراجات",
+          "en": "Cycling"
+        },
+        "categorySlug": "cycling",
+        "image": "assets/categories/Sports & Outdoors/Cycling.webp",
+        "description": {
+          "ar": "معدات ركوب الدراجات.",
+          "en": "Cycling equipment."
+        },
+        "url": "/categories/sports-outdoors/cycling",
+        "seoTitle": {
+          "ar": "ركوب الدراجات",
+          "en": "Cycling"
+        }
+      },
+      {
+        "name": {
+          "ar": "ملابس رياضية",
+          "en": "Sportswear"
+        },
+        "categorySlug": "sportswear",
+        "image": "assets/categories/Sports & Outdoors/Sportswear.webp",
+        "description": {
+          "ar": "ملابس رياضية مريحة.",
+          "en": "Comfortable sportswear."
+        },
+        "url": "/categories/sports-outdoors/sportswear",
+        "seoTitle": {
+          "ar": "ملابس رياضية",
+          "en": "Sportswear"
+        }
+      },
+      {
+        "name": {
+          "ar": "صيد السمك",
+          "en": "Fishing"
+        },
+        "categorySlug": "fishing",
+        "image": "assets/categories/Sports & Outdoors/Fishing.webp",
+        "description": {
+          "ar": "معدات صيد السمك.",
+          "en": "Fishing equipment."
+        },
+        "url": "/categories/sports-outdoors/fishing",
+        "seoTitle": {
+          "ar": "صيد السمك",
+          "en": "Fishing"
+        }
+      }
+    ]
+  },
+  {
+    "name": {
+      "ar": "تحسين المنزل",
+      "en": "Home Improvement"
+    },
+    "categorySlug": "home-improvement",
+    "image": "assets/categories/Home Improvement/main.webp",
+    "description": {
+      "ar": "أدوات ومنتجات لتحسين المنزل.",
+      "en": "Tools and products for home improvement."
+    },
+    "url": "/categories/home-improvement",
+    "order": 10,
+    "seoKeywords": {
+      "ar": ["تحسين المنزل", "إضاءة", "أدوات", "أجهزة منزلية"],
+      "en": ["home improvement", "lighting", "tools", "home appliances"]
+    },
+    "seoTitle": {
+      "ar": "تحسين المنزل",
+      "en": "Home Improvement"
+    },
+    "subcategories": [
+      {
+        "name": {
+          "ar": "إضاءة LED",
+          "en": "LED Lighting"
+        },
+        "categorySlug": "إضاءة-LED",
+        "image": "assets/categories/Home Improvement/LED Lighting.webp",
+        "description": {
+          "ar": "حلول إضاءة LED للمنزل.",
+          "en": "LED lighting solutions for home."
+        },
+        "url": "/categories/تحسين-المنزل/إضاءة-LED",
+        "seoTitle": {
+          "ar": "إضاءة LED",
+          "en": "LED Lighting"
+        }
+      },
+      {
+        "name": {
+          "ar": "الإضاءة الخارجية",
+          "en": "Outdoor Lighting"
+        },
+        "categorySlug": "الإضاءة-الخارجية",
+        "image": "assets/categories/Home Improvement/Outdoor Lighting.webp",
+        "description": {
+          "ar": "إضاءة للمساحات الخارجية.",
+          "en": "Lighting for outdoor spaces."
+        },
+        "url": "/categories/تحسين-المنزل/الإضاءة-الخارجية",
+        "seoTitle": {
+          "ar": "الإضاءة الخارجية",
+          "en": "Outdoor Lighting"
+        }
+      },
+      {
+        "name": {
+          "ar": "أدوات",
+          "en": "Tools"
+        },
+        "categorySlug": "أدوات",
+        "image": "assets/categories/Home Improvement/Tools.webp",
+        "description": {
+          "ar": "أدوات وصيانة منزلية.",
+          "en": "Tools and home maintenance."
+        },
+        "url": "/categories/تحسين-المنزل/أدوات",
+        "seoTitle": {
+          "ar": "أدوات",
+          "en": "Tools"
+        }
+      },
+      {
+        "name": {
+          "ar": "الأجهزة المنزلية",
+          "en": "Home Appliances"
+        },
+        "categorySlug": "الأجهزة-المنزلية",
+        "image": "assets/categories/Home Improvement/Home Appliances.webp",
+        "description": {
+          "ar": "أجهزة منزلية متنوعة.",
+          "en": "Various home appliances."
+        },
+        "url": "/categories/تحسين-المنزل/الأجهزة-المنزلية",
+        "seoTitle": {
+          "ar": "الأجهزة المنزلية",
+          "en": "Home Appliances"
+        }
+      },
+      {
+        "name": {
+          "ar": "الإضاءة الداخلية",
+          "en": "Indoor Lighting"
+        },
+        "categorySlug": "الإضاءة-الداخلية",
+        "image": "assets/categories/Home Improvement/Indoor Lighting.webp",
+        "description": {
+          "ar": "حلول إضاءة داخلية.",
+          "en": "Indoor lighting solutions."
+        },
+        "url": "/categories/تحسين-المنزل/الإضاءة-الداخلية",
+        "seoTitle": {
+          "ar": "الإضاءة الداخلية",
+          "en": "Indoor Lighting"
+        }
+      }
+    ]
+  },
+  {
+    "name": {
+      "ar": "السيارات والدراجات النارية",
+      "en": "Automobiles & Motorcycles"
+    },
+    "categorySlug": "automobiles-motorcycles",
+    "image": "assets/categories/Automobiles & Motorcycles/main.webp",
+    "description": {
+      "ar": "مستلزمات السيارات والدراجات النارية.",
+      "en": "Supplies for cars and motorcycles."
+    },
+    "url": "/categories/automobiles-motorcycles",
+    "order": 11,
+    "seoKeywords": {
+      "ar": ["سيارات", "دراجات نارية", "ملحقات سيارات", "صيانة"],
+      "en": ["cars", "motorcycles", "car accessories", "maintenance"]
+    },
+    "seoTitle": {
+      "ar": "السيارات والدراجات النارية",
+      "en": "Automobiles & Motorcycles"
+    },
+    "subcategories": [
+      {
+        "name": {
+          "ar": "الملحقات الخارجية",
+          "en": "Exterior Accessories"
+        },
+        "categorySlug": "exterior-accessories",
+        "image": "assets/categories/Automobiles & Motorcycles/Exterior Accessories.webp",
+        "description": {
+          "ar": "ملحقات خارجية للسيارات.",
+          "en": "External accessories for cars."
+        },
+        "url": "/categories/automobiles-motorcycles/exterior-accessories",
+        "seoTitle": {
+          "ar": "ملحقات السيارات الخارجية",
+          "en": "Car Exterior Accessories"
+        }
+      },
+      {
+        "name": {
+          "ar": "الملحقات الداخلية",
+          "en": "Interior Accessories"
+        },
+        "categorySlug": "interior-accessories",
+        "image": "assets/categories/Automobiles & Motorcycles/Interior Accessories.webp",
+        "description": {
+          "ar": "ملحقات داخلية للسيارات.",
+          "en": "Internal accessories for cars."
+        },
+        "url": "/categories/automobiles-motorcycles/interior-accessories",
+        "seoTitle": {
+          "ar": "ملحقات السيارات الداخلية",
+          "en": "Car Interior Accessories"
+        }
+      },
+      {
+        "name": {
+          "ar": "الأدوات والصيانة والعناية",
+          "en": "Tools, Maintenance & Care"
+        },
+        "categorySlug": "tools-maintenance-care",
+        "image": "assets/categories/Automobiles & Motorcycles/Tools, Maintenance & Care.webp",
+        "description": {
+          "ar": "أدوات وصيانة وعناية بالسيارات.",
+          "en": "Tools and maintenance for cars."
+        },
+        "url": "/categories/automobiles-motorcycles/tools-maintenance-care",
+        "seoTitle": {
+          "ar": "أدوات وصيانة السيارات",
+          "en": "Car Tools & Maintenance"
+        }
+      },
+      {
+        "name": {
+          "ar": "إلكترونيات السيارات",
+          "en": "Car Electronics"
+        },
+        "categorySlug": "car-electronics",
+        "image": "assets/categories/Automobiles & Motorcycles/Car Electronics.webp",
+        "description": {
+          "ar": "أجهزة وإلكترونيات السيارات.",
+          "en": "Car devices and electronics."
+        },
+        "url": "/categories/automobiles-motorcycles/car-electronics",
+        "seoTitle": {
+          "ar": "إلكترونيات السيارات",
+          "en": "Car Electronics"
+        }
+      },
+      {
+        "name": {
+          "ar": "إكسسوارات وقطع غيار الدراجات النارية",
+          "en": "Motorcycle Accessories & Parts"
+        },
+        "categorySlug": "motorcycle-accessories-parts",
+        "image": "assets/categories/Automobiles & Motorcycles/Motorcycle Accessories & Parts.webp",
+        "description": {
+          "ar": "ملحقات للدراجات النارية.",
+          "en": "Accessories for motorcycles."
+        },
+        "url": "/categories/automobiles-motorcycles/motorcycle-accessories-parts",
+        "seoTitle": {
+          "ar": "إكسسوارات وقطع الدراجات النارية",
+          "en": "Motorcycle Accessories & Parts"
+        }
+      },
+      {
+        "name": {
+          "ar": "قطع غيار السيارات",
+          "en": "Auto Replacement Parts"
+        },
+        "categorySlug": "auto-replacement-parts",
+        "image": "assets/categories/Automobiles & Motorcycles/Auto Replacement Parts.webp",
+        "description": {
+          "ar": "قطع غيار واستبدال للسيارات.",
+          "en": "Spare and replacement parts for cars."
+        },
+        "url": "/categories/automobiles-motorcycles/auto-replacement-parts",
+        "seoTitle": {
+          "ar": "قطع غيار السيارات",
+          "en": "Car Replacement Parts"
+        }
+      }
+    ]
+  },
+  {
+    "name": {
+      "ar": "مستلزمات الحيوانات الأليفة",
+      "en": "Pet Supplies"
+    },
+    "categorySlug": "pet-supplies",
+    "image": "assets/categories/Pet Supplies/main.webp",
+    "description": {
+      "ar": "احتياجات الحيوانات الأليفة اليومية.",
+      "en": "Daily needs for pets."
+    },
+    "url": "/categories/pet-supplies",
+    "order": 12,
+    "seoKeywords": {
+      "ar": ["حيوانات أليفة", "طعام حيوانات", "ألعاب حيوانات"],
+      "en": ["pets", "pet food", "pet toys"]
+    },
+    "seoTitle": {
+      "ar": "مستلزمات الحيوانات الأليفة",
+      "en": "Pet Supplies"
+    },
+    "subcategories": [
+      {
+        "name": {
+          "ar": "ألعاب الحيوانات الأليفة",
+          "en": "Pet Toys"
+        },
+        "categorySlug": "pet-toys",
+        "image": "assets/categories/Pet Supplies/Pet Toys.webp",
+        "description": {
+          "ar": "ألعاب وتسالي للحيوانات الأليفة.",
+          "en": "Toys and treats for pets."
+        },
+        "url": "/categories/pet-supplies/pet-toys",
+        "seoTitle": {
+          "ar": "ألعاب الحيوانات الأليفة",
+          "en": "Pet Toys"
+        }
+      },
+      {
+        "name": {
+          "ar": "شرب وتغذية الحيوانات الأليفة",
+          "en": "Pet Drinking & Feeding"
+        },
+        "categorySlug": "pet-drinking-feeding",
+        "image": "assets/categories/Pet Supplies/Pet Drinking & Feeding.webp",
+        "description": {
+          "ar": "أوعية ومستلزمات التغذية.",
+          "en": "Bowls and feeding supplies."
+        },
+        "url": "/categories/pet-supplies/pet-drinking-feeding",
+        "seoTitle": {
+          "ar": "تغذية الحيوانات الأليفة",
+          "en": "Pet Feeding"
+        }
+      },
+      {
+        "name": {
+          "ar": "مستلزمات الحيوانات الأليفة الخارجية",
+          "en": "Pet Outdoor Supplies"
+        },
+        "categorySlug": "pet-outdoor-supplies",
+        "image": "assets/categories/Pet Supplies/Pet Outdoor Supplies.webp",
+        "description": {
+          "ar": "مستلزمات للمساحات الخارجية.",
+          "en": "Supplies for outdoor spaces."
+        },
+        "url": "/categories/pet-supplies/pet-outdoor-supplies",
+        "seoTitle": {
+          "ar": "مستلزمات الحيوانات الأليفة الخارجية",
+          "en": "Pet Outdoor Supplies"
+        }
+      },
+      {
+        "name": {
+          "ar": "مستلزمات الطيور",
+          "en": "Bird Supplies"
+        },
+        "categorySlug": "bird-supplies",
+        "image": "assets/categories/Pet Supplies/Bird Supplies.webp",
+        "description": {
+          "ar": "أقفاص وطعام وإكسسوارات للطيور.",
+          "en": "Cages, food, and accessories for birds."
+        },
+        "url": "/categories/pet-supplies/bird-supplies",
+        "seoTitle": {
+          "ar": "مستلزمات الطيور",
+          "en": "Bird Supplies"
+        }
+      },
+      {
+        "name": {
+          "ar": "الأسماك والحيوانات الأليفة المائية",
+          "en": "Fish & Aquatic Pets"
+        },
+        "categorySlug": "fish-aquatic-pets",
+        "image": "assets/categories/Pet Supplies/Fish & Aquatic Pets.webp",
+        "description": {
+          "ar": "مستلزمات الأحواض والأسماك.",
+          "en": "Aquarium and fish supplies."
+        },
+        "url": "/categories/pet-supplies/fish-aquatic-pets",
+        "seoTitle": {
+          "ar": "مستلزمات الأسماك",
+          "en": "Fish Supplies"
+        }
+      },
+      {
+        "name": {
+          "ar": "ملابس الحيوانات الأليفة",
+          "en": "Pet Apparels"
+        },
+        "categorySlug": "pet-apparels",
+        "image": "assets/categories/Pet Supplies/Pet Apparels.webp",
+        "description": {
+          "ar": "ملابس وأزياء للحيوانات الأليفة.",
+          "en": "Clothes and fashion for pets."
+        },
+        "url": "/categories/pet-supplies/pet-apparels",
+        "seoTitle": {
+          "ar": "ملابس الحيوانات الأليفة",
+          "en": "Pet Apparels"
+        }
+      },
+      {
+        "name": {
+          "ar": "أطواق وأحزمة وملحقات الحيوانات الأليفة",
+          "en": "Pet Collars, Harnesses & Accessories"
+        },
+        "categorySlug": "pet-collars-harnesses-accessories",
+        "image": "assets/categories/Pet Supplies/Pet Collars, Harnesses & Accessories.webp",
+        "description": {
+          "ar": "أطواق وأحزمة وإكسسوارات.",
+          "en": "Collars, harnesses, and accessories."
+        },
+        "url": "/categories/pet-supplies/pet-collars-harnesses-accessories",
+        "seoTitle": {
+          "ar": "أطواق وأحزمة للحيوانات الأليفة",
+          "en": "Pet Collars & Harnesses"
+        }
+      },
+      {
+        "name": {
+          "ar": "العناية بالحيوانات الأليفة",
+          "en": "Pet Groomings"
+        },
+        "categorySlug": "pet-groomings",
+        "image": "assets/categories/Pet Supplies/Pet Groomings.webp",
+        "description": {
+          "ar": "منتجات عناية ونظافة.",
+          "en": "Grooming and hygiene products."
+        },
+        "url": "/categories/pet-supplies/pet-groomings",
+        "seoTitle": {
+          "ar": "العناية بالحيوانات الأليفة",
+          "en": "Pet Groomings"
+        }
+      },
+      {
+        "name": {
+          "ar": "أثاث الحيوانات الأليفة",
+          "en": "Pet Furnitures"
+        },
+        "categorySlug": "pet-furnitures",
+        "image": "assets/categories/Pet Supplies/Pet Furnitures.webp",
+        "description": {
+          "ar": "أسِرّة وأثاث للحيوانات الأليفة.",
+          "en": "Beds and furniture for pets."
+        },
+        "url": "/categories/pet-supplies/pet-furnitures",
+        "seoTitle": {
+          "ar": "أثاث الحيوانات الأليفة",
+          "en": "Pet Furnitures"
+        }
+      },
+      {
+        "name": {
+          "ar": "مفروشات الحيوانات الأليفة",
+          "en": "Pet Bedding"
+        },
+        "categorySlug": "pet-bedding",
+        "image": "assets/categories/Pet Supplies/Pet Bedding.webp",
+        "description": {
+          "ar": "مفارش وبطانيات للحيوانات.",
+          "en": "Covers and blankets for pets."
+        },
+        "url": "/categories/pet-supplies/pet-bedding",
+        "seoTitle": {
+          "ar": "مفروشات الحيوانات الأليفة",
+          "en": "Pet Bedding"
+        }
+      }
+    ]
+  },
+  {
+    "name": {
+      "ar": "الهواتف والملحقات",
+      "en": "Phones & Accessories"
+    },
+    "categorySlug": "phones-accessories",
+    "image": "assets/categories/Phones & Accessories/main.webp",
+    "description": {
+      "ar": "هواتف ذكية وملحقات متنوعة.",
+      "en": "Smartphones and various accessories."
+    },
+    "url": "/categories/phones-accessories",
+    "order": 13,
+    "seoKeywords": {
+      "ar": ["هواتف", "ملحقات", "جرابات", "قطع غيار"],
+      "en": ["phones", "accessories", "cases", "spare parts"]
+    },
+    "seoTitle": {
+      "ar": "الهواتف والملحقات",
+      "en": "Phones & Accessories"
+    },
+    "subcategories": [
+      {
+        "name": {
+          "ar": "ملحقات الهاتف المحمول",
+          "en": "Mobile Phone Accessories"
+        },
+        "categorySlug": "mobile-phone-accessories",
+        "image": "assets/categories/Phones & Accessories/Mobile Phone Accessories.webp",
+        "description": {
+          "ar": "ملحقات متنوعة للهواتف.",
+          "en": "Various accessories for phones."
+        },
+        "url": "/categories/phones-accessories/mobile-phone-accessories",
+        "seoTitle": {
+          "ar": "ملحقات الهاتف المحمول",
+          "en": "Mobile Phone Accessories"
+        }
+      },
+      {
+        "name": {
+          "ar": "جراب هاتف",
+          "en": "Phone Cases & Covers"
+        },
+        "categorySlug": "cases-covers",
+        "image": "assets/categories/Phones & Accessories/Cases & Covers.webp",
+        "description": {
+          "ar": "جرابات وأغطية حماية.",
+          "en": "Protective cases and covers."
+        },
+        "url": "/categories/phones-accessories/cases-covers",
+        "seoTitle": {
+          "ar": "جرابات وأغطية",
+          "en": "Phone Cases & Covers"
+        }
+      },
+      {
+        "name": {
+          "ar": "أجزاء الهاتف المحمول",
+          "en": "Mobile Phone Parts"
+        },
+        "categorySlug": "mobile-phone-parts",
+        "image": "assets/categories/Phones & Accessories/Mobile Phone Parts.webp",
+        "description": {
+          "ar": "قطع غيار وإصلاح.",
+          "en": "Spare parts and repair items."
+        },
+        "url": "/categories/phones-accessories/mobile-phone-parts",
+        "seoTitle": {
+          "ar": "أجزاء الهاتف المحمول",
+          "en": "Mobile Phone Parts"
+        }
+      },
+      {
+        "name": {
+          "ar": "الهواتف المحمولة",
+          "en": "Mobile Phones"
+        },
+        "categorySlug": "mobile-phones",
+        "image": "assets/categories/Phones & Accessories/Mobile Phones.webp",
+        "description": {
+          "ar": "هواتف ذكية وعادية.",
+          "en": "Smartphones and regular phones."
+        },
+        "url": "/categories/phones-accessories/mobile-phones",
+        "seoTitle": {
+          "ar": "الهواتف المحمولة",
+          "en": "Mobile Phones"
+        }
+      }
+    ]
+  },
+  {
+    "name": {
+      "ar": "الكمبيوتر والمكتب",
+      "en": "Computer & Office"
+    },
+    "categorySlug": "computer-office",
+    "image": "assets/categories/Computer & Office/main.webp",
+    "description": {
+      "ar": "أجهزة الكمبيوتر وملحقاتها ومنتجات المكتب.",
+      "en": "Computer devices, accessories and office products."
+    },
+    "url": "/categories/computer-office",
+    "order": 14,
+    "seoKeywords": {
+      "ar": ["كمبيوتر", "مكتب", "تخزين", "شبكات"],
+      "en": ["computer", "office", "storage", "networking"]
+    },
+    "seoTitle": {
+      "ar": "الكمبيوتر والمكتب",
+      "en": "Computer & Office"
+    },
+    "subcategories": [
+      {
+        "name": {
+          "ar": "إلكترونيات المكتب",
+          "en": "Office Electronics"
+        },
+        "categorySlug": "office-electronics",
+        "image": "assets/categories/Computer & Office/Office Electronics.webp",
+        "description": {
+          "ar": "أجهزة مكتبية إلكترونية.",
+          "en": "Electronic office equipment."
+        },
+        "url": "/categories/computer-office/office-electronics",
+        "seoTitle": {
+          "ar": "إلكترونيات المكتب",
+          "en": "Office Electronics"
+        }
+      },
+      {
+        "name": {
+          "ar": "الأمن والحماية",
+          "en": "Security & Protection"
+        },
+        "categorySlug": "security-protection",
+        "image": "assets/categories/Computer & Office/Security & Protection.webp",
+        "description": {
+          "ar": "حلول الأمن والحماية.",
+          "en": "Security and protection solutions."
+        },
+        "url": "/categories/computer-office/security-protection",
+        "seoTitle": {
+          "ar": "الأمن والحماية",
+          "en": "Security & Protection"
+        }
+      },
+      {
+        "name": {
+          "ar": "أجهزة التخزين",
+          "en": "Storage Devices"
+        },
+        "categorySlug": "storage-devices",
+        "image": "assets/categories/Computer & Office/Storage Devices.webp",
+        "description": {
+          "ar": "أقراص تخزين وذاكرة.",
+          "en": "Storage disks and memory."
+        },
+        "url": "/categories/computer-office/storage-devices",
+        "seoTitle": {
+          "ar": "أجهزة التخزين",
+          "en": "Storage Devices"
+        }
+      },
+      {
+        "name": {
+          "ar": "ملحقات الأجهزة اللوحية والكمبيوتر المحمول",
+          "en": "Tablet & Laptop Accessories"
+        },
+        "categorySlug": "tablet-laptop-accessories",
+        "image": "assets/categories/Computer & Office/Tablet & Laptop Accessories.webp",
+        "description": {
+          "ar": "ملحقات للأجهزة اللوحية واللابتوب.",
+          "en": "Accessories for tablets and laptops."
+        },
+        "url": "/categories/computer-office/tablet-laptop-accessories",
+        "seoTitle": {
+          "ar": "ملحقات الأجهزة اللوحية واللابتوب",
+          "en": "Tablet & Laptop Accessories"
+        }
+      },
+      {
+        "name": {
+          "ar": "أجهزة الكمبيوتر المحمولة والأجهزة اللوحية",
+          "en": "Laptops & Tablets"
+        },
+        "categorySlug": "laptop-tablets",
+        "image": "assets/categories/Computer & Office/Laptop & Tablets.webp",
+        "description": {
+          "ar": "لابتوبات وأجهزة لوحية.",
+          "en": "Laptops and tablet devices."
+        },
+        "url": "/categories/computer-office/laptop-tablets",
+        "seoTitle": {
+          "ar": "أجهزة الكمبيوتر المحمولة والأجهزة اللوحية",
+          "en": "Laptops & Tablets"
+        }
+      },
+      {
+        "name": {
+          "ar": "التواصل",
+          "en": "Networking"
+        },
+        "categorySlug": "networking",
+        "image": "assets/categories/Computer & Office/Networking.webp",
+        "description": {
+          "ar": "شبكات وموجهات ومفاتيح.",
+          "en": "Networks, routers and switches."
+        },
+        "url": "/categories/computer-office/networking",
+        "seoTitle": {
+          "ar": "الشبكات",
+          "en": "Networking"
+        }
+      }
+    ]
+  }
+]

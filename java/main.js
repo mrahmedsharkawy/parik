@@ -1,0 +1,942 @@
+﻿// الترجمة والعملة
+document.addEventListener("DOMContentLoaded", () => {
+  const lang = localStorage.getItem("lang") || "ar";
+  const currency = localStorage.getItem("currency") || "درهم";
+  const elements = document.querySelectorAll("[data-i18n]");
+
+  // ضبط اتجاه الصفحة تلقائياً حسب اللغة
+  document.documentElement.dir = (lang === "ar" ? "rtl" : "ltr");
+  document.documentElement.lang = lang;
+
+  fetch("translations/" + lang + ".json")
+    .then(res => res.json())
+    .then(data => {
+      elements.forEach(el => {
+        const key = el.getAttribute("data-i18n");
+        if (data[lang] && data[lang][key]) {
+          el.innerHTML = data[lang][key];
+        } else if (data["ar"] && data["ar"][key] && document.documentElement.dir === "rtl") {
+          el.innerHTML = data["ar"][key];
+        } else if (data["en"] && data["en"][key] && document.documentElement.dir === "ltr") {
+          el.innerHTML = data["en"][key];
+        }
+      });
+
+      // تحديث عنوان الصفحة تلقائياً حسب اللغة إذا كان هناك عنصر title يحمل data-i18n
+      const pageTitle = document.querySelector('title[data-i18n]');
+      if (pageTitle) {
+        const key = pageTitle.getAttribute('data-i18n');
+        // استخدم الترجمة الخاصة بهذه الصفحة فقط (لا تجبر على "جميع الفئات")
+        if (data[lang] && data[lang][key]) {
+          pageTitle.textContent = data[lang][key];
+        } else if (data["ar"] && data["ar"][key] && document.documentElement.dir === "rtl") {
+          pageTitle.textContent = data["ar"][key];
+        } else if (data["en"] && data["en"][key] && document.documentElement.dir === "ltr") {
+          pageTitle.textContent = data["en"][key];
+        }
+      }
+    });
+
+  const langSelect = document.getElementById("language");
+  if (langSelect) {
+    langSelect.value = lang;
+    langSelect.addEventListener("change", () => {
+      localStorage.setItem("lang", langSelect.value);
+      // ضبط اتجاه الصفحة عند تغيير اللغة
+      document.documentElement.dir = (langSelect.value === "ar" ? "rtl" : "ltr");
+      document.documentElement.lang = langSelect.value;
+      location.reload();
+    });
+  }
+
+  const currencySelect = document.getElementById("currency");
+  if (currencySelect) {
+    currencySelect.value = currency;
+    currencySelect.addEventListener("change", () => {
+      localStorage.setItem("currency", currencySelect.value);
+    });
+  }
+
+  // تنفيذ استجابة التصميم للشاشات الصغيرة
+  handleResponsive();
+});
+
+
+// إخفاء كل العناصر عند التصغير وإبقاء شريط البحث فقط
+function handleResponsive() {
+  const width = window.innerWidth;
+  const headerContent = document.querySelector(".header-content");
+  const children = headerContent ? headerContent.children : [];
+
+  for (let i = 0; i < children.length; i++) {
+    if (!children[i].classList.contains("search-container")) {
+      children[i].style.display = width < 1020 ? "none" : "flex";
+    }
+  }
+}
+
+
+window.addEventListener("resize", handleResponsive);
+
+
+// شريط البحث 
+document.addEventListener("DOMContentLoaded", function () {
+  const searchInput = document.getElementById("textSearch");
+  const searchIcon = document.querySelector(".icon.search");
+  const imageInput = document.getElementById("imageSearchInput");
+  const resultsBox = document.getElementById("searchResults");
+
+  // بيانات وهمية لتجربة البحث
+  const data = [
+    { name: "ساعة ذكية", desc: "ساعة بلوتوث ضد الماء" },
+    { name: "هاتف سامسونج", desc: "جهاز حديث" },
+    { name: "تيشيرت رجالي", desc: "قطن مريح" },
+    { name: "حقيبة نسائية", desc: "صناعة فاخرة" }
+  ];
+
+  // دالة البحث النصي
+  function performTextSearch() {
+    const keyword = searchInput.value.trim().toLowerCase();
+    resultsBox.innerHTML = "";
+
+    if (!keyword) {
+      resultsBox.innerHTML = "<p style='color:gray;'>اكتب كلمة للبحث</p>";
+      return;
+    }
+
+    const results = data.filter(item =>
+      item.name.toLowerCase().includes(keyword) ||
+      item.desc.toLowerCase().includes(keyword)
+    );
+
+    if (results.length === 0) {
+      resultsBox.innerHTML = "<p style='color:red;'>لا توجد نتائج</p>";
+    } else {
+      results.forEach(item => {
+        const card = document.createElement("div");
+        card.style.border = "1px solid #ccc";
+        card.style.padding = "10px";
+        card.style.marginBottom = "8px";
+        card.style.borderRadius = "6px";
+        card.innerHTML = `<strong>${item.name}</strong><br>${item.desc}`;
+        resultsBox.appendChild(card);
+      });
+    }
+  }
+
+  // تشغيل عند الضغط على العدسة
+  searchIcon.addEventListener("click", performTextSearch);
+
+  // تشغيل عند الضغط على Enter
+  searchInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      performTextSearch();
+    }
+  });
+
+  // تشغيل عند رفع صورة
+  imageInput.addEventListener("change", function () {
+    resultsBox.innerHTML = "";
+
+    if (imageInput.files.length > 0) {
+      const file = imageInput.files[0];
+      resultsBox.innerHTML = `<p>تم اختيار صورة: <strong>${file.name}</strong></p><p style="color:gray;">(ميزة التعرف على الصور لم تُفعّل بعد)</p>`;
+    } else {
+      resultsBox.innerHTML = "<p>لم يتم اختيار أي صورة</p>";
+    }
+  });
+});
+
+
+// ...existing code...
+// وجعل شريط الفئات بنفس عرض محتوى الصفحة/main  (معدل: يصبح ثابتاً بعد المرور وتحكم بالإظهار حسب اتجاه التمرير)
+document.addEventListener("DOMContentLoaded", function () {
+  const header = document.querySelector('.main-header');
+  const categoriesBar = document.querySelector('.categories');
+  const mainEl = document.querySelector('main');
+  if (header) {
+    header.style.position = 'fixed';
+    header.style.top = '0';
+    header.style.left = '0';
+    header.style.right = '0';
+    header.style.width = '100vw';
+    header.style.zIndex = '99999';
+  }
+  if (!categoriesBar || !mainEl) return;
+
+  // نترك الشريط في التدفق الطبيعي في البداية (بنر يظهر تحته)
+  categoriesBar.style.position = 'static';
+  categoriesBar.style.transform = 'translateY(0)';
+  categoriesBar.style.transition = 'transform 0.28s ease, opacity 0.28s ease';
+  categoriesBar.style.opacity = '1';
+
+  // helpers
+  function setFixedStyles() {
+    const headerH = header ? header.offsetHeight : 0;
+    const mainRect = mainEl.getBoundingClientRect();
+    const isMobile = window.innerWidth <= 768;
+    categoriesBar.style.position = 'fixed';
+    categoriesBar.style.top = headerH + 'px';
+    categoriesBar.style.zIndex = '99997';
+    categoriesBar.style.background = '#ffffff';
+    if (isMobile) {
+      categoriesBar.style.left = '0';
+      categoriesBar.style.width = '100%';
+    } else {
+      categoriesBar.style.width = getComputedStyle(mainEl).width;
+      categoriesBar.style.left = (mainRect.left + window.scrollX) + 'px';
+    }
+  }
+  function unsetFixedStyles() {
+    categoriesBar.style.position = 'static';
+    categoriesBar.style.left = '';
+    categoriesBar.style.width = '';
+    categoriesBar.style.top = '';
+    categoriesBar.style.zIndex = '';
+  }
+
+  // نقطة التحول — عندما يكون رأس البار أعلى من الهيدر (أي استخدم موضعه الأصلي)
+  let barTopOffset = categoriesBar.getBoundingClientRect().top + window.pageYOffset;
+  function updateBarTopOffset() {
+    barTopOffset = categoriesBar.getBoundingClientRect().top + window.pageYOffset;
+  }
+  // وضع البداية للمارجن فوق المحتوى (فقط ارتفاع الهيدر لكي يظهر البنر فوراً تحته)
+  if (mainEl) {
+    const headerH = header ? header.offsetHeight : 0;
+    mainEl.style.marginTop = (headerH) + 'px';
+  }
+
+  // تحكم بالإظهار حسب اتجاه التمرير، ونقوم بتثبيت الشريط عندما نتجاوز barTopOffset
+  let lastScroll = window.pageYOffset || document.documentElement.scrollTop;
+  let isFixed = false;
+  let isVisible = true;
+
+  function onScroll() {
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    // هل تجاوزنا موضع الشريط؟
+    if (scrollTop + (header ? header.offsetHeight : 0) >= barTopOffset) {
+      if (!isFixed) {
+        isFixed = true;
+        setFixedStyles();
+      }
+      // إخفاء/إظهار حسب الاتجاه
+      if (scrollTop > lastScroll) {
+        // تمرير لأسفل -> اختفاء
+        if (isVisible) {
+          categoriesBar.style.transform = 'translateY(-100%)';
+          categoriesBar.style.opacity = '0';
+          isVisible = false;
+        }
+      } else {
+        // تمرير لأعلى -> ظهور
+        if (!isVisible) {
+          categoriesBar.style.transform = 'translateY(0)';
+          categoriesBar.style.opacity = '1';
+          isVisible = true;
+        }
+      }
+    } else {
+      // قبل الوصول للبار: أعده لموقعه الطبيعي واظهره
+      if (isFixed) {
+        isFixed = false;
+        unsetFixedStyles();
+        categoriesBar.style.transform = 'translateY(0)';
+        categoriesBar.style.opacity = '1';
+        isVisible = true;
+        // إعادة حساب موضع لأن تغيّر التنسيق قد غير الـ layout
+        updateBarTopOffset();
+      }
+    }
+    lastScroll = scrollTop <= 0 ? 0 : scrollTop;
+  }
+
+  // عند تغيير حجم النافذة أعد حساب العرض والنقطة
+  function onResize() {
+    // إذا ثابت، عدِّل العرض والموقع
+    if (isFixed) setFixedStyles();
+    // إعادة حساب موضع الشريط في التدفق الطبيعي (نحتاج موضعًا صحيحًا فقط عندما ليس fixed)
+    // لحصول قيمة صحيحة نلغي مؤقتاً الوضع الثابت لنقيس العنصر في التدفق إن لزم
+    if (!isFixed) updateBarTopOffset();
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onResize);
+
+  // تنفيذ أولي بعد تأخير صغير لالتقاط القياسات الصحيحة
+  setTimeout(() => {
+    updateBarTopOffset();
+    onResize();
+    onScroll();
+  }, 120);
+});
+
+// إضافة تأثيرات انتقالية للقوائم المنسدلة مع ضبط موقعها تحت العنصر مباشرة
+document.addEventListener("DOMContentLoaded", () => {
+  const dropdowns = document.querySelectorAll(".dropdown-content");
+  
+  dropdowns.forEach(dropdown => {
+    // تعديل طريقة ظهور القوائم المنسدلة
+    dropdown.style.transition = "all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
+    dropdown.style.transform = "translateY(15px) scale(0.98)";
+    dropdown.style.opacity = "0";
+    dropdown.style.display = "none";
+    
+    // تأكد من وضع القائمة بشكل مطلق وتحت العنصر مباشرة
+    dropdown.style.position = "absolute";
+    dropdown.style.top = "130%"; // مباشرة تحت العنصر
+    dropdown.style.left = "0"; // محاذاة مع الجانب الأيسر (سيتم تعديله للغة العربية)
+    dropdown.style.zIndex = "1000"; // ضمان ظهورها فوق العناصر الأخرى
+    dropdown.style.width = "max-content"; // عرض مناسب للمحتوى
+    dropdown.style.minWidth = "100%"; // لا يقل عن عرض العنصر الأصلي
+    
+    // تعديل محاذاة القائمة حسب اتجاه اللغة
+    if (document.documentElement.dir === "rtl") {
+      dropdown.style.left = "auto";
+      dropdown.style.right = "0";
+    }
+    
+    const parent = dropdown.closest(".dropdown");
+    if (parent) {
+      // تأكد من أن العنصر الأصلي له position: relative
+      parent.style.position = "relative";
+    }
+    
+    const trigger = parent ? parent.querySelector(".dropbtn") : null;
+    
+    if (trigger) {
+      // توقيت أطول قبل إخفاء القائمة
+      let hideTimer;
+      let isMouseOverDropdown = false;
+      
+      trigger.addEventListener("mouseenter", () => {
+        clearTimeout(hideTimer);
+        dropdown.style.display = "block";
+        setTimeout(() => {
+          dropdown.style.opacity = "1";
+          dropdown.style.transform = "translateY(0) scale(1)";
+        }, 10);
+      });
+      
+      dropdown.addEventListener("mouseenter", () => {
+        clearTimeout(hideTimer);
+        isMouseOverDropdown = true;
+      });
+      
+      dropdown.addEventListener("mouseleave", () => {
+        isMouseOverDropdown = false;
+        hideTimer = setTimeout(() => {
+          if (!isMouseOverDropdown) {
+            dropdown.style.opacity = "0";
+            dropdown.style.transform = "translateY(15px) scale(0.98)";
+            setTimeout(() => {
+              dropdown.style.display = "none";
+            }, 100);
+          }
+        }, 100); // زيادة مدة التأخير هنا إلى 800 مللي ثانية
+      });
+      
+      parent.addEventListener("mouseleave", () => {
+        hideTimer = setTimeout(() => {
+          if (!isMouseOverDropdown) {
+            dropdown.style.opacity = "0";
+            dropdown.style.transform = "translateY(15px) scale(0.98)";
+            setTimeout(() => {
+              dropdown.style.display = "none";
+            }, 100);
+          }
+        }, 100); // زيادة مدة التأخير هنا إلى 800 مللي ثانية
+      });
+    }
+  });
+});
+
+
+
+// إضافة زر العودة للأعلى مع سهم ثابت للأعلى وإخفاء في الهاتف
+document.addEventListener("DOMContentLoaded", () => {
+  // إنشاء زر العودة للأعلى
+  const scrollBtn = document.createElement('button');
+  scrollBtn.id = 'scroll-btn';
+  
+  // استخدام سهم لأعلى ثابت
+  scrollBtn.innerHTML = '&#x2191;'; // سهم لأعلى Unicode
+  
+  scrollBtn.style.cssText = `
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(21, 37, 70, 1), rgb(21, 37, 70));
+    color: white;
+    border: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    cursor: pointer;
+    opacity: 0;
+    transform: scale(0.8) translateY(20px);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px; /* زيادة حجم الخط للسهم */
+    font-weight: bold;
+  `;
+  document.body.appendChild(scrollBtn);
+  
+  // إخفاء الزر على الأجهزة المحمولة باستخدام media query
+  const mobileStyle = document.createElement('style');
+  mobileStyle.textContent = `
+    @media (max-width: 768px) {
+      #scroll-btn {
+        display: none !important;
+      }
+    }
+  `;
+  document.head.appendChild(mobileStyle);
+  
+  // تغيير اتجاه الزر في الواجهات العربية
+  const isRTL = document.documentElement.dir === 'rtl';
+  if (isRTL) {
+    scrollBtn.style.right = 'auto';
+    scrollBtn.style.left = '20px';
+  }
+  
+  // إظهار/إخفاء الزر عند التمرير (بدون تغيير السهم)
+  window.addEventListener('scroll', () => {
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    
+    // إظهار الزر فقط عند التمرير لمسافة كافية
+    if (scrollTop > 300) {
+      scrollBtn.style.opacity = '1';
+      scrollBtn.style.transform = 'scale(1) translateY(0)';
+    } else {
+      scrollBtn.style.opacity = '0';
+      scrollBtn.style.transform = 'scale(0.8) translateY(20px)';
+    }
+  });
+  
+  // تنقل سلس للأعلى عند النقر
+  scrollBtn.addEventListener('click', () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  });
+  
+  // تأثير عند تمرير المؤشر فوق الزر
+  scrollBtn.addEventListener('mouseenter', () => {
+    scrollBtn.style.transform = 'scale(1.1) translateY(-5px)';
+    scrollBtn.style.boxShadow = '0 5px 15px rgba(0,123,255,0.4)';
+  });
+  
+  scrollBtn.addEventListener('mouseleave', () => {
+    scrollBtn.style.transform = 'scale(1) translateY(0)';
+    scrollBtn.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+  });
+});
+
+// كود تفعيل تنسيق الفئات   النشطة - مستقل تماماً عن أي كود آخر
+(function() {
+  function setupSubcategories(subcategoriesDisplay) {
+    if (!subcategoriesDisplay || subcategoriesDisplay._subSetup) return;
+    subcategoriesDisplay._subSetup = true;
+
+    const activeSubId = localStorage.getItem('activeSubcategoryId');
+
+    function activateSubcategory(element) {
+      document.querySelectorAll('#subcategories-display .subcategory-circle').forEach(el => {
+        el.classList.remove('active');
+      });
+      element.classList.add('active');
+
+      const subcatId = element.getAttribute('data-id') ||
+                        element.querySelector('.subcategory-label')?.textContent.trim();
+      if (subcatId) {
+        localStorage.setItem('activeSubcategoryId', subcatId);
+      }
+    }
+
+    subcategoriesDisplay.addEventListener('click', function(e) {
+      const subcatElement = e.target.closest('.subcategory-circle');
+      if (subcatElement) activateSubcategory(subcatElement);
+    });
+
+    if (activeSubId) {
+      const subcategories = subcategoriesDisplay.querySelectorAll('.subcategory-circle');
+      for (const subcategory of subcategories) {
+        const subcatId = subcategory.getAttribute('data-id') ||
+                         subcategory.querySelector('.subcategory-label')?.textContent.trim();
+        if (subcatId === activeSubId) {
+          activateSubcategory(subcategory);
+          break;
+        }
+      }
+    }
+  }
+
+  // محاولة فورية
+  const immediateContainer = document.getElementById('subcategories-display');
+  if (immediateContainer) {
+    setupSubcategories(immediateContainer);
+    return;
+  }
+
+  // مراقب لإضافة الحاوية إذا أُنشئت لاحقًا
+  const mo = new MutationObserver((records, observer) => {
+    const found = document.getElementById('subcategories-display');
+    if (found) {
+      setupSubcategories(found);
+      observer.disconnect();
+    }
+  });
+  mo.observe(document.documentElement || document.body, { childList: true, subtree: true });
+})();
+
+
+// كود تفعيل تنسيق الفئات الفرعية للصور النشطة - مستقل تماماً عن أي كود آخر
+document.addEventListener("DOMContentLoaded", function() {
+  // تحديد جميع أزرار الفلتر
+  const filterToggles = document.querySelectorAll('.filter-toggle');
+  
+  // إضافة مستمع للنقر لكل زر
+  filterToggles.forEach(toggle => {
+    toggle.addEventListener('click', function() {
+      // تحقق مما إذا كان هذا الزر هو المطبق عليه كلاس active فعلاً
+      const isActive = this.classList.contains('active');
+      
+      // إزالة كلاس active من جميع الأزرار
+      filterToggles.forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      // إذا لم يكن نشطًا من قبل، أضف كلاس active
+      if (!isActive) {
+        this.classList.add('active');
+      }
+    });
+  });
+});
+
+
+// كود محسّن للسحب للأسفل وتحديث المنتجات
+(function() {
+  // انتظر تحميل المستند بالكامل
+  document.addEventListener('DOMContentLoaded', function() {
+    // متغيرات تتبع السحب
+    let startY = 0;
+    let currentY = 0;
+    let isPulling = false;
+    let isRefreshing = false;
+    const pullThreshold = 70;
+    
+    // إنشاء مؤشر السحب للتحديث (بدون نص)
+    const refreshIndicator = document.createElement('div');
+    refreshIndicator.className = 'pull-refresh-indicator';
+    refreshIndicator.innerHTML = `
+      <div class="refresh-spinner"></div>
+    `;
+    
+    // تطبيق التنسيقات CSS
+    const styles = document.createElement('style');
+    styles.textContent = `
+      .pull-refresh-indicator {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background-color: #ffffff;
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transform: translateY(-100%);
+        transition: transform 0.25s ease;
+        z-index: 99999;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        pointer-events: none;
+      }
+      
+      .refresh-spinner {
+        width: 28px;
+        height: 28px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #3498db;
+        border-radius: 50%;
+      }
+      
+      .refresh-spinner.rotating {
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    `;
+    
+    // إضافة التنسيقات والمؤشر للصفحة بطريقة آمنة
+    document.head.appendChild(styles);
+    if (document.body) {
+      document.body.insertBefore(refreshIndicator, document.body.firstChild);
+    } else {
+      window.addEventListener('load', function() {
+        document.body.insertBefore(refreshIndicator, document.body.firstChild);
+      });
+    }
+    
+    // تسجيل أحداث اللمس
+    document.addEventListener('touchstart', function(e) {
+      if (window.scrollY <= 5 && !isRefreshing) {
+        startY = e.touches[0].clientY;
+        currentY = startY;
+        isPulling = true;
+      }
+    }, { passive: true });
+    
+    document.addEventListener('touchmove', function(e) {
+      if (!isPulling || isRefreshing) return;
+      currentY = e.touches[0].clientY;
+      const pullDistance = currentY - startY;
+      if (pullDistance > 5) {
+        // منع السلوك الافتراضي للتمرير عند السحب للأسفل
+        e.preventDefault();
+        const resistance = 0.4;
+        const movement = Math.min(pullThreshold * 1.5, pullDistance * resistance);
+        refreshIndicator.style.transform = `translateY(${movement}px)`;
+      }
+    }, { passive: false });
+    
+    document.addEventListener('touchend', function() {
+      if (!isPulling || isRefreshing) return;
+      isPulling = false;
+      const pullDistance = currentY - startY;
+      const movement = pullDistance * 0.4;
+      if (movement > pullThreshold) {
+        doRefresh();
+      } else {
+        refreshIndicator.style.transform = 'translateY(-100%)';
+      }
+    }, { passive: true });
+    
+    // وظيفة إجراء التحديث (تحافظ على السلوك لكن بدون نص)
+    function doRefresh() {
+      isRefreshing = true;
+      const refreshSpinner = refreshIndicator.querySelector('.refresh-spinner');
+      if (refreshSpinner) refreshSpinner.classList.add('rotating');
+      refreshIndicator.style.transform = 'translateY(0)';
+      
+      // استبدل هذه الجزئية بعملية التحديث الحقيقية عند الحاجة
+      setTimeout(function() {
+        // نفّذ إعادة ترتيب أو إعادة تحميل المنتجات هنا
+        try { shuffleProducts(); } catch(e){}
+        
+        // وقف الدوران وإخفاء المؤشر بعد انتهاء التحديث
+        if (refreshSpinner) refreshSpinner.classList.remove('rotating');
+        setTimeout(function() {
+          refreshIndicator.style.transform = 'translateY(-100%)';
+          setTimeout(function() { isRefreshing = false; }, 300);
+        }, 600);
+      }, 900);
+    }
+    
+    // وظيفة إعادة ترتيب المنتجات (كما كانت)
+    function shuffleProducts() {
+      try {
+        const productsContainer = 
+          document.querySelector('.products-grid') || 
+          document.querySelector('.products-row') || 
+          document.querySelector('.products-container') ||
+          document.querySelector('.product-list') ||
+          document.querySelector('[data-products]');
+        
+        if (!productsContainer || !productsContainer.children || productsContainer.children.length === 0) return;
+        
+        productsContainer.style.transition = 'opacity 0.25s';
+        productsContainer.style.opacity = '0.6';
+        
+        setTimeout(function() {
+          const products = Array.from(productsContainer.children);
+          for (let i = products.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [products[i], products[j]] = [products[j], products[i]];
+          }
+          const fragment = document.createDocumentFragment();
+          products.forEach((product, index) => {
+            const cloned = product.cloneNode(true);
+            cloned.style.opacity = '0';
+            cloned.style.transform = 'translateY(10px)';
+            cloned.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+            fragment.appendChild(cloned);
+            setTimeout(() => { cloned.style.opacity = '1'; cloned.style.transform = 'translateY(0)'; }, index * 20);
+          });
+          while (productsContainer.firstChild) productsContainer.removeChild(productsContainer.firstChild);
+          productsContainer.appendChild(fragment);
+          setTimeout(() => { productsContainer.style.opacity = '1'; }, 60);
+        }, 220);
+      } catch (error) {
+        console.error('حدث خطأ أثناء إعادة ترتيب المنتجات:', error);
+      }
+    }
+  });
+})();
+
+
+// محسّن: إجبار التنقل وتحويل مسارات /categories/* إلى categories.html?category=slug
+(function() {
+  document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('click', function(e) {
+      try {
+        const el = e.target.closest && (
+          e.target.closest('a') ||
+          e.target.closest('[data-href]') ||
+          e.target.closest('[data-url]') ||
+          e.target.closest('[role="link"]')
+        );
+        if (!el) return;
+
+        if (e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
+        if (el.hasAttribute('data-no-force')) return;
+        const forceAlways = el.hasAttribute('data-force');
+
+        const isAnchor = el.tagName && el.tagName.toLowerCase() === 'a';
+        let hrefAttr = isAnchor ? el.getAttribute('href') : (el.getAttribute('data-href') || el.getAttribute('data-url') || el.dataset.href || el.dataset.url);
+        if (!hrefAttr) return;
+        if (hrefAttr.startsWith('#')) return;
+        if (isAnchor && el.target === '_blank') return;
+
+        // احصل على URL مرجعي
+        let linkUrl;
+        try {
+          linkUrl = new URL(hrefAttr, location.href);
+        } catch (err) {
+          return;
+        }
+
+        // تحويل خاص: /categories/women  => /categories.html?category=women
+        const pathname = linkUrl.pathname.replace(/\/+$/, ''); // بدون سلاش نهائي
+        if (pathname === '/categories' || pathname.startsWith('/categories/')) {
+          // إذا كان الرابط بالفعل يشير إلى categories.html مع query فلا نغيّره
+          if (!/\/categories\.html$/i.test(pathname)) {
+            const parts = pathname.split('/').filter(Boolean); // ["categories","women"]
+            const slug = (parts[1]) ? parts[1] : '';
+            const newUrl = new URL('/categories.html', location.origin);
+            if (slug) newUrl.searchParams.set('category', slug);
+            // احتفظ بـ hash إن وُجد
+            if (linkUrl.hash) newUrl.hash = linkUrl.hash;
+            linkUrl = newUrl;
+            hrefAttr = linkUrl.href;
+          }
+        }
+
+        // تأكد نفس الأصل
+        if (linkUrl.origin !== location.origin) return;
+
+        const targetHref = linkUrl.href;
+        const beforeHref = location.href;
+        const beforeTitle = document.title;
+        const beforeBodyLen = document.body ? document.body.innerHTML.length : 0;
+
+        setTimeout(function() {
+          try {
+            const current = location.href;
+
+            if (forceAlways) {
+              if (current !== targetHref) {
+                window.location.assign(targetHref);
+                return;
+              }
+              const afterTitle = document.title;
+              const afterLen = document.body ? document.body.innerHTML.length : 0;
+              if (afterTitle === beforeTitle && Math.abs(afterLen - beforeBodyLen) < 50) {
+                window.location.assign(targetHref);
+              }
+              return;
+            }
+
+            if (current !== targetHref) {
+              window.location.assign(targetHref);
+              return;
+            }
+
+            const afterTitle = document.title;
+            const afterLen = document.body ? document.body.innerHTML.length : 0;
+            if (current === targetHref && afterTitle === beforeTitle && Math.abs(afterLen - beforeBodyLen) < 50) {
+              window.location.assign(targetHref);
+            }
+          } catch (err2) {
+            console.error('link-forcer timeout error', err2);
+          }
+        }, 200);
+      } catch (err) {
+        console.error('link-forcer error', err);
+      }
+    }, true);
+  });
+})();
+
+
+
+
+// سكربت بسيط لتبديل الشرائح تلقائياً والتعامل مع النقاط
+
+(function(){
+  const intervalTime = 4500;
+  let timer;
+  const banner = document.querySelector('.promo-banner');
+  if(!banner) return;
+  const slides = banner.querySelectorAll('.banner-slide');
+  const dots = banner.querySelectorAll('.dot');
+  let idx = 0;
+  function show(i){
+    slides.forEach(s=> s.classList.toggle('active', +s.dataset.index===i));
+    dots.forEach(d=> d.classList.toggle('active', +d.dataset.to===i));
+    idx = i;
+  }
+  function next(){
+    show((idx+1) % slides.length);
+  }
+  function start(){
+    stop();
+    timer = setInterval(next, intervalTime);
+  }
+  function stop(){ if(timer) clearInterval(timer); }
+  // dots click
+  dots.forEach(d => d.addEventListener('click', e => { show(+d.dataset.to); start(); }));
+  // pause on hover
+  banner.addEventListener('mouseenter', stop);
+  banner.addEventListener('mouseleave', start);
+  // init
+  show(0);
+  start();
+})();
+
+/* ============================================================
+   عداد السلة - يعمل على جميع الصفحات
+   ============================================================ */
+(function() {
+  function updateCartBadge() {
+    try {
+      const raw = localStorage.getItem('x2_cart');
+      const count = raw ? JSON.parse(raw).reduce((s, it) => s + (Number(it.qty) || 1), 0) : 0;
+
+      // شاشة الكمبيوتر
+      document.querySelectorAll('#checkout-count, .cart-count').forEach(function(el) {
+        el.textContent = count;
+        el.style.display = count > 0 ? 'flex' : 'none';
+      });
+
+      // موبايل ناف بار - window.__cartCount يُقرأ من main-navbar.js
+      window.__cartCount = count;
+
+      // تحديث .cart-badge مباشرةً إن كان الناف بار محملاً
+      document.querySelectorAll('.cart-badge').forEach(function(el) {
+        el.setAttribute('data-count', count > 0 ? String(count) : '');
+      });
+    } catch(e) {}
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', updateCartBadge);
+  } else {
+    updateCartBadge();
+  }
+
+  window.addEventListener('cart:updated', updateCartBadge);
+  window.addEventListener('mobile-nav:ready', updateCartBadge);
+  window.addEventListener('storage', function(e) {
+    if (e.key === 'x2_cart') updateCartBadge();
+  });
+
+  window.updateCartBadge = updateCartBadge;
+})();
+
+/* ============================================================
+   نظام الحساب - يعمل على جميع الصفحات
+   ============================================================ */
+(function() {
+  const PROFILE_KEY = 'x2_profile';
+  const LOGGED_KEY  = 'x2_logged';
+
+  function isLoggedIn() {
+    return localStorage.getItem(LOGGED_KEY) === '1';
+  }
+
+  function getProfile() {
+    try { return JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}'); } catch(e) { return {}; }
+  }
+
+  function logout() {
+    localStorage.removeItem(LOGGED_KEY);
+    localStorage.removeItem(PROFILE_KEY);
+    window.location.href = 'login.html';
+  }
+  window.x2Logout = logout;
+
+  /* تحديث قائمة "الحساب" في الهيدر */
+  function updateAccountNav() {
+    // ابحث عن جميع dropdowns التي تحتوي على زر الحساب
+    document.querySelectorAll('.dropdown').forEach(function(dd) {
+      const btn = dd.querySelector('.dropbtn');
+      if (!btn) return;
+      const btnText = btn.textContent || '';
+      if (!btnText.includes('الحساب') && !btnText.includes('Account')) return;
+
+      const menu = dd.querySelector('.dropdown-content');
+      if (!menu) return;
+
+      if (isLoggedIn()) {
+        const p = getProfile();
+        const name = p.name || 'حسابي';
+        const initial = name.charAt(0).toUpperCase();
+        btn.innerHTML = `<span style="display:inline-flex;align-items:center;gap:5px">
+          <span style="width:22px;height:22px;border-radius:50%;background:#fff;color:#D4AF37;font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center">${initial}</span>
+          <span style="font-size:14px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name.split(' ')[0]}</span>
+        </span>`;
+        menu.innerHTML = `
+          <a href="account.html">👤 حسابي</a>
+          <a href="account.html">📋 طلباتي</a>
+          <a href="checkout.html">🛒 إتمام الطلب</a>
+          <a href="#" onclick="window.x2Logout();return false;" style="color:#e53935">🚪 تسجيل الخروج</a>`;
+      } else {
+        btn.innerHTML = `🗣 <span>الحساب</span>`;
+        menu.innerHTML = `
+          <a href="login.html">🔑 تسجيل الدخول</a>
+          <a href="login.html?tab=register">📝 إنشاء حساب</a>`;
+      }
+    });
+
+    /* تحديث رابط الحساب في الموبايل ناف بار */
+    document.querySelectorAll('a[href*="account.html"], a[href*="account"]').forEach(function(a) {
+      if (a.closest('.mobile-nav') || a.closest('.acc-nav-item')) {
+        if (!isLoggedIn()) {
+          a.addEventListener('click', function(e) {
+            e.preventDefault();
+            window.location.href = 'login.html';
+          }, { once: true });
+        }
+      }
+    });
+  }
+
+  /* إعادة توجيه صفحة account.html إذا لم يكن مسجلاً */
+  if (window.location.pathname.includes('account.html') && !isLoggedIn()) {
+    window.location.replace('login.html');
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', updateAccountNav);
+  } else {
+    updateAccountNav();
+  }
+
+  /* تحديث بعد تحميل الموبايل ناف بار */
+  window.addEventListener('mobile-nav:ready', updateAccountNav);
+
+  /* تصدير عالمي */
+  window.x2Auth = { isLoggedIn, getProfile, logout };
+})();
+
+

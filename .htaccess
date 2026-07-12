@@ -1,0 +1,2 @@
+RewriteEngine On
+RewriteRule ^categories/([^/]+)/?$ categories.html?category=$1 [L,QSA]

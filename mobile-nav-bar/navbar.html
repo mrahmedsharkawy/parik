@@ -1,0 +1,53 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="شريط التنقل">شريط التنقل</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="main-navbar.js"></script>
+  <script src="../translations/translation.js"></script>
+</head>
+<body>
+
+<!-- partial: فقط شريط التنقل — لا تضف <!doctype> أو <head> أو <body> -->
+<nav class="mobile-nav" role="navigation" aria-label="التنقل أسفل الشاشة">
+  <ul>
+    <li>
+      <a href="../index.html" class="nav-link" data-key="home">
+        <img src="icons/home.svg" class="icon" alt="الرئيسية">
+        <span data-i18n="الرئيسية">الرئيسية</span>
+      </a>
+    </li>
+    <li>
+      <a href="../categories.html" class="nav-link" data-key="categories">
+        <img src="icons/categories.svg" class="icon" alt="الفئات">
+        <span data-i18n="الفئات">الفئات</span>
+      </a>
+    </li>
+    <li>
+      <a href="../low-price.html" class="nav-link" data-key="low-price">
+        <img src="icons/low-price.svg" class="icon" alt="منخفض جداً">
+        <span data-i18n="عروض منخفضة">منخفض جداً</span>
+      </a>
+    </li>
+    <li>
+      <a href="../account.html" class="nav-link" data-key="account">
+        <span class="icon-wrap account-badge" data-count="0" aria-label="عدد الإشعارات">
+          <img src="icons/account.svg" class="icon" alt="حسابي">
+        </span>
+        <span data-i18n="حسابي">حسابي</span>
+      </a>
+    </li>
+    <li>
+      <a href="../cart.html" class="nav-link">
+        <span class="icon-wrap cart-badge" data-count="0" aria-label="عدد العناصر في السلة">
+          <img src="icons/cart.svg" class="icon" alt="عربة">
+        </span>
+        <span data-i18n="السلة">السلة</span>
+      </a>
+    </li>
+  </ul>
+</nav>
+</body>
+</html>
