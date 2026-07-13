@@ -890,7 +890,7 @@ window.addEventListener('popstate', function(event) {
       'wood': '🪵',
       'leather': '👜',
       'sticker': '🏷️',
-      'ramadan': '🌙',
+      'Ramadan': '🌙',
     };
     
     return icons[slug] || '🔸';

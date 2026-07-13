@@ -263,7 +263,7 @@
   },
   {
     "name": { "ar": "رمضان", "en": "Ramadan" },
-    "categorySlug": "ramadan",
+    "categorySlug": "Ramadan",
     "image": "assets/categories/Ramadan/wood.png",
     "description": { "ar": "منتجات رمضان.", "en": "Ramadan products." },
     "url": "/categories/Ramadan",
