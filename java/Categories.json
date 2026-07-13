@@ -238,26 +238,26 @@
       {
         "name": { "ar": "مواليد", "en": "Born in" },
         "categorySlug": "born-in",
-        "image": "assets/categories/sticker/born-in.png",
-        "url": "/categories/sticker/born-in"
+        "image": "assets/categories/Sticker/born-in.png",
+        "url": "/categories/Sticker/born-in"
       },
       {
         "name": { "ar": "مفرغ", "en": "Empty" },
         "categorySlug": "empty",
-        "image": "assets/categories/sticker/empty.png",
-        "url": "/categories/sticker/empty"
+        "image": "assets/categories/Sticker/empty.png",
+        "url": "/categories/Sticker/empty"
       },
       {
         "name": { "ar": "كامل", "en": "Full" },
         "categorySlug": "full",
-        "image": "assets/categories/sticker/full.png",
-        "url": "/categories/sticker/full"
+        "image": "assets/categories/Sticker/full.png",
+        "url": "/categories/Sticker/full"
       },
       {
         "name": { "ar": "المناسبات", "en": "Occasions" },
         "categorySlug": "occasions",
-        "image": "assets/categories/sticker/occasions.png",
-        "url": "/categories/sticker/occasions"
+        "image": "assets/categories/Sticker/occasions.png",
+        "url": "/categories/Sticker/occasions"
       }
     ]
   },
