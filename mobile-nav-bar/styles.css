@@ -92,18 +92,21 @@ body{
 /* active state */
 .mobile-nav a.active,
 .mobile-nav button.active{
-  color:var(--nav-accent);
+  color:#fff;
+  background:#152546;
+  border-radius:12px;
+  box-shadow:0 6px 16px rgba(21,37,70,0.22);
 }
 
 /* تنسيق الأيقونات النشطة - تعديل لحل مشكلة عدم تغير اللون */
 .mobile-nav a.active svg.icon {
-  color: var(--nav-accent) !important;
-  fill: var(--nav-accent) !important;
-  stroke: var(--nav-accent) !important;
+  color: #fff !important;
+  fill: #fff !important;
+  stroke: #fff !important;
 }
 
 .mobile-nav a.active img.icon {
-  filter: brightness(0) saturate(100%) invert(23%) sepia(90%) saturate(3386%) hue-rotate(358deg) brightness(98%) contrast(101%) !important;
+  filter: brightness(0) saturate(100%) invert(100%) !important;
 }
 
 /* إزالة تأثير التحويم حتى لا يتعارض مع تنسيق الأيقونات النشطة */

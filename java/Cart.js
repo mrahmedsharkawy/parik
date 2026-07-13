@@ -667,6 +667,10 @@ function updateSelectedCount() {
     }
   }
 
+  function normalizeWhatsAppPhone(phone){
+    return String(phone || '').replace(/\D/g, '');
+  }
+
   function getSelectedItemsForOrder(){
     const cards = Array.from(document.querySelectorAll('.product-card-cart'));
     const selectedCards = cards.filter(card => {
@@ -709,7 +713,11 @@ function updateSelectedCount() {
     };
   }
 
-  function buildWhatsAppMessage(){
+  function buildWhatsAppMessage(options){
+    const opts = options || {};
+    const includeProductLinks = opts.includeProductLinks !== false;
+    const includeImages = opts.includeImages !== false;
+    const maxItems = Math.max(1, Number(opts.maxItems || 50));
     const items = getSelectedItemsForOrder();
     const customer = getCustomerDetails();
     const subtotal = parseNumber(document.querySelector('.subtotal')?.dataset.amount || document.querySelector('.subtotal')?.textContent || '0');
@@ -718,14 +726,15 @@ function updateSelectedCount() {
     const curr = typeof window.getSelectedCurrency === 'function' ? window.getSelectedCurrency() : (localStorage.getItem('currency') || 'AED');
     const sym = typeof window.currencySymbolFor === 'function' ? window.currencySymbolFor(curr) : curr;
 
-    const itemsText = items.length
-      ? items.map((it, idx) => [
+    const slicedItems = items.slice(0, maxItems);
+    const itemsText = slicedItems.length
+      ? slicedItems.map((it, idx) => [
           `${idx + 1}) ${it.title}`,
           `   الكمية: ${it.qty}`,
           `   سعر الوحدة: ${it.unit.toFixed(2)} ${sym}`,
           `   الإجمالي: ${it.line.toFixed(2)} ${sym}`,
-          it.productUrl ? `   رابط المنتج: ${it.productUrl}` : '',
-          it.image ? `   صورة المنتج: ${it.image}` : ''
+          includeProductLinks && it.productUrl ? `   رابط المنتج: ${it.productUrl}` : '',
+          includeImages && it.image ? `   صورة المنتج: ${it.image}` : ''
         ].filter(Boolean).join('\n')).join('\n\n')
       : 'لا توجد منتجات في السلة';
 
@@ -743,6 +752,7 @@ function updateSelectedCount() {
       '',
       'محتويات السلة:',
       itemsText,
+      items.length > slicedItems.length ? `\n... وتم اختصار ${items.length - slicedItems.length} منتج بسبب طول الرسالة` : '',
       '',
       `الإجمالي قبل الخصم: ${subtotal.toFixed(2)} ${sym}`,
       `الخصم: ${discount.toFixed(2)} ${sym}`,
@@ -755,8 +765,20 @@ function updateSelectedCount() {
   function openWhatsAppOrder(){
     const items = getSelectedItemsForOrder();
     if (!items.length) return;
-    const msg = encodeURIComponent(buildWhatsAppMessage());
-    const url = `https://wa.me/${WHATSAPP_PHONE}?text=${msg}`;
+    const phone = normalizeWhatsAppPhone(WHATSAPP_PHONE);
+    if (!phone) return;
+
+    // تقليل طول الرسالة تدريجياً لتجنب فشل فتح روابط واتساب الطويلة.
+    const variants = [
+      buildWhatsAppMessage({ includeProductLinks:true, includeImages:true, maxItems:50 }),
+      buildWhatsAppMessage({ includeProductLinks:true, includeImages:false, maxItems:25 }),
+      buildWhatsAppMessage({ includeProductLinks:true, includeImages:false, maxItems:10 }),
+      buildWhatsAppMessage({ includeProductLinks:false, includeImages:false, maxItems:10 })
+    ];
+    let finalText = variants.find(v => v.length <= 2500) || variants[variants.length - 1].slice(0, 2400);
+
+    const msg = encodeURIComponent(finalText);
+    const url = `https://wa.me/${phone}?text=${msg}`;
     window.open(url, '_blank', 'noopener');
   }
 

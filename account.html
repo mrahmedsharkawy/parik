@@ -292,6 +292,45 @@
   position: sticky;
   top: 80px;
 }
+.acc-sidebar-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px 16px;
+  border-bottom: 1px solid #f3f3f3;
+  margin-bottom: 8px;
+}
+.acc-sidebar-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #152546;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+.acc-sidebar-meta {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.acc-sidebar-name {
+  color: #152546;
+  font-size: 0.98rem;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.acc-sidebar-email {
+  color: #7a8296;
+  font-size: 0.76rem;
+}
 .acc-nav-section {
   border-bottom: 1px solid #f5f5f5;
   padding: 6px 0;
@@ -607,13 +646,25 @@
 
   /* الشريط الجانبي: مخفي افتراضياً */
   .acc-sidebar {
-    display: none !important;
-    width: 100% !important;
+    display: block !important;
+    position: fixed !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    right: 0 !important;
+    left: auto !important;
+    width: min(84vw, 320px) !important;
+    max-width: 320px !important;
     border-radius: 10px !important;
     order: 2;
+    z-index: 2000 !important;
+    transform: translateX(100%) !important;
+    transition: transform 0.28s ease !important;
+    box-shadow: -14px 0 34px rgba(0,0,0,0.18) !important;
+    padding-top: calc(env(safe-area-inset-top) + 72px) !important;
+    overflow-y: auto !important;
   }
   .acc-sidebar.mobile-open {
-    display: block !important;
+    transform: translateX(0) !important;
   }
 
   /* المحتوى أولاً */
@@ -641,6 +692,7 @@
     color: #333;
   }
   .acc-mobile-menu-btn::after { content: '›'; font-size: 1.2rem; color: #aaa; }
+  .acc-sidebar-head { padding: 12px 16px 14px; }
 
   /* التبويبات */
   .acc-tabs {
@@ -709,6 +761,14 @@
 
   <!-- الشريط الجانبي -->
   <aside class="acc-sidebar" id="accSidebar">
+
+      <div class="acc-sidebar-head">
+        <div class="acc-sidebar-avatar" id="sidebar-avatar">م</div>
+        <div class="acc-sidebar-meta">
+          <div class="acc-sidebar-name" id="sidebar-name">حسابي</div>
+          <div class="acc-sidebar-email" id="sidebar-email">مرحباً بك</div>
+        </div>
+      </div>
 
     <div class="acc-nav-section">
       <div class="acc-nav-title">طلباتك</div>
@@ -969,6 +1029,10 @@
     renderOrders();
     // scroll to top of content
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (window.matchMedia('(max-width: 768px)').matches) {
+      const sidebar = document.getElementById('accSidebar');
+      if (sidebar) sidebar.classList.remove('mobile-open');
+    }
   };
 
   // profile
@@ -983,8 +1047,22 @@
       document.getElementById('profile-name').textContent = p.name;
       document.getElementById('avatar-letter').textContent = p.name.charAt(0);
     }
+    updateSidebarProfile(p);
     alert('✅ تم حفظ التغييرات');
   };
+
+  function updateSidebarProfile(p) {
+    const profile = p || getProfile();
+    const name = (profile.name || 'حسابي').trim();
+    const email = (profile.email || 'مرحباً بك').trim();
+    const avatar = name ? name.charAt(0) : 'م';
+    const nameEl = document.getElementById('sidebar-name');
+    const emailEl = document.getElementById('sidebar-email');
+    const avatarEl = document.getElementById('sidebar-avatar');
+    if (nameEl) nameEl.textContent = name;
+    if (emailEl) emailEl.textContent = email || 'مرحباً بك';
+    if (avatarEl) avatarEl.textContent = avatar;
+  }
 
   // load profile
   function loadProfile() {
@@ -997,7 +1075,21 @@
       }
       if (p.email) { document.getElementById('pf-email').value = p.email; document.getElementById('profile-email').textContent = p.email; }
       if (p.phone) document.getElementById('pf-phone').value = p.phone;
+      updateSidebarProfile(p);
     } catch(e) {}
+  document.addEventListener('click', function(e) {
+    const sidebar = document.getElementById('accSidebar');
+    const btn = document.querySelector('.acc-mobile-menu-btn');
+    if (!sidebar || !btn) return;
+    if (!window.matchMedia('(max-width: 768px)').matches) return;
+    if (sidebar.classList.contains('mobile-open') && !sidebar.contains(e.target) && !btn.contains(e.target)) {
+      sidebar.classList.remove('mobile-open');
+    }
+  });
+
+  document.getElementById('accSidebar')?.addEventListener('click', function(e) {
+    e.stopPropagation();
+  });
   }
 
   // init

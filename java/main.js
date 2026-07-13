@@ -274,26 +274,68 @@ document.addEventListener("DOMContentLoaded", function () {
 // إضافة تأثيرات انتقالية للقوائم المنسدلة مع ضبط موقعها تحت العنصر مباشرة
 document.addEventListener("DOMContentLoaded", () => {
   const dropdowns = document.querySelectorAll(".dropdown-content");
+  const isMobileNow = () => window.matchMedia('(max-width: 992px)').matches || 'ontouchstart' in window;
+  const isRTL = document.documentElement.dir === 'rtl';
+
+  function showDropdown(dropdown) {
+    dropdown.classList.add('show');
+    dropdown.style.display = "block";
+    requestAnimationFrame(() => {
+      dropdown.style.opacity = "1";
+      dropdown.style.transform = isMobileNow()
+        ? 'translateX(0)'
+        : 'translateY(0) scale(1)';
+    });
+  }
+
+  function hideDropdown(dropdown) {
+    dropdown.classList.remove('show');
+    dropdown.style.opacity = "0";
+    dropdown.style.transform = isMobileNow()
+      ? (isRTL ? 'translateX(-100%)' : 'translateX(100%)')
+      : 'translateY(15px) scale(0.98)';
+    setTimeout(() => {
+      if (!dropdown.classList.contains('show')) dropdown.style.display = "none";
+    }, 120);
+  }
+
+  function closeAllDropdowns(exceptDropdown) {
+    dropdowns.forEach(d => { if (d !== exceptDropdown) hideDropdown(d); });
+  }
   
   dropdowns.forEach(dropdown => {
     // تعديل طريقة ظهور القوائم المنسدلة
     dropdown.style.transition = "all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
-    dropdown.style.transform = "translateY(15px) scale(0.98)";
+    dropdown.style.transform = isMobileNow()
+      ? (isRTL ? 'translateX(-100%)' : 'translateX(100%)')
+      : 'translateY(15px) scale(0.98)';
     dropdown.style.opacity = "0";
     dropdown.style.display = "none";
     
     // تأكد من وضع القائمة بشكل مطلق وتحت العنصر مباشرة
-    dropdown.style.position = "absolute";
-    dropdown.style.top = "130%"; // مباشرة تحت العنصر
-    dropdown.style.left = "0"; // محاذاة مع الجانب الأيسر (سيتم تعديله للغة العربية)
-    dropdown.style.zIndex = "1000"; // ضمان ظهورها فوق العناصر الأخرى
-    dropdown.style.width = "max-content"; // عرض مناسب للمحتوى
-    dropdown.style.minWidth = "100%"; // لا يقل عن عرض العنصر الأصلي
-    
-    // تعديل محاذاة القائمة حسب اتجاه اللغة
-    if (document.documentElement.dir === "rtl") {
-      dropdown.style.left = "auto";
-      dropdown.style.right = "0";
+    if (isMobileNow()) {
+      dropdown.style.position = "fixed";
+      dropdown.style.top = "0";
+      dropdown.style.bottom = "0";
+      dropdown.style.width = "min(82vw, 320px)";
+      dropdown.style.minWidth = "0";
+      dropdown.style.maxWidth = "320px";
+      dropdown.style.zIndex = "2000";
+      dropdown.style.left = isRTL ? "0" : "auto";
+      dropdown.style.right = isRTL ? "auto" : "0";
+    } else {
+      dropdown.style.position = "absolute";
+      dropdown.style.top = "130%"; // مباشرة تحت العنصر
+      dropdown.style.left = "0"; // محاذاة مع الجانب الأيسر (سيتم تعديله للغة العربية)
+      dropdown.style.zIndex = "1000"; // ضمان ظهورها فوق العناصر الأخرى
+      dropdown.style.width = "max-content"; // عرض مناسب للمحتوى
+      dropdown.style.minWidth = "100%"; // لا يقل عن عرض العنصر الأصلي
+      
+      // تعديل محاذاة القائمة حسب اتجاه اللغة
+      if (document.documentElement.dir === "rtl") {
+        dropdown.style.left = "auto";
+        dropdown.style.right = "0";
+      }
     }
     
     const parent = dropdown.closest(".dropdown");
@@ -310,44 +352,53 @@ document.addEventListener("DOMContentLoaded", () => {
       let isMouseOverDropdown = false;
       
       trigger.addEventListener("mouseenter", () => {
+        if (isMobileNow()) return;
         clearTimeout(hideTimer);
-        dropdown.style.display = "block";
-        setTimeout(() => {
-          dropdown.style.opacity = "1";
-          dropdown.style.transform = "translateY(0) scale(1)";
-        }, 10);
+        showDropdown(dropdown);
+      });
+
+      // على الهاتف: فتح/إغلاق بالقَرص (tap) بدل hover.
+      trigger.addEventListener('click', (e) => {
+        if (!isMobileNow()) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const opened = dropdown.classList.contains('show') || dropdown.style.display === 'block';
+        closeAllDropdowns(dropdown);
+        if (!opened) showDropdown(dropdown);
+        else hideDropdown(dropdown);
       });
       
       dropdown.addEventListener("mouseenter", () => {
+        if (isMobileNow()) return;
         clearTimeout(hideTimer);
         isMouseOverDropdown = true;
       });
       
       dropdown.addEventListener("mouseleave", () => {
+        if (isMobileNow()) return;
         isMouseOverDropdown = false;
         hideTimer = setTimeout(() => {
           if (!isMouseOverDropdown) {
-            dropdown.style.opacity = "0";
-            dropdown.style.transform = "translateY(15px) scale(0.98)";
-            setTimeout(() => {
-              dropdown.style.display = "none";
-            }, 100);
+            hideDropdown(dropdown);
           }
         }, 100); // زيادة مدة التأخير هنا إلى 800 مللي ثانية
       });
       
       parent.addEventListener("mouseleave", () => {
+        if (isMobileNow()) return;
         hideTimer = setTimeout(() => {
           if (!isMouseOverDropdown) {
-            dropdown.style.opacity = "0";
-            dropdown.style.transform = "translateY(15px) scale(0.98)";
-            setTimeout(() => {
-              dropdown.style.display = "none";
-            }, 100);
+            hideDropdown(dropdown);
           }
         }, 100); // زيادة مدة التأخير هنا إلى 800 مللي ثانية
       });
     }
+  });
+
+  // إغلاق القوائم عند الضغط خارجها في الهاتف.
+  document.addEventListener('click', (e) => {
+    if (!isMobileNow()) return;
+    if (!e.target.closest('.dropdown')) closeAllDropdowns();
   });
 });
 
@@ -896,6 +947,13 @@ document.addEventListener("DOMContentLoaded", function() {
           <span style="font-size:14px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name.split(' ')[0]}</span>
         </span>`;
         menu.innerHTML = `
+          <div class="account-drawer-head">
+            <div class="account-drawer-avatar">${initial}</div>
+            <div class="account-drawer-meta">
+              <strong>${name}</strong>
+              <span>مرحباً بك</span>
+            </div>
+          </div>
           <a href="account.html">👤 حسابي</a>
           <a href="account.html">📋 طلباتي</a>
           <a href="checkout.html">🛒 إتمام الطلب</a>
@@ -903,6 +961,13 @@ document.addEventListener("DOMContentLoaded", function() {
       } else {
         btn.innerHTML = `🗣 <span>الحساب</span>`;
         menu.innerHTML = `
+          <div class="account-drawer-head">
+            <div class="account-drawer-avatar">?</div>
+            <div class="account-drawer-meta">
+              <strong>الضيف</strong>
+              <span>سجل الدخول لمتابعة الطلبات</span>
+            </div>
+          </div>
           <a href="login.html">🔑 تسجيل الدخول</a>
           <a href="login.html?tab=register">📝 إنشاء حساب</a>`;
       }
