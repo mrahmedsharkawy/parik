@@ -136,19 +136,19 @@
       {
         "name": { "ar": "طولات", "en": "tables" },
         "categorySlug": "tables",
-        "image": "assets/categories/forex/tables.png",
+        "image": "assets/categories/Forex/tables.png",
         "url": "/categories/forex/tables"
       },
       {
         "name": { "ar": "استاند", "en": "Stands" },
         "categorySlug": "stands",
-        "image": "assets/categories/forex/stands.png",
+        "image": "assets/categories/Forex/stands.png",
         "url": "/categories/forex/stands"
       },
       {
         "name": { "ar": "مجسم", "en": "Models" },
         "categorySlug": "models",
-        "image": "assets/categories/forex/models.png",
+        "image": "assets/categories/Forex/models.png",
         "url": "/categories/forex/models"
       },
       {
