@@ -164,13 +164,13 @@
   placeholder="ابحث في x2-shopping"
   data-i18n-placeholder="ابحث في x2-shopping">
   <!-- أيقونة البحث -->
-  <span class="icon search" onclick="performTextSearch()">
-    🔍
+  <span class="icon search search-icon" onclick="performTextSearch()" style="cursor:pointer;display:flex;align-items:center;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
   </span>
 
   <!-- أيقونة الكاميرا -->
-  <label class="icon camera" for="imageSearchInput">
-    📷
+  <label class="icon camera camera-icon" for="imageSearchInput" style="cursor:pointer;display:flex;align-items:center;margin-right:4px;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
   </label>
   <input type="file" id="imageSearchInput" accept="image/*" style="display:none;">
 </div>
@@ -243,29 +243,582 @@
 </header>
 
 <main class="main" id="main">
-  <!-- اسم الفئة المختارة يظهر تلقائياً -->
-  <h2 id="selected-category-title" style="display:none;text-align:center;margin:20px 0;"></h2>
-  <!-- محتوى الموقع هنا -->
-  <div id="searchResults" style="margin-top: 10px;"></div>
-   
-<div class="categories">
-    <div><a href="/categories.html">💯 <span data-i18n="الكل">الكل</span></a></div>
-    <div><a href="/categories/Occasions">🎉 <span data-i18n="مناسابات">مناسابات</span></a></div>
-    <div><a href="/categories/Acrylic">💎 <span data-i18n=" اكريلك">اكريلك </span></a></div>
-    <div><a href="/categories/paper">📄 <span data-i18n="ورق ">ورق </span></a></div>
-    <div><a href="/categories/Forex">🖼️ <span data-i18n="فوركس ">فوركس </span></a></div>
-    <div><a href="/categories/wood">🪵 <span data-i18n="خشب  ">خشب  </span></a></div>
-    <div><a href="/categories/leather">👜 <span data-i18n="جلد  ">جلد  </span></a></div>
-    <div><a href="/categories/sticker">🏷️ <span data-i18n="استيكر ">استيكر </span></a></div>
-    <div><a href="/categories/ramadan">🌙 <span data-i18n="رمضان ">رمضان </span></a></div>
-</div>
 
-<!-- شريط الفئات الدائري سيظهر هنا -->
-<div id="subcategories-display"></div>
+<style>
+/* ===== صفحة الفئات الاحترافية ===== */
+#main.main { width: 100% !important; max-width: 100% !important; margin-top: 64px !important; margin-bottom: 0 !important; padding: 0 !important; background: #f5f6fa; }
 
-<!-- ✅ شريط الفلاتر الأفقي المتحرك -->
-   
-  <div class="filter-wrapper">
+.cat-page {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  min-height: calc(100dvh - 64px);
+  max-width: 100%;
+  margin: 0;
+  gap: 0;
+}
+
+/* الشريط الجانبي */
+.cat-sidebar {
+  background: #fff;
+  border-left: 1px solid #eee;
+  padding: 12px 0;
+  position: sticky;
+  top: 64px;
+  height: calc(100dvh - 64px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.cat-sidebar-title {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #9aa3b2;
+  padding: 0 16px 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.cat-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #333;
+  border-right: 3px solid transparent;
+  transition: all 0.15s;
+  text-decoration: none;
+}
+.cat-sidebar-item:hover { background: #f7f8fc; color: #D4AF37; }
+.cat-sidebar-item.active { border-right-color: #D4AF37; background: rgba(212,175,55,0.07); color: #D4AF37; }
+.cat-sidebar-item img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid #eee;
+  flex-shrink: 0;
+}
+.cat-sidebar-item .cat-count {
+  margin-right: auto;
+  font-size: 0.7rem;
+  background: #f0f0f0;
+  color: #777;
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+.cat-sidebar-item.active .cat-count { background: rgba(212,175,55,0.18); color: #D4AF37; }
+
+/* المنطقة الرئيسية */
+.cat-main {
+  padding: 20px 20px 60px;
+  min-height: 400px;
+}
+
+/* رأس القسم */
+.cat-main-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+.cat-main-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #152546;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cat-breadcrumb {
+  font-size: 0.76rem;
+  color: #9aa3b2;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.cat-breadcrumb a { color: #D4AF37; text-decoration: none; cursor: pointer; }
+.cat-breadcrumb a:hover { text-decoration: underline; }
+
+/* شبكة الفئات الفرعية */
+.cat-sub-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 14px;
+  margin-bottom: 28px;
+}
+.cat-sub-card {
+  background: #fff;
+  border-radius: 14px;
+  border: 1.5px solid #eef0f6;
+  padding: 16px 10px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.18s;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+}
+.cat-sub-card:hover, .cat-sub-card.active {
+  border-color: #D4AF37;
+  box-shadow: 0 6px 20px rgba(212,175,55,0.18);
+  transform: translateY(-2px);
+}
+.cat-sub-card.active { background: rgba(212,175,55,0.04); }
+.cat-sub-img {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2.5px solid #eee;
+  background: #f5f5f5;
+  transition: border-color 0.15s;
+}
+.cat-sub-card:hover .cat-sub-img, .cat-sub-card.active .cat-sub-img {
+  border-color: #D4AF37;
+}
+.cat-sub-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #222;
+  text-align: center;
+  line-height: 1.3;
+}
+.cat-sub-card.active .cat-sub-name { color: #D4AF37; }
+
+/* قسم المنتجات */
+.cat-products-section { margin-top: 8px; }
+.cat-products-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #eee;
+}
+.cat-products-title {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #152546;
+}
+.cat-products-count {
+  font-size: 0.75rem;
+  color: #9aa3b2;
+  background: #f0f0f0;
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+.cat-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #152546;
+  cursor: pointer;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1.5px solid #ddd;
+  background: #fff;
+  transition: all 0.15s;
+}
+.cat-back-btn:hover { border-color: #D4AF37; color: #D4AF37; }
+
+/* موبايل */
+.cat-mobile-tabs {
+  display: none;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+}
+.cat-mobile-tabs::-webkit-scrollbar { display: none; }
+.cat-mobile-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 7px 14px;
+  border-radius: 20px;
+  border: 1.5px solid #eee;
+  background: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #555;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.cat-mobile-tab.active { border-color: #D4AF37; background: rgba(212,175,55,0.07); color: #D4AF37; }
+.cat-mobile-tab img { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; }
+
+@media (max-width: 900px) {
+  .cat-page { grid-template-columns: 1fr; }
+  .cat-sidebar { display: none; }
+  .cat-mobile-tabs { display: flex; }
+  .cat-main { padding: 14px 12px 80px; }
+  .cat-sub-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+  .cat-sub-img { width: 60px; height: 60px; }
+  .cat-sub-name { font-size: 0.72rem; }
+}
+@media (max-width: 500px) {
+  .cat-sub-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+}
+</style>
+
+  <div id="searchResults" style="margin-top: 0;"></div>
+
+  <!-- تبويبات الموبايل -->
+  <div class="cat-mobile-tabs" id="catMobileTabs"></div>
+
+  <div class="cat-page">
+    <!-- الشريط الجانبي -->
+    <aside class="cat-sidebar" id="catSidebar">
+      <div class="cat-sidebar-title">الفئات</div>
+      <!-- تُملأ بـ JS -->
+    </aside>
+
+    <!-- المحتوى الرئيسي -->
+    <div class="cat-main">
+      <div class="cat-main-header">
+        <div>
+          <div class="cat-breadcrumb" id="catBreadcrumb">
+            <span>الكل</span>
+          </div>
+          <div class="cat-main-title" id="catMainTitle">🛍 جميع الفئات</div>
+        </div>
+        <button class="cat-back-btn" id="catBackBtn" style="display:none" onclick="showAllSubcategories()">
+          ← العودة للفئات
+        </button>
+      </div>
+
+      <!-- شبكة الفئات الفرعية -->
+      <div class="cat-sub-grid" id="catSubGrid">
+        <!-- تُملأ بـ JS -->
+      </div>
+
+      <!-- منتجات الفئة -->
+      <div class="cat-products-section" id="catProductsSection" style="display:none">
+        <div class="cat-products-header">
+          <span class="cat-products-title" id="catProductsTitle"></span>
+          <span class="cat-products-count" id="catProductsCount"></span>
+        </div>
+        <div id="category-products" style="margin-bottom:30px;"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function() {
+  'use strict';
+
+  let allCategories = [];
+  let allProducts = [];
+  let activeMainSlug = null;
+  let activeSubSlug = null;
+
+  // تحميل البيانات
+  Promise.all([
+    fetch('java/Categories.json', {cache:'no-store'}).then(r=>r.json()),
+    fetch('java/Products.json', {cache:'no-store'}).then(r=>r.json())
+  ]).then(([cats, prods]) => {
+    allCategories = cats;
+    allProducts = prods;
+    buildSidebar();
+    buildMobileTabs();
+    // تحقق من URL params
+    const params = new URLSearchParams(location.search);
+    const cat = params.get('category');
+    const sub = params.get('subcategory');
+    if (cat) selectMainCategory(cat, false);
+    else showAllSubcategories();
+    if (sub) selectSubcategory(sub);
+  }).catch(() => {
+    document.getElementById('catSubGrid').innerHTML = '<p style="color:#aaa;padding:20px">تعذّر تحميل الفئات</p>';
+  });
+
+  // بناء الشريط الجانبي
+  function buildSidebar() {
+    const sb = document.getElementById('catSidebar');
+    const title = sb.querySelector('.cat-sidebar-title');
+    sb.innerHTML = '';
+    sb.appendChild(title);
+
+    // عنصر "الكل"
+    const allItem = makeItem({name:{ar:'جميع الفئات',en:'All Categories'}, categorySlug:'all', image:''}, true);
+    allItem.dataset.slug = 'all';
+    allItem.addEventListener('click', () => { selectMainCategory('all', true); });
+    sb.appendChild(allItem);
+
+    allCategories.forEach(cat => {
+      const item = makeItem(cat);
+      item.dataset.slug = cat.categorySlug;
+      item.addEventListener('click', () => selectMainCategory(cat.categorySlug, true));
+      sb.appendChild(item);
+    });
+  }
+
+  function makeItem(cat, isAll=false) {
+    const a = document.createElement('div');
+    a.className = 'cat-sidebar-item';
+    const name = cat.name.ar || cat.name.en;
+    const subs = cat.subcategories ? cat.subcategories.length : '';
+    a.innerHTML = isAll
+      ? `<span style="font-size:1.2rem">💯</span><span>${name}</span>`
+      : `<img src="${cat.image||''}" alt="${name}" onerror="this.style.display='none'">${name}${subs?`<span class="cat-count">${subs}</span>`:''}`;
+    return a;
+  }
+
+  // بناء تبويبات الموبايل
+  function buildMobileTabs() {
+    const wrap = document.getElementById('catMobileTabs');
+    const allTab = document.createElement('div');
+    allTab.className = 'cat-mobile-tab active';
+    allTab.dataset.slug = 'all';
+    allTab.innerHTML = '💯 الكل';
+    allTab.addEventListener('click', () => selectMainCategory('all', true));
+    wrap.appendChild(allTab);
+
+    allCategories.forEach(cat => {
+      const tab = document.createElement('div');
+      tab.className = 'cat-mobile-tab';
+      tab.dataset.slug = cat.categorySlug;
+      const name = cat.name.ar || cat.name.en;
+      tab.innerHTML = `${cat.image?`<img src="${cat.image}" alt="">`:''}${name}`;
+      tab.addEventListener('click', () => selectMainCategory(cat.categorySlug, true));
+      wrap.appendChild(tab);
+    });
+  }
+
+  // اختيار فئة رئيسية
+  function selectMainCategory(slug, scroll) {
+    activeMainSlug = slug;
+    activeSubSlug = null;
+
+    // تحديث active في الشريط
+    document.querySelectorAll('.cat-sidebar-item').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.cat-mobile-tab').forEach(el => el.classList.remove('active'));
+    const sideEl = document.querySelector(`.cat-sidebar-item[data-slug="${slug}"]`);
+    if (sideEl) sideEl.classList.add('active');
+    const tabEl = document.querySelector(`.cat-mobile-tab[data-slug="${slug}"]`);
+    if (tabEl) { tabEl.classList.add('active'); tabEl.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'}); }
+
+    if (slug === 'all') {
+      showAllSubcategories();
+    } else {
+      const cat = allCategories.find(c => c.categorySlug === slug);
+      if (!cat) return;
+      const name = cat.name.ar || cat.name.en;
+      document.getElementById('catMainTitle').textContent = name;
+      document.getElementById('catBreadcrumb').innerHTML = `<a onclick="selectMainCategory('all',true)">الكل</a> › <span>${name}</span>`;
+      document.getElementById('catBackBtn').style.display = 'flex';
+      renderSubcategories(cat.subcategories || [], slug);
+    }
+
+    if (scroll) window.scrollTo({top:0,behavior:'smooth'});
+    updateUrl(slug, null);
+  }
+
+  // عرض كل الفئات الفرعية من كل الفئات
+  function showAllSubcategories() {
+    activeMainSlug = 'all';
+    activeSubSlug = null;
+    document.querySelectorAll('.cat-sidebar-item').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.cat-mobile-tab').forEach(el => el.classList.remove('active'));
+    const allSide = document.querySelector('.cat-sidebar-item[data-slug="all"]');
+    if (allSide) allSide.classList.add('active');
+    const allTab = document.querySelector('.cat-mobile-tab[data-slug="all"]');
+    if (allTab) allTab.classList.add('active');
+
+    document.getElementById('catMainTitle').textContent = '🛍 جميع الفئات';
+    document.getElementById('catBreadcrumb').innerHTML = '<span>الكل</span>';
+    document.getElementById('catBackBtn').style.display = 'none';
+    hideProducts();
+
+    // عرض كل الفئات الرئيسية كبطاقات كبيرة
+    const grid = document.getElementById('catSubGrid');
+    grid.innerHTML = '';
+    // 2 في الصف على الموبايل، صف واحد على الكمبيوتر
+    if (window.innerWidth <= 900) {
+      grid.style.gridTemplateColumns = 'repeat(2, 1fr)';
+    } else {
+      // صف واحد يمتد بعدد الفئات
+      grid.style.gridTemplateColumns = `repeat(${allCategories.length}, minmax(0, 1fr))`;
+    }
+    allCategories.forEach(cat => {
+      const card = document.createElement('div');
+      card.className = 'cat-sub-card';
+      const name = cat.name.ar || cat.name.en;
+      card.innerHTML = `
+        <img class="cat-sub-img" src="${cat.image||''}" alt="${name}" onerror="this.src='assets/logo.png'">
+        <div class="cat-sub-name">${name}</div>`;
+      card.addEventListener('click', () => selectMainCategory(cat.categorySlug, true));
+      grid.appendChild(card);
+    });
+  }
+
+  // رسم الفئات الفرعية
+  function renderSubcategories(subs, parentSlug) {
+    const grid = document.getElementById('catSubGrid');
+    grid.innerHTML = '';
+    hideProducts();
+    document.querySelectorAll('.cat-sub-card').forEach(c=>c.classList.remove('active'));
+
+    // تحديد عدد الأعمدة على الموبايل حسب عدد الفئات الفرعية
+    const isMobile = window.innerWidth <= 900;
+    if (isMobile) {
+      const count = subs.length;
+      if (count <= 4) {
+        // صف واحد بعدد الأعمدة = عدد العناصر (بحد أقصى 4)
+        grid.style.gridTemplateColumns = `repeat(${count}, 1fr)`;
+      } else if (count <= 6) {
+        // صفّان: 3 في كل صف
+        grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+      } else {
+        grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+      }
+    } else {
+      grid.style.gridTemplateColumns = '';
+    }
+
+    subs.forEach(sub => {
+      const card = document.createElement('div');
+      card.className = 'cat-sub-card';
+      card.dataset.slug = sub.categorySlug;
+      const name = sub.name.ar || sub.name.en;
+      card.innerHTML = `
+        <img class="cat-sub-img" src="${sub.image||''}" alt="${name}" onerror="this.src='assets/logo.png'">
+        <div class="cat-sub-name">${name}</div>`;
+      card.addEventListener('click', () => selectSubcategory(sub.categorySlug, name, parentSlug));
+      grid.appendChild(card);
+    });
+  }
+
+  // اختيار فئة فرعية وعرض منتجاتها
+  function selectSubcategory(subSlug, subName, parentSlug) {
+    activeSubSlug = subSlug;
+    if (!subName) subName = subSlug;
+
+    document.querySelectorAll('.cat-sub-card').forEach(c=>c.classList.remove('active'));
+    const card = document.querySelector(`.cat-sub-card[data-slug="${subSlug}"]`);
+    if (card) { card.classList.add('active'); card.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+
+    const filtered = filterProducts(subSlug, subName);
+    showProducts(filtered, subName);
+    updateUrl(activeMainSlug, subSlug);
+  }
+
+  // تصفية المنتجات
+  function filterProducts(slug, name) {
+    const norm = v => String(v||'').toLowerCase().trim();
+    const sl = norm(slug), nm = norm(name);
+    return allProducts.filter(p => {
+      const fields = [p.category, p.subCategory, p.subcategory, p.categorySlug, p.subcategorySlug];
+      return fields.some(f => {
+        if (!f) return false;
+        if (Array.isArray(f)) return f.some(v => norm(v)===sl||norm(v)===nm||(typeof v==='object'&&(norm(v.ar)===sl||norm(v.en)===sl||norm(v.ar)===nm||norm(v.en)===nm)));
+        if (typeof f==='object') return norm(f.ar)===sl||norm(f.en)===sl||norm(f.ar)===nm||norm(f.en)===nm;
+        return norm(f)===sl||norm(f)===nm;
+      });
+    });
+  }
+
+  // عرض المنتجات
+  function showProducts(products, title) {
+    const sec = document.getElementById('catProductsSection');
+    const container = document.getElementById('category-products');
+    sec.style.display = '';
+    document.getElementById('catProductsTitle').textContent = '🛍 ' + title;
+    document.getElementById('catProductsCount').textContent = products.length + ' منتج';
+    container.innerHTML = '';
+
+    if (!products.length) {
+      container.innerHTML = '<p style="color:#aaa;padding:20px;text-align:center">لا توجد منتجات لهذه الفئة حالياً</p>';
+      sec.scrollIntoView({behavior:'smooth', block:'start'});
+      return;
+    }
+
+    // استخدم createProductCard لو متاحة (module)، وإلا ارسم مباشرة
+    function renderCard(p) {
+      if (typeof window.createProductCard === 'function') return window.createProductCard(p);
+      // fallback: كارت بسيط بنفس CSS المتجر
+      const name = (typeof p.name==='object'?(p.name.ar||p.name.en):(p.name||'منتج'));
+      const img  = (Array.isArray(p.img)?p.img[0]:p.img)||'assets/logo.png';
+      const link = p.id ? `product.html?id=${encodeURIComponent(p.id)}` : '#';
+      const price = parseFloat(p.price)||0;
+      const oldPrice = parseFloat(p.oldPrice)||0;
+      const sym = {AED:'د.إ',USD:'$',SAR:'ر.س',EGP:'ج.م'}[localStorage.getItem('currency')||'AED']||'د.إ';
+      const disc = oldPrice>price ? Math.round((oldPrice-price)/oldPrice*100) : 0;
+
+      const card = document.createElement('a');
+      card.href = link;
+      card.className = 'product-card';
+      card.style.cssText = 'display:inline-block;text-decoration:none;color:inherit;width:100%;margin:0;break-inside:avoid;';
+      card.innerHTML = `
+        ${disc?`<span class="offer-badge">-${disc}%</span>`:''}
+        <img class="product-img" src="${img}" alt="${name}" onerror="this.src='assets/logo.png'" style="height:180px;object-fit:cover;">
+        <div class="product-content" style="padding:8px 10px 10px;">
+          <div class="product-name">${name}</div>
+          <div class="product-price-row">
+            <span class="product-price${disc?' product-price-discount':''}">${price.toFixed(2)} ${sym}</span>
+            ${disc?`<span class="product-old-price-striked" style="display:inline">${oldPrice.toFixed(2)} ${sym}</span>`:''}
+          </div>
+        </div>`;
+      return card;
+    }
+
+    const row = document.createElement('div');
+    row.className = 'products-row';
+    products.forEach(p => {
+      const card = renderCard(p);
+      if (card) row.appendChild(card);
+    });
+    container.appendChild(row);
+
+    // حاول استخدام createProductCard لو اتحمل لاحقاً
+    if (typeof window.createProductCard !== 'function') {
+      const waitFor = setInterval(() => {
+        if (typeof window.createProductCard === 'function') {
+          clearInterval(waitFor);
+          container.innerHTML = '';
+          const row2 = document.createElement('div');
+          row2.className = 'products-row';
+          products.forEach(p => row2.appendChild(window.createProductCard(p)));
+          container.appendChild(row2);
+        }
+      }, 300);
+      setTimeout(() => clearInterval(waitFor), 5000);
+    }
+
+    sec.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+
+  function hideProducts() {
+    document.getElementById('catProductsSection').style.display = 'none';
+    document.getElementById('category-products').innerHTML = '';
+  }
+
+  function updateUrl(cat, sub) {
+    const params = new URLSearchParams();
+    if (cat && cat !== 'all') params.set('category', cat);
+    if (sub) params.set('subcategory', sub);
+    const q = params.toString();
+    history.replaceState({}, '', q ? '?' + q : location.pathname);
+  }
+
+  window.showAllSubcategories = showAllSubcategories;
+})();
+</script>
+<footer class="site-footer">
+<footer class="site-footer">
+  <div class="footer-info-bar">
     <div class="filters-scroll-container">
     <div class="filter-dropdown">
       <button class="filter-toggle">💰 <span data-i18n="فلتر بالسعر">فلتر بالسعر</span> </button>

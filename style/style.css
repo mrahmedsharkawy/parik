@@ -120,16 +120,15 @@ header, .main-header {
   font-size: 13px;
 }
 
-/* أيقونة البحث والكاميرا SVG باللون الأسود */
+/* أيقونة البحث والكاميرا SVG باللون الأزرق */
 .search-icon svg,
 .camera-icon svg {
-  color: #111 !important;
-  fill: #11111100 !important;
-  stroke: #111 !important;
+  color: #152546 !important;
+  fill: #15254600 !important;
+  stroke: #152546 !important;
   width: 22px;
   height: 22px;
   vertical-align: middle;
- 
 }
 
 /* ✅ DROPDOWN MENU */

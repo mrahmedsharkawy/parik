@@ -86,65 +86,189 @@ document.addEventListener("DOMContentLoaded", function () {
   const imageInput = document.getElementById("imageSearchInput");
   const resultsBox = document.getElementById("searchResults");
 
-  // بيانات وهمية لتجربة البحث
-  const data = [
-    { name: "ساعة ذكية", desc: "ساعة بلوتوث ضد الماء" },
-    { name: "هاتف سامسونج", desc: "جهاز حديث" },
-    { name: "تيشيرت رجالي", desc: "قطن مريح" },
-    { name: "حقيبة نسائية", desc: "صناعة فاخرة" }
-  ];
+  let _productsCache = null;
+  async function getProducts() {
+    if (_productsCache) return _productsCache;
+    try { const r = await fetch('java/Products.json',{cache:'no-store'}); _productsCache = await r.json(); return _productsCache; }
+    catch(e) { return []; }
+  }
+  function getOrders() {
+    try { return JSON.parse(localStorage.getItem('x2_orders')||'[]'); } catch(e) { return []; }
+  }
 
   // دالة البحث النصي
-  function performTextSearch() {
+  async function performTextSearch() {
     const keyword = searchInput.value.trim().toLowerCase();
-    resultsBox.innerHTML = "";
+    resultsBox.innerHTML = '';
+    if (!keyword) return;
 
-    if (!keyword) {
-      resultsBox.innerHTML = "<p style='color:gray;'>اكتب كلمة للبحث</p>";
+    const [products, orders] = await Promise.all([getProducts(), getOrders()]);
+
+    const prodResults = products.filter(p => {
+      const name = (typeof p.name==='object'?(p.name.ar||p.name.en):(p.name||'')).toLowerCase();
+      const desc = (typeof p.desc==='object'?(p.desc.ar||p.desc.en):(p.desc||'')).toLowerCase();
+      return name.includes(keyword)||desc.includes(keyword);
+    }).slice(0,8);
+
+    const orderResults = orders.filter(o=>
+      String(o.id||'').toLowerCase().includes(keyword)||
+      (o.items||[]).some(i=>(i.title||'').toLowerCase().includes(keyword))
+    ).slice(0,3);
+
+    if (!prodResults.length && !orderResults.length) {
+      resultsBox.innerHTML=`<p style="color:#888;padding:10px;text-align:center;background:#fff;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.08)">لا توجد نتائج لـ "${searchInput.value.trim()}"</p>`;
       return;
     }
 
-    const results = data.filter(item =>
-      item.name.toLowerCase().includes(keyword) ||
-      item.desc.toLowerCase().includes(keyword)
-    );
+    const wrap = document.createElement('div');
+    wrap.style.cssText='background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.10);padding:10px;margin-top:4px;';
 
-    if (results.length === 0) {
-      resultsBox.innerHTML = "<p style='color:red;'>لا توجد نتائج</p>";
-    } else {
-      results.forEach(item => {
-        const card = document.createElement("div");
-        card.style.border = "1px solid #ccc";
-        card.style.padding = "10px";
-        card.style.marginBottom = "8px";
-        card.style.borderRadius = "6px";
-        card.innerHTML = `<strong>${item.name}</strong><br>${item.desc}`;
-        resultsBox.appendChild(card);
+    if (prodResults.length) {
+      const t=document.createElement('div');
+      t.style.cssText='font-size:.75rem;font-weight:700;color:#888;padding:4px 6px 6px;';
+      t.textContent='🛒 منتجات';
+      wrap.appendChild(t);
+      prodResults.forEach(p=>{
+        const name=typeof p.name==='object'?(p.name.ar||p.name.en):(p.name||'منتج');
+        const img=(Array.isArray(p.img)?p.img[0]:p.img)||'assets/logo.png';
+        const link=p.id?`product.html?id=${encodeURIComponent(p.id)}`:'#';
+        const a=document.createElement('a');
+        a.href=link;
+        a.style.cssText='display:flex;align-items:center;gap:10px;padding:7px 6px;border-radius:8px;text-decoration:none;color:inherit;';
+        a.onmouseenter=()=>a.style.background='#f7f8fc';
+        a.onmouseleave=()=>a.style.background='';
+        a.innerHTML=`<img src="${img}" alt="" style="width:38px;height:38px;object-fit:cover;border-radius:7px;flex-shrink:0;background:#f0f0f0" onerror="this.src='assets/logo.png'"><span style="font-size:.84rem;font-weight:600;color:#111;flex:1">${name}</span><span style="font-size:.78rem;font-weight:700;color:#152546;white-space:nowrap">${p.price?p.price+' د.إ':''}</span>`;
+        wrap.appendChild(a);
       });
     }
+
+    if (orderResults.length) {
+      const sep=document.createElement('div');
+      sep.style.cssText='border-top:1px solid #f0f0f0;margin:6px 0;';
+      wrap.appendChild(sep);
+      const t2=document.createElement('div');
+      t2.style.cssText='font-size:.75rem;font-weight:700;color:#888;padding:4px 6px 6px;';
+      t2.textContent='📦 طلبات';
+      wrap.appendChild(t2);
+      orderResults.forEach(o=>{
+        const a=document.createElement('a');
+        a.href='account.html';
+        a.style.cssText='display:flex;align-items:center;gap:10px;padding:7px 6px;border-radius:8px;text-decoration:none;color:inherit;';
+        a.onmouseenter=()=>a.style.background='#f7f8fc';
+        a.onmouseleave=()=>a.style.background='';
+        const fi=(o.items||[])[0]||{};
+        a.innerHTML=`<span style="font-size:1.1rem">📦</span><span style="font-size:.84rem;font-weight:600;color:#111;flex:1">رقم الطلب: ${o.id||''}</span><span style="font-size:.78rem;color:#888">${fi.title||''}</span>`;
+        wrap.appendChild(a);
+      });
+    }
+
+    const cb=document.createElement('div');
+    cb.style.cssText='text-align:center;padding-top:8px;';
+    cb.innerHTML=`<button onclick="document.getElementById('searchResults').innerHTML=''" style="border:none;background:none;color:#aaa;font-size:.74rem;cursor:pointer">إغلاق ✕</button>`;
+    wrap.appendChild(cb);
+    resultsBox.appendChild(wrap);
   }
 
-  // تشغيل عند الضغط على العدسة
-  searchIcon.addEventListener("click", performTextSearch);
+  // تشغيل من أول حرف (live search)
+  let _liveTimer = null;
+  searchInput.addEventListener("input", function () {
+    clearTimeout(_liveTimer);
+    if (!searchInput.value.trim()) { resultsBox.innerHTML = ''; return; }
+    _liveTimer = setTimeout(performTextSearch, 220);
+  });
 
   // تشغيل عند الضغط على Enter
   searchInput.addEventListener("keydown", function (e) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      performTextSearch();
+    if (e.key === "Enter") { e.preventDefault(); clearTimeout(_liveTimer); performTextSearch(); }
+    if (e.key === "Escape") { resultsBox.innerHTML = ''; searchInput.value = ''; }
+  });
+
+  // إغلاق النتائج عند الضغط خارج الشريط
+  document.addEventListener("click", function(e) {
+    if (!searchInput.contains(e.target) && !resultsBox.contains(e.target)) {
+      resultsBox.innerHTML = '';
     }
   });
 
-  // تشغيل عند رفع صورة
-  imageInput.addEventListener("change", function () {
-    resultsBox.innerHTML = "";
+  // ===== بحث بالصورة =====
+  function getDominantHue(imgSrc) {
+    return new Promise(resolve => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = function() {
+        const c = document.createElement('canvas');
+        c.width = 16; c.height = 16;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0, 16, 16);
+        const d = ctx.getImageData(0, 0, 16, 16).data;
+        let r=0,g=0,b=0,count=0;
+        for(let i=0;i<d.length;i+=4){r+=d[i];g+=d[i+1];b+=d[i+2];count++;}
+        resolve({r:r/count,g:g/count,b:b/count});
+      };
+      img.onerror = () => resolve(null);
+      img.src = imgSrc;
+    });
+  }
 
-    if (imageInput.files.length > 0) {
-      const file = imageInput.files[0];
-      resultsBox.innerHTML = `<p>تم اختيار صورة: <strong>${file.name}</strong></p><p style="color:gray;">(ميزة التعرف على الصور لم تُفعّل بعد)</p>`;
-    } else {
-      resultsBox.innerHTML = "<p>لم يتم اختيار أي صورة</p>";
-    }
+  function colorDiff(a, b) {
+    if (!a || !b) return 999;
+    return Math.sqrt((a.r-b.r)**2+(a.g-b.g)**2+(a.b-b.b)**2);
+  }
+
+  imageInput.addEventListener("change", async function () {
+    if (!imageInput.files.length) return;
+    const file = imageInput.files[0];
+
+    resultsBox.innerHTML = `<div style="background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.10);padding:14px;margin-top:4px;text-align:center;color:#555;font-size:.84rem;">
+      🔍 جارٍ البحث بالصورة…<br><small style="color:#aaa">يتم تحليل الألوان للبحث عن أقرب المنتجات</small>
+    </div>`;
+
+    // قراءة الصورة المرفوعة
+    const uploadedSrc = await new Promise(res => {
+      const fr = new FileReader();
+      fr.onload = e => res(e.target.result);
+      fr.readAsDataURL(file);
+    });
+    const uploadedColor = await getDominantHue(uploadedSrc);
+
+    const products = await getProducts();
+    // نقارن فقط أول 30 منتج للأداء
+    const pool = products.slice(0, 30);
+    const scored = await Promise.all(pool.map(async p => {
+      const imgSrc = (Array.isArray(p.img) ? p.img[0] : p.img) || '';
+      const col = await getDominantHue(imgSrc);
+      return { p, diff: colorDiff(uploadedColor, col) };
+    }));
+    scored.sort((a,b) => a.diff - b.diff);
+    const top = scored.slice(0,6);
+
+    const wrap = document.createElement('div');
+    wrap.style.cssText='background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.10);padding:10px;margin-top:4px;';
+    const title = document.createElement('div');
+    title.style.cssText='font-size:.75rem;font-weight:700;color:#888;padding:4px 6px 8px;';
+    title.textContent='📷 أقرب المنتجات للصورة';
+    wrap.appendChild(title);
+
+    top.forEach(({p}) => {
+      const name = typeof p.name==='object'?(p.name.ar||p.name.en):(p.name||'منتج');
+      const img  = (Array.isArray(p.img)?p.img[0]:p.img)||'assets/logo.png';
+      const link = p.id?`product.html?id=${encodeURIComponent(p.id)}`:'#';
+      const a = document.createElement('a');
+      a.href = link;
+      a.style.cssText='display:flex;align-items:center;gap:10px;padding:7px 6px;border-radius:8px;text-decoration:none;color:inherit;';
+      a.onmouseenter=()=>a.style.background='#f7f8fc';
+      a.onmouseleave=()=>a.style.background='';
+      a.innerHTML=`<img src="${img}" alt="" style="width:38px;height:38px;object-fit:cover;border-radius:7px;flex-shrink:0;background:#f0f0f0" onerror="this.src='assets/logo.png'"><span style="font-size:.84rem;font-weight:600;color:#111;flex:1">${name}</span><span style="font-size:.78rem;font-weight:700;color:#152546;white-space:nowrap">${p.price?p.price+' د.إ':''}</span>`;
+      wrap.appendChild(a);
+    });
+
+    const cb=document.createElement('div');
+    cb.style.cssText='text-align:center;padding-top:8px;';
+    cb.innerHTML=`<button onclick="document.getElementById('searchResults').innerHTML=''" style="border:none;background:none;color:#aaa;font-size:.74rem;cursor:pointer">إغلاق ✕</button>`;
+    wrap.appendChild(cb);
+    resultsBox.innerHTML='';
+    resultsBox.appendChild(wrap);
+    imageInput.value='';
   });
 });
 

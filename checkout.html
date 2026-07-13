@@ -164,13 +164,13 @@
   placeholder="ابحث في x2-shopping"
   data-i18n-placeholder="ابحث في x2-shopping">
   <!-- أيقونة البحث -->
-  <span class="icon search" onclick="performTextSearch()">
-    🔍
+  <span class="icon search search-icon" onclick="performTextSearch()" style="cursor:pointer;display:flex;align-items:center;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
   </span>
 
   <!-- أيقونة الكاميرا -->
-  <label class="icon camera" for="imageSearchInput">
-    📷
+  <label class="icon camera camera-icon" for="imageSearchInput" style="cursor:pointer;display:flex;align-items:center;margin-right:4px;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
   </label>
   <input type="file" id="imageSearchInput" accept="image/*" style="display:none;">
 </div>
@@ -918,9 +918,12 @@
       orders.unshift(order);
       localStorage.setItem('x2_orders', JSON.stringify(orders));
       localStorage.removeItem(CART_KEY);
+      // إضافة 5 درهم كاش باك
+      const cb = parseFloat(localStorage.getItem('x2_cashback') || '0') + 5;
+      localStorage.setItem('x2_cashback', cb.toFixed(2));
     } catch(e) {}
 
-    alert('✅ تم تأكيد طلبك!\nرقم الطلب: ' + order.id);
+    alert('✅ تم تأكيد طلبك!\nرقم الطلب: ' + order.id + '\n🎁 تمت إضافة 5 د.إ كاش باك لحسابك!');
     window.location.href = 'index.html';
   };
 })();

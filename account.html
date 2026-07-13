@@ -164,13 +164,13 @@
   placeholder="ابحث في x2-shopping"
   data-i18n-placeholder="ابحث في x2-shopping">
   <!-- أيقونة البحث -->
-  <span class="icon search" onclick="performTextSearch()">
-    🔍
+  <span class="icon search search-icon" onclick="performTextSearch()" style="cursor:pointer;display:flex;align-items:center;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
   </span>
 
   <!-- أيقونة الكاميرا -->
-  <label class="icon camera" for="imageSearchInput">
-    📷
+  <label class="icon camera camera-icon" for="imageSearchInput" style="cursor:pointer;display:flex;align-items:center;margin-right:4px;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
   </label>
   <input type="file" id="imageSearchInput" accept="image/*" style="display:none;">
 </div>
@@ -337,19 +337,19 @@
 }
 .acc-nav-section:last-child { border-bottom: none; }
 .acc-nav-title {
-  font-size: 0.78rem;
+  font-size: 0.6rem;
   font-weight: 700;
   color: #888;
-  padding: 6px 18px 2px;
+  padding: 3px 10px 1px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 .acc-nav-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 9px 18px;
-  font-size: 0.87rem;
+  gap: 6px;
+  padding: 5px 10px;
+  font-size: 0.72rem;
   color: #333;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
@@ -358,14 +358,14 @@
 }
 .acc-nav-item:hover { background: rgba(21,37,70,0.05); color: #D4AF37; }
 .acc-nav-item.active { border-right-color: #D4AF37; background: rgba(21,37,70,0.07); color: #D4AF37; font-weight: 700; }
-.acc-nav-item .ico { font-size: 1rem; width: 20px; text-align: center; flex-shrink: 0; }
+.acc-nav-item .ico { font-size: 0.8rem; width: 16px; text-align: center; flex-shrink: 0; }
 .acc-nav-sub {
-  padding-right: 48px;
+  padding-right: 26px;
 }
 .acc-nav-sub .acc-nav-item {
-  font-size: 0.82rem;
+  font-size: 0.68rem;
   color: #555;
-  padding: 7px 18px 7px 0;
+  padding: 4px 10px 4px 0;
   border-right: none;
   font-weight: 400;
 }
@@ -791,12 +791,12 @@
     display: none;
   }
   .acc-nav-item {
-    padding: 9px 12px;
-    font-size: 0.8rem;
+    padding: 6px 10px;
+    font-size: 0.9rem;
     border-right: none;
-    border-radius: 8px;
+    border-radius: 7px;
     background: #fafbfe;
-    min-height: 38px;
+    min-height: 30px;
     justify-content: flex-start;
   }
   .acc-nav-item.active {
@@ -809,8 +809,8 @@
     gap: 6px;
   }
   .acc-nav-sub .acc-nav-item {
-    padding: 8px 12px;
-    font-size: 0.75rem;
+    padding: 5px 10px;
+    font-size: 0.9rem;
   }
 
   /* التبويبات */
@@ -890,6 +890,198 @@
 @media (min-width: 769px) {
   .acc-mobile-menu-btn { display: none !important; }
 }
+
+/* شبكة المشاهدات */
+.history-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 10px;
+}
+.hist-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: 10px;
+  border: 1px solid #eef0f6;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  background: #fafbfe;
+  transition: box-shadow 0.15s;
+}
+.hist-card:hover { box-shadow: 0 4px 12px rgba(212,175,55,0.18); border-color: rgba(212,175,55,0.4); }
+.hist-img { width:100%; aspect-ratio:1; object-fit:cover; background:#f0f0f0; }
+.hist-info { padding: 6px 7px 8px; }
+.hist-name { font-size:0.68rem; font-weight:600; color:#111; line-height:1.3; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical; }
+.hist-price { font-size:0.7rem; font-weight:700; color:#D4AF37; margin-top:3px; }
+.hist-empty { text-align:center; padding:40px 20px; color:#aaa; font-size:0.84rem; }
+
+/* بطاقة طريقة الدفع */
+.pm-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1.5px solid #eef0f6;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  background: #fafbfe;
+}
+.pm-icons { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
+.pm-icons img { height: 24px; border-radius: 3px; }
+.pm-info { flex: 1; }
+.pm-title { font-size: 0.84rem; font-weight: 700; color: #111; }
+.pm-sub { font-size: 0.72rem; color: #9aa3b2; margin-top: 2px; }
+.pm-badge { font-size: 0.66rem; font-weight: 700; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
+.pm-badge.active { background: #e8f5e9; color: #2e7d32; }
+
+/* بنر الخدمة الذاتية */
+.acc-support-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, #152546, #1e3360);
+  border-radius: 12px;
+  padding: 12px 14px;
+  color: #fff;
+  transition: opacity 0.15s;
+}
+.acc-support-banner:hover { opacity: 0.92; }
+.acc-support-icon { font-size: 1.5rem; flex-shrink: 0; }
+.acc-support-text { flex: 1; }
+.acc-support-title { font-size: 0.88rem; font-weight: 700; }
+.acc-support-sub { font-size: 0.7rem; color: rgba(255,255,255,0.7); margin-top: 2px; }
+.acc-support-arrow { font-size: 1.4rem; color: #D4AF37; font-weight: 900; flex-shrink: 0; }
+
+/* ===== Self-Service Chat ===== */
+.sc-wrap {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #eee;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 520px;
+  box-shadow: 0 4px 24px rgba(21,37,70,0.08);
+}
+.sc-header {
+  background: linear-gradient(135deg, #152546, #1e3360);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.sc-agent-avatar {
+  width: 42px; height: 42px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+.sc-agent-info { flex: 1; }
+.sc-agent-name { color: #fff; font-weight: 700; font-size: 0.88rem; }
+.sc-agent-status { display: flex; align-items: center; gap: 5px; color: rgba(255,255,255,0.7); font-size: 0.72rem; margin-top: 2px; }
+.sc-dot { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; display: inline-block; animation: scPulse 2s ease-in-out infinite; }
+@keyframes scPulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+.sc-clear-btn { background: rgba(255,255,255,0.12); border: none; color: rgba(255,255,255,0.7); padding: 5px 10px; border-radius: 8px; font-size: 0.72rem; cursor: pointer; }
+.sc-clear-btn:hover { background: rgba(255,255,255,0.2); }
+
+.sc-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #f8f9fc;
+  scrollbar-width: thin;
+}
+.sc-msg {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  max-width: 85%;
+}
+.sc-msg.user { align-self: flex-start; flex-direction: row-reverse; }
+.sc-msg.bot  { align-self: flex-end; }
+.sc-bubble {
+  padding: 9px 13px;
+  border-radius: 14px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  max-width: 100%;
+  word-break: break-word;
+}
+.sc-msg.bot  .sc-bubble { background: #fff; color: #222; border: 1px solid #eee; border-bottom-right-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.sc-msg.user .sc-bubble { background: #152546; color: #fff; border-bottom-left-radius: 4px; }
+.sc-avatar { width: 28px; height: 28px; border-radius: 50%; background: rgba(212,175,55,0.15); border: 1.5px solid rgba(212,175,55,0.3); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; flex-shrink: 0; }
+.sc-time { font-size: 0.6rem; color: #bbb; margin-top: 3px; }
+
+/* typing indicator */
+.sc-typing { display: flex; gap: 4px; align-items: center; padding: 10px 14px; }
+.sc-typing span { width: 7px; height: 7px; border-radius: 50%; background: #ccc; animation: scTyping 1.2s infinite; }
+.sc-typing span:nth-child(2) { animation-delay: 0.2s; }
+.sc-typing span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes scTyping { 0%,60%,100% { transform: translateY(0); background: #ccc; } 30% { transform: translateY(-6px); background: #D4AF37; } }
+
+.sc-quick-btns {
+  padding: 10px 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  background: #fff;
+  border-top: 1px solid #f0f0f0;
+  flex-shrink: 0;
+}
+.sc-quick-btns button {
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1.5px solid #D4AF37;
+  background: #fff;
+  color: #152546;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.sc-quick-btns button:hover { background: #152546; color: #D4AF37; }
+
+.sc-input-row {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid #eee;
+  background: #fff;
+  flex-shrink: 0;
+}
+.sc-input {
+  flex: 1;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 20px;
+  padding: 8px 14px;
+  font-size: 0.82rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.sc-input:focus { border-color: #D4AF37; }
+.sc-send-btn {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: #152546;
+  border: none;
+  color: #D4AF37;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.sc-send-btn:hover { background: #D4AF37; color: #fff; }
+
+@media (max-width: 600px) {
+  .sc-wrap { height: 460px; }
+  .sc-quick-btns button { font-size: 0.68rem; padding: 5px 10px; }
+}
 </style>
 
 <div class="acc-layout">
@@ -922,15 +1114,14 @@
       <div class="acc-nav-item" onclick="showSection('reviews')"><span class="ico">⭐</span> تقييماتك</div>
       <div class="acc-nav-item" onclick="showSection('profile')"><span class="ico">👤</span> ملفك الشخصي</div>
       <div class="acc-nav-item" onclick="showSection('coupons')"><span class="ico">🎁</span> القسائم والعروض</div>
-      <div class="acc-nav-item" onclick="showSection('credit')"><span class="ico">💳</span> الرصيد الائتماني</div>
+      <div class="acc-nav-item" onclick="showSection('credit')"><span class="ico">�</span> كاش باك</div>
     </div>
 
     <div class="acc-nav-section">
-      <div class="acc-nav-item" onclick="showSection('history')"><span class="ico">🕐</span> تاريخ التصفح</div>
-      <div class="acc-nav-item" onclick="showSection('addresses')"><span class="ico">📍</span> العناوين</div>
-      <div class="acc-nav-item" onclick="showSection('settings')"><span class="ico">🌐</span> البلد/المنطقة واللغة</div>
+      <div class="acc-nav-item" onclick="showSection('history')"><span class="ico">❤️</span> منتجات في اهتمامك</div>
+      <div class="acc-nav-item" onclick="showSection('settings')"><span class="ico">📍</span> عنواني</div>
       <div class="acc-nav-item" onclick="showSection('payment')"><span class="ico">💰</span> طرق الدفع</div>
-      <div class="acc-nav-item" onclick="showSection('security')"><span class="ico">🔒</span> أمن الحساب</div>
+      <div class="acc-nav-item" onclick="showSection('support')"><span class="ico">🤖</span> الخدمة الذاتية</div>
       <div class="acc-nav-item" onclick="showSection('notifications')"><span class="ico">🔔</span> الإشعارات</div>
     </div>
 
@@ -954,6 +1145,16 @@
 
     <!-- قسم الطلبات -->
     <div id="section-orders">
+
+      <!-- بنر الخدمة الذاتية -->
+      <div class="acc-support-banner" onclick="showSection('support')" style="cursor:pointer;">
+        <span class="acc-support-icon">🤖</span>
+        <div class="acc-support-text">
+          <div class="acc-support-title">الخدمة الذاتية</div>
+          <div class="acc-support-sub">تتبع طلبك، الإرجاع، الدفع وأكثر بضغطة واحدة</div>
+        </div>
+        <span class="acc-support-arrow">›</span>
+      </div>
 
       <!-- شريط البحث -->
       <div class="acc-search">
@@ -1012,6 +1213,57 @@
       </div>
     </div>
 
+    <!-- قسم الخدمة الذاتية / الشات -->
+    <div id="section-support" style="display:none">
+      <div class="sc-wrap">
+        <!-- رأس الشات -->
+        <div class="sc-header">
+          <div class="sc-agent-avatar">🤖</div>
+          <div class="sc-agent-info">
+            <div class="sc-agent-name">X2 مساعد</div>
+            <div class="sc-agent-status"><span class="sc-dot"></span> متاح</div>
+          </div>
+          <button class="sc-clear-btn" onclick="clearSupportChat()">🗑 مسح</button>
+        </div>
+
+        <!-- منطقة الرسائل -->
+        <div class="sc-messages" id="scMessages"></div>
+
+        <!-- أسئلة جاهزة -->
+        <div class="sc-quick-btns" id="scQuickBtns">
+          <button onclick="askSupport('تتبع طلبي')"> 📦 تتبع طلبي</button>
+          <button onclick="askSupport('كيف أرجع منتجج؟')"> ↩️ ارجاع منتج</button>
+          <button onclick="askSupport('طرق الدفع')"> 💳 طرق الدفع</button>
+          <button onclick="askSupport('موعد التوصيل')"> 🚚 موعد التوصيل</button>
+          <button onclick="askSupport('هل يوجد خصومات؟')"> 🎁 خصومات</button>
+          <button onclick="askSupport('تحدث مع موظف')"> 💬 موظف حقيقي</button>
+        </div>
+
+        <!-- حقل الكتابة -->
+        <div class="sc-input-row">
+          <input type="text" id="scInput" class="sc-input" placeholder="اكتب سؤالك هنا..." onkeydown="if(event.key==='Enter')sendSupportMsg()">
+          <button class="sc-send-btn" onclick="sendSupportMsg()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- قسم كاش باك -->
+    <div id="section-credit" style="display:none">
+      <div class="acc-profile-card">
+        <!-- بطاقة الرصيد -->
+        <div style="background:linear-gradient(135deg,#152546,#1e3360);border-radius:14px;padding:20px 18px;margin-bottom:16px;color:#fff;">
+          <div style="font-size:.78rem;color:rgba(255,255,255,.7);margin-bottom:4px">رصيد كاش باك</div>
+          <div style="font-size:2rem;font-weight:900;color:#D4AF37;" id="cbBalance">0.00 د.إ</div>
+          <div style="font-size:.72rem;color:rgba(255,255,255,.6);margin-top:6px">🎁 تحصل على <strong style="color:#D4AF37">5 د.إ</strong> مع كل طلب</div>
+        </div>
+        <!-- تاريخ الكاش باك -->
+        <div style="font-size:.84rem;font-weight:700;color:#152546;margin-bottom:10px">📜 سجل الطلبات</div>
+        <div id="cbHistory"></div>
+      </div>
+    </div>
+
     <!-- قسم الإشعارات -->
     <div id="section-notifications" style="display:none">
       <div class="acc-profile-card">
@@ -1031,6 +1283,107 @@
     </div>
 
     <!-- الأقسام الأخرى -->
+    <!-- قسم عنواني -->
+    <div id="section-settings" style="display:none">
+      <div class="acc-profile-card">
+        <h3 style="font-size:1rem;font-weight:800;color:#152546;margin-bottom:16px">📍 عنوان الشحن</h3>
+        <div class="acc-form-group">
+          <label>الدولة</label>
+          <select id="addr-country" style="width:100%;border:1px solid #ddd;border-radius:8px;padding:9px 12px;font-size:0.84rem;outline:none;box-sizing:border-box;">
+            <option value="ae">الإمارات العربية المتحدة</option>
+            <option value="sa">المملكة العربية السعودية</option>
+            <option value="kw">الكويت</option>
+            <option value="eg">مصر</option>
+            <option value="jo">الأردن</option>
+            <option value="bh">البحرين</option>
+            <option value="qa">قطر</option>
+            <option value="om">عُمان</option>
+          </select>
+        </div>
+        <div class="acc-form-group"><label>المدينة / الإمارة</label><input type="text" id="addr-city" placeholder="دبي"></div>
+        <div class="acc-form-group"><label>المنطقة / الحي</label><input type="text" id="addr-area" placeholder="الخليج التجاري"></div>
+        <div class="acc-form-group"><label>الشارع</label><input type="text" id="addr-street" placeholder="شارع الشيخ زايد"></div>
+        <div class="acc-form-group"><label>المبنى / الشقة</label><input type="text" id="addr-building" placeholder="برج المارينا، شقة 504"></div>
+        <div class="acc-form-group"><label>الرمز البريدي (اختياري)</label><input type="text" id="addr-zip" placeholder="00000"></div>
+        <div class="acc-form-group"><label>ملاحظات التوصيل (اختياري)</label><input type="text" id="addr-notes" placeholder="بالقرب من سبينيس..."></div>
+        <button class="acc-save-btn" onclick="saveAddress()">💾 حفظ العنوان</button>
+      </div>
+    </div>
+
+    <div id="section-payment" style="display:none">
+      <div class="acc-profile-card">
+        <h3 style="font-size:1rem;font-weight:800;color:#152546;margin-bottom:16px">💳 طرق الدفع</h3>
+
+        <!-- كروت اتمان -->
+        <div class="pm-item">
+          <div class="pm-icons"><img src="assets/pay/visa.webp" alt="Visa"><img src="assets/pay/mastercard.webp" alt="Mastercard"><img src="assets/pay/amex.webp" alt="Amex"></div>
+          <div class="pm-info">
+            <div class="pm-title">بطاقة ائتمان / مدى</div>
+            <div class="pm-sub">Visa ، Mastercard ، AMEX ، مدى</div>
+          </div>
+          <span class="pm-badge active">متاح</span>
+        </div>
+
+        <!-- ابل باي -->
+        <div class="pm-item">
+          <div class="pm-icons"><img src="assets/pay/applepay.webp" alt="Apple Pay"><img src="assets/pay/googlepay.webp" alt="Google Pay"></div>
+          <div class="pm-info">
+            <div class="pm-title">Apple Pay / Google Pay</div>
+            <div class="pm-sub">دفع سريع وآمن من هاتفك</div>
+          </div>
+          <span class="pm-badge active">متاح</span>
+        </div>
+
+        <!-- تحويل بنكي -->
+        <div class="pm-item">
+          <div class="pm-icons" style="font-size:1.8rem">🏦</div>
+          <div class="pm-info">
+            <div class="pm-title">تحويل بنكي</div>
+            <div class="pm-sub">البنك: بنك الإمارات</div>
+            <div style="margin-top:6px;background:#f8f9fc;border-radius:8px;padding:8px 10px;font-size:0.75rem;color:#333;">
+              📌 رقم الحساب: <strong>AE07 0331 2345 6789 0123 456</strong><br>
+              🏦 اسم البنك: بنك الإمارات، الإمارات<br>
+              <span style="color:#9aa3b2;font-size:0.68rem">بعد التحويل أرسل إيصال الدفع عبر واتساب</span>
+            </div>
+          </div>
+          <span class="pm-badge active">متاح</span>
+        </div>
+
+        <!-- دفع عند الاستلام -->
+        <div class="pm-item">
+          <div class="pm-icons" style="font-size:1.8rem">💵</div>
+          <div class="pm-info">
+            <div class="pm-title">الدفع عند الاستلام (COD)</div>
+            <div class="pm-sub">نقدًا لدى استلام طلبك — متاح في مناطق محددة</div>
+          </div>
+          <span class="pm-badge active">متاح</span>
+        </div>
+
+        <!-- تقسيط تابي / تمارا -->
+        <div class="pm-item">
+          <div class="pm-icons"><img src="assets/pay/tabby.webp" alt="Tabby"><img src="assets/pay/tamara.webp" alt="Tamara"></div>
+          <div class="pm-info">
+            <div class="pm-title">تابي / تمارا</div>
+            <div class="pm-sub">قسّم دفعاتك على 3-4 أشهر بدون فوائد</div>
+          </div>
+          <span class="pm-badge active">متاح</span>
+        </div>
+
+        <p style="font-size:0.72rem;color:#9aa3b2;margin-top:14px;text-align:center">🔒 جميع المعاملات مشفّرة وآمنة 100%</p>
+      </div>
+    </div>
+
+    <!-- منتجات في اهتمامك -->
+    <div id="section-history" style="display:none">
+      <div class="acc-profile-card" style="padding:16px 14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div style="font-size:1rem;font-weight:800;color:#152546;">❤️ منتجات في اهتمامك</div>
+          <button onclick="clearHistory()" style="border:none;background:none;color:#aaa;font-size:0.72rem;cursor:pointer;">🗑 مسح</button>
+        </div>
+        <div id="historyGrid" class="history-grid"></div>
+      </div>
+    </div>
+
     <div id="section-generic" style="display:none">
       <div class="acc-empty">
         <div class="acc-empty-icon">🔧</div>
@@ -1125,7 +1478,6 @@
           <div class="acc-empty-title">ليس لديك أي طلبات</div>
           <div class="acc-empty-sub">لا يمكنك العثور على طلبك؟</div>
           <div class="acc-empty-actions">
-            <a href="#" class="acc-empty-btn" onclick="alert('خدمة الدعم قريباً')"><span class="ico">🤖</span> الخدمة الذاتية للعثور على الطلب</a>
             <a href="index.html" class="acc-empty-btn"><span class="ico">🛍</span> تسوق الآن</a>
           </div>
         </div>`;
@@ -1184,15 +1536,20 @@
     const qmap = { orders:'aqn-orders', profile:'aqn-profile', coupons:'aqn-coupons', notifications:'aqn-notif' };
     if (qmap[section]) { const qel = document.getElementById(qmap[section]); if (qel) qel.classList.add('active'); }
 
-    const sections = ['orders','profile','notifications','offers'];
+    const sections = ['orders','profile','notifications','offers','support','payment','settings','history','credit'];
     if (sections.includes(section)) {
       document.getElementById('section-' + section).style.display = '';
     } else {
       document.getElementById('section-generic').style.display = '';
       document.getElementById('generic-title').textContent =
-        { reviews:'تقييماتك', coupons:'العروض والخصومات', credit:'الرصيد الائتماني',
-          history:'تاريخ التصفح', addresses:'العناوين', settings:'البلد/المنطقة واللغة',
+        { reviews:'تقييماتك', coupons:'العروض والخصومات', credit:'كاش باك',
+          history:'منتجات في اهتمامك', settings:'عنواني',
           payment:'طرق الدفع', security:'أمن الحساب' }[section] || 'قريباً';
+    }
+
+    if (section === 'support' && !window._scInited) {
+      window._scInited = true;
+      setTimeout(initSupportChat, 100);
     }
 
     if (section === 'coupons') {
@@ -1211,7 +1568,97 @@
     }
   };
 
+  // منتجات في اهتمامك
+  function renderHistory() {
+    const grid = document.getElementById('historyGrid');
+    if (!grid) return;
+    try {
+      const hist = JSON.parse(localStorage.getItem('x2_history') || '[]');
+      if (!hist.length) {
+        grid.innerHTML = '<div class="hist-empty">👀 لم تتصفح أي منتجات بعد<br><small style="color:#ccc">ستظهر هنا المنتجات التي فتحتها</small></div>';
+        return;
+      }
+      const sym = {AED:'د.إ',USD:'$',SAR:'ر.س',EGP:'ج.م'}[localStorage.getItem('currency')||'AED']||'د.إ';
+      grid.innerHTML = hist.map(p => `
+        <a class="hist-card" href="product.html?id=${encodeURIComponent(p.id)}">
+          <img class="hist-img" src="${p.img||'assets/logo.png'}" alt="${p.name}" onerror="this.src='assets/logo.png'" loading="lazy">
+          <div class="hist-info">
+            <div class="hist-name">${p.name||'منتج'}</div>
+            ${p.price ? `<div class="hist-price">${parseFloat(p.price).toFixed(2)} ${sym}</div>` : ''}
+          </div>
+        </a>`).join('');
+    } catch(e) {
+      grid.innerHTML = '<div class="hist-empty">⚠️ تعذّر تحميل التاريخ</div>';
+    }
+  }
+
+  window.clearHistory = function() {
+    localStorage.removeItem('x2_history');
+    renderHistory();
+  };
+
+  // تحديث renderHistory عند فتح القسم
+  const _origShowSection = window.showSection;
+  window.showSection = function(section, filter) {
+    _origShowSection && _origShowSection(section, filter);
+    if (section === 'history') renderHistory();
+  };
+
   // profile
+  // كاش باك
+  const CASHBACK_KEY = 'x2_cashback';
+
+  function getCashback() {
+    try { return parseFloat(localStorage.getItem(CASHBACK_KEY)||'0'); } catch(e){ return 0; }
+  }
+
+  function renderCashback() {
+    const el = document.getElementById('cbBalance');
+    if (el) el.textContent = getCashback().toFixed(2) + ' د.إ';
+    const hist = document.getElementById('cbHistory');
+    if (hist) {
+      try {
+        const orders = JSON.parse(localStorage.getItem('x2_orders')||'[]');
+        if (!orders.length) { hist.innerHTML = '<p style="color:#aaa;text-align:center;font-size:.8rem">لم تضع أي طلب بعد</p>'; return; }
+        hist.innerHTML = orders.slice(0,8).map(o=>{
+          const d = new Date(o.date).toLocaleDateString('ar-AE',{year:'numeric',month:'short',day:'numeric'});
+          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:#f8f9fc;border-radius:8px;margin-bottom:7px;font-size:.8rem">
+            <div>
+              <div style="font-weight:700;color:#111">طلب ${o.id||''}</div>
+              <div style="color:#9aa3b2;font-size:.7rem">${d}</div>
+            </div>
+            <span style="font-size:.84rem;font-weight:800;color:#2e7d32;background:#e8f5e9;padding:3px 10px;border-radius:999px">+5.00 د.إ</span>
+          </div>`;
+        }).join('');
+      } catch(e) {}
+    }
+  }
+
+  // تحديث showSection لعرض الكاش باك
+  const _origShow2 = window.showSection;
+  window.showSection = function(section, filter) {
+    _origShow2 && _origShow2(section, filter);
+    if (section === 'credit') renderCashback();
+  };
+
+  window.saveAddress = function() {
+    const addr = {
+      country:  document.getElementById('addr-country').value,
+      city:     document.getElementById('addr-city').value.trim(),
+      area:     document.getElementById('addr-area').value.trim(),
+      street:   document.getElementById('addr-street').value.trim(),
+      building: document.getElementById('addr-building').value.trim(),
+      zip:      document.getElementById('addr-zip').value.trim(),
+      notes:    document.getElementById('addr-notes').value.trim()
+    };
+    try {
+      const p = JSON.parse(localStorage.getItem('x2_profile') || '{}');
+      p.address_full = addr;
+      localStorage.setItem('x2_profile', JSON.stringify(p));
+    } catch(e) {}
+    alert('✅ تم حفظ العنوان');
+  };
+
   window.saveProfile = function() {
     const p = {
       name: document.getElementById('pf-name').value.trim(),
@@ -1356,6 +1803,103 @@
     }
   }
 
+  // ===== Self-Service Chat =====
+  const SC_ANSWERS = {
+    'تتبع طلبي': 'لتتبع طلبك، اذهب لقسم **طلباتي** من القائمة، ستجد آخر حالة لكل طلب مع رقمه وتاريخ التوصيل المتوقع. 📦\n\nإذا مضى أكثر من 7 أيام ولم يصلك، تواصل معنا على واتساب مباشرة.',
+    'كيف أرجع منتجج': 'يمكنك الإرجاع خلال **90 يوم** من تاريخ الاستلام بشرط أن يكون المنتج بحالته الأصلية.\n\n**خطوات الإرجاع:**\n1️⃣ راسلنا على واتساب برقم طلبك\n2️⃣ أرسل صور للمنتج\n3️⃣ سنحدد موعد الاستلام\n\nالإرجاع مجاني 🎉',
+    'طرق الدفع': 'نقبل طرق دفع متعددة:\n\n💳 فيزا / ماستركارد / أمريكان إكسبريس\n📱 Apple Pay / Google Pay\n🏦 تحويل بنكي\n💵 الدفع عند الاستلام (مناطق محددة)\n\nجميع المعاملات مشفرة وآمنة 100% 🔒',
+    'موعد التوصيل': 'مواعيد التوصيل:\n\n📍 **داخل الإمارات:** 2-4 أيام عمل\n🌍 **السعودية والخليج:** 3-6 أيام\n✈️ **دول أخرى:** 7-14 يوم\n\nستصلك رسالة نصية عند خروج الشحنة مع رابط التتبع 📲',
+    'هل يوجد خصوماتج': 'نعم! لدينا عروض دائمة:\n\n🔥 عروض يومية في صفحة **العروض**\n🎁 كوبون ترحيبي للمشتركين الجدد\n📧 اشترك في النشرة البريدية للحصول على خصم 10%\n⭐ عملاء VIP يحصلون على خصم دائم 15%',
+    'تحدث مع موظف': 'سأوصلك بفريق الدعم الآن! 👋\n\nوقت العمل: **السبت - الخميس 9ص - 10م**\n\nاضغط على الزر أدناه للتواصل المباشر:'
+  };
+
+  const SC_FALLBACK = 'شكراً لسؤالك! للإجابة الدقيقة على استفسارك، اضغط على **"تحدث مع موظف"** أو تواصل معنا عبر واتساب وسيرد عليك فريقنا خلال دقائق. 😊';
+  const SC_WELCOME = 'مرحباً بك! 👋 أنا X2 مساعد، كيف يمكنني مساعدتك اليوم؟\n\nاختر من الأسئلة الشائعة أدناه أو اكتب سؤالك مباشرة.';
+
+  function initSupportChat() {
+    const msgs = document.getElementById('scMessages');
+    if (!msgs || msgs.children.length) return;
+    addBotMessage(SC_WELCOME, false);
+  }
+
+  function addBotMessage(text, animate=true) {
+    const msgs = document.getElementById('scMessages');
+    if (!msgs) return;
+
+    if (animate) {
+      // typing indicator
+      const typing = document.createElement('div');
+      typing.className = 'sc-msg bot';
+      typing.id = 'scTyping';
+      typing.innerHTML = `<div class="sc-avatar">🤖</div><div class="sc-bubble" style="padding:0"><div class="sc-typing"><span></span><span></span><span></span></div></div>`;
+      msgs.appendChild(typing);
+      msgs.scrollTop = msgs.scrollHeight;
+
+      setTimeout(() => {
+        typing.remove();
+        renderBotBubble(text, msgs);
+      }, 900 + Math.min(text.length * 18, 1400));
+    } else {
+      renderBotBubble(text, msgs);
+    }
+  }
+
+  function renderBotBubble(text, msgs) {
+    const now = new Date().toLocaleTimeString('ar', {hour:'2-digit', minute:'2-digit'});
+    const div = document.createElement('div');
+    div.className = 'sc-msg bot';
+    // تحويل **bold** وأسطر جديدة
+    const html = text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+    div.innerHTML = `<div class="sc-avatar">🤖</div><div><div class="sc-bubble">${html}</div><div class="sc-time">${now}</div></div>`;
+    msgs.appendChild(div);
+
+    // إذا كان رد "تحدث مع موظف" → أضف زر واتساب
+    if (text.includes('اضغط على الزر أدناه')) {
+      const waBtn = document.createElement('div');
+      waBtn.style.cssText = 'padding:4px 0 0 36px;';
+      waBtn.innerHTML = `<a href="https://wa.me/971554423151?text=%D9%85\u0631\u062d\u0628\u0627\u060c%20\u0623\u062d\u062a\u0627\u062c%20\u0645\u0633\u0627\u0639\u062f\u0629" target="_blank" style="display:inline-flex;align-items:center;gap:7px;background:#25D366;color:#fff;border-radius:20px;padding:8px 16px;font-size:0.78rem;font-weight:700;text-decoration:none;">💬 فتح واتساب</a>`;
+      msgs.appendChild(waBtn);
+    }
+
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function addUserMessage(text) {
+    const msgs = document.getElementById('scMessages');
+    if (!msgs) return;
+    const now = new Date().toLocaleTimeString('ar', {hour:'2-digit', minute:'2-digit'});
+    const div = document.createElement('div');
+    div.className = 'sc-msg user';
+    div.innerHTML = `<div><div class="sc-bubble">${text}</div><div class="sc-time" style="text-align:left">${now}</div></div><div class="sc-avatar">👤</div>`;
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  window.askSupport = function(q) {
+    addUserMessage(q);
+    // البحث عن إجابة
+    const key = Object.keys(SC_ANSWERS).find(k => q.includes(k.replace('ج','')) || k.replace('ج','').includes(q.replace('؟','').trim()));
+    addBotMessage(key ? SC_ANSWERS[key] : SC_FALLBACK);
+  };
+
+  window.sendSupportMsg = function() {
+    const inp = document.getElementById('scInput');
+    if (!inp) return;
+    const text = inp.value.trim();
+    if (!text) return;
+    inp.value = '';
+    addUserMessage(text);
+    const lc = text.toLowerCase();
+    const key = Object.keys(SC_ANSWERS).find(k => lc.includes(k.replace('ج','').toLowerCase()));
+    addBotMessage(key ? SC_ANSWERS[key] : SC_FALLBACK);
+  };
+
+  window.clearSupportChat = function() {
+    const msgs = document.getElementById('scMessages');
+    if (msgs) { msgs.innerHTML = ''; window._scInited = false; }
+    initSupportChat();
+  };
+
   // load profile
   function loadProfile() {
     try {
@@ -1367,6 +1911,17 @@
       }
       if (p.email) { document.getElementById('pf-email').value = p.email; document.getElementById('profile-email').textContent = p.email; }
       if (p.address) document.getElementById('pf-address').value = p.address;
+      // تحميل العنوان الكامل
+      if (p.address_full) {
+        const a = p.address_full;
+        if (a.country)  { const el=document.getElementById('addr-country');  if(el) el.value=a.country; }
+        if (a.city)     { const el=document.getElementById('addr-city');     if(el) el.value=a.city; }
+        if (a.area)     { const el=document.getElementById('addr-area');     if(el) el.value=a.area; }
+        if (a.street)   { const el=document.getElementById('addr-street');   if(el) el.value=a.street; }
+        if (a.building) { const el=document.getElementById('addr-building'); if(el) el.value=a.building; }
+        if (a.zip)      { const el=document.getElementById('addr-zip');      if(el) el.value=a.zip; }
+        if (a.notes)    { const el=document.getElementById('addr-notes');    if(el) el.value=a.notes; }
+      }
       if (p.phone) document.getElementById('pf-phone').value = p.phone;
       if (p.password) document.getElementById('pf-password').value = p.password;
       updateSidebarProfile(p);

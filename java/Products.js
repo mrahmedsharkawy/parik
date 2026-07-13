@@ -133,12 +133,26 @@ function normalizeAssetUrl(u) {
 
 // ... نفس الكود الحالي لإنشاء كارت المنتج ...
 export function createProductCard(prod) {
+  // تسجيل عالمي للاستخدام خارج الموديول
+  if (!window.createProductCard) window.createProductCard = createProductCard;
   const card = document.createElement("div");
   card.className = "product-card";
   card.style.position = "relative";
   card.style.cursor = "pointer";
 
 card.addEventListener("click", () => {
+    // تسجيل مشاهدة المنتج
+    try {
+      const HIST_KEY = 'x2_history';
+      const img  = Array.isArray(prod.img) ? prod.img[0] : (prod.img || '');
+      const name = typeof prod.name==='object' ? (prod.name.ar||prod.name.en) : (prod.name||'');
+      const entry = { id: prod.id, name, img: img.startsWith('data:') ? '' : img, price: prod.price, oldPrice: prod.oldPrice };
+      let hist = JSON.parse(localStorage.getItem(HIST_KEY)||'[]');
+      hist = hist.filter(h => String(h.id) !== String(prod.id)); // ازالة التكرار
+      hist.unshift(entry);
+      if (hist.length > 20) hist = hist.slice(0, 20);
+      localStorage.setItem(HIST_KEY, JSON.stringify(hist));
+    } catch(e) {}
     window.location.href = `product.html?id=${prod.id}`;
 });
 

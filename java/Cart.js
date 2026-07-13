@@ -544,6 +544,23 @@ function updateSelectedCount() {
     // رندر من التخزين
     renderList(readCart());
 
+    // تحديد كل المنتجات تلقائياً عند فتح السلة
+    function autoSelectAll() {
+      const allCbs = listRoot.querySelectorAll('.card-checkbox input[type="checkbox"]');
+      allCbs.forEach(cb => {
+        if (!cb.checked) {
+          cb.checked = true;
+          cb.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      });
+      // تحديث checkbox "تحديد الكل"
+      const selAllCb = document.getElementById('selectAllCheckbox') || document.querySelector('.select-all-checkbox input');
+      if (selAllCb) selAllCb.checked = true;
+      updateSummary();
+    }
+    // تشغيل بعد الرندر بإطار واحد
+    requestAnimationFrame(autoSelectAll);
+
     // استجابة لتغيير العملة
     const curSel = document.getElementById('currency');
     if (curSel && !curSel._boundCart) {
