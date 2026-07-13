@@ -2624,13 +2624,47 @@ if (filtersScroll) {
         setTimeout(() => { sp.textContent = orig; }, 2000);
       });
 
-      // زر واتساب - يفتح محادثة مع نص جاهز باسم المنتج وسعره ورابطه
+      // زر واتساب - يفتح محادثة مع نص جاهز + بيانات العميل
       const waBtn = document.getElementById('whatsappOrderBtn');
       if (waBtn) {
+        const readJson = (key, fallback) => {
+          try {
+            const raw = localStorage.getItem(key);
+            if (!raw) return fallback;
+            const parsed = JSON.parse(raw);
+            return parsed ?? fallback;
+          } catch (e) {
+            return fallback;
+          }
+        };
+
+        const profile = readJson('x2_profile', {});
+        const orders = readJson('x2_orders', []);
+        const lastOrder = Array.isArray(orders) && orders.length ? orders[0] : null;
+        const shipping = lastOrder?.shipping || {};
+        const qtyVal = Math.max(1, Number(document.getElementById('qty')?.value || 1));
+
+        const customerName = String(profile.name || shipping.name || '').trim() || 'غير متوفر';
+        const customerPhone = String(profile.phone || shipping.phone || '').trim() || 'غير متوفر';
+        const customerEmail = String(profile.email || '').trim() || 'غير متوفر';
+        const customerCity = String(shipping.city || '').trim() || 'غير متوفر';
+        const customerAddress = String(shipping.address || '').trim() || 'غير متوفر';
+
         const productUrl = window.location.href;
-        const waMsg = encodeURIComponent(
-          `مرحباً، أريد تخصيص طلب لـ:\n🛍 ${getT(p.name)}\n💰 السعر: ${p.price != null ? p.price + ' ' + sym : ''}\n🔗 ${productUrl}`
-        );
+        const waMsg = encodeURIComponent([
+          'مرحباً، أريد تخصيص طلب لهذا المنتج:',
+          `🛍 المنتج: ${getT(p.name)}`,
+          `🔢 الكمية: ${qtyVal}`,
+          `💰 السعر: ${p.price != null ? p.price + ' ' + sym : 'غير متوفر'}`,
+          `🔗 رابط المنتج: ${productUrl}`,
+          '',
+          'بيانات العميل:',
+          `الاسم: ${customerName}`,
+          `الهاتف: ${customerPhone}`,
+          `البريد: ${customerEmail}`,
+          `المدينة: ${customerCity}`,
+          `العنوان: ${customerAddress}`
+        ].join('\n'));
         waBtn.href = `https://wa.me/+971554423151?text=${waMsg}`;
       }
 
@@ -2650,3 +2684,5 @@ if (filtersScroll) {
     })
     .catch(e => console.error('خطأ تحميل المنتج:', e));
 })();
+
+

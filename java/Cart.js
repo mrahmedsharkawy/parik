@@ -551,12 +551,12 @@ function updateSelectedCount() {
       curSel._boundCart = true;
     }
 
-    // حد أدنى للشراء (اختياري)
+    // تفاعل زر تأكيد الطلب
     const checkoutBtn = document.getElementById('checkoutBtn');
     if (checkoutBtn && !checkoutBtn._bound) {
       checkoutBtn.addEventListener('click', (e) => {
         const total = parseCurrency(document.querySelector('.summary-total')?.dataset.amount || '0');
-        if (total < 60) { e.preventDefault(); checkoutBtn.classList.add('shake'); setTimeout(() => checkoutBtn.classList.remove('shake'), 600); }
+        if (total <= 0) { e.preventDefault(); checkoutBtn.classList.add('shake'); setTimeout(() => checkoutBtn.classList.remove('shake'), 600); }
       });
       checkoutBtn._bound = true;
     }
@@ -615,10 +615,9 @@ function updateSelectedCount() {
   if (window.X2CheckoutStateInited) return;
   window.X2CheckoutStateInited = true;
 
-  const MIN_CHECKOUT = 60; // حد التفعيل
-  const CHECKOUT_URL = '/checkout.html'; // رابط الخروج المحلي
+  const WHATSAPP_PHONE = '+971554423151';
   const PAYPAL_URL = 'https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=YOUR_BUTTON_ID'; // غيّره لرابط PayPal الخاص بك
-  const USE_PAYPAL = true; // إذا true سيعرض/يحدّث زر PayPal (إن صار مفعّل)
+  const USE_PAYPAL = false;
 
   function parseNumber(text){
     if(!text) return 0;
@@ -657,7 +656,100 @@ function updateSelectedCount() {
     return v || 0;
   }
 
-  // مروّج: يحدّث زر الدفع الرئيسي وزر PayPal (إن وجد) وحالة العرض
+  function readJson(key, fallback){
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return fallback;
+      const parsed = JSON.parse(raw);
+      return parsed ?? fallback;
+    } catch (e) {
+      return fallback;
+    }
+  }
+
+  function getSelectedItemsForOrder(){
+    const cards = Array.from(document.querySelectorAll('.product-card-cart'));
+    const selectedCards = cards.filter(card => {
+      const cb = card.querySelector('.card-checkbox input[type="checkbox"]');
+      return cb ? cb.checked : true;
+    });
+    const used = selectedCards.length ? selectedCards : cards;
+
+    return used.map(card => {
+      const qtyInput = card.querySelector('.qty-dropdown input[type="number"]');
+      const qtyValue = card.querySelector('.qty-dropdown .qty-value');
+      const qty = Math.max(1, Number(qtyInput?.value || qtyValue?.textContent || card.dataset.qty || 1));
+      const unit = parseNumber(card.dataset.priceCurrent || card.querySelector('.current-price, .price-current')?.textContent || '0');
+      return {
+        title: (card.querySelector('.title')?.textContent || 'منتج').trim(),
+        qty,
+        unit,
+        line: unit * qty
+      };
+    });
+  }
+
+  function getCustomerDetails(){
+    const profile = readJson('x2_profile', {});
+    const orders = readJson('x2_orders', []);
+    const lastOrder = Array.isArray(orders) && orders.length ? orders[0] : null;
+    const shipping = lastOrder?.shipping || {};
+
+    return {
+      name: (profile.name || shipping.name || '').trim(),
+      phone: (profile.phone || shipping.phone || '').trim(),
+      email: (profile.email || '').trim(),
+      city: (shipping.city || '').trim(),
+      address: (shipping.address || '').trim()
+    };
+  }
+
+  function buildWhatsAppMessage(){
+    const items = getSelectedItemsForOrder();
+    const customer = getCustomerDetails();
+    const subtotal = parseNumber(document.querySelector('.subtotal')?.dataset.amount || document.querySelector('.subtotal')?.textContent || '0');
+    const discount = parseNumber(document.querySelector('.discount')?.dataset.amount || document.querySelector('.discount')?.textContent || '0');
+    const total = parseNumber(document.querySelector('.summary-total')?.dataset.amount || document.querySelector('.summary-total')?.textContent || '0');
+    const curr = typeof window.getSelectedCurrency === 'function' ? window.getSelectedCurrency() : (localStorage.getItem('currency') || 'AED');
+    const sym = typeof window.currencySymbolFor === 'function' ? window.currencySymbolFor(curr) : curr;
+
+    const itemsText = items.length
+      ? items.map((it, idx) => `${idx + 1}) ${it.title}\n   الكمية: ${it.qty}\n   سعر الوحدة: ${it.unit.toFixed(2)} ${sym}\n   الإجمالي: ${it.line.toFixed(2)} ${sym}`).join('\n\n')
+      : 'لا توجد منتجات في السلة';
+
+    const lines = [
+      'طلب جديد من الموقع',
+      '',
+      `التاريخ: ${new Date().toLocaleString('ar')}`,
+      `رابط السلة: ${window.location.href}`,
+      '',
+      'بيانات العميل:',
+      `الاسم: ${customer.name || 'غير متوفر'}`,
+      `الهاتف: ${customer.phone || 'غير متوفر'}`,
+      `البريد: ${customer.email || 'غير متوفر'}`,
+      `المدينة: ${customer.city || 'غير متوفر'}`,
+      `العنوان: ${customer.address || 'غير متوفر'}`,
+      '',
+      'محتويات السلة:',
+      itemsText,
+      '',
+      `الإجمالي قبل الخصم: ${subtotal.toFixed(2)} ${sym}`,
+      `الخصم: ${discount.toFixed(2)} ${sym}`,
+      `الإجمالي النهائي: ${total.toFixed(2)} ${sym}`
+    ];
+
+    return lines.join('\n');
+  }
+
+  function openWhatsAppOrder(){
+    const items = getSelectedItemsForOrder();
+    if (!items.length) return;
+    const msg = encodeURIComponent(buildWhatsAppMessage());
+    const url = `https://wa.me/${WHATSAPP_PHONE}?text=${msg}`;
+    window.open(url, '_blank', 'noopener');
+  }
+
+  // تحديث زر تأكيد الطلب عبر واتساب
   function setCheckoutState(enabled){
     const mainBtn = document.getElementById('checkoutBtn') || document.querySelector('.checkout-btn');
     const paypalBtn = document.getElementById('paypalBtn') || document.querySelector('.paypal-btn');
@@ -666,15 +758,14 @@ function updateSelectedCount() {
 
     if(mainBtn){
       if(enabled){
-        mainBtn.textContent = qty > 0 ? `اتمام عملية الشراء (${qty} قطعة)` : 'اتمام عملية الشراء';
+        mainBtn.textContent = qty > 0 ? `تأكيد الطلب عبر واتساب (${qty} قطعة)` : 'تأكيد الطلب عبر واتساب';
         mainBtn.classList.remove('disabled');
         mainBtn.removeAttribute('aria-disabled');
         mainBtn.disabled = false;
         mainBtn.dataset.enabled = '1';
-        // توجيه الى صفحة الخروج المحلية افتراضياً
-        mainBtn.onclick = () => { window.location.href = CHECKOUT_URL; };
+        mainBtn.onclick = (e) => { e.preventDefault(); openWhatsAppOrder(); };
       } else {
-        mainBtn.textContent = `الحد الأدنى لإتمام الشراء ${MIN_CHECKOUT} د.إ`;
+        mainBtn.textContent = 'السلة فارغة';
         mainBtn.classList.add('disabled');
         mainBtn.setAttribute('aria-disabled','true');
         mainBtn.disabled = true;
@@ -711,8 +802,7 @@ function updateSelectedCount() {
   }
 
   function evaluateCheckout(){
-    const value = readSummaryValue();
-    setCheckoutState(value >= MIN_CHECKOUT);
+    setCheckoutState(getSelectedQuantity() > 0);
   }
 
   function observeAndBind(){

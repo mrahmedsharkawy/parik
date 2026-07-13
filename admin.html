@@ -432,8 +432,22 @@
       <!-- قائمة التعليقات -->
       <div class="card">
         <h2>💬 تعليقات المنتج</h2>
-        <label>عرض تعليقات المنتج</label>
-        <select id="c-filter" onchange="renderComments()"></select>
+        <label>عرض التعليقات</label>
+        <div class="row">
+          <select id="c-scope" onchange="renderComments()">
+            <option value="all">الكل</option>
+            <option value="category">حسب القسم</option>
+          </select>
+          <select id="c-category" onchange="renderComments()">
+            <option value="">كل الأقسام</option>
+          </select>
+          <select id="c-sort" onchange="renderComments()">
+            <option value="worst">الأسوأ (الأقل تقييماً)</option>
+            <option value="best">الأفضل (الأعلى تقييماً)</option>
+            <option value="newest">الأحدث</option>
+            <option value="oldest">الأقدم</option>
+          </select>
+        </div>
         <div class="plist" id="commentList" style="margin-top:14px"><div class="empty">لا توجد تعليقات</div></div>
       </div>
 
@@ -783,9 +797,27 @@ function saveReviews(r){ localStorage.setItem(LS_REVIEWS, JSON.stringify(r)); }
 function fillProductSelects(){
   const opts = products.map(p=>`<option value="${p.id}">${esc(getT(p.name))||('#'+p.id)}</option>`).join('');
   $('c-product').innerHTML = opts || '<option value="">لا توجد منتجات</option>';
-  $('c-filter').innerHTML = opts || '<option value="">لا توجد منتجات</option>';
+  fillCommentCategoryFilter();
   const oProd = $('o-product');
   if(oProd) oProd.innerHTML = '<option value="">— بدون —</option>' + opts;
+}
+function getProductCategories(p){
+  const src = p?.category ?? p?.categories;
+  if(Array.isArray(src)) return src.map(getT).map(s=>String(s||'').trim()).filter(Boolean);
+  if(src && typeof src==='object') return [getT(src)].map(s=>String(s||'').trim()).filter(Boolean);
+  if(typeof src==='string') return src.split(',').map(s=>s.trim()).filter(Boolean);
+  return [];
+}
+function fillCommentCategoryFilter(){
+  const cats = new Set();
+  categories.forEach(c=>{
+    const n = String(getT(c?.name)||'').trim();
+    if(n) cats.add(n);
+  });
+  products.forEach(p=>getProductCategories(p).forEach(c=>cats.add(c)));
+  const list = [...cats];
+  $('c-category').innerHTML = '<option value="">كل الأقسام</option>' +
+    list.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
 }
 function addComment(){
   const pid = $('c-product').value;
@@ -799,7 +831,6 @@ function addComment(){
   });
   saveReviews(reviews);
   $('c-name').value=''; $('c-text').value='';
-  $('c-filter').value = pid;
   renderComments();
   toast('تمت إضافة التعليق');
 }
@@ -808,18 +839,49 @@ function deleteComment(pid, idx){
   if(reviews[pid]){ reviews[pid].splice(idx,1); saveReviews(reviews); renderComments(); toast('تم حذف التعليق'); }
 }
 function renderComments(){
-  const pid = $('c-filter').value;
+  const scope = $('c-scope').value;
+  const selectedCategory = $('c-category').value;
+  const sortBy = $('c-sort').value;
   const reviews = getReviews();
-  const list = reviews[pid]||[];
-  if(!list.length){ $('commentList').innerHTML='<div class="empty">لا توجد تعليقات لهذا المنتج</div>'; return; }
-  $('commentList').innerHTML = list.map((r,i)=>`
+  const rows = [];
+  Object.keys(reviews).forEach(pid=>{
+    const p = products.find(x=>String(x.id)===String(pid));
+    const pName = p ? (esc(getT(p.name))||('#'+pid)) : ('#'+pid);
+    const pCats = p ? getProductCategories(p) : [];
+    (reviews[pid]||[]).forEach((r,i)=>{
+      rows.push({ pid, idx:i, pName, pCats, r });
+    });
+  });
+
+  let list = rows;
+  if(scope==='category' && selectedCategory){
+    list = list.filter(x=>x.pCats.includes(selectedCategory));
+  }
+
+  if(sortBy==='worst'){
+    list.sort((a,b)=>(Number(a.r.rating)||0)-(Number(b.r.rating)||0) || new Date(b.r.date)-new Date(a.r.date));
+  }else if(sortBy==='best'){
+    list.sort((a,b)=>(Number(b.r.rating)||0)-(Number(a.r.rating)||0) || new Date(b.r.date)-new Date(a.r.date));
+  }else if(sortBy==='oldest'){
+    list.sort((a,b)=>new Date(a.r.date)-new Date(b.r.date));
+  }else{
+    list.sort((a,b)=>new Date(b.r.date)-new Date(a.r.date));
+  }
+
+  if(!list.length){
+    $('commentList').innerHTML = '<div class="empty">لا توجد تعليقات مطابقة للفلاتر</div>';
+    return;
+  }
+
+  $('commentList').innerHTML = list.map(({pid,idx,pName,pCats,r})=>`
     <div class="prod-row" style="align-items:flex-start">
       <div class="info">
         <b>${esc(r.name)} <span class="stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</span></b>
+        <div style="font-size:.76rem;color:#7a8296;margin-top:2px">المنتج: ${pName}${pCats[0] ? ` • القسم: ${esc(pCats[0])}` : ''}</div>
         <div style="font-size:.88rem;color:#3a4256;margin:4px 0">${esc(r.text)}</div>
         <small>${new Date(r.date).toLocaleString('ar')}</small>
       </div>
-      <button class="btn-danger btn-sm" onclick="deleteComment('${pid}',${i})">حذف</button>
+      <button class="btn-danger btn-sm" onclick="deleteComment('${pid}',${idx})">حذف</button>
     </div>`).join('');
 }
 function exportComments(){ download('reviews.json', JSON.stringify(getReviews(),null,2)); toast('تم تنزيل reviews.json'); }
