@@ -302,7 +302,7 @@
     </div>
     <div class="trust-divider"></div>
     <div class="trust-item">
-      <span class="trust-icon"></span>
+      <span class="trust-icon">🔄</span>
       <span class="trust-title" data-i18n="إرجاع مجاني">إرجاع مجاني</span>
     </div>
     <div class="trust-divider"></div>
@@ -496,8 +496,7 @@
       const pool = discounted.slice(0, Math.min(30, discounted.length));
       const chosen = [];
       const used = new Set();
-      const isMobile = window.innerWidth <= 900;
-      const count = isMobile ? 4 : 6;
+      const count = 12;
       for (let i = 0; i < count && i < pool.length; i++) {
         let idx;
         do { idx = Math.floor(rand() * pool.length); } while (used.has(idx) && used.size < pool.length);

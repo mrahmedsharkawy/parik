@@ -1811,12 +1811,24 @@ footer a:hover {
 }
 .daily-picks-all:hover { text-decoration: underline; }
 .daily-picks-grid {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 8px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  overflow-x: scroll;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  gap: 10px;
+  padding-bottom: 6px;
+  touch-action: pan-x;
 }
-@media (max-width: 900px) {
-  .daily-picks-grid { grid-template-columns: repeat(4, 1fr); }
+.daily-picks-grid::-webkit-scrollbar { display: none; }
+.dp-card {
+  min-width: 120px;
+  max-width: 120px;
+  flex-shrink: 0;
+  scroll-snap-align: start;
 }
 @media (max-width: 600px) {
   .daily-picks-section {
@@ -1827,25 +1839,12 @@ footer a:hover {
     padding-right: 10px;
   }
   .daily-picks-grid {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    overflow-x: scroll;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-x: contain;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none;
     gap: 8px;
-    padding-bottom: 6px;
     padding-right: 10px;
-    touch-action: pan-x;
   }
-  .daily-picks-grid::-webkit-scrollbar { display: none; }
   .dp-card {
     min-width: 100px;
     max-width: 100px;
-    flex-shrink: 0;
-    scroll-snap-align: start;
   }
 }
 .dp-card {
@@ -1917,6 +1916,7 @@ footer a:hover {
   padding: 8px 12px;
   flex-wrap: nowrap;
   overflow: hidden;
+  margin: 10px 0;
 }
 
 .trust-item {
