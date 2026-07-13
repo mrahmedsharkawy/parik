@@ -680,11 +680,16 @@ function updateSelectedCount() {
       const qtyValue = card.querySelector('.qty-dropdown .qty-value');
       const qty = Math.max(1, Number(qtyInput?.value || qtyValue?.textContent || card.dataset.qty || 1));
       const unit = parseNumber(card.dataset.priceCurrent || card.querySelector('.current-price, .price-current')?.textContent || '0');
+      const productId = String(card.dataset.itemId || '').trim();
+      const imgSrc = String(card.querySelector('.image img')?.src || '').trim();
+      const productUrl = productId ? new URL(`product.html?id=${encodeURIComponent(productId)}`, window.location.href).href : '';
       return {
         title: (card.querySelector('.title')?.textContent || 'منتج').trim(),
         qty,
         unit,
-        line: unit * qty
+        line: unit * qty,
+        image: imgSrc,
+        productUrl
       };
     });
   }
@@ -714,14 +719,20 @@ function updateSelectedCount() {
     const sym = typeof window.currencySymbolFor === 'function' ? window.currencySymbolFor(curr) : curr;
 
     const itemsText = items.length
-      ? items.map((it, idx) => `${idx + 1}) ${it.title}\n   الكمية: ${it.qty}\n   سعر الوحدة: ${it.unit.toFixed(2)} ${sym}\n   الإجمالي: ${it.line.toFixed(2)} ${sym}`).join('\n\n')
+      ? items.map((it, idx) => [
+          `${idx + 1}) ${it.title}`,
+          `   الكمية: ${it.qty}`,
+          `   سعر الوحدة: ${it.unit.toFixed(2)} ${sym}`,
+          `   الإجمالي: ${it.line.toFixed(2)} ${sym}`,
+          it.productUrl ? `   رابط المنتج: ${it.productUrl}` : '',
+          it.image ? `   صورة المنتج: ${it.image}` : ''
+        ].filter(Boolean).join('\n')).join('\n\n')
       : 'لا توجد منتجات في السلة';
 
     const lines = [
       'طلب جديد من الموقع',
       '',
       `التاريخ: ${new Date().toLocaleString('ar')}`,
-      `رابط السلة: ${window.location.href}`,
       '',
       'بيانات العميل:',
       `الاسم: ${customer.name || 'غير متوفر'}`,
