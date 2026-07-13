@@ -134,7 +134,7 @@
     "order": 4,
     "subcategories": [
       {
-        "name": { "ar": "طولات", "en": "Tables" },
+        "name": { "ar": "طولات", "en": "tables" },
         "categorySlug": "tables",
         "image": "assets/categories/forex/tables.png",
         "url": "/categories/forex/tables"
