@@ -7,7 +7,7 @@
   --nav-shadow: 0 -6px 18px rgba(0, 0, 0, 0);
   --badge-bg: #D4AF37;
   --badge-fg: #fff;
-  --font-size: 12px;
+  --font-size: 14px;
 }
 
 /* ensure content not hidden under fixed nav */
@@ -36,6 +36,7 @@ body{
   padding-bottom:env(safe-area-inset-bottom);
   -webkit-tap-highlight-color: transparent;
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.041);
+  height: auto;
 }
 
 /* hide on large screens */
@@ -80,8 +81,8 @@ body{
 .mobile-nav svg.icon,
 .mobile-nav img.icon,
 .mobile-nav img.nav-icon{
-  width:20px;
-  height:20px;
+  width:22px;
+  height:22px;
   display:block;
   object-fit:contain;
   flex-shrink:0;
