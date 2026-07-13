@@ -665,65 +665,72 @@ card.appendChild(content);
   cartBtn.type = "button";
   cartBtn.innerHTML = `
     <span style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;">
-      <svg width="35" height="35" viewBox="-4.32 -4.32 32.64 32.64" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-        <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
-        <g id="SVGRepo_iconCarrier">
-          <path fill-rule="evenodd" clip-rule="evenodd" d="M2 1C1.44772 1 1 1.44772 1 2C1 2.55228 1.44772 3 2 3H3.21922L6.78345 17.2569C5.73276 17.7236 5 18.7762 5 20C5 21.6569 6.34315 23 8 23C9.65685 23 11 21.6569 11 20C11 19.6494 10.9398 19.3128 10.8293 19H15.1707C15.0602 19.3128 15 19.6494 15 20C15 21.6569 16.3431 23 18 23C19.6569 23 21 21.6569 21 20C21 18.3431 19.6569 17 18 17H8.78078L8.28078 15H18C20.0642 15 21.3019 13.6959 21.9887 12.2559C22.6599 10.8487 22.8935 9.16692 22.975 7.94368C23.0884 6.24014 21.6803 5 20.1211 5H5.78078L5.15951 2.51493C4.93692 1.62459 4.13696 1 3.21922 1H2ZM18 13H7.78078L6.28078 7H20.1211C20.6742 7 21.0063 7.40675 20.9794 7.81078C20.9034 8.9522 20.6906 10.3318 20.1836 11.3949C19.6922 12.4251 19.0201 13 18 13ZM18 20.9938C17.4511 20.9938 17.0062 20.5489 17.0062 20C17.0062 19.4511 17.4511 19.0062 18 19.0062C18.5489 19.0062 18.9938 19.4511 18.9938 20C18.9938 20.5489 18.5489 20.9938 18 20.9938ZM7.00617 20C7.00617 20.5489 7.45112 20.9938 8 20.9938C8.54888 20.9938 8.99383 20.5489 8.99383 20C8.99383 19.4511 8.54888 19.0062 8 19.0062C7.45112 19.0062 7.00617 19.4511 7.00617 20Z" fill="#0F0F0F"></path>
-        </g>
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="cart-svg-icon">
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M2 1C1.44772 1 1 1.44772 1 2C1 2.55228 1.44772 3 2 3H3.21922L6.78345 17.2569C5.73276 17.7236 5 18.7762 5 20C5 21.6569 6.34315 23 8 23C9.65685 23 11 21.6569 11 20C11 19.6494 10.9398 19.3128 10.8293 19H15.1707C15.0602 19.3128 15 19.6494 15 20C15 21.6569 16.3431 23 18 23C19.6569 23 21 21.6569 21 20C21 18.3431 19.6569 17 18 17H8.78078L8.28078 15H18C20.0642 15 21.3019 13.6959 21.9887 12.2559C22.6599 10.8487 22.8935 9.16692 22.975 7.94368C23.0884 6.24014 21.6803 5 20.1211 5H5.78078L5.15951 2.51493C4.93692 1.62459 4.13696 1 3.21922 1H2ZM18 13H7.78078L6.28078 7H20.1211C20.6742 7 21.0063 7.40675 20.9794 7.81078C20.9034 8.9522 20.6906 10.3318 20.1836 11.3949C19.6922 12.4251 19.0201 13 18 13ZM18 20.9938C17.4511 20.9938 17.0062 20.5489 17.0062 20C17.0062 19.4511 17.4511 19.0062 18 19.0062C18.5489 19.0062 18.9938 19.4511 18.9938 20C18.9938 20.5489 18.5489 20.9938 18 20.9938ZM7.00617 20C7.00617 20.5489 7.45112 20.9938 8 20.9938C8.54888 20.9938 8.99383 20.5489 8.99383 20C8.99383 19.4511 8.54888 19.0062 8 19.0062C7.45112 19.0062 7.00617 19.4511 7.00617 20Z" fill="currentColor"/>
       </svg>
     </span>
   `;
 // ...existing code...
   cartBtn.addEventListener('click', function (ev) {
     ev.preventDefault();
-    ev.stopPropagation(); // منع فتح صفحة المنتج عند الضغط على زر السلة
+    ev.stopPropagation();
+
+    // لا نخزن صور base64 الضخمة في السلة — تسبب QuotaExceededError
+    const rawImg = firstImage || prod.img || prod.image || '';
+    const safeImg = rawImg.startsWith('data:') ? 'assets/logo.png' : rawImg;
 
     const payload = {
-      id: prod.id || prod.productId || '',
+      id: String(prod.id || prod.productId || ''),
       title: (typeof prod.name === 'object' ? (prod.name.ar || prod.name.en) : (prod.name || prod.title)) || '',
       meta: prod.variant || prod.meta || '',
-      img: (typeof normalizeAssetUrl === 'function') ? normalizeAssetUrl(firstImage || prod.img || prod.image || '') : (firstImage || prod.img || prod.image || ''),
-      priceCurrent: (typeof getNumericValue === 'function') ? getNumericValue(prod.price || prod.priceCurrent || 0) : parseFloat(String(prod.price || 0).replace(/[^\d.-]/g, '')) || 0,
-      priceOld: (typeof getNumericValue === 'function') ? getNumericValue(prod.oldPrice || prod.priceOld || 0) : parseFloat(String(prod.oldPrice || 0).replace(/[^\d.-]/g, '')) || 0,
+      img: safeImg,
+      priceCurrent: (typeof getNumericValue === 'function')
+        ? getNumericValue(prod.price || prod.priceCurrent || 0)
+        : parseFloat(String(prod.price || 0).replace(/[^\d.-]/g, '')) || 0,
+      priceOld: (typeof getNumericValue === 'function')
+        ? getNumericValue(prod.oldPrice || prod.priceOld || 0)
+        : parseFloat(String(prod.oldPrice || 0).replace(/[^\d.-]/g, '')) || 0,
       qty: 1
     };
 
-    // استدعاء addProduct إن كانت معرفة عالمياً، وإلا استخدام localStorage كـ fallback
+    // استخدم addProduct إن وُجد (Cart.html)، وإلا اكتب مباشرة في localStorage
     if (typeof window.addProduct === 'function') {
       try { window.addProduct(payload); } catch (err) { console.warn('addProduct error', err); }
-    } else if (typeof addProduct === 'function') {
-      try { addProduct(payload); } catch (err) { console.warn('addProduct error', err); }
     } else {
       try {
         const raw = localStorage.getItem('x2_cart') || '[]';
         const cart = JSON.parse(raw);
-        const ix = cart.findIndex(it => it.id && payload.id && it.id === payload.id);
-        if (ix !== -1) cart[ix].qty = (cart[ix].qty || 1) + 1;
-        else cart.unshift(payload);
+        const ix = cart.findIndex(it => String(it.id) === String(payload.id));
+        if (ix !== -1) {
+          cart[ix].qty = (Number(cart[ix].qty) || 1) + 1;
+        } else {
+          cart.unshift(payload);
+        }
         localStorage.setItem('x2_cart', JSON.stringify(cart));
-      } catch (err) { console.warn('localStorage cart save failed', err); }
+
+        // تحديث عداد السلة
+        const count = cart.reduce((s, it) => s + (Number(it.qty) || 1), 0);
+        const badge = document.getElementById('checkout-count');
+        if (badge) { badge.textContent = count; badge.style.display = count > 0 ? 'flex' : 'none'; }
+        document.querySelectorAll('.cart-count').forEach(el => {
+          el.textContent = count;
+          el.style.display = count > 0 ? 'flex' : 'none';
+        });
+      } catch (err) { console.warn('cart write error:', err); }
     }
 
-    // تحديث عداد السلة (checkout-count أو .cart-count) إن وجد
-    try {
-      let count = 0;
-      const raw = localStorage.getItem('x2_cart');
-      if (raw) {
-        const arr = JSON.parse(raw);
-        count = arr.reduce((s, it) => s + (Number(it.qty) || 1), 0);
-      }
-      const updateBadge = (el) => {
-        if (!el) return;
-        el.textContent = count;
-        el.style.display = count > 0 ? 'flex' : 'none';
-      };
-      updateBadge(document.getElementById('checkout-count'));
-      document.querySelectorAll('.cart-count').forEach(updateBadge);
-    } catch (e) { console.warn('update counter failed', e); }
-
-    // بث حدث عام لتحديث أجزاء أخرى من الواجهة
+    // إطلاق حدث عام
     try { window.dispatchEvent(new CustomEvent('cart:updated', { detail: { product: payload } })); } catch(e){}
+
+    // تغذية راجعة بصرية على الزر
+    const origBg = cartBtn.style.background;
+    cartBtn.style.background = '#D4AF37';
+    const pathEl = cartBtn.querySelector('path');
+    if (pathEl) pathEl.style.fill = '#fff';
+    setTimeout(() => {
+      cartBtn.style.background = origBg;
+      if (pathEl) pathEl.style.fill = '';
+    }, 900);
   });
 // ...existing code...
   // دعم اتجاه زر السلة حسب اتجاه الكارت
@@ -969,10 +976,7 @@ function renderProductsGrid(list, productsContainer, direction = null) {
   const tempContainer = document.createElement('div');
   const rowDiv = document.createElement("div");
   rowDiv.className = "products-row";
-  rowDiv.style.display = "flex";
-  rowDiv.style.flexWrap = "wrap";
-  rowDiv.style.gap = "0";
-  rowDiv.style.justifyContent = "flex-start";
+  // inline styles removed — layout controlled by CSS column-count
   tempContainer.appendChild(rowDiv);
 
   // مؤشر تحميل مؤقت
@@ -1026,10 +1030,7 @@ function renderBatch(items, container, clearContainer, direction = null) {
     rowDiv.className = "products-row";
     if (direction === 'next') rowDiv.classList.add('from-right');
     else if (direction === 'prev') rowDiv.classList.add('from-left');
-    rowDiv.style.display = "flex";
-    rowDiv.style.flexWrap = "wrap";
-    rowDiv.style.gap = "0px";
-    rowDiv.style.justifyContent = "flex-start";
+    // inline styles removed — layout controlled by CSS column-count
     container.appendChild(rowDiv);
   }
   
@@ -2253,7 +2254,9 @@ if (filtersScroll) {
       '.filter-dropdown',
       '.subcategory-circle',
       '.subcategory',
-      '.category-flyout'
+      '.category-flyout',
+      '.daily-picks-grid',
+      '.dp-card'
     ];
 
     function shouldIgnore(el) {
@@ -2676,7 +2679,7 @@ if (filtersScroll) {
         if (rel.length && typeof createProductCard==='function') {
           const row = document.createElement('div');
           row.className = 'products-row';
-          row.style.cssText = 'display:flex;flex-wrap:wrap;gap:0;';
+          // inline styles removed — layout controlled by CSS column-count
           rel.forEach(x => row.appendChild(createProductCard(x)));
           relEl.appendChild(row);
         }

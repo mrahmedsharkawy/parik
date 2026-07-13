@@ -27,7 +27,7 @@ body{
   right:0;
   bottom:0;
   height:var(--nav-h);
-  background:var(--nav-bg);
+  background:#152546;
   box-shadow:var(--nav-shadow);
   z-index:100000;
   display:flex;
@@ -67,7 +67,7 @@ body{
   justify-content:center;
   gap:0px;
   text-decoration:none;
-  color:var(--nav-fg);
+  color:#fff;
   font-size:var(--font-size);
   padding:1px 1px;
   background:transparent;
@@ -87,12 +87,19 @@ body{
   object-fit:contain;
   flex-shrink:0;
   fill:currentColor;
+  color:#fff;
+}
+
+/* SVG icons as <img> need a filter to actually show as white */
+.mobile-nav img.icon,
+.mobile-nav img.nav-icon{
+  filter: brightness(0) saturate(100%) invert(100%) !important;
 }
 
 /* active state */
 .mobile-nav a.active,
 .mobile-nav button.active{
-  color:#fff;
+  color:#D4AF37;
   background:#152546;
   border-radius:12px;
   box-shadow:0 6px 16px rgba(21,37,70,0.22);
@@ -100,13 +107,17 @@ body{
 
 /* تنسيق الأيقونات النشطة - تعديل لحل مشكلة عدم تغير اللون */
 .mobile-nav a.active svg.icon {
-  color: #fff !important;
-  fill: #fff !important;
-  stroke: #fff !important;
+  color: #D4AF37 !important;
+  fill: #D4AF37 !important;
+  stroke: #D4AF37 !important;
 }
 
 .mobile-nav a.active img.icon {
-  filter: brightness(0) saturate(100%) invert(100%) !important;
+  filter: brightness(0) saturate(100%) invert(76%) sepia(47%) saturate(1052%) hue-rotate(356deg) brightness(94%) contrast(91%) !important;
+}
+
+.mobile-nav a.active img.nav-icon {
+  filter: brightness(0) saturate(100%) invert(76%) sepia(47%) saturate(1052%) hue-rotate(356deg) brightness(94%) contrast(91%) !important;
 }
 
 /* إزالة تأثير التحويم حتى لا يتعارض مع تنسيق الأيقونات النشطة */
@@ -124,6 +135,42 @@ body{
   outline:2px solid rgba(0,123,255,0.18);
   outline-offset:4px;
   border-radius:6px;
+}
+
+/* ===== Fire Deal Button ===== */
+.fire-deal-item { position: relative; }
+
+.fire-deal-link {
+  position: relative;
+}
+
+.fire-nav-icon {
+  font-size: 24px;
+  display: block;
+  line-height: 1;
+  filter: drop-shadow(0 0 6px rgba(255,180,0,0.85));
+  animation: fireFlicker 1.4s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+.fire-deal-link span:not(.fire-nav-icon) {
+  color: #fff !important;
+  font-weight: 700;
+  font-size: 11px;
+}
+
+@keyframes fireFlicker {
+  0%,100% { transform: scale(1) rotate(-3deg); filter: drop-shadow(0 0 6px rgba(255,180,0,0.9)); }
+  30%      { transform: scale(1.18) rotate(2deg); filter: drop-shadow(0 0 10px rgba(255,120,0,1)); }
+  60%      { transform: scale(1.1) rotate(-1deg); filter: drop-shadow(0 0 8px rgba(255,200,0,0.85)); }
+}
+
+/* active state for fire link */
+.fire-deal-link.active .fire-nav-icon {
+  filter: drop-shadow(0 0 10px #D4AF37) !important;
+}
+.fire-deal-link.active span:not(.fire-nav-icon) {
+  color: #D4AF37 !important;
 }
 
 /* cart badge */

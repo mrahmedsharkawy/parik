@@ -587,11 +587,80 @@
   cursor: pointer;
 }
 
+.acc-password-field {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+}
+.acc-password-field input {
+  flex: 1;
+  min-width: 0;
+}
+.acc-password-toggle {
+  border: 1px solid #ddd;
+  background: #f7f8fc;
+  color: #152546;
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* ===== قسم العروض ===== */
+.offers-card {
+  padding: 16px 14px;
+}
+.offers-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.offers-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #152546;
+}
+.offers-subtitle {
+  font-size: 0.76rem;
+  color: #7a8296;
+  margin-top: 4px;
+}
+.offers-count {
+  background: rgba(21,37,70,0.08);
+  color: #152546;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.offers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 14px;
+  justify-items: center;
+}
+/* جعل كارت المنتج داخل شبكة العروض بنفس شكل المتجر */
+.offers-grid .product-card {
+  width: 100%;
+  max-width: 260px;
+  min-width: 0;
+  margin: 0;
+}
+
 /* تنقل سريع موبايل */
 .acc-quick-nav {
   display: none;
 }
 @media (max-width: 768px) {
+  .offers-card { padding: 12px 10px; }
+  .offers-head { flex-direction: column; align-items: flex-start; margin-bottom: 10px; }
+  .offers-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; justify-items: stretch; }
+  .offers-grid .product-card { max-width: none; }
   .acc-quick-nav {
     display: flex !important;
     gap: 6px;
@@ -636,9 +705,9 @@
   .acc-layout {
     display: flex !important;
     flex-direction: column !important;
-    padding: 12px 10px 100px !important;
+    padding: 12px 10px 18px !important;
     margin: 0 !important;
-    gap: 24px !important;
+    gap: 12px !important;
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
@@ -660,8 +729,8 @@
     transform: translateX(100%) !important;
     transition: transform 0.28s ease !important;
     box-shadow: -14px 0 34px rgba(0,0,0,0.18) !important;
-    padding-top: calc(env(safe-area-inset-top) + 72px) !important;
-    overflow-y: auto !important;
+    padding: calc(env(safe-area-inset-top) + 10px) 10px 10px !important;
+    overflow-y: hidden !important;
   }
   .acc-sidebar.mobile-open {
     transform: translateX(0) !important;
@@ -684,7 +753,7 @@
     border: 1.5px solid #f0f0f0;
     border-radius: 10px;
     padding: 11px 14px;
-    font-size: 0.88rem;
+    font-size: 0.9rem;
     font-weight: 700;
     cursor: pointer;
     width: 100%;
@@ -692,7 +761,57 @@
     color: #333;
   }
   .acc-mobile-menu-btn::after { content: '›'; font-size: 1.2rem; color: #aaa; }
-  .acc-sidebar-head { padding: 12px 16px 14px; }
+  .acc-sidebar-head {
+    padding: 10px 10px 8px;
+    margin-bottom: 6px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .acc-sidebar-meta {
+    width: 100%;
+  }
+  .acc-sidebar-name {
+    font-size: 0.92rem;
+    line-height: 1.35;
+    white-space: normal;
+  }
+  .acc-sidebar-email {
+    font-size: 0.72rem;
+    line-height: 1.3;
+  }
+
+  .acc-nav-section {
+    padding: 2px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .acc-nav-title {
+    display: none;
+  }
+  .acc-nav-item {
+    padding: 9px 12px;
+    font-size: 0.8rem;
+    border-right: none;
+    border-radius: 8px;
+    background: #fafbfe;
+    min-height: 38px;
+    justify-content: flex-start;
+  }
+  .acc-nav-item.active {
+    background: rgba(21,37,70,0.07);
+  }
+  .acc-nav-sub {
+    padding-right: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .acc-nav-sub .acc-nav-item {
+    padding: 8px 12px;
+    font-size: 0.75rem;
+  }
 
   /* التبويبات */
   .acc-tabs {
@@ -739,17 +858,33 @@
   .acc-empty-btn { justify-content: center; font-size: 0.78rem; padding: 9px 12px; }
 
   /* ملف شخصي */
-  .acc-profile-card { padding: 16px 12px; border-radius: 10px; }
+  .acc-profile-card { padding: 12px 10px; border-radius: 10px; }
   .acc-profile-avatar { width: 56px; height: 56px; font-size: 1.4rem; }
-  .acc-profile-name { font-size: 0.95rem; }
+  .acc-profile-name { font-size: 1rem; }
+  .acc-profile-email { font-size: 0.76rem; margin-bottom: 8px; }
+  .acc-profile-card .acc-form-group { margin-bottom: 6px; }
+  .acc-profile-card .acc-form-group label { font-size: 0.74rem; margin-bottom: 3px; }
   .acc-form-group input { font-size: 0.82rem; padding: 8px 10px; }
-  .acc-save-btn { width: 100%; padding: 12px; font-size: 0.88rem; border-radius: 10px; }
+  .acc-password-toggle { font-size: 0.74rem; }
+  .acc-save-btn { width: 100%; padding: 9px 10px; font-size: 0.8rem; border-radius: 10px; }
+  #section-profile > div > div[style*="قسم الأمان"] + div {
+    font-size: 0.98rem !important;
+  }
 
   /* sections */
   #section-orders,
   #section-profile,
   #section-notifications,
   #section-generic { width: 100% !important; box-sizing: border-box !important; }
+  .acc-content {
+    max-height: none !important;
+    overflow: visible !important;
+    padding-bottom: 140px !important;
+  }
+  .acc-content > div {
+    max-height: none !important;
+    overflow: visible !important;
+  }
 }
 
 @media (min-width: 769px) {
@@ -858,8 +993,22 @@
         <div class="acc-profile-email" id="profile-email">لم يتم تسجيل الدخول</div>
         <div class="acc-form-group"><label>الاسم الكامل</label><input type="text" id="pf-name" placeholder="أدخل اسمك"></div>
         <div class="acc-form-group"><label>البريد الإلكتروني</label><input type="email" id="pf-email" placeholder="example@email.com"></div>
+        <div class="acc-form-group"><label>العنوان</label><input type="text" id="pf-address" placeholder="أدخل عنوانك"></div>
         <div class="acc-form-group"><label>رقم الهاتف</label><input type="tel" id="pf-phone" placeholder="+971 XX XXX XXXX"></div>
+        <div class="acc-form-group">
+          <label>كلمة السر</label>
+          <div class="acc-password-field">
+            <input type="password" id="pf-password" placeholder="أدخل كلمة السر">
+            <button type="button" class="acc-password-toggle" onclick="togglePasswordField('pf-password', this)">إظهار</button>
+          </div>
+        </div>
         <button class="acc-save-btn" onclick="saveProfile()">💾 حفظ التغييرات</button>
+        <div style="height:16px"></div>
+        <div style="font-size:0.78rem;font-weight:700;color:#7a8296;margin-bottom:4px">قسم الأمان</div>
+        <div style="font-size:0.92rem;font-weight:800;color:#152546;margin-bottom:10px">تغيير كلمة السر</div>
+        <div class="acc-form-group"><label>كلمة السر الجديدة</label><input type="password" id="pf-new-password" placeholder="أدخل كلمة السر الجديدة"></div>
+        <div class="acc-form-group"><label>تأكيد كلمة السر الجديدة</label><input type="password" id="pf-confirm-password" placeholder="أعد كتابة كلمة السر الجديدة"></div>
+        <button class="acc-save-btn" onclick="changePassword()">🔒 تغيير كلمة السر</button>
       </div>
     </div>
 
@@ -893,6 +1042,25 @@
       </div>
     </div>
 
+    <div id="section-offers" style="display:none">
+      <div class="acc-profile-card offers-card">
+        <div class="offers-head">
+          <div>
+            <div class="offers-title">العروض والخصومات</div>
+            <div class="offers-subtitle">كل المنتجات التي عليها خصم في مكان واحد</div>
+          </div>
+          <div class="offers-count" id="offers-count">0 عرض</div>
+        </div>
+        <div class="offers-grid" id="offers-list">
+          <div class="acc-empty" style="padding:24px 12px; margin:0;">
+            <div class="acc-empty-icon" style="font-size:2rem;">⏳</div>
+            <div class="acc-empty-title">جارٍ تحميل العروض</div>
+            <div class="acc-empty-sub">سيتم عرض جميع المنتجات المخفضة هنا</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div><!-- end acc-content -->
 </div><!-- end acc-layout -->
 
@@ -900,8 +1068,10 @@
 (function() {
   const ORDERS_KEY = 'x2_orders';
   const PROFILE_KEY = 'x2_profile';
+  const PRODUCTS_URL = 'java/Products.json';
   let currentStatus = 'all';
   let currentSearch = '';
+  let offersLoaded = false;
 
   function getCurrSym() {
     const code = localStorage.getItem('currency') || 'AED';
@@ -1014,15 +1184,21 @@
     const qmap = { orders:'aqn-orders', profile:'aqn-profile', coupons:'aqn-coupons', notifications:'aqn-notif' };
     if (qmap[section]) { const qel = document.getElementById(qmap[section]); if (qel) qel.classList.add('active'); }
 
-    const sections = ['orders','profile','notifications'];
+    const sections = ['orders','profile','notifications','offers'];
     if (sections.includes(section)) {
       document.getElementById('section-' + section).style.display = '';
     } else {
       document.getElementById('section-generic').style.display = '';
       document.getElementById('generic-title').textContent =
-        { reviews:'تقييماتك', coupons:'القسائم والعروض', credit:'الرصيد الائتماني',
+        { reviews:'تقييماتك', coupons:'العروض والخصومات', credit:'الرصيد الائتماني',
           history:'تاريخ التصفح', addresses:'العناوين', settings:'البلد/المنطقة واللغة',
           payment:'طرق الدفع', security:'أمن الحساب' }[section] || 'قريباً';
+    }
+
+    if (section === 'coupons') {
+      document.getElementById('section-generic').style.display = 'none';
+      document.getElementById('section-offers').style.display = '';
+      renderOffers();
     }
 
     if (filter) filterByStatus(filter, null);
@@ -1040,7 +1216,9 @@
     const p = {
       name: document.getElementById('pf-name').value.trim(),
       email: document.getElementById('pf-email').value.trim(),
-      phone: document.getElementById('pf-phone').value.trim()
+      address: document.getElementById('pf-address').value.trim(),
+      phone: document.getElementById('pf-phone').value.trim(),
+      password: document.getElementById('pf-password').value
     };
     try { localStorage.setItem(PROFILE_KEY, JSON.stringify(p)); } catch(e) {}
     if (p.name) {
@@ -1049,6 +1227,41 @@
     }
     updateSidebarProfile(p);
     alert('✅ تم حفظ التغييرات');
+  };
+
+  window.changePassword = function() {
+    const newPassword = document.getElementById('pf-new-password').value;
+    const confirmPassword = document.getElementById('pf-confirm-password').value;
+    const profile = getProfile();
+
+    if (!newPassword || !confirmPassword) {
+      alert('⚠️ من فضلك املأ كل حقول تغيير كلمة السر');
+      return;
+    }
+    if (newPassword.length < 6) {
+      alert('⚠️ كلمة السر الجديدة يجب أن تكون 6 أحرف على الأقل');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      alert('❌ كلمة السر الجديدة وتأكيدها غير متطابقين');
+      return;
+    }
+
+    const updated = { ...profile, password: newPassword };
+    try { localStorage.setItem(PROFILE_KEY, JSON.stringify(updated)); } catch(e) {}
+    const passwordField = document.getElementById('pf-password');
+    if (passwordField) passwordField.value = newPassword;
+    document.getElementById('pf-new-password').value = '';
+    document.getElementById('pf-confirm-password').value = '';
+    alert('✅ تم تغيير كلمة السر بنجاح');
+  };
+
+  window.togglePasswordField = function(inputId, button) {
+    const input = document.getElementById(inputId);
+    if (!input || !button) return;
+    const hidden = input.type === 'password';
+    input.type = hidden ? 'text' : 'password';
+    button.textContent = hidden ? 'إخفاء' : 'إظهار';
   };
 
   function updateSidebarProfile(p) {
@@ -1064,6 +1277,85 @@
     if (avatarEl) avatarEl.textContent = avatar;
   }
 
+  function getPriceValue(value) {
+    const num = parseFloat(value);
+    return Number.isFinite(num) ? num : 0;
+  }
+
+  function getDiscountedProducts(products) {
+    return (products || []).filter(product => {
+      const price = getPriceValue(product.price);
+      const oldPrice = getPriceValue(product.oldPrice);
+      return oldPrice > price && price > 0;
+    });
+  }
+
+  function renderOfferCard(product) {
+    const name = (product?.name?.ar || product?.name || 'منتج').toString();
+    const price = getPriceValue(product.price);
+    const oldPrice = getPriceValue(product.oldPrice);
+    const discount = oldPrice > price ? Math.round(((oldPrice - price) / oldPrice) * 100) : 0;
+    const img = Array.isArray(product.img) ? product.img[0] : product.img || 'assets/logo.png';
+    const link = product.id ? `product.html?id=${encodeURIComponent(product.id)}` : 'product.html';
+    const savedAmt = (oldPrice - price).toFixed(2);
+    return `
+      <a class="product-card" href="${link}" style="text-decoration:none;">
+        <span class="offer-badge">-${discount}%</span>
+        <img class="product-img" src="${img}" alt="${name}" onerror="this.src='assets/logo.png'">
+        <div class="product-content" style="padding:6px 8px 8px;">
+          <div class="product-name">${name}</div>
+          <div class="product-price-row">
+            <span class="product-price product-price-discount">${price.toFixed(2)} د.إ</span>
+          </div>
+          <span class="product-old-price-striked">${oldPrice.toFixed(2)} د.إ</span>
+          <div class="product-timer-save-box" style="margin-top:4px;">
+            <span class="product-save-text">وفّر ${savedAmt} د.إ</span>
+          </div>
+        </div>
+      </a>`;
+  }
+
+  async function renderOffers() {
+    const list = document.getElementById('offers-list');
+    const count = document.getElementById('offers-count');
+    if (!list || !count) return;
+
+    if (!offersLoaded) {
+      list.innerHTML = `
+        <div class="acc-empty" style="padding:24px 12px; margin:0;">
+          <div class="acc-empty-icon" style="font-size:2rem;">⏳</div>
+          <div class="acc-empty-title">جارٍ تحميل العروض</div>
+          <div class="acc-empty-sub">سيتم عرض جميع المنتجات المخفضة هنا</div>
+        </div>`;
+    }
+
+    try {
+      const response = await fetch(PRODUCTS_URL, { cache: 'no-store' });
+      const products = await response.json();
+      const discounted = getDiscountedProducts(products);
+      offersLoaded = true;
+      count.textContent = `${discounted.length} عرض`;
+      if (!discounted.length) {
+        list.innerHTML = `
+          <div class="acc-empty" style="padding:24px 12px; margin:0;">
+            <div class="acc-empty-icon" style="font-size:2rem;">🎁</div>
+            <div class="acc-empty-title">لا توجد عروض حالياً</div>
+            <div class="acc-empty-sub">سنضيف هنا كل المنتجات التي عليها خصم فور توفرها</div>
+          </div>`;
+        return;
+      }
+      list.innerHTML = discounted.map(renderOfferCard).join('');
+    } catch (error) {
+      count.textContent = '0 عرض';
+      list.innerHTML = `
+        <div class="acc-empty" style="padding:24px 12px; margin:0;">
+          <div class="acc-empty-icon" style="font-size:2rem;">⚠️</div>
+          <div class="acc-empty-title">تعذر تحميل العروض</div>
+          <div class="acc-empty-sub">تأكد من ملف المنتجات أو أعد المحاولة</div>
+        </div>`;
+    }
+  }
+
   // load profile
   function loadProfile() {
     try {
@@ -1074,7 +1366,9 @@
         document.getElementById('avatar-letter').textContent = p.name.charAt(0);
       }
       if (p.email) { document.getElementById('pf-email').value = p.email; document.getElementById('profile-email').textContent = p.email; }
+      if (p.address) document.getElementById('pf-address').value = p.address;
       if (p.phone) document.getElementById('pf-phone').value = p.phone;
+      if (p.password) document.getElementById('pf-password').value = p.password;
       updateSidebarProfile(p);
     } catch(e) {}
   document.addEventListener('click', function(e) {

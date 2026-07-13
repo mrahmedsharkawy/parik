@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title data-i18n="عروض حصرية - X2 Shopping">عروض حصرية 🔥 - X2 Shopping</title>
+  <meta name="theme-color" content="#152546">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="X2 Shopping - أفضل العروض والخصومات. وفّر أكثر على منتجات مختارة بخصم يصل إلى 70%.">
+  <meta name="robots" content="index, follow">
+  <meta name="author" content="X2 Shopping">
+  <link rel="stylesheet" href="style/style.css" />
+  <style>
+    /* ============================================================
+       Flash Sale Banner — احترافي بالكامل
+       ============================================================ */
+    .flash-sale-hero {
+      margin: 0;
+      background: linear-gradient(135deg, #0a1628 0%, #152546 45%, #1a1a2e 100%);
+      position: relative;
+      overflow: hidden;
+      padding: 0;
+    }
+    /* نقاط خلفية زخرفية */
+    .flash-sale-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(circle at 20% 50%, rgba(212,175,55,0.12) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(212,175,55,0.08) 0%, transparent 40%),
+        radial-gradient(circle at 60% 80%, rgba(255,120,0,0.07) 0%, transparent 35%);
+      pointer-events: none;
+    }
+
+    .fsh-inner {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 32px 20px 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      text-align: center;
+    }
+
+    /* شريط "Flash Sale" */
+    .fsh-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(212,175,55,0.18);
+      border: 1px solid rgba(212,175,55,0.45);
+      border-radius: 999px;
+      padding: 5px 18px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: #D4AF37;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .fsh-badge-fire {
+      font-size: 1rem;
+      animation: badgeFire 1.2s ease-in-out infinite;
+    }
+    @keyframes badgeFire {
+      0%,100% { transform: scale(1); }
+      50%      { transform: scale(1.3) rotate(5deg); }
+    }
+
+    /* العنوان الرئيسي */
+    .fsh-title {
+      font-size: clamp(1.6rem, 6vw, 2.6rem);
+      font-weight: 900;
+      color: #fff;
+      line-height: 1.15;
+      margin: 0;
+    }
+    .fsh-title span.gold { color: #D4AF37; }
+    .fsh-title .fire-big {
+      display: inline-block;
+      animation: bigFire 1.4s ease-in-out infinite alternate;
+    }
+    @keyframes bigFire {
+      from { transform: scale(1) rotate(-4deg); filter: drop-shadow(0 0 8px rgba(255,160,0,0.8)); }
+      to   { transform: scale(1.2) rotate(4deg); filter: drop-shadow(0 0 18px rgba(255,80,0,1)); }
+    }
+
+    /* نص الخصم */
+    .fsh-discount-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .fsh-discount-pill {
+      background: linear-gradient(90deg, #D4AF37, #f0c94a);
+      color: #0a1628;
+      font-weight: 900;
+      font-size: clamp(1.2rem, 4vw, 1.7rem);
+      padding: 6px 22px;
+      border-radius: 999px;
+      box-shadow: 0 4px 20px rgba(212,175,55,0.45);
+    }
+    .fsh-discount-label {
+      color: rgba(255,255,255,0.82);
+      font-size: 0.88rem;
+      font-weight: 600;
+    }
+
+    /* عداد العروض */
+    .fsh-countdown-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .fsh-countdown-label {
+      color: rgba(255,255,255,0.7);
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+    .fsh-countdown {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .fsh-unit {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .fsh-unit-num {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(212,175,55,0.35);
+      border-radius: 10px;
+      color: #D4AF37;
+      font-size: clamp(1.4rem, 5vw, 2rem);
+      font-weight: 900;
+      width: clamp(52px, 14vw, 72px);
+      height: clamp(52px, 14vw, 72px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-variant-numeric: tabular-nums;
+      backdrop-filter: blur(6px);
+      transition: color 0.3s;
+    }
+    .fsh-unit-lbl {
+      color: rgba(255,255,255,0.55);
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+    }
+    .fsh-sep {
+      color: rgba(212,175,55,0.7);
+      font-size: 1.6rem;
+      font-weight: 900;
+      margin-top: -8px;
+      animation: sepPulse 1s steps(1) infinite;
+    }
+    @keyframes sepPulse { 0%,49% { opacity:1; } 50%,100% { opacity:0; } }
+
+    /* مؤشر عدد المنتجات */
+    .fsh-products-count {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.7);
+    }
+    .fsh-products-count strong {
+      color: #D4AF37;
+      font-size: 1rem;
+    }
+
+    /* ============================================================
+       محتوى الصفحة
+       ============================================================ */
+    .offers-page-main {
+      width: 75%;
+      margin: 0 auto;
+      padding: 24px 0 60px;
+    }
+    .offers-section-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .offers-section-title h2 {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: #152546;
+      margin: 0;
+    }
+    .offers-section-title .divider {
+      flex: 1;
+      height: 2px;
+      background: linear-gradient(90deg, rgba(212,175,55,0.4), transparent);
+      border-radius: 2px;
+    }
+
+    .offers-products-grid {
+      column-count: 4;
+      column-gap: 14px;
+    }
+    .offers-products-grid .product-card {
+      display: inline-block;   /* ضروري لـ columns */
+      width: 100%;
+      max-width: none;
+      min-width: 0;
+      margin: 0 0 14px 0;      /* الفاصل السفلي ثابت */
+      break-inside: avoid;
+    }
+    /* إلغاء الإزاحة القديمة */
+    .offers-products-grid .product-card:nth-child(even) {
+      margin-top: 0;
+    }
+    /* حالة فارغة أو تحميل */
+    .offers-state {
+      column-span: all;
+      text-align: center;
+      padding: 60px 20px;
+      color: #888;
+    }
+    .offers-state .state-icon { font-size: 3rem; margin-bottom: 12px; }
+    .offers-state h3 { font-size: 1.1rem; color: #555; margin-bottom: 8px; }
+    .offers-state p  { font-size: 0.88rem; color: #aaa; }
+
+    /* فلتر الفرز */
+    .offers-sort-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .offers-sort-lbl {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #555;
+    }
+    .offers-sort-btn {
+      padding: 5px 14px;
+      border-radius: 999px;
+      border: 1px solid #ddd;
+      background: #fff;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: #444;
+      transition: all 0.15s;
+    }
+    .offers-sort-btn.active,
+    .offers-sort-btn:hover {
+      background: #152546;
+      color: #D4AF37;
+      border-color: #152546;
+    }
+
+    /* ===== زر السلة الخاص بصفحة العروض ===== */
+    .offer-add-cart-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: calc(100% - 16px);
+      margin: 0 8px 10px;
+      padding: 8px 12px;
+      border-radius: 20px;
+      border: 1.5px solid #D4AF37;
+      background: #fff;
+      color: #152546;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      position: static !important;
+    }
+    .offer-add-cart-btn:hover {
+      background: #152546;
+      color: #D4AF37;
+    }
+    .offer-add-cart-btn.added {
+      background: #e8f5e9;
+      color: #2e7d32;
+      border-color: #2e7d32;
+    }
+
+    /* =======  Responsive ======= */
+    @media (max-width: 900px) {
+      .offers-page-main { width: 94%; }
+      .offers-products-grid { column-count: 3; }
+    }
+    @media (max-width: 600px) {
+      .fsh-inner { padding: 22px 14px 20px; gap: 12px; }
+      .offers-page-main { width: 96%; padding: 16px 0 80px; }
+      .offers-products-grid {
+        column-count: 2;
+        column-gap: 10px;
+      }
+      .offers-products-grid .product-card { margin-bottom: 10px; }
+      /* الفرز في صف واحد قابل للتمرير */
+      .offers-sort-bar {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 4px;
+        gap: 6px;
+      }
+      .offers-sort-bar::-webkit-scrollbar { display: none; }
+      .offers-sort-lbl { white-space: nowrap; flex-shrink: 0; }
+      .offers-sort-btn { white-space: nowrap; flex-shrink: 0; padding: 5px 10px; font-size: 0.72rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ===== HEADER (نفس الهيدر الرئيسي) ===== -->
+  <header class="main-header" id="mainHeader">
+    <div class="header-content">
+      <div class="logo">
+        <a href="index.html"><img src="assets/logo.png" alt="X2 Logo" /></a>
+      </div>
+      <div class="search-container">
+        <span class="icon">
+          <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </span>
+        <input type="text" id="searchInput" placeholder="🔥 ابحث في العروض..." autocomplete="off">
+      </div>
+      <div class="cart" style="position:relative;">
+        <a href="Cart.html" aria-label="السلة">
+          <svg class="cart-icon" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          <span id="checkout-count" class="cart-count"></span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== MAIN ===== -->
+  <main class="main" id="main" style="width:100%;margin-top:64px;margin-bottom:0;padding:0;">
+
+    <!-- ===== بنر فلاش سيل ===== -->
+    <section class="flash-sale-hero" aria-label="فلاش سيل عروض حصرية">
+      <div class="fsh-inner">
+
+        <div class="fsh-badge">
+          <span class="fsh-badge-fire">🔥</span>
+          FLASH SALE
+          <span class="fsh-badge-fire">🔥</span>
+        </div>
+
+        <h1 class="fsh-title">
+          <span class="fire-big">🔥</span>
+          عروض <span class="gold">حصرية</span> خاطفة
+          <span class="fire-big">🔥</span>
+        </h1>
+
+        <div class="fsh-discount-row">
+          <div class="fsh-discount-pill" id="maxDiscountPill">حتى 70% خصم</div>
+          <span class="fsh-discount-label">على منتجات مختارة</span>
+        </div>
+
+        <div class="fsh-countdown-wrap">
+          <div class="fsh-countdown-label">⏰ تنتهي العروض خلال</div>
+          <div class="fsh-countdown">
+            <div class="fsh-unit">
+              <div class="fsh-unit-num" id="cd-h">00</div>
+              <div class="fsh-unit-lbl">ساعة</div>
+            </div>
+            <span class="fsh-sep">:</span>
+            <div class="fsh-unit">
+              <div class="fsh-unit-num" id="cd-m">00</div>
+              <div class="fsh-unit-lbl">دقيقة</div>
+            </div>
+            <span class="fsh-sep">:</span>
+            <div class="fsh-unit">
+              <div class="fsh-unit-num" id="cd-s">00</div>
+              <div class="fsh-unit-lbl">ثانية</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="fsh-products-count">
+          <strong id="dealsCount">0</strong> منتج عليهم عرض الآن
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===== قسم المنتجات ===== -->
+    <div class="offers-page-main">
+
+      <!-- فرز -->
+      <div class="offers-sort-bar">
+        <span class="offers-sort-lbl">الفرز:</span>
+        <button class="offers-sort-btn active" data-sort="discount" onclick="setSort('discount',this)">أعلى خصم 🔥</button>
+        <button class="offers-sort-btn" data-sort="price_asc"    onclick="setSort('price_asc',this)">أقل سعر ↑</button>
+        <button class="offers-sort-btn" data-sort="price_desc"   onclick="setSort('price_desc',this)">أعلى سعر ↓</button>
+        <button class="offers-sort-btn" data-sort="saving"       onclick="setSort('saving',this)">أكثر توفيراً 💰</button>
+      </div>
+
+      <!-- العنوان -->
+      <div class="offers-section-title">
+        <h2>🔥 كل المنتجات عليها خصم</h2>
+        <div class="divider"></div>
+      </div>
+
+      <!-- شبكة المنتجات -->
+      <div class="offers-products-grid" id="offersGrid">
+        <div class="offers-state">
+          <div class="state-icon">⏳</div>
+          <h3>جارٍ تحميل العروض...</h3>
+          <p>سيتم عرض جميع المنتجات المخفضة هنا</p>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="site-footer">
+    <div class="footer-info-bar">
+      <div class="footer-columns">
+        <div class="footer-column">
+          <strong data-i18n="معلومات عن x2-shopping">معلومات عن x2-shopping</strong>
+          <ul>
+            <li><a href="/policy/about" data-i18n="نبذة عن x2-shopping">نبذة عن x2-shopping</a></li>
+            <li><a href="/policy/contact" data-i18n="تواصل معنا">تواصل معنا</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <strong data-i18n="خدمة العملاء">خدمة العملاء</strong>
+          <ul>
+            <li><a href="/policy/returns" data-i18n="سياسة الإرجاع والاسترداد">سياسة الإرجاع والاسترداد</a></li>
+            <li><a href="/policy/shipping-info" data-i18n="معلومات الشحن">معلومات الشحن</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-social">
+        <strong data-i18n="تواصل معنا">تواصل معنا</strong>
+        <div class="footer-social-icons">
+          <a href="#" aria-label="Instagram"><img src="assets/social/instagram.png" alt="Instagram" style="width:30px;height:30px;"></a>
+          <a href="https://www.facebook.com/x2shopping.store" aria-label="Facebook"><img src="assets/social/facebook.png" alt="Facebook" style="width:30px;height:30px;"></a>
+          <a href="#" aria-label="TikTok"><img src="assets/social/tiktok.png" alt="TikTok" style="width:30px;height:30px;"></a>
+        </div>
+      </div>
+      <p data-i18n="جميع الحقوق محفوظة © x2-shopping">جميع الحقوق محفوظة © x2-shopping</p>
+    </div>
+  </footer>
+
+</div><!-- .page -->
+
+<script src="java/main.js" defer></script>
+<script src="translations/translation.js" defer></script>
+<script src="mobile-nav-bar/main-navbar.js" defer></script>
+
+<script>
+(function () {
+  'use strict';
+
+  const PRODUCTS_URL = 'java/Products.json';
+  const CART_KEY     = 'x2_cart';
+  let allDeals  = [];
+  let sortKey   = 'discount';
+
+  /* ---- helpers ---- */
+  function getPriceValue(v) { const n = parseFloat(v); return isFinite(n) ? n : 0; }
+  function pad(n) { return String(Math.floor(n)).padStart(2,'0'); }
+  function getCurrSym() {
+    const code = localStorage.getItem('currency') || 'AED';
+    return {AED:'د.إ',USD:'$',EUR:'€',SAR:'ر.س',EGP:'ج.م',KWD:'د.ك',JOD:'د.أ',GBP:'£'}[code] || code;
+  }
+
+  /* ---- countdown: يعيد ضبط نفسه كل 24 ساعة تبدأ من منتصف الليل ---- */
+  function initCountdown() {
+    function tick() {
+      const now = new Date();
+      const end = new Date(now);
+      end.setHours(23, 59, 59, 999);
+      const diff = end - now;
+      document.getElementById('cd-h').textContent = pad(diff / 3600000);
+      document.getElementById('cd-m').textContent = pad((diff % 3600000) / 60000);
+      document.getElementById('cd-s').textContent = pad((diff % 60000) / 1000);
+    }
+    tick();
+    setInterval(tick, 1000);
+  }
+
+  /* ---- خريطة منتجات العروض (بتتملى عند التحميل) ---- */
+  const offersMap = {};
+
+  /* ---- cart ---- */
+  function getCart()     { try { return JSON.parse(localStorage.getItem(CART_KEY) || '[]'); } catch(e) { return []; } }
+  function saveCart(c)   { try { localStorage.setItem(CART_KEY, JSON.stringify(c)); } catch(e) {} }
+  function updateCartBadge() {
+    const count = getCart().reduce((s,it) => s + (Number(it.qty)||1), 0);
+    const el = document.getElementById('checkout-count');
+    if (el) { el.textContent = count > 0 ? count : ''; el.style.display = count > 0 ? 'flex' : 'none'; }
+    window.__cartCount = count;
+    window.dispatchEvent(new CustomEvent('cart:updated', {detail:{count}}));
+  }
+
+  function addToCart(product) {
+    if (!product || !product.id) return;
+    const cart = getCart();
+    const img  = Array.isArray(product.img) ? product.img[0] : (product.img || 'assets/logo.png');
+    const name = (product?.name?.ar || product?.name || 'منتج').toString();
+    const idx  = cart.findIndex(i => String(i.id) === String(product.id));
+    if (idx > -1) { cart[idx].qty = (Number(cart[idx].qty)||1) + 1; }
+    else { cart.push({ id: product.id, title: name, price: getPriceValue(product.price), img, qty: 1 }); }
+    saveCart(cart);
+    updateCartBadge();
+  }
+
+  /* دالة عامة تُستدعى من onclick بالـ ID ---- */
+  window.__addOfferById = function(id, btn) {
+    const product = offersMap[String(id)];
+    if (!product) return;
+    addToCart(product);
+    if (btn) {
+      btn.classList.add('added');
+      btn.textContent = '✅ تمت الإضافة';
+      setTimeout(() => {
+        btn.classList.remove('added');
+        btn.textContent = '🛒 أضف للسلة';
+      }, 1400);
+    }
+  };
+
+  /* ---- render one card ---- */
+  function renderCard(p) {
+    /* حفظ المنتج في الخريطة عشان الزر يقدر يجيبه بالـ ID */
+    offersMap[String(p.id)] = p;
+
+    const name     = (p?.name?.ar || p?.name || 'منتج').toString();
+    const price    = getPriceValue(p.price);
+    const oldPrice = getPriceValue(p.oldPrice);
+    const discount = oldPrice > price ? Math.round(((oldPrice - price) / oldPrice) * 100) : 0;
+    const saved    = (oldPrice - price).toFixed(2);
+    const img      = Array.isArray(p.img) ? p.img[0] : (p.img || 'assets/logo.png');
+    const link     = p.id ? `product.html?id=${encodeURIComponent(p.id)}` : 'product.html';
+    const sym      = getCurrSym();
+
+    return `
+      <div class="product-card offers-card-item">
+        <a href="${link}" style="text-decoration:none;display:contents;">
+          <span class="offer-badge">-${discount}%</span>
+          <img class="product-img" src="${img}" alt="${name}" onerror="this.src='assets/logo.png'" loading="lazy">
+          <div class="product-content" style="padding:6px 8px 10px;">
+            <div class="product-name">${name}</div>
+            <div class="product-price-row">
+              <span class="product-price product-price-discount">${price.toFixed(2)} ${sym}</span>
+            </div>
+            <span class="product-old-price-striked">${oldPrice.toFixed(2)} ${sym}</span>
+            <div class="product-timer-save-box" style="margin-top:4px;">
+              <span class="product-save-text">وفّر ${saved} ${sym}</span>
+            </div>
+          </div>
+        </a>
+        <button
+          class="offer-add-cart-btn"
+          data-offer-id="${p.id}"
+          onclick="window.__addOfferById(this.dataset.offerId, this);"
+        >🛒 أضف للسلة</button>
+      </div>`;
+  }
+
+  /* ---- sort ---- */
+  window.setSort = function(key, btn) {
+    sortKey = key;
+    document.querySelectorAll('.offers-sort-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderGrid();
+  };
+
+  function sortDeals(arr) {
+    const copy = [...arr];
+    if (sortKey === 'discount') {
+      copy.sort((a,b) => {
+        const da = a.oldPrice > a.price ? (a.oldPrice - a.price) / a.oldPrice : 0;
+        const db = b.oldPrice > b.price ? (b.oldPrice - b.price) / b.oldPrice : 0;
+        return db - da;
+      });
+    } else if (sortKey === 'price_asc')  { copy.sort((a,b) => a.price - b.price); }
+    else if (sortKey === 'price_desc') { copy.sort((a,b) => b.price - a.price); }
+    else if (sortKey === 'saving')     { copy.sort((a,b) => (b.oldPrice-b.price) - (a.oldPrice-a.price)); }
+    return copy;
+  }
+
+  /* ---- search filter ---- */
+  let searchQ = '';
+  document.getElementById('searchInput')?.addEventListener('input', function() {
+    searchQ = this.value.trim().toLowerCase();
+    renderGrid();
+  });
+
+  function renderGrid() {
+    const grid = document.getElementById('offersGrid');
+    let deals = sortDeals(allDeals);
+    if (searchQ) {
+      deals = deals.filter(p => {
+        const name = (p?.name?.ar || p?.name || '').toString().toLowerCase();
+        return name.includes(searchQ);
+      });
+    }
+    if (!deals.length) {
+      grid.innerHTML = `
+        <div class="offers-state">
+          <div class="state-icon">🎁</div>
+          <h3>${searchQ ? 'لا توجد نتائج' : 'لا توجد عروض حالياً'}</h3>
+          <p>${searchQ ? 'جرّب كلمة بحث أخرى' : 'سنضيف عروضاً قريباً'}</p>
+        </div>`;
+      return;
+    }
+    grid.innerHTML = deals.map(renderCard).join('');
+  }
+
+  /* ---- load products ---- */
+  async function loadDeals() {
+    const grid = document.getElementById('offersGrid');
+    try {
+      const res      = await fetch(PRODUCTS_URL, { cache: 'no-store' });
+      const products = await res.json();
+
+      allDeals = products
+        .map(p => ({
+          ...p,
+          price:    getPriceValue(p.price),
+          oldPrice: getPriceValue(p.oldPrice)
+        }))
+        .filter(p => p.oldPrice > p.price && p.price > 0);
+
+      /* تحديث عداد المنتجات والخصم الأقصى */
+      document.getElementById('dealsCount').textContent = allDeals.length;
+      if (allDeals.length) {
+        const maxDisc = Math.max(...allDeals.map(p => Math.round(((p.oldPrice - p.price) / p.oldPrice) * 100)));
+        document.getElementById('maxDiscountPill').textContent = `حتى ${maxDisc}% خصم`;
+      }
+
+      renderGrid();
+    } catch (e) {
+      grid.innerHTML = `
+        <div class="offers-state">
+          <div class="state-icon">⚠️</div>
+          <h3>تعذّر تحميل العروض</h3>
+          <p>تحقق من اتصالك وأعد المحاولة</p>
+        </div>`;
+    }
+  }
+
+  /* ---- init ---- */
+  initCountdown();
+  updateCartBadge();
+  loadDeals();
+})();
+</script>
+</body>
+</html>
