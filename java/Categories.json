@@ -154,8 +154,8 @@
       {
         "name": { "ar": "دوران", "en": "Rotations" },
         "categorySlug": "rotations",
-        "image": "assets/categories/forex/rotations.png",
-        "url": "/categories/forex/rotations"
+        "image": "assets/categories/Forex/rotations.png",
+        "url": "/categories/Forex/rotations"
       }
     ]
   },
@@ -264,34 +264,34 @@
   {
     "name": { "ar": "رمضان", "en": "Ramadan" },
     "categorySlug": "ramadan",
-    "image": "assets/categories/ramadan/wood.png",
+    "image": "assets/categories/Ramadan/wood.png",
     "description": { "ar": "منتجات رمضان.", "en": "Ramadan products." },
-    "url": "/categories/ramadan",
+    "url": "/categories/Ramadan",
     "order": 8,
     "subcategories": [
       {
         "name": { "ar": "خشب", "en": "Wood" },
         "categorySlug": "wood",
-        "image": "assets/categories/ramadan/wood.png",
-        "url": "/categories/ramadan/wood"
+        "image": "assets/categories/Ramadan/wood.png",
+        "url": "/categories/Ramadan/wood"
       },
       {
         "name": { "ar": "اكريلك", "en": "Acrylic" },
         "categorySlug": "acrylic",
-        "image": "assets/categories/ramadan/acrylic.png",
-        "url": "/categories/ramadan/acrylic"
+        "image": "assets/categories/Ramadan/acrylic.png",
+        "url": "/categories/Ramadan/acrylic"
       },
       {
         "name": { "ar": "فوركس", "en": "Forex" },
         "categorySlug": "forex",
-        "image": "assets/categories/ramadan/forex.png",
-        "url": "/categories/ramadan/forex"
+        "image": "assets/categories/Ramadan/forex.png",
+        "url": "/categories/Ramadan/forex"
       },
       {
         "name": { "ar": "جلد", "en": "Leather" },
         "categorySlug": "leather",
-        "image": "assets/categories/ramadan/leather.png",
-        "url": "/categories/ramadan/leather"
+        "image": "assets/categories/Ramadan/leather.png",
+        "url": "/categories/Ramadan/leather"
       }
     ]
   }
