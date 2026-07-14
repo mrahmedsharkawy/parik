@@ -1941,6 +1941,22 @@ function saveDailyPicks() { localStorage.setItem(LS_DAILY_PICKS, JSON.stringify(
 /* ================= إضافة عميل يدوياً ================= */
 const LS_MANUAL_CUSTOMERS = 'admin_manual_customers';
 
+function fillMsgProductSelect() {
+  const mp = $('msg-product');
+  if (!mp) return;
+  const src = products.length ? products : JSON.parse(localStorage.getItem('admin_products')||'[]');
+  const discPct = p => Math.round(((parseFloat(p.oldPrice)-parseFloat(p.price))/parseFloat(p.oldPrice))*100);
+  const discounted = src
+    .filter(p => parseFloat(p.oldPrice) > parseFloat(p.price) && parseFloat(p.price) > 0)
+    .sort((a,b) => discPct(b) - discPct(a));
+  if (!discounted.length) {
+    mp.innerHTML = '<option value="">— لا توجد منتجات مخفّضة —</option>';
+    return;
+  }
+  mp.innerHTML = '<option value="">— بدون منتج —</option>' +
+    discounted.map(p => `<option value="${p.id}">-${discPct(p)}% | ${esc(getT(p.name))} — ${p.price} د.إ</option>`).join('');
+}
+
 function getManualCustomers() {
   try { return JSON.parse(localStorage.getItem(LS_MANUAL_CUSTOMERS)||'[]'); } catch(e) { return []; }
 }
@@ -2001,21 +2017,7 @@ function clearVisitors() {
   toast('تم مسح السجل');
 }
 
-function getCustomers() {
-  const orders = JSON.parse(localStorage.getItem('x2_orders')||'[]');
-  const map = {};
-  orders.forEach(o => {
-    const profile = (() => { try { return JSON.parse(localStorage.getItem('x2_profile')||'{}'); }catch(e){return{};} })();
-    const name = o.customerName || profile.name || '—';
-    const phone = o.customerPhone || profile.phone || '';
-    const email = o.customerEmail || profile.email || '';
-    const key = phone || name;
-    if (!map[key]) map[key] = { name, phone, email, orders:[], statuses:new Set() };
-    map[key].orders.push(o);
-    map[key].statuses.add(o.status||'processing');
-  });
-  return Object.values(map);
-}
+/* getCustomers - سيُعرَّف لاحقاً بشكل شامل */
 
 function renderCustomers() {
   const q = ($('cust-search').value||'').toLowerCase();
@@ -2033,7 +2035,7 @@ function renderCustomers() {
       <input type="checkbox" style="width:auto" ${selectedCustomers.has(i)?'checked':''} onchange="toggleCust(${i},this.checked)">
       <div class="info">
         <b>${esc(c.name)}</b>
-        <small>📱 ${c.phone||'—'} ${c.email?'• 📧 '+c.email:''} • ${c.orders.length} طلب</small>
+        <small>📱 ${c.phone||'—'} ${c.email?'• 📧 '+esc(c.email):''} ${c.city?'• 📍 '+esc(c.city):''} • ${c.orders.length} طلب</small>
       </div>
       <a href="https://wa.me/${(c.phone||'').replace(/\D/g,'')}" target="_blank" class="btn-gold btn-sm" style="text-decoration:none;${!c.phone?'opacity:.4;pointer-events:none':''}">💬</a>
     </div>`).join('');
@@ -2048,6 +2050,7 @@ function selectAllCustomers() {
 function deselectAllCustomers() { selectedCustomers.clear(); renderCustomers(); }
 
 let bulkIdx = 0, bulkList = [];
+let selectedCustomers = new Set();
 function toggleEmailFields() {
   const isEmail = $('msg-type').value === 'email';
   const ef = $('email-fields');
@@ -2165,14 +2168,7 @@ window.switchTab = function(name) {
     syncCustomersFromSupabase();
     renderCustomers();
     renderVisitorsStats();
-    // تحميل المنتجات المخفّضة فقط في قائمة الرسائل
-    const mp = $('msg-product');
-    if (mp && products.length) {
-      const discounted = products.filter(p => parseFloat(p.oldPrice) > parseFloat(p.price) && parseFloat(p.price) > 0);
-      const discPct = p => Math.round(((parseFloat(p.oldPrice)-parseFloat(p.price))/parseFloat(p.oldPrice))*100);
-      mp.innerHTML = '<option value="">— بدون منتج —</option>' +
-        discounted.map(p => `<option value="${p.id}">-${discPct(p)}% | ${esc(getT(p.name))} — ${p.price} د.إ</option>`).join('');
-    }
+    fillMsgProductSelect();
   }
   if (name === 'settings') { loadSettings(); }
   if (name === 'orders') { syncStoreOrders(false); }
@@ -2202,26 +2198,31 @@ async function syncCustomersFromSupabase() {
 /* تعديل getCustomers لتدمج Supabase مع المحلي */
 const _origGetCustomers = window.getCustomers;
 function getCustomers() {
-  const localCusts = (() => {
-    const orders = getOrders();
-    const map = {};
-    orders.forEach(o => {
-      const profile = (() => { try { return JSON.parse(localStorage.getItem('x2_profile')||'{}'); }catch(e){return{};} })();
-      const name = o.customerName || profile.name || '—';
-      const phone = o.customerPhone || profile.phone || '';
-      const email = o.customerEmail || profile.email || '';
-      const key = phone || name;
-      if (!map[key]) map[key] = { name, phone, email, orders:[], statuses:new Set() };
-      map[key].orders.push(o);
-      map[key].statuses.add(o.status||'processing');
-    });
-    return Object.values(map);
-  })();
+  // جمع الطلبات من كلا المصدرين
+  const storeOrders  = JSON.parse(localStorage.getItem('x2_orders')   || '[]');
+  const adminOrders  = getOrders(); // admin_orders
+  const allOrders    = [...storeOrders, ...adminOrders];
+  const profile = (() => { try { return JSON.parse(localStorage.getItem('x2_profile')||'{}'); }catch(e){return{};} })();
+
+  const map = {};
+  allOrders.forEach(o => {
+    // x2_orders بيخزن البيانات في shipping أو customerName مباشرة
+    const sh    = o.shipping || {};
+    const name  = o.customerName  || o.customer || sh.name  || profile.name  || '—';
+    const phone = o.customerPhone || o.phone    || sh.phone || profile.phone || '';
+    const email = o.customerEmail || o.email    || sh.email || profile.email || '';
+    const city  = sh.city || sh.address || o.address || '';
+    const key   = phone || email || name;
+    if (!map[key]) map[key] = { name, phone, email, city, orders:[], statuses:new Set() };
+    map[key].orders.push(o);
+    map[key].statuses.add(o.status||'processing');
+  });
+  const localCusts = Object.values(map);
 
   // دمج عملاء Supabase
   const merged = [...localCusts];
   supaCustomers.forEach(sc => {
-    const exists = merged.some(c => c.phone === sc.phone || c.email === sc.email);
+    const exists = merged.some(c => (sc.phone && c.phone === sc.phone) || (sc.email && c.email === sc.email));
     if (!exists && (sc.phone || sc.email)) merged.push(sc);
   });
   // دمج العملاء المضافين يدوياً
