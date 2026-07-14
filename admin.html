@@ -982,7 +982,7 @@ function saveProduct(){
   saveLocal();
   renderProducts();
   resetForm();
-  toast(editing?'تم تحديث المنتج':'تمت إضافة المنتج');
+  toast(editing?'تم تحديث المنتج - اضغط ☁️ رفع الكل لـ Supabase':'تمت إضافة المنتج - اضغط ☁️ رفع الكل لـ Supabase');
 
   // ===== رفع المنتج لـ Supabase =====
   if (window.Supabase) {
@@ -2021,29 +2021,43 @@ const LS_VISITORS = 'x2_visitors';
 function getVisitors() { try { return JSON.parse(localStorage.getItem(LS_VISITORS)||'[]'); } catch(e) { return []; } }
 
 function renderVisitorsStats() {
-  const visitors = getVisitors();
-  const today = new Date().toDateString();
-  const todayVisits = visitors.filter(v => new Date(v.date).toDateString() === today);
   const todayEl = $('visitorsTodayCount');
   const allEl   = $('visitorsAllCount');
   const locEl   = $('visitorsLocations');
-  if (todayEl) todayEl.textContent = todayVisits.length;
-  if (allEl)   allEl.textContent   = visitors.length;
-  if (locEl) {
-    // تجميع حسب الموقع
-    const locMap = {};
-    visitors.forEach(v => {
-      const loc = v.city || v.country || v.ip || 'غير محدد';
-      locMap[loc] = (locMap[loc]||0) + 1;
-    });
-    const sorted = Object.entries(locMap).sort((a,b) => b[1]-a[1]).slice(0, 10);
-    if (!sorted.length) { locEl.innerHTML = '<span style="color:#aaa;font-size:.8rem">لا توجد بيانات</span>'; return; }
-    locEl.innerHTML = sorted.map(([loc, count]) => `
-      <div style="display:flex;justify-content:space-between;font-size:.82rem;padding:3px 6px;background:#f7f8fc;border-radius:6px">
-        <span>🌍 ${esc(loc)}</span>
-        <b style="color:var(--navy)">${count}</b>
-      </div>`).join('');
-  }
+
+  // قراءة من Supabase أولاً (لكل الأجهزة)
+  fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors?select=visited_at,page,city,country&order=visited_at.desc&limit=500', {
+    headers: {
+      'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E',
+      'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E'
+    }
+  }).then(r => r.json()).then(function(rows) {
+    if (!Array.isArray(rows)) throw new Error('no data');
+    const today = new Date().toDateString();
+    const todayVisits = rows.filter(v => new Date(v.visited_at).toDateString() === today);
+    if (todayEl) todayEl.textContent = todayVisits.length;
+    if (allEl)   allEl.textContent   = rows.length;
+    if (locEl) {
+      const locMap = {};
+      rows.forEach(v => {
+        const loc = [v.city, v.country].filter(Boolean).join('، ') || 'غير محدد';
+        locMap[loc] = (locMap[loc]||0) + 1;
+      });
+      const sorted = Object.entries(locMap).sort((a,b) => b[1]-a[1]).slice(0, 10);
+      locEl.innerHTML = sorted.length ? sorted.map(([loc, count]) =>
+        `<div style="display:flex;justify-content:space-between;font-size:.82rem;padding:3px 6px;background:#f7f8fc;border-radius:6px">
+          <span>🌍 ${esc(loc)}</span><b style="color:var(--navy)">${count}</b>
+        </div>`).join('') : '<span style="color:#aaa;font-size:.8rem">لا توجد زيارات بعد</span>';
+    }
+  }).catch(function() {
+    // fallback لـ localStorage
+    const visitors = getVisitors();
+    const today = new Date().toDateString();
+    const todayVisits = visitors.filter(v => new Date(v.date).toDateString() === today);
+    if (todayEl) todayEl.textContent = todayVisits.length;
+    if (allEl)   allEl.textContent   = visitors.length;
+    if (locEl)   locEl.innerHTML = '<span style="color:#aaa;font-size:.8rem">يحتاج إنشاء جدول visitors في Supabase</span>';
+  });
 }
 
 function clearVisitors() {

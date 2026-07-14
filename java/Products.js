@@ -47,20 +47,7 @@ const PROD_CACHE_TTL = 5 * 60 * 1000; // 5 دقائق
 export async function fetchProducts() {
   if (_productsCache) return _productsCache;
 
-  // 1. admin_products في localStorage (أولوية قصوى - تعديلات الأدمن المباشرة)
-  try {
-    const adminProds = localStorage.getItem('admin_products');
-    if (adminProds) {
-      const parsed = JSON.parse(adminProds);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        _productsCache = parsed;
-        try { sessionStorage.setItem(PROD_CACHE_KEY, JSON.stringify({ ts: Date.now(), data: _productsCache })); } catch(e) {}
-        return _productsCache;
-      }
-    }
-  } catch(e) {}
-
-  // 2. sessionStorage cache (تسريع التنقل بين الصفحات)
+  // 1. sessionStorage cache (تسريع التنقل)
   try {
     const cached = sessionStorage.getItem(PROD_CACHE_KEY);
     if (cached) {
@@ -72,7 +59,7 @@ export async function fetchProducts() {
     }
   } catch(e) {}
 
-  // 3. Supabase (للمنتجات المرفوعة للسحابة)
+  // 2. Supabase (المصدر الحقيقي لجميع الزوار)
   try {
     if (window.Supabase && window.Supabase.Products) {
       const sbProds = await window.Supabase.Products.getAll(500);
@@ -102,12 +89,21 @@ export async function fetchProducts() {
     }
   } catch(e) {}
 
+  // 3. admin_products في localStorage (fallback لجهاز الأدمن)
+  try {
+    const adminProds = localStorage.getItem('admin_products');
+    if (adminProds) {
+      const parsed = JSON.parse(adminProds);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        _productsCache = parsed;
+        try { sessionStorage.setItem(PROD_CACHE_KEY, JSON.stringify({ ts: Date.now(), data: _productsCache })); } catch(e) {}
+        return _productsCache;
+      }
+    }
+  } catch(e) {}
+
   // 4. Products.json كـ fallback أخير
-  const paths = [
-    'java/Products.json',
-    '/java/Products.json',
-    location.origin + '/java/Products.json'
-  ];
+  const paths = ['java/Products.json', '/java/Products.json', location.origin + '/java/Products.json'];
   for (const path of paths) {
     try {
       const res = await fetch(path);

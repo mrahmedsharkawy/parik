@@ -1444,6 +1444,22 @@ document.addEventListener("DOMContentLoaded", function() {
     visitors.unshift(entry);
     localStorage.setItem(LS_VISITORS, JSON.stringify(visitors.slice(0, 500)));
 
+    // رفع لـ Supabase (للأدمن يشوف كل الزوار)
+    function saveVisitorToSupabase(data) {
+      if (!window.Supabase) return;
+      fetch(window.SUPABASE_URL ? window.SUPABASE_URL + '/rest/v1/visitors' : 'https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors', {
+        method: 'POST',
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E',
+          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E',
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ page: data.page, city: data.city || '', country: data.country || '', ip: data.ip || '' })
+      }).catch(function(){});
+    }
+    saveVisitorToSupabase(entry);
+
     // محاولة الحصول على معلومات الموقع (غير مؤثر على السرعة)
     fetch('https://ipwho.is/', { signal: AbortSignal.timeout ? AbortSignal.timeout(3000) : undefined })
       .then(r => r.json())
