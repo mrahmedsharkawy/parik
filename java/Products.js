@@ -47,7 +47,9 @@ const PROD_CACHE_TTL = 60 * 1000; // دقيقة واحدة فقط
 export async function fetchProducts() {
   if (_productsCache) return _productsCache;
 
-  // 1. sessionStorage cache (تسريع التنقل)
+  let staleCache = null; // cache قديم كـ backup لو Supabase فشل
+
+  // 1. sessionStorage cache
   try {
     const cached = sessionStorage.getItem(PROD_CACHE_KEY);
     if (cached) {
@@ -56,6 +58,8 @@ export async function fetchProducts() {
         _productsCache = obj.data;
         return _productsCache;
       }
+      // cache منتهي لكن احتفظ به كـ backup
+      staleCache = obj.data;
     }
   } catch(e) {}
 
@@ -87,9 +91,21 @@ export async function fetchProducts() {
         return _productsCache;
       }
     }
-  } catch(e) {}
+  } catch(e) {
+    // Supabase فشل - استخدم الـ cache القديم لو موجود
+    if (staleCache && staleCache.length > 0) {
+      _productsCache = staleCache;
+      return _productsCache;
+    }
+  }
 
-  // 3. admin_products في localStorage (fallback لجهاز الأدمن)
+  // 3. stale cache كـ fallback قبل admin_products
+  if (staleCache && staleCache.length > 0) {
+    _productsCache = staleCache;
+    return _productsCache;
+  }
+
+  // 4. admin_products في localStorage (fallback لجهاز الأدمن)
   try {
     const adminProds = localStorage.getItem('admin_products');
     if (adminProds) {
@@ -102,7 +118,7 @@ export async function fetchProducts() {
     }
   } catch(e) {}
 
-  // 4. Products.json كـ fallback أخير
+  // 5. Products.json كـ fallback أخير
   const paths = ['java/Products.json', '/java/Products.json', location.origin + '/java/Products.json'];
   for (const path of paths) {
     try {
