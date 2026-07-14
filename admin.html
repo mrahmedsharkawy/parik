@@ -787,20 +787,44 @@ function getAdminCreds() {
 }
 
 /* ================= البوابة ================= */
-function checkGate(){
-  const creds = getAdminCreds();
-  const enteredUser = ($('gateUser').value||'').trim();
-  const enteredPass = ($('gatePass').value||'').trim();
-  if(enteredUser === creds.user && enteredPass === creds.pass){
-    sessionStorage.setItem('admin_ok','1');
-    $('gate').style.display='none';
-  } else {
-    toast('❌ اسم المستخدم أو كلمة المرور غير صحيحة');
-  }
-}
-if(sessionStorage.getItem('admin_ok')==='1') $('gate').style.display='none';
-$('gatePass').addEventListener('keydown',e=>{ if(e.key==='Enter') checkGate(); });
+async function checkGate(){
+  const enteredEmail = ($('gateUser').value || '').trim();
+  const enteredPass = ($('gatePass').value || '').trim();
 
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: enteredEmail,
+    password: enteredPass
+  });
+
+  if(error){
+    toast('❌ الإيميل أو كلمة المرور غير صحيحة');
+    return;
+  }
+
+  const { data: admin, error: adminError } = await supabase
+    .from('admins')
+    .select('*')
+    .eq('user_id', data.user.id)
+    .eq('active', true)
+    .single();
+
+  if(adminError || !admin){
+    toast('❌ ليس لديك صلاحية دخول');
+    await supabase.auth.signOut();
+    return;
+  }
+
+  sessionStorage.setItem('admin_ok','1');
+  $('gate').style.display='none';
+}
+
+if(sessionStorage.getItem('admin_ok') === '1'){
+  $('gate').style.display='none';
+}
+
+$('gatePass').addEventListener('keydown', e=>{
+  if(e.key === 'Enter') checkGate();
+});
 /* ================= التبويبات ================= */
 function switchTab(name){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));
