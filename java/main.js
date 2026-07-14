@@ -1429,32 +1429,32 @@ document.addEventListener("DOMContentLoaded", function() {
 (function() {
   try {
     const LS_VISITORS = 'x2_visitors';
-    const visitors = JSON.parse(localStorage.getItem(LS_VISITORS)||'[]');
-    // تسجيل زيارة واحدة لكل جلسة
     const SESSION_KEY = 'x2_visit_logged';
-    if (!sessionStorage.getItem(SESSION_KEY)) {
-      sessionStorage.setItem(SESSION_KEY, '1');
-      const entry = {
-        date: new Date().toISOString(),
-        page: location.pathname.split('/').pop() || 'index.html',
-        city: '', country: ''
-      };
-      // محاولة الحصول على الموقع الجغرافي (بدون طلب إذن)
-      fetch('https://ipapi.co/json/', { cache: 'force-cache' })
-        .then(r => r.json())
-        .then(d => {
-          entry.city = d.city || '';
-          entry.country = d.country_name || '';
-          entry.ip = d.ip || '';
-          visitors.unshift(entry);
-          // احتفظ بآخر 500 زيارة فقط
-          localStorage.setItem(LS_VISITORS, JSON.stringify(visitors.slice(0, 500)));
-        })
-        .catch(() => {
-          visitors.unshift(entry);
-          localStorage.setItem(LS_VISITORS, JSON.stringify(visitors.slice(0, 500)));
-        });
-    }
+    if (sessionStorage.getItem(SESSION_KEY)) return; // سجّل مرة واحدة فقط
+    sessionStorage.setItem(SESSION_KEY, '1');
+
+    const entry = {
+      date:    new Date().toISOString(),
+      page:    location.pathname.split('/').pop() || 'index.html',
+      city:    '', country: '', ip: ''
+    };
+
+    // حفظ الزيارة فوراً بدون انتظار الـ IP
+    const visitors = JSON.parse(localStorage.getItem(LS_VISITORS) || '[]');
+    visitors.unshift(entry);
+    localStorage.setItem(LS_VISITORS, JSON.stringify(visitors.slice(0, 500)));
+
+    // محاولة الحصول على معلومات الموقع (غير مؤثر على السرعة)
+    fetch('https://ipwho.is/', { signal: AbortSignal.timeout ? AbortSignal.timeout(3000) : undefined })
+      .then(r => r.json())
+      .then(d => {
+        entry.city    = d.city    || '';
+        entry.country = d.country || '';
+        entry.ip      = d.ip      || '';
+        const v = JSON.parse(localStorage.getItem(LS_VISITORS) || '[]');
+        if (v[0] && v[0].date === entry.date) { v[0] = entry; localStorage.setItem(LS_VISITORS, JSON.stringify(v)); }
+      })
+      .catch(function() {});
   } catch(e) {}
 })();
 

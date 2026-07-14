@@ -47,7 +47,32 @@ const PROD_CACHE_TTL = 5 * 60 * 1000; // 5 دقائق
 export async function fetchProducts() {
   if (_productsCache) return _productsCache;
 
-  // 1. قراءة من Supabase (المصدر الرئيسي - تعديلات الأدمن)
+  // 1. admin_products في localStorage (أولوية قصوى - تعديلات الأدمن المباشرة)
+  try {
+    const adminProds = localStorage.getItem('admin_products');
+    if (adminProds) {
+      const parsed = JSON.parse(adminProds);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        _productsCache = parsed;
+        try { sessionStorage.setItem(PROD_CACHE_KEY, JSON.stringify({ ts: Date.now(), data: _productsCache })); } catch(e) {}
+        return _productsCache;
+      }
+    }
+  } catch(e) {}
+
+  // 2. sessionStorage cache (تسريع التنقل بين الصفحات)
+  try {
+    const cached = sessionStorage.getItem(PROD_CACHE_KEY);
+    if (cached) {
+      const obj = JSON.parse(cached);
+      if (Date.now() - obj.ts < PROD_CACHE_TTL) {
+        _productsCache = obj.data;
+        return _productsCache;
+      }
+    }
+  } catch(e) {}
+
+  // 3. Supabase (للمنتجات المرفوعة للسحابة)
   try {
     if (window.Supabase && window.Supabase.Products) {
       const sbProds = await window.Supabase.Products.getAll(500);
@@ -72,31 +97,6 @@ export async function fetchProducts() {
           };
         });
         try { sessionStorage.setItem(PROD_CACHE_KEY, JSON.stringify({ ts: Date.now(), data: _productsCache })); } catch(e) {}
-        return _productsCache;
-      }
-    }
-  } catch(e) { /* Supabase غير متاح، نكمل للـ fallback */ }
-
-  // 2. admin_products في localStorage (نفس المتصفح)
-  try {
-    const adminProds = localStorage.getItem('admin_products');
-    if (adminProds) {
-      const parsed = JSON.parse(adminProds);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        _productsCache = parsed;
-        try { sessionStorage.setItem(PROD_CACHE_KEY, JSON.stringify({ ts: Date.now(), data: _productsCache })); } catch(e) {}
-        return _productsCache;
-      }
-    }
-  } catch(e) {}
-
-  // 3. sessionStorage cache
-  try {
-    const cached = sessionStorage.getItem(PROD_CACHE_KEY);
-    if (cached) {
-      const obj = JSON.parse(cached);
-      if (Date.now() - obj.ts < PROD_CACHE_TTL) {
-        _productsCache = obj.data;
         return _productsCache;
       }
     }
