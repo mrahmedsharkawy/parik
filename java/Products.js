@@ -67,7 +67,8 @@ export async function fetchProducts() {
   try {
     if (window.Supabase && window.Supabase.Products) {
       const sbProds = await window.Supabase.Products.getAll(500);
-      if (Array.isArray(sbProds) && sbProds.length > 0) {
+      // نجح الاتصال - نثق بالنتيجة حتى لو فاضية (يعني فعلاً لا توجد منتجات)
+      if (Array.isArray(sbProds)) {
         _productsCache = sbProds.map(function(p) {
           const imgs = [];
           if (p.image) imgs.push(p.image);
@@ -92,7 +93,7 @@ export async function fetchProducts() {
       }
     }
   } catch(e) {
-    // Supabase فشل - استخدم الـ cache القديم لو موجود
+    // Supabase فشل فعلياً (خطأ شبكة/اتصال) - استخدم الـ cache القديم لو موجود
     if (staleCache && staleCache.length > 0) {
       _productsCache = staleCache;
       return _productsCache;
