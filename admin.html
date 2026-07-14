@@ -1718,7 +1718,13 @@ async function pushAllProductsToSupabase() {
   if (!confirm('رفع '+products.length+' منتج لـ Supabase؟')) return;
   toast('⏳ جارٍ الرفع...');
 
-  // حذف المنتجات القديمة أولاً ثم إضافة الجديدة (تحديث كامل)
+  // جلب كل منتجات Supabase الحالية لمطابقتها بالاسم (منع التكرار أول مرة)
+  var existingByName = {};
+  try {
+    var allSb = await window.Supabase.Products.getAll(1000);
+    (allSb||[]).forEach(function(sp){ if(sp.name_ar) existingByName[sp.name_ar.trim()] = sp.id; });
+  } catch(e) {}
+
   var ok=0, fail=0;
   for (var i=0; i<products.length; i++) {
     var p = products[i];
@@ -1729,10 +1735,11 @@ async function pushAllProductsToSupabase() {
       var nameEn = (p.name && typeof p.name === 'object') ? (p.name.en||nameAr) : nameAr;
       var descAr = (p.desc && typeof p.desc === 'object') ? (p.desc.ar||'') : (p.desc||'');
 
-      // تحقق هل موجود في Supabase
-      var existing = await window.Supabase.Products.getById(Number(p.id));
-      if (existing && existing.id) {
-        await window.Supabase.Products.update(existing.id, {
+      // حدد supabaseId: المحفوظ محلياً، أو بالمطابقة بالاسم، أو جديد
+      var targetId = p.supabaseId || existingByName[nameAr.trim()] || null;
+
+      if (targetId) {
+        await window.Supabase.Products.update(targetId, {
           name_ar:nameAr, name_en:nameEn, description_ar:descAr,
           price:parseFloat(p.price)||0, old_price:parseFloat(p.oldPrice)||0,
           stock:parseInt(p.stock)||0, image:imgs[0]||'', gallery:imgs,
@@ -1740,14 +1747,18 @@ async function pushAllProductsToSupabase() {
           sort_order:Number(p.id)||i, active:true,
           timer_end:p.timerEnd||null
         });
+        products[i].supabaseId = targetId;
       } else {
-        await window.Supabase.Products.insert({
+        const res = await window.Supabase.Products.insert({
           name:{ar:nameAr,en:nameEn}, desc:{ar:descAr,en:''},
           category:cats, img:imgs,
           price:parseFloat(p.price)||0, oldPrice:parseFloat(p.oldPrice)||0,
           stock:parseInt(p.stock)||0, rating:parseFloat(p.rating)||5,
           sort:Number(p.id)||i, timerEnd:p.timerEnd||null
         });
+        if (Array.isArray(res) && res[0] && res[0].id) {
+          products[i].supabaseId = res[0].id;
+        }
       }
       ok++;
     } catch(e) {
@@ -1755,6 +1766,7 @@ async function pushAllProductsToSupabase() {
       console.warn('فشل رفع:', p.id, e.message);
     }
   }
+  saveLocal(); // احفظ الـ supabaseId المحدّثة محلياً
   toast('✅ رُفع '+ok+' منتج'+(fail?' — ⚠️ فشل '+fail+' منتج':''));
 }
 
