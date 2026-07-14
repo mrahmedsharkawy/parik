@@ -47,7 +47,50 @@ const PROD_CACHE_TTL = 5 * 60 * 1000; // 5 دقائق
 export async function fetchProducts() {
   if (_productsCache) return _productsCache;
 
-  // محاولة قراءة من sessionStorage أولاً
+  // 1. قراءة من Supabase (المصدر الرئيسي - تعديلات الأدمن)
+  try {
+    if (window.Supabase && window.Supabase.Products) {
+      const sbProds = await window.Supabase.Products.getAll(500);
+      if (Array.isArray(sbProds) && sbProds.length > 0) {
+        _productsCache = sbProds.map(function(p) {
+          const imgs = [];
+          if (p.image) imgs.push(p.image);
+          if (Array.isArray(p.gallery)) p.gallery.forEach(function(g){ if(g && g !== p.image) imgs.push(g); });
+          return {
+            id:          p.id,
+            name:        { ar: p.name_ar || '', en: p.name_en || p.name_ar || '' },
+            desc:        p.description_ar || '',
+            img:         imgs.length ? imgs : undefined,
+            category:    Array.isArray(p.categories) ? p.categories : (p.categories ? [p.categories] : []),
+            price:       p.price,
+            oldPrice:    p.old_price || undefined,
+            stock:       p.stock || undefined,
+            rating:      p.rating || undefined,
+            ratingCount: p.ratingCount || undefined,
+            timerEnd:    p.timer_end || undefined,
+            featured:    p.featured || false
+          };
+        });
+        try { sessionStorage.setItem(PROD_CACHE_KEY, JSON.stringify({ ts: Date.now(), data: _productsCache })); } catch(e) {}
+        return _productsCache;
+      }
+    }
+  } catch(e) { /* Supabase غير متاح، نكمل للـ fallback */ }
+
+  // 2. admin_products في localStorage (نفس المتصفح)
+  try {
+    const adminProds = localStorage.getItem('admin_products');
+    if (adminProds) {
+      const parsed = JSON.parse(adminProds);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        _productsCache = parsed;
+        try { sessionStorage.setItem(PROD_CACHE_KEY, JSON.stringify({ ts: Date.now(), data: _productsCache })); } catch(e) {}
+        return _productsCache;
+      }
+    }
+  } catch(e) {}
+
+  // 3. sessionStorage cache
   try {
     const cached = sessionStorage.getItem(PROD_CACHE_KEY);
     if (cached) {
@@ -59,6 +102,7 @@ export async function fetchProducts() {
     }
   } catch(e) {}
 
+  // 4. Products.json كـ fallback أخير
   const paths = [
     'java/Products.json',
     '/java/Products.json',
@@ -69,13 +113,10 @@ export async function fetchProducts() {
       const res = await fetch(path);
       if (res.ok) {
         _productsCache = await res.json();
-        // حفظ في sessionStorage
         try { sessionStorage.setItem(PROD_CACHE_KEY, JSON.stringify({ ts: Date.now(), data: _productsCache })); } catch(e) {}
         return _productsCache;
       }
-    } catch (e) {
-      // نكمل التجربة على المسارات الأخرى
-    }
+    } catch (e) {}
   }
   throw new Error('Products.json not found!');
 }
@@ -928,7 +969,7 @@ window.addEventListener('popstate', function(event) {
       'Forex': '🖼️',
       'wood': '🪵',
       'leather': '👜',
-      'sticker': '🏷️',
+      'Sticker': '🏷️',
       'Ramadan': '🌙',
     };
     

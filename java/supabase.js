@@ -76,16 +76,17 @@ const SupaSubcategories = {
   insert: async function(s){ return sbFetch('subcategories',{method:'POST',body:JSON.stringify({category_id:s.categoryId,name_ar:s.nameAr,name_en:s.nameEn||s.nameAr,image:s.image||'',sort_order:s.order||0,active:true})}); }
 };
 
-/* === PRODUCTS (name_ar, name_en, desc, category_id, subcategory_id, price, old_price, stock, image, gallery, rating, featured, active, sort_order, timer_end) === */
+/* === PRODUCTS (name_ar, name_en, desc, category_id, subcategory_id, price, old_price, stock, image, gallery, categories, rating, featured, active, sort_order, timer_end) === */
 const SupaProducts = {
-  getAll: async function(limit){ return sbFetch('products?active=eq.true&order=sort_order.asc&limit='+(limit||100)); },
+  getAll: async function(limit){ return sbFetch('products?active=eq.true&order=sort_order.asc&limit='+(limit||500)); },
   getFeatured: async function(){ return sbFetch('products?featured=eq.true&active=eq.true&order=sort_order.asc'); },
   getByCategory: async function(catId){ return sbFetch('products?category_id=eq.'+catId+'&active=eq.true&order=sort_order.asc'); },
   getById: async function(id){ var r=await sbFetch('products?id=eq.'+id+'&limit=1'); return r&&r[0]?r[0]:null; },
   insert: async function(p){
     var name = p.name&&typeof p.name==='object'?p.name:{ar:p.name||'',en:p.name||''};
     var desc = p.desc&&typeof p.desc==='object'?p.desc:{ar:p.desc||'',en:p.desc||''};
-    return sbFetch('products',{method:'POST',body:JSON.stringify({name_ar:name.ar,name_en:name.en,description_ar:desc.ar,description_en:desc.en,category_id:p.categoryId||null,subcategory_id:p.subcategoryId||null,price:parseFloat(p.price)||0,old_price:parseFloat(p.oldPrice)||0,stock:parseInt(p.stock)||0,image:Array.isArray(p.img)?p.img[0]:(p.img||''),gallery:Array.isArray(p.img)?p.img:[],rating:parseFloat(p.rating)||5,featured:p.featured||false,active:true,sort_order:p.sort||0,timer_end:p.timerEnd||null})});
+    var cats = Array.isArray(p.category)?p.category:(p.category?[p.category]:[]);
+    return sbFetch('products',{method:'POST',body:JSON.stringify({name_ar:name.ar,name_en:name.en,description_ar:desc.ar,description_en:desc.en,category_id:p.categoryId||null,subcategory_id:p.subcategoryId||null,price:parseFloat(p.price)||0,old_price:parseFloat(p.oldPrice)||0,stock:parseInt(p.stock)||0,image:Array.isArray(p.img)?p.img[0]:(p.img||''),gallery:Array.isArray(p.img)?p.img:[],categories:cats,rating:parseFloat(p.rating)||5,ratingCount:parseInt(p.ratingCount)||0,featured:p.featured||false,active:true,sort_order:p.sort||0,timer_end:p.timerEnd||null})});
   },
   update: async function(id,d){ return sbFetch('products?id=eq.'+id,{method:'PATCH',body:JSON.stringify(d)}); },
   remove: async function(id){ return sbFetch('products?id=eq.'+id,{method:'PATCH',body:JSON.stringify({active:false})}); }
