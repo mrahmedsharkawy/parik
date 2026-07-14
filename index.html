@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
   <meta charset="UTF-8" />
@@ -468,63 +468,98 @@
   const grid = document.getElementById('dailyPicksGrid');
   if (!grid) return;
 
-  function seededRand(seed) {
-    let s = seed;
-    return function() { s = (s * 1664525 + 1013904223) & 0xffffffff; return (s >>> 0) / 0xffffffff; };
-  }
-
   function renderStars(r) {
     r = parseFloat(r) || 0;
     const full = Math.floor(r), half = r % 1 >= 0.5 ? 1 : 0, empty = 5 - full - half;
     return '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(empty);
   }
 
-  fetch('java/Products.json', {cache:'no-store'})
-    .then(r => r.json())
-    .then(products => {
-      const discounted = products.filter(p => {
-        const pr = parseFloat(p.price), old = parseFloat(p.oldPrice);
-        return old > pr && pr > 0;
-      }).sort((a, b) => {
-        const da = (parseFloat(a.oldPrice) - parseFloat(a.price)) / parseFloat(a.oldPrice);
-        const db = (parseFloat(b.oldPrice) - parseFloat(b.price)) / parseFloat(b.oldPrice);
-        return db - da;
-      });
+  function renderCard(p) {
+    const name = (p?.name?.ar || p?.name || 'منتج').toString();
+    const img  = (Array.isArray(p.img) ? p.img[0] : p.img) || 'assets/logo.png';
+    const link = p.id ? `product.html?id=${encodeURIComponent(p.id)}` : 'product.html';
+    const pr = parseFloat(p.price), old = parseFloat(p.oldPrice);
+    const disc = (old > pr && pr > 0) ? Math.round(((old - pr) / old) * 100) : 0;
+    return `
+      <a class="dp-card" href="${link}">
+        <img class="dp-img" src="${img}" alt="${name}" loading="lazy" onerror="this.src='assets/logo.png'">
+        <div class="dp-name">${name}</div>
+        ${p.rating ? `<div class="dp-stars">${renderStars(p.rating)}</div>` : ''}
+        ${disc > 0 ? `<span class="dp-badge">-${disc}%</span>` : ''}
+      </a>`;
+  }
 
-      if (!discounted.length) { grid.closest('.daily-picks-section').style.display = 'none'; return; }
+  async function loadDailyPicks() {
+    try {
+      // جلب المنتجات: admin_products أولاً، ثم Supabase، ثم JSON
+      let products = null;
+      try {
+        const ap = localStorage.getItem('admin_products');
+        if (ap) { const p = JSON.parse(ap); if (Array.isArray(p) && p.length) products = p; }
+      } catch(e) {}
 
-      // seed بالتاريخ اليومي
-      const today = new Date();
-      const seed = today.getFullYear() * 10000 + (today.getMonth()+1) * 100 + today.getDate();
-      const rand = seededRand(seed);
-
-      // اختر 4 منتجات عشوائية يومياً من أعلى 30 عرضاً
-      const pool = discounted.slice(0, Math.min(30, discounted.length));
-      const chosen = [];
-      const used = new Set();
-      const count = 12;
-      for (let i = 0; i < count && i < pool.length; i++) {
-        let idx;
-        do { idx = Math.floor(rand() * pool.length); } while (used.has(idx) && used.size < pool.length);
-        used.add(idx);
-        chosen.push(pool[idx]);
+      if (!products && window.Supabase && window.Supabase.Products) {
+        try {
+          const sb = await window.Supabase.Products.getAll(500);
+          if (Array.isArray(sb) && sb.length) {
+            products = sb.map(p => {
+              const imgs = [];
+              if (p.image) imgs.push(p.image);
+              if (Array.isArray(p.gallery)) p.gallery.forEach(g => { if(g && g !== p.image) imgs.push(g); });
+              return { id: p.id, name: { ar: p.name_ar||'', en: p.name_en||'' }, img: imgs, price: p.price, oldPrice: p.old_price, rating: p.rating };
+            });
+          }
+        } catch(e) {}
       }
 
-      grid.innerHTML = chosen.map(p => {
-        const name = (p?.name?.ar || p?.name || 'منتج').toString();
-        const img  = (Array.isArray(p.img) ? p.img[0] : p.img) || 'assets/logo.png';
-        const disc = Math.round(((parseFloat(p.oldPrice) - parseFloat(p.price)) / parseFloat(p.oldPrice)) * 100);
-        const link = p.id ? `product.html?id=${encodeURIComponent(p.id)}` : 'product.html';
-        return `
-          <a class="dp-card" href="${link}">
-            <img class="dp-img" src="${img}" alt="${name}" loading="lazy" onerror="this.src='assets/logo.png'">
-            <div class="dp-name">${name}</div>
-            ${p.rating ? `<div class="dp-stars">${renderStars(p.rating)}</div>` : ''}
-            <span class="dp-badge">-${disc}%</span>
-          </a>`;
-      }).join('');
-    })
-    .catch(() => { const s = grid.closest('.daily-picks-section'); if (s) s.style.display='none'; });
+      if (!products) {
+        const res = await fetch('java/Products.json', {cache:'no-store'});
+        products = await res.json();
+      }
+
+      // اختيارات اليوم من الأدمن
+      let dailyIds = new Set();
+      try { dailyIds = new Set(JSON.parse(localStorage.getItem('x2_daily_picks') || '[]')); } catch(e) {}
+
+      let chosen = [];
+
+      if (dailyIds.size > 0) {
+        // عرض المنتجات المحددة من الأدمن
+        chosen = products.filter(p => dailyIds.has(String(p.id)));
+      } else {
+        // fallback: 12 منتج مخفّض عشوائي يومياً
+        const discounted = products.filter(p => {
+          const pr = parseFloat(p.price), old = parseFloat(p.oldPrice);
+          return old > pr && pr > 0;
+        }).sort((a, b) => {
+          const da = (parseFloat(a.oldPrice) - parseFloat(a.price)) / parseFloat(a.oldPrice);
+          const db = (parseFloat(b.oldPrice) - parseFloat(b.price)) / parseFloat(b.oldPrice);
+          return db - da;
+        });
+        const pool = discounted.slice(0, Math.min(30, discounted.length));
+        const today = new Date();
+        const seed = today.getFullYear() * 10000 + (today.getMonth()+1) * 100 + today.getDate();
+        let s = seed;
+        const rand = () => { s = (s * 1664525 + 1013904223) & 0xffffffff; return (s >>> 0) / 0xffffffff; };
+        const used = new Set();
+        for (let i = 0; i < 12 && i < pool.length; i++) {
+          let idx;
+          do { idx = Math.floor(rand() * pool.length); } while (used.has(idx) && used.size < pool.length);
+          used.add(idx);
+          chosen.push(pool[idx]);
+        }
+      }
+
+      if (!chosen.length) { grid.closest('.daily-picks-section').style.display = 'none'; return; }
+      grid.innerHTML = chosen.map(renderCard).join('');
+    } catch(e) {
+      const s = grid.closest('.daily-picks-section');
+      if (s) s.style.display = 'none';
+    }
+  }
+
+  // انتظر supabase.js
+  setTimeout(loadDailyPicks, 150);
 })();
 </script>
 </body>

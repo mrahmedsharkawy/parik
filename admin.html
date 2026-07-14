@@ -286,7 +286,24 @@
           الحفظ يتم في متصفحك تلقائياً. لتظهر التعديلات على الموقع الفعلي اضغط
           <b>⬇ تنزيل Products.json</b> ثم ضع الملف مكان <code>java/Products.json</code>.
         </div>
-        <input type="text" id="searchProd" placeholder="🔍 بحث بالاسم…" oninput="prodPage=1;renderProducts()" style="margin-bottom:12px">
+        <input type="text" id="searchProd" placeholder="🔍 بحث بالاسم…" oninput="prodPage=1;renderProducts()" style="margin-bottom:8px">
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+          <select id="sortProd" onchange="prodPage=1;renderProducts()" style="flex:1;min-width:140px">
+            <option value="default">ترتيب: افتراضي</option>
+            <option value="newest">الأحدث أولاً</option>
+            <option value="oldest">الأقدم أولاً</option>
+            <option value="price_asc">السعر: من الأقل</option>
+            <option value="price_desc">السعر: من الأعلى</option>
+            <option value="discount">نسبة الخصم الأعلى</option>
+            <option value="rating">التقييم الأعلى</option>
+            <option value="name_az">الاسم: أ → ي</option>
+          </select>
+          <select id="stockFilter" onchange="prodPage=1;renderProducts()" style="width:auto">
+            <option value="">كل المنتجات</option>
+            <option value="instock">متاح فقط</option>
+            <option value="discount">عليها خصم</option>
+          </select>
+        </div>
         <div class="plist" id="prodList" style="flex:1"><div class="empty">لا توجد منتجات</div></div>
         <div class="pager" id="prodPager"></div>
       </div>
@@ -523,6 +540,17 @@
         <button class="btn-ghost btn-sm" onclick="saveFeatured()">💾 حفظ</button>
       </div>
       <div class="plist" id="featuredPicker"></div>
+    </div>
+
+    <!-- اختيارات اليوم للصفحة الرئيسية -->
+    <div class="card" style="margin-top:18px">
+      <h2>🌟 اختيارات اليوم (الصفحة الرئيسية)</h2>
+      <div class="hint">اختر المنتجات التي تظهر في قسم "اختيارات اليوم" في الصفحة الرئيسية.</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <input type="text" id="dp-search" placeholder="ابحث عن منتج..." oninput="renderDailyPicker()" style="flex:1">
+        <button class="btn-ghost btn-sm" onclick="saveDailyPicks()">💾 حفظ</button>
+      </div>
+      <div class="plist" id="dailyPicker"></div>
     </div>
   </div>
 
@@ -937,19 +965,36 @@ function firstMedia(p){
 }
 function renderProducts(){
   const q = ($('searchProd')?.value||'').toLowerCase().trim();
+  const sort = $('sortProd')?.value || 'default';
+  const stockF = $('stockFilter')?.value || '';
   $('prodCount').textContent = products.length;
   renderCatCounts();
   const cat = catFilter ? categories.find(c => (c.categorySlug||'').toLowerCase().trim()===catFilter) : null;
   const catAr = (cat?.name?.ar||'').toLowerCase().trim();
   const catEn = (cat?.name?.en||'').toLowerCase().trim();
-  const all = products.filter(p=>{
+  let all = products.filter(p=>{
     if(catFilter){
       const vals = productCatValues(p);
       if(!(vals.includes(catAr) || vals.includes(catEn) || vals.includes(catFilter))) return false;
     }
     if(q && !getT(p.name).toLowerCase().includes(q)) return false;
+    if(stockF === 'instock' && p.stock === '0') return false;
+    if(stockF === 'discount' && !(parseFloat(p.oldPrice) > parseFloat(p.price))) return false;
     return true;
   });
+
+  // تطبيق الترتيب
+  if(sort === 'newest')     all = [...all].sort((a,b) => Number(b.id||0) - Number(a.id||0));
+  else if(sort === 'oldest') all = [...all].sort((a,b) => Number(a.id||0) - Number(b.id||0));
+  else if(sort === 'price_asc')  all = [...all].sort((a,b) => (parseFloat(a.price)||0) - (parseFloat(b.price)||0));
+  else if(sort === 'price_desc') all = [...all].sort((a,b) => (parseFloat(b.price)||0) - (parseFloat(a.price)||0));
+  else if(sort === 'discount')   all = [...all].sort((a,b) => {
+    const da = parseFloat(a.oldPrice)>0 ? (parseFloat(a.oldPrice)-parseFloat(a.price))/parseFloat(a.oldPrice) : 0;
+    const db = parseFloat(b.oldPrice)>0 ? (parseFloat(b.oldPrice)-parseFloat(b.price))/parseFloat(b.oldPrice) : 0;
+    return db - da;
+  });
+  else if(sort === 'rating') all = [...all].sort((a,b) => (parseFloat(b.rating)||0) - (parseFloat(a.rating)||0));
+  else if(sort === 'name_az') all = [...all].sort((a,b) => getT(a.name).localeCompare(getT(b.name), 'ar'));
   if(!all.length){ $('prodList').innerHTML='<div class="empty">لا توجد منتجات</div>'; $('prodPager').innerHTML=''; return; }
 
   // ترقيم الصفحات
@@ -1607,6 +1652,32 @@ function renderFeaturedPicker() {
 function toggleFeatured(id, checked) { if(checked) featuredIds.add(String(id)); else featuredIds.delete(String(id)); }
 function saveFeatured() { localStorage.setItem(LS_FEATURED, JSON.stringify([...featuredIds])); toast('تم حفظ المنتجات المميزة'); }
 
+/* ================= اختيارات اليوم ================= */
+const LS_DAILY_PICKS = 'x2_daily_picks';
+let dailyPickIds = new Set();
+function getDailyPickIds() { try { return new Set(JSON.parse(localStorage.getItem(LS_DAILY_PICKS)||'[]')); } catch(e) { return new Set(); } }
+
+function renderDailyPicker() {
+  const q = ($('dp-search').value||'').toLowerCase();
+  const list = $('dailyPicker'); if (!list) return;
+  dailyPickIds = getDailyPickIds();
+  const filtered = products.filter(p => !q || getT(p.name).toLowerCase().includes(q)).slice(0, 30);
+  if (!filtered.length) { list.innerHTML='<div class="empty">لا توجد منتجات</div>'; return; }
+  list.innerHTML = filtered.map(p => {
+    const name = getT(p.name); const checked = dailyPickIds.has(String(p.id));
+    const img = (Array.isArray(p.img) ? p.img[0] : p.img) || '';
+    return `<div class="prod-row">
+      <input type="checkbox" ${checked?'checked':''} onchange="toggleDailyPick('${p.id}',this.checked)" style="width:auto">
+      <div class="info">
+        ${img ? `<img src="${img}" style="width:36px;height:36px;object-fit:cover;border-radius:6px;margin-left:8px" onerror="this.style.display='none'">` : ''}
+        <b>${esc(name)}</b><small>${p.price||''} د.إ</small>
+      </div>
+    </div>`;
+  }).join('');
+}
+function toggleDailyPick(id, checked) { if(checked) dailyPickIds.add(String(id)); else dailyPickIds.delete(String(id)); }
+function saveDailyPicks() { localStorage.setItem(LS_DAILY_PICKS, JSON.stringify([...dailyPickIds])); toast('✅ تم حفظ اختيارات اليوم'); }
+
 /* ================================================================
    العملاء
 ================================================================ */
@@ -1724,7 +1795,7 @@ const _origSwitchTab = window.switchTab;
 window.switchTab = function(name) {
   _origSwitchTab && _origSwitchTab(name);
   if (name === 'categories') { renderAdminCategories(); }
-  if (name === 'banners') { renderBanners(); renderFeaturedPicker(); }
+  if (name === 'banners') { renderBanners(); renderFeaturedPicker(); renderDailyPicker(); }
   if (name === 'customers') { selectedCustomers.clear(); syncCustomersFromSupabase(); renderCustomers(); }
   if (name === 'settings') { loadSettings(); }
   if (name === 'orders') { syncStoreOrders(false); }
