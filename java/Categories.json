@@ -229,10 +229,10 @@
   },
   {
     "name": { "ar": "استيكر", "en": "Sticker" },
-    "categorySlug": "sticker",
-    "image": "assets/categories/sticker/full.png",
+    "categorySlug": "Sticker",
+    "image": "assets/categories/Sticker/full.png",
     "description": { "ar": "منتجات الاستيكر.", "en": "Sticker products." },
-    "url": "/categories/sticker",
+    "url": "/categories/Sticker",
     "order": 7,
     "subcategories": [
       {
