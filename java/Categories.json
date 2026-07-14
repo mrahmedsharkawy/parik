@@ -128,7 +128,7 @@
   {
     "name": { "ar": "فوركس", "en": "Forex" },
     "categorySlug": "Forex",
-    "image": "assets/categories/forex/tables.png",
+    "image": "assets/categories/Forex/tables.png",
     "description": { "ar": "منتجات الفوركس.", "en": "Forex board products." },
     "url": "/categories/Forex",
     "order": 4,
@@ -137,7 +137,7 @@
         "name": { "ar": "طولات", "en": "tables" },
         "categorySlug": "tables",
         "image": "assets/categories/Forex/tables.png",
-        "url": "/categories/forex/tables"
+        "url": "/categories/Forex/tables"
       },
       {
         "name": { "ar": "استاند", "en": "Stands" },
