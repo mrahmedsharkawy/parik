@@ -125,6 +125,33 @@ const SupaSync = {
   }
 };
 
-window.Supabase = { Orders:SupaOrders, Customers:SupaCustomers, Categories:SupaCategories, Subcategories:SupaSubcategories, Products:SupaProducts, Settings:SupaSettings, Sync:SupaSync };
+/* === AUTH (Supabase Auth REST) === */
+const SupaAuth = {
+  signIn: async function(email, password) {
+    const res = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_ANON, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error_description || data.msg || 'Login failed');
+    return data; // { access_token, user, ... }
+  },
+  signOut: async function(token) {
+    await fetch(SUPABASE_URL + '/auth/v1/logout', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + (token || SUPABASE_ANON) }
+    }).catch(function(){});
+  },
+  getAdmin: async function(userId, token) {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/admins?user_id=eq.' + userId + '&active=eq.true&limit=1', {
+      headers: { 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + (token || SUPABASE_ANON) }
+    });
+    const rows = await res.json();
+    return rows && rows[0] ? rows[0] : null;
+  }
+};
+
+window.Supabase = { Orders:SupaOrders, Customers:SupaCustomers, Categories:SupaCategories, Subcategories:SupaSubcategories, Products:SupaProducts, Settings:SupaSettings, Sync:SupaSync, Auth:SupaAuth };
 
 window.addEventListener('load',function(){ setTimeout(function(){ SupaSync.loadSettings(); SupaSync.pushLocalOrders(); },2000); });

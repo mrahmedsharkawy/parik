@@ -170,9 +170,10 @@
   <div class="box">
     <h2>🔒 لوحة التحكم</h2>
     <p>أدخل بيانات الدخول</p>
-    <input type="text" id="gateUser" placeholder="اسم المستخدم" style="text-align:center;margin-bottom:10px">
+    <input type="email" id="gateUser" placeholder="البريد الإلكتروني" style="text-align:center;margin-bottom:10px">
     <input type="password" id="gatePass" placeholder="كلمة المرور" style="text-align:center;margin-bottom:12px">
-    <button class="btn-gold" style="width:100%" onclick="checkGate()">دخول</button>
+    <button class="btn-gold" style="width:100%" onclick="checkGate()" id="gateBtn">دخول</button>
+    <p id="gateMsg" style="margin-top:10px;font-size:.8rem;color:#e53935;display:none"></p>
   </div>
 </div>
 
@@ -788,43 +789,50 @@ function getAdminCreds() {
 
 /* ================= البوابة ================= */
 async function checkGate(){
-  const enteredEmail = ($('gateUser').value || '').trim();
-  const enteredPass = ($('gatePass').value || '').trim();
+  const email     = ($('gateUser').value || '').trim();
+  const password  = ($('gatePass').value || '').trim();
+  const msgEl     = $('gateMsg');
+  const btn       = $('gateBtn');
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: enteredEmail,
-    password: enteredPass
-  });
+  function showErr(msg){ if(msgEl){ msgEl.textContent=msg; msgEl.style.display='block'; } else toast(msg); }
 
-  if(error){
-    toast('❌ الإيميل أو كلمة المرور غير صحيحة');
-    return;
+  if (!email || !password) { showErr('❌ أدخل الإيميل وكلمة المرور'); return; }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ جارٍ التحقق...';
+
+  try {
+    // 1. تسجيل الدخول عبر Supabase Auth
+    const authData = await window.Supabase.Auth.signIn(email, password);
+
+    // 2. التحقق أن المستخدم admin نشط في جدول admins
+    const admin = await window.Supabase.Auth.getAdmin(authData.user.id, authData.access_token);
+    if (!admin) {
+      await window.Supabase.Auth.signOut(authData.access_token);
+      showErr('❌ ليس لديك صلاحية دخول لوحة التحكم');
+      btn.disabled = false; btn.textContent = 'دخول';
+      return;
+    }
+
+    // ✅ نجاح
+    sessionStorage.setItem('admin_ok', '1');
+    sessionStorage.setItem('admin_token', authData.access_token);
+    sessionStorage.setItem('admin_name', admin.full_name || email.split('@')[0]);
+    $('gate').style.display = 'none';
+    toast('✅ مرحباً ' + (admin.full_name || 'بالأدمن'));
+
+  } catch(e) {
+    showErr('❌ ' + (e.message || 'الإيميل أو كلمة المرور غير صحيحة'));
+    btn.disabled = false; btn.textContent = 'دخول';
   }
-
-  const { data: admin, error: adminError } = await supabase
-    .from('admins')
-    .select('*')
-    .eq('user_id', data.user.id)
-    .eq('active', true)
-    .single();
-
-  if(adminError || !admin){
-    toast('❌ ليس لديك صلاحية دخول');
-    await supabase.auth.signOut();
-    return;
-  }
-
-  sessionStorage.setItem('admin_ok','1');
-  $('gate').style.display='none';
 }
 
 if(sessionStorage.getItem('admin_ok') === '1'){
-  $('gate').style.display='none';
+  $('gate').style.display = 'none';
 }
 
-$('gatePass').addEventListener('keydown', e=>{
-  if(e.key === 'Enter') checkGate();
-});
+$('gatePass').addEventListener('keydown', e=>{ if(e.key==='Enter') checkGate(); });
+$('gateUser').addEventListener('keydown', e=>{ if(e.key==='Enter') $('gatePass').focus(); });
 /* ================= التبويبات ================= */
 function switchTab(name){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));
