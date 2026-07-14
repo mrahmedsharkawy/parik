@@ -42,7 +42,7 @@ export async function fetchCategories() {
 // أضف هذه الدالة بعد دالة fetchCategories
 let _productsCache = null;
 const PROD_CACHE_KEY = 'x2_prods_ss';
-const PROD_CACHE_TTL = 5 * 60 * 1000; // 5 دقائق
+const PROD_CACHE_TTL = 60 * 1000; // دقيقة واحدة فقط
 
 export async function fetchProducts() {
   if (_productsCache) return _productsCache;

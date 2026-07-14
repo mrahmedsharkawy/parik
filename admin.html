@@ -1711,18 +1711,47 @@ function clearTimer(){ $('p-timerend').value=''; }
 /* ================= رفع كل المنتجات لـ Supabase ================= */
 async function pushAllProductsToSupabase() {
   if (!window.Supabase) { toast('Supabase غير متصل'); return; }
-  if (!confirm('رفع '+products.length+' منتج لـ Supabase؟ قد يستغرق وقتاً.')) return;
+  if (!confirm('رفع '+products.length+' منتج لـ Supabase؟')) return;
+  toast('⏳ جارٍ الرفع...');
+
+  // حذف المنتجات القديمة أولاً ثم إضافة الجديدة (تحديث كامل)
   var ok=0, fail=0;
-  toast('جارٍ الرفع...');
   for (var i=0; i<products.length; i++) {
     var p = products[i];
     try {
       var imgs = (Array.isArray(p.img)?p.img:[p.img||''].filter(Boolean)).filter(function(s){return s&&!s.startsWith('data:');});
-      await window.Supabase.Products.insert({name:p.name,desc:p.desc||'',price:parseFloat(p.price)||0,oldPrice:parseFloat(p.oldPrice)||0,stock:parseInt(p.stock)||0,img:imgs,rating:parseFloat(p.rating)||5,sort:Number(p.id)||i,timerEnd:p.timerEnd||null});
+      var cats = Array.isArray(p.category)?p.category:(p.category?[p.category]:[]);
+      var nameAr = (p.name && typeof p.name === 'object') ? (p.name.ar||'') : (p.name||'');
+      var nameEn = (p.name && typeof p.name === 'object') ? (p.name.en||nameAr) : nameAr;
+      var descAr = (p.desc && typeof p.desc === 'object') ? (p.desc.ar||'') : (p.desc||'');
+
+      // تحقق هل موجود في Supabase
+      var existing = await window.Supabase.Products.getById(Number(p.id));
+      if (existing && existing.id) {
+        await window.Supabase.Products.update(existing.id, {
+          name_ar:nameAr, name_en:nameEn, description_ar:descAr,
+          price:parseFloat(p.price)||0, old_price:parseFloat(p.oldPrice)||0,
+          stock:parseInt(p.stock)||0, image:imgs[0]||'', gallery:imgs,
+          categories:cats, rating:parseFloat(p.rating)||5,
+          sort_order:Number(p.id)||i, active:true,
+          timer_end:p.timerEnd||null
+        });
+      } else {
+        await window.Supabase.Products.insert({
+          name:{ar:nameAr,en:nameEn}, desc:{ar:descAr,en:''},
+          category:cats, img:imgs,
+          price:parseFloat(p.price)||0, oldPrice:parseFloat(p.oldPrice)||0,
+          stock:parseInt(p.stock)||0, rating:parseFloat(p.rating)||5,
+          sort:Number(p.id)||i, timerEnd:p.timerEnd||null
+        });
+      }
       ok++;
-    } catch(e) { fail++; }
+    } catch(e) {
+      fail++;
+      console.warn('فشل رفع:', p.id, e.message);
+    }
   }
-  toast('✅ رُفع '+ok+' منتج'+(fail?' — فشل '+fail+' منتج':''));
+  toast('✅ رُفع '+ok+' منتج'+(fail?' — ⚠️ فشل '+fail+' منتج':''));
 }
 
 /* ================= بدء ================= */
