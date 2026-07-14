@@ -153,6 +153,47 @@ const SupaAuth = {
   }
 };
 
-window.Supabase = { Orders:SupaOrders, Customers:SupaCustomers, Categories:SupaCategories, Subcategories:SupaSubcategories, Products:SupaProducts, Settings:SupaSettings, Sync:SupaSync, Auth:SupaAuth };
+/* === STORAGE (رفع الصور والملفات إلى Supabase Storage) === */
+const BUCKET_NAME = 'products';
+const SupaStorage = {
+  /**
+   * يرفع ملف (File أو Blob) إلى Supabase Storage ويرجع رابط URL عام قابل للاستخدام مباشرة
+   */
+  upload: async function(file, folder) {
+    const ext = (file.name && file.name.includes('.')) ? file.name.split('.').pop() : (file.type.split('/')[1] || 'jpg');
+    const safeName = Date.now() + '-' + Math.random().toString(36).slice(2,8) + '.' + ext;
+    const path = (folder ? folder + '/' : '') + safeName;
+
+    const res = await fetch(SUPABASE_URL + '/storage/v1/object/' + BUCKET_NAME + '/' + path, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_ANON,
+        'Authorization': 'Bearer ' + SUPABASE_ANON,
+        'Content-Type': file.type || 'application/octet-stream'
+      },
+      body: file
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error('فشل رفع الملف: ' + errText);
+    }
+
+    // رابط الوصول العام للملف
+    return SUPABASE_URL + '/storage/v1/object/public/' + BUCKET_NAME + '/' + path;
+  },
+  /**
+   * تحويل dataURL (base64) إلى Blob ثم رفعه
+   */
+  uploadDataUrl: async function(dataUrl, folder) {
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    const isVideo = dataUrl.startsWith('data:video');
+    const fakeFile = new File([blob], (isVideo ? 'video' : 'image') + '.' + (blob.type.split('/')[1] || 'jpg'), { type: blob.type });
+    return SupaStorage.upload(fakeFile, folder);
+  }
+};
+
+window.Supabase = { Orders:SupaOrders, Customers:SupaCustomers, Categories:SupaCategories, Subcategories:SupaSubcategories, Products:SupaProducts, Settings:SupaSettings, Sync:SupaSync, Auth:SupaAuth, Storage:SupaStorage };
 
 window.addEventListener('load',function(){ setTimeout(function(){ SupaSync.loadSettings(); SupaSync.pushLocalOrders(); },2000); });

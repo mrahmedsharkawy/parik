@@ -263,8 +263,8 @@
 
         <label>الصور والفيديوهات</label>
         <div class="hint" style="margin-bottom:8px">
-          ⚠️ الصور المرفوعة من جهازك تظهر لك فقط في هذا المتصفح. لتظهر لكل الزوار
-          <b>استخدم رابط URL</b> (ارفع الصورة على موقع مثل imgur.com ثم الصق الرابط بالأسفل).
+          📤 الصور المرفوعة تُخزَّن تلقائياً في Supabase Storage وتظهر لكل الزوار.
+          يمكنك أيضاً لصق رابط URL جاهز مباشرة.
         </div>
         <div class="media-drop" id="mediaDrop">
           📷 اضغط لرفع صور/فيديوهات (يمكن اختيار أكثر من ملف)
@@ -954,12 +954,28 @@ $('mediaInput').addEventListener('change',e=>{
   files.forEach(f=>{
     const reader = new FileReader();
     reader.onload = async ()=>{
-      if (f.type.startsWith('video')) {
-        currentMedia.push({ type:'video', src: reader.result });
-      } else {
-        // ضغط الصورة لتقليل حجم base64 وتفادي امتلاء المساحة
-        const compressed = await compressImage(reader.result, 700, 0.72);
-        currentMedia.push({ type:'image', src: compressed });
+      // إضافة معاينة فورية (base64 مؤقت) أثناء الرفع
+      const tempIdx = currentMedia.length;
+      const isVid = f.type.startsWith('video');
+      currentMedia.push({ type: isVid?'video':'image', src: reader.result, uploading: true });
+      renderMedia();
+
+      try {
+        let uploadSrc = reader.result;
+        if (!isVid) {
+          uploadSrc = await compressImage(reader.result, 900, 0.75);
+        }
+        if (window.Supabase && window.Supabase.Storage) {
+          // رفع فعلي لـ Supabase Storage → رابط دائم يظهر لكل الزوار
+          const publicUrl = await window.Supabase.Storage.uploadDataUrl(uploadSrc, isVid ? 'videos' : 'images');
+          currentMedia[tempIdx] = { type: isVid?'video':'image', src: publicUrl, uploading: false };
+          toast('✅ تم رفع الصورة بنجاح');
+        } else {
+          currentMedia[tempIdx] = { type: isVid?'video':'image', src: uploadSrc, uploading: false };
+        }
+      } catch(err) {
+        toast('⚠️ فشل رفع الصورة لـ Supabase - محفوظة محلياً فقط: ' + err.message);
+        currentMedia[tempIdx].uploading = false;
       }
       renderMedia();
     };
@@ -980,7 +996,8 @@ function renderMedia(){
     const el = m.type==='video'
       ? `<video src="${escAttr(m.src)}" muted></video>`
       : `<img src="${escAttr(m.src)}">`;
-    return `<div class="media-thumb">${el}<span class="tag">${m.type==='video'?'فيديو':'صورة'}</span><span class="rm" onclick="removeMedia(${i})">×</span></div>`;
+    const uploadingTag = m.uploading ? `<span class="tag" style="background:#e08e0b">⏳ جارٍ الرفع...</span>` : `<span class="tag">${m.type==='video'?'فيديو':'صورة'}</span>`;
+    return `<div class="media-thumb">${el}${uploadingTag}<span class="rm" onclick="removeMedia(${i})">×</span></div>`;
   }).join('');
 }
 function removeMedia(i){ currentMedia.splice(i,1); renderMedia(); }
