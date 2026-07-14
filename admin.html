@@ -861,8 +861,13 @@ async function loadCategories(){
 async function loadProducts(){
   const saved = localStorage.getItem(LS_PRODUCTS);
   if(saved){
-    try{ products = JSON.parse(saved); }catch(e){ products=[]; }
-  } else {
+    try{
+      products = JSON.parse(saved);
+      if(!Array.isArray(products)) products = [];
+    }catch(e){ products=[]; }
+  }
+  // لو مفيش منتجات في localStorage حمّل من الملف
+  if(!products.length){
     await reloadFromFile(true);
   }
   renderProducts();
@@ -939,8 +944,7 @@ function saveProduct(){
   const nameAr = $('p-name-ar').value.trim();
   const nameEn = $('p-name-en').value.trim();
   if(!nameAr && !nameEn){ toast('اكتب اسم المنتج'); return; }
-  const cats = getSelectedCats();
-  if(!cats.length){ toast('اختر قسماً واحداً على الأقل'); return; }
+  const cats = getSelectedCats(); // اختياري - لم يعد إجباري
 
   const idField = $('p-id').value;
   const editing = idField !== '';
@@ -2288,6 +2292,12 @@ async function loadSettingsFromSupabase() {
   syncStoreOrders(true);
   await loadSettingsFromSupabase();
   loadSettings();
+  // إخبار المستخدم بعدد المنتجات المحملة
+  setTimeout(function(){
+    if(products.length === 0){
+      toast('⚠️ لا توجد منتجات - اضغط "↻ تحميل من الملف" لتحميلها');
+    }
+  }, 1500);
 })();
 </script>
 </body>
