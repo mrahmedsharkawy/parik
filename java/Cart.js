@@ -181,11 +181,33 @@ function updateSummary() {
 
   if (shippingEl) {
     shippingEl.dataset.amount = shipping.toFixed(2);
-    shippingEl.textContent = (shipping === 0 ? (document.documentElement.lang === 'ar' ? 'مجاني' : 'Free') : window.formatCurrency(shipping));
+    shippingEl.textContent = (shipping === 0 ? (document.documentElement.lang === 'ar' ? 'يتم تحديده لاحقاً' : 'TBD') : window.formatCurrency(shipping));
   }
 
   if (totalEl) {
-    const grandTotal = actualTotal + shipping;
+    // ===== خصم كوبون الكاش باك =====
+    let couponDiscount = 0;
+    const couponDiscountLine  = document.getElementById('couponDiscountLine');
+    const couponDiscountAmtEl = document.getElementById('couponDiscountAmount');
+    try {
+      const applied = JSON.parse(localStorage.getItem('x2_coupon_applied') || 'null');
+      if (applied && applied.code && applied.amount) {
+        const stored = JSON.parse(localStorage.getItem('x2_coupon_code') || 'null');
+        if (stored && stored.code === applied.code && !stored.used) {
+          couponDiscount = Math.min(parseFloat(applied.amount) || 0, actualTotal);
+          if (couponDiscountLine) couponDiscountLine.style.display = '';
+          if (couponDiscountAmtEl) couponDiscountAmtEl.textContent = '-' + window.formatCurrency(couponDiscount);
+        } else {
+          localStorage.removeItem('x2_coupon_applied');
+          if (couponDiscountLine) couponDiscountLine.style.display = 'none';
+        }
+      } else {
+        if (couponDiscountLine) couponDiscountLine.style.display = 'none';
+      }
+    } catch(e) {
+      if (couponDiscountLine) couponDiscountLine.style.display = 'none';
+    }
+    const grandTotal = Math.max(0, actualTotal + shipping - couponDiscount);
     totalEl.dataset.amount = grandTotal.toFixed(2);
     totalEl.textContent = window.formatCurrency(grandTotal);
   }
@@ -201,9 +223,34 @@ function updateSummary() {
 
 try { window.updateSummary = updateSummary; } catch(e) {}
 
+// ===== تطبيق كوبون الخصم =====
+function applyCoupon() {
+  const input = document.getElementById('couponCodeInput');
+  const msgEl = document.getElementById('couponMsg');
+  if (!input || !msgEl) return;
+  const code = (input.value || '').trim().toUpperCase();
+  if (!code) { msgEl.className = 'error'; msgEl.textContent = '❌ أدخل كود الخصم أولاً'; return; }
+  try {
+    const stored = JSON.parse(localStorage.getItem('x2_coupon_code') || 'null');
+    if (!stored) { msgEl.className = 'error'; msgEl.textContent = '❌ الكود غير صحيح'; return; }
+    if (stored.used)  { msgEl.className = 'error'; msgEl.textContent = '❌ هذا الكود تم استخدامه مسبقاً'; return; }
+    if (stored.code !== code) { msgEl.className = 'error'; msgEl.textContent = '❌ الكود غير صحيح'; return; }
+    // الكود صحيح
+    localStorage.setItem('x2_coupon_applied', JSON.stringify({ code: stored.code, amount: stored.amount }));
+    const sym = typeof window.currencySymbolFor === 'function' ? window.currencySymbolFor(window.getSelectedCurrency()) : 'د.إ';
+    msgEl.className = 'success';
+    msgEl.textContent = `✅ تم تطبيق خصم ${parseFloat(stored.amount).toFixed(2)} ${sym}!`;
+    input.disabled = true;
+    document.querySelector('.coupon-input-row button').disabled = true;
+    document.querySelector('.coupon-input-row button').textContent = '✔ مطبّق';
+    if (typeof updateSummary === 'function') updateSummary();
+  } catch(e) { msgEl.className = 'error'; msgEl.textContent = '❌ حدث خطأ، حاول مرة أخرى'; }
+}
+window.applyCoupon = applyCoupon;
+
 function addCard(p) {
-  const cur = Number(p.priceCurrent || 0);
-  const old = Number(p.priceOld ?? p.priceCurrent ?? 0);
+  const cur = Number(p.priceCurrent || p.price || p.priceSale || 0);
+  const old = Number(p.priceOld ?? p.priceOriginal ?? p.priceCurrent ?? p.price ?? 0);
   const key = makeKey(p);
   const discountPercent = old > cur ? Math.round((old - cur) / old * 100) : 0;
 
@@ -285,7 +332,7 @@ function addCard(p) {
       </div>
     </div>
     <div class="image">
-      <img src="${p.img || ''}" alt="${(p.title||'').replace(/"/g,'&quot;')}">
+      <img src="${p.img || 'assets/logo.png'}" alt="${(p.title||'').replace(/"/g,'&quot;')}" onerror="this.src='assets/logo.png'" loading="lazy">
     </div>
     <div class="details">
       <div class="title">${p.title || ''}</div>
@@ -561,6 +608,39 @@ function updateSelectedCount() {
     // تشغيل بعد الرندر بإطار واحد
     requestAnimationFrame(autoSelectAll);
 
+    // جلب صور المنتجات من Products.json وتعبئة الصور المفقودة في السلة
+    (async function fillMissingCartImages() {
+      try {
+        const res = await fetch('java/Products.json');
+        if (!res.ok) return;
+        const products = await res.json();
+        // بناء خريطة id → img
+        const imgMap = {};
+        (Array.isArray(products) ? products : []).forEach(p => {
+          if (!p.id) return;
+          const rawImg = Array.isArray(p.img) ? p.img[0] : p.img;
+          if (rawImg && typeof rawImg === 'string') imgMap[String(p.id)] = rawImg;
+        });
+        if (!Object.keys(imgMap).length) return;
+        // تحديث الصور الفارغة أو الـ logo fallback في كروت السلة
+        listRoot.querySelectorAll('.product-card').forEach(card => {
+          const itemId = card.dataset.itemId || card.dataset.key?.split('|')[0] || '';
+          if (!itemId) return;
+          const imgEl = card.querySelector('.image img');
+          if (!imgEl) return;
+          const currentSrc = imgEl.getAttribute('src') || '';
+          // استبدل فقط لو الصورة فارغة أو هي اللوجو الافتراضي
+          if (!currentSrc || currentSrc.includes('logo.png') || currentSrc === '') {
+            const newSrc = imgMap[String(itemId)];
+            if (newSrc) {
+              imgEl.src = newSrc;
+              imgEl.onerror = function() { this.src = 'assets/logo.png'; };
+            }
+          }
+        });
+      } catch(e) {}
+    })();
+
     // استجابة لتغيير العملة
     const curSel = document.getElementById('currency');
     if (curSel && !curSel._boundCart) {
@@ -700,7 +780,9 @@ function updateSelectedCount() {
       const qtyInput = card.querySelector('.qty-dropdown input[type="number"]');
       const qtyValue = card.querySelector('.qty-dropdown .qty-value');
       const qty = Math.max(1, Number(qtyInput?.value || qtyValue?.textContent || card.dataset.qty || 1));
-      const unit = parseNumber(card.dataset.priceCurrent || card.querySelector('.current-price, .price-current')?.textContent || '0');
+      const dsPrice = parseNumber(card.dataset.priceCurrent || '0');
+      const domPrice = parseNumber(card.querySelector('.current-price, .price-current')?.textContent || '0');
+      const unit = dsPrice > 0 ? dsPrice : domPrice;
       const productId = String(card.dataset.itemId || '').trim();
       const imgSrc = String(card.querySelector('.image img')?.src || '').trim();
       const productUrl = productId ? new URL(`product.html?id=${encodeURIComponent(productId)}`, window.location.href).href : '';
@@ -773,8 +855,18 @@ function updateSelectedCount() {
       '',
       `الإجمالي قبل الخصم: ${subtotal.toFixed(2)} ${sym}`,
       `الخصم: ${discount.toFixed(2)} ${sym}`,
+      (() => {
+        try {
+          const applied = JSON.parse(localStorage.getItem('x2_coupon_applied') || 'null');
+          const stored  = JSON.parse(localStorage.getItem('x2_coupon_code')    || 'null');
+          if (applied && applied.code && stored && stored.code === applied.code && !stored.used) {
+            return `خصم الكوبون (${applied.code}): -${parseFloat(applied.amount).toFixed(2)} ${sym}`;
+          }
+        } catch(e) {}
+        return '';
+      })(),
       `الإجمالي النهائي: ${total.toFixed(2)} ${sym}`
-    ];
+    ].filter(l => l !== null && l !== undefined);
 
     return lines.join('\n');
   }
@@ -797,6 +889,96 @@ function updateSelectedCount() {
     const msg = encodeURIComponent(finalText);
     const url = `https://wa.me/${phone}?text=${msg}`;
     window.open(url, '_blank', 'noopener');
+
+    // إضافة 5 درهم كاش باك لكل طلب مع تفاصيل الطلب
+    try {
+      const CB_KEY = 'x2_cashback';
+      let cb = JSON.parse(localStorage.getItem(CB_KEY) || '{"balance":0,"history":[]}');
+      if (!cb.history) cb.history = [];
+      cb.balance = (parseFloat(cb.balance) || 0) + 5;
+      const now = new Date().toLocaleDateString('ar-AE', {year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+      const lastNum = parseInt(localStorage.getItem('x2_order_counter') || '999', 10);
+      const nextNum = lastNum + 1;
+      localStorage.setItem('x2_order_counter', String(nextNum));
+      const orderId = '#' + nextNum;
+      // تفاصيل المنتجات في الطلب
+      const orderItems = items.slice(0,2).map(i => i.title || i.name || 'منتج').join(' · ');
+      // الإجمالي: نأخذه من الملخص المعروض (يشمل الخصم والكوبون)، وإلا نحسبه من الأسعار
+      const summaryTotal = readSummaryValue();
+      const calcTotal = items.reduce((s,i) => s + ((i.unit || parseFloat(i.price||i.priceCurrent||0)) * (Number(i.qty)||1)), 0);
+      const totalAmt = (summaryTotal > 0 ? summaryTotal : calcTotal).toFixed(2);
+      cb.history.push({
+        date: now,
+        amount: 5,
+        orderId,
+        items: orderItems + (items.length > 2 ? ` و${items.length-2} أخرى` : ''),
+        total: totalAmt,
+        note: `طلب ${orderId}`
+      });
+      // حفظ الطلب في x2_orders مع الـ id لكل منتج
+      const orders = JSON.parse(localStorage.getItem('x2_orders') || '[]');
+      orders.unshift({
+        id: orderId,
+        date: new Date().toISOString(),
+        items: items.map(i => {
+          const rawImg = i.image || i.img || '';
+          const pid = i.productId || (i.productUrl ? (() => { try { return new URL(i.productUrl).searchParams.get('id') || ''; } catch(e) { return ''; } })() : '');
+          return {
+            id: pid,
+            title: i.title || i.name || 'منتج',
+            qty: i.qty,
+            img: rawImg && !rawImg.startsWith('data:') ? rawImg : ''
+          };
+        }),
+        total: totalAmt,
+        status: 'processing',
+        cashback: 5
+      });
+      localStorage.setItem('x2_orders', JSON.stringify(orders));
+      localStorage.setItem(CB_KEY, JSON.stringify(cb));
+    } catch(e) {}
+
+    // ===== استهلاك كوبون الخصم وتصفير الكاش باك =====
+    try {
+      const applied = JSON.parse(localStorage.getItem('x2_coupon_applied') || 'null');
+      if (applied && applied.code) {
+        // تحديد الكوبون كمستخدم
+        let storedCoupon = JSON.parse(localStorage.getItem('x2_coupon_code') || 'null');
+        if (storedCoupon && storedCoupon.code === applied.code) {
+          storedCoupon.used = true;
+          localStorage.setItem('x2_coupon_code', JSON.stringify(storedCoupon));
+        }
+        // تصفير الكاش باك
+        let cbReset = JSON.parse(localStorage.getItem('x2_cashback') || '{"balance":0,"history":[]}');
+        cbReset.balance = 0;
+        localStorage.setItem('x2_cashback', JSON.stringify(cbReset));
+        // مسح حالة التطبيق
+        localStorage.removeItem('x2_coupon_applied');
+        // تحديث الـ summary بعد لحظة
+        setTimeout(() => { try { if (typeof updateSummary === 'function') updateSummary(); } catch(e){} }, 300);
+      }
+    } catch(e) {}
+
+    // ===== مسح السلة بعد إرسال الطلب =====
+    try {
+      localStorage.setItem('x2_cart', '[]');
+      // تحديث عداد السلة في الناف بار
+      document.querySelectorAll('.cart-badge').forEach(el => el.setAttribute('data-count', ''));
+      window.__cartCount = 0;
+      try { window.dispatchEvent(new CustomEvent('cart:updated', { detail: { items: [] } })); } catch(e) {}
+      // إظهار رسالة نجاح وتوجيه للحساب
+      setTimeout(() => {
+        if (typeof renderList === 'function') renderList([]);
+        if (typeof toggleEmptyState === 'function') toggleEmptyState();
+        if (typeof updateSummary === 'function') updateSummary();
+        // إظهار رسالة نجاح
+        const banner = document.createElement('div');
+        banner.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#152546;color:#D4AF37;padding:14px 24px;border-radius:12px;font-size:0.9rem;font-weight:700;z-index:99999;box-shadow:0 6px 24px rgba(0,0,0,0.25);text-align:center;direction:rtl;max-width:90vw';
+        banner.innerHTML = '✅ تم إرسال طلبك عبر واتساب!<br><span style="font-size:0.78rem;opacity:0.85">الطلب محفوظ في حسابك — قسم طلباتي</span>';
+        document.body.appendChild(banner);
+        setTimeout(() => banner.remove(), 4000);
+      }, 200);
+    } catch(e) {}
   }
 
   // تحديث زر تأكيد الطلب عبر واتساب
@@ -975,7 +1157,7 @@ function updateSummary() {
 
   if (shippingEl) {
     shippingEl.dataset.amount = shipping.toFixed(2);
-    shippingEl.textContent = (shipping === 0 ? (document.documentElement.lang === 'ar' ? 'مجاني' : 'Free') : window.formatCurrency(shipping));
+    shippingEl.textContent = (shipping === 0 ? (document.documentElement.lang === 'ar' ? 'يتم تحديده لاحقاً' : 'TBD') : window.formatCurrency(shipping));
   }
 
   if (totalEl) {

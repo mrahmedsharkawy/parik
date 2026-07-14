@@ -116,10 +116,11 @@ function normalizeAssetUrl(u) {
       }
     });
     
-    // إعادة بناء الرابط مع شرطة مائلة في البداية
-    let result = '/' + parts.join('/');
+    // إعادة بناء الرابط بدون شرطة مائلة في البداية (مسار نسبي يعمل مع GitHub Pages والمجلدات الفرعية)
+    let result = parts.join('/');
     
-    // إضافة پارامترات الاستعلام والقطع إذا وجدت
+    // تنظيف الترميز المزدوج للمسافات
+    result = result.replace(/%2520/gi, '%20');
     if (query) result += '?' + query;
     if (fragment) result += fragment;
     
@@ -2549,6 +2550,72 @@ if (filtersScroll) {
           });
           thumbs.appendChild(thumb);
         });
+      }
+
+      // ===== Swipe carousel للموبايل =====
+      if (mainWrap && media.length > 1 && window.innerWidth <= 600) {
+        // بناء carousel
+        const carousel = document.createElement('div');
+        carousel.id = 'prodCarousel';
+        carousel.style.cssText = 'display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;width:100%;height:100%;border-radius:inherit;';
+
+        let currentIdx = 0;
+        const slides = [];
+
+        media.forEach((item, i) => {
+          const slide = document.createElement('div');
+          slide.style.cssText = 'flex:0 0 100%;scroll-snap-align:center;width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;';
+          if (item.type === 'video') {
+            const vid = document.createElement('video');
+            vid.src = item.src; vid.controls = true; vid.playsInline = true;
+            vid.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+            slide.appendChild(vid);
+          } else {
+            const img = document.createElement('img');
+            img.src = item.src; img.alt = getT(p.name);
+            img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+            slide.appendChild(img);
+          }
+          carousel.appendChild(slide);
+          slides.push(slide);
+        });
+
+        // Dots
+        const dots = document.createElement('div');
+        dots.style.cssText = 'position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:10;';
+        const dotEls = media.map((_, i) => {
+          const d = document.createElement('span');
+          d.style.cssText = `width:${i===0?'18px':'7px'};height:7px;border-radius:999px;background:${i===0?'#D4AF37':'rgba(255,255,255,0.6)'};transition:all 0.3s;cursor:pointer;`;
+          d.addEventListener('click', () => { carousel.scrollTo({ left: i * carousel.offsetWidth, behavior: 'smooth' }); });
+          dots.appendChild(d);
+          return d;
+        });
+
+        // تحديث الـ dot النشط عند السكرول
+        carousel.addEventListener('scroll', () => {
+          const idx = Math.round(carousel.scrollLeft / carousel.offsetWidth);
+          if (idx !== currentIdx) {
+            dotEls[currentIdx].style.cssText = `width:7px;height:7px;border-radius:999px;background:rgba(255,255,255,0.6);transition:all 0.3s;cursor:pointer;`;
+            currentIdx = idx;
+            dotEls[idx].style.cssText = `width:18px;height:7px;border-radius:999px;background:#D4AF37;transition:all 0.3s;cursor:pointer;`;
+            // مزامنة مع الـ thumbs
+            if (thumbs) {
+              thumbs.querySelectorAll('.active').forEach(t => t.classList.remove('active'));
+              const thumbItems = thumbs.querySelectorAll('img, .thumb-video');
+              if (thumbItems[idx]) thumbItems[idx].classList.add('active');
+            }
+          }
+        }, { passive: true });
+
+        // تضمين الـ carousel وإخفاء الصورة الأصلية
+        mainWrap.style.position = 'relative';
+        if (mainImg) mainImg.style.display = 'none';
+        if (mainVid) mainVid.style.display = 'none';
+        mainWrap.appendChild(carousel);
+        mainWrap.appendChild(dots);
+
+        // إخفاء الـ thumbs على الموبايل
+        if (thumbs) thumbs.style.display = 'none';
       }
 
       /* ---- النصوص ---- */

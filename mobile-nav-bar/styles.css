@@ -156,7 +156,7 @@ body{
 .fire-deal-link span:not(.fire-nav-icon) {
   color: #fff !important;
   font-weight: 700;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 @keyframes fireFlicker {
@@ -233,8 +233,11 @@ body{
 
 /* small screens tweak */
 @media (max-width: 420px){
-  :root{ --nav-h:60px; --font-size:11px; }
+  :root{ --nav-h:60px; --font-size:12px; }
   .mobile-nav svg.icon, .mobile-nav img.icon{ width:20px; height:20px; }
+}
+@media (min-width: 421px) and (max-width: 900px){
+  :root{ --font-size:13px; }
 }
 
 

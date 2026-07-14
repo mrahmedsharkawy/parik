@@ -107,7 +107,7 @@ header, .main-header {
   flex: 1;
   outline: none;
   padding: 6px 10px;
-  font-size: 12px;
+  font-size: 16px;
   background: transparent;
 }
 .search-container .icon {
@@ -2817,32 +2817,52 @@ body.product-page-body .related-products {
   body.product-page-body main#main,
   body.product-page-body main.main {
     margin: 75px auto 5px !important;
-    padding: 0 8px !important;
+    padding: 0 !important;
   }
   body.product-page-body .product-page {
     padding: 0px !important;
     gap: 0 12px !important;
     grid-template-columns: 1fr !important;
   }
+  body.product-page-body .thumbs {
+    display: none !important;
+  }
   body.product-page-body .gallery {
-    grid-template-columns: 54px minmax(0,1fr) !important;
-    gap: 0px !important;
-  }
-  body.product-page-body .thumbs img {
-    width: 48px !important;
-    height: 48px !important;
-    min-width: 48px !important;
-    min-height: 48px !important;
-  }
-  body.product-page-body .thumbs .thumb-video {
-    width: 48px !important;
-    height: 48px !important;
-    min-width: 48px !important;
-    min-height: 48px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0 !important;
   }
   body.product-page-body .main-image {
+    order: 1 !important;
     min-height: 260px !important;
-    max-height: 300px !important;
+    max-height: 420px !important;
+    width: calc(100vw - 24px) !important;
+    margin-left: 12px !important;
+    margin-right: 12px !important;
+    border-radius: 16px !important;
+    overflow: hidden !important;
+    border: none !important;
+  }
+  body.product-page-body .thumbs {
+    padding-right: 8px !important;
+    padding-left: 8px !important;
+  }
+  body.product-page-body .info {
+    padding: 12px 12px 10px !important;
+  }
+  body.product-page-body .thumbs img {
+    width: 58px !important;
+    height: 58px !important;
+    min-width: 58px !important;
+    min-height: 58px !important;
+    flex-shrink: 0 !important;
+  }
+  body.product-page-body .thumbs .thumb-video {
+    width: 58px !important;
+    height: 58px !important;
+    min-width: 58px !important;
+    min-height: 58px !important;
+    flex-shrink: 0 !important;
   }
   body.product-page-body .info {
     padding: 12px 10px 10px !important;

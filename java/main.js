@@ -185,7 +185,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // إغلاق النتائج عند الضغط خارج الشريط
   document.addEventListener("click", function(e) {
-    if (!searchInput.contains(e.target) && !resultsBox.contains(e.target)) {
+    if (searchInput && resultsBox &&
+        !searchInput.contains(e.target) && !resultsBox.contains(e.target)) {
       resultsBox.innerHTML = '';
     }
   });
@@ -1128,4 +1129,208 @@ document.addEventListener("DOMContentLoaded", function() {
   window.x2Auth = { isLoggedIn, getProfile, logout };
 })();
 
+/* ============================================================
+   نظام الإشعارات - يعمل على جميع الصفحات
+   ============================================================ */
+(function() {
+  const NOTIF_KEY = 'x2_notifications';
+  const SEEN_KEY  = 'x2_notif_seen';
 
+  function getNotifications() {
+    try { return JSON.parse(localStorage.getItem(NOTIF_KEY) || '[]'); } catch(e) { return []; }
+  }
+  function saveNotifications(arr) {
+    try { localStorage.setItem(NOTIF_KEY, JSON.stringify(arr.slice(0, 60))); } catch(e) {}
+  }
+  function getUnreadCount() {
+    return getNotifications().filter(function(n){ return !n.read; }).length;
+  }
+
+  function updateNotifBadge() {
+    var count = getUnreadCount();
+    window.__accountCount = count > 0 ? String(count) : '';
+    document.querySelectorAll('.account-badge').forEach(function(el) {
+      el.setAttribute('data-count', count > 0 ? String(count) : '');
+    });
+    try { window.dispatchEvent(new CustomEvent('x2:notif-updated', { detail: { count: count } })); } catch(e) {}
+  }
+
+  var STATUS_LABELS = {
+    pending:'قيد الانتظار', processing:'قيد المعالجة', confirmed:'مؤكد',
+    shipped:'تم الشحن', delivered:'تم التوصيل', cancelled:'ملغى', returned:'مرتجع'
+  };
+  var STATUS_ICONS = {
+    pending:'⏳', processing:'🔄', confirmed:'✅',
+    shipped:'🚚', delivered:'🎉', cancelled:'❌', returned:'↩️'
+  };
+
+  function assignStatus(order) {
+    if (order.status) return order.status;
+    var diff = (Date.now() - new Date(order.date).getTime()) / 3600000;
+    if (diff < 24) return 'processing';
+    if (diff < 72) return 'shipped';
+    return 'delivered';
+  }
+
+  function makeId() {
+    return 'n-' + Date.now() + '-' + Math.random().toString(36).slice(2,7);
+  }
+
+  function checkOrderNotifications() {
+    var orders = [];
+    try { orders = JSON.parse(localStorage.getItem('x2_orders') || '[]'); } catch(e) {}
+    if (!orders.length) { updateNotifBadge(); return; }
+
+    var seen = {};
+    try { seen = JSON.parse(localStorage.getItem(SEEN_KEY) || '{}'); } catch(e) {}
+
+    var notifs = getNotifications();
+    var changed = false;
+
+    orders.forEach(function(order) {
+      var oid = order.id || '';
+      var currentStatus = assignStatus(order);
+      var lastStatus = seen['ord-' + oid];
+
+      if (!lastStatus) {
+        // طلب جديد — إشعار أول مرة
+        seen['ord-' + oid] = currentStatus;
+        if (!notifs.some(function(n){ return n.orderId === oid && n.type === 'order_new'; })) {
+          notifs.unshift({
+            id: makeId(), type: 'order_new', icon: '📦',
+            title: 'تم استلام طلبك',
+            msg: 'طلبك ' + oid + ' قيد المعالجة — سنبلغك بأي تحديث',
+            date: order.date || new Date().toISOString(),
+            read: false, orderId: oid
+          });
+          changed = true;
+        }
+      } else if (lastStatus !== currentStatus) {
+        // تغيرت الحالة
+        seen['ord-' + oid] = currentStatus;
+        notifs.unshift({
+          id: makeId(), type: 'order_update',
+          icon: STATUS_ICONS[currentStatus] || '🔔',
+          title: 'تحديث على طلبك',
+          msg: 'طلبك ' + oid + ' — ' + (STATUS_LABELS[currentStatus] || currentStatus),
+          date: new Date().toISOString(),
+          read: false, orderId: oid
+        });
+        changed = true;
+      }
+
+      // كاش باك
+      if (order.cashback && !seen['cb-' + oid]) {
+        seen['cb-' + oid] = 1;
+        notifs.unshift({
+          id: 'n-cb-' + oid, type: 'cashback', icon: '🤑',
+          title: 'كاش باك مضاف!',
+          msg: 'حصلت على ' + order.cashback + ' د.إ كاش باك من طلبك ' + oid,
+          date: order.date || new Date().toISOString(),
+          read: false, orderId: oid
+        });
+        changed = true;
+      }
+    });
+
+    if (changed) {
+      saveNotifications(notifs);
+      try { localStorage.setItem(SEEN_KEY, JSON.stringify(seen)); } catch(e) {}
+    }
+    updateNotifBadge();
+  }
+
+  // فحص خصومات على منتجات سبق للعميل طلبها
+  async function checkDiscountNotifications() {
+    try {
+      var orders = JSON.parse(localStorage.getItem('x2_orders') || '[]');
+      if (!orders.length) return;
+
+      var seen = {};
+      try { seen = JSON.parse(localStorage.getItem(SEEN_KEY) || '{}'); } catch(e) {}
+
+      var orderedIds = new Set();
+      orders.forEach(function(o) {
+        (o.items || []).forEach(function(item) {
+          if (item.id) orderedIds.add(String(item.id));
+        });
+      });
+      if (!orderedIds.size) return;
+
+      var res = await fetch('java/Products.json');
+      if (!res.ok) return;
+      var products = await res.json();
+      var notifs = getNotifications();
+      var changed = false;
+
+      products.forEach(function(p) {
+        var pid = String(p.id || '');
+        if (!orderedIds.has(pid)) return;
+        var price = parseFloat(p.price) || 0;
+        var oldPrice = parseFloat(p.oldPrice) || 0;
+        if (oldPrice <= price || price <= 0) return;
+        var discKey = 'disc-' + pid + '-' + Math.round(price);
+        if (seen[discKey]) return;
+        seen[discKey] = 1;
+        var pname = typeof p.name === 'object' ? (p.name.ar || p.name.en || 'منتج') : (p.name || 'منتج');
+        var pct = Math.round((oldPrice - price) / oldPrice * 100);
+        notifs.unshift({
+          id: 'n-disc-' + pid + '-' + Date.now(),
+          type: 'discount', icon: '🏷️',
+          title: 'عرض على منتج طلبته!',
+          msg: pname + ' الآن بخصم ' + pct + '%',
+          date: new Date().toISOString(),
+          read: false, productId: pid
+        });
+        changed = true;
+      });
+
+      if (changed) {
+        saveNotifications(notifs);
+        try { localStorage.setItem(SEEN_KEY, JSON.stringify(seen)); } catch(e) {}
+        updateNotifBadge();
+      }
+    } catch(e) {}
+  }
+
+  function init() {
+    checkOrderNotifications();
+    setTimeout(checkDiscountNotifications, 1800);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  window.addEventListener('mobile-nav:ready', updateNotifBadge);
+  window.addEventListener('storage', function(e) {
+    if (e.key === 'x2_orders' || e.key === 'x2_notifications') checkOrderNotifications();
+  });
+  window.addEventListener('x2:order-placed', checkOrderNotifications);
+
+  window.x2Notifications = {
+    getAll:       getNotifications,
+    getUnread:    function(){ return getNotifications().filter(function(n){ return !n.read; }); },
+    getCount:     getUnreadCount,
+    markAllRead:  function(){
+      var notifs = getNotifications();
+      notifs.forEach(function(n){ n.read = true; });
+      saveNotifications(notifs);
+      updateNotifBadge();
+    },
+    markRead: function(id) {
+      var notifs = getNotifications();
+      var n = notifs.find(function(n){ return n.id === id; });
+      if (n) { n.read = true; saveNotifications(notifs); updateNotifBadge(); }
+    },
+    add: function(notif) {
+      var notifs = getNotifications();
+      notifs.unshift(Object.assign({ id: makeId(), date: new Date().toISOString(), read: false }, notif));
+      saveNotifications(notifs);
+      updateNotifBadge();
+    },
+    refresh: function(){ checkOrderNotifications(); setTimeout(checkDiscountNotifications, 500); }
+  };
+})();
