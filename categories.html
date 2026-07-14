@@ -694,7 +694,10 @@
       card.dataset.slug = sub.categorySlug;
       const name = sub.name.ar || sub.name.en;
       card.innerHTML = `
-        <img class="cat-sub-img" src="${sub.image||''}" alt="${name}" onerror="this.src='assets/logo.png'">
+        <img class="cat-sub-img"
+     src="${sub.image || ''}"
+     alt="${name}"
+     onerror="console.log('Image Error:', this.src); this.src='assets/logo.png';">
         <div class="cat-sub-name">${name}</div>`;
       card.addEventListener('click', () => selectSubcategory(sub.categorySlug, name, parentSlug));
       grid.appendChild(card);
