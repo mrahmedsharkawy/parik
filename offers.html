@@ -629,21 +629,65 @@
   async function loadDeals() {
     const grid = document.getElementById('offersGrid');
     try {
-      const res      = await fetch(PRODUCTS_URL, { cache: 'no-store' });
-      const products = await res.json();
+      // قراءة المنتجات: admin_products أولاً، ثم Supabase، ثم JSON
+      let products = null;
 
-      allDeals = products
-        .map(p => ({
-          ...p,
-          price:    getPriceValue(p.price),
-          oldPrice: getPriceValue(p.oldPrice)
-        }))
-        .filter(p => p.oldPrice > p.price && p.price > 0);
+      // 1. admin_products من localStorage
+      try {
+        const ap = localStorage.getItem('admin_products');
+        if (ap) { const p = JSON.parse(ap); if (Array.isArray(p) && p.length) products = p; }
+      } catch(e) {}
+
+      // 2. Supabase
+      if (!products && window.Supabase && window.Supabase.Products) {
+        try {
+          const sb = await window.Supabase.Products.getAll(500);
+          if (Array.isArray(sb) && sb.length) {
+            products = sb.map(p => {
+              const imgs = [];
+              if (p.image) imgs.push(p.image);
+              if (Array.isArray(p.gallery)) p.gallery.forEach(g => { if(g && g !== p.image) imgs.push(g); });
+              return {
+                id: p.id,
+                name: { ar: p.name_ar || '', en: p.name_en || p.name_ar || '' },
+                img: imgs,
+                price: p.price,
+                oldPrice: p.old_price,
+                category: Array.isArray(p.categories) ? p.categories : [],
+                rating: p.rating
+              };
+            });
+          }
+        } catch(e) {}
+      }
+
+      // 3. Products.json كـ fallback
+      if (!products) {
+        const res = await fetch(PRODUCTS_URL, { cache: 'no-store' });
+        products = await res.json();
+      }
+
+      // المنتجات المميزة من الأدمن
+      let featuredIds = new Set();
+      try { featuredIds = new Set(JSON.parse(localStorage.getItem('x2_featured_ids') || '[]')); } catch(e) {}
+
+      const mapped = products.map(p => ({
+        ...p,
+        price:    getPriceValue(p.price),
+        oldPrice: getPriceValue(p.oldPrice)
+      }));
+
+      // المنتجات المميزة أولاً، ثم المخفّضة
+      const featured   = featuredIds.size ? mapped.filter(p => featuredIds.has(String(p.id))) : [];
+      const discounted = mapped.filter(p => p.oldPrice > p.price && p.price > 0 && !featuredIds.has(String(p.id)));
+
+      // لو مفيش مميزة → اعرض المخفّضة فقط
+      allDeals = featured.length ? [...featured, ...discounted] : discounted;
 
       /* تحديث عداد المنتجات والخصم الأقصى */
       document.getElementById('dealsCount').textContent = allDeals.length;
-      if (allDeals.length) {
-        const maxDisc = Math.max(...allDeals.map(p => Math.round(((p.oldPrice - p.price) / p.oldPrice) * 100)));
+      if (allDeals.filter(p => p.oldPrice > p.price).length) {
+        const maxDisc = Math.max(...allDeals.filter(p => p.oldPrice > p.price).map(p => Math.round(((p.oldPrice - p.price) / p.oldPrice) * 100)));
         document.getElementById('maxDiscountPill').textContent = `حتى ${maxDisc}% خصم`;
       }
 
@@ -661,7 +705,12 @@
   /* ---- init ---- */
   initCountdown();
   updateCartBadge();
-  loadDeals();
+  // انتظر تحميل supabase.js قبل جلب المنتجات
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadDeals);
+  } else {
+    setTimeout(loadDeals, 100); // أعطِ supabase.js وقت للتحميل
+  }
 })();
 </script>
 </body>
