@@ -891,6 +891,17 @@
   .acc-mobile-menu-btn { display: none !important; }
 }
 
+/* ===== الإشعارات ===== */
+.notif-item{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:12px;border:1px solid #eef0f6;background:#fafbfe;margin-bottom:8px;cursor:pointer;transition:background .15s}
+.notif-item.unread{background:#fff8e8;border-color:rgba(212,175,55,.3)}
+.notif-icon{font-size:1.4rem;flex-shrink:0;line-height:1.2}
+.notif-body{flex:1;min-width:0}
+.notif-title{font-size:.86rem;font-weight:700;color:#152546;margin-bottom:2px}
+.notif-msg{font-size:.8rem;color:#555;line-height:1.45}
+.notif-date{font-size:.68rem;color:#bbb;margin-top:4px}
+.notif-dot{width:8px;height:8px;border-radius:50%;background:#D4AF37;flex-shrink:0;margin-top:5px}
+.notif-empty{text-align:center;color:#aaa;padding:40px 20px;font-size:.86rem}
+
 /* شبكة المشاهدات */
 .history-grid {
   display: grid;
@@ -1140,7 +1151,7 @@
       <button onclick="showSection('orders','all')" class="aqn-btn active" id="aqn-orders">📋<span>طلباتي</span></button>
       <button onclick="showSection('profile')"      class="aqn-btn"        id="aqn-profile">👤<span>ملفي</span></button>
       <button onclick="showSection('coupons')"      class="aqn-btn"        id="aqn-coupons">🎁<span>عروض</span></button>
-      <button onclick="showSection('notifications')" class="aqn-btn"       id="aqn-notif">🔔<span>إشعارات</span></button>
+      <button onclick="showSection('notifications')" class="aqn-btn" id="aqn-notif" style="position:relative">🔔<span id="aqnNotifBadge" style="display:none;position:absolute;top:3px;left:50%;margin-left:2px;background:#D4AF37;color:#fff;font-size:.55rem;font-weight:800;padding:1px 5px;border-radius:999px;min-width:14px;text-align:center;line-height:1.4"></span><span>إشعارات</span></button>
     </div>
 
     <!-- قسم الطلبات -->
@@ -1183,6 +1194,7 @@
       <div id="orders-list">
         <!-- تُملأ بـ JS -->
       </div>
+      <div id="orders-pagination" style="display:none;justify-content:center;align-items:center;gap:6px;flex-wrap:wrap;margin-top:14px"></div>
 
     </div>
 
@@ -1261,23 +1273,52 @@
         <!-- تاريخ الكاش باك -->
         <div style="font-size:.84rem;font-weight:700;color:#152546;margin-bottom:10px">📜 سجل الطلبات</div>
         <div id="cbHistory"></div>
+
+        <!-- كوبون الخصم — يظهر لما الرصيد يوصل 5 -->
+        <div id="cbCouponSection" style="display:none;margin-top:16px">
+          <div style="background:linear-gradient(135deg,#1a6b3c,#228b4e);border-radius:14px;padding:16px;color:#fff;text-align:center;position:relative;overflow:hidden">
+            <div style="font-size:1rem;font-weight:900;margin-bottom:3px">🎉 كوبون خصم جاهز!</div>
+            <div style="font-size:.75rem;color:rgba(255,255,255,.75);margin-bottom:12px" id="cbCouponSubText">استخدم الكود في السلة</div>
+            <div style="display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(255,255,255,.12);border-radius:10px;padding:10px 14px;border:1.5px dashed rgba(255,255,255,.45);margin-bottom:8px">
+              <span style="font-size:1.3rem;font-weight:900;letter-spacing:.14em;font-family:monospace;user-select:all" id="cbCouponCode">CB-XXXXXX</span>
+              <button onclick="copyCouponCode()" class="coupon-copy-btn" style="background:rgba(255,255,255,.22);border:none;color:#fff;border-radius:7px;padding:5px 12px;font-size:.78rem;font-weight:700;cursor:pointer">📋 نسخ</button>
+            </div>
+            <div style="font-size:.72rem;color:rgba(255,255,255,.6)">⚠️ يُستخدم مرة واحدة فقط · الخصم يُطبَّق في السلة</div>
+          </div>
+        </div>
+
+        <!-- شريط التقدم نحو الكوبون -->
+        <div id="cbProgressSection" style="margin-top:14px">
+          <div style="background:linear-gradient(135deg,#152546,#1e3360);border-radius:14px;padding:14px 16px;color:#fff">
+            <div style="font-size:.78rem;color:rgba(255,255,255,.8);margin-bottom:8px">🎯 اجمع 5 د.إ كاش باك واحصل على كوبون خصم</div>
+            <div style="height:7px;background:rgba(255,255,255,.15);border-radius:999px;overflow:hidden">
+              <div id="cbProgressFill" style="height:100%;background:#D4AF37;border-radius:999px;transition:width .5s;width:0%"></div>
+            </div>
+            <div id="cbProgressLabel" style="font-size:.72rem;color:rgba(255,255,255,.7);margin-top:6px;text-align:center">0.00 / 5 د.إ</div>
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- قسم الإشعارات -->
     <div id="section-notifications" style="display:none">
-      <div class="acc-profile-card">
-        <h3 style="font-size:1rem;font-weight:700;margin-bottom:16px">⚙️ إعدادات الإشعارات</h3>
-        <div style="display:flex;flex-direction:column;gap:14px">
-          <label style="display:flex;justify-content:space-between;align-items:center;font-size:0.88rem">
-            تحديثات الطلبات <input type="checkbox" checked style="accent-color:#D4AF37;width:18px;height:18px">
-          </label>
-          <label style="display:flex;justify-content:space-between;align-items:center;font-size:0.88rem">
-            العروض والتخفيضات <input type="checkbox" checked style="accent-color:#D4AF37;width:18px;height:18px">
-          </label>
-          <label style="display:flex;justify-content:space-between;align-items:center;font-size:0.88rem">
-            انخفاض الأسعار <input type="checkbox" style="accent-color:#D4AF37;width:18px;height:18px">
-          </label>
+      <div class="acc-profile-card" style="padding:16px 14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="font-size:1rem;font-weight:800;color:#152546">🔔 الإشعارات</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span id="notifUnreadCount" style="display:none;background:#D4AF37;color:#fff;font-size:.76rem;padding:2px 9px;border-radius:999px;font-weight:700"></span>
+            <button onclick="markAllNotifsRead()" id="notifMarkAllBtn" style="display:none;border:none;background:none;color:#aaa;font-size:.74rem;cursor:pointer">✓ تحديد كمقروء</button>
+            <button onclick="clearAllNotifs()" style="border:none;background:none;color:#e57373;font-size:.74rem;cursor:pointer">🗑 مسح</button>
+          </div>
+        </div>
+        <div id="notifList"></div>
+        <div style="margin-top:18px;padding-top:14px;border-top:1px solid #f0f0f0">
+          <div style="font-size:.8rem;font-weight:700;color:#888;margin-bottom:10px">⚙️ الإعدادات</div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <label style="display:flex;justify-content:space-between;align-items:center;font-size:.88rem;cursor:pointer">تحديثات الطلبات <input type="checkbox" checked style="accent-color:#D4AF37;width:18px;height:18px"></label>
+            <label style="display:flex;justify-content:space-between;align-items:center;font-size:.88rem;cursor:pointer">العروض والتخفيضات <input type="checkbox" checked style="accent-color:#D4AF37;width:18px;height:18px"></label>
+            <label style="display:flex;justify-content:space-between;align-items:center;font-size:.88rem;cursor:pointer">الكاش باك والمكافآت <input type="checkbox" checked style="accent-color:#D4AF37;width:18px;height:18px"></label>
+          </div>
         </div>
       </div>
     </div>
@@ -1424,6 +1465,8 @@
   const PRODUCTS_URL = 'java/Products.json';
   let currentStatus = 'all';
   let currentSearch = '';
+  let currentPage   = 1;
+  const PAGE_SIZE   = 3;
   let offersLoaded = false;
 
   function getCurrSym() {
@@ -1459,8 +1502,25 @@
     return 'delivered';
   }
 
-  function renderOrders() {
+  const WA_PHONE = '971554423151';
+  let _prodsCache = null;
+  async function getProductsMap() {
+    if (_prodsCache) return _prodsCache;
+    try {
+      const arr = await (await fetch('java/Products.json')).json();
+      _prodsCache = {};
+      arr.forEach(p => {
+        if (p.id) _prodsCache[String(p.id)] = p;
+        const nm = typeof p.name==='object'?(p.name.ar||p.name.en||''):(p.name||'');
+        if (nm) _prodsCache['__n__'+nm.trim().toLowerCase()] = p;
+      });
+    } catch(e) { _prodsCache = {}; }
+    return _prodsCache;
+  }
+
+  async function renderOrders() {
     const list = document.getElementById('orders-list');
+    const pgEl = document.getElementById('orders-pagination');
     const orders = getOrders();
     const filtered = orders.filter(o => {
       const status = assignStatus(o);
@@ -1481,37 +1541,79 @@
             <a href="index.html" class="acc-empty-btn"><span class="ico">🛍</span> تسوق الآن</a>
           </div>
         </div>`;
+      if (pgEl) pgEl.style.display = 'none';
       return;
     }
 
-    list.innerHTML = filtered.map(order => {
+    const pMap = await getProductsMap();
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+    if (currentPage > totalPages) currentPage = 1;
+    const pageItems = filtered.slice((currentPage-1)*PAGE_SIZE, currentPage*PAGE_SIZE);
+
+    list.innerHTML = pageItems.map(order => {
       const status = assignStatus(order);
       const item = (order.items||[])[0] || {};
       const itemCount = (order.items||[]).length;
       const date = new Date(order.date).toLocaleDateString('ar-AE', { year:'numeric', month:'short', day:'numeric' });
+      const oid = order.id || '';
+      const prod = pMap[String(item.id||'')] || pMap['__n__'+(item.title||'').trim().toLowerCase()];
+      const imgSrc = (item.img && !item.img.startsWith('data:') ? item.img : '') ||
+                     (prod ? (Array.isArray(prod.img)?prod.img[0]:prod.img)||'' : '') ||
+                     'assets/logo.png';
+      const resolvedId = item.id || prod?.id || '';
+      const prodLink = resolvedId ? `product.html?id=${encodeURIComponent(resolvedId)}` : '';
+      const displayTotal = parseFloat(order.total) > 0 ? fmt(order.total) : '—';
+      const profile = (() => { try { return JSON.parse(localStorage.getItem('x2_profile')||'{}'); } catch(e) { return {}; } })();
+      const nm = profile.name||'—'; const ph = profile.phone||'—';
+      const waT = encodeURIComponent(`📦 تتبع طلب\nرقم الطلب: ${oid}\nالحالة: ${getStatusLabel(status)}\nالاسم: ${nm}\nالهاتف: ${ph}\nأرجو التحديث على طلبي 🙏`);
+      const waR = encodeURIComponent(`↩️ طلب إرجاع\nرقم الطلب: ${oid}\nالمنتج: ${item.title||'—'}\nالاسم: ${nm}\nالهاتف: ${ph}\nأرجو مساعدتي في الإرجاع 🙏`);
       return `
         <div class="acc-order-card">
-          <img src="${item.img||'assets/logo.png'}" alt="${item.title||''}" onerror="this.src='assets/logo.png'">
+          ${prodLink
+            ? `<a href="${prodLink}"><img src="${imgSrc}" alt="${item.title||''}" onerror="this.src='assets/logo.png'" loading="lazy" style="cursor:pointer"></a>`
+            : `<img src="${imgSrc}" alt="${item.title||''}" onerror="this.src='assets/logo.png'" loading="lazy">`}
           <div class="acc-order-info">
-            <div class="acc-order-name">${item.title||'منتج'}${itemCount>1?` <span style="color:#aaa;font-size:0.75rem">+${itemCount-1} منتج آخر</span>`:''}</div>
-            <div class="acc-order-id">رقم الطلب: ${order.id||'—'}</div>
+            <div class="acc-order-name">${prodLink?`<a href="${prodLink}" style="color:#111;text-decoration:none;font-weight:600">${item.title||'منتج'}</a>`:(item.title||'منتج')}${itemCount>1?` <span style="color:#aaa;font-size:0.75rem">+${itemCount-1} منتج آخر</span>`:''}</div>
+            <div class="acc-order-id">رقم الطلب: ${oid||'—'}</div>
             <div class="acc-order-meta">
               <span class="acc-order-status ${getStatusClass(status)}">${getStatusLabel(status)}</span>
-              <span class="acc-order-price">${fmt(order.total)}</span>
+              <span class="acc-order-price">${displayTotal}</span>
               <span class="acc-order-date">${date}</span>
             </div>
           </div>
           <div class="acc-order-actions">
-            <button class="acc-order-btn" onclick="alert('تتبع الطلب ${order.id||''} قريباً')">تتبع الطلب</button>
-            <button class="acc-order-btn" onclick="alert('طلب الإرجاع قريباً')">إرجاع</button>
+            <a class="acc-order-btn" href="https://wa.me/${WA_PHONE}?text=${waT}" target="_blank" rel="noopener" style="text-decoration:none">📦 تتبع</a>
+            <a class="acc-order-btn" href="https://wa.me/${WA_PHONE}?text=${waR}" target="_blank" rel="noopener" style="color:#e57373;text-decoration:none">↩️ إرجاع</a>
           </div>
         </div>`;
     }).join('');
+
+    // Pagination
+    if (pgEl) {
+      if (totalPages <= 1) { pgEl.style.display = 'none'; }
+      else {
+        pgEl.style.display = 'flex';
+        const s = 'min-width:32px;height:32px;border-radius:8px;border:1.5px solid #eee;background:#fff;color:#333;font-size:.8rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0 8px;margin:2px;';
+        let html = `<button style="${s}" onclick="goToOrderPage(${currentPage-1})" ${currentPage===1?'disabled':''}>›</button>`;
+        for (let i=1;i<=totalPages;i++) html += `<button style="${s}${i===currentPage?';background:#152546;color:#D4AF37;border-color:#152546':''}" onclick="goToOrderPage(${i})">${i}</button>`;
+        html += `<button style="${s}" onclick="goToOrderPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>‹</button>`;
+        html += `<span style="font-size:.74rem;color:#888;padding:0 4px">${(currentPage-1)*PAGE_SIZE+1}–${Math.min(currentPage*PAGE_SIZE,filtered.length)} من ${filtered.length}</span>`;
+        pgEl.innerHTML = html;
+      }
+    }
   }
+
+  window.goToOrderPage = function(page) {
+    const tot = Math.ceil(getOrders().filter(o=>currentStatus==='all'||assignStatus(o)===currentStatus).length/PAGE_SIZE);
+    currentPage = Math.max(1, Math.min(page, tot||1));
+    renderOrders();
+    document.getElementById('orders-list')?.scrollIntoView({behavior:'smooth',block:'start'});
+  };
 
   // tab filter
   window.filterByStatus = function(status, el) {
     currentStatus = status;
+    currentPage = 1;
     document.querySelectorAll('.acc-tab').forEach(t => t.classList.remove('active'));
     if (el) el.classList.add('active');
     renderOrders();
@@ -1520,6 +1622,7 @@
   // search
   window.filterOrders = function() {
     currentSearch = document.getElementById('order-search').value;
+    currentPage = 1;
     renderOrders();
   };
 
@@ -1609,37 +1712,233 @@
   const CASHBACK_KEY = 'x2_cashback';
 
   function getCashback() {
-    try { return parseFloat(localStorage.getItem(CASHBACK_KEY)||'0'); } catch(e){ return 0; }
+    try {
+      const raw = localStorage.getItem(CASHBACK_KEY);
+      if (!raw) return 0;
+      const parsed = JSON.parse(raw);
+      // لو JSON object {balance, history} أو رقم مباشر
+      return typeof parsed === 'number' ? parsed : (parseFloat(parsed.balance) || 0);
+    } catch(e) { return 0; }
   }
 
   function renderCashback() {
-    const el = document.getElementById('cbBalance');
-    if (el) el.textContent = getCashback().toFixed(2) + ' د.إ';
-    const hist = document.getElementById('cbHistory');
+    const balEl = document.getElementById('cbBalance');
+    const hist  = document.getElementById('cbHistory');
+    const sym   = 'د.إ';
+
+    const orders = (() => { try { return JSON.parse(localStorage.getItem('x2_orders')||'[]'); } catch(e) { return []; } })();
+
+    // حساب الرصيد الحقيقي من الطلبات (فقط غير المنتهية)
+    const now = Date.now();
+    const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+
+    // فلترة الطلبات حسب حالة الكاش باك
+    // earned = تم التسليم وأُضيف للرصيد
+    // pending = لم يُسلَّم بعد
+    // claimed = استُخدم في كوبون
+    // (الطلبات القديمة بدون cashbackStatus: نحكم من status)
+    const getEffectiveStatus = o => {
+      if (o.cashbackStatus) return o.cashbackStatus;
+      if (o.status === 'delivered') return 'earned'; // قديم تم تسليمه
+      return 'pending';
+    };
+
+    // مساعدة: احسب مبلغ الكاش باك للطلب (القديم قد لا يملك الحقل)
+    const getCbAmount = o => {
+      const v = parseFloat(o.cashback);
+      if (v > 0) return v;
+      // الطلبات القديمة المسلّمة بدون حقل cashback → تُعامل كـ 5 د.إ
+      if (getEffectiveStatus(o) === 'earned') return 5;
+      return 0;
+    };
+
+    const validOrders   = orders.filter(o => {
+      if (getCbAmount(o) <= 0) return false;
+      if (getEffectiveStatus(o) !== 'earned') return false;
+      const exp = o.cashbackExpiresAt
+        ? new Date(o.cashbackExpiresAt).getTime()
+        : new Date(o.date).getTime() + THIRTY_DAYS;
+      return exp > now;
+    });
+    const expiredOrders = orders.filter(o => {
+      if (getCbAmount(o) <= 0 || getEffectiveStatus(o) !== 'earned') return false;
+      const exp = o.cashbackExpiresAt
+        ? new Date(o.cashbackExpiresAt).getTime()
+        : new Date(o.date).getTime() + THIRTY_DAYS;
+      return exp <= now;
+    });
+
+    // الرصيد = فقط الطلبات المسلّمة (earned) + غير منتهية + غير مستخدمة
+    const ordersBalance = validOrders.reduce((s,o) => s + getCbAmount(o), 0);
+    const displayBalance = ordersBalance;
+
+    if (balEl) balEl.textContent = displayBalance.toFixed(2) + ' ' + sym;
+
+    // عرض سجل الطلبات (valid أولاً ثم expired)
     if (hist) {
-      try {
-        const orders = JSON.parse(localStorage.getItem('x2_orders')||'[]');
-        if (!orders.length) { hist.innerHTML = '<p style="color:#aaa;text-align:center;font-size:.8rem">لم تضع أي طلب بعد</p>'; return; }
-        hist.innerHTML = orders.slice(0,8).map(o=>{
+      const allCb = orders.filter(o => getCbAmount(o) > 0 || getEffectiveStatus(o) === 'earned');
+      if (!allCb.length) {
+        hist.innerHTML = '<p style="color:#aaa;text-align:center;font-size:.8rem">لم تضع أي طلب بعد</p>';
+      } else {
+        hist.innerHTML = allCb.slice(0,10).map(o => {
           const d = new Date(o.date).toLocaleDateString('ar-AE',{year:'numeric',month:'short',day:'numeric'});
-          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:#f8f9fc;border-radius:8px;margin-bottom:7px;font-size:.8rem">
+          const cbStatus = getEffectiveStatus(o);
+          const exp = o.cashbackExpiresAt
+            ? new Date(o.cashbackExpiresAt).getTime()
+            : new Date(o.date).getTime() + THIRTY_DAYS;
+          const isExpired = cbStatus === 'earned' && exp <= now;
+          const daysLeft  = (!isExpired && cbStatus === 'earned') ? Math.ceil((exp - now) / (24*60*60*1000)) : 0;
+
+          let statusBadge, amtColor, bgColor, opacity = 1;
+          if (cbStatus === 'claimed') {
+            statusBadge = '<span style="font-size:.68rem;color:#fff;background:#888;padding:1px 7px;border-radius:999px">تم الاستحقاق ✓</span>';
+            amtColor = '#bbb'; bgColor = '#f5f5f5'; opacity = 0.6;
+          } else if (cbStatus === 'pending') {
+            statusBadge = '<span style="font-size:.68rem;color:#e65100;background:#fff3e0;padding:1px 7px;border-radius:999px">⏳ استحقاق بعد التسليم</span>';
+            amtColor = '#e65100'; bgColor = '#fffbf5';
+          } else if (isExpired) {
+            statusBadge = '<span style="font-size:.68rem;color:#c62828;background:#fce4ec;padding:1px 7px;border-radius:999px">منتهي الصلاحية</span>';
+            amtColor = '#bbb'; bgColor = '#fafafa'; opacity = 0.55;
+          } else if (daysLeft <= 7) {
+            statusBadge = `<span style="font-size:.68rem;color:#e65100;background:#fff3e0;padding:1px 7px;border-radius:999px">ينتهي خلال ${daysLeft} يوم</span>`;
+            amtColor = '#2e7d32'; bgColor = '#f8f9fc';
+          } else {
+            statusBadge = `<span style="font-size:.68rem;color:#9aa3b2">ينتهي ${new Date(exp).toLocaleDateString('ar-AE',{month:'short',day:'numeric'})}</span>`;
+            amtColor = '#2e7d32'; bgColor = '#f8f9fc';
+          }
+
+          const cbAmt = getCbAmount(o);
+          const prefix = cbStatus === 'earned' && !isExpired ? '+' : '';
+          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:${bgColor};border-radius:8px;margin-bottom:7px;font-size:.8rem;opacity:${opacity}">
             <div>
               <div style="font-weight:700;color:#111">طلب ${o.id||''}</div>
-              <div style="color:#9aa3b2;font-size:.7rem">${d}</div>
+              <div style="color:#9aa3b2;font-size:.7rem;margin-top:2px">${d} · ${statusBadge}</div>
             </div>
-            <span style="font-size:.84rem;font-weight:800;color:#2e7d32;background:#e8f5e9;padding:3px 10px;border-radius:999px">+5.00 د.إ</span>
+            <span style="font-size:.84rem;font-weight:800;color:${amtColor};background:${bgColor === '#f8f9fc' ? '#e8f5e9' : bgColor};padding:3px 10px;border-radius:999px">${prefix}${cbAmt.toFixed(2)} ${sym}</span>
           </div>`;
         }).join('');
-      } catch(e) {}
+      }
+    }
+
+    // ===== كوبون الخصم =====
+    const COUPON_MIN = 5;
+    const couponSection  = document.getElementById('cbCouponSection');
+    const progressSection = document.getElementById('cbProgressSection');
+    const couponCodeEl   = document.getElementById('cbCouponCode');
+    const couponSubEl    = document.getElementById('cbCouponSubText');
+    const progressFill   = document.getElementById('cbProgressFill');
+    const progressLabel  = document.getElementById('cbProgressLabel');
+
+    if (displayBalance >= COUPON_MIN) {
+      let storedCoupon = null;
+      try { storedCoupon = JSON.parse(localStorage.getItem('x2_coupon_code') || 'null'); } catch(e) {}
+      if (!storedCoupon || storedCoupon.used) {
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        let code = 'CB-';
+        for (let i=0;i<6;i++) code += chars[Math.floor(Math.random()*chars.length)];
+        storedCoupon = { code, amount: displayBalance, used: false, generated: new Date().toISOString() };
+        localStorage.setItem('x2_coupon_code', JSON.stringify(storedCoupon));
+      } else {
+        storedCoupon.amount = displayBalance;
+        localStorage.setItem('x2_coupon_code', JSON.stringify(storedCoupon));
+      }
+      if (couponSection)   couponSection.style.display   = 'block';
+      if (progressSection) progressSection.style.display  = 'none';
+      if (couponCodeEl)    couponCodeEl.textContent = storedCoupon.code;
+      if (couponSubEl)     couponSubEl.textContent  = `رصيدك ${displayBalance.toFixed(2)} ${sym} — استخدم الكود في السلة`;
+    } else {
+      if (couponSection)   couponSection.style.display   = 'none';
+      if (progressSection) progressSection.style.display  = 'block';
+      const pct = Math.min(100, (displayBalance/COUPON_MIN)*100);
+      if (progressFill)  progressFill.style.width   = pct + '%';
+      if (progressLabel) progressLabel.textContent   = `${displayBalance.toFixed(2)} / ${COUPON_MIN} ${sym}`;
     }
   }
+
+  window.copyCouponCode = function() {
+    try {
+      const c = JSON.parse(localStorage.getItem('x2_coupon_code')||'null');
+      if (!c || !c.code) return;
+      const btn = document.querySelector('.coupon-copy-btn');
+      const done = () => { if (btn) { btn.textContent = '✅ تم النسخ'; setTimeout(() => btn.textContent = '📋 نسخ', 2200); } };
+      if (navigator.clipboard) navigator.clipboard.writeText(c.code).then(done).catch(() => { const t=document.createElement('textarea');t.value=c.code;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);done(); });
+      else { const t=document.createElement('textarea');t.value=c.code;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);done(); }
+    } catch(e) {}
+  };
 
   // تحديث showSection لعرض الكاش باك
   const _origShow2 = window.showSection;
   window.showSection = function(section, filter) {
     _origShow2 && _origShow2(section, filter);
     if (section === 'credit') renderCashback();
+    if (section === 'notifications') renderNotifications();
   };
+
+  // ===== عرض الإشعارات =====
+  function renderNotifications() {
+    const listEl   = document.getElementById('notifList');
+    const countEl  = document.getElementById('notifUnreadCount');
+    const markBtn  = document.getElementById('notifMarkAllBtn');
+    const aqnBadge = document.getElementById('aqnNotifBadge');
+    if (!listEl) return;
+
+    const notifs = window.x2Notifications ? window.x2Notifications.getAll() : [];
+    const unread = notifs.filter(n => !n.read).length;
+
+    if (countEl) { countEl.textContent = unread > 0 ? unread + ' جديد' : ''; countEl.style.display = unread > 0 ? 'inline' : 'none'; }
+    if (markBtn) markBtn.style.display = unread > 0 ? 'inline' : 'none';
+
+    // تحديث badge الزر السريع
+    if (aqnBadge) { aqnBadge.textContent = unread > 0 ? String(unread) : ''; aqnBadge.style.display = unread > 0 ? 'inline' : 'none'; }
+
+    // تحديد كمقروء تلقائياً عند الفتح
+    if (window.x2Notifications) window.x2Notifications.markAllRead();
+
+    if (!notifs.length) {
+      listEl.innerHTML = '<div class="notif-empty">🔔<br>لا توجد إشعارات حتى الآن<br><small style="color:#ccc">ستظهر هنا تحديثات طلباتك والعروض</small></div>';
+      return;
+    }
+
+    listEl.innerHTML = notifs.map((n, idx) => {
+      const date = n.date ? new Date(n.date).toLocaleDateString('ar-AE',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+      const onClick = n.orderId ? `showSection('orders')` : '';
+      return `<div class="notif-item${n.read?'':' unread'}" ${onClick?`onclick="${onClick}"`:''}  >
+        <span class="notif-icon">${n.icon||'🔔'}</span>
+        <div class="notif-body">
+          <div class="notif-title">${n.title||''}</div>
+          <div class="notif-msg">${n.msg||''}</div>
+          <div class="notif-date">${date}</div>
+        </div>
+        ${!n.read?'<span class="notif-dot"></span>':''}
+      </div>`;
+    }).join('');
+  }
+
+  window.markAllNotifsRead = function() {
+    if (window.x2Notifications) window.x2Notifications.markAllRead();
+    renderNotifications();
+    const b = document.getElementById('aqnNotifBadge');
+    if (b) { b.textContent = ''; b.style.display = 'none'; }
+  };
+
+  window.clearAllNotifs = function() {
+    try { localStorage.removeItem('x2_notifications'); } catch(e) {}
+    if (window.x2Notifications) window.x2Notifications.markAllRead();
+    renderNotifications();
+    const b = document.getElementById('aqnNotifBadge');
+    if (b) { b.textContent = ''; b.style.display = 'none'; }
+    // تحديث badge التنقل السفلي
+    document.querySelectorAll('.account-badge').forEach(el => el.setAttribute('data-count', ''));
+  };
+
+  // تحديث badge الزر السريع عند التحميل
+  function updateAqnBadge() {
+    const count = window.x2Notifications ? window.x2Notifications.getCount() : 0;
+    const b = document.getElementById('aqnNotifBadge');
+    if (b) { b.textContent = count > 0 ? String(count) : ''; b.style.display = count > 0 ? 'inline' : 'none'; }
+  }
+  setTimeout(updateAqnBadge, 500);
+  window.addEventListener('x2:notif-updated', updateAqnBadge);
 
   window.saveAddress = function() {
     const addr = {
@@ -1944,6 +2243,23 @@
   // init
   renderOrders();
   loadProfile();
+
+  // فتح قسم مباشر لو جاي من رابط خارجي
+  (function() {
+    const goto = localStorage.getItem('x2_goto_section') || new URLSearchParams(location.search).get('section');
+    if (goto) {
+      localStorage.removeItem('x2_goto_section');
+      setTimeout(() => { if (typeof showSection === 'function') showSection(goto); }, 100);
+    }
+  })();
+
+  // إصلاح أيقونة كاش باك
+  document.querySelectorAll('.acc-nav-item').forEach(el => {
+    if (el.textContent.includes('كاش باك')) {
+      const ico = el.querySelector('.ico');
+      if (ico) ico.textContent = '🤑';
+    }
+  });
 })();
 </script>
 

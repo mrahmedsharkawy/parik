@@ -190,7 +190,7 @@ function updateSummary() {
     const couponDiscountLine  = document.getElementById('couponDiscountLine');
     const couponDiscountAmtEl = document.getElementById('couponDiscountAmount');
     try {
-      const applied = JSON.parse(localStorage.getItem('x2_coupon_applied') || 'null');
+      const applied = JSON.parse(sessionStorage.getItem('x2_coupon_applied') || 'null');
       if (applied && applied.code && applied.amount) {
         const stored = JSON.parse(localStorage.getItem('x2_coupon_code') || 'null');
         if (stored && stored.code === applied.code && !stored.used) {
@@ -198,7 +198,7 @@ function updateSummary() {
           if (couponDiscountLine) couponDiscountLine.style.display = '';
           if (couponDiscountAmtEl) couponDiscountAmtEl.textContent = '-' + window.formatCurrency(couponDiscount);
         } else {
-          localStorage.removeItem('x2_coupon_applied');
+          sessionStorage.removeItem('x2_coupon_applied');
           if (couponDiscountLine) couponDiscountLine.style.display = 'none';
         }
       } else {
@@ -223,28 +223,36 @@ function updateSummary() {
 
 try { window.updateSummary = updateSummary; } catch(e) {}
 
-// ===== تطبيق كوبون الخصم =====
+// مسح أي تطبيق قديم من localStorage عند كل تحميل (الكوبون يُطبَّق يدوياً فقط)
+try { localStorage.removeItem('x2_coupon_applied'); } catch(e) {}
+
+// ===== تطبيق كوبون الكاش باك (يدوياً فقط) =====
 function applyCoupon() {
   const input = document.getElementById('couponCodeInput');
   const msgEl = document.getElementById('couponMsg');
   if (!input || !msgEl) return;
   const code = (input.value || '').trim().toUpperCase();
-  if (!code) { msgEl.className = 'error'; msgEl.textContent = '❌ أدخل كود الخصم أولاً'; return; }
+  const show = (txt, ok) => {
+    msgEl.textContent = txt;
+    msgEl.style.display = 'block';
+    msgEl.style.background = ok ? '#e8f5e9' : '#fce4ec';
+    msgEl.style.color       = ok ? '#2e7d32' : '#c62828';
+  };
+  if (!code) { show('❌ أدخل كود الخصم أولاً', false); return; }
   try {
     const stored = JSON.parse(localStorage.getItem('x2_coupon_code') || 'null');
-    if (!stored) { msgEl.className = 'error'; msgEl.textContent = '❌ الكود غير صحيح'; return; }
-    if (stored.used)  { msgEl.className = 'error'; msgEl.textContent = '❌ هذا الكود تم استخدامه مسبقاً'; return; }
-    if (stored.code !== code) { msgEl.className = 'error'; msgEl.textContent = '❌ الكود غير صحيح'; return; }
-    // الكود صحيح
-    localStorage.setItem('x2_coupon_applied', JSON.stringify({ code: stored.code, amount: stored.amount }));
+    if (!stored)              { show('❌ الكود غير صحيح', false); return; }
+    if (stored.used)          { show('❌ هذا الكود تم استخدامه مسبقاً', false); return; }
+    if (stored.code !== code) { show('❌ الكود غير صحيح', false); return; }
+    // حفظ في sessionStorage فقط (يُمسح عند إغلاق التبويب)
+    sessionStorage.setItem('x2_coupon_applied', JSON.stringify({ code: stored.code, amount: stored.amount }));
     const sym = typeof window.currencySymbolFor === 'function' ? window.currencySymbolFor(window.getSelectedCurrency()) : 'د.إ';
-    msgEl.className = 'success';
-    msgEl.textContent = `✅ تم تطبيق خصم ${parseFloat(stored.amount).toFixed(2)} ${sym}!`;
+    show(`✅ تم تطبيق خصم ${parseFloat(stored.amount).toFixed(2)} ${sym}!`, true);
     input.disabled = true;
-    document.querySelector('.coupon-input-row button').disabled = true;
-    document.querySelector('.coupon-input-row button').textContent = '✔ مطبّق';
+    const btn = input.nextElementSibling;
+    if (btn) { btn.disabled = true; btn.textContent = '✔ مطبّق'; }
     if (typeof updateSummary === 'function') updateSummary();
-  } catch(e) { msgEl.className = 'error'; msgEl.textContent = '❌ حدث خطأ، حاول مرة أخرى'; }
+  } catch(e) { show('❌ حدث خطأ، حاول مرة أخرى', false); }
 }
 window.applyCoupon = applyCoupon;
 
@@ -332,7 +340,9 @@ function addCard(p) {
       </div>
     </div>
     <div class="image">
+      ${p.id ? `<a href="product.html?id=${encodeURIComponent(p.id)}" style="display:block;width:100%;height:100%">` : ''}
       <img src="${p.img || 'assets/logo.png'}" alt="${(p.title||'').replace(/"/g,'&quot;')}" onerror="this.src='assets/logo.png'" loading="lazy">
+      ${p.id ? `</a>` : ''}
     </div>
     <div class="details">
       <div class="title">${p.title || ''}</div>
@@ -890,57 +900,41 @@ function updateSelectedCount() {
     const url = `https://wa.me/${phone}?text=${msg}`;
     window.open(url, '_blank', 'noopener');
 
-    // إضافة 5 درهم كاش باك لكل طلب مع تفاصيل الطلب
+    // إضافة الطلب مع الكاش باك "معلّق" — يُضاف للرصيد بعد تأكيد التسليم
     try {
       const CB_KEY = 'x2_cashback';
-      let cb = JSON.parse(localStorage.getItem(CB_KEY) || '{"balance":0,"history":[]}');
-      if (!cb.history) cb.history = [];
-      cb.balance = (parseFloat(cb.balance) || 0) + 5;
-      const now = new Date().toLocaleDateString('ar-AE', {year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
       const lastNum = parseInt(localStorage.getItem('x2_order_counter') || '999', 10);
       const nextNum = lastNum + 1;
       localStorage.setItem('x2_order_counter', String(nextNum));
       const orderId = '#' + nextNum;
-      // تفاصيل المنتجات في الطلب
       const orderItems = items.slice(0,2).map(i => i.title || i.name || 'منتج').join(' · ');
-      // الإجمالي: نأخذه من الملخص المعروض (يشمل الخصم والكوبون)، وإلا نحسبه من الأسعار
       const summaryTotal = readSummaryValue();
       const calcTotal = items.reduce((s,i) => s + ((i.unit || parseFloat(i.price||i.priceCurrent||0)) * (Number(i.qty)||1)), 0);
       const totalAmt = (summaryTotal > 0 ? summaryTotal : calcTotal).toFixed(2);
-      cb.history.push({
-        date: now,
-        amount: 5,
-        orderId,
-        items: orderItems + (items.length > 2 ? ` و${items.length-2} أخرى` : ''),
-        total: totalAmt,
-        note: `طلب ${orderId}`
-      });
+      const expiresAt = new Date(Date.now() + 30*24*60*60*1000).toISOString();
       // حفظ الطلب في x2_orders مع الـ id لكل منتج
       const orders = JSON.parse(localStorage.getItem('x2_orders') || '[]');
       orders.unshift({
         id: orderId,
         date: new Date().toISOString(),
+        cashback: 5,
+        cashbackStatus: 'pending', // يُضاف للرصيد فقط بعد تأكيد التسليم
+        cashbackExpiresAt: expiresAt,
         items: items.map(i => {
           const rawImg = i.image || i.img || '';
           const pid = i.productId || (i.productUrl ? (() => { try { return new URL(i.productUrl).searchParams.get('id') || ''; } catch(e) { return ''; } })() : '');
-          return {
-            id: pid,
-            title: i.title || i.name || 'منتج',
-            qty: i.qty,
-            img: rawImg && !rawImg.startsWith('data:') ? rawImg : ''
-          };
+          return { id: pid, title: i.title || i.name || 'منتج', qty: i.qty, img: rawImg && !rawImg.startsWith('data:') ? rawImg : '' };
         }),
         total: totalAmt,
-        status: 'processing',
-        cashback: 5
+        status: 'processing'
       });
       localStorage.setItem('x2_orders', JSON.stringify(orders));
-      localStorage.setItem(CB_KEY, JSON.stringify(cb));
     } catch(e) {}
 
     // ===== استهلاك كوبون الخصم وتصفير الكاش باك =====
     try {
-      const applied = JSON.parse(localStorage.getItem('x2_coupon_applied') || 'null');
+      // تحقق من sessionStorage (التطبيق اليدوي) أو localStorage (للتوافق)
+      const applied = JSON.parse(sessionStorage.getItem('x2_coupon_applied') || localStorage.getItem('x2_coupon_applied') || 'null');
       if (applied && applied.code) {
         // تحديد الكوبون كمستخدم
         let storedCoupon = JSON.parse(localStorage.getItem('x2_coupon_code') || 'null');
@@ -948,13 +942,24 @@ function updateSelectedCount() {
           storedCoupon.used = true;
           localStorage.setItem('x2_coupon_code', JSON.stringify(storedCoupon));
         }
-        // تصفير الكاش باك
+        // تصفير الكاش باك كاملاً (الرصيد + التاريخ)
         let cbReset = JSON.parse(localStorage.getItem('x2_cashback') || '{"balance":0,"history":[]}');
         cbReset.balance = 0;
+        cbReset.history = []; // مسح التاريخ ليبدأ من جديد
         localStorage.setItem('x2_cashback', JSON.stringify(cbReset));
+        // وسّم الطلبات القديمة بـ "claimed" حتى لا تُحتسب مجدداً
+        try {
+          const ords = JSON.parse(localStorage.getItem('x2_orders') || '[]');
+          ords.forEach(o => {
+            if (parseFloat(o.cashback) > 0 && o.cashbackStatus !== 'pending') {
+              o.cashbackStatus = 'claimed';
+            }
+          });
+          localStorage.setItem('x2_orders', JSON.stringify(ords));
+        } catch(e2) {}
         // مسح حالة التطبيق
+        sessionStorage.removeItem('x2_coupon_applied');
         localStorage.removeItem('x2_coupon_applied');
-        // تحديث الـ summary بعد لحظة
         setTimeout(() => { try { if (typeof updateSummary === 'function') updateSummary(); } catch(e){} }, 300);
       }
     } catch(e) {}

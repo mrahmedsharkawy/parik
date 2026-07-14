@@ -86,6 +86,44 @@ document.addEventListener("DOMContentLoaded", function () {
   const imageInput = document.getElementById("imageSearchInput");
   const resultsBox = document.getElementById("searchResults");
 
+  // ===== Dropdown تحت شريط البحث =====
+  const searchContainer = searchInput ? searchInput.closest('.search-container') : null;
+  let dropdownBox = null;
+  if (searchContainer) {
+    searchContainer.style.position = 'relative';
+    dropdownBox = document.createElement('div');
+    dropdownBox.id = 'searchDropdown';
+    dropdownBox.style.cssText = [
+      'position:absolute',
+      'top:calc(100% + 6px)',
+      'right:0',
+      'left:0',
+      'z-index:99999',
+      'background:#fff',
+      'border-radius:14px',
+      'box-shadow:0 8px 32px rgba(0,0,0,.15)',
+      'max-height:70vh',
+      'overflow-y:auto',
+      'display:none',
+      'direction:rtl',
+      'min-width:260px',
+    ].join(';');
+    searchContainer.appendChild(dropdownBox);
+  }
+
+  function showDropdown(content) {
+    if (dropdownBox) {
+      dropdownBox.innerHTML = content || '';
+      dropdownBox.style.display = content ? 'block' : 'none';
+    } else if (resultsBox) {
+      resultsBox.innerHTML = content || '';
+    }
+  }
+  function clearDropdown() {
+    if (dropdownBox) { dropdownBox.innerHTML = ''; dropdownBox.style.display = 'none'; }
+    if (resultsBox) resultsBox.innerHTML = '';
+  }
+
   let _productsCache = null;
   async function getProducts() {
     if (_productsCache) return _productsCache;
@@ -99,7 +137,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // دالة البحث النصي
   async function performTextSearch() {
     const keyword = searchInput.value.trim().toLowerCase();
-    resultsBox.innerHTML = '';
+    clearDropdown();
     if (!keyword) return;
 
     const [products, orders] = await Promise.all([getProducts(), getOrders()]);
@@ -116,16 +154,16 @@ document.addEventListener("DOMContentLoaded", function () {
     ).slice(0,3);
 
     if (!prodResults.length && !orderResults.length) {
-      resultsBox.innerHTML=`<p style="color:#888;padding:10px;text-align:center;background:#fff;border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.08)">لا توجد نتائج لـ "${searchInput.value.trim()}"</p>`;
+      showDropdown(`<p style="color:#888;padding:14px;text-align:center;font-size:.84rem">لا توجد نتائج لـ "${searchInput.value.trim()}"</p>`);
       return;
     }
 
     const wrap = document.createElement('div');
-    wrap.style.cssText='background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.10);padding:10px;margin-top:4px;';
+    wrap.style.cssText = 'padding:8px;';
 
     if (prodResults.length) {
       const t=document.createElement('div');
-      t.style.cssText='font-size:.75rem;font-weight:700;color:#888;padding:4px 6px 6px;';
+      t.style.cssText='font-size:.72rem;font-weight:700;color:#aaa;padding:4px 8px 6px;text-transform:uppercase;letter-spacing:.04em;';
       t.textContent='🛒 منتجات';
       wrap.appendChild(t);
       prodResults.forEach(p=>{
@@ -134,10 +172,10 @@ document.addEventListener("DOMContentLoaded", function () {
         const link=p.id?`product.html?id=${encodeURIComponent(p.id)}`:'#';
         const a=document.createElement('a');
         a.href=link;
-        a.style.cssText='display:flex;align-items:center;gap:10px;padding:7px 6px;border-radius:8px;text-decoration:none;color:inherit;';
+        a.style.cssText='display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:10px;text-decoration:none;color:inherit;transition:background .12s;';
         a.onmouseenter=()=>a.style.background='#f7f8fc';
         a.onmouseleave=()=>a.style.background='';
-        a.innerHTML=`<img src="${img}" alt="" style="width:38px;height:38px;object-fit:cover;border-radius:7px;flex-shrink:0;background:#f0f0f0" onerror="this.src='assets/logo.png'"><span style="font-size:.84rem;font-weight:600;color:#111;flex:1">${name}</span><span style="font-size:.78rem;font-weight:700;color:#152546;white-space:nowrap">${p.price?p.price+' د.إ':''}</span>`;
+        a.innerHTML=`<img src="${img}" alt="" style="width:40px;height:40px;object-fit:cover;border-radius:8px;flex-shrink:0;background:#f0f0f0" onerror="this.src='assets/logo.png'"><span style="font-size:.84rem;font-weight:600;color:#111;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name}</span><span style="font-size:.78rem;font-weight:700;color:#D4AF37;white-space:nowrap">${p.price?p.price+' د.إ':''}</span>`;
         wrap.appendChild(a);
       });
     }
@@ -147,47 +185,61 @@ document.addEventListener("DOMContentLoaded", function () {
       sep.style.cssText='border-top:1px solid #f0f0f0;margin:6px 0;';
       wrap.appendChild(sep);
       const t2=document.createElement('div');
-      t2.style.cssText='font-size:.75rem;font-weight:700;color:#888;padding:4px 6px 6px;';
+      t2.style.cssText='font-size:.72rem;font-weight:700;color:#aaa;padding:4px 8px 6px;text-transform:uppercase;letter-spacing:.04em;';
       t2.textContent='📦 طلبات';
       wrap.appendChild(t2);
       orderResults.forEach(o=>{
         const a=document.createElement('a');
         a.href='account.html';
-        a.style.cssText='display:flex;align-items:center;gap:10px;padding:7px 6px;border-radius:8px;text-decoration:none;color:inherit;';
+        a.style.cssText='display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:10px;text-decoration:none;color:inherit;transition:background .12s;';
         a.onmouseenter=()=>a.style.background='#f7f8fc';
         a.onmouseleave=()=>a.style.background='';
         const fi=(o.items||[])[0]||{};
-        a.innerHTML=`<span style="font-size:1.1rem">📦</span><span style="font-size:.84rem;font-weight:600;color:#111;flex:1">رقم الطلب: ${o.id||''}</span><span style="font-size:.78rem;color:#888">${fi.title||''}</span>`;
+        a.innerHTML=`<span style="font-size:1.2rem;flex-shrink:0">📦</span><span style="font-size:.84rem;font-weight:600;color:#111;flex:1">طلب ${o.id||''}</span><span style="font-size:.78rem;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px">${fi.title||''}</span>`;
         wrap.appendChild(a);
       });
     }
 
     const cb=document.createElement('div');
-    cb.style.cssText='text-align:center;padding-top:8px;';
-    cb.innerHTML=`<button onclick="document.getElementById('searchResults').innerHTML=''" style="border:none;background:none;color:#aaa;font-size:.74rem;cursor:pointer">إغلاق ✕</button>`;
+    cb.style.cssText='text-align:center;padding:6px 0 2px;border-top:1px solid #f5f5f5;margin-top:6px;';
+    cb.innerHTML=`<button onclick="window._clearSearch&&window._clearSearch()" style="border:none;background:none;color:#bbb;font-size:.72rem;cursor:pointer;padding:4px 10px;">إغلاق ✕</button>`;
     wrap.appendChild(cb);
-    resultsBox.appendChild(wrap);
+
+    if (dropdownBox) {
+      dropdownBox.innerHTML = '';
+      dropdownBox.appendChild(wrap);
+      dropdownBox.style.display = 'block';
+    } else if (resultsBox) {
+      resultsBox.innerHTML = '';
+      resultsBox.appendChild(wrap);
+    }
   }
+
+  window._clearSearch = clearDropdown;
+  window.performTextSearch = performTextSearch;
 
   // تشغيل من أول حرف (live search)
   let _liveTimer = null;
   searchInput.addEventListener("input", function () {
     clearTimeout(_liveTimer);
-    if (!searchInput.value.trim()) { resultsBox.innerHTML = ''; return; }
+    if (!searchInput.value.trim()) { clearDropdown(); return; }
     _liveTimer = setTimeout(performTextSearch, 220);
   });
 
   // تشغيل عند الضغط على Enter
   searchInput.addEventListener("keydown", function (e) {
     if (e.key === "Enter") { e.preventDefault(); clearTimeout(_liveTimer); performTextSearch(); }
-    if (e.key === "Escape") { resultsBox.innerHTML = ''; searchInput.value = ''; }
+    if (e.key === "Escape") { clearDropdown(); searchInput.value = ''; }
   });
 
   // إغلاق النتائج عند الضغط خارج الشريط
   document.addEventListener("click", function(e) {
-    if (searchInput && resultsBox &&
-        !searchInput.contains(e.target) && !resultsBox.contains(e.target)) {
-      resultsBox.innerHTML = '';
+    const target = e.target;
+    const inSearch = searchInput && searchInput.contains(target);
+    const inDropdown = dropdownBox && dropdownBox.contains(target);
+    const inResults = resultsBox && resultsBox.contains(target);
+    if (!inSearch && !inDropdown && !inResults) {
+      clearDropdown();
     }
   });
 
@@ -265,10 +317,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const cb=document.createElement('div');
     cb.style.cssText='text-align:center;padding-top:8px;';
-    cb.innerHTML=`<button onclick="document.getElementById('searchResults').innerHTML=''" style="border:none;background:none;color:#aaa;font-size:.74rem;cursor:pointer">إغلاق ✕</button>`;
+    cb.innerHTML=`<button onclick="window._clearSearch&&window._clearSearch()" style="border:none;background:none;color:#aaa;font-size:.74rem;cursor:pointer">إغلاق ✕</button>`;
     wrap.appendChild(cb);
-    resultsBox.innerHTML='';
-    resultsBox.appendChild(wrap);
+    if (dropdownBox) {
+      dropdownBox.innerHTML = '';
+      dropdownBox.appendChild(wrap);
+      dropdownBox.style.display = 'block';
+    } else if (resultsBox) {
+      resultsBox.innerHTML='';
+      resultsBox.appendChild(wrap);
+    }
     imageInput.value='';
   });
 });

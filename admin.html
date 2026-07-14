@@ -1026,7 +1026,31 @@ function updateStoreOrderStatus(srcId, status){
   try{
     const store = JSON.parse(localStorage.getItem(LS_STORE_ORDERS)||'[]');
     const s = store.find(o=>o && o.id===srcId);
-    if(s){ s.status=status; localStorage.setItem(LS_STORE_ORDERS, JSON.stringify(store)); }
+    if(s){
+      s.status = status;
+      // عند التسليم: أضف الكاش باك المعلّق للرصيد
+      if(status === 'delivered' && s.cashback > 0 && s.cashbackStatus === 'pending'){
+        const deliveryDate = new Date().toISOString();
+        const expiresAt = new Date(Date.now() + 30*24*60*60*1000).toISOString(); // 30 يوم من التسليم
+        s.cashbackStatus = 'earned';
+        s.cashbackEarnedAt = deliveryDate;
+        s.cashbackExpiresAt = expiresAt; // يُحسب من التسليم لا من الطلب
+        try{
+          const CB_KEY = 'x2_cashback';
+          let cb = JSON.parse(localStorage.getItem(CB_KEY)||'{"balance":0,"history":[]}');
+          cb.balance = (parseFloat(cb.balance)||0) + parseFloat(s.cashback||5);
+          if(!cb.history) cb.history = [];
+          cb.history.push({
+            date: new Date().toLocaleDateString('ar-AE',{year:'numeric',month:'short',day:'numeric'}),
+            amount: s.cashback||5,
+            orderId: s.id,
+            note: 'كاش باك طلب ' + s.id
+          });
+          localStorage.setItem(CB_KEY, JSON.stringify(cb));
+        }catch(e2){}
+      }
+      localStorage.setItem(LS_STORE_ORDERS, JSON.stringify(store));
+    }
   }catch(e){}
 }
 function deleteOrder(id){
