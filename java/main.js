@@ -1401,3 +1401,79 @@ document.addEventListener("DOMContentLoaded", function() {
     refresh: function(){ checkOrderNotifications(); setTimeout(checkDiscountNotifications, 500); }
   };
 })();
+
+/* ============================================================
+   تسجيل زيارات الموقع (للإحصائيات في الأدمن)
+   ============================================================ */
+(function() {
+  try {
+    const LS_VISITORS = 'x2_visitors';
+    const visitors = JSON.parse(localStorage.getItem(LS_VISITORS)||'[]');
+    // تسجيل زيارة واحدة لكل جلسة
+    const SESSION_KEY = 'x2_visit_logged';
+    if (!sessionStorage.getItem(SESSION_KEY)) {
+      sessionStorage.setItem(SESSION_KEY, '1');
+      const entry = {
+        date: new Date().toISOString(),
+        page: location.pathname.split('/').pop() || 'index.html',
+        city: '', country: ''
+      };
+      // محاولة الحصول على الموقع الجغرافي (بدون طلب إذن)
+      fetch('https://ipapi.co/json/', { cache: 'force-cache' })
+        .then(r => r.json())
+        .then(d => {
+          entry.city = d.city || '';
+          entry.country = d.country_name || '';
+          entry.ip = d.ip || '';
+          visitors.unshift(entry);
+          // احتفظ بآخر 500 زيارة فقط
+          localStorage.setItem(LS_VISITORS, JSON.stringify(visitors.slice(0, 500)));
+        })
+        .catch(() => {
+          visitors.unshift(entry);
+          localStorage.setItem(LS_VISITORS, JSON.stringify(visitors.slice(0, 500)));
+        });
+    }
+  } catch(e) {}
+})();
+
+/* ============================================================
+   تحديث روابط السوشيال ميديا من الإعدادات
+   ============================================================ */
+(function() {
+  function applySocialLinks() {
+    try {
+      var s = JSON.parse(localStorage.getItem('x2_settings') || '{}');
+      var map = {
+        'Instagram':  s.instagram,
+        'Facebook':   s.facebook,
+        'TikTok':     s.tiktok,
+        'Snapchat':   s.snapchat,
+        'YouTube':    s.youtube,
+        'Twitter':    s.twitter,
+        'Pinterest':  s.pinterest,
+        'WhatsApp':   s.wa ? ('https://wa.me/' + String(s.wa).replace(/\D/g,'')) : null
+      };
+      document.querySelectorAll('.footer-social-icons a[aria-label]').forEach(function(a) {
+        var label = a.getAttribute('aria-label');
+        var url = map[label];
+        if (url) {
+          a.href = url;
+          a.style.opacity = '1';
+          a.style.pointerEvents = '';
+        } else if (url === null || url === '') {
+          a.style.opacity = '0.35';
+          a.style.pointerEvents = 'none';
+        }
+      });
+    } catch(e) {}
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applySocialLinks);
+  } else {
+    applySocialLinks();
+  }
+
+  window.applySocialLinks = applySocialLinks;
+})();

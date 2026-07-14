@@ -49,7 +49,7 @@
     padding:10px 18px;font-weight:700;color:#5a6478;cursor:pointer}
   .tab.active{color:var(--navy);border-color:var(--navy);position:relative;top:1px;background:#fff}
 
-  .wrap{max-width:1150px;margin:0 auto;padding:18px 22px 60px}
+  .wrap{max-width:80%;margin:0 auto;padding:18px 22px 60px}
   .panel{display:none}
   .panel.active{display:block}
 
@@ -282,10 +282,6 @@
       <!-- قائمة المنتجات -->
       <div class="card" style="display:flex;flex-direction:column">
         <h2>📦 المنتجات (<span id="prodCount">0</span>)</h2>
-        <div class="hint">
-          الحفظ يتم في متصفحك تلقائياً. لتظهر التعديلات على الموقع الفعلي اضغط
-          <b>⬇ تنزيل Products.json</b> ثم ضع الملف مكان <code>java/Products.json</code>.
-        </div>
         <input type="text" id="searchProd" placeholder="🔍 بحث بالاسم…" oninput="prodPage=1;renderProducts()" style="margin-bottom:8px">
         <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
           <select id="sortProd" onchange="prodPage=1;renderProducts()" style="flex:1;min-width:140px">
@@ -485,17 +481,21 @@
         <div class="plist" id="catList"><div class="empty">جارٍ التحميل...</div></div>
       </div>
       <div class="card">
-        <h2>➕ إضافة فئة مؤقتة</h2>
-        <div class="hint">تُضاف كـ override محلي — لتطبيقها دائماً يجب تعديل Categories.json يدوياً.</div>
-        <label>اسم الفئة (عربي)</label>
+        <h2>➕ إضافة فئة</h2>
+        <div class="hint">اختر فئة رئيسية لإضافة فئة فرعية، أو اتركها فارغة لإضافة فئة رئيسية جديدة.</div>
+        <label>الفئة الرئيسية (اختياري)</label>
+        <select id="nc-parent">
+          <option value="">— فئة رئيسية جديدة —</option>
+        </select>
+        <label>الاسم (عربي)</label>
         <input type="text" id="nc-ar" placeholder="مثال: إكسسوارات">
-        <label>اسم الفئة (English)</label>
+        <label>الاسم (English)</label>
         <input type="text" id="nc-en" placeholder="e.g. Accessories">
         <label>الرابط (slug)</label>
         <input type="text" id="nc-slug" placeholder="accessories">
         <label>رابط الصورة</label>
         <input type="text" id="nc-img" placeholder="assets/categories/...">
-        <button class="btn-gold" style="margin-top:14px;width:100%" onclick="addTempCategory()">➕ إضافة</button>
+        <button class="btn-gold" style="margin-top:14px;width:100%" onclick="addCategory()">➕ إضافة</button>
         <button class="btn-ghost btn-sm" style="margin-top:8px;width:100%" onclick="exportCatsJSON()">⬇ تنزيل Categories.json</button>
       </div>
     </div>
@@ -503,6 +503,83 @@
 
   <!-- ============ العروض والبنرات ============ -->
   <div class="panel" id="panel-banners">
+
+    <!-- المنتجات المميزة واختيارات اليوم في أول الصفحة -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px">
+
+      <!-- المنتجات المميزة في العروض -->
+      <div class="card">
+        <h2>🔥 المنتجات المميّزة في العروض</h2>
+        <div class="hint">تظهر في صفحة العروض.</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <input type="text" id="fe-search" placeholder="ابحث..." oninput="fePage=1;renderFeaturedPicker()" style="flex:1">
+          <button class="btn-ghost btn-sm" onclick="saveFeatured()">💾 حفظ</button>
+        </div>
+        <div class="plist" id="featuredPicker" style="max-height:350px;overflow-y:auto"></div>
+        <div class="pager" id="featurePager" style="margin-top:8px"></div>
+      </div>
+
+      <!-- اختيارات اليوم للصفحة الرئيسية -->
+      <div class="card">
+        <h2>🌟 اختيارات اليوم (الرئيسية)</h2>
+        <div class="hint">تظهر في قسم "اختيارات اليوم".</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <input type="text" id="dp-search" placeholder="ابحث..." oninput="dpPage=1;renderDailyPicker()" style="flex:1">
+          <button class="btn-ghost btn-sm" onclick="saveDailyPicks()">💾 حفظ</button>
+        </div>
+        <div class="plist" id="dailyPicker" style="max-height:350px;overflow-y:auto"></div>
+        <div class="pager" id="dailyPager" style="margin-top:8px"></div>
+      </div>
+
+    </div>
+
+    <!-- بنرات الصفحة الرئيسية (الكود) -->
+    <div class="card" style="margin-bottom:18px">
+      <h2>🖼️ بنرات الصفحة الرئيسية</h2>
+      <div class="hint">تعديل البنرات الظاهرة في أعلى الصفحة الرئيسية مباشرة.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
+
+        <!-- بنر 1 -->
+        <div style="border:1px solid var(--line);border-radius:10px;padding:12px">
+          <b style="color:var(--navy);font-size:.9rem">🎯 البنر الرئيسي</b>
+          <label style="margin-top:10px">رابط الصورة</label>
+          <input type="text" id="hb1-img" placeholder="assets/home/1.png">
+          <label>الرابط عند الضغط</label>
+          <input type="text" id="hb1-link" placeholder="offers.html">
+        </div>
+
+        <!-- بنر 2 -->
+        <div style="border:1px solid var(--line);border-radius:10px;padding:12px">
+          <b style="color:var(--navy);font-size:.9rem">⚡ بنر العروض</b>
+          <label style="margin-top:10px">رابط الصورة الخلفية</label>
+          <input type="text" id="hb2-img" placeholder="assets/home/2.png">
+          <label>النص الأول</label>
+          <input type="text" id="hb2-text1" placeholder="عروض خاطفة">
+          <label>النص الثاني</label>
+          <input type="text" id="hb2-text2" placeholder="الحق قبل نفاد الكمية">
+          <label>الرابط</label>
+          <input type="text" id="hb2-link" placeholder="offers.html">
+        </div>
+
+        <!-- بنر 3 -->
+        <div style="border:1px solid var(--line);border-radius:10px;padding:12px">
+          <b style="color:var(--navy);font-size:.9rem">🌟 بنر إضافي</b>
+          <label style="margin-top:10px">رابط الصورة</label>
+          <input type="text" id="hb3-img" placeholder="assets/home/3.png">
+          <label>العنوان</label>
+          <input type="text" id="hb3-title" placeholder="عنوان البنر">
+          <label>الرابط</label>
+          <input type="text" id="hb3-link" placeholder="categories.html">
+          <label>إظهار البنر</label>
+          <select id="hb3-show">
+            <option value="0">مخفي</option>
+            <option value="1">ظاهر</option>
+          </select>
+        </div>
+
+      </div>
+      <button class="btn-gold" style="width:100%;margin-top:14px" onclick="saveHomeBanners()">💾 حفظ بنرات الرئيسية</button>
+    </div>
     <div class="grid">
       <div class="card">
         <h2>➕ إضافة بنر</h2>
@@ -531,32 +608,49 @@
       </div>
     </div>
 
-    <!-- إدارة العروض الخاصة -->
-    <div class="card" style="margin-top:18px">
-      <h2>🔥 المنتجات المميّزة في العروض</h2>
-      <div class="hint">اختر المنتجات التي تظهر في صفحة العروض (تُحفظ محلياً).</div>
-      <div style="display:flex;gap:8px;margin-bottom:12px">
-        <input type="text" id="fe-search" placeholder="ابحث عن منتج..." oninput="renderFeaturedPicker()" style="flex:1">
-        <button class="btn-ghost btn-sm" onclick="saveFeatured()">💾 حفظ</button>
-      </div>
-      <div class="plist" id="featuredPicker"></div>
-    </div>
-
-    <!-- اختيارات اليوم للصفحة الرئيسية -->
-    <div class="card" style="margin-top:18px">
-      <h2>🌟 اختيارات اليوم (الصفحة الرئيسية)</h2>
-      <div class="hint">اختر المنتجات التي تظهر في قسم "اختيارات اليوم" في الصفحة الرئيسية.</div>
-      <div style="display:flex;gap:8px;margin-bottom:12px">
-        <input type="text" id="dp-search" placeholder="ابحث عن منتج..." oninput="renderDailyPicker()" style="flex:1">
-        <button class="btn-ghost btn-sm" onclick="saveDailyPicks()">💾 حفظ</button>
-      </div>
-      <div class="plist" id="dailyPicker"></div>
-    </div>
+    <!-- المنتجات المميزة واختيارات اليوم (تم نقلها لأول الصفحة) -->
   </div>
 
   <!-- ============ العملاء ============ -->
   <div class="panel" id="panel-customers">
+
+    <!-- إحصائيات الزوار اليومية -->
+    <div class="card" style="margin-bottom:16px">
+      <h2>📊 إحصائيات الزوار</h2>
+      <div id="visitorsStats" style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start">
+        <div class="stat gold" style="min-width:130px">
+          <span class="ic">👁️</span>
+          <div class="v" id="visitorsTodayCount">0</div>
+          <div class="l">زيارة اليوم</div>
+        </div>
+        <div class="stat navy" style="min-width:130px">
+          <span class="ic">📅</span>
+          <div class="v" id="visitorsAllCount">0</div>
+          <div class="l">إجمالي الزيارات</div>
+        </div>
+        <div style="flex:1;min-width:220px">
+          <div style="font-size:.82rem;font-weight:700;color:#3a4256;margin-bottom:8px">🌍 مواقع الزوار</div>
+          <div id="visitorsLocations" style="display:flex;flex-direction:column;gap:4px;max-height:120px;overflow-y:auto"></div>
+        </div>
+      </div>
+      <button class="btn-ghost btn-sm" style="margin-top:10px" onclick="clearVisitors()">🗑 مسح السجل</button>
+    </div>
+
     <div class="grid">
+      <!-- إضافة عميل يدوياً -->
+      <div class="card">
+        <h2>➕ إضافة عميل</h2>
+        <label>الاسم الكامل</label>
+        <input type="text" id="nc-fullname" placeholder="أحمد محمد">
+        <label>رقم الهاتف</label>
+        <input type="text" id="nc-phone" placeholder="+971XXXXXXXX">
+        <label>البريد الإلكتروني</label>
+        <input type="text" id="nc-email" placeholder="example@email.com">
+        <label>المدينة / العنوان</label>
+        <input type="text" id="nc-address" placeholder="دبي، الإمارات">
+        <button class="btn-gold" style="width:100%;margin-top:14px" onclick="addManualCustomer()">➕ إضافة العميل</button>
+      </div>
+
       <div class="card">
         <h2>👥 قائمة العملاء</h2>
         <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
@@ -575,16 +669,39 @@
           <span id="custCount" style="font-size:.8rem;color:#7a8296;align-self:center"></span>
         </div>
       </div>
+    </div>
+
+    <div class="grid" style="margin-top:16px">
       <div class="card">
         <h2>📨 إرسال رسالة جماعية</h2>
-        <div class="hint">ستُفتح واتساب لكل عميل محدد بالرسالة المكتوبة.</div>
+        <div class="hint">
+          المتغيرات المتاحة: <code>{name}</code> اسم العميل، <code>{phone}</code> هاتفه،
+          <code>{product_link}</code> رابط المنتج، <code>{product_img}</code> رابط صورة المنتج.
+        </div>
         <label>نوع الإرسال</label>
-        <select id="msg-type">
+        <select id="msg-type" onchange="toggleEmailFields()">
           <option value="whatsapp">واتساب</option>
-          <option value="email">إيميل (mailto)</option>
+          <option value="email">إيميل</option>
         </select>
+
+        <!-- حقول الإيميل -->
+        <div id="email-fields" style="display:none">
+          <label>موضوع الرسالة</label>
+          <input type="text" id="msg-subject" placeholder="عرض خاص لك من Bariq 🎁">
+        </div>
+
+        <!-- اختيار منتج للإرسال -->
+        <label>منتج مرفق (اختياري)</label>
+        <select id="msg-product" onchange="insertProductVars()">
+          <option value="">— بدون منتج —</option>
+        </select>
+        <div id="msg-product-preview" style="display:none;margin:6px 0;padding:8px;border:1px solid var(--line);border-radius:8px;background:#fffdf5">
+          <small style="color:#7a8296">سيُضاف تلقائياً: رابط المنتج وصورته</small>
+        </div>
+
         <label>الرسالة</label>
-        <textarea id="bulk-msg" placeholder="أهلاً {name}، لدينا عرض خاص لك...&#10;استخدم {name} لاسم العميل و{phone} لهاتفه" style="min-height:130px"></textarea>
+        <textarea id="bulk-msg" placeholder="أهلاً {name}، لدينا عرض خاص لك!&#10;شاهد المنتج: {product_link}" style="min-height:130px;font-family:monospace;font-size:.85rem"></textarea>
+
         <label>التأخير بين كل رسالة (ثانية)</label>
         <input type="number" id="msg-delay" value="3" min="1" max="30">
         <button class="btn-gold" style="width:100%;margin-top:14px" onclick="sendBulkMsg()">📤 إرسال للمحددين</button>
@@ -610,6 +727,10 @@
         <input type="text" id="s-snapchat" placeholder="https://snapchat.com/...">
         <label>رابط يوتيوب</label>
         <input type="text" id="s-youtube" placeholder="https://youtube.com/...">
+        <label>رابط تويتر / X</label>
+        <input type="text" id="s-twitter" placeholder="https://x.com/...">
+        <label>رابط بنتريست</label>
+        <input type="text" id="s-pinterest" placeholder="https://pinterest.com/...">
       </div>
       <div class="card">
         <h2>🏪 إعدادات المتجر</h2>
@@ -691,9 +812,16 @@ function switchTab(name){
 
 /* ================= تحميل البيانات ================= */
 async function loadCategories(){
+  // أولاً: تحقق من admin_categories في localStorage
+  try {
+    const saved = localStorage.getItem('admin_categories');
+    if (saved) { categories = JSON.parse(saved); renderCatBox(); return; }
+  } catch(e) {}
+  // ثانياً: من Categories.json
   try{
     const res = await fetch('java/Categories.json',{cache:'no-store'});
     categories = await res.json();
+    saveCategoriesLocal();
   }catch(e){ categories=[]; }
   renderCatBox();
 }
@@ -1009,11 +1137,14 @@ function renderProducts(){
     const thumb = isVideo(m) ? `<video src="${escAttr(m)}" muted></video>` : `<img src="${escAttr(m)}" onerror="this.style.opacity=.3">`;
     const cats = (Array.isArray(p.category)?p.category:[p.category]).filter(Boolean).map(c=>`<span class="chip">${esc(getT(c))}</span>`).join('');
     const old = p.oldPrice ? `<span class="price-old">${p.oldPrice}</span>` : '';
+    const discPct = (parseFloat(p.oldPrice) > parseFloat(p.price) && parseFloat(p.price) > 0)
+      ? Math.round(((parseFloat(p.oldPrice)-parseFloat(p.price))/parseFloat(p.oldPrice))*100) : 0;
+    const discBadge = discPct > 0 ? `<span style="background:#e53935;color:#fff;border-radius:20px;padding:1px 7px;font-size:.7rem;font-weight:700">-%${discPct}</span>` : '';
     return `<div class="prod-row">
       ${thumb}
       <div class="info">
         <b>${esc(getT(p.name))||'—'}</b>
-        <small><span class="price-now">${p.price??'—'}</span> ${old}</small>
+        <small><span class="price-now">${p.price??'—'}</span> ${old} ${discBadge}</small>
         <div>${cats}</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:6px">
@@ -1561,25 +1692,103 @@ function renderAdminCategories() {
   if (!categories.length) { list.innerHTML = '<div class="empty">لا توجد فئات</div>'; return; }
   list.innerHTML = categories.map((cat, ci) => {
     const name = getT(cat.name) || cat.categorySlug;
-    const subs = (cat.subcategories||[]).map(s => `<div class="cat-item sub">↳ ${getT(s.name)||s.categorySlug}</div>`).join('');
-    return `<div class="cat-item" style="flex-direction:column;align-items:flex-start;padding:8px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px">
-      <div style="display:flex;align-items:center;gap:10px;width:100%">
-        ${cat.image ? `<img src="${cat.image}" style="width:32px;height:32px;border-radius:6px;object-fit:cover" onerror="this.style.display='none'">` : ''}
-        <b style="flex:1;color:var(--navy)">${name}</b>
-        <small style="color:#9aa2b4">${(cat.subcategories||[]).length} فئة فرعية</small>
+    const subs = (cat.subcategories||[]).map((s,si) => {
+      const sn = getT(s.name)||s.categorySlug;
+      return `<div class="cat-item sub" style="justify-content:space-between">
+        <span>↳ ${esc(sn)}</span>
+        <button class="btn-danger btn-sm" onclick="deleteSubcategory(${ci},${si})">✕</button>
+      </div>`;
+    }).join('');
+    return `<div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:10px">
+        ${cat.image ? `<img src="${cat.image}" style="width:36px;height:36px;border-radius:7px;object-fit:cover" onerror="this.style.display='none'">` : `<span style="font-size:1.4rem">${catIcon(cat.categorySlug)}</span>`}
+        <div style="flex:1">
+          <b style="color:var(--navy)">${esc(name)}</b>
+          <small style="color:#9aa2b4;margin-right:8px">${(cat.subcategories||[]).length} فئة فرعية • <code style="font-size:.7rem">${esc(cat.categorySlug||'')}</code></small>
+        </div>
+        <button class="btn-danger btn-sm" onclick="deleteCategory(${ci})">حذف</button>
       </div>
-      ${subs}
+      ${subs ? `<div style="margin-top:8px;border-top:1px dashed var(--line);padding-top:6px">${subs}</div>` : ''}
     </div>`;
   }).join('');
+
+  // تحديث dropdown الفئة الرئيسية
+  const sel = $('nc-parent');
+  if (sel) {
+    sel.innerHTML = '<option value="">— فئة رئيسية جديدة —</option>' +
+      categories.map((c,i) => `<option value="${i}">${esc(getT(c.name)||c.categorySlug)}</option>`).join('');
+  }
 }
 
-function addTempCategory() {
-  const ar = $('nc-ar').value.trim(), en = $('nc-en').value.trim(), slug = $('nc-slug').value.trim(), img = $('nc-img').value.trim();
-  if (!ar || !slug) { toast('أدخل الاسم العربي والـ slug'); return; }
-  const newCat = { name:{ar,en:en||ar}, categorySlug:slug, image:img, url:`/categories/${slug}`, subcategories:[] };
-  categories.push(newCat);
+function deleteCategory(ci) {
+  if (!confirm('حذف هذه الفئة؟')) return;
+  categories.splice(ci, 1);
+  saveCategoriesLocal();
   renderAdminCategories();
-  toast('تمت الإضافة مؤقتاً — نزّل JSON للحفظ الدائم');
+  renderCatBox();
+  toast('تم الحذف');
+}
+
+function deleteSubcategory(ci, si) {
+  if (!confirm('حذف هذه الفئة الفرعية؟')) return;
+  categories[ci].subcategories.splice(si, 1);
+  saveCategoriesLocal();
+  renderAdminCategories();
+  renderCatBox();
+  toast('تم الحذف');
+}
+
+function saveCategoriesLocal() {
+  localStorage.setItem('admin_categories', JSON.stringify(categories));
+  try { sessionStorage.removeItem('x2_prods_ss'); } catch(e) {}
+}
+
+function addCategory() {
+  const ar = $('nc-ar').value.trim();
+  const en = $('nc-en').value.trim();
+  const slug = $('nc-slug').value.trim();
+  const img = $('nc-img').value.trim();
+  const parentIdx = $('nc-parent').value;
+
+  if (!ar) { toast('أدخل الاسم العربي'); return; }
+
+  if (parentIdx !== '') {
+    // إضافة فئة فرعية
+    const parent = categories[Number(parentIdx)];
+    if (!parent) { toast('الفئة الرئيسية غير موجودة'); return; }
+    const sub = { name:{ar, en:en||ar}, categorySlug: slug||ar, image: img, url:`/categories/${parent.categorySlug}/${slug||ar}` };
+    if (!parent.subcategories) parent.subcategories = [];
+    parent.subcategories.push(sub);
+    saveCategoriesLocal();
+    renderAdminCategories();
+    renderCatBox();
+    toast(`✅ تمت إضافة "${ar}" كفئة فرعية تحت "${getT(parent.name)}"`);
+
+    // حفظ في Supabase
+    if (window.Supabase && window.Supabase.Subcategories) {
+      window.Supabase.Subcategories.insert({ nameAr: ar, nameEn: en||ar, image: img, order: parent.subcategories.length })
+        .catch(function(){});
+    }
+  } else {
+    // إضافة فئة رئيسية
+    if (!slug) { toast('أدخل الـ slug'); return; }
+    const newCat = { name:{ar, en:en||ar}, categorySlug: slug, image: img, url:`/categories/${slug}`, subcategories:[] };
+    categories.push(newCat);
+    saveCategoriesLocal();
+    renderAdminCategories();
+    renderCatBox();
+    toast(`✅ تمت إضافة الفئة "${ar}"`);
+
+    // حفظ في Supabase
+    if (window.Supabase && window.Supabase.Categories) {
+      window.Supabase.Categories.insert({ nameAr: ar, nameEn: en||ar, image: img, order: categories.length })
+        .catch(function(){});
+    }
+  }
+
+  // مسح الحقول
+  ['nc-ar','nc-en','nc-slug','nc-img'].forEach(id => $(id).value='');
+  $('nc-parent').value = '';
 }
 
 function exportCatsJSON() {
@@ -1592,6 +1801,40 @@ function exportCatsJSON() {
 ================================================================ */
 const LS_BANNERS = 'x2_banners';
 const LS_FEATURED = 'x2_featured_ids';
+const LS_HOME_BANNERS = 'x2_home_banners';
+
+function loadHomeBanners() {
+  try {
+    const hb = JSON.parse(localStorage.getItem(LS_HOME_BANNERS)||'{}');
+    if (hb.b1img)   $('hb1-img').value   = hb.b1img;
+    if (hb.b1link)  $('hb1-link').value  = hb.b1link;
+    if (hb.b2img)   $('hb2-img').value   = hb.b2img;
+    if (hb.b2text1) $('hb2-text1').value = hb.b2text1;
+    if (hb.b2text2) $('hb2-text2').value = hb.b2text2;
+    if (hb.b2link)  $('hb2-link').value  = hb.b2link;
+    if (hb.b3img)   $('hb3-img').value   = hb.b3img;
+    if (hb.b3title) $('hb3-title').value = hb.b3title;
+    if (hb.b3link)  $('hb3-link').value  = hb.b3link;
+    if (hb.b3show !== undefined) $('hb3-show').value = hb.b3show;
+  } catch(e) {}
+}
+
+function saveHomeBanners() {
+  const hb = {
+    b1img:   $('hb1-img').value.trim(),
+    b1link:  $('hb1-link').value.trim(),
+    b2img:   $('hb2-img').value.trim(),
+    b2text1: $('hb2-text1').value.trim(),
+    b2text2: $('hb2-text2').value.trim(),
+    b2link:  $('hb2-link').value.trim(),
+    b3img:   $('hb3-img').value.trim(),
+    b3title: $('hb3-title').value.trim(),
+    b3link:  $('hb3-link').value.trim(),
+    b3show:  $('hb3-show').value
+  };
+  localStorage.setItem(LS_HOME_BANNERS, JSON.stringify(hb));
+  toast('✅ تم حفظ البنرات — ستظهر التغييرات عند فتح الصفحة الرئيسية');
+}
 
 function getBanners() { try { return JSON.parse(localStorage.getItem(LS_BANNERS)||'[]'); } catch(e) { return []; } }
 function saveBannersLS(arr) { localStorage.setItem(LS_BANNERS, JSON.stringify(arr)); }
@@ -1633,21 +1876,32 @@ function clearAllBanners() { if(!confirm('مسح كل البنرات؟')) return
 function exportBanners() { download('banners.json', JSON.stringify(getBanners(),null,2)); toast('تم التنزيل'); }
 
 let featuredIds = new Set();
+let fePage = 1;
+const PICKER_PAGE = 10;
 function getFeaturedIds() { try { return new Set(JSON.parse(localStorage.getItem(LS_FEATURED)||'[]')); } catch(e) { return new Set(); } }
 
 function renderFeaturedPicker() {
   const q = ($('fe-search').value||'').toLowerCase();
   const list = $('featuredPicker'); if (!list) return;
   featuredIds = getFeaturedIds();
-  const filtered = products.filter(p => !q || getT(p.name).toLowerCase().includes(q)).slice(0,20);
-  if (!filtered.length) { list.innerHTML='<div class="empty">لا توجد منتجات</div>'; return; }
+  const filtered = products
+    .filter(p => parseFloat(p.oldPrice) > parseFloat(p.price) && parseFloat(p.price) > 0)
+    .filter(p => !q || getT(p.name).toLowerCase().includes(q));
+  if (!filtered.length) { list.innerHTML='<div class="empty">لا توجد منتجات مخفّضة</div>'; return; }
   list.innerHTML = filtered.map(p => {
     const name = getT(p.name); const checked = featuredIds.has(String(p.id));
+    const img = (Array.isArray(p.img) ? p.img[0] : p.img) || '';
+    const discPct = Math.round(((parseFloat(p.oldPrice)-parseFloat(p.price))/parseFloat(p.oldPrice))*100);
+    const badge = `<span style="background:#e53935;color:#fff;border-radius:12px;padding:1px 6px;font-size:.68rem;font-weight:700;margin-right:4px">-${discPct}%</span>`;
     return `<div class="prod-row">
       <input type="checkbox" ${checked?'checked':''} onchange="toggleFeatured('${p.id}',this.checked)" style="width:auto">
-      <div class="info"><b>${esc(name)}</b><small>${p.price||''} د.إ</small></div>
+      <div class="info">
+        ${img ? `<img src="${img}" style="width:32px;height:32px;object-fit:cover;border-radius:5px;margin-left:8px" onerror="this.style.display='none'">` : ''}
+        <b>${esc(name)}</b><small>${p.price||''} د.إ ${badge}</small>
+      </div>
     </div>`;
   }).join('');
+  $('featurePager').innerHTML = '';
 }
 function toggleFeatured(id, checked) { if(checked) featuredIds.add(String(id)); else featuredIds.delete(String(id)); }
 function saveFeatured() { localStorage.setItem(LS_FEATURED, JSON.stringify([...featuredIds])); toast('تم حفظ المنتجات المميزة'); }
@@ -1655,33 +1909,97 @@ function saveFeatured() { localStorage.setItem(LS_FEATURED, JSON.stringify([...f
 /* ================= اختيارات اليوم ================= */
 const LS_DAILY_PICKS = 'x2_daily_picks';
 let dailyPickIds = new Set();
+let dpPage = 1;
 function getDailyPickIds() { try { return new Set(JSON.parse(localStorage.getItem(LS_DAILY_PICKS)||'[]')); } catch(e) { return new Set(); } }
 
 function renderDailyPicker() {
   const q = ($('dp-search').value||'').toLowerCase();
   const list = $('dailyPicker'); if (!list) return;
   dailyPickIds = getDailyPickIds();
-  const filtered = products.filter(p => !q || getT(p.name).toLowerCase().includes(q)).slice(0, 30);
-  if (!filtered.length) { list.innerHTML='<div class="empty">لا توجد منتجات</div>'; return; }
+  const filtered = products
+    .filter(p => parseFloat(p.oldPrice) > parseFloat(p.price) && parseFloat(p.price) > 0)
+    .filter(p => !q || getT(p.name).toLowerCase().includes(q));
+  if (!filtered.length) { list.innerHTML='<div class="empty">لا توجد منتجات مخفّضة</div>'; return; }
   list.innerHTML = filtered.map(p => {
     const name = getT(p.name); const checked = dailyPickIds.has(String(p.id));
     const img = (Array.isArray(p.img) ? p.img[0] : p.img) || '';
+    const discPct = Math.round(((parseFloat(p.oldPrice)-parseFloat(p.price))/parseFloat(p.oldPrice))*100);
+    const badge = `<span style="background:#e53935;color:#fff;border-radius:12px;padding:1px 6px;font-size:.68rem;font-weight:700;margin-right:4px">-${discPct}%</span>`;
     return `<div class="prod-row">
       <input type="checkbox" ${checked?'checked':''} onchange="toggleDailyPick('${p.id}',this.checked)" style="width:auto">
       <div class="info">
-        ${img ? `<img src="${img}" style="width:36px;height:36px;object-fit:cover;border-radius:6px;margin-left:8px" onerror="this.style.display='none'">` : ''}
-        <b>${esc(name)}</b><small>${p.price||''} د.إ</small>
+        ${img ? `<img src="${img}" style="width:32px;height:32px;object-fit:cover;border-radius:5px;margin-left:8px" onerror="this.style.display='none'">` : ''}
+        <b>${esc(name)}</b><small>${p.price||''} د.إ ${badge}</small>
       </div>
     </div>`;
   }).join('');
+  $('dailyPager').innerHTML = '';
 }
 function toggleDailyPick(id, checked) { if(checked) dailyPickIds.add(String(id)); else dailyPickIds.delete(String(id)); }
 function saveDailyPicks() { localStorage.setItem(LS_DAILY_PICKS, JSON.stringify([...dailyPickIds])); toast('✅ تم حفظ اختيارات اليوم'); }
 
-/* ================================================================
-   العملاء
-================================================================ */
-let selectedCustomers = new Set();
+/* ================= إضافة عميل يدوياً ================= */
+const LS_MANUAL_CUSTOMERS = 'admin_manual_customers';
+
+function getManualCustomers() {
+  try { return JSON.parse(localStorage.getItem(LS_MANUAL_CUSTOMERS)||'[]'); } catch(e) { return []; }
+}
+
+function addManualCustomer() {
+  const name    = ($('nc-fullname').value||'').trim();
+  const phone   = ($('nc-phone').value||'').trim();
+  const email   = ($('nc-email').value||'').trim();
+  const address = ($('nc-address').value||'').trim();
+  if (!name) { toast('أدخل اسم العميل'); return; }
+  const custs = getManualCustomers();
+  custs.unshift({ id: Date.now(), name, phone, email, address, date: new Date().toISOString() });
+  localStorage.setItem(LS_MANUAL_CUSTOMERS, JSON.stringify(custs));
+  ['nc-fullname','nc-phone','nc-email','nc-address'].forEach(id => $(id) && ($(id).value=''));
+  renderCustomers();
+  toast('✅ تمت إضافة العميل');
+  // رفع لـ Supabase
+  if (window.Supabase && window.Supabase.Customers) {
+    window.Supabase.Customers.upsert({ full_name: name, phone, email, city: address }).catch(()=>{});
+  }
+}
+
+/* ================= إحصائيات الزوار ================= */
+const LS_VISITORS = 'x2_visitors';
+
+function getVisitors() { try { return JSON.parse(localStorage.getItem(LS_VISITORS)||'[]'); } catch(e) { return []; } }
+
+function renderVisitorsStats() {
+  const visitors = getVisitors();
+  const today = new Date().toDateString();
+  const todayVisits = visitors.filter(v => new Date(v.date).toDateString() === today);
+  const todayEl = $('visitorsTodayCount');
+  const allEl   = $('visitorsAllCount');
+  const locEl   = $('visitorsLocations');
+  if (todayEl) todayEl.textContent = todayVisits.length;
+  if (allEl)   allEl.textContent   = visitors.length;
+  if (locEl) {
+    // تجميع حسب الموقع
+    const locMap = {};
+    visitors.forEach(v => {
+      const loc = v.city || v.country || v.ip || 'غير محدد';
+      locMap[loc] = (locMap[loc]||0) + 1;
+    });
+    const sorted = Object.entries(locMap).sort((a,b) => b[1]-a[1]).slice(0, 10);
+    if (!sorted.length) { locEl.innerHTML = '<span style="color:#aaa;font-size:.8rem">لا توجد بيانات</span>'; return; }
+    locEl.innerHTML = sorted.map(([loc, count]) => `
+      <div style="display:flex;justify-content:space-between;font-size:.82rem;padding:3px 6px;background:#f7f8fc;border-radius:6px">
+        <span>🌍 ${esc(loc)}</span>
+        <b style="color:var(--navy)">${count}</b>
+      </div>`).join('');
+  }
+}
+
+function clearVisitors() {
+  if (!confirm('مسح سجل الزيارات؟')) return;
+  localStorage.removeItem(LS_VISITORS);
+  renderVisitorsStats();
+  toast('تم مسح السجل');
+}
 
 function getCustomers() {
   const orders = JSON.parse(localStorage.getItem('x2_orders')||'[]');
@@ -1730,29 +2048,74 @@ function selectAllCustomers() {
 function deselectAllCustomers() { selectedCustomers.clear(); renderCustomers(); }
 
 let bulkIdx = 0, bulkList = [];
+function toggleEmailFields() {
+  const isEmail = $('msg-type').value === 'email';
+  const ef = $('email-fields');
+  if (ef) ef.style.display = isEmail ? 'block' : 'none';
+}
+
+function insertProductVars() {
+  const pid = $('msg-product').value;
+  const preview = $('msg-product-preview');
+  if (!pid) { if (preview) preview.style.display = 'none'; return; }
+  const p = products.find(x => String(x.id) === String(pid));
+  if (!p) return;
+  const link = `${location.origin}/product.html?id=${p.id}`;
+  const img  = (Array.isArray(p.img) ? p.img[0] : p.img) || '';
+  if (preview) {
+    preview.style.display = 'block';
+    preview.innerHTML = `<div style="display:flex;gap:8px;align-items:center">
+      ${img ? `<img src="${img}" style="width:40px;height:40px;object-fit:cover;border-radius:6px">` : ''}
+      <div><b style="font-size:.82rem">${esc(getT(p.name))}</b><br><small style="color:#7a8296">${link}</small></div>
+    </div>`;
+  }
+  // إضافة المتغيرات للرسالة لو لم تكن موجودة
+  const ta = $('bulk-msg');
+  if (ta && !ta.value.includes('{product_link}')) {
+    ta.value += (ta.value ? '\n' : '') + '🔗 شاهد المنتج: {product_link}';
+  }
+}
+
 function sendBulkMsg() {
-  const msg = $('bulk-msg').value.trim();
-  const type = $('msg-type').value;
+  const msg   = $('bulk-msg').value.trim();
+  const type  = $('msg-type').value;
   const delay = Number($('msg-delay').value)||3;
   if (!msg) { toast('اكتب الرسالة أولاً'); return; }
   const custs = getCustomers();
   bulkList = [...selectedCustomers].map(i=>custs[i]).filter(Boolean);
   if (!bulkList.length) { toast('اختر عملاء أولاً'); return; }
+  // بيانات المنتج
+  const pid = $('msg-product')?.value;
+  const prod = pid ? products.find(x => String(x.id) === String(pid)) : null;
+  const prodLink = prod ? `${location.origin}/product.html?id=${prod.id}` : '';
+  const prodImg  = prod ? ((Array.isArray(prod.img) ? prod.img[0] : prod.img) || '') : '';
   bulkIdx = 0;
-  sendNextMsg(msg, type, delay);
+  sendNextMsg(msg, type, delay, prodLink, prodImg);
 }
-function sendNextMsg(msg, type, delay) {
-  if (bulkIdx >= bulkList.length) { $('bulk-progress').textContent = `✅ تم الإرسال لـ ${bulkList.length} عميل`; return; }
+
+function sendNextMsg(msg, type, delay, prodLink='', prodImg='') {
+  if (bulkIdx >= bulkList.length) {
+    $('bulk-progress').textContent = `✅ تم الإرسال لـ ${bulkList.length} عميل`;
+    return;
+  }
   const c = bulkList[bulkIdx];
-  const text = msg.replace('{name}', c.name||'عميل').replace('{phone}', c.phone||'');
+  const text = msg
+    .replace(/\{name\}/g,         c.name  || 'عميل')
+    .replace(/\{phone\}/g,        c.phone || '')
+    .replace(/\{product_link\}/g, prodLink)
+    .replace(/\{product_img\}/g,  prodImg);
+
   $('bulk-progress').textContent = `إرسال ${bulkIdx+1}/${bulkList.length}: ${c.name}`;
+
   if (type === 'whatsapp' && c.phone) {
-    window.open(`https://wa.me/${c.phone.replace(/\D/g,'')}?text=${encodeURIComponent(text)}`, '_blank','noopener');
+    window.open(`https://wa.me/${c.phone.replace(/\D/g,'')}?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
   } else if (type === 'email' && c.email) {
-    window.open(`mailto:${c.email}?body=${encodeURIComponent(text)}`, '_blank');
+    const subject = encodeURIComponent(($('msg-subject')?.value||'').trim() || 'رسالة من Bariq');
+    const body    = encodeURIComponent(text);
+    window.open(`mailto:${c.email}?subject=${subject}&body=${body}`, '_self');
   }
   bulkIdx++;
-  setTimeout(() => sendNextMsg(msg, type, delay), delay * 1000);
+  setTimeout(() => sendNextMsg(msg, type, delay, prodLink, prodImg), delay * 1000);
 }
 
 /* ================================================================
@@ -1763,13 +2126,13 @@ function getSettings() { try { return JSON.parse(localStorage.getItem(LS_SETTING
 
 function loadSettings() {
   const s = getSettings();
-  const ids = ['wa','instagram','facebook','tiktok','snapchat','youtube','name','logo','user','shipping','delivery','freeship'];
+  const ids = ['wa','instagram','facebook','tiktok','snapchat','youtube','twitter','pinterest','name','logo','user','shipping','delivery','freeship'];
   ids.forEach(id => { const el=$('s-'+id); if(el && s[id]!==undefined) el.value=s[id]; });
 }
 
 function saveSettings() {
   const s = {};
-  const ids = ['wa','instagram','facebook','tiktok','snapchat','youtube','name','logo','user','pass','shipping','delivery','freeship'];
+  const ids = ['wa','instagram','facebook','tiktok','snapchat','youtube','twitter','pinterest','name','logo','user','pass','shipping','delivery','freeship'];
   ids.forEach(id => { const el=$('s-'+id); if(el) s[id]=el.value.trim(); });
   // لا تحفظ الباسورد لو فارغ (احتفظ بالقديم)
   const old = JSON.parse(localStorage.getItem(LS_SETTINGS)||'{}');
@@ -1784,6 +2147,7 @@ function saveSettings() {
     }).catch(function(){});
   }
   toast('✅ تم حفظ الإعدادات');
+  if (typeof window.applySocialLinks === 'function') window.applySocialLinks();
 }
 
 function exportSettings() { download('settings.json', JSON.stringify(getSettings(),null,2)); toast('تم التنزيل'); }
@@ -1796,7 +2160,20 @@ window.switchTab = function(name) {
   _origSwitchTab && _origSwitchTab(name);
   if (name === 'categories') { renderAdminCategories(); }
   if (name === 'banners') { renderBanners(); renderFeaturedPicker(); renderDailyPicker(); }
-  if (name === 'customers') { selectedCustomers.clear(); syncCustomersFromSupabase(); renderCustomers(); }
+  if (name === 'customers') {
+    selectedCustomers.clear();
+    syncCustomersFromSupabase();
+    renderCustomers();
+    renderVisitorsStats();
+    // تحميل المنتجات المخفّضة فقط في قائمة الرسائل
+    const mp = $('msg-product');
+    if (mp && products.length) {
+      const discounted = products.filter(p => parseFloat(p.oldPrice) > parseFloat(p.price) && parseFloat(p.price) > 0);
+      const discPct = p => Math.round(((parseFloat(p.oldPrice)-parseFloat(p.price))/parseFloat(p.oldPrice))*100);
+      mp.innerHTML = '<option value="">— بدون منتج —</option>' +
+        discounted.map(p => `<option value="${p.id}">-${discPct(p)}% | ${esc(getT(p.name))} — ${p.price} د.إ</option>`).join('');
+    }
+  }
   if (name === 'settings') { loadSettings(); }
   if (name === 'orders') { syncStoreOrders(false); }
 };
@@ -1846,6 +2223,11 @@ function getCustomers() {
   supaCustomers.forEach(sc => {
     const exists = merged.some(c => c.phone === sc.phone || c.email === sc.email);
     if (!exists && (sc.phone || sc.email)) merged.push(sc);
+  });
+  // دمج العملاء المضافين يدوياً
+  getManualCustomers().forEach(mc => {
+    const exists = merged.some(c => (mc.phone && c.phone === mc.phone) || (mc.email && c.email === mc.email));
+    if (!exists) merged.push({ name: mc.name, phone: mc.phone, email: mc.email, orders: [], statuses: new Set(['manual']) });
   });
   return merged;
 }
