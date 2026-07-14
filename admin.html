@@ -169,10 +169,10 @@
 <div id="gate">
   <div class="box">
     <h2>🔒 لوحة التحكم</h2>
-    <p>أدخل كلمة المرور للدخول</p>
+    <p>أدخل بيانات الدخول</p>
+    <input type="text" id="gateUser" placeholder="اسم المستخدم" style="text-align:center;margin-bottom:10px">
     <input type="password" id="gatePass" placeholder="كلمة المرور" style="text-align:center;margin-bottom:12px">
     <button class="btn-gold" style="width:100%" onclick="checkGate()">دخول</button>
-    <p style="margin-top:14px;font-size:.72rem;color:#b0b6c4">ملاحظة: هذه حماية بسيطة من جهة المتصفح فقط.</p>
   </div>
 </div>
 
@@ -589,8 +589,11 @@
         <input type="text" id="s-name" placeholder="Bariq">
         <label>شعار المتجر (رابط)</label>
         <input type="text" id="s-logo" placeholder="assets/logo.png">
-        <label>كلمة مرور لوحة التحكم</label>
-        <input type="password" id="s-pass" placeholder="••••••••">
+        <h2 style="margin-top:18px">🔐 بيانات دخول لوحة التحكم</h2>
+        <label>اسم المستخدم</label>
+        <input type="text" id="s-user" placeholder="admin">
+        <label>كلمة المرور الجديدة</label>
+        <input type="password" id="s-pass" placeholder="اتركها فارغة إذا لم تريد التغيير">
         <h2 style="margin-top:18px">🚚 إعدادات الشحن</h2>
         <label>سياسة الشحن (نص)</label>
         <textarea id="s-shipping" placeholder="يتم تحديد الشحن بعد تأكيد الطلب..." style="min-height:80px"></textarea>
@@ -618,7 +621,8 @@ const PROD_PAGE_SIZE = 7;     // عدد المنتجات في كل صفحة
 let catFilter = '';            // القسم المختار لتصفية المنتجات ('' = الكل)
 const LS_PRODUCTS = 'admin_products';
 const LS_REVIEWS  = 'admin_reviews';
-const GATE_PASS   = '123456789'; // غيّر كلمة المرور من هنا
+const GATE_PASS   = '123456789'; // الباسورد الافتراضي
+const GATE_USER   = 'admin';     // اسم المستخدم الافتراضي
 
 /* ================= أدوات ================= */
 const $ = id => document.getElementById(id);
@@ -626,10 +630,24 @@ const isVideo = s => /\.(mp4|webm|ogg|ogv|mov|m4v)(\?|#|$)/i.test(String(s||''))
 function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
 function getT(v){ if(!v) return ''; if(typeof v==='object') return v.ar||v.en||''; return String(v); }
 
+function getAdminCreds() {
+  try {
+    const s = JSON.parse(localStorage.getItem(LS_SETTINGS)||'{}');
+    return { user: s.user || GATE_USER, pass: s.pass || GATE_PASS };
+  } catch(e) { return { user: GATE_USER, pass: GATE_PASS }; }
+}
+
 /* ================= البوابة ================= */
 function checkGate(){
-  if($('gatePass').value === GATE_PASS){ sessionStorage.setItem('admin_ok','1'); $('gate').style.display='none'; }
-  else toast('كلمة المرور غير صحيحة');
+  const creds = getAdminCreds();
+  const enteredUser = ($('gateUser').value||'').trim();
+  const enteredPass = ($('gatePass').value||'').trim();
+  if(enteredUser === creds.user && enteredPass === creds.pass){
+    sessionStorage.setItem('admin_ok','1');
+    $('gate').style.display='none';
+  } else {
+    toast('❌ اسم المستخدم أو كلمة المرور غير صحيحة');
+  }
 }
 if(sessionStorage.getItem('admin_ok')==='1') $('gate').style.display='none';
 $('gatePass').addEventListener('keydown',e=>{ if(e.key==='Enter') checkGate(); });
@@ -1674,17 +1692,26 @@ function getSettings() { try { return JSON.parse(localStorage.getItem(LS_SETTING
 
 function loadSettings() {
   const s = getSettings();
-  const ids = ['wa','instagram','facebook','tiktok','snapchat','youtube','name','logo','pass','shipping','delivery','freeship'];
+  const ids = ['wa','instagram','facebook','tiktok','snapchat','youtube','name','logo','user','shipping','delivery','freeship'];
   ids.forEach(id => { const el=$('s-'+id); if(el && s[id]!==undefined) el.value=s[id]; });
 }
 
 function saveSettings() {
   const s = {};
-  const ids = ['wa','instagram','facebook','tiktok','snapchat','youtube','name','logo','pass','shipping','delivery','freeship'];
-  ids.forEach(id => { const el=$('s-'+id); if(el) s[id]=el.value; });
+  const ids = ['wa','instagram','facebook','tiktok','snapchat','youtube','name','logo','user','pass','shipping','delivery','freeship'];
+  ids.forEach(id => { const el=$('s-'+id); if(el) s[id]=el.value.trim(); });
+  // لا تحفظ الباسورد لو فارغ (احتفظ بالقديم)
+  const old = JSON.parse(localStorage.getItem(LS_SETTINGS)||'{}');
+  if (!s.pass) s.pass = old.pass || GATE_PASS;
+  if (!s.user) s.user = old.user || GATE_USER;
   localStorage.setItem(LS_SETTINGS, JSON.stringify(s));
-  // تحديث GATE_PASS لو تغيّر
-  if (s.pass) { window.__adminPass = s.pass; }
+  // مزامنة مع Supabase
+  if (window.Supabase && window.Supabase.Settings) {
+    window.Supabase.Settings.save({
+      whatsapp: s.wa, site_name: s.name, logo: s.logo,
+      currency: 'AED', language: 'ar'
+    }).catch(function(){});
+  }
   toast('✅ تم حفظ الإعدادات');
 }
 
@@ -1698,9 +1725,74 @@ window.switchTab = function(name) {
   _origSwitchTab && _origSwitchTab(name);
   if (name === 'categories') { renderAdminCategories(); }
   if (name === 'banners') { renderBanners(); renderFeaturedPicker(); }
-  if (name === 'customers') { selectedCustomers.clear(); renderCustomers(); }
+  if (name === 'customers') { selectedCustomers.clear(); syncCustomersFromSupabase(); renderCustomers(); }
   if (name === 'settings') { loadSettings(); }
+  if (name === 'orders') { syncStoreOrders(false); }
 };
+
+/* ================= مزامنة العملاء من Supabase ================= */
+let supaCustomers = []; // عملاء Supabase
+
+async function syncCustomersFromSupabase() {
+  if (!window.Supabase) return;
+  try {
+    const remote = await window.Supabase.Customers.getAll();
+    if (remote && remote.length) {
+      supaCustomers = remote.map(c => ({
+        name:   c.full_name || c.name || '—',
+        phone:  c.phone || '',
+        email:  c.email || '',
+        city:   c.city || '',
+        orders: [],
+        statuses: new Set()
+      }));
+      renderCustomers();
+    }
+  } catch(e) {}
+}
+
+/* تعديل getCustomers لتدمج Supabase مع المحلي */
+const _origGetCustomers = window.getCustomers;
+function getCustomers() {
+  const localCusts = (() => {
+    const orders = getOrders();
+    const map = {};
+    orders.forEach(o => {
+      const profile = (() => { try { return JSON.parse(localStorage.getItem('x2_profile')||'{}'); }catch(e){return{};} })();
+      const name = o.customerName || profile.name || '—';
+      const phone = o.customerPhone || profile.phone || '';
+      const email = o.customerEmail || profile.email || '';
+      const key = phone || name;
+      if (!map[key]) map[key] = { name, phone, email, orders:[], statuses:new Set() };
+      map[key].orders.push(o);
+      map[key].statuses.add(o.status||'processing');
+    });
+    return Object.values(map);
+  })();
+
+  // دمج عملاء Supabase
+  const merged = [...localCusts];
+  supaCustomers.forEach(sc => {
+    const exists = merged.some(c => c.phone === sc.phone || c.email === sc.email);
+    if (!exists && (sc.phone || sc.email)) merged.push(sc);
+  });
+  return merged;
+}
+
+/* ================= تحميل الإعدادات من Supabase ================= */
+async function loadSettingsFromSupabase() {
+  if (!window.Supabase || !window.Supabase.Settings) return;
+  try {
+    const remote = await window.Supabase.Settings.get();
+    if (remote) {
+      const s = getSettings();
+      if (remote.whatsapp)  s.wa   = remote.whatsapp;
+      if (remote.site_name) s.name = remote.site_name;
+      if (remote.logo)      s.logo = remote.logo;
+      localStorage.setItem(LS_SETTINGS, JSON.stringify(s));
+    }
+  } catch(e) {}
+}
 
 /* ================= بدء ================= */
 (async function init(){
@@ -1708,6 +1800,8 @@ window.switchTab = function(name) {
   await loadProducts();
   fillProductSelects();
   syncStoreOrders(true);
+  await loadSettingsFromSupabase();
+  loadSettings();
 })();
 </script>
 </body>
