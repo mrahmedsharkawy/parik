@@ -41,8 +41,24 @@ export async function fetchCategories() {
 
 // أضف هذه الدالة بعد دالة fetchCategories
 let _productsCache = null;
+const PROD_CACHE_KEY = 'x2_prods_ss';
+const PROD_CACHE_TTL = 5 * 60 * 1000; // 5 دقائق
+
 export async function fetchProducts() {
   if (_productsCache) return _productsCache;
+
+  // محاولة قراءة من sessionStorage أولاً
+  try {
+    const cached = sessionStorage.getItem(PROD_CACHE_KEY);
+    if (cached) {
+      const obj = JSON.parse(cached);
+      if (Date.now() - obj.ts < PROD_CACHE_TTL) {
+        _productsCache = obj.data;
+        return _productsCache;
+      }
+    }
+  } catch(e) {}
+
   const paths = [
     'java/Products.json',
     '/java/Products.json',
@@ -50,16 +66,17 @@ export async function fetchProducts() {
   ];
   for (const path of paths) {
     try {
-      const res = await fetch(path, { cache: 'no-store' });
+      const res = await fetch(path);
       if (res.ok) {
         _productsCache = await res.json();
+        // حفظ في sessionStorage
+        try { sessionStorage.setItem(PROD_CACHE_KEY, JSON.stringify({ ts: Date.now(), data: _productsCache })); } catch(e) {}
         return _productsCache;
       }
     } catch (e) {
       // نكمل التجربة على المسارات الأخرى
     }
   }
-  // لا شيء نجح
   throw new Error('Products.json not found!');
 }
 // ...existing code...
@@ -893,7 +910,7 @@ window.addEventListener('popstate', function(event) {
       return `
         <li>
           <a href="${subUrl}">
-            <img src="${normalizeAssetUrl(sub.image) || ''}">
+            <img src="${normalizeAssetUrl(sub.image) || ''}" loading="lazy">
             <span data-i18n-ar="${sub.name.ar || sub.name.en}" data-i18n-en="${sub.name.en || sub.name.ar}">${subName}</span>
           </a>
         </li>
@@ -1084,6 +1101,7 @@ function renderBatch(items, container, clearContainer, direction = null) {
           const img = document.createElement('img');
           img.src = normalizeAssetUrl(sub.image);
           img.alt = sub.name.ar || sub.name.en || '';
+          img.loading = 'lazy';
           wrap.appendChild(img);
         }
 

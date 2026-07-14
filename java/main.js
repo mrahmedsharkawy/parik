@@ -127,8 +127,15 @@ document.addEventListener("DOMContentLoaded", function () {
   let _productsCache = null;
   async function getProducts() {
     if (_productsCache) return _productsCache;
-    try { const r = await fetch('java/Products.json',{cache:'no-store'}); _productsCache = await r.json(); return _productsCache; }
-    catch(e) { return []; }
+    try {
+      const SS_KEY = 'x2_prods_ss';
+      const cached = sessionStorage.getItem(SS_KEY);
+      if (cached) { const obj = JSON.parse(cached); if (Date.now()-obj.ts < 300000) { _productsCache=obj.data; return _productsCache; } }
+      const r = await fetch('java/Products.json');
+      _productsCache = await r.json();
+      try { sessionStorage.setItem(SS_KEY, JSON.stringify({ts:Date.now(),data:_productsCache})); } catch(e2) {}
+      return _productsCache;
+    } catch(e) { return []; }
   }
   function getOrders() {
     try { return JSON.parse(localStorage.getItem('x2_orders')||'[]'); } catch(e) { return []; }
@@ -1318,6 +1325,8 @@ document.addEventListener("DOMContentLoaded", function() {
       var res = await fetch('java/Products.json');
       if (!res.ok) return;
       var products = await res.json();
+      try { sessionStorage.setItem('x2_prods_ss', JSON.stringify({ts:Date.now(),data:products})); } catch(e3) {}
+      var products = await res.json();
       var notifs = getNotifications();
       var changed = false;
 
@@ -1353,7 +1362,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
   function init() {
     checkOrderNotifications();
-    setTimeout(checkDiscountNotifications, 1800);
+    setTimeout(checkDiscountNotifications, 5000); // مرة واحدة فقط عند التحميل
   }
 
   if (document.readyState === 'loading') {

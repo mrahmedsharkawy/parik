@@ -1,12 +1,12 @@
 ﻿// خريطة slug <-> اسم الصفحة عربي وإنجليزي
 var footerPageSlugs = window.footerPageSlugs || (window.footerPageSlugs = {
-  "about-x2-shopping": { ar: "معلومات عن x2-shopping", en: "About X2-Shopping" },
-  "about": { ar: "نبذة عن x2-shopping", en: "About" },
+  "about-Bariq": { ar: "معلومات عن Bariq", en: "About Bariq" },
+  "about": { ar: "نبذة عن Bariq", en: "About" },
   "shop-like-pro": { ar: "تسوق مثل المحترفين", en: "Shop Like Pro" },
   "affiliate-commission": { ar: "التابع والمكافآت: اكسب عمولة", en: "Affiliate & Commission" },
   "contact": { ar: "تواصل معنا", en: "Contact Us" },
   "media-outlets": { ar: "المنافذ الإعلامية", en: "Media Outlets" },
-  "tree-planting": { ar: "برنامج زراعة الأشجار في x2-shopping", en: "Tree Planting Program" },
+  "tree-planting": { ar: "برنامج زراعة الأشجار في Bariq", en: "Tree Planting Program" },
   "customer-service": { ar: "خدمة العملاء", en: "Customer Service" },
   "returns": { ar: "سياسة الإرجاع والاسترداد", en: "Returns Policy" },
   "intellectual-property": { ar: "سياسة الملكية الفكرية", en: "Intellectual Property" },
@@ -15,8 +15,8 @@ var footerPageSlugs = window.footerPageSlugs || (window.footerPageSlugs = {
   "help": { ar: "المساعدة", en: "Help" },
   "support-faq": { ar: "مركز الدعم والأسئلة الشائعة", en: "Support & FAQ" },
   "security-center": { ar: "مركز الأمان", en: "Security Center" },
-  "buyer-protection": { ar: "حماية المشتري في x2-shopping", en: "Buyer Protection" },
-  "work-with-x2-shopping": { ar: "اعمل مع x2-shopping", en: "Work With X2-Shopping" }
+  "buyer-protection": { ar: "حماية المشتري في Bariq", en: "Buyer Protection" },
+  "work-with-Bariq": { ar: "اعمل مع Bariq", en: "Work With Bariq" }
 });
 
 
@@ -69,10 +69,10 @@ async function renderPolicyPage(slug) {
   // عرض المحتوى حسب نوع الصفحة
   if (slug === "about") {
     let html = "";
-    if (pages["نبذة عن x2-shopping:العنوان"])
-      html += `<h2>${pages["نبذة عن x2-shopping:العنوان"]}</h2>`;
-    if (pages["نبذة عن x2-shopping:النص"])
-      html += `<p>${pages["نبذة عن x2-shopping:النص"]}</p>`;
+    if (pages["نبذة عن Bariq:العنوان"])
+      html += `<h2>${pages["نبذة عن Bariq:العنوان"]}</h2>`;
+    if (pages["نبذة عن Bariq:النص"])
+      html += `<p>${pages["نبذة عن Bariq:النص"]}</p>`;
     // ... أضف باقي الحقول حسب الحاجة ...
     contentDiv.innerHTML = html;
     return;
@@ -170,33 +170,33 @@ if (
     // ===== About page: ابنِ المحتوى أولاً ثم ارجع =====
     if (slug === "about") {
       let html = "";
-      if (pages["نبذة عن x2-shopping:العنوان"])
-        html += `<h2 class="about-x2-title" data-i18n="نبذة عن x2-shopping:العنوان">${pages["نبذة عن x2-shopping:العنوان"]}</h2>`;
-      if (pages["نبذة عن x2-shopping:النص"])
-        html += `<p class="about-x2-text" data-i18n="نبذة عن x2-shopping:النص">${pages["نبذة عن x2-shopping:النص"]}</p>`;
-      if (pages["نبذة عن x2-shopping:العنوان2"])
-        html += `<h2 class="about-x2-title" data-i18n="نبذة عن x2-shopping:العنوان2">${pages["نبذة عن x2-shopping:العنوان2"]}</h2>`;
-      if (pages["نبذة عن x2-shopping:النص2"])
-        html += `<p class="about-x2-text" data-i18n="نبذة عن x2-shopping:النص2">${pages["نبذة عن x2-shopping:النص2"]}</p>`;
-      if (pages["نبذة عن x2-shopping:العنوان3"])
-        html += `<h2 class="about-x2-title" data-i18n="نبذة عن x2-shopping:العنوان3">${pages["نبذة عن x2-shopping:العنوان3"]}</h2>`;
-      if (pages["نبذة عن x2-shopping:النص3"])
-        html += `<p class="about-x2-text" data-i18n="نبذة عن x2-shopping:النص3">${pages["نبذة عن x2-shopping:النص3"]}</p>`;
-      if (pages["نبذة عن x2-shopping:العنوان4"])
-        html += `<h2 class="about-x2-title" data-i18n="نبذة عن x2-shopping:العنوان4">${pages["نبذة عن x2-shopping:العنوان4"]}</h2>`;
-      if (Array.isArray(pages["نبذة عن x2-shopping:قائمة"])) {
+      if (pages["نبذة عن Bariq:العنوان"])
+        html += `<h2 class="about-x2-title" data-i18n="نبذة عن Bariq:العنوان">${pages["نبذة عن Bariq:العنوان"]}</h2>`;
+      if (pages["نبذة عن Bariq:النص"])
+        html += `<p class="about-x2-text" data-i18n="نبذة عن Bariq:النص">${pages["نبذة عن Bariq:النص"]}</p>`;
+      if (pages["نبذة عن Bariq:العنوان2"])
+        html += `<h2 class="about-x2-title" data-i18n="نبذة عن Bariq:العنوان2">${pages["نبذة عن Bariq:العنوان2"]}</h2>`;
+      if (pages["نبذة عن Bariq:النص2"])
+        html += `<p class="about-x2-text" data-i18n="نبذة عن Bariq:النص2">${pages["نبذة عن Bariq:النص2"]}</p>`;
+      if (pages["نبذة عن Bariq:العنوان3"])
+        html += `<h2 class="about-x2-title" data-i18n="نبذة عن Bariq:العنوان3">${pages["نبذة عن Bariq:العنوان3"]}</h2>`;
+      if (pages["نبذة عن Bariq:النص3"])
+        html += `<p class="about-x2-text" data-i18n="نبذة عن Bariq:النص3">${pages["نبذة عن Bariq:النص3"]}</p>`;
+      if (pages["نبذة عن Bariq:العنوان4"])
+        html += `<h2 class="about-x2-title" data-i18n="نبذة عن Bariq:العنوان4">${pages["نبذة عن Bariq:العنوان4"]}</h2>`;
+      if (Array.isArray(pages["نبذة عن Bariq:قائمة"])) {
         html += `<ul class="about-x2-list">`;
-        pages["نبذة عن x2-shopping:قائمة"].forEach(item => {
-          html += `<li data-i18n="نبذة عن x2-shopping:قائمة">${item}</li>`;
+        pages["نبذة عن Bariq:قائمة"].forEach(item => {
+          html += `<li data-i18n="نبذة عن Bariq:قائمة">${item}</li>`;
         });
         html += `</ul>`;
       }
-      if (pages["نبذة عن x2-shopping:العنوان5"])
-        html += `<h2 class="about-x2-title" data-i18n="نبذة عن x2-shopping:العنوان5">${pages["نبذة عن x2-shopping:العنوان5"]}</h2>`;
-      if (Array.isArray(pages["نبذة عن x2-shopping:القيم"])) {
+      if (pages["نبذة عن Bariq:العنوان5"])
+        html += `<h2 class="about-x2-title" data-i18n="نبذة عن Bariq:العنوان5">${pages["نبذة عن Bariq:العنوان5"]}</h2>`;
+      if (Array.isArray(pages["نبذة عن Bariq:القيم"])) {
         html += `<div class="about-x2-values">`;
-        pages["نبذة عن x2-shopping:القيم"].forEach(val => {
-          html += `<div class="about-x2-value"><img src="${val["صورة"]}" alt="${val["عنوان"]}"><div class="about-x2-value-title" data-i18n="نبذة عن x2-shopping:القيم">${val["عنوان"]}</div><div data-i18n="نبذة عن x2-shopping:القيم">${val["وصف"]}</div></div>`;
+        pages["نبذة عن Bariq:القيم"].forEach(val => {
+          html += `<div class="about-x2-value"><img src="${val["صورة"]}" alt="${val["عنوان"]}"><div class="about-x2-value-title" data-i18n="نبذة عن Bariq:القيم">${val["عنوان"]}</div><div data-i18n="نبذة عن Bariq:القيم">${val["وصف"]}</div></div>`;
         });
         html += `</div>`;
       }
