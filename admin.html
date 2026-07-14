@@ -183,6 +183,7 @@
     <button class="btn-ghost btn-sm" onclick="reloadFromFile()">↻ تحميل من الملف</button>
     <button class="btn-gold btn-sm" onclick="exportProducts()">⬇ تنزيل Products.json</button>
     <button class="btn-navy btn-sm" onclick="pushAllProductsToSupabase()">☁️ رفع الكل لـ Supabase</button>
+    <button class="btn-navy btn-sm" onclick="migrateImagesToStorage()">🖼️ ترحيل الصور المحلية لـ Storage</button>
   </div>
 </div>
 
@@ -1816,6 +1817,54 @@ async function pushAllProductsToSupabase() {
   }
   saveLocal(); // احفظ الـ supabaseId المحدّثة محلياً
   toast('✅ رُفع '+ok+' منتج'+(fail?' — ⚠️ فشل '+fail+' منتج':''));
+}
+
+/* ================= ترحيل الصور المحلية (base64) إلى Supabase Storage ================= */
+async function migrateImagesToStorage() {
+  if (!window.Supabase || !window.Supabase.Storage) { toast('Supabase غير متصل'); return; }
+
+  // اجمع المنتجات التي لديها صور base64 محلية فقط
+  const targets = products.filter(function(p) {
+    const imgs = Array.isArray(p.img) ? p.img : (p.img ? [p.img] : []);
+    return imgs.some(function(s){ return s && s.startsWith('data:'); });
+  });
+
+  if (!targets.length) { toast('لا توجد صور محلية تحتاج ترحيل'); return; }
+  if (!confirm('ترحيل صور '+targets.length+' منتج إلى Supabase Storage؟')) return;
+
+  toast('⏳ جارٍ ترحيل الصور...');
+  var ok=0, fail=0;
+
+  for (var i=0; i<targets.length; i++) {
+    var p = targets[i];
+    try {
+      var imgs = Array.isArray(p.img) ? p.img : (p.img ? [p.img] : []);
+      var newImgs = [];
+      for (var j=0; j<imgs.length; j++) {
+        if (imgs[j] && imgs[j].startsWith('data:')) {
+          const url = await window.Supabase.Storage.uploadDataUrl(imgs[j], 'images');
+          newImgs.push(url);
+        } else if (imgs[j]) {
+          newImgs.push(imgs[j]);
+        }
+      }
+      // تحديث المنتج محلياً
+      const idx = products.findIndex(function(x){ return x.id === p.id; });
+      if (idx >= 0) products[idx].img = newImgs;
+
+      // تحديث Supabase إن كان لديه supabaseId
+      if (p.supabaseId) {
+        await window.Supabase.Products.update(p.supabaseId, { image: newImgs[0]||'', gallery: newImgs });
+      }
+      ok++;
+    } catch(e) {
+      fail++;
+      console.warn('فشل ترحيل صورة المنتج:', p.id, e.message);
+    }
+  }
+  saveLocal();
+  renderProducts();
+  toast('✅ تم ترحيل صور '+ok+' منتج'+(fail?' — ⚠️ فشل '+fail:''));
 }
 
 /* ================= بدء ================= */
