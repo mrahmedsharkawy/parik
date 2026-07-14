@@ -181,6 +181,7 @@
   <h1>⚙️ لوحة التحكم <span class="badge">Bariq</span></h1>
   <div class="actions">
     <button class="btn-ghost btn-sm" onclick="reloadFromFile()">↻ تحميل من الملف</button>
+    <button class="btn-danger btn-sm" onclick="syncFromSupabase()">🔄 مزامنة من Supabase</button>
     <button class="btn-gold btn-sm" onclick="exportProducts()">⬇ تنزيل Products.json</button>
     <button class="btn-navy btn-sm" onclick="pushAllProductsToSupabase()">☁️ رفع الكل لـ Supabase</button>
     <button class="btn-navy btn-sm" onclick="migrateImagesToStorage()">🖼️ ترحيل الصور المحلية لـ Storage</button>
@@ -866,18 +867,68 @@ async function loadCategories(){
 }
 
 async function loadProducts(){
+  // أولاً: جرّب Supabase (المصدر الحقيقي)
+  if (window.Supabase) {
+    try {
+      const sbProds = await window.Supabase.Products.getAll(500);
+      if (Array.isArray(sbProds)) {
+        products = sbProds.map(function(p) {
+          const imgs = [];
+          if (p.image) imgs.push(p.image);
+          if (Array.isArray(p.gallery)) p.gallery.forEach(function(g){ if(g && g!==p.image) imgs.push(g); });
+          return {
+            id: p.id, supabaseId: p.id,
+            name: { ar: p.name_ar||'', en: p.name_en||p.name_ar||'' },
+            desc: p.description_ar||'',
+            img: imgs,
+            category: Array.isArray(p.categories)?p.categories:(p.categories?[p.categories]:[]),
+            price: p.price, oldPrice: p.old_price, stock: p.stock,
+            rating: p.rating, ratingCount: p.rating_count,
+            timerEnd: p.timer_end, featured: p.featured
+          };
+        });
+        saveLocal();
+        renderProducts();
+        return;
+      }
+    } catch(e) {}
+  }
+  // Fallback: localStorage فقط (Supabase غير متاح)
   const saved = localStorage.getItem(LS_PRODUCTS);
   if(saved){
-    try{
-      products = JSON.parse(saved);
-      if(!Array.isArray(products)) products = [];
-    }catch(e){ products=[]; }
+    try{ const p = JSON.parse(saved); if(Array.isArray(p)) products = p; }catch(e){ products=[]; }
   }
-  // لو مفيش منتجات في localStorage حمّل من الملف
-  if(!products.length){
-    await reloadFromFile(true);
-  }
+  if(!products.length){ await reloadFromFile(true); }
   renderProducts();
+}
+
+async function syncFromSupabase(){
+  if (!window.Supabase) { toast('Supabase غير متصل'); return; }
+  toast('⏳ جارٍ المزامنة...');
+  try {
+    const sbProds = await window.Supabase.Products.getAll(500);
+    if (!Array.isArray(sbProds)) throw new Error('رد غير صالح');
+    products = sbProds.map(function(p) {
+      const imgs = [];
+      if (p.image) imgs.push(p.image);
+      if (Array.isArray(p.gallery)) p.gallery.forEach(function(g){ if(g && g!==p.image) imgs.push(g); });
+      return {
+        id: p.id, supabaseId: p.id,
+        name: { ar: p.name_ar||'', en: p.name_en||p.name_ar||'' },
+        desc: p.description_ar||'',
+        img: imgs,
+        category: Array.isArray(p.categories)?p.categories:(p.categories?[p.categories]:[]),
+        price: p.price, oldPrice: p.old_price, stock: p.stock,
+        rating: p.rating, ratingCount: p.rating_count,
+        timerEnd: p.timer_end, featured: p.featured
+      };
+    });
+    saveLocal();
+    renderProducts();
+    toast('✅ تمت المزامنة - ' + products.length + ' منتج');
+  } catch(e) {
+    toast('⚠️ فشلت المزامنة: ' + e.message);
+  }
 }
 
 async function reloadFromFile(silent){
