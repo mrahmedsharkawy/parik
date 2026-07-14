@@ -2510,10 +2510,10 @@ if (filtersScroll) {
     tick(); setInterval(tick, 1000);
   }
 
-  fetch('java/Products.json')
-    .then(r => r.json())
+  fetchProducts()
     .then(all => {
-      const p = all.find(x => x.id === productId);
+      // البحث بالـ id مع مقارنة مرنة (نص أو رقم)
+      const p = all.find(x => String(x.id) === String(productId));
       if (!p) {
         const pp = document.querySelector('.product-page');
         if (pp) pp.innerHTML = '<p style="padding:40px;color:#888;">المنتج غير موجود</p>';
