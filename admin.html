@@ -761,6 +761,8 @@
 
 </div><!-- end wrap -->
 
+<div id="toast" class="toast"></div>
+
 <script>
 /* ================= الحالة ================= */
 let products = [];
@@ -777,7 +779,7 @@ const GATE_USER   = 'admin';     // اسم المستخدم الافتراضي
 /* ================= أدوات ================= */
 const $ = id => document.getElementById(id);
 const isVideo = s => /\.(mp4|webm|ogg|ogv|mov|m4v)(\?|#|$)/i.test(String(s||'')) || String(s||'').startsWith('data:video');
-function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+function toast(msg){ const t=$('toast'); if(!t) return; t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
 function getT(v){ if(!v) return ''; if(typeof v==='object') return v.ar||v.en||''; return String(v); }
 
 function getAdminCreds() {
