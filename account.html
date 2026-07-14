@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
   <meta charset="UTF-8" />
@@ -1122,31 +1122,51 @@
       </div>
 
     <div class="acc-nav-section">
-      <div class="acc-nav-title">طلباتك</div>
+      <div class="acc-nav-title" data-i18n="طلباتك">طلباتك</div>
       <div class="acc-nav-item active" onclick="showSection('orders','all')" data-section="orders">
-        <span class="ico">📋</span> كل الطلبات
+        <span class="ico">📋</span> <span data-i18n="كل الطلبات">كل الطلبات</span>
       </div>
       <div class="acc-nav-sub">
-        <div class="acc-nav-item" onclick="showSection('orders','processing')"><span class="ico">⏳</span> قيد المعالجة</div>
-        <div class="acc-nav-item" onclick="showSection('orders','shipped')"><span class="ico">🚚</span> تم الشحن</div>
-        <div class="acc-nav-item" onclick="showSection('orders','delivered')"><span class="ico">✅</span> تم التوصيل</div>
-        <div class="acc-nav-item" onclick="showSection('orders','returned')"><span class="ico">↩️</span> المرتجعات</div>
+        <div class="acc-nav-item" onclick="showSection('orders','processing')"><span class="ico">⏳</span> <span data-i18n="قيد المعالجة">قيد المعالجة</span></div>
+        <div class="acc-nav-item" onclick="showSection('orders','shipped')"><span class="ico">🚚</span> <span data-i18n="تم الشحن">تم الشحن</span></div>
+        <div class="acc-nav-item" onclick="showSection('orders','delivered')"><span class="ico">✅</span> <span data-i18n="تم التوصيل">تم التوصيل</span></div>
+        <div class="acc-nav-item" onclick="showSection('orders','returned')"><span class="ico">↩️</span> <span data-i18n="المرتجعات">المرتجعات</span></div>
       </div>
     </div>
 
     <div class="acc-nav-section">
-      <div class="acc-nav-item" onclick="showSection('reviews')"><span class="ico">⭐</span> تقييماتك</div>
-      <div class="acc-nav-item" onclick="showSection('profile')"><span class="ico">👤</span> ملفك الشخصي</div>
-      <div class="acc-nav-item" onclick="showSection('coupons')"><span class="ico">🎁</span> القسائم والعروض</div>
-      <div class="acc-nav-item" onclick="showSection('credit')"><span class="ico">�</span> كاش باك</div>
+      <div class="acc-nav-item" onclick="showSection('reviews')"><span class="ico">⭐</span> <span data-i18n="تقييماتك">تقييماتك</span></div>
+      <div class="acc-nav-item" onclick="showSection('profile')"><span class="ico">👤</span> <span data-i18n="ملفك الشخصي">ملفك الشخصي</span></div>
+      <div class="acc-nav-item" onclick="showSection('coupons')"><span class="ico">🎁</span> <span data-i18n="القسائم والعروض">القسائم والعروض</span></div>
+      <div class="acc-nav-item" onclick="showSection('credit')"><span class="ico">🤑</span> <span data-i18n="كاش باك">كاش باك</span></div>
     </div>
 
     <div class="acc-nav-section">
-      <div class="acc-nav-item" onclick="showSection('history')"><span class="ico">❤️</span> منتجات في اهتمامك</div>
-      <div class="acc-nav-item" onclick="showSection('settings')"><span class="ico">📍</span> عنواني</div>
-      <div class="acc-nav-item" onclick="showSection('payment')"><span class="ico">💰</span> طرق الدفع</div>
-      <div class="acc-nav-item" onclick="showSection('support')"><span class="ico">🤖</span> الخدمة الذاتية</div>
-      <div class="acc-nav-item" onclick="showSection('notifications')"><span class="ico">🔔</span> الإشعارات</div>
+      <div class="acc-nav-item" onclick="showSection('history')"><span class="ico">❤️</span> <span data-i18n="منتجات في اهتمامك">منتجات في اهتمامك</span></div>
+      <div class="acc-nav-item" onclick="showSection('settings')"><span class="ico">📍</span> <span data-i18n="عنواني">عنواني</span></div>
+      <div class="acc-nav-item" onclick="showSection('payment')"><span class="ico">💰</span> <span data-i18n="طرق الدفع">طرق الدفع</span></div>
+      <div class="acc-nav-item" onclick="showSection('support')"><span class="ico">🤖</span> <span data-i18n="الخدمة الذاتية">الخدمة الذاتية</span></div>
+      <div class="acc-nav-item" onclick="showSection('notifications')"><span class="ico">🔔</span> <span data-i18n="الإشعارات">الإشعارات</span></div>
+    </div>
+
+    <!-- اللغة والعملة -->
+    <div style="padding:12px 14px;border-top:1px solid #f0f0f0;margin-top:4px">
+      <div style="font-size:.72rem;color:#aaa;margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">🌐 اللغة والعملة</div>
+      <div style="display:flex;gap:8px">
+        <select id="sidebar-lang" onchange="changeSidebarLang(this.value)"
+          style="flex:1;border:1.5px solid #eee;border-radius:8px;padding:7px 10px;font-size:.82rem;color:#152546;font-weight:600;outline:none;background:#fafbfe;cursor:pointer">
+          <option value="ar">🌐 العربية</option>
+          <option value="en">🌐 English</option>
+        </select>
+        <select id="sidebar-curr" onchange="changeSidebarCurr(this.value)"
+          style="flex:1;border:1.5px solid #eee;border-radius:8px;padding:7px 10px;font-size:.82rem;color:#152546;font-weight:600;outline:none;background:#fafbfe;cursor:pointer">
+          <option value="AED">💱 درهم</option>
+          <option value="USD">💱 Dollar</option>
+          <option value="EUR">💱 Euro</option>
+          <option value="SAR">💱 ريال</option>
+          <option value="EGP">💱 جنيه</option>
+        </select>
+      </div>
     </div>
 
   </aside>
@@ -1156,15 +1176,15 @@
 
     <!-- زر القائمة للموبايل -->
     <button class="acc-mobile-menu-btn" onclick="document.getElementById('accSidebar').classList.toggle('mobile-open')">
-      ☰ القائمة والإعدادات
+      ☰ <span data-i18n="القائمة والإعدادات">القائمة والإعدادات</span>
     </button>
 
     <!-- تنقل سريع للموبايل -->
     <div class="acc-quick-nav">
-      <button onclick="showSection('orders','all')" class="aqn-btn active" id="aqn-orders">📋<span>طلباتي</span></button>
-      <button onclick="showSection('profile')"      class="aqn-btn"        id="aqn-profile">👤<span>ملفي</span></button>
-      <button onclick="showSection('coupons')"      class="aqn-btn"        id="aqn-coupons">🎁<span>عروض</span></button>
-      <button onclick="showSection('notifications')" class="aqn-btn" id="aqn-notif" style="position:relative">🔔<span id="aqnNotifBadge" style="display:none;position:absolute;top:3px;left:50%;margin-left:2px;background:#D4AF37;color:#fff;font-size:.55rem;font-weight:800;padding:1px 5px;border-radius:999px;min-width:14px;text-align:center;line-height:1.4"></span><span>إشعارات</span></button>
+      <button onclick="showSection('orders','all')" class="aqn-btn active" id="aqn-orders">📋<span data-i18n="طلباتي">طلباتي</span></button>
+      <button onclick="showSection('profile')"      class="aqn-btn"        id="aqn-profile">👤<span data-i18n="ملفي">ملفي</span></button>
+      <button onclick="showSection('coupons')"      class="aqn-btn"        id="aqn-coupons">🎁<span data-i18n="عروض">عروض</span></button>
+      <button onclick="showSection('notifications')" class="aqn-btn" id="aqn-notif" style="position:relative">🔔<span id="aqnNotifBadge" style="display:none;position:absolute;top:3px;left:50%;margin-left:2px;background:#D4AF37;color:#fff;font-size:.55rem;font-weight:800;padding:1px 5px;border-radius:999px;min-width:14px;text-align:center;line-height:1.4"></span><span data-i18n="الإشعارات">إشعارات</span></button>
     </div>
 
     <!-- قسم الطلبات -->
@@ -1174,8 +1194,8 @@
       <div class="acc-support-banner" onclick="showSection('support')" style="cursor:pointer;">
         <span class="acc-support-icon">🤖</span>
         <div class="acc-support-text">
-          <div class="acc-support-title">الخدمة الذاتية</div>
-          <div class="acc-support-sub">تتبع طلبك، الإرجاع، الدفع وأكثر بضغطة واحدة</div>
+          <div class="acc-support-title" data-i18n="الخدمة الذاتية-title">الخدمة الذاتية</div>
+          <div class="acc-support-sub" data-i18n="الخدمة الذاتية-sub">تتبع طلبك، الإرجاع، الدفع وأكثر بضغطة واحدة</div>
         </div>
         <span class="acc-support-arrow">›</span>
       </div>
@@ -1183,16 +1203,16 @@
       <!-- شريط البحث -->
       <div class="acc-search">
         <span class="ico">🔍</span>
-        <input type="text" id="order-search" placeholder="اسم المنتج/ رقم الطلب الخاص بالطلب / رقم ..." oninput="filterOrders()">
+        <input type="text" id="order-search" placeholder="اسم المنتج/ رقم الطلب الخاص بالطلب / رقم ..." data-i18n-placeholder="اسم المنتج أو رقم الطلب" oninput="filterOrders()">
       </div>
 
       <!-- التبويبات -->
       <div class="acc-tabs">
-        <div class="acc-tab active" onclick="filterByStatus('all',this)">كل الطلبات</div>
-        <div class="acc-tab" onclick="filterByStatus('processing',this)">قيد المعالجة</div>
-        <div class="acc-tab" onclick="filterByStatus('shipped',this)">تم الشحن</div>
-        <div class="acc-tab" onclick="filterByStatus('delivered',this)">تم التوصيل</div>
-        <div class="acc-tab" onclick="filterByStatus('returned',this)">المرتجعات</div>
+        <div class="acc-tab active" onclick="filterByStatus('all',this)" data-i18n="كل الطلبات">كل الطلبات</div>
+        <div class="acc-tab" onclick="filterByStatus('processing',this)" data-i18n="قيد المعالجة">قيد المعالجة</div>
+        <div class="acc-tab" onclick="filterByStatus('shipped',this)" data-i18n="تم الشحن">تم الشحن</div>
+        <div class="acc-tab" onclick="filterByStatus('delivered',this)" data-i18n="تم التوصيل">تم التوصيل</div>
+        <div class="acc-tab" onclick="filterByStatus('returned',this)" data-i18n="المرتجعات">المرتجعات</div>
       </div>
 
       <!-- شريط الضمان -->
@@ -1217,24 +1237,24 @@
         <div class="acc-profile-avatar" id="avatar-letter">م</div>
         <div class="acc-profile-name" id="profile-name">مستخدم</div>
         <div class="acc-profile-email" id="profile-email">لم يتم تسجيل الدخول</div>
-        <div class="acc-form-group"><label>الاسم الكامل</label><input type="text" id="pf-name" placeholder="أدخل اسمك"></div>
-        <div class="acc-form-group"><label>البريد الإلكتروني</label><input type="email" id="pf-email" placeholder="example@email.com"></div>
-        <div class="acc-form-group"><label>العنوان</label><input type="text" id="pf-address" placeholder="أدخل عنوانك"></div>
-        <div class="acc-form-group"><label>رقم الهاتف</label><input type="tel" id="pf-phone" placeholder="+971 XX XXX XXXX"></div>
+        <div class="acc-form-group"><label data-i18n="الاسم الكامل">الاسم الكامل</label><input type="text" id="pf-name" placeholder="أدخل اسمك"></div>
+        <div class="acc-form-group"><label data-i18n="البريد الإلكتروني">البريد الإلكتروني</label><input type="email" id="pf-email" placeholder="example@email.com"></div>
+        <div class="acc-form-group"><label data-i18n="عنواني">العنوان</label><input type="text" id="pf-address" placeholder="أدخل عنوانك"></div>
+        <div class="acc-form-group"><label data-i18n="رقم الهاتف">رقم الهاتف</label><input type="tel" id="pf-phone" placeholder="+971 XX XXX XXXX"></div>
         <div class="acc-form-group">
-          <label>كلمة السر</label>
+          <label data-i18n="كلمة السر">كلمة السر</label>
           <div class="acc-password-field">
             <input type="password" id="pf-password" placeholder="أدخل كلمة السر">
             <button type="button" class="acc-password-toggle" onclick="togglePasswordField('pf-password', this)">إظهار</button>
           </div>
         </div>
-        <button class="acc-save-btn" onclick="saveProfile()">💾 حفظ التغييرات</button>
+        <button class="acc-save-btn" onclick="saveProfile()">💾 <span data-i18n="حفظ التغييرات">حفظ التغييرات</span></button>
         <div style="height:16px"></div>
         <div style="font-size:0.78rem;font-weight:700;color:#7a8296;margin-bottom:4px">قسم الأمان</div>
         <div style="font-size:0.92rem;font-weight:800;color:#152546;margin-bottom:10px">تغيير كلمة السر</div>
-        <div class="acc-form-group"><label>كلمة السر الجديدة</label><input type="password" id="pf-new-password" placeholder="أدخل كلمة السر الجديدة"></div>
-        <div class="acc-form-group"><label>تأكيد كلمة السر الجديدة</label><input type="password" id="pf-confirm-password" placeholder="أعد كتابة كلمة السر الجديدة"></div>
-        <button class="acc-save-btn" onclick="changePassword()">🔒 تغيير كلمة السر</button>
+        <div class="acc-form-group"><label data-i18n="كلمة السر الجديدة">كلمة السر الجديدة</label><input type="password" id="pf-new-password" placeholder="أدخل كلمة السر الجديدة"></div>
+        <div class="acc-form-group"><label data-i18n="تأكيد كلمة السر الجديدة">تأكيد كلمة السر الجديدة</label><input type="password" id="pf-confirm-password" placeholder="أعد كتابة كلمة السر الجديدة"></div>
+        <button class="acc-save-btn" onclick="changePassword()">🔒 <span data-i18n="تغيير كلمة السر">تغيير كلمة السر</span></button>
       </div>
     </div>
 
@@ -1342,7 +1362,7 @@
       <div class="acc-profile-card">
         <h3 style="font-size:1rem;font-weight:800;color:#152546;margin-bottom:16px">📍 عنوان الشحن</h3>
         <div class="acc-form-group">
-          <label>الدولة</label>
+          <label data-i18n="الدولة">الدولة</label>
           <select id="addr-country" style="width:100%;border:1px solid #ddd;border-radius:8px;padding:9px 12px;font-size:0.84rem;outline:none;box-sizing:border-box;">
             <option value="ae">الإمارات العربية المتحدة</option>
             <option value="sa">المملكة العربية السعودية</option>
@@ -1354,13 +1374,13 @@
             <option value="om">عُمان</option>
           </select>
         </div>
-        <div class="acc-form-group"><label>المدينة / الإمارة</label><input type="text" id="addr-city" placeholder="دبي"></div>
-        <div class="acc-form-group"><label>المنطقة / الحي</label><input type="text" id="addr-area" placeholder="الخليج التجاري"></div>
-        <div class="acc-form-group"><label>الشارع</label><input type="text" id="addr-street" placeholder="شارع الشيخ زايد"></div>
-        <div class="acc-form-group"><label>المبنى / الشقة</label><input type="text" id="addr-building" placeholder="برج المارينا، شقة 504"></div>
-        <div class="acc-form-group"><label>الرمز البريدي (اختياري)</label><input type="text" id="addr-zip" placeholder="00000"></div>
-        <div class="acc-form-group"><label>ملاحظات التوصيل (اختياري)</label><input type="text" id="addr-notes" placeholder="بالقرب من سبينيس..."></div>
-        <button class="acc-save-btn" onclick="saveAddress()">💾 حفظ العنوان</button>
+        <div class="acc-form-group"><label data-i18n="المدينة">المدينة / الإمارة</label><input type="text" id="addr-city" placeholder="دبي"></div>
+        <div class="acc-form-group"><label data-i18n="المنطقة">المنطقة / الحي</label><input type="text" id="addr-area" placeholder="الخليج التجاري"></div>
+        <div class="acc-form-group"><label data-i18n="الشارع">الشارع</label><input type="text" id="addr-street" placeholder="شارع الشيخ زايد"></div>
+        <div class="acc-form-group"><label data-i18n="المبنى">المبنى / الشقة</label><input type="text" id="addr-building" placeholder="برج المارينا، شقة 504"></div>
+        <div class="acc-form-group"><label data-i18n="الرمز البريدي">الرمز البريدي (اختياري)</label><input type="text" id="addr-zip" placeholder="00000"></div>
+        <div class="acc-form-group"><label data-i18n="ملاحظات التوصيل">ملاحظات التوصيل (اختياري)</label><input type="text" id="addr-notes" placeholder="بالقرب من سبينيس..."></div>
+        <button class="acc-save-btn" onclick="saveAddress()">💾 <span data-i18n="حفظ العنوان">حفظ العنوان</span></button>
       </div>
     </div>
 
@@ -1506,11 +1526,10 @@
   }
 
   function getStatusLabel(s) {
-    const map = {
-      pending:'قيد الانتظار', processing:'قيد المعالجة', confirmed:'مؤكد',
-      shipped:'تم الشحن', delivered:'تم التوصيل', cancelled:'ملغى', returned:'مرتجع'
-    };
-    return map[s] || 'قيد المعالجة';
+    const isEn = (localStorage.getItem('lang') || document.documentElement.lang) === 'en';
+    const ar = { pending:'قيد الانتظار', processing:'قيد المعالجة', confirmed:'مؤكد', shipped:'تم الشحن', delivered:'تم التوصيل', cancelled:'ملغى', returned:'مرتجع' };
+    const en = { pending:'Pending', processing:'Processing', confirmed:'Confirmed', shipped:'Shipped', delivered:'Delivered', cancelled:'Cancelled', returned:'Returned' };
+    return (isEn ? en[s] : ar[s]) || (isEn ? 'Processing' : 'قيد المعالجة');
   }
 
   function getStatusClass(s) {
@@ -1566,7 +1585,7 @@
           <div class="acc-empty-title">ليس لديك أي طلبات</div>
           <div class="acc-empty-sub">لا يمكنك العثور على طلبك؟</div>
           <div class="acc-empty-actions">
-            <a href="index.html" class="acc-empty-btn"><span class="ico">🛍</span> تسوق الآن</a>
+            <a href="index.html" class="acc-empty-btn"><span class="ico">🛍</span> <span data-i18n="تسوق الآن">تسوق الآن</span></a>
           </div>
         </div>`;
       if (pgEl) pgEl.style.display = 'none';
@@ -1610,8 +1629,8 @@
             </div>
           </div>
           <div class="acc-order-actions">
-            <a class="acc-order-btn" href="https://wa.me/${WA_PHONE}?text=${waT}" target="_blank" rel="noopener" style="text-decoration:none">📦 تتبع</a>
-            <a class="acc-order-btn" href="https://wa.me/${WA_PHONE}?text=${waR}" target="_blank" rel="noopener" style="color:#e57373;text-decoration:none">↩️ إرجاع</a>
+            <a class="acc-order-btn" href="https://wa.me/${WA_PHONE}?text=${waT}" target="_blank" rel="noopener" style="text-decoration:none">📦 <span data-i18n="تتبع">تتبع</span></a>
+            <a class="acc-order-btn" href="https://wa.me/${WA_PHONE}?text=${waR}" target="_blank" rel="noopener" style="color:#e57373;text-decoration:none">↩️ <span data-i18n="إرجاع">إرجاع</span></a>
           </div>
         </div>`;
     }).join('');
@@ -2291,7 +2310,7 @@
         <div class="acc-empty-icon">⭐</div>
         <div class="acc-empty-title">لم تكتب أي تقييم بعد</div>
         <div class="acc-empty-sub">تسوق وشارك تجربتك مع المنتجات</div>
-        <div class="acc-empty-actions"><a href="index.html" class="acc-empty-btn"><span class="ico">🛍</span> تسوق الآن</a></div>
+        <div class="acc-empty-actions"><a href="index.html" class="acc-empty-btn"><span class="ico">🛍</span> <span data-i18n="تسوق الآن">تسوق الآن</span></a></div>
       </div>`;
       return;
     }
@@ -2365,6 +2384,25 @@
       if (ico) ico.textContent = '🤑';
     }
   });
+
+  // مزامنة قوائم اللغة والعملة في الـ sidebar
+  (function syncSidebarSelects() {
+    const sLang = document.getElementById('sidebar-lang');
+    const sCurr = document.getElementById('sidebar-curr');
+    if (sLang) sLang.value = localStorage.getItem('lang')     || document.documentElement.lang || 'ar';
+    if (sCurr) sCurr.value = localStorage.getItem('currency') || 'AED';
+  })();
+
+  window.changeSidebarLang = function(val) {
+    const main = document.getElementById('language');
+    if (main) { main.value = val; main.dispatchEvent(new Event('change')); }
+    else { localStorage.setItem('lang', val); location.reload(); }
+  };
+  window.changeSidebarCurr = function(val) {
+    const main = document.getElementById('currency');
+    if (main) { main.value = val; main.dispatchEvent(new Event('change')); }
+    else { localStorage.setItem('currency', val); location.reload(); }
+  };
 })();
 </script>
 
@@ -2482,6 +2520,7 @@
 </div>
   </div>
 </footer>
+<script src="java/supabase.js" defer></script>
 <script src="java/main.js" defer></script>
 <script src="translations/translation.js" defer></script>
 <script src="java/footer-pages.js" defer></script>

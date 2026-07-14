@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
   <meta charset="UTF-8" />
@@ -294,14 +294,14 @@
 
         <div class="stock">
 
-            المتبقي :
+            <span data-i18n="المتبقي">المتبقي</span> :
             <b id="stock"></b>
 
         </div>
 
         <div class="timer-box">
 
-            ⏰ ينتهي خلال
+            ⏰ <span data-i18n="ينتهي خلال">ينتهي خلال</span>
 
             <span id="timer"></span>
 
@@ -319,13 +319,13 @@
 
         </div>
 
-        <button class="buy">
+        <button class="buy" data-i18n="شراء الآن">
 
             شراء الآن
 
         </button>
 
-        <button class="cart">
+        <button class="cart" data-i18n="إضافة إلى السلة">
 
             إضافة إلى السلة
 
@@ -373,27 +373,27 @@
 
 <section class="reviews-section" id="reviewsSection">
   <div class="rv-head">
-    <h3 class="rv-title">التقييمات والتعليقات</h3>
+    <h3 class="rv-title" data-i18n="التقييمات والتعليقات">التقييمات والتعليقات</h3>
     <div class="rv-avg" id="rvAvg"></div>
   </div>
 
   <div class="rv-list" id="rvList"><div class="rv-empty">لا توجد تعليقات بعد. كن أول من يقيّم هذا المنتج!</div></div>
 
   <div class="rv-form">
-    <h4>أضف تقييمك</h4>
+    <h4 data-i18n="أضف تقييمك">أضف تقييمك</h4>
     <div class="row">
       <div>
         <input type="text" id="rvName" placeholder="اسمك">
       </div>
       <div style="display:flex;align-items:center;gap:10px">
-        <span style="color:#152546;font-weight:600;font-size:.85rem">التقييم:</span>
+        <span style="color:#152546;font-weight:600;font-size:.85rem" data-i18n="التقييم">التقييم:</span>
         <div class="rv-stars-pick" id="rvStars">
           <span data-v="5">★</span><span data-v="4">★</span><span data-v="3">★</span><span data-v="2">★</span><span data-v="1">★</span>
         </div>
       </div>
     </div>
     <textarea id="rvText" placeholder="اكتب تعليقك عن المنتج..."></textarea>
-    <button class="submit" id="rvSubmit">إرسال التقييم</button>
+    <button class="submit" id="rvSubmit" data-i18n="إرسال التقييم">إرسال التقييم</button>
   </div>
 </section>
 
@@ -475,7 +475,7 @@
 
 <hr>
 
-<h2 class="related-title">
+<h2 class="related-title" data-i18n="منتجات مشابهة">
 منتجات مشابهة
 </h2>
 
@@ -485,20 +485,14 @@
    
 <div class="categories">
     <div><a href="/categories.html">💯 <span data-i18n="الكل">الكل</span></a></div>
-    <div><a href="/categories/women">👗 <span data-i18n="ملابس نسائية">ملابس نسائية</span></a></div>
-    <div><a href="/categories/men">👕 <span data-i18n="ملابس رجالية">ملابس رجالية</span></a></div>
-    <div><a href="/categories/health-beauty">💄 <span data-i18n="الصحة والجمال">الصحة والجمال</span></a></div>
-    <div><a href="/categories/consumer-electronics">📷 <span data-i18n="الإلكترونيات الاستهلاكية">الإلكترونيات الاستهلاكية</span></a></div>
-    <div><a href="/categories/home-garden-furniture">🪑 <span data-i18n="المنزل والحديقة والاثاث">المنزل والحديقة والاثاث</span></a></div>
-    <div><a href="/categories/kids-babies">👶 <span data-i18n="ألعاب الأطفال والرضع">ألعاب الأطفال والرضع</span></a></div>
-    <div><a href="/categories/jewelry-watches">💍 <span data-i18n="المجوهرات والساعات">المجوهرات والساعات</span></a></div>
-    <div><a href="/categories/bags-shoes">👟 <span data-i18n="الحقائب والأحذية">الحقائب والأحذية</span></a></div>
-    <div><a href="/categories/sports-outdoors">🎽 <span data-i18n="الرياضة والهواء الطلق">الرياضة والهواء الطلق</span></a></div>
-    <div><a href="/categories/home-improvement">🏠 <span data-i18n="تحسين المنزل">تحسين المنزل</span></a></div>
-    <div><a href="/categories/automobiles-motorcycles">🚗 <span data-i18n="السيارات والدراجات النارية">السيارات والدراجات النارية</span></a></div>
-    <div><a href="/categories/pet-supplies">🐶 <span data-i18n="مستلزمات الحيوانات الأليفة">مستلزمات الحيوانات الأليفة</span></a></div>
-    <div><a href="/categories/phones-accessories">📱 <span data-i18n="الهواتف والملحقات">الهواتف والملحقات</span></a></div>
-    <div><a href="/categories/computer-office">💻 <span data-i18n="الكمبيوتر والمكتب">الكمبيوتر والمكتب</span></a></div>
+    <div><a href="/categories/Occasions">🎉 <span data-i18n="مناسابات">مناسابات</span></a></div>
+    <div><a href="/categories/Acrylic">💎 <span data-i18n=" اكريلك">اكريلك </span></a></div>
+    <div><a href="/categories/paper">📄 <span data-i18n="ورق ">ورق </span></a></div>
+    <div><a href="/categories/Forex">🖼️ <span data-i18n="فوركس ">فوركس </span></a></div>
+    <div><a href="/categories/wood">🪵 <span data-i18n="خشب  ">خشب  </span></a></div>
+    <div><a href="/categories/leather">👜 <span data-i18n="جلد  ">جلد  </span></a></div>
+    <div><a href="/categories/sticker">🏷️ <span data-i18n="استيكر ">استيكر </span></a></div>
+    <div><a href="/categories/ramadan">🌙 <span data-i18n="رمضان ">رمضان </span></a></div>
 </div>
 
 
@@ -622,6 +616,7 @@
 </div>
   </div>
 </footer>
+<script src="java/supabase.js" defer></script>
 <script src="java/main.js" defer></script>
 <script src="translations/translation.js" defer></script>
 <script src="java/footer-pages.js" defer></script>

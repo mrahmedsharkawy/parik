@@ -194,7 +194,7 @@ function updateSummary() {
       if (applied && applied.code && applied.amount) {
         const stored = JSON.parse(localStorage.getItem('x2_coupon_code') || 'null');
         if (stored && stored.code === applied.code && !stored.used) {
-          couponDiscount = Math.min(parseFloat(applied.amount) || 0, actualTotal);
+          couponDiscount = Math.min(parseFloat(stored.amount) || 0, actualTotal);
           if (couponDiscountLine) couponDiscountLine.style.display = '';
           if (couponDiscountAmtEl) couponDiscountAmtEl.textContent = '-' + window.formatCurrency(couponDiscount);
         } else {
@@ -225,6 +225,8 @@ try { window.updateSummary = updateSummary; } catch(e) {}
 
 // مسح أي تطبيق قديم من localStorage عند كل تحميل (الكوبون يُطبَّق يدوياً فقط)
 try { localStorage.removeItem('x2_coupon_applied'); } catch(e) {}
+// مسح الكوبون المطبّق من sessionStorage عند كل تحميل للصفحة (يجب إدخال الكود يدوياً)
+try { sessionStorage.removeItem('x2_coupon_applied'); } catch(e) {}
 
 // ===== تطبيق كوبون الكاش باك (يدوياً فقط) =====
 function applyCoupon() {
@@ -867,10 +869,11 @@ function updateSelectedCount() {
       `الخصم: ${discount.toFixed(2)} ${sym}`,
       (() => {
         try {
-          const applied = JSON.parse(localStorage.getItem('x2_coupon_applied') || 'null');
+          const applied = JSON.parse(sessionStorage.getItem('x2_coupon_applied') || 'null');
           const stored  = JSON.parse(localStorage.getItem('x2_coupon_code')    || 'null');
           if (applied && applied.code && stored && stored.code === applied.code && !stored.used) {
-            return `خصم الكوبون (${applied.code}): -${parseFloat(applied.amount).toFixed(2)} ${sym}`;
+            const couponAmt = parseFloat(stored.amount) || 0;
+            return `خصم الكوبون (${applied.code}): -${couponAmt.toFixed(2)} ${sym}`;
           }
         } catch(e) {}
         return '';
@@ -929,6 +932,25 @@ function updateSelectedCount() {
         status: 'processing'
       });
       localStorage.setItem('x2_orders', JSON.stringify(orders));
+      // رفع الطلب لـ Supabase (غير متزامن - لا يوقف العملية)
+      if (window.Supabase) {
+        const profile = (() => { try { return JSON.parse(localStorage.getItem('x2_profile')||'{}'); } catch(e){ return {}; } })();
+        const newOrder = orders[0];
+        window.Supabase.Orders.insert({
+          ...newOrder,
+          customerName:  profile.name  || '',
+          customerPhone: profile.phone || '',
+          customerEmail: profile.email || '',
+          address:       profile.address_full || null
+        }).catch(() => {});
+        // إشعار للأدمن
+        window.Supabase.Notifications.insert({
+          type: 'order_new', icon: '📦',
+          title: `طلب جديد ${orderId}`,
+          msg: `${profile.name||'عميل'} - ${totalAmt} د.إ`,
+          orderId
+        }).catch(() => {});
+      }
     } catch(e) {}
 
     // ===== استهلاك كوبون الخصم وتصفير الكاش باك =====

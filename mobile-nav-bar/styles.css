@@ -221,11 +221,14 @@ body{
   box-shadow:0 1px 3px rgba(0,0,0,0.12);
   box-sizing:border-box;
   transform-origin:center;
-  opacity: 1; /* دائمًا مرئية */
+  opacity: 0; /* مخفية افتراضياً */
+}
+/* تظهر فقط لما يكون في إشعارات */
+.account-badge[data-count]:not([data-count="0"]):not([data-count=""])::after {
+  opacity: 1;
 }
 
-/* تأكيد عرض العداد دائمًا */
-.account-badge::after,
+/* تأكيد عرض عداد السلة دائمًا */
 .cart-badge::after {
   opacity: 1;
   display: inline-block !important;

@@ -1215,7 +1215,7 @@ document.addEventListener("DOMContentLoaded", function() {
     var count = getUnreadCount();
     window.__accountCount = count > 0 ? String(count) : '';
     document.querySelectorAll('.account-badge').forEach(function(el) {
-      el.setAttribute('data-count', count > 0 ? String(count) : '');
+      el.setAttribute('data-count', count > 0 ? String(count) : '0');
     });
     try { window.dispatchEvent(new CustomEvent('x2:notif-updated', { detail: { count: count } })); } catch(e) {}
   }

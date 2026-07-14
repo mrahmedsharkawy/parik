@@ -2,16 +2,25 @@ function changeLang(lang) {
   fetch(`translations/${lang}.json`)
     .then(res => res.json())
     .then(data => {
+      // ترجمة النصوص data-i18n
       document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
-        if (data[key]) {
-          el.textContent = data[key];
-        }
+        if (data[key]) el.textContent = data[key];
       });
-      // الفئات: الاسم يأتي مباشرة من Categories.json (المصدر الوحيد)
-      // ولا تُستبدل من ملفات الترجمة، فقط نبدّل بين العربي والإنجليزي حسب اللغة
+      // ترجمة placeholder
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (data[key]) el.placeholder = data[key];
+      });
+      // ترجمة title
+      document.querySelectorAll('[data-i18n-title]').forEach(el => {
+        const key = el.getAttribute('data-i18n-title');
+        if (data[key]) el.title = data[key];
+      });
       applyCategoryNames(lang);
       localStorage.setItem('lang', lang);
+      document.documentElement.lang = lang;
+      document.documentElement.dir  = lang === 'ar' ? 'rtl' : 'ltr';
     });
 }
 

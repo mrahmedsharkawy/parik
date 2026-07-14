@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
   <meta charset="UTF-8" />
@@ -36,9 +36,17 @@ main#main {
 /* 2. الحاوية الرئيسية للتخطيط */
 .cart-layout-container {
   display: flex;
-  flex-direction: row-reverse; /* القائمة الجانبية على اليسار */
+  flex-direction: row-reverse;
   gap: 25px;
   align-items: flex-start;
+  overflow: visible;
+}
+
+/* العمود الأيمن (المنتجات) */
+.cart-right {
+  flex: 1;
+  min-width: 0;
+  overflow: visible;
 }
 
 /* 3. العمود الأيسر (ملخص الطلب) - ثابت وقابل للتمرير */
@@ -64,6 +72,24 @@ main#main {
 .cart-left::-webkit-scrollbar { width: 8px; }
 .cart-left::-webkit-scrollbar-track { background: transparent; }
 .cart-left::-webkit-scrollbar-thumb { background-color: #e0e0e000; border-radius: 10px; }
+
+/* شبكة المنتجات الموصى بها داخل السلة */
+#category-products .product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  max-width: 100%;
+}
+#category-products .product-card {
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+/* تقليل عدد الأعمدة في السلة لأن العمود الأيمن أضيق */
+#category-products .products-row { column-count: 4 !important; }
+@media (max-width: 1300px) { #category-products .products-row { column-count: 3 !important; } }
+@media (max-width: 992px)  { #category-products .products-row { column-count: 2 !important; } }
 
 
 /* 5. شريط الشحن المجاني */
@@ -982,15 +1008,15 @@ h3 {
     <label class="select-all-checkbox">
       <input type="checkbox" id="selectAllCheckbox">
       <span class="checkmark"></span>
-      <span data-i18n="تحديد الكل">تحديد الكل</span>
+      <span data-i18n="تحديد الكل"><span data-i18n="تحديد الكل">تحديد الكل</span></span>
     </label>
   </div>
   <div class="selection-info">
-    <span class="selected-count" data-i18n="المحدد">المحدد</span>: <span id="selectedItemsCount">0</span>
+    <span class="selected-count" data-i18n="المحدد"><span data-i18n="المحدد">المحدد</span></span>: <span id="selectedItemsCount">0</span>
   </div>
   <div class="selection-actions">
     <button id="deleteSelectedBtn" class="action-btn delete-selected" disabled>
-      <span data-i18n="حذف المحدد">حذف المحدد</span>
+      <span data-i18n="حذف المحدد"><span data-i18n="حذف المحدد">حذف المحدد</span></span>
     </button>
   </div>
 </div>
@@ -1048,7 +1074,7 @@ h3 {
         
         <p class="summary-note" data-i18n="summary_note">تاكيد الطلب يتم علي واتساب لاكمال البيانات وتحديد الون والمقاس الدفع عند الاستلام او تحويل بنكي .</p>
 
-        <button class="checkout-btn" id="checkoutBtn">تأكيد الطلب عبر واتساب</button>
+        <button class="checkout-btn" id="checkoutBtn"><span data-i18n="تأكيد الطلب عبر واتساب">تأكيد الطلب عبر واتساب</span></button>
 
 
         <div class="small-note" data-i18n="payment_note">
@@ -1250,6 +1276,7 @@ h3 {
 </div>
   </div>
 </footer>
+<script src="java/supabase.js" defer></script>
 <script src="java/main.js" defer></script>
 <script type="module" src="./java/Cart.js"></script>
 <script src="translations/translation.js" defer></script>

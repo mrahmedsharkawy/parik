@@ -162,7 +162,7 @@
   #gate h2{margin:0 0 6px;color:var(--navy)}
   #gate p{color:#7a8296;font-size:.85rem;margin:0 0 18px}
 </style>
-</head>
+<script src="java/supabase.js"></script></head>
 <body>
 
 <!-- بوابة دخول بسيطة (حماية شكلية فقط) -->
@@ -181,13 +181,18 @@
   <div class="actions">
     <button class="btn-ghost btn-sm" onclick="reloadFromFile()">↻ تحميل من الملف</button>
     <button class="btn-gold btn-sm" onclick="exportProducts()">⬇ تنزيل Products.json</button>
+    <button class="btn-navy btn-sm" onclick="pushAllProductsToSupabase()">☁️ رفع الكل لـ Supabase</button>
   </div>
 </div>
 
 <div class="tabs">
   <div class="tab active" data-tab="products" onclick="switchTab('products')">🛍️ المنتجات</div>
-  <div class="tab" data-tab="orders" onclick="switchTab('orders')">📊 الطلبات والمبيعات</div>
+  <div class="tab" data-tab="orders" onclick="switchTab('orders')">📊 الطلبات</div>
   <div class="tab" data-tab="comments" onclick="switchTab('comments')">💬 التعليقات</div>
+  <div class="tab" data-tab="categories" onclick="switchTab('categories')">🗂️ الفئات</div>
+  <div class="tab" data-tab="banners" onclick="switchTab('banners')">🖼️ العروض والبنرات</div>
+  <div class="tab" data-tab="customers" onclick="switchTab('customers')">👥 العملاء</div>
+  <div class="tab" data-tab="settings" onclick="switchTab('settings')">⚙️ الإعدادات</div>
 </div>
 
 <div class="wrap">
@@ -454,9 +459,154 @@
     </div>
   </div>
 
-</div>
+  <!-- ============ الفئات ============ -->
+  <div class="panel" id="panel-categories">
+    <div class="grid">
+      <div class="card">
+        <h2>🗂️ الفئات الرئيسية</h2>
+        <div class="hint">عرض الفئات المحمّلة من Categories.json. يمكنك تعديل الأسماء وحفظها كإعدادات مؤقتة.</div>
+        <div class="plist" id="catList"><div class="empty">جارٍ التحميل...</div></div>
+      </div>
+      <div class="card">
+        <h2>➕ إضافة فئة مؤقتة</h2>
+        <div class="hint">تُضاف كـ override محلي — لتطبيقها دائماً يجب تعديل Categories.json يدوياً.</div>
+        <label>اسم الفئة (عربي)</label>
+        <input type="text" id="nc-ar" placeholder="مثال: إكسسوارات">
+        <label>اسم الفئة (English)</label>
+        <input type="text" id="nc-en" placeholder="e.g. Accessories">
+        <label>الرابط (slug)</label>
+        <input type="text" id="nc-slug" placeholder="accessories">
+        <label>رابط الصورة</label>
+        <input type="text" id="nc-img" placeholder="assets/categories/...">
+        <button class="btn-gold" style="margin-top:14px;width:100%" onclick="addTempCategory()">➕ إضافة</button>
+        <button class="btn-ghost btn-sm" style="margin-top:8px;width:100%" onclick="exportCatsJSON()">⬇ تنزيل Categories.json</button>
+      </div>
+    </div>
+  </div>
 
-<div class="toast" id="toast"></div>
+  <!-- ============ العروض والبنرات ============ -->
+  <div class="panel" id="panel-banners">
+    <div class="grid">
+      <div class="card">
+        <h2>➕ إضافة بنر</h2>
+        <label>عنوان البنر (عربي)</label>
+        <input type="text" id="bn-title" placeholder="عروض خاطفة ⚡">
+        <label>نص فرعي</label>
+        <input type="text" id="bn-sub" placeholder="عرض لوقت محدود">
+        <label>رابط الصورة</label>
+        <input type="text" id="bn-img" placeholder="assets/home/banner.png">
+        <label>الرابط عند الضغط</label>
+        <input type="text" id="bn-link" placeholder="offers.html">
+        <label>ترتيب الظهور</label>
+        <input type="number" id="bn-order" value="1" min="1">
+        <div style="display:flex;gap:8px;margin-top:14px">
+          <button class="btn-gold" style="flex:1" onclick="saveBanner()">💾 حفظ البنر</button>
+          <button class="btn-ghost btn-sm" onclick="clearBannerForm()">✕ مسح</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>🖼️ البنرات الحالية</h2>
+        <div class="plist" id="bannerList"><div class="empty">لا توجد بنرات محفوظة</div></div>
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <button class="btn-ghost btn-sm" onclick="exportBanners()">⬇ تنزيل JSON</button>
+          <button class="btn-danger btn-sm" onclick="clearAllBanners()">🗑 مسح الكل</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- إدارة العروض الخاصة -->
+    <div class="card" style="margin-top:18px">
+      <h2>🔥 المنتجات المميّزة في العروض</h2>
+      <div class="hint">اختر المنتجات التي تظهر في صفحة العروض (تُحفظ محلياً).</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <input type="text" id="fe-search" placeholder="ابحث عن منتج..." oninput="renderFeaturedPicker()" style="flex:1">
+        <button class="btn-ghost btn-sm" onclick="saveFeatured()">💾 حفظ</button>
+      </div>
+      <div class="plist" id="featuredPicker"></div>
+    </div>
+  </div>
+
+  <!-- ============ العملاء ============ -->
+  <div class="panel" id="panel-customers">
+    <div class="grid">
+      <div class="card">
+        <h2>👥 قائمة العملاء</h2>
+        <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+          <input type="text" id="cust-search" placeholder="ابحث بالاسم أو الهاتف..." oninput="renderCustomers()" style="flex:1;min-width:150px">
+          <select id="cust-filter" onchange="renderCustomers()" style="width:auto">
+            <option value="">كل الحالات</option>
+            <option value="delivered">تم التسليم</option>
+            <option value="processing">قيد المعالجة</option>
+            <option value="shipped">تم الشحن</option>
+          </select>
+        </div>
+        <div class="plist" id="custList"><div class="empty">لا يوجد عملاء</div></div>
+        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-gold btn-sm" onclick="selectAllCustomers()">✓ تحديد الكل</button>
+          <button class="btn-ghost btn-sm" onclick="deselectAllCustomers()">✗ إلغاء</button>
+          <span id="custCount" style="font-size:.8rem;color:#7a8296;align-self:center"></span>
+        </div>
+      </div>
+      <div class="card">
+        <h2>📨 إرسال رسالة جماعية</h2>
+        <div class="hint">ستُفتح واتساب لكل عميل محدد بالرسالة المكتوبة.</div>
+        <label>نوع الإرسال</label>
+        <select id="msg-type">
+          <option value="whatsapp">واتساب</option>
+          <option value="email">إيميل (mailto)</option>
+        </select>
+        <label>الرسالة</label>
+        <textarea id="bulk-msg" placeholder="أهلاً {name}، لدينا عرض خاص لك...&#10;استخدم {name} لاسم العميل و{phone} لهاتفه" style="min-height:130px"></textarea>
+        <label>التأخير بين كل رسالة (ثانية)</label>
+        <input type="number" id="msg-delay" value="3" min="1" max="30">
+        <button class="btn-gold" style="width:100%;margin-top:14px" onclick="sendBulkMsg()">📤 إرسال للمحددين</button>
+        <div id="bulk-progress" style="margin-top:10px;font-size:.82rem;color:#7a8296"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ الإعدادات ============ -->
+  <div class="panel" id="panel-settings">
+    <div class="grid">
+      <div class="card">
+        <h2>📱 إعدادات واتساب والتواصل</h2>
+        <label>رقم واتساب (مع كود الدولة)</label>
+        <input type="text" id="s-wa" placeholder="971554423151">
+        <label>رابط إنستغرام</label>
+        <input type="text" id="s-instagram" placeholder="https://instagram.com/...">
+        <label>رابط فيسبوك</label>
+        <input type="text" id="s-facebook" placeholder="https://facebook.com/...">
+        <label>رابط تيك توك</label>
+        <input type="text" id="s-tiktok" placeholder="https://tiktok.com/...">
+        <label>رابط سناب شات</label>
+        <input type="text" id="s-snapchat" placeholder="https://snapchat.com/...">
+        <label>رابط يوتيوب</label>
+        <input type="text" id="s-youtube" placeholder="https://youtube.com/...">
+      </div>
+      <div class="card">
+        <h2>🏪 إعدادات المتجر</h2>
+        <label>اسم المتجر</label>
+        <input type="text" id="s-name" placeholder="Bariq">
+        <label>شعار المتجر (رابط)</label>
+        <input type="text" id="s-logo" placeholder="assets/logo.png">
+        <label>كلمة مرور لوحة التحكم</label>
+        <input type="password" id="s-pass" placeholder="••••••••">
+        <h2 style="margin-top:18px">🚚 إعدادات الشحن</h2>
+        <label>سياسة الشحن (نص)</label>
+        <textarea id="s-shipping" placeholder="يتم تحديد الشحن بعد تأكيد الطلب..." style="min-height:80px"></textarea>
+        <label>متوسط وقت التوصيل (أيام)</label>
+        <input type="text" id="s-delivery" placeholder="2-4 أيام عمل">
+        <label>الحد الأدنى للشحن المجاني (درهم)</label>
+        <input type="number" id="s-freeship" placeholder="200" min="0">
+      </div>
+    </div>
+    <div style="margin-top:16px;display:flex;gap:10px">
+      <button class="btn-gold" style="flex:1" onclick="saveSettings()">💾 حفظ جميع الإعدادات</button>
+      <button class="btn-ghost btn-sm" onclick="exportSettings()">⬇ تنزيل JSON</button>
+    </div>
+  </div>
+
+</div><!-- end wrap -->
 
 <script>
 /* ================= الحالة ================= */
@@ -619,6 +769,46 @@ function saveProduct(){
   renderProducts();
   resetForm();
   toast(editing?'تم تحديث المنتج':'تمت إضافة المنتج');
+
+  // ===== رفع المنتج لـ Supabase =====
+  if (window.Supabase) {
+    // فلتر الصور: استخدم URLs فقط (بدون base64)
+    const publicImgs = imgArr.filter(function(s){ return s && !s.startsWith('data:'); });
+    const sbProd = {
+      name:           { ar: nameAr, en: nameEn || nameAr },
+      desc:           { ar: $('p-desc').value.trim(), en: '' },
+      categoryId:     cats[0] ? null : null, // يمكن ربطه بـ id لاحقاً
+      price:          numOrUndef($('p-price').value)     || 0,
+      oldPrice:       numOrUndef($('p-oldprice').value)  || 0,
+      stock:          numOrUndef($('p-stock').value)     || 0,
+      img:            publicImgs[0] || '',
+      gallery:        publicImgs,
+      rating:         numOrUndef($('p-rating').value)    || 5,
+      featured:       false,
+      sort:           id,
+      timerEnd:       $('p-timerend').value ? new Date($('p-timerend').value).toISOString() : null
+    };
+    if (editing) {
+      // تحديث المنتج الموجود بالـ id
+      window.Supabase.Products.getById(id).then(function(existing) {
+        if (existing && existing.id) {
+          window.Supabase.Products.update(existing.id, {
+            name_ar: nameAr, name_en: nameEn || nameAr,
+            price: sbProd.price, old_price: sbProd.oldPrice,
+            stock: sbProd.stock, image: sbProd.img, gallery: sbProd.gallery,
+            rating: sbProd.rating, timer_end: sbProd.timerEnd,
+            updated_at: new Date().toISOString()
+          }).catch(function(){});
+        } else {
+          window.Supabase.Products.insert(sbProd).catch(function(){});
+        }
+      }).catch(function(){ window.Supabase.Products.insert(sbProd).catch(function(){}); });
+    } else {
+      window.Supabase.Products.insert(sbProd).then(function(){
+        toast('✅ تم حفظ المنتج في Supabase');
+      }).catch(function(e){ console.warn('Supabase product insert:', e.message); });
+    }
+  }
 }
 
 function editProduct(id){
@@ -653,6 +843,12 @@ function deleteProduct(id){
   saveLocal();
   renderProducts();
   toast('تم الحذف');
+  // حذف من Supabase
+  if (window.Supabase) {
+    window.Supabase.Products.getById(id).then(function(p) {
+      if (p && p.id) window.Supabase.Products.remove(p.id).catch(function(){});
+    }).catch(function(){});
+  }
 }
 
 function resetForm(){
@@ -908,6 +1104,33 @@ function saveOrders(o){ localStorage.setItem(LS_ORDERS, JSON.stringify(o)); }
 /* استيراد طلبات المتجر المكتملة (من صفحة الدفع) تلقائياً */
 const LS_STORE_ORDERS = 'x2_orders';
 function syncStoreOrders(silent){
+  // محاولة جلب الطلبات من Supabase أولاً
+  if (window.Supabase) {
+    window.Supabase.Orders.getAll().then(remote => {
+      if (remote && remote.length) {
+        // دمج مع الطلبات المحلية
+        const merged = remote.map(r => ({
+          id: r.id,
+          srcId: r.id,
+          customer: r.customer_name || 'عميل',
+          phone: r.customer_phone || '',
+          productName: (r.items||[]).map(i=>`${i.title||'منتج'}×${i.qty||1}`).join('، '),
+          qty: (r.items||[]).reduce((s,i)=>s+(Number(i.qty)||1),0) || 1,
+          unit: parseFloat(r.total) || 0,
+          total: parseFloat(r.total) || 0,
+          status: r.status || 'processing',
+          date: r.created_at,
+          items: r.items || [],
+          cashback: r.cashback,
+          cashbackStatus: r.cashback_status
+        }));
+        saveOrders(merged);
+        renderStats(); renderOrders();
+        if (!silent) toast('✅ تم تحديث الطلبات من Supabase');
+      }
+    }).catch(() => { /* فشل الاتصال - استخدم البيانات المحلية */ });
+  }
+
   let store=[];
   try{ store = JSON.parse(localStorage.getItem(LS_STORE_ORDERS)||'[]'); }catch(e){ store=[]; }
   const orders = getOrders();
@@ -1050,6 +1273,13 @@ function updateStoreOrderStatus(srcId, status){
         }catch(e2){}
       }
       localStorage.setItem(LS_STORE_ORDERS, JSON.stringify(store));
+      // تحديث Supabase
+      if (window.Supabase) {
+        window.Supabase.Orders.updateStatus(srcId, status).catch(() => {});
+        if (status === 'delivered' && s.cashback > 0) {
+          window.Supabase.Orders.updateCashback(srcId, 'earned').catch(() => {});
+        }
+      }
     }
   }catch(e){}
 }
@@ -1224,6 +1454,244 @@ function isoToLocalInput(iso){
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 function clearTimer(){ $('p-timerend').value=''; }
+
+/* ================= رفع كل المنتجات لـ Supabase ================= */
+async function pushAllProductsToSupabase() {
+  if (!window.Supabase) { toast('Supabase غير متصل'); return; }
+  if (!confirm('رفع '+products.length+' منتج لـ Supabase؟ قد يستغرق وقتاً.')) return;
+  var ok=0, fail=0;
+  toast('جارٍ الرفع...');
+  for (var i=0; i<products.length; i++) {
+    var p = products[i];
+    try {
+      var imgs = (Array.isArray(p.img)?p.img:[p.img||''].filter(Boolean)).filter(function(s){return s&&!s.startsWith('data:');});
+      await window.Supabase.Products.insert({name:p.name,desc:p.desc||'',price:parseFloat(p.price)||0,oldPrice:parseFloat(p.oldPrice)||0,stock:parseInt(p.stock)||0,img:imgs,rating:parseFloat(p.rating)||5,sort:Number(p.id)||i,timerEnd:p.timerEnd||null});
+      ok++;
+    } catch(e) { fail++; }
+  }
+  toast('✅ رُفع '+ok+' منتج'+(fail?' — فشل '+fail+' منتج':''));
+}
+
+/* ================= بدء ================= */
+(async function init(){
+  await loadCategories();
+  await loadProducts();
+  fillProductSelects();
+  syncStoreOrders(true);
+})();
+
+/* ================================================================
+   الفئات
+================================================================ */
+function renderAdminCategories() {
+  const list = $('catList');
+  if (!list) return;
+  if (!categories.length) { list.innerHTML = '<div class="empty">لا توجد فئات</div>'; return; }
+  list.innerHTML = categories.map((cat, ci) => {
+    const name = getT(cat.name) || cat.categorySlug;
+    const subs = (cat.subcategories||[]).map(s => `<div class="cat-item sub">↳ ${getT(s.name)||s.categorySlug}</div>`).join('');
+    return `<div class="cat-item" style="flex-direction:column;align-items:flex-start;padding:8px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px">
+      <div style="display:flex;align-items:center;gap:10px;width:100%">
+        ${cat.image ? `<img src="${cat.image}" style="width:32px;height:32px;border-radius:6px;object-fit:cover" onerror="this.style.display='none'">` : ''}
+        <b style="flex:1;color:var(--navy)">${name}</b>
+        <small style="color:#9aa2b4">${(cat.subcategories||[]).length} فئة فرعية</small>
+      </div>
+      ${subs}
+    </div>`;
+  }).join('');
+}
+
+function addTempCategory() {
+  const ar = $('nc-ar').value.trim(), en = $('nc-en').value.trim(), slug = $('nc-slug').value.trim(), img = $('nc-img').value.trim();
+  if (!ar || !slug) { toast('أدخل الاسم العربي والـ slug'); return; }
+  const newCat = { name:{ar,en:en||ar}, categorySlug:slug, image:img, url:`/categories/${slug}`, subcategories:[] };
+  categories.push(newCat);
+  renderAdminCategories();
+  toast('تمت الإضافة مؤقتاً — نزّل JSON للحفظ الدائم');
+}
+
+function exportCatsJSON() {
+  download('Categories.json', JSON.stringify(categories, null, 2));
+  toast('تم تنزيل Categories.json');
+}
+
+/* ================================================================
+   العروض والبنرات
+================================================================ */
+const LS_BANNERS = 'x2_banners';
+const LS_FEATURED = 'x2_featured_ids';
+
+function getBanners() { try { return JSON.parse(localStorage.getItem(LS_BANNERS)||'[]'); } catch(e) { return []; } }
+function saveBannersLS(arr) { localStorage.setItem(LS_BANNERS, JSON.stringify(arr)); }
+
+function saveBanner() {
+  const title=$('bn-title').value.trim(), sub=$('bn-sub').value.trim(), img=$('bn-img').value.trim(), link=$('bn-link').value.trim(), order=Number($('bn-order').value)||1;
+  if (!title) { toast('أدخل عنوان البنر'); return; }
+  const banners = getBanners();
+  banners.push({ id: Date.now(), title, sub, img, link, order, active:true });
+  banners.sort((a,b)=>a.order-b.order);
+  saveBannersLS(banners);
+  renderBanners(); clearBannerForm(); toast('تم حفظ البنر');
+}
+function clearBannerForm() { ['bn-title','bn-sub','bn-img','bn-link'].forEach(id=>$(id).value=''); $('bn-order').value=1; }
+
+function renderBanners() {
+  const list = $('bannerList'); if (!list) return;
+  const banners = getBanners();
+  if (!banners.length) { list.innerHTML='<div class="empty">لا توجد بنرات</div>'; return; }
+  list.innerHTML = banners.map(b => `
+    <div class="prod-row">
+      ${b.img?`<img src="${b.img}" onerror="this.style.display='none'">`:'<span style="font-size:1.5rem">🖼️</span>'}
+      <div class="info" style="flex:1">
+        <b>${esc(b.title)}</b>
+        <small>${esc(b.sub||'')} • رابط: ${esc(b.link||'-')} • ترتيب: ${b.order}</small>
+      </div>
+      <label style="margin:0;display:flex;align-items:center;gap:5px;font-size:.8rem">
+        <input type="checkbox" ${b.active?'checked':''} onchange="toggleBanner(${b.id},this.checked)"> نشط
+      </label>
+      <button class="btn-danger btn-sm" onclick="deleteBanner(${b.id})">🗑</button>
+    </div>`).join('');
+}
+
+function toggleBanner(id, active) {
+  const banners = getBanners(); const b = banners.find(x=>x.id===id); if(b) b.active=active; saveBannersLS(banners); toast(active?'مفعّل':'معطّل');
+}
+function deleteBanner(id) { saveBannersLS(getBanners().filter(b=>b.id!==id)); renderBanners(); toast('تم الحذف'); }
+function clearAllBanners() { if(!confirm('مسح كل البنرات؟')) return; localStorage.removeItem(LS_BANNERS); renderBanners(); toast('تم مسح الكل'); }
+function exportBanners() { download('banners.json', JSON.stringify(getBanners(),null,2)); toast('تم التنزيل'); }
+
+let featuredIds = new Set();
+function getFeaturedIds() { try { return new Set(JSON.parse(localStorage.getItem(LS_FEATURED)||'[]')); } catch(e) { return new Set(); } }
+
+function renderFeaturedPicker() {
+  const q = ($('fe-search').value||'').toLowerCase();
+  const list = $('featuredPicker'); if (!list) return;
+  featuredIds = getFeaturedIds();
+  const filtered = products.filter(p => !q || getT(p.name).toLowerCase().includes(q)).slice(0,20);
+  if (!filtered.length) { list.innerHTML='<div class="empty">لا توجد منتجات</div>'; return; }
+  list.innerHTML = filtered.map(p => {
+    const name = getT(p.name); const checked = featuredIds.has(String(p.id));
+    return `<div class="prod-row">
+      <input type="checkbox" ${checked?'checked':''} onchange="toggleFeatured('${p.id}',this.checked)" style="width:auto">
+      <div class="info"><b>${esc(name)}</b><small>${p.price||''} د.إ</small></div>
+    </div>`;
+  }).join('');
+}
+function toggleFeatured(id, checked) { if(checked) featuredIds.add(String(id)); else featuredIds.delete(String(id)); }
+function saveFeatured() { localStorage.setItem(LS_FEATURED, JSON.stringify([...featuredIds])); toast('تم حفظ المنتجات المميزة'); }
+
+/* ================================================================
+   العملاء
+================================================================ */
+let selectedCustomers = new Set();
+
+function getCustomers() {
+  const orders = JSON.parse(localStorage.getItem('x2_orders')||'[]');
+  const map = {};
+  orders.forEach(o => {
+    const profile = (() => { try { return JSON.parse(localStorage.getItem('x2_profile')||'{}'); }catch(e){return{};} })();
+    const name = o.customerName || profile.name || '—';
+    const phone = o.customerPhone || profile.phone || '';
+    const email = o.customerEmail || profile.email || '';
+    const key = phone || name;
+    if (!map[key]) map[key] = { name, phone, email, orders:[], statuses:new Set() };
+    map[key].orders.push(o);
+    map[key].statuses.add(o.status||'processing');
+  });
+  return Object.values(map);
+}
+
+function renderCustomers() {
+  const q = ($('cust-search').value||'').toLowerCase();
+  const statusFilter = $('cust-filter').value;
+  const list = $('custList'); if (!list) return;
+  let custs = getCustomers().filter(c => {
+    const matchQ = !q || c.name.toLowerCase().includes(q) || c.phone.includes(q);
+    const matchS = !statusFilter || [...c.statuses].some(s=>s===statusFilter);
+    return matchQ && matchS;
+  });
+  $('custCount').textContent = `${custs.length} عميل`;
+  if (!custs.length) { list.innerHTML='<div class="empty">لا يوجد عملاء</div>'; return; }
+  list.innerHTML = custs.map((c,i) => `
+    <div class="prod-row">
+      <input type="checkbox" style="width:auto" ${selectedCustomers.has(i)?'checked':''} onchange="toggleCust(${i},this.checked)">
+      <div class="info">
+        <b>${esc(c.name)}</b>
+        <small>📱 ${c.phone||'—'} ${c.email?'• 📧 '+c.email:''} • ${c.orders.length} طلب</small>
+      </div>
+      <a href="https://wa.me/${(c.phone||'').replace(/\D/g,'')}" target="_blank" class="btn-gold btn-sm" style="text-decoration:none;${!c.phone?'opacity:.4;pointer-events:none':''}">💬</a>
+    </div>`).join('');
+}
+
+function toggleCust(i, checked) { if(checked) selectedCustomers.add(i); else selectedCustomers.delete(i); }
+function selectAllCustomers() {
+  const custs = getCustomers();
+  custs.forEach((_,i) => selectedCustomers.add(i));
+  renderCustomers(); document.querySelectorAll('#custList input[type=checkbox]').forEach(cb=>cb.checked=true);
+}
+function deselectAllCustomers() { selectedCustomers.clear(); renderCustomers(); }
+
+let bulkIdx = 0, bulkList = [];
+function sendBulkMsg() {
+  const msg = $('bulk-msg').value.trim();
+  const type = $('msg-type').value;
+  const delay = Number($('msg-delay').value)||3;
+  if (!msg) { toast('اكتب الرسالة أولاً'); return; }
+  const custs = getCustomers();
+  bulkList = [...selectedCustomers].map(i=>custs[i]).filter(Boolean);
+  if (!bulkList.length) { toast('اختر عملاء أولاً'); return; }
+  bulkIdx = 0;
+  sendNextMsg(msg, type, delay);
+}
+function sendNextMsg(msg, type, delay) {
+  if (bulkIdx >= bulkList.length) { $('bulk-progress').textContent = `✅ تم الإرسال لـ ${bulkList.length} عميل`; return; }
+  const c = bulkList[bulkIdx];
+  const text = msg.replace('{name}', c.name||'عميل').replace('{phone}', c.phone||'');
+  $('bulk-progress').textContent = `إرسال ${bulkIdx+1}/${bulkList.length}: ${c.name}`;
+  if (type === 'whatsapp' && c.phone) {
+    window.open(`https://wa.me/${c.phone.replace(/\D/g,'')}?text=${encodeURIComponent(text)}`, '_blank','noopener');
+  } else if (type === 'email' && c.email) {
+    window.open(`mailto:${c.email}?body=${encodeURIComponent(text)}`, '_blank');
+  }
+  bulkIdx++;
+  setTimeout(() => sendNextMsg(msg, type, delay), delay * 1000);
+}
+
+/* ================================================================
+   الإعدادات
+================================================================ */
+const LS_SETTINGS = 'x2_settings';
+function getSettings() { try { return JSON.parse(localStorage.getItem(LS_SETTINGS)||'{}'); } catch(e) { return {}; } }
+
+function loadSettings() {
+  const s = getSettings();
+  const ids = ['wa','instagram','facebook','tiktok','snapchat','youtube','name','logo','pass','shipping','delivery','freeship'];
+  ids.forEach(id => { const el=$('s-'+id); if(el && s[id]!==undefined) el.value=s[id]; });
+}
+
+function saveSettings() {
+  const s = {};
+  const ids = ['wa','instagram','facebook','tiktok','snapchat','youtube','name','logo','pass','shipping','delivery','freeship'];
+  ids.forEach(id => { const el=$('s-'+id); if(el) s[id]=el.value; });
+  localStorage.setItem(LS_SETTINGS, JSON.stringify(s));
+  // تحديث GATE_PASS لو تغيّر
+  if (s.pass) { window.__adminPass = s.pass; }
+  toast('✅ تم حفظ الإعدادات');
+}
+
+function exportSettings() { download('settings.json', JSON.stringify(getSettings(),null,2)); toast('تم التنزيل'); }
+
+/* ================================================================
+   تحديث switchTab لتشمل التابات الجديدة
+================================================================ */
+const _origSwitchTab = window.switchTab;
+window.switchTab = function(name) {
+  _origSwitchTab && _origSwitchTab(name);
+  if (name === 'categories') { renderAdminCategories(); }
+  if (name === 'banners') { renderBanners(); renderFeaturedPicker(); }
+  if (name === 'customers') { selectedCustomers.clear(); renderCustomers(); }
+  if (name === 'settings') { loadSettings(); }
+};
 
 /* ================= بدء ================= */
 (async function init(){
