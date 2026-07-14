@@ -1077,23 +1077,37 @@ function saveProduct(){
     const idx = products.findIndex(p=>Number(p.id)===id);
     const existingSupaId = idx>=0 ? products[idx].supabaseId : null;
 
-    if (existingSupaId) {
-      // منتج معروف الـ Supabase ID الخاص به - تحديث مباشر
-      window.Supabase.Products.update(existingSupaId, sbUpdate)
-        .then(function(){ toast('✅ تم تحديث المنتج في Supabase'); })
-        .catch(function(e){ toast('⚠️ خطأ Supabase: ' + e.message); });
-    } else {
-      // منتج جديد - أدخله واحفظ الـ Supabase ID الذي يرجعه
-      window.Supabase.Products.insert(sbProd)
-        .then(function(res){
-          toast('✅ تم حفظ المنتج في Supabase');
-          if (Array.isArray(res) && res[0] && res[0].id && idx>=0) {
-            products[idx].supabaseId = res[0].id;
-            saveLocal();
-          }
-        })
-        .catch(function(e){ toast('⚠️ خطأ Supabase: ' + e.message); });
-    }
+    (async function syncToSupabase() {
+      let targetId = existingSupaId;
+
+      // لو مفيش supabaseId محفوظ محلياً، حاول تطابق بالاسم لمنع التكرار
+      if (!targetId && editing) {
+        try {
+          const allSb = await window.Supabase.Products.getAll(1000);
+          const match = (allSb||[]).find(function(sp){ return sp.name_ar && sp.name_ar.trim() === nameAr.trim(); });
+          if (match) targetId = match.id;
+        } catch(e) {}
+      }
+
+      if (targetId) {
+        window.Supabase.Products.update(targetId, sbUpdate)
+          .then(function(){
+            toast('✅ تم تحديث المنتج في Supabase');
+            if (idx>=0) { products[idx].supabaseId = targetId; saveLocal(); }
+          })
+          .catch(function(e){ toast('⚠️ خطأ Supabase: ' + e.message); });
+      } else {
+        window.Supabase.Products.insert(sbProd)
+          .then(function(res){
+            toast('✅ تم حفظ المنتج في Supabase');
+            if (Array.isArray(res) && res[0] && res[0].id && idx>=0) {
+              products[idx].supabaseId = res[0].id;
+              saveLocal();
+            }
+          })
+          .catch(function(e){ toast('⚠️ خطأ Supabase: ' + e.message); });
+      }
+    })();
   }
 }
 
