@@ -1,5 +1,26 @@
 ﻿// الترجمة والعملة
 document.addEventListener("DOMContentLoaded", () => {
+
+  // إخفاء الصور المكسورة (404) تلقائياً
+  document.querySelectorAll('img').forEach(function(img) {
+    img.addEventListener('error', function() {
+      this.setAttribute('data-broken', '1');
+    }, { once: true });
+  });
+  // مراقبة الصور المضافة لاحقاً بـ JS
+  const imgObserver = new MutationObserver(function(mutations) {
+    mutations.forEach(function(m) {
+      m.addedNodes.forEach(function(node) {
+        if (!node.querySelectorAll) return;
+        node.querySelectorAll('img').forEach(function(img) {
+          img.addEventListener('error', function() {
+            this.setAttribute('data-broken', '1');
+          }, { once: true });
+        });
+      });
+    });
+  });
+  imgObserver.observe(document.body, { childList: true, subtree: true });
   const lang = localStorage.getItem("lang") || "ar";
   const currency = localStorage.getItem("currency") || "درهم";
   const elements = document.querySelectorAll("[data-i18n]");
