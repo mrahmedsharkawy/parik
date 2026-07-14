@@ -262,6 +262,10 @@
         <div class="cat-box" id="catBox"><div class="empty">جاري تحميل الأقسام…</div></div>
 
         <label>الصور والفيديوهات</label>
+        <div class="hint" style="margin-bottom:8px">
+          ⚠️ الصور المرفوعة من جهازك تظهر لك فقط في هذا المتصفح. لتظهر لكل الزوار
+          <b>استخدم رابط URL</b> (ارفع الصورة على موقع مثل imgur.com ثم الصق الرابط بالأسفل).
+        </div>
         <div class="media-drop" id="mediaDrop">
           📷 اضغط لرفع صور/فيديوهات (يمكن اختيار أكثر من ملف)
           <input type="file" id="mediaInput" accept="image/*,video/*" multiple hidden>
@@ -886,19 +890,22 @@ async function reloadFromFile(silent){
 }
 
 function saveLocal(){
-  // احفظ نسخة مخففة (بدون base64) في localStorage لتوفير المساحة
-  const lightweight = products.map(function(p) {
-    const imgs = (Array.isArray(p.img) ? p.img : [p.img]).filter(function(s){ return s && !s.startsWith('data:'); });
-    return Object.assign({}, p, { img: imgs });
-  });
   try {
-    localStorage.setItem(LS_PRODUCTS, JSON.stringify(lightweight));
+    localStorage.setItem(LS_PRODUCTS, JSON.stringify(products));
   } catch(e) {
-    // لو ممتلئ، احذف نصف المنتجات القديمة وحاول مجدداً
+    // المساحة ممتلئة - احذف الصور من أقدم المنتجات فقط (وليس كلها) للحفاظ على الأحدث
     try {
-      localStorage.setItem(LS_PRODUCTS, JSON.stringify(lightweight.slice(0, Math.ceil(lightweight.length/2))));
-      toast('⚠️ المساحة محدودة - تم حفظ جزء من المنتجات فقط. استخدم روابط URL بدل رفع الصور.');
-    } catch(e2) {}
+      const trimmed = products.map(function(p, i) {
+        // أبقِ صور آخر 5 منتجات فقط، واحذف base64 من الباقي
+        if (i < 5) return p;
+        const imgs = (Array.isArray(p.img) ? p.img : [p.img]).filter(function(s){ return s && !s.startsWith('data:'); });
+        return Object.assign({}, p, { img: imgs });
+      });
+      localStorage.setItem(LS_PRODUCTS, JSON.stringify(trimmed));
+      toast('⚠️ المساحة محدودة - احتُفظ بصور أحدث 5 منتجات فقط. استخدم روابط URL للصور القديمة.');
+    } catch(e2) {
+      toast('❌ فشل الحفظ - امسح بعض المنتجات أو استخدم روابط URL بدل رفع الصور');
+    }
   }
   // مسح cache المنتجات عشان التغييرات تظهر فوراً في الموقع
   try { sessionStorage.removeItem('x2_prods_ss'); } catch(e) {}
@@ -926,12 +933,36 @@ function setSelectedCats(arr){
 }
 
 /* ================= الوسائط ================= */
+function compressImage(dataUrl, maxW, quality){
+  return new Promise(function(resolve){
+    const img = new Image();
+    img.onload = function(){
+      let w = img.width, h = img.height;
+      if (w > maxW) { h = Math.round(h * (maxW / w)); w = maxW; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = function(){ resolve(dataUrl); };
+    img.src = dataUrl;
+  });
+}
 $('mediaDrop').addEventListener('click',()=> $('mediaInput').click());
 $('mediaInput').addEventListener('change',e=>{
   const files = Array.from(e.target.files||[]);
   files.forEach(f=>{
     const reader = new FileReader();
-    reader.onload = ()=>{ currentMedia.push({ type: f.type.startsWith('video')?'video':'image', src: reader.result }); renderMedia(); };
+    reader.onload = async ()=>{
+      if (f.type.startsWith('video')) {
+        currentMedia.push({ type:'video', src: reader.result });
+      } else {
+        // ضغط الصورة لتقليل حجم base64 وتفادي امتلاء المساحة
+        const compressed = await compressImage(reader.result, 700, 0.72);
+        currentMedia.push({ type:'image', src: compressed });
+      }
+      renderMedia();
+    };
     reader.readAsDataURL(f);
   });
   e.target.value='';
