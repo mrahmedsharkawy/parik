@@ -903,78 +903,75 @@ function updateSelectedCount() {
     const url = `https://wa.me/${phone}?text=${msg}`;
     window.open(url, '_blank', 'noopener');
 
-    // إضافة الطلب مع الكاش باك "معلّق" — يُضاف للرصيد بعد تأكيد التسليم
+    // إضافة الطلب — في try/catch منفصلة لكل خطوة حتى لا يوقف خطأ واحد الباقي
+    const summaryTotal = readSummaryValue();
+    const calcTotal = items.reduce((s,i) => s + ((i.unit || parseFloat(i.price||i.priceCurrent||0)) * (Number(i.qty)||1)), 0);
+    const totalAmt = (summaryTotal > 0 ? summaryTotal : calcTotal).toFixed(2);
+    const expiresAt = new Date(Date.now() + 30*24*60*60*1000).toISOString();
+
+    // --- الخطوة 1: رقم الطلب ---
+    let orderId;
     try {
-      const CB_KEY = 'x2_cashback';
-      const summaryTotal = readSummaryValue();
-      const calcTotal = items.reduce((s,i) => s + ((i.unit || parseFloat(i.price||i.priceCurrent||0)) * (Number(i.qty)||1)), 0);
-      const totalAmt = (summaryTotal > 0 ? summaryTotal : calcTotal).toFixed(2);
-      const expiresAt = new Date(Date.now() + 30*24*60*60*1000).toISOString();
-
-      // جلب رقم الطلب العالمي من Supabase (متسلسل عبر كل العملاء)
-      let orderId = null;
       if (window.Supabase && window.Supabase.Counter) {
-        try {
-          orderId = await window.Supabase.Counter.nextOrderNumber();
-        } catch(e) {}
-      }
-      // fallback محلي لو Supabase مش متاح
-      if (!orderId) {
-        const lastNum = parseInt(localStorage.getItem('x2_order_counter') || '999', 10);
-        const nextNum = lastNum + 1;
-        localStorage.setItem('x2_order_counter', String(nextNum));
-        orderId = '#' + nextNum;
-      }
-
-      const orderItems = items.slice(0,2).map(i => i.title || i.name || 'منتج').join(' · ');
-      // حفظ الطلب في x2_orders مع الـ id لكل منتج
-      const orders = JSON.parse(localStorage.getItem('x2_orders') || '[]');
-      orders.unshift({
-        id: orderId,
-        date: new Date().toISOString(),
-        cashback: 5,
-        cashbackStatus: 'pending', // يُضاف للرصيد فقط بعد تأكيد التسليم
-        cashbackExpiresAt: expiresAt,
-        items: items.map(i => {
-          const rawImg = i.image || i.img || '';
-          const pid = i.productId || (i.productUrl ? (() => { try { return new URL(i.productUrl).searchParams.get('id') || ''; } catch(e) { return ''; } })() : '');
-          return { id: pid, title: i.title || i.name || 'منتج', qty: i.qty, img: rawImg && !rawImg.startsWith('data:') ? rawImg : '' };
-        }),
-        total: totalAmt,
-        status: 'processing'
-      });
-      localStorage.setItem('x2_orders', JSON.stringify(orders));
-      // رفع الطلب لـ Supabase (غير متزامن - لا يوقف العملية)
-      if (window.Supabase) {
-        const profile = (() => { try { return JSON.parse(localStorage.getItem('x2_profile')||'{}'); } catch(e){ return {}; } })();
-        const newOrder = orders[0];
-        window.Supabase.Orders.insert({
-          ...newOrder,
-          customerName:  profile.name  || '',
-          customerPhone: profile.phone || '',
-          customerEmail: profile.email || '',
-          address:       profile.address_full || null
-        }).then(() => {
-          // تعليم الطلب كمرفوع لمنع رفعه مرة أخرى من pushLocalOrders
-          try {
-            const cur = JSON.parse(localStorage.getItem('x2_orders')||'[]');
-            const idx = cur.findIndex(o => o.id === orderId);
-            if (idx !== -1) cur[idx]._synced = true;
-            localStorage.setItem('x2_orders', JSON.stringify(cur));
-            const synced = JSON.parse(localStorage.getItem('x2_orders_synced')||'[]');
-            if (synced.indexOf(orderId) === -1) synced.push(orderId);
-            localStorage.setItem('x2_orders_synced', JSON.stringify(synced));
-          } catch(e) {}
-        }).catch(() => {});
-        // إشعار للأدمن
-        window.Supabase.Notifications.insert({
-          type: 'order_new', icon: '📦',
-          title: `طلب جديد ${orderId}`,
-          msg: `${profile.name||'عميل'} - ${totalAmt} د.إ`,
-          orderId
-        }).catch(() => {});
+        orderId = await window.Supabase.Counter.nextOrderNumber();
       }
     } catch(e) {}
+    if (!orderId) {
+      const lastNum = parseInt(localStorage.getItem('x2_order_counter') || '999', 10);
+      localStorage.setItem('x2_order_counter', String(lastNum + 1));
+      orderId = '#' + (lastNum + 1);
+    }
+
+    // --- الخطوة 2: حفظ الطلب محلياً ---
+    const newOrderObj = {
+      id: orderId,
+      date: new Date().toISOString(),
+      cashback: 5,
+      cashbackStatus: 'pending',
+      cashbackExpiresAt: expiresAt,
+      items: items.map(i => {
+        const rawImg = i.image || i.img || '';
+        const pid = i.productId || (i.productUrl ? (() => { try { return new URL(i.productUrl).searchParams.get('id') || ''; } catch(e) { return ''; } })() : '');
+        return { id: pid, title: i.title || i.name || 'منتج', qty: i.qty, img: rawImg && !rawImg.startsWith('data:') ? rawImg : '' };
+      }),
+      total: totalAmt,
+      status: 'processing'
+    };
+    try {
+      const orders = JSON.parse(localStorage.getItem('x2_orders') || '[]');
+      orders.unshift(newOrderObj);
+      localStorage.setItem('x2_orders', JSON.stringify(orders));
+    } catch(e) {}
+
+    // --- الخطوة 3: رفع الطلب لـ Supabase ---
+    if (window.Supabase) {
+      const profile = (() => { try { return JSON.parse(localStorage.getItem('x2_profile')||'{}'); } catch(e){ return {}; } })();
+      window.Supabase.Orders.insert({
+        ...newOrderObj,
+        customerName:  profile.name  || '',
+        customerPhone: profile.phone || '',
+        customerEmail: profile.email || '',
+        address:       profile.address_full || null
+      }).then(() => {
+        try {
+          const cur = JSON.parse(localStorage.getItem('x2_orders')||'[]');
+          const idx = cur.findIndex(o => o.id === orderId);
+          if (idx !== -1) cur[idx]._synced = true;
+          localStorage.setItem('x2_orders', JSON.stringify(cur));
+          const synced = JSON.parse(localStorage.getItem('x2_orders_synced')||'[]');
+          if (synced.indexOf(orderId) === -1) synced.push(orderId);
+          localStorage.setItem('x2_orders_synced', JSON.stringify(synced));
+        } catch(e) {}
+      }).catch(err => { console.error('فشل إرسال الطلب لـ Supabase:', err); });
+
+      // إشعار للأدمن (اختياري - لا يوقف العملية لو فشل)
+      window.Supabase.Notifications && window.Supabase.Notifications.insert({
+        type: 'order_new', icon: '📦',
+        title: `طلب جديد ${orderId}`,
+        msg: `${profile.name||'عميل'} - ${totalAmt} د.إ`,
+        orderId
+      }).catch(() => {});
+    }
 
     // ===== استهلاك كوبون الخصم وتصفير الكاش باك =====
     try {
