@@ -536,6 +536,8 @@ videoContainer.addEventListener('mouseleave', function() {
   img.alt = getTranslated(prod.name);
   img.loading = "lazy";
   img.decoding = "async";
+  img.width = 230;
+  img.height = 230;
   img.style.height = "230px";
   img.style.objectFit = "cover";
   img.style.backgroundColor = "#f0f0f0";

@@ -9,6 +9,11 @@ img,video{max-width:100%;height:auto;border-radius: 3px;}
 img[width][height]{aspect-ratio:attr(width number)/attr(height number)}
 /* إخفاء الصور المكسورة */
 img.broken, img[data-broken="1"] { display:none !important; }
+
+/* أبعاد صريحة للصور لمنع CLS */
+.subcategories li img { width: 150px; height: 150px; }
+.dp-img { width: 100%; aspect-ratio: 1/1; object-fit: cover; background: #f0f0f0; }
+
 /* حجز مبدئي لشريط الفلاتر */
 #filtersWrap,.filters-scroll-container{min-height:44px}
 * {
