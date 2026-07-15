@@ -169,6 +169,93 @@ const SupaAuth = {
   }
 };
 
+/* === COUPONS (code, type, value, min_order, expiry, max_use, used_count, active) === */
+const SupaCoupons = {
+  getAll: async function(){ return sbFetch('coupons?order=created_at.desc'); },
+  getActive: async function(){ return sbFetch('coupons?active=eq.true&order=created_at.desc'); },
+  getByCode: async function(code){ 
+    const r = await sbFetch('coupons?code=eq.'+encodeURIComponent(code.toUpperCase())+'&limit=1'); 
+    return r&&r[0]?r[0]:null; 
+  },
+  insert: async function(c){
+    return sbFetch('coupons',{method:'POST',body:JSON.stringify({
+      code: (c.code||'').toUpperCase(),
+      type: c.type||'percent',
+      value: parseFloat(c.value)||0,
+      min_order: parseFloat(c.minOrder)||0,
+      expiry: c.expiry||null,
+      max_use: parseInt(c.maxUse)||0,
+      used_count: 0,
+      active: c.active !== false
+    })});
+  },
+  update: async function(id, d){ return sbFetch('coupons?id=eq.'+id,{method:'PATCH',body:JSON.stringify(d)}); },
+  updateByCode: async function(code, d){ return sbFetch('coupons?code=eq.'+encodeURIComponent(code.toUpperCase()),{method:'PATCH',body:JSON.stringify(d)}); },
+  remove: async function(id){ return sbFetch('coupons?id=eq.'+id,{method:'DELETE'}); },
+  incrementUsage: async function(code){ 
+    const c = await this.getByCode(code);
+    if(c) return sbFetch('coupons?id=eq.'+c.id,{method:'PATCH',body:JSON.stringify({used_count: (c.used_count||0)+1})});
+  }
+};
+
+/* === CAMPAIGNS (name, description, banner, start_date, end_date, discount, active) === */
+const SupaCampaigns = {
+  getAll: async function(){ return sbFetch('campaigns?order=created_at.desc'); },
+  getActive: async function(){ 
+    const now = new Date().toISOString();
+    return sbFetch('campaigns?active=eq.true&or=(start_date.is.null,start_date.lte.'+now+')&or=(end_date.is.null,end_date.gte.'+now+')&order=created_at.desc'); 
+  },
+  insert: async function(c){
+    return sbFetch('campaigns',{method:'POST',body:JSON.stringify({
+      name: c.name||'',
+      description: c.desc||c.description||'',
+      banner: c.banner||'',
+      start_date: c.start||c.start_date||null,
+      end_date: c.end||c.end_date||null,
+      discount: parseFloat(c.discount)||0,
+      active: c.active !== false
+    })});
+  },
+  update: async function(id, d){ return sbFetch('campaigns?id=eq.'+id,{method:'PATCH',body:JSON.stringify(d)}); },
+  remove: async function(id){ return sbFetch('campaigns?id=eq.'+id,{method:'DELETE'}); }
+};
+
+/* === VISITORS (للإحصائيات) === */
+const SupaVisitors = {
+  getAll: async function(limit){ return sbFetch('visitors?order=visited_at.desc&limit='+(limit||500)); },
+  getToday: async function(){
+    const today = new Date().toISOString().slice(0,10);
+    return sbFetch('visitors?visited_at=gte.'+today+'T00:00:00&order=visited_at.desc');
+  },
+  insert: async function(v){
+    return sbFetch('visitors',{method:'POST',body:JSON.stringify({
+      page: v.page||'/',
+      ip: v.ip||'',
+      country: v.country||'',
+      city: v.city||'',
+      user_agent: v.userAgent||navigator.userAgent||''
+    })});
+  },
+  getStats: async function(){
+    const all = await this.getAll(10000);
+    const today = new Date().toDateString();
+    const todayCount = (all||[]).filter(v => new Date(v.visited_at).toDateString() === today).length;
+    return { total: (all||[]).length, today: todayCount, data: all||[] };
+  }
+};
+
+/* === تحديث ORDERS بدوال إضافية === */
+SupaOrders.update = async function(id, d){ return sbFetch('orders?id=eq.'+id,{method:'PATCH',body:JSON.stringify(d)}); };
+SupaOrders.remove = async function(id){ return sbFetch('orders?id=eq.'+id,{method:'DELETE'}); };
+SupaOrders.getById = async function(id){ const r = await sbFetch('orders?id=eq.'+id+'&limit=1'); return r&&r[0]?r[0]:null; };
+SupaOrders.getByOrderNumber = async function(num){ const r = await sbFetch('orders?order_number=eq.'+encodeURIComponent(num)+'&limit=1'); return r&&r[0]?r[0]:null; };
+
+/* === تحديث CUSTOMERS بدوال إضافية === */
+SupaCustomers.update = async function(id, d){ return sbFetch('customers?id=eq.'+id,{method:'PATCH',body:JSON.stringify(d)}); };
+SupaCustomers.block = async function(id){ return sbFetch('customers?id=eq.'+id,{method:'PATCH',body:JSON.stringify({blocked:true})}); };
+SupaCustomers.unblock = async function(id){ return sbFetch('customers?id=eq.'+id,{method:'PATCH',body:JSON.stringify({blocked:false})}); };
+SupaCustomers.getBlocked = async function(){ return sbFetch('customers?blocked=eq.true&order=created_at.desc'); };
+
 /* === STORAGE (رفع الصور والملفات إلى Supabase Storage) === */
 const BUCKET_NAME = 'products';
 const SupaStorage = {
@@ -210,6 +297,19 @@ const SupaStorage = {
   }
 };
 
-window.Supabase = { Orders:SupaOrders, Customers:SupaCustomers, Categories:SupaCategories, Subcategories:SupaSubcategories, Products:SupaProducts, Settings:SupaSettings, Sync:SupaSync, Auth:SupaAuth, Storage:SupaStorage };
+window.Supabase = { 
+  Orders: SupaOrders, 
+  Customers: SupaCustomers, 
+  Categories: SupaCategories, 
+  Subcategories: SupaSubcategories, 
+  Products: SupaProducts, 
+  Settings: SupaSettings, 
+  Sync: SupaSync, 
+  Auth: SupaAuth, 
+  Storage: SupaStorage,
+  Coupons: SupaCoupons,
+  Campaigns: SupaCampaigns,
+  Visitors: SupaVisitors
+};
 
 window.addEventListener('load',function(){ setTimeout(function(){ SupaSync.loadSettings(); SupaSync.pushLocalOrders(); },2000); });

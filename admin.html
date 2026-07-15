@@ -418,7 +418,8 @@
             <option value="returned">↩ مرتجع</option>
           </select>
           <button class="btn-ghost btn-sm" onclick="clearOrderFilters()">✕ مسح الفلاتر</button>
-          <button class="btn-navy btn-sm" onclick="syncStoreOrders()">↻ مزامنة طلبات المتجر</button>
+          <button class="btn-navy btn-sm" onclick="syncStoreOrders()">↻ مزامنة من Supabase</button>
+          <button class="btn-danger btn-sm" onclick="clearFakeOrders()" title="مسح البيانات التجريبية من localStorage">🗑️ مسح البيانات المحلية</button>
           <button class="btn-gold btn-sm" onclick="exportOrders()">⬇ تنزيل orders.json</button>
         </div>
         <div class="plist" id="ordList"><div class="empty">لا توجد طلبات</div></div>
@@ -1744,13 +1745,14 @@ function renderComments(){
 }
 function exportComments(){ download('reviews.json', JSON.stringify(getReviews(),null,2)); toast('تم تنزيل reviews.json'); }
 
-/* ================= الطلبات والمبيعات ================= */
+/* ================= الطلبات والمبيعات (متزامنة مع Supabase) ================= */
 const LS_ORDERS = 'admin_orders';
 let currentPeriod = 'day';
 let ordPage = 1;               // صفحة الطلبات الحالية
 const ORDER_PAGE_SIZE = 3;     // عدد الطلبات في كل صفحة
 const STATUS = {
   pending:  {label:'قيد الانتظار', cls:'st-pending'},
+  processing:{label:'قيد المعالجة', cls:'st-pending'},
   confirmed:{label:'مؤكد',        cls:'st-confirmed'},
   shipped:  {label:'تم الشحن',     cls:'st-shipped'},
   delivered:{label:'تم التسليم',   cls:'st-delivered'},
@@ -1760,71 +1762,92 @@ const STATUS = {
 // الحالات التي تُحتسب كمبيعات محققة
 const REALIZED = ['confirmed','shipped','delivered'];
 
-function getOrders(){ try{ return JSON.parse(localStorage.getItem(LS_ORDERS)||'[]'); }catch(e){ return []; } }
+// كاش الطلبات من Supabase
+let supaOrdersCache = [];
+let ordersLoaded = false;
+
+// جلب الطلبات من Supabase
+async function loadOrdersFromSupabase() {
+  if (!window.Supabase) return [];
+  try {
+    const remote = await window.Supabase.Orders.getAll();
+    if (remote && Array.isArray(remote)) {
+      supaOrdersCache = remote.map(r => ({
+        id: r.id,
+        orderNumber: r.order_number,
+        srcId: r.id,
+        customer: r.customer_name || 'عميل',
+        phone: r.customer_phone || '',
+        email: r.customer_email || '',
+        productName: (r.items||[]).map(i=>`${i.title||i.name||'منتج'}×${i.qty||1}`).join('، '),
+        qty: (r.items||[]).reduce((s,i)=>s+(Number(i.qty)||1),0) || 1,
+        unit: parseFloat(r.total) || 0,
+        total: parseFloat(r.total) || 0,
+        status: r.status || 'pending',
+        date: r.created_at,
+        items: r.items || [],
+        cashback: r.cashback,
+        cashbackStatus: r.cashback_status,
+        notes: r.notes || '',
+        city: r.shipping_city || '',
+        address: r.shipping_address || ''
+      }));
+      ordersLoaded = true;
+      return supaOrdersCache;
+    }
+    // لو رجع empty array - هذا يعني لا توجد طلبات (صحيح)
+    ordersLoaded = true;
+    supaOrdersCache = [];
+    return [];
+  } catch(e) {
+    console.error('فشل تحميل الطلبات من Supabase:', e);
+    ordersLoaded = false; // فشل الاتصال - سنستخدم local
+  }
+  return [];
+}
+
+// دالة الطلبات - تعيد الكاش إذا تم التحميل من Supabase
+function getOrders() { 
+  // لو تم التحميل من Supabase (حتى لو فارغ) - استخدم الكاش
+  if (ordersLoaded) {
+    return supaOrdersCache;
+  }
+  // فقط في حالة فشل الاتصال بـ Supabase - استخدم localStorage
+  try { return JSON.parse(localStorage.getItem(LS_ORDERS)||'[]'); } catch(e) { return []; }
+}
 function saveOrders(o){ localStorage.setItem(LS_ORDERS, JSON.stringify(o)); }
 
-/* استيراد طلبات المتجر المكتملة (من صفحة الدفع) تلقائياً */
-const LS_STORE_ORDERS = 'x2_orders';
-function syncStoreOrders(silent){
-  // محاولة جلب الطلبات من Supabase أولاً
-  if (window.Supabase) {
-    window.Supabase.Orders.getAll().then(remote => {
-      if (remote && remote.length) {
-        // دمج مع الطلبات المحلية
-        const merged = remote.map(r => ({
-          id: r.id,
-          srcId: r.id,
-          customer: r.customer_name || 'عميل',
-          phone: r.customer_phone || '',
-          productName: (r.items||[]).map(i=>`${i.title||'منتج'}×${i.qty||1}`).join('، '),
-          qty: (r.items||[]).reduce((s,i)=>s+(Number(i.qty)||1),0) || 1,
-          unit: parseFloat(r.total) || 0,
-          total: parseFloat(r.total) || 0,
-          status: r.status || 'processing',
-          date: r.created_at,
-          items: r.items || [],
-          cashback: r.cashback,
-          cashbackStatus: r.cashback_status
-        }));
-        saveOrders(merged);
-        renderStats(); renderOrders();
-        if (!silent) toast('✅ تم تحديث الطلبات من Supabase');
-      }
-    }).catch(() => { /* فشل الاتصال - استخدم البيانات المحلية */ });
-  }
+// مسح البيانات التجريبية من localStorage
+function clearFakeOrders() {
+  if (!confirm('هل أنت متأكد من مسح البيانات المحلية؟ سيتم عرض البيانات الحقيقية من Supabase فقط.')) return;
+  localStorage.removeItem(LS_ORDERS);
+  localStorage.removeItem('x2_orders');
+  localStorage.removeItem('admin_orders');
+  ordersLoaded = true; // إجبار استخدام Supabase
+  supaOrdersCache = []; // مسح الكاش لإعادة التحميل
+  ordersLoaded = false;
+  syncStoreOrders(false);
+  toast('✅ تم مسح البيانات المحلية');
+}
 
-  let store=[];
-  try{ store = JSON.parse(localStorage.getItem(LS_STORE_ORDERS)||'[]'); }catch(e){ store=[]; }
-  const orders = getOrders();
-  const existing = new Set(orders.map(o=>o.srcId).filter(Boolean));
-  let maxId = orders.reduce((m,o)=>Math.max(m,Number(o.id)||0),0);
-  let added = 0;
-  store.forEach(s=>{
-    if(!s || existing.has(s.id)) return;
-    const items = Array.isArray(s.items)?s.items:[];
-    const qty = items.reduce((n,it)=>n+(Number(it.qty)||1),0) || 1;
-    const productName = items.map(it=>`${it.title||'منتج'}×${it.qty||1}`).join('، ');
-    const sh = s.shipping||{};
-    orders.unshift({
-      id: ++maxId,
-      srcId: s.id,
-      customer: sh.name || 'عميل',
-      phone: sh.phone || '',
-      productId: null,
-      productName,
-      qty,
-      unit: 0,
-      total: Number(s.total)||0,
-      status: s.status || 'pending',
-      date: s.date || new Date().toISOString(),
-      notes: [sh.city?('المدينة: '+sh.city):'', sh.address?('العنوان: '+sh.address):'', s.payment?('الدفع: '+s.payment):'']
-              .filter(Boolean).join(' — '),
-      items
-    });
-    added++;
-  });
-  if(added){ saveOrders(orders); renderStats(); renderOrders(); }
-  if(!silent) toast(added ? `تم استيراد ${added} طلب من المتجر` : 'لا توجد طلبات جديدة من المتجر');
+/* استيراد طلبات المتجر من Supabase */
+const LS_STORE_ORDERS = 'x2_orders';
+async function syncStoreOrders(silent){
+  if (!silent) toast('⏳ جارٍ تحميل الطلبات من Supabase...');
+  
+  // جلب الطلبات من Supabase
+  await loadOrdersFromSupabase();
+  
+  if (supaOrdersCache.length > 0) {
+    renderStats();
+    renderOrders();
+    if (!silent) toast('✅ تم تحميل ' + supaOrdersCache.length + ' طلب من Supabase');
+  } else {
+    // لا توجد طلبات في Supabase - إظهار رسالة
+    renderStats();
+    renderOrders();
+    if (!silent) toast('📭 لا توجد طلبات في قاعدة البيانات');
+  }
 }
 
 function orderProductChanged(){
@@ -2223,12 +2246,13 @@ async function migrateImagesToStorage() {
   toast('✅ تم ترحيل صور '+ok+' منتج'+(fail?' — ⚠️ فشل '+fail:''));
 }
 
-/* ================= بدء ================= */
+/* ================= بدء تحميل البيانات الأساسية ================= */
 (async function init(){
   await loadCategories();
   await loadProducts();
   fillProductSelects();
-  syncStoreOrders(true);
+  // تحميل الطلبات من Supabase
+  await syncStoreOrders(true);
 })();
 
 /* ================================================================
@@ -2722,13 +2746,14 @@ function exportSettings() { download('settings.json', JSON.stringify(getSettings
    تحديث switchTab لتشمل التابات الجديدة
 ================================================================ */
 const _origSwitchTab = window.switchTab;
-window.switchTab = function(name) {
+window.switchTab = async function(name) {
   _origSwitchTab && _origSwitchTab(name);
   if (name === 'categories') { renderAdminCategories(); }
   if (name === 'banners') { renderBanners(); renderFeaturedPicker(); renderDailyPicker(); }
   if (name === 'customers') {
     selectedCustomers.clear();
-    syncCustomersFromSupabase();
+    await syncCustomersFromSupabase();
+    await loadBlockedCustomers();
     renderCustomers();
     renderVisitorsStats();
     fillMsgProductSelect();
@@ -2736,14 +2761,20 @@ window.switchTab = function(name) {
   if (name === 'settings') { loadSettings(); }
   if (name === 'orders') { syncStoreOrders(false); }
   if (name === 'marketing') {
-    renderCoupons();
-    renderCampaigns();
+    await loadCouponsFromSupabase();
+    await loadCampaignsFromSupabase();
     renderSuggestedPicker();
-    loadSEO();
-    renderBestSellers([...getOrders(), ...JSON.parse(localStorage.getItem('x2_orders')||'[]')]);
+    await loadSEO();
+    // جلب الطلبات لأكثر المنتجات مبيعاً
+    try {
+      const orders = await window.Supabase.Orders.getAll();
+      renderBestSellers(orders || []);
+    } catch(e) {
+      renderBestSellers([...getOrders(), ...JSON.parse(localStorage.getItem('x2_orders')||'[]')]);
+    }
   }
   if (name === 'reports') {
-    renderReports();
+    await renderReports();
   }
 };
 
@@ -2821,33 +2852,58 @@ async function loadSettingsFromSupabase() {
   } catch(e) {}
 }
 
-/* ================= كوبونات الخصم ================= */
-const LS_COUPONS = 'admin_coupons';
-function getCoupons() { try { return JSON.parse(localStorage.getItem(LS_COUPONS)||'[]'); } catch(e) { return []; } }
+/* ================= كوبونات الخصم (متزامنة مع Supabase) ================= */
+let couponsCache = [];
 
-function saveCoupon() {
+async function loadCouponsFromSupabase() {
+  if (!window.Supabase || !window.Supabase.Coupons) return [];
+  try {
+    const remote = await window.Supabase.Coupons.getAll();
+    couponsCache = remote || [];
+    return couponsCache;
+  } catch(e) { console.warn('Coupons load error:', e); return []; }
+}
+
+function getCoupons() { return couponsCache; }
+
+async function saveCoupon() {
   const code = ($('cp-code').value||'').trim().toUpperCase();
   if (!code) { toast('أدخل كود الكوبون'); return; }
+  
   const coupon = {
-    id: Date.now(),
     code: code,
     type: $('cp-type').value,
     value: parseFloat($('cp-value').value) || 0,
     minOrder: parseFloat($('cp-minorder').value) || 0,
     expiry: $('cp-expiry').value || null,
     maxUse: parseInt($('cp-maxuse').value) || 0,
-    usedCount: 0,
-    active: $('cp-active').value === '1',
-    createdAt: new Date().toISOString()
+    active: $('cp-active').value === '1'
   };
-  const coupons = getCoupons();
-  const existIdx = coupons.findIndex(c => c.code === code);
-  if (existIdx >= 0) coupons[existIdx] = { ...coupons[existIdx], ...coupon, id: coupons[existIdx].id };
-  else coupons.unshift(coupon);
-  localStorage.setItem(LS_COUPONS, JSON.stringify(coupons));
-  renderCoupons();
-  clearCouponForm();
-  toast('✅ تم حفظ الكوبون');
+
+  toast('⏳ جارٍ الحفظ...');
+  
+  try {
+    // تحقق إذا الكوبون موجود
+    const existing = await window.Supabase.Coupons.getByCode(code);
+    if (existing) {
+      await window.Supabase.Coupons.update(existing.id, {
+        type: coupon.type,
+        value: coupon.value,
+        min_order: coupon.minOrder,
+        expiry: coupon.expiry,
+        max_use: coupon.maxUse,
+        active: coupon.active
+      });
+    } else {
+      await window.Supabase.Coupons.insert(coupon);
+    }
+    await loadCouponsFromSupabase();
+    renderCoupons();
+    clearCouponForm();
+    toast('✅ تم حفظ الكوبون في قاعدة البيانات');
+  } catch(e) {
+    toast('⚠️ خطأ: ' + e.message);
+  }
 }
 
 function renderCoupons() {
@@ -2864,35 +2920,39 @@ function renderCoupons() {
         <b style="font-family:monospace;letter-spacing:1px">${c.code}</b> ${statusBadge}
         <small>
           ${c.type === 'percent' ? c.value + '%' : c.value + ' د.إ'} خصم
-          ${c.minOrder ? '• حد أدنى ' + c.minOrder + ' د.إ' : ''}
-          ${c.maxUse ? '• استخدام ' + c.usedCount + '/' + c.maxUse : ''}
+          ${c.min_order ? '• حد أدنى ' + c.min_order + ' د.إ' : ''}
+          ${c.max_use ? '• استخدام ' + (c.used_count||0) + '/' + c.max_use : ''}
           ${c.expiry ? '• ينتهي ' + new Date(c.expiry).toLocaleDateString('ar') : ''}
         </small>
       </div>
       <button class="btn-ghost btn-sm" onclick="editCoupon('${c.code}')">✏️</button>
-      <button class="btn-danger btn-sm" onclick="deleteCoupon('${c.code}')">🗑</button>
+      <button class="btn-danger btn-sm" onclick="deleteCoupon(${c.id})">🗑</button>
     </div>`;
   }).join('');
 }
 
-function editCoupon(code) {
-  const c = getCoupons().find(x => x.code === code);
+async function editCoupon(code) {
+  const c = couponsCache.find(x => x.code === code);
   if (!c) return;
   $('cp-code').value = c.code;
   $('cp-type').value = c.type;
   $('cp-value').value = c.value;
-  $('cp-minorder').value = c.minOrder || '';
+  $('cp-minorder').value = c.min_order || '';
   $('cp-expiry').value = c.expiry ? c.expiry.slice(0, 16) : '';
-  $('cp-maxuse').value = c.maxUse || '';
+  $('cp-maxuse').value = c.max_use || '';
   $('cp-active').value = c.active ? '1' : '0';
 }
 
-function deleteCoupon(code) {
-  if (!confirm('حذف الكوبون ' + code + '؟')) return;
-  const coupons = getCoupons().filter(c => c.code !== code);
-  localStorage.setItem(LS_COUPONS, JSON.stringify(coupons));
-  renderCoupons();
-  toast('تم حذف الكوبون');
+async function deleteCoupon(id) {
+  if (!confirm('حذف هذا الكوبون؟')) return;
+  try {
+    await window.Supabase.Coupons.remove(id);
+    await loadCouponsFromSupabase();
+    renderCoupons();
+    toast('✅ تم حذف الكوبون');
+  } catch(e) {
+    toast('⚠️ خطأ: ' + e.message);
+  }
 }
 
 function clearCouponForm() {
@@ -2908,30 +2968,44 @@ function exportCoupons() {
   a.download = 'coupons.json'; a.click();
 }
 
-/* ================= حملات العروض ================= */
-const LS_CAMPAIGNS = 'admin_campaigns';
-function getCampaigns() { try { return JSON.parse(localStorage.getItem(LS_CAMPAIGNS)||'[]'); } catch(e) { return []; } }
+/* ================= حملات العروض (متزامنة مع Supabase) ================= */
+let campaignsCache = [];
 
-function saveCampaign() {
+async function loadCampaignsFromSupabase() {
+  if (!window.Supabase || !window.Supabase.Campaigns) return [];
+  try {
+    const remote = await window.Supabase.Campaigns.getAll();
+    campaignsCache = remote || [];
+    return campaignsCache;
+  } catch(e) { console.warn('Campaigns load error:', e); return []; }
+}
+
+function getCampaigns() { return campaignsCache; }
+
+async function saveCampaign() {
   const name = ($('camp-name').value||'').trim();
   if (!name) { toast('أدخل اسم الحملة'); return; }
+  
   const campaign = {
-    id: Date.now(),
     name: name,
     desc: $('camp-desc').value || '',
     banner: $('camp-banner').value || '',
     start: $('camp-start').value || null,
     end: $('camp-end').value || null,
-    discount: parseFloat($('camp-discount').value) || 0,
-    active: true,
-    createdAt: new Date().toISOString()
+    discount: parseFloat($('camp-discount').value) || 0
   };
-  const campaigns = getCampaigns();
-  campaigns.unshift(campaign);
-  localStorage.setItem(LS_CAMPAIGNS, JSON.stringify(campaigns));
-  renderCampaigns();
-  clearCampaignForm();
-  toast('✅ تم حفظ الحملة');
+
+  toast('⏳ جارٍ الحفظ...');
+  
+  try {
+    await window.Supabase.Campaigns.insert(campaign);
+    await loadCampaignsFromSupabase();
+    renderCampaigns();
+    clearCampaignForm();
+    toast('✅ تم حفظ الحملة في قاعدة البيانات');
+  } catch(e) {
+    toast('⚠️ خطأ: ' + e.message);
+  }
 }
 
 function renderCampaigns() {
@@ -2940,8 +3014,8 @@ function renderCampaigns() {
   if (!camps.length) { list.innerHTML = '<div class="empty">لا توجد حملات</div>'; return; }
   const now = new Date();
   list.innerHTML = camps.map(c => {
-    const started = !c.start || new Date(c.start) <= now;
-    const ended = c.end && new Date(c.end) < now;
+    const started = !c.start_date || new Date(c.start_date) <= now;
+    const ended = c.end_date && new Date(c.end_date) < now;
     const status = ended ? 'منتهية' : started ? 'نشطة' : 'قادمة';
     const statusClass = ended ? 'st-cancelled' : started ? 'st-delivered' : 'st-pending';
     return `<div class="prod-row">
@@ -2949,8 +3023,8 @@ function renderCampaigns() {
         <b>${esc(c.name)}</b> <span class="status-badge ${statusClass}">${status}</span>
         <small>
           ${c.discount ? c.discount + '% خصم' : ''} 
-          ${c.start ? '• من ' + new Date(c.start).toLocaleDateString('ar') : ''}
-          ${c.end ? '• إلى ' + new Date(c.end).toLocaleDateString('ar') : ''}
+          ${c.start_date ? '• من ' + new Date(c.start_date).toLocaleDateString('ar') : ''}
+          ${c.end_date ? '• إلى ' + new Date(c.end_date).toLocaleDateString('ar') : ''}
         </small>
       </div>
       <button class="btn-danger btn-sm" onclick="deleteCampaign(${c.id})">🗑</button>
@@ -2958,11 +3032,16 @@ function renderCampaigns() {
   }).join('');
 }
 
-function deleteCampaign(id) {
-  const camps = getCampaigns().filter(c => c.id !== id);
-  localStorage.setItem(LS_CAMPAIGNS, JSON.stringify(camps));
-  renderCampaigns();
-  toast('تم حذف الحملة');
+async function deleteCampaign(id) {
+  if (!confirm('حذف هذه الحملة؟')) return;
+  try {
+    await window.Supabase.Campaigns.remove(id);
+    await loadCampaignsFromSupabase();
+    renderCampaigns();
+    toast('✅ تم حذف الحملة');
+  } catch(e) {
+    toast('⚠️ خطأ: ' + e.message);
+  }
 }
 
 function clearCampaignForm() {
@@ -2992,31 +3071,47 @@ function renderSuggestedPicker() {
 function toggleSuggested(id, checked) { if(checked) suggestedIds.add(String(id)); else suggestedIds.delete(String(id)); }
 function saveSuggested() { localStorage.setItem(LS_SUGGESTED, JSON.stringify([...suggestedIds])); toast('✅ تم حفظ المنتجات المقترحة'); }
 
-/* ================= SEO ================= */
-const LS_SEO = 'admin_seo';
-function getSEO() { try { return JSON.parse(localStorage.getItem(LS_SEO)||'{}'); } catch(e) { return {}; } }
-
-function saveSEO() {
+/* ================= SEO (متزامن مع Supabase Settings) ================= */
+async function saveSEO() {
   const seo = {
-    title: $('seo-title').value || '',
-    desc: $('seo-desc').value || '',
-    keywords: $('seo-keywords').value || '',
-    ogImage: $('seo-ogimage').value || '',
-    fbPixel: $('seo-fbpixel').value || '',
-    ga: $('seo-ga').value || ''
+    seo_title: $('seo-title').value || '',
+    seo_desc: $('seo-desc').value || '',
+    seo_keywords: $('seo-keywords').value || '',
+    seo_og_image: $('seo-ogimage').value || '',
+    fb_pixel: $('seo-fbpixel').value || '',
+    google_analytics: $('seo-ga').value || ''
   };
-  localStorage.setItem(LS_SEO, JSON.stringify(seo));
-  toast('✅ تم حفظ إعدادات SEO');
+  
+  toast('⏳ جارٍ الحفظ...');
+  try {
+    await window.Supabase.Settings.save(seo);
+    toast('✅ تم حفظ إعدادات SEO');
+  } catch(e) {
+    // fallback to localStorage
+    localStorage.setItem('admin_seo', JSON.stringify(seo));
+    toast('✅ تم حفظ إعدادات SEO محلياً');
+  }
 }
 
-function loadSEO() {
-  const seo = getSEO();
-  if ($('seo-title')) $('seo-title').value = seo.title || '';
-  if ($('seo-desc')) $('seo-desc').value = seo.desc || '';
-  if ($('seo-keywords')) $('seo-keywords').value = seo.keywords || '';
-  if ($('seo-ogimage')) $('seo-ogimage').value = seo.ogImage || '';
-  if ($('seo-fbpixel')) $('seo-fbpixel').value = seo.fbPixel || '';
-  if ($('seo-ga')) $('seo-ga').value = seo.ga || '';
+async function loadSEO() {
+  try {
+    const settings = await window.Supabase.Settings.get();
+    if ($('seo-title')) $('seo-title').value = settings.seo_title || '';
+    if ($('seo-desc')) $('seo-desc').value = settings.seo_desc || '';
+    if ($('seo-keywords')) $('seo-keywords').value = settings.seo_keywords || '';
+    if ($('seo-ogimage')) $('seo-ogimage').value = settings.seo_og_image || '';
+    if ($('seo-fbpixel')) $('seo-fbpixel').value = settings.fb_pixel || '';
+    if ($('seo-ga')) $('seo-ga').value = settings.google_analytics || '';
+  } catch(e) {
+    // fallback to localStorage
+    const seo = JSON.parse(localStorage.getItem('admin_seo')||'{}');
+    if ($('seo-title')) $('seo-title').value = seo.seo_title || '';
+    if ($('seo-desc')) $('seo-desc').value = seo.seo_desc || '';
+    if ($('seo-keywords')) $('seo-keywords').value = seo.seo_keywords || '';
+    if ($('seo-ogimage')) $('seo-ogimage').value = seo.seo_og_image || '';
+    if ($('seo-fbpixel')) $('seo-fbpixel').value = seo.fb_pixel || '';
+    if ($('seo-ga')) $('seo-ga').value = seo.google_analytics || '';
+  }
 }
 
 /* ================= مشاركة السوشيال ================= */
@@ -3047,10 +3142,25 @@ function setReportPeriod(period) {
   renderReports();
 }
 
-function renderReports() {
-  const orders = getOrders();
-  const storeOrders = JSON.parse(localStorage.getItem('x2_orders')||'[]');
-  const allOrders = [...orders, ...storeOrders];
+async function renderReports() {
+  // جلب الطلبات من Supabase
+  let allOrders = [];
+  try {
+    const supaOrders = await window.Supabase.Orders.getAll();
+    allOrders = (supaOrders || []).map(o => ({
+      id: o.order_number || o.id,
+      date: o.created_at,
+      total: o.total,
+      status: o.status,
+      items: o.items || [],
+      customer: o.customer_name || ''
+    }));
+  } catch(e) {
+    // fallback to local
+    const orders = getOrders();
+    const storeOrders = JSON.parse(localStorage.getItem('x2_orders')||'[]');
+    allOrders = [...orders, ...storeOrders];
+  }
   
   const now = new Date();
   const todayStr = now.toDateString();
@@ -3081,15 +3191,31 @@ function renderReports() {
   const periodTotal = calcTotal(periodOrders);
   const avgOrder = periodOrders.length ? periodTotal / periodOrders.length : 0;
   
+  // جلب عدد الزوار من Supabase
+  let visitorStats = { total: 0, today: 0 };
+  try {
+    visitorStats = await window.Supabase.Visitors.getStats();
+  } catch(e) {}
+  
+  // جلب عدد العملاء من Supabase
+  let totalCustomers = 0;
+  try {
+    const customers = await window.Supabase.Customers.getAll();
+    totalCustomers = (customers || []).length;
+  } catch(e) {
+    totalCustomers = getCustomers().length;
+  }
+  
   // تحديث الأرقام
   if ($('rpt-today-sales')) $('rpt-today-sales').textContent = calcTotal(todayOrders).toFixed(0) + ' د.إ';
   if ($('rpt-month-sales')) $('rpt-month-sales').textContent = calcTotal(monthOrders).toFixed(0) + ' د.إ';
   if ($('rpt-total-orders')) $('rpt-total-orders').textContent = allOrders.length;
-  if ($('rpt-total-customers')) $('rpt-total-customers').textContent = getCustomers().length;
+  if ($('rpt-total-customers')) $('rpt-total-customers').textContent = totalCustomers;
   
-  // معدل التحويل (نسبة الطلبات المكتملة)
+  // معدل التحويل (نسبة الطلبات المكتملة من الزوار)
   const delivered = allOrders.filter(o => o.status === 'delivered').length;
-  const convRate = allOrders.length ? ((delivered / allOrders.length) * 100).toFixed(1) : 0;
+  const convRate = visitorStats.total > 0 ? ((allOrders.length / visitorStats.total) * 100).toFixed(1) : 
+                   allOrders.length ? ((delivered / allOrders.length) * 100).toFixed(1) : 0;
   if ($('rpt-conversion')) $('rpt-conversion').textContent = convRate + '%';
   
   // تقارير الفترة
@@ -3248,36 +3374,84 @@ function clearOrderFilters() {
   renderOrders();
 }
 
-/* ================= تحسينات العملاء ================= */
-const LS_BLOCKED = 'admin_blocked_customers';
-function getBlockedCustomers() { try { return JSON.parse(localStorage.getItem(LS_BLOCKED)||'[]'); } catch(e) { return []; } }
+/* ================= تحسينات العملاء (متزامنة مع Supabase) ================= */
+let blockedCustomersCache = [];
 
-function blockSelectedCustomers() {
+async function loadBlockedCustomers() {
+  try {
+    const blocked = await window.Supabase.Customers.getBlocked();
+    blockedCustomersCache = (blocked || []).map(c => c.phone || c.id);
+    return blockedCustomersCache;
+  } catch(e) {
+    return JSON.parse(localStorage.getItem('admin_blocked_customers')||'[]');
+  }
+}
+
+function getBlockedCustomers() { return blockedCustomersCache; }
+
+async function blockSelectedCustomers() {
   const custs = getCustomers();
-  const blocked = getBlockedCustomers();
-  selectedCustomers.forEach(i => {
+  toast('⏳ جارٍ الحظر...');
+  
+  for (const i of selectedCustomers) {
     const c = custs[i];
-    if (c && c.phone && !blocked.includes(c.phone)) blocked.push(c.phone);
-  });
-  localStorage.setItem(LS_BLOCKED, JSON.stringify(blocked));
+    if (c && c.id) {
+      try {
+        await window.Supabase.Customers.block(c.id);
+      } catch(e) {
+        // fallback - add to local blocked list
+        const blocked = JSON.parse(localStorage.getItem('admin_blocked_customers')||'[]');
+        if (c.phone && !blocked.includes(c.phone)) {
+          blocked.push(c.phone);
+          localStorage.setItem('admin_blocked_customers', JSON.stringify(blocked));
+        }
+      }
+    }
+  }
+  
+  await loadBlockedCustomers();
   selectedCustomers.clear();
   renderCustomers();
-  toast('تم حظر العملاء المحددين');
+  toast('✅ تم حظر العملاء المحددين');
 }
 
-function unblockCustomer(phone) {
-  const blocked = getBlockedCustomers().filter(p => p !== phone);
-  localStorage.setItem(LS_BLOCKED, JSON.stringify(blocked));
-  renderCustomers();
-  toast('تم إلغاء الحظر');
+async function unblockCustomer(idOrPhone) {
+  toast('⏳ جارٍ إلغاء الحظر...');
+  try {
+    await window.Supabase.Customers.unblock(idOrPhone);
+    await loadBlockedCustomers();
+    renderCustomers();
+    toast('✅ تم إلغاء الحظر');
+  } catch(e) {
+    // fallback
+    const blocked = JSON.parse(localStorage.getItem('admin_blocked_customers')||'[]').filter(p => p !== idOrPhone);
+    localStorage.setItem('admin_blocked_customers', JSON.stringify(blocked));
+    blockedCustomersCache = blocked;
+    renderCustomers();
+    toast('✅ تم إلغاء الحظر');
+  }
 }
 
-function exportCustomers() {
-  const custs = getCustomers();
+async function exportCustomers() {
+  toast('⏳ جارٍ تحميل البيانات...');
+  let custs = [];
+  try {
+    const supaCustomers = await window.Supabase.Customers.getAll();
+    custs = (supaCustomers || []).map(c => ({
+      name: c.full_name || c.name || '',
+      phone: c.phone || '',
+      email: c.email || '',
+      orders: [],
+      totalPurchases: 0
+    }));
+  } catch(e) {
+    custs = getCustomers();
+  }
+  
   let csv = 'الاسم,الهاتف,الإيميل,عدد الطلبات,إجمالي المشتريات\n';
   custs.forEach(c => {
-    const total = c.orders.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
-    csv += `${c.name},${c.phone},${c.email},${c.orders.length},${total.toFixed(2)}\n`;
+    const total = (c.orders || []).reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+    csv += `${c.name},${c.phone},${c.email},${(c.orders||[]).length},${total.toFixed(2)}\n`;
   });
   const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
@@ -3420,21 +3594,80 @@ window.renderCustomers = function() {
   `).join('');
 };
 
-/* ================= بدء ================= */
+/* ================= تحميل الكوبونات والحملات من Supabase ================= */
+async function loadCouponsFromSupabase() {
+  try {
+    const data = await window.Supabase.Coupons.getAll();
+    couponsCache = (data || []).map(c => ({
+      id: c.id,
+      code: c.code,
+      type: c.type || 'percent',
+      value: c.value,
+      minOrder: c.min_order,
+      expiry: c.expiry,
+      maxUse: c.max_use,
+      usedCount: c.used_count || 0,
+      active: c.active !== false
+    }));
+  } catch(e) {
+    console.log('Coupons fallback to local');
+    couponsCache = JSON.parse(localStorage.getItem('admin_coupons')||'[]');
+  }
+  renderCoupons();
+}
+
+async function loadCampaignsFromSupabase() {
+  try {
+    const data = await window.Supabase.Campaigns.getAll();
+    campaignsCache = (data || []).map(c => ({
+      id: c.id,
+      name: c.name,
+      description: c.description,
+      banner: c.banner,
+      startDate: c.start_date,
+      endDate: c.end_date,
+      discount: c.discount,
+      active: c.active !== false
+    }));
+  } catch(e) {
+    console.log('Campaigns fallback to local');
+    campaignsCache = JSON.parse(localStorage.getItem('admin_campaigns')||'[]');
+  }
+  renderCampaigns();
+}
+
+/* ================= بدء لوحة التحكم ================= */
 (async function init(){
+  console.log('🚀 بدء تحميل لوحة التحكم...');
+  
+  // تحميل الفئات والمنتجات
   await loadCategories();
   await loadProducts();
   fillProductSelects();
+  
+  // مزامنة الطلبات
   syncStoreOrders(true);
+  
+  // تحميل الإعدادات
   await loadSettingsFromSupabase();
   loadSettings();
+  
+  // تحميل SEO
   loadSEO();
-  renderCoupons();
-  renderCampaigns();
+  
+  // تحميل الكوبونات والحملات من Supabase
+  await loadCouponsFromSupabase();
+  await loadCampaignsFromSupabase();
+  
+  // تحميل قائمة العملاء المحظورين
+  await loadBlockedCustomers();
+  
   // إخبار المستخدم بعدد المنتجات المحملة
   setTimeout(function(){
     if(products.length === 0){
       toast('⚠️ لا توجد منتجات - اضغط "↻ تحميل من الملف" لتحميلها');
+    } else {
+      console.log('✅ تم تحميل ' + products.length + ' منتج');
     }
   }, 1500);
 })();
