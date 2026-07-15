@@ -1331,8 +1331,6 @@ function compressImage(dataUrl, maxW, quality) {
     img.src = dataUrl;
   });
 }
-  });
-}
 $('mediaDrop').addEventListener('click',()=> $('mediaInput').click());
 $('mediaInput').addEventListener('change',e=>{
   const files = Array.from(e.target.files||[]);
