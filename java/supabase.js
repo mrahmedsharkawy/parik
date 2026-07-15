@@ -63,7 +63,11 @@ const SupaOrders = {
         customerId = cr&&cr[0]?cr[0].id:null;
       }catch(e){}
     }
-    return sbFetch('orders',{method:'POST',body:JSON.stringify({order_number:order.id,customer_id:customerId,customer_name:customerName,customer_phone:customerPhone,customer_email:customerEmail,total:parseFloat(order.total)||0,status:order.status||'pending',payment_method:'whatsapp',payment_status:'unpaid',shipping_cost:0,notes:order.notes||null,items:order.items||[],cashback:order.cashback||5,cashback_status:order.cashbackStatus||'pending'})});
+    return sbFetch('orders',{
+      method:'POST',
+      prefer: 'resolution=ignore-duplicates,return=minimal',
+      body:JSON.stringify({order_number:order.id,customer_id:customerId,customer_name:customerName,customer_phone:customerPhone,customer_email:customerEmail,total:parseFloat(order.total)||0,status:order.status||'pending',payment_method:'whatsapp',payment_status:'unpaid',shipping_cost:0,notes:order.notes||null,items:order.items||[],cashback:order.cashback||5,cashback_status:order.cashbackStatus||'pending'})
+    });
   },
   getAll: async function(){ 
     // جلب الطلبات بدون join - أبسط وأسرع
@@ -136,7 +140,6 @@ const SupaSync = {
       var pushed=0;
       var changed=false;
       for(var i=0;i<local.length;i++){
-        // تخطي الطلبات التي تم رفعها مسبقاً - يمنع التكرار عند كل تحميل صفحة
         if(local[i]._synced || pushedIds.indexOf(local[i].id)!==-1) continue;
         try{
           await SupaOrders.insert(Object.assign({},local[i],{customerName:local[i].customerName||profile.name||'',customerPhone:local[i].customerPhone||profile.phone||'',customerEmail:local[i].customerEmail||profile.email||''}));
@@ -144,13 +147,19 @@ const SupaSync = {
           pushedIds.push(local[i].id);
           changed = true;
           pushed++;
-        }catch(e){}
+        }catch(e){
+          // 409 = الطلب موجود بالفعل → علّمه كمرفوع لمنع إعادة المحاولة
+          if(e.message && e.message.includes('409')){
+            local[i]._synced = true;
+            pushedIds.push(local[i].id);
+            changed = true;
+          }
+        }
       }
       if(changed){
         localStorage.setItem('x2_orders', JSON.stringify(local));
         localStorage.setItem('x2_orders_synced', JSON.stringify(pushedIds));
       }
-      if(pushed) console.warn('[Supabase] Pushed '+pushed+' orders');
     }catch(e){ console.warn('[Supabase]',e.message); }
   },
   pullOrders: async function(){
