@@ -890,8 +890,8 @@ document.addEventListener("DOMContentLoaded", function() {
       currentY = e.touches[0].clientY;
       const pullDistance = currentY - startY;
       if (pullDistance > 5) {
-        // منع السلوك الافتراضي للتمرير عند السحب للأسفل
-        e.preventDefault();
+        // منع السلوك الافتراضي فقط إذا كان الحدث قابلاً للإلغاء (يمنع تحذير [Intervention])
+        if (e.cancelable) e.preventDefault();
         const resistance = 0.4;
         const movement = Math.min(pullThreshold * 1.5, pullDistance * resistance);
         refreshIndicator.style.transform = `translateY(${movement}px)`;

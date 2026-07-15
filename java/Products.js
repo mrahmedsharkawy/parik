@@ -2425,8 +2425,8 @@ if (filtersScroll) {
       const dx = p.x - startX, dy = p.y - startY;
       if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10) {
         moved = true;
-        // تنها استدعاء preventDefault لو كان الحدث الأصلي قابل للإلغاء ولديه الدالة preventDefault
-        if (p.cancelable && typeof ev.preventDefault === 'function') {
+        // استدعاء preventDefault فقط إذا كان الحدث قابلاً للإلغاء (يمنع تحذير [Intervention])
+        if (ev.cancelable && typeof ev.preventDefault === 'function') {
           try { ev.preventDefault(); } catch(e) {}
         }
         console.log('swipe:move horiz', dx);
