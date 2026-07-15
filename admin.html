@@ -795,6 +795,38 @@ function getAdminCreds() {
   } catch(e) { return { user: GATE_USER, pass: GATE_PASS }; }
 }
 
+/* ================= تجديد التوكن تلقائياً ================= */
+async function refreshAdminToken() {
+  const refreshToken = sessionStorage.getItem('admin_refresh_token');
+  if (!refreshToken) return null;
+  try {
+    const res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/auth/v1/token?grant_type=refresh_token', {
+      method: 'POST',
+      headers: { 'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: refreshToken })
+    });
+    const data = await res.json();
+    if (data.access_token) {
+      sessionStorage.setItem('admin_token', data.access_token);
+      sessionStorage.setItem('admin_refresh_token', data.refresh_token || refreshToken);
+      sessionStorage.setItem('admin_token_exp', String(Date.now() + (data.expires_in || 3600) * 1000));
+      return data.access_token;
+    }
+  } catch(e) {}
+  return null;
+}
+
+async function getValidAdminToken() {
+  const token = sessionStorage.getItem('admin_token');
+  const exp   = parseInt(sessionStorage.getItem('admin_token_exp') || '0');
+  // تجديد لو باقي أقل من 5 دقائق
+  if (token && exp && (exp - Date.now()) < 5 * 60 * 1000) {
+    const newToken = await refreshAdminToken();
+    return newToken || token;
+  }
+  return token || null;
+}
+
 /* ================= البوابة ================= */
 async function checkGate(){
   const email     = ($('gateUser').value || '').trim();
@@ -825,6 +857,8 @@ async function checkGate(){
     // ✅ نجاح
     sessionStorage.setItem('admin_ok', '1');
     sessionStorage.setItem('admin_token', authData.access_token);
+    sessionStorage.setItem('admin_refresh_token', authData.refresh_token || '');
+    sessionStorage.setItem('admin_token_exp', String(Date.now() + (authData.expires_in || 3600) * 1000));
     sessionStorage.setItem('admin_name', admin.full_name || email.split('@')[0]);
     $('gate').style.display = 'none';
     toast('✅ مرحباً ' + (admin.full_name || 'بالأدمن'));
@@ -2251,14 +2285,14 @@ const LS_VISITORS = 'x2_visitors';
 
 function getVisitors() { try { return JSON.parse(localStorage.getItem(LS_VISITORS)||'[]'); } catch(e) { return []; } }
 
-function renderVisitorsStats() {
+async function renderVisitorsStats() {
   const todayEl = $('visitorsTodayCount');
   const allEl   = $('visitorsAllCount');
   const locEl   = $('visitorsLocations');
   const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
 
-  // استخدم JWT الأدمن (مطلوب بعد تفعيل RLS)
-  const adminToken = sessionStorage.getItem('admin_token') || ANON;
+  // استخدم JWT الأدمن مع تجديد تلقائي عند الانتهاء
+  const adminToken = await getValidAdminToken() || ANON;
 
   fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors?select=visited_at,page,city,country&order=visited_at.desc&limit=500', {
     headers: {

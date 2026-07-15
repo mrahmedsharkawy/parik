@@ -18,7 +18,21 @@ async function sbFetch(path, opts){
       'Prefer': opts.prefer || 'return=representation'
     }, opts.extraHeaders||{})
   }));
-  if(!res.ok){ const e=await res.text(); throw new Error('SB '+res.status+': '+e); }
+  if(!res.ok){
+    const e = await res.text();
+    // لو JWT انتهت صلاحيتها، امسح التوكن وأعِد المحاولة بالـ anon key
+    if (res.status === 401 && e.includes('JWT expired') && typeof sessionStorage !== 'undefined') {
+      sessionStorage.removeItem('admin_token');
+      // محاولة تجديد التوكن (لو الدالة موجودة في الأدمن)
+      if (typeof refreshAdminToken === 'function') {
+        const newTok = await refreshAdminToken();
+        if (newTok) {
+          return sbFetch(path, opts); // إعادة المحاولة بالتوكن الجديد
+        }
+      }
+    }
+    throw new Error('SB '+res.status+': '+e);
+  }
   const t=await res.text(); return t?JSON.parse(t):null;
 }
 window.sbFetch = sbFetch;
