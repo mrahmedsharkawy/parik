@@ -85,7 +85,7 @@
   .media-thumb .tag{position:absolute;bottom:0;inset-inline-start:0;background:rgba(21,37,70,.8);color:#fff;font-size:9px;padding:1px 4px}
 
   /* قائمة المنتجات */
-  .plist{display:flex;flex-direction:column;gap:10px}
+  .plist{display:flex;flex-direction:column;gap:10px;max-height:600px;overflow-y:auto}
   .prod-row{display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff}
   .prod-row img,.prod-row video{width:56px;height:56px;object-fit:cover;border-radius:8px;flex-shrink:0;background:#eef1f7}
   .prod-row .info{flex:1;min-width:0}
@@ -1749,7 +1749,7 @@ function exportComments(){ download('reviews.json', JSON.stringify(getReviews(),
 const LS_ORDERS = 'admin_orders';
 let currentPeriod = 'day';
 let ordPage = 1;               // صفحة الطلبات الحالية
-const ORDER_PAGE_SIZE = 3;     // عدد الطلبات في كل صفحة
+const ORDER_PAGE_SIZE = 50;    // عدد الطلبات في كل صفحة
 const STATUS = {
   pending:  {label:'قيد الانتظار', cls:'st-pending'},
   processing:{label:'قيد المعالجة', cls:'st-pending'},
@@ -1771,28 +1771,38 @@ async function loadOrdersFromSupabase() {
   if (!window.Supabase) return [];
   try {
     const remote = await window.Supabase.Orders.getAll();
+    console.log('📦 Supabase Orders:', remote); // للتشخيص
     if (remote && Array.isArray(remote)) {
-      supaOrdersCache = remote.map(r => ({
-        id: r.id,
-        orderNumber: r.order_number,
-        srcId: r.id,
-        customer: r.customer_name || 'عميل',
-        phone: r.customer_phone || '',
-        email: r.customer_email || '',
-        productName: (r.items||[]).map(i=>`${i.title||i.name||'منتج'}×${i.qty||1}`).join('، '),
-        qty: (r.items||[]).reduce((s,i)=>s+(Number(i.qty)||1),0) || 1,
-        unit: parseFloat(r.total) || 0,
-        total: parseFloat(r.total) || 0,
-        status: r.status || 'pending',
-        date: r.created_at,
-        items: r.items || [],
-        cashback: r.cashback,
-        cashbackStatus: r.cashback_status,
-        notes: r.notes || '',
-        city: r.shipping_city || '',
-        address: r.shipping_address || ''
-      }));
+      supaOrdersCache = remote.map(r => {
+        // جلب بيانات العميل من العلاقة أو من الحقول المباشرة
+        const cust = r.customers || {};
+        const customerName = r.customer_name || cust.full_name || cust.name || '';
+        const customerPhone = r.customer_phone || cust.phone || '';
+        const customerEmail = r.customer_email || cust.email || '';
+        
+        return {
+          id: r.id,
+          orderNumber: r.order_number,
+          srcId: r.id,
+          customer: customerName || 'بدون اسم',
+          phone: customerPhone,
+          email: customerEmail,
+          productName: (r.items||[]).map(i=>`${i.title||i.name||'منتج'}×${i.qty||1}`).join('، '),
+          qty: (r.items||[]).reduce((s,i)=>s+(Number(i.qty)||1),0) || 1,
+          unit: parseFloat(r.total) || 0,
+          total: parseFloat(r.total) || 0,
+          status: r.status || 'pending',
+          date: r.created_at,
+          items: r.items || [],
+          cashback: r.cashback,
+          cashbackStatus: r.cashback_status,
+          notes: r.notes || '',
+          city: r.shipping_city || '',
+          address: r.shipping_address || ''
+        };
+      });
       ordersLoaded = true;
+      console.log('✅ تم تحميل', supaOrdersCache.length, 'طلب من Supabase');
       return supaOrdersCache;
     }
     // لو رجع empty array - هذا يعني لا توجد طلبات (صحيح)
@@ -1800,7 +1810,7 @@ async function loadOrdersFromSupabase() {
     supaOrdersCache = [];
     return [];
   } catch(e) {
-    console.error('فشل تحميل الطلبات من Supabase:', e);
+    console.error('❌ فشل تحميل الطلبات من Supabase:', e);
     ordersLoaded = false; // فشل الاتصال - سنستخدم local
   }
   return [];
@@ -1968,11 +1978,26 @@ function updateStoreOrderStatus(srcId, status){
     }
   }catch(e){}
 }
-function deleteOrder(id){
+async function deleteOrder(id){
   if(!confirm('حذف هذا الطلب؟')) return;
-  saveOrders(getOrders().filter(o=>Number(o.id)!==Number(id)));
-  renderOrders(); renderStats();
-  toast('تم حذف الطلب');
+  
+  toast('⏳ جارٍ الحذف...');
+  
+  // حذف من Supabase
+  try {
+    await window.Supabase.Orders.remove(id);
+    // تحديث الكاش المحلي
+    supaOrdersCache = supaOrdersCache.filter(o => o.id !== id && o.srcId !== id);
+    renderOrders(); 
+    renderStats();
+    toast('✅ تم حذف الطلب من قاعدة البيانات');
+  } catch(e) {
+    console.error('فشل حذف الطلب:', e);
+    // حذف من localStorage كـ fallback
+    saveOrders(getOrders().filter(o=>Number(o.id)!==Number(id)));
+    renderOrders(); renderStats();
+    toast('⚠️ تم الحذف محلياً فقط');
+  }
 }
 function resetOrderForm(){
   $('orderFormTitle').textContent='➕ إضافة طلب';
@@ -2071,7 +2096,7 @@ function renderOrders(){
   let orders = getOrders();
   if(filter!=='all') orders = orders.filter(o=>o.status===filter);
   $('ordCount').textContent = getOrders().length;
-  if(!orders.length){ $('ordList').innerHTML='<div class="empty">لا توجد طلبات</div>'; if($('ordPager')) $('ordPager').innerHTML=''; return; }
+  if(!orders.length){ $('ordList').innerHTML='<div class="empty">لا توجد طلبات في قاعدة البيانات</div>'; if($('ordPager')) $('ordPager').innerHTML=''; return; }
 
   // ترقيم الصفحات
   const totalPages = Math.max(1, Math.ceil(orders.length / ORDER_PAGE_SIZE));
@@ -2083,21 +2108,27 @@ function renderOrders(){
   $('ordList').innerHTML = pageOrders.map(o=>{
     const st = STATUS[o.status]||STATUS.pending;
     const opts = Object.keys(STATUS).map(k=>`<option value="${k}" ${k===o.status?'selected':''}>${STATUS[k].label}</option>`).join('');
+    const orderNum = o.orderNumber || o.order_number || o.id;
+    const custName = o.customer || 'بدون اسم';
     return `<div class="ord-row">
-      <div class="oinfo">
-        <b>${esc(o.customer)}</b> ${o.phone?`<small style="color:#7a8296"> · ${esc(o.phone)}</small>`:''}
-        <div style="font-size:.82rem;color:#5a6478;margin-top:2px">
-          ${o.productName?esc(o.productName)+' × '+o.qty+' — ':''}<b style="color:var(--navy)">${money(o.total)}</b>
+      <div class="oinfo" style="flex:1">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+          <span style="background:var(--navy);color:#fff;padding:2px 8px;border-radius:4px;font-size:.75rem;font-weight:700">#${orderNum}</span>
+          <span class="status-badge ${st.cls}" style="font-size:.7rem">${st.label}</span>
         </div>
-        <div style="font-size:.72rem;color:#9aa2b4;margin-top:2px">${new Date(o.date).toLocaleString('ar-EG')}</div>
+        <b style="color:var(--navy);font-size:.95rem">${esc(custName)}</b> 
+        ${o.phone?`<small style="color:#7a8296"> · 📱 ${esc(o.phone)}</small>`:''}
+        <div style="font-size:.82rem;color:#5a6478;margin-top:4px">
+          ${o.productName?'🛒 '+esc(o.productName)+' — ':''}<b style="color:var(--gold)">${money(o.total)} د.إ</b>
+        </div>
+        <div style="font-size:.72rem;color:#9aa2b4;margin-top:2px">📅 ${new Date(o.date).toLocaleString('ar-EG')}</div>
         ${o.notes?`<div style="font-size:.75rem;color:#7a8296;margin-top:3px">📝 ${esc(o.notes)}</div>`:''}
       </div>
-      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
-        <span class="status-badge ${st.cls}">${st.label}</span>
-        <select onchange="changeOrderStatus(${o.id}, this.value)">${opts}</select>
+      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;min-width:120px">
+        <select onchange="changeOrderStatus(${o.id}, this.value)" style="font-size:.8rem">${opts}</select>
         <div style="display:flex;gap:6px">
-          <button class="btn-ghost btn-sm" onclick="editOrder(${o.id})">تعديل</button>
-          <button class="btn-danger btn-sm" onclick="deleteOrder(${o.id})">حذف</button>
+          <button class="btn-ghost btn-sm" onclick="editOrder(${o.id})">✏️</button>
+          <button class="btn-danger btn-sm" onclick="deleteOrder(${o.id})">🗑️</button>
         </div>
       </div>
     </div>`;
