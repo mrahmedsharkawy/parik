@@ -2050,23 +2050,32 @@ function updateStoreOrderStatus(srcId, status){
 }
 async function deleteOrder(id){
   if(!confirm('حذف هذا الطلب؟')) return;
-  
+
+  // حذف فوري من الواجهة (تفاؤلي) قبل انتظار استجابة الخادم
+  const removedIdx = supaOrdersCache.findIndex(o => Number(o.id) === Number(id));
+  const removedOrder = removedIdx !== -1 ? supaOrdersCache[removedIdx] : null;
+  if (removedIdx !== -1) supaOrdersCache.splice(removedIdx, 1);
+  // تحديث ترقيم الصفحات إذا أصبحت الصفحة الحالية فارغة
+  const totalPages = Math.max(1, Math.ceil(supaOrdersCache.length / ORDER_PAGE_SIZE));
+  if (ordPage > totalPages) ordPage = totalPages;
+  renderOrders();
+  renderStats();
+
   toast('⏳ جارٍ الحذف...');
-  
+
   // حذف من Supabase
   try {
     await window.Supabase.Orders.remove(id);
-    // تحديث الكاش المحلي
-    supaOrdersCache = supaOrdersCache.filter(o => o.id !== id && o.srcId !== id);
-    renderOrders(); 
-    renderStats();
     toast('✅ تم حذف الطلب من قاعدة البيانات');
   } catch(e) {
     console.error('فشل حذف الطلب:', e);
-    // حذف من localStorage كـ fallback
-    saveOrders(getOrders().filter(o=>Number(o.id)!==Number(id)));
-    renderOrders(); renderStats();
-    toast('⚠️ تم الحذف محلياً فقط');
+    // استرجاع الطلب في الواجهة إذا فشل الحذف فعلياً من الخادم
+    if (removedOrder) {
+      supaOrdersCache.splice(Math.min(removedIdx, supaOrdersCache.length), 0, removedOrder);
+      renderOrders();
+      renderStats();
+    }
+    toast('⚠️ فشل الحذف من الخادم، تم التراجع');
   }
 }
 function resetOrderForm(){
