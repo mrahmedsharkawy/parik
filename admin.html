@@ -2184,21 +2184,40 @@ function renderPeriod(){
 
 /* ---- عرض الطلبات ---- */
 function renderOrders(){
-  console.log('🎨 renderOrders called');
-  console.log('   ordersLoaded:', ordersLoaded);
-  console.log('   supaOrdersCache length:', supaOrdersCache.length);
-  
   const filter = $('ordFilter')?.value || 'all';
+  const search = ($('ordSearch')?.value || '').toLowerCase();
+  const dateFrom = $('ordDateFrom')?.value ? new Date($('ordDateFrom').value) : null;
+  const dateTo = $('ordDateTo')?.value ? new Date($('ordDateTo').value + 'T23:59:59') : null;
+
   let orders = getOrders();
-  console.log('   getOrders() returned:', orders.length, 'orders');
-  
+
   if(filter!=='all') orders = orders.filter(o=>o.status===filter);
+
+  // فلترة البحث برقم الطلب أو اسم العميل
+  if (search) {
+    orders = orders.filter(o => {
+      const orderId = String(o.orderNumber || o.order_number || o.id || '').toLowerCase();
+      const customer = String(o.customer || '').toLowerCase();
+      return orderId.includes(search) || customer.includes(search);
+    });
+  }
+
+  // فلترة حسب التاريخ
+  if (dateFrom || dateTo) {
+    orders = orders.filter(o => {
+      const d = new Date(o.date || o.created_at || o.createdAt);
+      if (dateFrom && d < dateFrom) return false;
+      if (dateTo && d > dateTo) return false;
+      return true;
+    });
+  }
+
   $('ordCount').textContent = getOrders().length;
-  
-  if(!orders.length){ 
-    $('ordList').innerHTML='<div class="empty">لا توجد طلبات في قاعدة البيانات<br><small>ordersLoaded: '+ordersLoaded+' | cache: '+supaOrdersCache.length+'</small></div>'; 
-    if($('ordPager')) $('ordPager').innerHTML=''; 
-    return; 
+
+  if(!orders.length){
+    $('ordList').innerHTML='<div class="empty">لا توجد طلبات مطابقة</div>';
+    if($('ordPager')) $('ordPager').innerHTML='';
+    return;
   }
 
   // ترقيم الصفحات
@@ -3592,76 +3611,8 @@ async function exportCustomers() {
 
 /* ================= تحديث switchTab ================= */
 // تمت إضافة التابات الجديدة إلى switchTab الموجود
-
-/* ================= تحديث renderOrders لدعم البحث والتاريخ ================= */
-const _origRenderOrders = window.renderOrders;
-window.renderOrders = function() {
-  const filter = ($('ordFilter')?.value || 'all');
-  const search = ($('ordSearch')?.value || '').toLowerCase();
-  const dateFrom = $('ordDateFrom')?.value ? new Date($('ordDateFrom').value) : null;
-  const dateTo = $('ordDateTo')?.value ? new Date($('ordDateTo').value + 'T23:59:59') : null;
-  
-  let list = getOrders();
-  
-  // فلترة الحالة
-  if (filter !== 'all') list = list.filter(o => o.status === filter);
-  
-  // فلترة البحث
-  if (search) {
-    list = list.filter(o => {
-      const orderId = String(o.id || o.order_number || '').toLowerCase();
-      const customer = String(o.customer || o.customerName || '').toLowerCase();
-      return orderId.includes(search) || customer.includes(search);
-    });
-  }
-  
-  // فلترة التاريخ
-  if (dateFrom || dateTo) {
-    list = list.filter(o => {
-      const d = new Date(o.date || o.created_at || o.createdAt);
-      if (dateFrom && d < dateFrom) return false;
-      if (dateTo && d > dateTo) return false;
-      return true;
-    });
-  }
-  
-  const el = $('ordList');
-  const countEl = $('ordCount');
-  if (countEl) countEl.textContent = list.length;
-  
-  if (!list.length) {
-    if (el) el.innerHTML = '<div class="empty">لا توجد طلبات</div>';
-    return;
-  }
-  
-  // ترقيم الصفحات
-  const start = (ordPage - 1) * 10;
-  const pageList = list.slice(start, start + 10);
-  
-  if (el) {
-    el.innerHTML = pageList.map(o => {
-      const st = o.status || 'pending';
-      const stClass = 'st-' + st;
-      const stLabel = {pending:'قيد الانتظار',confirmed:'مؤكد',shipped:'تم الشحن',delivered:'تم التسليم',cancelled:'ملغى',returned:'مرتجع'}[st] || st;
-      const date = o.date ? new Date(o.date).toLocaleDateString('ar') : '';
-      return `<div class="ord-row">
-        <div class="oinfo">
-          <b>#${o.id || o.order_number || '—'}</b> <span class="status-badge ${stClass}">${stLabel}</span>
-          <small>📅 ${date} • 👤 ${esc(o.customer || o.customerName || '—')} • 💰 ${o.total || 0} د.إ</small>
-        </div>
-        <select onchange="updateOrderStatus('${o.id}', this.value)" style="width:auto;font-size:.8rem">
-          <option value="pending" ${st==='pending'?'selected':''}>⏳ قيد الانتظار</option>
-          <option value="confirmed" ${st==='confirmed'?'selected':''}>✅ مؤكد</option>
-          <option value="shipped" ${st==='shipped'?'selected':''}>🚚 تم الشحن</option>
-          <option value="delivered" ${st==='delivered'?'selected':''}>📦 تم التسليم</option>
-          <option value="cancelled" ${st==='cancelled'?'selected':''}>✖ ملغى</option>
-        </select>
-        <button class="btn-ghost btn-sm" onclick="editOrder('${o.id}')">✏️</button>
-        <button class="btn-danger btn-sm" onclick="deleteOrder('${o.id}')">🗑</button>
-      </div>`;
-    }).join('');
-  }
-};
+// ملاحظة: تم دمج فلترة البحث والتاريخ داخل renderOrders() الأساسية مباشرة
+// (تمت إزالة نسخة مكررة كانت تستخدم دالة غير معرّفة updateOrderStatus وتُسبب أخطاء)
 
 /* ================= تحديث renderCustomers لدعم الترتيب والحظر ================= */
 const _origRenderCustomers = window.renderCustomers;
