@@ -2,25 +2,30 @@
 <html lang="ar" dir="rtl">
   <head>
   <meta charset="UTF-8" />
-  <title data-i18n="الصفحة الرئيسية - بريق">الصفحة الرئيسية - بريق</title>
-    <link rel="manifest" href="/manifest.json">
+  <title data-i18n="?????? ???????? - ????">?????? ???????? - ????</title>
+  <!-- Critical: Preload CSS for faster rendering -->
+  <link rel="preload" href="style/style.css" as="style">
+  <!-- Preconnect to external resources -->
+  <link rel="preconnect" href="https://ihhkzujjafydclnvyhaq.supabase.co" crossorigin>
+  <link rel="dns-prefetch" href="https://ihhkzujjafydclnvyhaq.supabase.co">
+  <link rel="manifest" href="/manifest.json">
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="icon" type="image/png" href="assets/logo.png">
   <link rel="apple-touch-icon" href="assets/logo.png">
-  <meta name="apple-mobile-web-app-title" content="بريق">
+  <meta name="apple-mobile-web-app-title" content="????">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#152546">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">  
-  <meta name="description" content="بريق - متجر إلكتروني شامل يقدم آلاف المنتجات بأفضل الأسعار. تسوق الآن ملابس، إلكترونيات، مستلزمات منزلية، أدوات تجميل، وأكثر. شحن سريع، دفع آمن، وضمان جودة المنتجات مع إمكانية الإرجاع. اكتشف عالم التسوق المميز معنا!">
+  <meta name="description" content="???? - ???? ???????? ???? ???? ???? ???????? ????? ???????. ???? ???? ?????? ??????????? ???????? ??????? ????? ?????? ?????. ??? ????? ??? ???? ????? ???? ???????? ?? ??????? ???????. ????? ???? ?????? ?????? ????!">
   <meta name="description-en" content="Bariq - A comprehensive online store offering thousands of products at the best prices. Shop now for clothing, electronics, home essentials, beauty products, and more. Fast shipping, secure payment, and quality assurance with easy returns. Discover a world of exceptional shopping with us!">
-  <meta name="keywords" content="متجر إلكتروني، قرقعيان،اليوم الوطني،حق اليله، يوم العلم، افراح، عمره، حج، تخرج، عرس، خطوبه،  مواليد، ورق، جلد، خشب، فوركس، مناسابات، هدايا، اكريلك، دفع آمن، شحن سريع، أفضل الأسعار، عروض خاصة، خصومات">
+  <meta name="keywords" content="???? ????????? ????????????? ????????? ?????? ??? ?????? ?????? ????? ??? ????? ???? ??????  ??????? ???? ???? ???? ?????? ????????? ?????? ??????? ??? ???? ??? ????? ???? ???????? ???? ????? ??????">
   <meta name="keywords-en" content="Electronics store, Garangao, National Day, Haq Al Laila, Flag Day, celebrations, Umrah, Hajj, graduation, weddings, engagements, newborns, paper, leather, wood, Forex, special occasions, gifts, acrylic, secure payment, fast service, superior designs, special offers, discounts">
   <meta name="robots" content="index, follow">
   <meta name="author" content="Bariq">
   <meta property="og:title" content="Bariq">
-  <meta property="og:description" content="متجر إلكتروني شامل يقدم آلاف المنتجات بأفضل الأسعار. شحن سريع، دفع آمن، وضمان جودة.">
+  <meta property="og:description" content="???? ???????? ???? ???? ???? ???????? ????? ???????. ??? ????? ??? ???? ????? ????.">
   <meta property="og:image" content="assets/logo.png">
   <meta property="og:url" content="https://bariq.com">
   <meta property="og:type" content="website">
@@ -32,127 +37,127 @@
     <header class="main-header" id="mainHeader">
       <div class="header-content">
 
-    <!-- الشعار -->
+    <!-- ?????? -->
     <div class="logo">
-      <a href="index.html"><img src="assets/logo.png" alt="X2 Logo" /></a>
+      <a href="index.html"><img src="assets/logo.png" alt="X2 Logo" fetchpriority="high" width="50" height="50" /></a>
     </div>
 
-<!-- القائمة الجانبية للفئات -->
+<!-- ??????? ???????? ?????? -->
 <div class="dropdown">
   <a href="categories.html" class="dropbtn-link" style="text-decoration:none;">
     <button class="dropbtn" style="border:none;outline:none;background:transparent;padding:0;margin:0;box-shadow:none;">
-      ≣ <span data-i18n="جميع الفئات">جميع الفئات</span>
+      ? <span data-i18n="???? ??????">???? ??????</span>
     </button>
   </a>
 
   <div class="dropdown-content categories-menu">
 
-    <!-- 1.  مناسابات-->
+    <!-- 1.  ????????-->
     <li class="category-item">
-      <a href="/categories/Occasions">🎉<span data-i18n=" مناسابات">مناسابات </span><span class="arrow">›</span></a>
+      <a href="/categories/Occasions">??<span data-i18n=" ????????">???????? </span><span class="arrow">�</span></a>
       <div class="flyout category-flyout">
         <ul class="subcategories">
-          <li><a href="/categories/Occasions/National Day"><img src="assets/categories/Occasions/National Day.png" alt="اليوم الوطني"><span data-i18n="اليوم الوطني  ">اليوم الوطني  </span></a></li>
-          <li><a href="/categories/Occasions/Haq Al-Laila"><img src="assets/categories/Occasions/Haq Al-Laila.png" alt="حق الليلة"><span data-i18n="حق الليلة ">حق الليلة </span></a></li>
-          <li><a href="/categories/Occasions/Mother's Day"><img src="assets/categories/Occasions/Mother's Day.png" alt="عيد الام"><span data-i18n="عيد الام ">عيد الام </span></a></li>
-          <li><a href="/categories/Occasions/Graduation"><img src="assets/categories/Occasions/Graduation.png" alt="تخرج"><span data-i18n="تخرج ">تخرج </span></a></li>
-          <li><a href="/categories/Occasions/Eid"><img src="assets/categories/Occasions/Eid.png" alt="العيد"><span data-i18n="العيد ">العيد </span></a></li>
-          <li><a href="/categories/Occasions/Hajj"><img src="assets/categories/Occasions/Hajj.png" alt="حج"><span data-i18n="حج ">حج </span></a></li>
+          <li><a href="/categories/Occasions/National Day"><img src="assets/categories/Occasions/National Day.png" alt="????? ??????" loading="lazy"><span data-i18n="????? ??????  ">????? ??????  </span></a></li>
+          <li><a href="/categories/Occasions/Haq Al-Laila"><img src="assets/categories/Occasions/Haq Al-Laila.png" alt="?? ??????" loading="lazy"><span data-i18n="?? ?????? ">?? ?????? </span></a></li>
+          <li><a href="/categories/Occasions/Mother's Day"><img src="assets/categories/Occasions/Mother's Day.png" alt="??? ????" loading="lazy"><span data-i18n="??? ???? ">??? ???? </span></a></li>
+          <li><a href="/categories/Occasions/Graduation"><img src="assets/categories/Occasions/Graduation.png" alt="????" loading="lazy"><span data-i18n="???? ">???? </span></a></li>
+          <li><a href="/categories/Occasions/Eid"><img src="assets/categories/Occasions/Eid.png" alt="?????" loading="lazy"><span data-i18n="????? ">????? </span></a></li>
+          <li><a href="/categories/Occasions/Hajj"><img src="assets/categories/Occasions/Hajj.png" alt="??" loading="lazy"><span data-i18n="?? ">?? </span></a></li>
         </ul>
       </div>
     </li>
 
-    <!-- 2.  اكريلك -->
+    <!-- 2.  ?????? -->
     <li class="category-item">
-      <a href="/categories/Acrylic">💎<span data-i18n=" اكريلك">اكريلك </span><span class="arrow">›</span></a>
+      <a href="/categories/Acrylic">??<span data-i18n=" ??????">?????? </span><span class="arrow">�</span></a>
       <div class="flyout category-flyout">
         <ul class="subcategories">
-          <li><a href="/categories/Acrylic/Box"><img src="assets/categories/Acrylic/Box.png" alt="بوكس"><span data-i18n="بوكس">بوكس</span></a></li>
-          <li><a href="/categories/Acrylic/Tables"><img src="assets/categories/Acrylic/Tables.png" alt="طولات "><span data-i18n="طولات ">طولات </span></a></li>
-          <li><a href="/categories/Acrylic/Born in"><img src="assets/categories/Acrylic/Born in.png" alt="مواليد "><span data-i18n="مواليد ">مواليد </span></a></li>
-          <li><a href="/categories/Acrylic/censer"><img src="assets/categories/Acrylic/censer.png" alt="مباخر "><span data-i18n="مباخر ">مباخر </span></a></li>
-          <li><a href="/categories/Acrylic/Trays"><img src="assets/categories/Acrylic/Trays.png" alt="صواني "><span data-i18n="صواني ">صواني </span></a></li>
-          <li><a href="/categories/Acrylic/Stand"><img src="assets/categories/Acrylic/Stand.png" alt="استاند "><span data-i18n="استاند ">استاند </span></a></li>
+          <li><a href="/categories/Acrylic/Box"><img src="assets/categories/Acrylic/Box.png" alt="????" loading="lazy"><span data-i18n="????">????</span></a></li>
+          <li><a href="/categories/Acrylic/Tables"><img src="assets/categories/Acrylic/Tables.png" alt="????? " loading="lazy"><span data-i18n="????? ">????? </span></a></li>
+          <li><a href="/categories/Acrylic/Born in"><img src="assets/categories/Acrylic/Born in.png" alt="?????? " loading="lazy"><span data-i18n="?????? ">?????? </span></a></li>
+          <li><a href="/categories/Acrylic/censer"><img src="assets/categories/Acrylic/censer.png" alt="????? " loading="lazy"><span data-i18n="????? ">????? </span></a></li>
+          <li><a href="/categories/Acrylic/Trays"><img src="assets/categories/Acrylic/Trays.png" alt="????? " loading="lazy"><span data-i18n="????? ">????? </span></a></li>
+          <li><a href="/categories/Acrylic/Stand"><img src="assets/categories/Acrylic/Stand.png" alt="?????? " loading="lazy"><span data-i18n="?????? ">?????? </span></a></li>
         </ul>
       </div>
     </li>
 
-    <!-- 3.  ورق -->
+    <!-- 3.  ??? -->
     <li class="category-item">
-      <a href="/categories/paper">📄<span data-i18n="ورق ">ورق </span><span class="arrow">›</span></a>
+      <a href="/categories/paper">??<span data-i18n="??? ">??? </span><span class="arrow">�</span></a>
       <div class="flyout category-flyout">
         <ul class="subcategories">
-          <li><a href="/categories/paper/Bags"><img src="assets/categories/paper/Bags.png" alt="شنط  "><span data-i18n="شنط  ">شنط  </span></a></li>
-          <li><a href="/categories/paper/Cups"><img src="assets/categories/paper/Cups.png" alt="كوب "><span data-i18n="كوب ">كوب </span></a></li>
-          <li><a href="/categories/paper/Tissues"><img src="assets/categories/paper/Tissues.png" alt="تيشو "><span data-i18n="تيشو ">تيشو </span></a></li>
-          <li><a href="/categories/paper/Stickers"><img src="assets/categories/paper/Stickers.png" alt="استيكر "><span data-i18n="استيكر ">استيكر </span></a></li>
+          <li><a href="/categories/paper/Bags"><img src="assets/categories/paper/Bags.png" alt="???  " loading="lazy"><span data-i18n="???  ">???  </span></a></li>
+          <li><a href="/categories/paper/Cups"><img src="assets/categories/paper/Cups.png" alt="??? " loading="lazy"><span data-i18n="??? ">??? </span></a></li>
+          <li><a href="/categories/paper/Tissues"><img src="assets/categories/paper/Tissues.png" alt="???? " loading="lazy"><span data-i18n="???? ">???? </span></a></li>
+          <li><a href="/categories/paper/Stickers"><img src="assets/categories/paper/Stickers.png" alt="?????? " loading="lazy"><span data-i18n="?????? ">?????? </span></a></li>
         </ul>
       </div>
     </li>
 
-    <!-- 4.  فوركس -->
+    <!-- 4.  ????? -->
     <li class="category-item">
-      <a href="/categories/Forex">🪙<span data-i18n="فوركس ">فوركس </span><span class="arrow">›</span></a>
+      <a href="/categories/Forex">??<span data-i18n="????? ">????? </span><span class="arrow">�</span></a>
       <div class="flyout category-flyout">
         <ul class="subcategories">
-          <li><a href="/categories/Forex/tables"><img src="assets/categories/Forex/tables.png" alt="طولات "><span data-i18n="طولات ">طولات </span></a></li>
-          <li><a href="/categories/Forex/stands"><img src="assets/categories/Forex/stands.png" alt="استاند  "><span data-i18n="استاند  ">استاند  </span></a></li>
-          <li><a href="/categories/Forex/models"><img src="assets/categories/Forex/models.png" alt="مجسم "><span data-i18n="مجسم ">مجسم </span></a></li>
-          <li><a href="/categories/Forex/rotations"><img src="assets/categories/Forex/rotations.png" alt="دوران "><span data-i18n="دوران ">دوران </span></a></li>
+          <li><a href="/categories/Forex/tables"><img src="assets/categories/Forex/tables.png" alt="????? " loading="lazy"><span data-i18n="????? ">????? </span></a></li>
+          <li><a href="/categories/Forex/stands"><img src="assets/categories/Forex/stands.png" alt="??????  " loading="lazy"><span data-i18n="??????  ">??????  </span></a></li>
+          <li><a href="/categories/Forex/models"><img src="assets/categories/Forex/models.png" alt="???? " loading="lazy"><span data-i18n="???? ">???? </span></a></li>
+          <li><a href="/categories/Forex/rotations"><img src="assets/categories/Forex/rotations.png" alt="????? " loading="lazy"><span data-i18n="????? ">????? </span></a></li>
         </ul>
       </div>
     </li>
 
-    <!-- 5.  خشب   -->
+    <!-- 5.  ???   -->
     <li class="category-item">
-      <a href="/categories/wood">🪵<span data-i18n="خشب  "> خشب  </span><span class="arrow">›</span></a>
+      <a href="/categories/wood">??<span data-i18n="???  "> ???  </span><span class="arrow">�</span></a>
       <div class="flyout category-flyout">
         <ul class="subcategories">
-          <li><a href="/categories/wood/tables"><img src="assets/categories/wood/tables.png" alt="طولات "><span data-i18n="طولات">طولات </span></a></li>
-          <li><a href="/categories/wood/chairs"><img src="assets/categories/wood/chairs.png" alt="دوران "><span data-i18n="دوران  ">دوران  </span></a></li>
-          <li><a href="/categories/wood/benches"><img src="assets/categories/wood/benches.png" alt="مجسم "><span data-i18n="مجسم ">مجسم </span></a></li>
-          <li><a href="/categories/wood/cabinets"><img src="assets/categories/wood/cabinets.png" alt="استاند  "><span data-i18n="استاند  ">استاند  </span></a></li>
+          <li><a href="/categories/wood/tables"><img src="assets/categories/wood/tables.png" alt="????? " loading="lazy"><span data-i18n="?????">????? </span></a></li>
+          <li><a href="/categories/wood/chairs"><img src="assets/categories/wood/chairs.png" alt="????? " loading="lazy"><span data-i18n="?????  ">?????  </span></a></li>
+          <li><a href="/categories/wood/benches"><img src="assets/categories/wood/benches.png" alt="???? " loading="lazy"><span data-i18n="???? ">???? </span></a></li>
+          <li><a href="/categories/wood/cabinets"><img src="assets/categories/wood/cabinets.png" alt="??????  " loading="lazy"><span data-i18n="??????  ">??????  </span></a></li>
         </ul>
       </div>
     </li>
 
-    <!-- 6.   جلد -->
+    <!-- 6.   ??? -->
     <li class="category-item">
-      <a href="/categories/leather">👞<span data-i18n="جلد  ">جلد  </span><span class="arrow">›</span></a>
+      <a href="/categories/leather">??<span data-i18n="???  ">???  </span><span class="arrow">�</span></a>
       <div class="flyout category-flyout">
         <ul class="subcategories">
-          <li><a href="/categories/leather/boxes"><img src="assets/categories/leather/boxes.png" alt="بوكسات "><span data-i18n="بوكسات ">بوكسات</span></a></li>
-          <li><a href="/categories/leather/born-in"><img src="assets/categories/leather/born-in.png" alt="مواليد "><span data-i18n="مواليد ">مواليد</span></a></li>
-          <li><a href="/categories/leather/trays"><img src="assets/categories/leather/trays.png" alt="صواني "><span data-i18n="صواني ">صواني</span></a></li>
-          <li><a href="/categories/leather/tables"><img src="assets/categories/leather/tables.png" alt="طولات "><span data-i18n="طولات ">طولات</span></a></li>
-        </ul>
-      </div>
-    </li>
-
-
-    <!-- 7.   استيكر -->
-    <li class="category-item">
-      <a href="/categories/sticker">🏷️<span data-i18n="استيكر">استيكر</span><span class="arrow">›</span></a>
-      <div class="flyout category-flyout">
-        <ul class="subcategories">
-          <li><a href="/categories/Sticker/born-in"><img src="assets/categories/Sticker/born-in.png" alt="مواليد "><span data-i18n="مواليد ">مواليد</span></a></li>
-          <li><a href="/categories/Sticker/empty"><img src="assets/categories/Sticker/empty.png" alt="مفرغ "><span data-i18n="مفرغ ">مفرغ</span></a></li>
-          <li><a href="/categories/Sticker/full"><img src="assets/categories/Sticker/full.png" alt="كامل "><span data-i18n="كامل ">كامل</span></a></li>
-          <li><a href="/categories/Sticker/occasions"><img src="assets/categories/Sticker/occasions.png" alt="المناسبات"><span data-i18n="المناسبات">المناسبات</span></a></li>
+          <li><a href="/categories/leather/boxes"><img src="assets/categories/leather/boxes.png" alt="?????? " loading="lazy"><span data-i18n="?????? ">??????</span></a></li>
+          <li><a href="/categories/leather/born-in"><img src="assets/categories/leather/born-in.png" alt="?????? " loading="lazy"><span data-i18n="?????? ">??????</span></a></li>
+          <li><a href="/categories/leather/trays"><img src="assets/categories/leather/trays.png" alt="????? " loading="lazy"><span data-i18n="????? ">?????</span></a></li>
+          <li><a href="/categories/leather/tables"><img src="assets/categories/leather/tables.png" alt="????? " loading="lazy"><span data-i18n="????? ">?????</span></a></li>
         </ul>
       </div>
     </li>
 
 
-        <!-- 8.   رمضان -->
+    <!-- 7.   ?????? -->
     <li class="category-item">
-      <a href="/categories/Ramadan">🌙<span data-i18n="رمضان">رمضان</span><span class="arrow">›</span></a>
+      <a href="/categories/sticker">???<span data-i18n="??????">??????</span><span class="arrow">�</span></a>
       <div class="flyout category-flyout">
         <ul class="subcategories">
-          <li><a href="/categories/Ramadan/wood"><img src="assets/categories/Ramadan/wood.png" alt="خشب"><span data-i18n="خشب">خشب</span></a></li>
-          <li><a href="/categories/Ramadan/acrylic"><img src="assets/categories/Ramadan/acrylic.png" alt="اكريلك "><span data-i18n="اكريلك ">اكريلك</span></a></li>
-          <li><a href="/categories/Ramadan/forex"><img src="assets/categories/Ramadan/forex.png" alt="فوركس "><span data-i18n="فوركس ">فوركس </span></a></li>
-          <li><a href="/categories/Ramadan/leather"><img src="assets/categories/Ramadan/leather.png" alt="جلد "><span data-i18n="جلد "> جلد</span></a></li>
+          <li><a href="/categories/Sticker/born-in"><img src="assets/categories/Sticker/born-in.png" alt="?????? " loading="lazy"><span data-i18n="?????? ">??????</span></a></li>
+          <li><a href="/categories/Sticker/empty"><img src="assets/categories/Sticker/empty.png" alt="???? " loading="lazy"><span data-i18n="???? ">????</span></a></li>
+          <li><a href="/categories/Sticker/full"><img src="assets/categories/Sticker/full.png" alt="???? " loading="lazy"><span data-i18n="???? ">????</span></a></li>
+          <li><a href="/categories/Sticker/occasions"><img src="assets/categories/Sticker/occasions.png" alt="?????????" loading="lazy"><span data-i18n="?????????">?????????</span></a></li>
+        </ul>
+      </div>
+    </li>
+
+
+        <!-- 8.   ????? -->
+    <li class="category-item">
+      <a href="/categories/Ramadan">??<span data-i18n="?????">?????</span><span class="arrow">�</span></a>
+      <div class="flyout category-flyout">
+        <ul class="subcategories">
+          <li><a href="/categories/Ramadan/wood"><img src="assets/categories/Ramadan/wood.png" alt="???" loading="lazy"><span data-i18n="???">???</span></a></li>
+          <li><a href="/categories/Ramadan/acrylic"><img src="assets/categories/Ramadan/acrylic.png" alt="?????? " loading="lazy"><span data-i18n="?????? ">??????</span></a></li>
+          <li><a href="/categories/Ramadan/forex"><img src="assets/categories/Ramadan/forex.png" alt="????? " loading="lazy"><span data-i18n="????? ">????? </span></a></li>
+          <li><a href="/categories/Ramadan/leather"><img src="assets/categories/Ramadan/leather.png" alt="??? " loading="lazy"><span data-i18n="??? "> ???</span></a></li>
         </ul>
       </div>
     </li>
@@ -163,19 +168,19 @@
 
 
 
-    <!-- داخل شريط البحث -->
+    <!-- ???? ???? ????? -->
 <div class="search-container">
 <input type="text" id="textSearch"
-  placeholder="ابحث بالصورة أو الاسم أو رقم الطلب"
-  data-i18n-placeholder="ابحث بالصورة أو الاسم أو رقم الطلب">
-  <!-- أيقونة البحث -->
+  placeholder="???? ??????? ?? ????? ?? ??? ?????"
+  data-i18n-placeholder="???? ??????? ?? ????? ?? ??? ?????">
+  <!-- ?????? ????? -->
   <span class="icon search search-icon" onclick="performTextSearch()" style="cursor:pointer;display:flex;align-items:center;">
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
     </svg>
   </span>
 
-  <!-- أيقونة الكاميرا -->
+  <!-- ?????? ???????? -->
   <label class="icon camera camera-icon" for="imageSearchInput" style="cursor:pointer;display:flex;align-items:center;margin-right:4px;">
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
@@ -186,59 +191,59 @@
 </div>
 
 
-    <!-- الحساب -->
+    <!-- ?????? -->
     <div class="dropdown">
-      <button class="dropbtn">🗣 <span data-i18n="الحساب">الحساب</span> </button>
+      <button class="dropbtn">?? <span data-i18n="??????">??????</span> </button>
       <div class="dropdown-content">
-        <a href="login.html">🔑<span data-i18n="تسجيل الدخول"> تسجيل الدخول</span></a>
-        <a href="login.html?tab=register">📝<span data-i18n="إنشاء حساب"> إنشاء حساب</span></a>
-        <a href="account.html">👤<span data-i18n="حسابي"> حسابي</span></a>
+        <a href="login.html">??<span data-i18n="????? ??????"> ????? ??????</span></a>
+        <a href="login.html?tab=register">??<span data-i18n="????? ????"> ????? ????</span></a>
+        <a href="account.html">??<span data-i18n="?????"> ?????</span></a>
       </div>
     </div>
 
-   <!-- الدعم -->
+   <!-- ????? -->
     <div class="dropdown">
-      <button class="dropbtn">☎<span data-i18n="الدعم">الدعم</span> </button>
+      <button class="dropbtn">?<span data-i18n="?????">?????</span> </button>
       <div class="dropdown-content">
-        <a href="/policy.html?page=contact">📘<span data-i18n="تواصل معنا"> تواصل معنا</span></a>
-        <a href="/policy.html?page=security-center">🛡️<span data-i18n="مركز الأمان"> مركز الأمان</span></a>
-        <a href="/policy.html?page=returns">📜<span data-i18n="سياسة الإرجاع والاسترداد"> سياسة الإرجاع والاسترداد</span></a>
-        <a href="/policy.html?page=shipping-info">📦 <span data-i18n="معلومات الشحن">معلومات الشحن</span></a>
-        <a href="/policy.html?page=work-with-Bariq">💱 <span data-i18n="اعمل مع Bariq">اعمل مع Bariq</span></a>
+        <a href="/policy.html?page=contact">??<span data-i18n="????? ????"> ????? ????</span></a>
+        <a href="/policy.html?page=security-center">???<span data-i18n="???? ??????"> ???? ??????</span></a>
+        <a href="/policy.html?page=returns">??<span data-i18n="????? ??????? ??????????"> ????? ??????? ??????????</span></a>
+        <a href="/policy.html?page=shipping-info">?? <span data-i18n="??????? ?????">??????? ?????</span></a>
+        <a href="/policy.html?page=work-with-Bariq">?? <span data-i18n="???? ?? Bariq">???? ?? Bariq</span></a>
       </div>
     </div>
 
-    <!-- البلد -->
+    <!-- ????? -->
     <div class="dropdown">
-      <button class="dropbtn">🏳️<span data-i18n="البلد">البلد</span> </button>
+      <button class="dropbtn">???<span data-i18n="?????">?????</span> </button>
       <div class="dropdown-content lang-country">
-        <label for="language">🌐<span data-i18n="اللغة"> اللغة</span></label>
+        <label for="language">??<span data-i18n="?????"> ?????</span></label>
         <select id="language">
-          <option value="ar">العربية</option>
+          <option value="ar">???????</option>
           <option value="en">English</option>
         </select>
 
-        <label for="currency">💱<span data-i18n="العملة"> العملة</span></label>
+        <label for="currency">??<span data-i18n="??????"> ??????</span></label>
         <select id="currency">
-          <option value="AED"><span data-i18n="درهم">درهم</span></option>
-          <option value="USD"><span data-i18n="دولار">دولار</span></option>
-          <option value="EUR"><span data-i18n="يورو">يورو</span></option>
-          <option value="SAR"><span data-i18n="ريال سعودي">ريال سعودي</span></option>
-          <option value="EGP"><span data-i18n="جنيه مصري">جنيه مصري</span></option>
-          <option value="KWD"><span data-i18n="دينار كويتي">دينار كويتي</span></option>
-          <option value="JOD"><span data-i18n="دينار أردني">دينار أردني</span></option>
-          <option value="GBP"><span data-i18n="جنيه إسترليني">جنيه إسترليني</span></option>
+          <option value="AED"><span data-i18n="????">????</span></option>
+          <option value="USD"><span data-i18n="?????">?????</span></option>
+          <option value="EUR"><span data-i18n="????">????</span></option>
+          <option value="SAR"><span data-i18n="???? ?????">???? ?????</span></option>
+          <option value="EGP"><span data-i18n="???? ????">???? ????</span></option>
+          <option value="KWD"><span data-i18n="????? ?????">????? ?????</span></option>
+          <option value="JOD"><span data-i18n="????? ?????">????? ?????</span></option>
+          <option value="GBP"><span data-i18n="???? ????????">???? ????????</span></option>
         </select><br>
 
         <div class="country-info">
-          🏳️ <span data-i18n="أنت الآن تتسوق في">أنت الآن تتسوق في</span> <span data-i18n="الإمارات"> الإمارات</span>
+          ??? <span data-i18n="??? ???? ????? ??">??? ???? ????? ??</span> <span data-i18n="????????"> ????????</span>
         </div>
       </div>
     </div>
 
-    <!-- السلة -->
+    <!-- ????? -->
     <div class="cart">
-      <a href="Cart.html" title="سلة التسوق">
+      <a href="Cart.html" title="??? ??????">
         <svg class="cart-icon" xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-shopping-cart">
           <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
           <path d="M6 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
@@ -254,7 +259,7 @@
 
 <main class="main" id="main">
   
-<section class="animated-promo-banner" aria-label="بنر بريق">
+<section class="animated-promo-banner" aria-label="??? ????">
   <a href="#">
     <div class="banner-inner">
       <img src="assets/home/1.png"
@@ -266,84 +271,84 @@
 
 
 
-<!-- بنر العروض الخاطفة المتحرك -->
-<section class="flash-deal-banner" aria-label="عروض X2 Shopping">
+<!-- ??? ?????? ??????? ??????? -->
+<section class="flash-deal-banner" aria-label="???? X2 Shopping">
   <a href="offers.html" class="promo-link">
     <div class="promo-inner">
-      <!-- صورة الخلفية -->
+      <!-- ???? ??????? -->
       <img src="assets/home/2.png" class="banner-bg" alt="" aria-hidden="true">
 
-      <!-- النص المتحرك في خط واحد -->
+      <!-- ???? ??????? ?? ?? ???? -->
       <div class="scrolling-text-container">
         <div class="scrolling-text">
-          <!-- تم تكرار العنصر لتحقيق حركة مستمرة -->
+          <!-- ?? ????? ?????? ?????? ???? ?????? -->
           <div class="text-item">
-            <span class="promo-icon">⚡</span>
-            <span class="promo-title" data-i18n="promo.banner.title">عروض خاطفة</span>
-            <span class="promo-sub" data-i18n="promo.banner.sub">عرض لوقت محدود</span>
+            <span class="promo-icon">?</span>
+            <span class="promo-title" data-i18n="promo.banner.title">???? ?????</span>
+            <span class="promo-sub" data-i18n="promo.banner.sub">??? ???? ?????</span>
           </div>
           <div class="text-item">
-            <span class="promo-icon">⚡</span>
-            <span class="promo-title" data-i18n="promo.banner.title">الحق قبل نفاد الكمية</span>
+            <span class="promo-icon">?</span>
+            <span class="promo-title" data-i18n="promo.banner.title">???? ??? ???? ??????</span>
           </div>
         </div>
       </div>
     </div>
   </a>
 </section>
-  <!-- محتوى الموقع هنا -->
+  <!-- ????? ?????? ??? -->
   <div id="searchResults" style="margin-top: 10px;"></div>
 
-  <!-- ===== اختيارات اليوم: 4 منتجات مخفّضة تتغير يومياً ===== -->
+  <!-- ===== ???????? ?????: 4 ?????? ?????? ????? ?????? ===== -->
   <div class="daily-picks-section">
     <div class="daily-picks-header">
-      <span class="daily-picks-label" data-i18n="اختيارات اليوم">🌟 اختيارات اليوم</span>
-      <a href="offers.html" class="daily-picks-all" data-i18n="عرض الكل">عرض الكل 🔥</a>
+      <span class="daily-picks-label" data-i18n="???????? ?????">?? ???????? ?????</span>
+      <a href="offers.html" class="daily-picks-all" data-i18n="??? ????">??? ???? ??</a>
     </div>
     <div class="daily-picks-grid" id="dailyPicksGrid">
-      <!-- تُملأ بـ JS -->
+      <!-- ????? ?? JS -->
     </div>
   </div>
 
-  <!-- شريط الثقة الاحترافي -->
+  <!-- ???? ????? ????????? -->
   <div class="trust-bar">
     <div class="trust-item">
-      <span class="trust-icon">🚚</span>
-      <span class="trust-title" data-i18n="شحن سريع">شحن سريع</span>
+      <span class="trust-icon">??</span>
+      <span class="trust-title" data-i18n="??? ????">??? ????</span>
     </div>
     <div class="trust-divider"></div>
     <div class="trust-item">
-      <span class="trust-icon">🔄</span>
-      <span class="trust-title" data-i18n="إرجاع مجاني">إرجاع مجاني</span>
+      <span class="trust-icon">??</span>
+      <span class="trust-title" data-i18n="????? ?????">????? ?????</span>
     </div>
     <div class="trust-divider"></div>
     <div class="trust-item">
-      <span class="trust-icon">🎁</span>
-      <span class="trust-title" data-i18n="عروض حصرية">عروض حصرية</span>
+      <span class="trust-icon">??</span>
+      <span class="trust-title" data-i18n="???? ?????">???? ?????</span>
     </div>
     <div class="trust-divider"></div>
     <div class="trust-item">
-      <span class="trust-icon">🏆</span>
-      <span class="trust-title" data-i18n="جودة مضمونة">جودة مضمونة</span>
+      <span class="trust-icon">??</span>
+      <span class="trust-title" data-i18n="???? ??????">???? ??????</span>
     </div>
   </div>
 
 <div class="categories">
-    <div><a href="/categories.html">💯 <span data-i18n="الكل">الكل</span></a></div>
-    <div><a href="/categories/Occasions">🎉 <span data-i18n="مناسابات">مناسابات</span></a></div>
-    <div><a href="/categories/Acrylic">💎 <span data-i18n=" اكريلك">اكريلك </span></a></div>
-    <div><a href="/categories/paper">📄 <span data-i18n="ورق ">ورق </span></a></div>
-    <div><a href="/categories/Forex">🖼️ <span data-i18n="فوركس ">فوركس </span></a></div>
-    <div><a href="/categories/wood">🪵 <span data-i18n="خشب  ">خشب  </span></a></div>
-    <div><a href="/categories/leather">👜 <span data-i18n="جلد  ">جلد  </span></a></div>
-    <div><a href="/categories/sticker">🏷️ <span data-i18n="استيكر ">استيكر </span></a></div>
-    <div><a href="/categories/ramadan">🌙 <span data-i18n="رمضان ">رمضان </span></a></div>
+    <div><a href="/categories.html">?? <span data-i18n="????">????</span></a></div>
+    <div><a href="/categories/Occasions">?? <span data-i18n="????????">????????</span></a></div>
+    <div><a href="/categories/Acrylic">?? <span data-i18n=" ??????">?????? </span></a></div>
+    <div><a href="/categories/paper">?? <span data-i18n="??? ">??? </span></a></div>
+    <div><a href="/categories/Forex">??? <span data-i18n="????? ">????? </span></a></div>
+    <div><a href="/categories/wood">?? <span data-i18n="???  ">???  </span></a></div>
+    <div><a href="/categories/leather">?? <span data-i18n="???  ">???  </span></a></div>
+    <div><a href="/categories/sticker">??? <span data-i18n="?????? ">?????? </span></a></div>
+    <div><a href="/categories/ramadan">?? <span data-i18n="????? ">????? </span></a></div>
 </div>
 
-<!-- شريط الفئات الدائري سيظهر هنا -->
+<!-- ???? ?????? ??????? ????? ??? -->
 <div id="subcategories-display"></div>
 
-<!-- أضف هذا العنصر لعرض المنتجات الخاصة بالفئة المختارة -->
+<!-- ??? ??? ?????? ???? ???????? ?????? ?????? ???????? -->
   <div id="category-products" style="margin-bottom:30px;"></div>
 
   
@@ -352,47 +357,47 @@
 <footer class="site-footer">
   <div class="footer-info-bar">
     <div class="footer-columns">
-      <!-- معلومات عن Bariq -->
+      <!-- ??????? ?? Bariq -->
       <div class="footer-column">
-        <strong data-i18n="معلومات عن Bariq">معلومات عن Bariq</strong>
+        <strong data-i18n="??????? ?? Bariq">??????? ?? Bariq</strong>
         <ul>
-          <li><a href="/policy/about" data-i18n="نبذة عن Bariq">نبذة عن Bariq</a></li>
-          <li><a href="/policy/shop-like-pro" data-i18n="تسوق مثل المحترفين">تسوق مثل المحترفين</a></li>
-          <li><a href="/policy/affiliate-commission" data-i18n="التابع والمكافآت: اكسب عمولة">التابع والمكافآت: اكسب عمولة</a></li>
-          <li><a href="/policy/contact" data-i18n="تواصل معنا">تواصل معنا</a></li>
-          <li><a href="/policy/media-outlets" data-i18n="المنافذ الإعلامية">المنافذ الإعلامية</a></li>
-          <li><a href="/policy/tree-planting" data-i18n="برنامج زراعة الأشجار في Bariq">برنامج زراعة الأشجار في Bariq</a></li>
+          <li><a href="/policy/about" data-i18n="???? ?? Bariq">???? ?? Bariq</a></li>
+          <li><a href="/policy/shop-like-pro" data-i18n="???? ??? ?????????">???? ??? ?????????</a></li>
+          <li><a href="/policy/affiliate-commission" data-i18n="?????? ?????????: ???? ?????">?????? ?????????: ???? ?????</a></li>
+          <li><a href="/policy/contact" data-i18n="????? ????">????? ????</a></li>
+          <li><a href="/policy/media-outlets" data-i18n="??????? ?????????">??????? ?????????</a></li>
+          <li><a href="/policy/tree-planting" data-i18n="?????? ????? ??????? ?? Bariq">?????? ????? ??????? ?? Bariq</a></li>
         </ul>
       </div>
-      <!-- خدمة العملاء -->
+      <!-- ???? ??????? -->
       <div class="footer-column">
-        <strong data-i18n="خدمة العملاء">خدمة العملاء</strong>
+        <strong data-i18n="???? ???????">???? ???????</strong>
         <ul>
-          <li><a href="/policy/customer-service" data-i18n="خدمة العملاء">خدمة العملاء</a></li>
-          <li><a href="/policy/returns" data-i18n="سياسة الإرجاع والاسترداد">سياسة الإرجاع والاسترداد</a></li>
-          <li><a href="/policy/intellectual-property" data-i18n="سياسة الملكية الفكرية">سياسة الملكية الفكرية</a></li>
-          <li><a href="/policy/shipping-info" data-i18n="معلومات الشحن">معلومات الشحن</a></li>
-          <li><a href="/policy/report-abuse" data-i18n="الإبلاغ عن النشاط المشبوه">الإبلاغ عن النشاط المشبوه</a></li>
+          <li><a href="/policy/customer-service" data-i18n="???? ???????">???? ???????</a></li>
+          <li><a href="/policy/returns" data-i18n="????? ??????? ??????????">????? ??????? ??????????</a></li>
+          <li><a href="/policy/intellectual-property" data-i18n="????? ??????? ???????">????? ??????? ???????</a></li>
+          <li><a href="/policy/shipping-info" data-i18n="??????? ?????">??????? ?????</a></li>
+          <li><a href="/policy/report-abuse" data-i18n="??????? ?? ?????? ???????">??????? ?? ?????? ???????</a></li>
         </ul>
       </div>
-      <!-- المساعدة -->
+      <!-- ???????? -->
       <div class="footer-column">
-        <strong data-i18n="المساعدة">المساعدة</strong>
+        <strong data-i18n="????????">????????</strong>
         <ul>
-          <li><a href="/policy/support-faq" data-i18n="مركز الدعم والأسئلة الشائعة">مركز الدعم والأسئلة الشائعة</a></li>
-          <li><a href="/policy/security-center" data-i18n="مركز الأمان">مركز الأمان</a></li>
-          <li><a href="/policy/buyer-protection" data-i18n="حماية المشتري في Bariq">حماية المشتري في Bariq</a></li>
-          <li><a href="/policy/work-with-Bariq" data-i18n="اعمل مع Bariq">اعمل مع Bariq</a></li>
+          <li><a href="/policy/support-faq" data-i18n="???? ????? ???????? ???????">???? ????? ???????? ???????</a></li>
+          <li><a href="/policy/security-center" data-i18n="???? ??????">???? ??????</a></li>
+          <li><a href="/policy/buyer-protection" data-i18n="????? ??????? ?? Bariq">????? ??????? ?? Bariq</a></li>
+          <li><a href="/policy/work-with-Bariq" data-i18n="???? ?? Bariq">???? ?? Bariq</a></li>
         </ul>
       </div>
-      <!-- تنزيل تطبيق Bariq -->
+      <!-- ????? ????? Bariq -->
       <div class="footer-app-section">
-        <strong data-i18n="تنزيل تطبيق Bariq">تنزيل تطبيق Bariq</strong>
+        <strong data-i18n="????? ????? Bariq">????? ????? Bariq</strong>
         <ul>
-          <li data-i18n="تنبيهات انخفاض الأسعار، العروض، الخصومات">تنبيهات انخفاض الأسعار، العروض، الخصومات</li>
-          <li data-i18n="عملية دفع آمنة وإرجاع آمن">عملية دفع آمنة وإرجاع آمن</li>
-          <li data-i18n="تتبع الطلبات في أي وقت">تتبع الطلبات في أي وقت</li>
-          <li data-i18n="تنبيهات توفر المنتج بكميات">تنبيهات توفر المنتج بكميات</li>
+          <li data-i18n="??????? ?????? ???????? ??????? ????????">??????? ?????? ???????? ??????? ????????</li>
+          <li data-i18n="????? ??? ???? ?????? ???">????? ??? ???? ?????? ???</li>
+          <li data-i18n="???? ??????? ?? ?? ???">???? ??????? ?? ?? ???</li>
+          <li data-i18n="??????? ???? ?????? ??????">??????? ???? ?????? ??????</li>
         </ul>
         <div class="footer-app-buttons">
           <a href="#"><img src="assets/app/Google Play.png" alt="Google Play"></a>
@@ -400,9 +405,9 @@
         </div>
       </div>
     </div>
-    <!-- تواصل معنا -->
+    <!-- ????? ???? -->
     <div class="footer-social">
-      <strong data-i18n="تواصل معنا">تواصل معنا</strong>
+      <strong data-i18n="????? ????">????? ????</strong>
       <div class="footer-social-icons">
         <a href="#" aria-label="Instagram">
           <img src="assets/social/instagram.png" alt="Instagram" style="width:30px;height:30px;">
@@ -427,10 +432,10 @@
         </a>
       </div>
     </div>
-    <!-- صف الدفع وشهادة الأمان -->
+    <!-- ?? ????? ?????? ?????? -->
     <div class="footer-bottom-row">
       <div class="footer-pay-methods">
-        <div class="footer-pay-methods-title" data-i18n="نحن نقبل">نحن نقبل</div>
+        <div class="footer-pay-methods-title" data-i18n="??? ????">??? ????</div>
         <div class="footer-pay-icons">
           <img src="assets/pay/visa.webp" alt="Visa">
           <img src="assets/pay/mastercard.webp" alt="MasterCard">
@@ -448,7 +453,7 @@
         </div>
       </div>
       <div class="footer-security-badges">
-        <div class="footer-security-badges-title" data-i18n="شهادة الأمان">شهادة الأمان</div>
+        <div class="footer-security-badges-title" data-i18n="????? ??????">????? ??????</div>
         <div class="footer-security-icons">
           <img src="assets/secure/apwg.webp" alt="APWG">
           <img src="assets/secure/protectbuy.webp" alt="ProtectBuy">
@@ -458,7 +463,7 @@
         </div>
       </div>
     </div>
-       <p data-i18n="جميع الحقوق محفوظة © Bariq">جميع الحقوق محفوظة © Bariq</p>
+       <p data-i18n="???? ?????? ?????? � Bariq">???? ?????? ?????? � Bariq</p>
 </div>
   </div>
 </footer>
@@ -467,7 +472,7 @@
 <script src="translations/translation.js" defer></script>
 <script src="java/footer-pages.js" defer></script>
 <script src="mobile-nav-bar/main-navbar.js" defer></script>  
-<script type="module" src="java/Products.js"></script> <!-- ده يفضل يفضل في الآخر -->
+<script type="module" src="java/Products.js" defer></script>
 
 <script>
 (function(){
@@ -477,18 +482,18 @@
   function renderStars(r) {
     r = parseFloat(r) || 0;
     const full = Math.floor(r), half = r % 1 >= 0.5 ? 1 : 0, empty = 5 - full - half;
-    return '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(empty);
+    return '?'.repeat(full) + (half ? '�' : '') + '?'.repeat(empty);
   }
 
   function renderCard(p) {
-    const name = (p?.name?.ar || p?.name || 'منتج').toString();
+    const name = (p?.name?.ar || p?.name || '????').toString();
     const img  = (Array.isArray(p.img) ? p.img[0] : p.img) || 'assets/logo.png';
     const link = p.id ? `product.html?id=${encodeURIComponent(p.id)}` : 'product.html';
     const pr = parseFloat(p.price), old = parseFloat(p.oldPrice);
     const disc = (old > pr && pr > 0) ? Math.round(((old - pr) / old) * 100) : 0;
     return `
       <a class="dp-card" href="${link}">
-        <img class="dp-img" src="${img}" alt="${name}" loading="lazy" onerror="this.src='assets/logo.png'">
+        <img class="dp-img" src="${img}" alt="${name}" loading="lazy" decoding="async" onerror="this.src='assets/logo.png'">
         <div class="dp-name">${name}</div>
         ${p.rating ? `<div class="dp-stars">${renderStars(p.rating)}</div>` : ''}
         ${disc > 0 ? `<span class="dp-badge">-${disc}%</span>` : ''}
@@ -497,7 +502,7 @@
 
   async function loadDailyPicks() {
     try {
-      // جلب المنتجات: admin_products أولاً، ثم Supabase، ثم JSON
+      // ??? ????????: admin_products ?????? ?? Supabase? ?? JSON
       let products = null;
       try {
         const ap = localStorage.getItem('admin_products');
@@ -523,17 +528,17 @@
         products = await res.json();
       }
 
-      // اختيارات اليوم من الأدمن
+      // ???????? ????? ?? ??????
       let dailyIds = new Set();
       try { dailyIds = new Set(JSON.parse(localStorage.getItem('x2_daily_picks') || '[]')); } catch(e) {}
 
       let chosen = [];
 
       if (dailyIds.size > 0) {
-        // عرض المنتجات المحددة من الأدمن
+        // ??? ???????? ??????? ?? ??????
         chosen = products.filter(p => dailyIds.has(String(p.id)));
       } else {
-        // fallback: 12 منتج مخفّض عشوائي يومياً
+        // fallback: 12 ???? ????? ?????? ??????
         const discounted = products.filter(p => {
           const pr = parseFloat(p.price), old = parseFloat(p.oldPrice);
           return old > pr && pr > 0;
@@ -564,33 +569,33 @@
     }
   }
 
-  // انتظر supabase.js
+  // ????? supabase.js
   setTimeout(loadDailyPicks, 150);
 })();
 </script>
 <script>
-  // تسجيل Service Worker لدعم PWA (تثبيت الموقع كتطبيق)
+  // ????? Service Worker ???? PWA (????? ?????? ??????)
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
       navigator.serviceWorker.register('/sw.js').catch(function(){});
     });
   }
 
-  // توليد favicon ديناميكي: لوجو أبيض على خلفية كحلية
+  // ????? favicon ????????: ???? ???? ??? ????? ?????
   (function() {
     const img = new Image();
     img.onload = function() {
       const c = document.createElement('canvas');
       c.width = 64; c.height = 64;
       const ctx = c.getContext('2d');
-      // خلفية كحلية مدوّرة بدون padding
+      // ????? ????? ?????? ???? padding
       ctx.fillStyle = '#152546';
       ctx.beginPath();
       ctx.roundRect(0, 0, 64, 64, 10);
       ctx.fill();
-      // اللوجو الأبيض يملأ كامل المساحة (بدون مسافات)
+      // ?????? ?????? ???? ???? ??????? (???? ??????)
       ctx.drawImage(img, 0, 0, 64, 64);
-      // تطبيق الـ favicon
+      // ????? ??? favicon
       let link = document.querySelector('link[rel="icon"][type="image/png"]');
       if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
       link.type = 'image/png';
