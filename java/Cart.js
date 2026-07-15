@@ -881,7 +881,7 @@ function updateSelectedCount() {
     return lines.join('\n');
   }
 
-  function openWhatsAppOrder(){
+  async function openWhatsAppOrder(){
     const items = getSelectedItemsForOrder();
     if (!items.length) return;
     const phone = normalizeWhatsAppPhone(WHATSAPP_PHONE);
@@ -903,22 +903,37 @@ function updateSelectedCount() {
     // إضافة الطلب مع الكاش باك "معلّق" — يُضاف للرصيد بعد تأكيد التسليم
     try {
       const CB_KEY = 'x2_cashback';
-      const lastNum = parseInt(localStorage.getItem('x2_order_counter') || '999', 10);
-      const nextNum = lastNum + 1;
-      localStorage.setItem('x2_order_counter', String(nextNum));
-      const orderId = '#' + nextNum;
-      const orderItems = items.slice(0,2).map(i => i.title || i.name || 'منتج').join(' · ');
       const summaryTotal = readSummaryValue();
       const calcTotal = items.reduce((s,i) => s + ((i.unit || parseFloat(i.price||i.priceCurrent||0)) * (Number(i.qty)||1)), 0);
       const totalAmt = (summaryTotal > 0 ? summaryTotal : calcTotal).toFixed(2);
       const expiresAt = new Date(Date.now() + 30*24*60*60*1000).toISOString();
-      // حفظ الطلب في x2_orders مع الـ id لكل منتج
+
+      // رقم الطلب: نأخذ أعلى رقم موجود في Supabase + 1 لضمان التسلسل العالمي
+      // مع fallback على localStorage لو Supabase مش متاح
+      let orderId;
+      try {
+        const existing = await window.Supabase.Orders.getAll();
+        if (existing && existing.length > 0) {
+          const maxNum = existing.reduce((max, o) => {
+            const n = parseInt((o.order_number || '').replace('#','')) || 0;
+            return n > max ? n : max;
+          }, 999);
+          orderId = '#' + (maxNum + 1);
+        }
+      } catch(e) {}
+      if (!orderId) {
+        const lastNum = parseInt(localStorage.getItem('x2_order_counter') || '999', 10);
+        orderId = '#' + (lastNum + 1);
+      }
+      localStorage.setItem('x2_order_counter', orderId.replace('#',''));
+
+      // حفظ الطلب محلياً
       const orders = JSON.parse(localStorage.getItem('x2_orders') || '[]');
-      orders.unshift({
+      const newOrder = {
         id: orderId,
         date: new Date().toISOString(),
         cashback: 5,
-        cashbackStatus: 'pending', // يُضاف للرصيد فقط بعد تأكيد التسليم
+        cashbackStatus: 'pending',
         cashbackExpiresAt: expiresAt,
         items: items.map(i => {
           const rawImg = i.image || i.img || '';
@@ -927,38 +942,30 @@ function updateSelectedCount() {
         }),
         total: totalAmt,
         status: 'processing'
-      });
+      };
+      orders.unshift(newOrder);
       localStorage.setItem('x2_orders', JSON.stringify(orders));
 
-      // رفع الطلب لـ Supabase حتى يظهر في لوحة الأدمن
+      // رفع الطلب لـ Supabase
       if (window.Supabase && window.Supabase.Orders) {
         const profile = (() => { try { return JSON.parse(localStorage.getItem('x2_profile')||'{}'); } catch(e){ return {}; } })();
-
-        // تعليم الطلب كـ "قيد الرفع" فوراً لمنع pushLocalOrders من رفعه مجدداً (409 Conflict)
+        // تعليم الطلب كمرفوع أولاً لمنع pushLocalOrders من رفعه مجدداً
         try {
-          const cur = JSON.parse(localStorage.getItem('x2_orders')||'[]');
-          const idx = cur.findIndex(o => o.id === orderId);
-          if (idx !== -1) cur[idx]._synced = true;
-          localStorage.setItem('x2_orders', JSON.stringify(cur));
+          newOrder._synced = true;
+          orders[0]._synced = true;
+          localStorage.setItem('x2_orders', JSON.stringify(orders));
           const synced = JSON.parse(localStorage.getItem('x2_orders_synced')||'[]');
-          if (synced.indexOf(orderId) === -1) synced.push(orderId);
-          localStorage.setItem('x2_orders_synced', JSON.stringify(synced));
+          if (!synced.includes(orderId)) { synced.push(orderId); localStorage.setItem('x2_orders_synced', JSON.stringify(synced)); }
         } catch(e2) {}
 
         window.Supabase.Orders.insert({
-          id: orderId,
-          items: orders[0].items,
-          total: totalAmt,
-          status: 'processing',
-          cashback: 5,
-          cashbackStatus: 'pending',
-          customerName:  profile.name  || '',
-          customerPhone: profile.phone || '',
-          customerEmail: profile.email || '',
-          address: profile.address_full || null
-        }).catch(err => { console.error('فشل رفع الطلب لـ Supabase:', err); });
+          id: orderId, items: newOrder.items, total: totalAmt,
+          status: 'processing', cashback: 5, cashbackStatus: 'pending',
+          customerName: profile.name||'', customerPhone: profile.phone||'',
+          customerEmail: profile.email||'', address: profile.address_full||null
+        }).catch(err => { console.error('فشل رفع الطلب:', err.message); });
       }
-    } catch(e) {}
+    } catch(e) { console.error('خطأ في إنشاء الطلب:', e); }
 
     // ===== استهلاك كوبون الخصم وتصفير الكاش باك =====
     try {
