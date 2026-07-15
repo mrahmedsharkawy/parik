@@ -40,6 +40,7 @@ window.applyCategoryNames = applyCategoryNames;
 window.addEventListener('DOMContentLoaded', () => {
   const savedLang = localStorage.getItem('lang') || 'ar';
   changeLang(savedLang);
-  document.querySelector('select').value = savedLang;
+  const sel = document.querySelector('select');
+  if (sel) sel.value = savedLang;
 });
 

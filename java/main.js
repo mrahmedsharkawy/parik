@@ -335,6 +335,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // ????? ?? ??? ??? (live search)
   let _liveTimer = null;
+  if (searchInput) {
   searchInput.addEventListener("input", function () {
     clearTimeout(_liveTimer);
     if (!searchInput.value.trim()) { clearDropdown(); return; }
@@ -346,6 +347,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (e.key === "Enter") { e.preventDefault(); clearTimeout(_liveTimer); performTextSearch(); }
     if (e.key === "Escape") { clearDropdown(); searchInput.value = ''; }
   });
+  } // end if searchInput
 
   // ????? ??????? ??? ????? ???? ??????
   document.addEventListener("click", function(e) {
