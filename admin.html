@@ -2289,33 +2289,6 @@ function renderVisitorsStats() {
     if (locEl)   locEl.innerHTML = '<span style="color:#e53935;font-size:.8rem">⚠️ تأكد من تسجيل الدخول لعرض الزوار</span>';
   });
 }
-    if (!Array.isArray(rows)) throw new Error('no data');
-    const today = new Date().toDateString();
-    const todayVisits = rows.filter(v => new Date(v.visited_at).toDateString() === today);
-    if (todayEl) todayEl.textContent = todayVisits.length;
-    if (allEl)   allEl.textContent   = rows.length;
-    if (locEl) {
-      const locMap = {};
-      rows.forEach(v => {
-        const loc = [v.city, v.country].filter(Boolean).join('، ') || 'غير محدد';
-        locMap[loc] = (locMap[loc]||0) + 1;
-      });
-      const sorted = Object.entries(locMap).sort((a,b) => b[1]-a[1]).slice(0, 10);
-      locEl.innerHTML = sorted.length ? sorted.map(([loc, count]) =>
-        `<div style="display:flex;justify-content:space-between;font-size:.82rem;padding:3px 6px;background:#f7f8fc;border-radius:6px">
-          <span>🌍 ${esc(loc)}</span><b style="color:var(--navy)">${count}</b>
-        </div>`).join('') : '<span style="color:#aaa;font-size:.8rem">لا توجد زيارات بعد</span>';
-    }
-  }).catch(function() {
-    // fallback لـ localStorage
-    const visitors = getVisitors();
-    const today = new Date().toDateString();
-    const todayVisits = visitors.filter(v => new Date(v.date).toDateString() === today);
-    if (todayEl) todayEl.textContent = todayVisits.length;
-    if (allEl)   allEl.textContent   = visitors.length;
-    if (locEl)   locEl.innerHTML = '<span style="color:#aaa;font-size:.8rem">يحتاج إنشاء جدول visitors في Supabase</span>';
-  });
-}
 
 function clearVisitors() {
   if (!confirm('مسح سجل الزيارات؟')) return;
