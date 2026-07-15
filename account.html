@@ -1582,11 +1582,13 @@
       const profile = (() => { try { return JSON.parse(localStorage.getItem(PROFILE_KEY)||'{}'); } catch(e) { return {}; } })();
       if (!profile.phone) { return; }
       const remote = await window.Supabase.Orders.getByPhone(profile.phone);
-      if (!remote || !remote.length) { return; }
+      // remote === null/undefined يعني فشل الاتصال - لا تلمس البيانات المحلية
+      if (!remote) { return; }
 
-      const local = getOrders();
+      let local = getOrders();
       let changed = false;
       const cashbackToAdd = [];
+      const remoteIds = new Set(remote.map(r => String(r.order_number)));
 
       remote.forEach(r => {
         // مطابقة برقم الطلب (order_number) مع مقارنة نصية مرنة
@@ -1604,6 +1606,12 @@
           changed = true;
         }
       });
+
+      // حذف الطلبات المحلية التي حذفها الأدمن من قاعدة البيانات
+      // (فقط الطلبات التي وصلت فعلاً لـ Supabase مسبقاً - لا نحذف طلباً جديداً لم يُرفع بعد)
+      const beforeCount = local.length;
+      local = local.filter(o => o._synced !== true || remoteIds.has(String(o.id)));
+      if (local.length !== beforeCount) changed = true;
 
       if (changed) {
         localStorage.setItem(ORDERS_KEY, JSON.stringify(local));
@@ -2488,8 +2496,15 @@
   // init
   renderOrders();
   loadProfile();
-  // مزامنة حالة الطلبات الحقيقية من Supabase (التي حدّثها الأدمن) ثم إعادة العرض
+  // مزامنة حالة الطلبات الحقيقية من Supabase (التي حدّثها/حذفها الأدمن) ثم إعادة العرض
   syncOrdersFromSupabase().then(() => renderOrders());
+
+  // إعادة المزامنة عند العودة لتبويب الحساب (يعكس حذف/تحديث الأدمن فوراً)
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible') {
+      syncOrdersFromSupabase().then(() => renderOrders());
+    }
+  });
 
   // فتح قسم مباشر لو جاي من رابط خارجي
   (function() {
