@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
   <meta charset="UTF-8" />
@@ -575,7 +575,23 @@
       navigator.serviceWorker.register('/sw.js').catch(function(){});
     });
   }
+
+  // توليد نسخة داكنة من اللوجو تلقائياً كـ favicon في التبويب
+  // (اللوجو الأصلي أبيض → نحوّله لكحلي على خلفية شفافة للمتصفح الفاتح)
+  (function() {
+    try {
+      const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const link = document.querySelector('link[rel="icon"][type="image/svg+xml"]');
+      if (!link) return;
+      if (isDark) {
+        // الوضع الداكن: اللوجو الأبيض ظاهر على خلفية المتصفح الداكنة
+        link.href = 'assets/favicon.svg';
+      } else {
+        // الوضع الفاتح: استخدم favicon.svg الذي له خلفية كحلية
+        link.href = 'assets/favicon.svg';
+      }
+    } catch(e) {}
+  })();
 </script>
 </body>
 </html>
-
