@@ -2162,11 +2162,22 @@ function renderPeriod(){
 
 /* ---- عرض الطلبات ---- */
 function renderOrders(){
+  console.log('🎨 renderOrders called');
+  console.log('   ordersLoaded:', ordersLoaded);
+  console.log('   supaOrdersCache length:', supaOrdersCache.length);
+  
   const filter = $('ordFilter')?.value || 'all';
   let orders = getOrders();
+  console.log('   getOrders() returned:', orders.length, 'orders');
+  
   if(filter!=='all') orders = orders.filter(o=>o.status===filter);
   $('ordCount').textContent = getOrders().length;
-  if(!orders.length){ $('ordList').innerHTML='<div class="empty">لا توجد طلبات في قاعدة البيانات</div>'; if($('ordPager')) $('ordPager').innerHTML=''; return; }
+  
+  if(!orders.length){ 
+    $('ordList').innerHTML='<div class="empty">لا توجد طلبات في قاعدة البيانات<br><small>ordersLoaded: '+ordersLoaded+' | cache: '+supaOrdersCache.length+'</small></div>'; 
+    if($('ordPager')) $('ordPager').innerHTML=''; 
+    return; 
+  }
 
   // ترقيم الصفحات
   const totalPages = Math.max(1, Math.ceil(orders.length / ORDER_PAGE_SIZE));
@@ -2348,13 +2359,7 @@ async function migrateImagesToStorage() {
 }
 
 /* ================= بدء تحميل البيانات الأساسية ================= */
-(async function init(){
-  await loadCategories();
-  await loadProducts();
-  fillProductSelects();
-  // تحميل الطلبات من Supabase
-  await syncStoreOrders(true);
-})();
+// تم نقل هذا الكود إلى init() الرئيسية في نهاية الملف
 
 /* ================================================================
    الفئات
@@ -3746,8 +3751,8 @@ async function loadCampaignsFromSupabase() {
   await loadProducts();
   fillProductSelects();
   
-  // مزامنة الطلبات
-  syncStoreOrders(true);
+  // مزامنة الطلبات من Supabase (مع await)
+  await syncStoreOrders(true);
   
   // تحميل الإعدادات
   await loadSettingsFromSupabase();
