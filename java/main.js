@@ -1485,17 +1485,35 @@ document.addEventListener("DOMContentLoaded", function() {
     }
     saveVisitorToSupabase(entry);
 
-    // محاولة الحصول على معلومات الموقع (غير مؤثر على السرعة)
-    fetch('https://ipwho.is/', { signal: AbortSignal.timeout ? AbortSignal.timeout(3000) : undefined })
-      .then(r => r.json())
-      .then(d => {
-        entry.city    = d.city    || '';
-        entry.country = d.country || '';
-        entry.ip      = d.ip      || '';
-        const v = JSON.parse(localStorage.getItem(LS_VISITORS) || '[]');
-        if (v[0] && v[0].date === entry.date) { v[0] = entry; localStorage.setItem(LS_VISITORS, JSON.stringify(v)); }
-      })
-      .catch(function() {});
+    // محاولة الحصول على معلومات الموقع - نجرب خدمات متعددة
+    const ipServices = [
+      { url: 'https://ipapi.co/json/', parse: d => ({ city: d.city, country: d.country_name, ip: d.ip }) },
+      { url: 'https://ip.seeip.org/geoip', parse: d => ({ city: d.city, country: d.country, ip: d.ip }) },
+      { url: 'https://ipwho.is/', parse: d => ({ city: d.city, country: d.country, ip: d.ip }) }
+    ];
+
+    (async function tryGeoIP() {
+      for (const svc of ipServices) {
+        try {
+          const ctrl = new AbortController();
+          setTimeout(() => ctrl.abort(), 4000);
+          const r = await fetch(svc.url, { signal: ctrl.signal });
+          if (!r.ok) continue;
+          const d = await r.json();
+          const geo = svc.parse(d);
+          if (geo.country || geo.city) {
+            entry.city    = geo.city    || '';
+            entry.country = geo.country || '';
+            entry.ip      = geo.ip      || '';
+            const v = JSON.parse(localStorage.getItem(LS_VISITORS) || '[]');
+            if (v[0] && v[0].date === entry.date) { v[0] = entry; localStorage.setItem(LS_VISITORS, JSON.stringify(v)); }
+            // تحديث Supabase بالموقع
+            saveVisitorToSupabase(entry);
+            break;
+          }
+        } catch(e) {}
+      }
+    })();
   } catch(e) {}
 })();
 
