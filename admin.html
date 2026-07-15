@@ -1091,7 +1091,7 @@ function renderMedia(){
 function removeMedia(i){ currentMedia.splice(i,1); renderMedia(); }
 
 /* ================= حفظ / تعديل منتج ================= */
-function saveProduct(){
+async function saveProduct(){
   const nameAr = $('p-name-ar').value.trim();
   const nameEn = $('p-name-en').value.trim();
   if(!nameAr && !nameEn){ toast('اكتب اسم المنتج'); return; }
@@ -1137,6 +1137,12 @@ function saveProduct(){
 
   // ===== رفع المنتج لـ Supabase (نستخدم قيم prod المحفوظة قبل resetForm) =====
   if (window.Supabase) {
+    // تأكد من وجود توكن صالح قبل الرفع لـ Supabase
+    const validToken = await getValidAdminToken();
+    if (!validToken) {
+      toast('⚠️ يرجى تسجيل الدخول مرة أخرى للمزامنة مع Supabase');
+      return;
+    }
     const publicImgs = imgArr.filter(function(s){ return s && !s.startsWith('data:'); });
     const sbProd = {
       name:      { ar: nameAr, en: nameEn || nameAr },
