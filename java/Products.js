@@ -2335,160 +2335,10 @@ if (filtersScroll) {
 
 
 
-// ...existing code...
-(function() {
-  if (window._swipeCategoryInit) return;
-  window._swipeCategoryInit = true;
-
-  function initSwipeCategory() {
-    const THRESHOLD = 60;
-    let startX = 0, startY = 0, isTracking = false, moved = false, touchStartEl = null;
-    let activePointerId = null;
-
-    const IGNORE = [
-      '.categories',
-      '.filters-scroll-container',
-      '.filter-dropdown',
-      '.subcategory-circle',
-      '.subcategory',
-      '.category-flyout',
-      '.daily-picks-grid',
-      '.dp-card'
-    ];
-
-    function shouldIgnore(el) {
-      if (!el) return false;
-      const node = (el.nodeType === 3 && el.parentElement) ? el.parentElement : el;
-      try { return IGNORE.some(sel => node.closest && node.closest(sel)); }
-      catch (e) { return false; }
-    }
-
-    function categoriesList() {
-      const bar = document.querySelector('.categories');
-      if (!bar) return [];
-      return Array.from(bar.querySelectorAll('div a, a[data-category-slug], a[href*="categories"]'));
-    }
-
-    function getCurrentIndex(list) {
-      if (!list || !list.length) return -1;
-      const activeIdx = list.findIndex(a => a.classList.contains('active') || a.classList.contains('active-category'));
-      if (activeIdx !== -1) return activeIdx;
-      const cur = new URLSearchParams(window.location.search).get('category') || '';
-      const found = list.findIndex(a => {
-        const href = a.getAttribute('href') || '';
-        const m = href.match(/\/categories\/([^\/\?]+)/);
-        const slug = m ? m[1] : (a.getAttribute('data-category-slug') || '');
-        return slug === cur;
-      });
-      return found !== -1 ? found : 0;
-    }
-
-    function activateIndex(idx) {
-      const list = categoriesList();
-      if (!list.length) return;
-      idx = Math.max(0, Math.min(list.length - 1, idx));
-      const el = list[idx];
-      if (!el) return;
-      el.click();
-      try { localStorage.setItem('activeCategoryIndex', String(idx)); } catch(e) {}
-      const bar = document.querySelector('.categories');
-      if (bar && el.closest('div')) {
-        const parent = el.closest('div');
-        const center = bar.offsetWidth / 2;
-        const target = parent.offsetLeft + parent.offsetWidth / 2 - center;
-        bar.scrollTo({ left: target, behavior: 'smooth' });
-      }
-    }
-
-    // normalize event helpers
-    function getPointFromTouchEvent(ev) {
-      if (ev.touches && ev.touches.length) return { x: ev.touches[0].clientX, y: ev.touches[0].clientY, cancelable: ev.cancelable };
-      if (ev.changedTouches && ev.changedTouches.length) return { x: ev.changedTouches[0].clientX, y: ev.changedTouches[0].clientY, cancelable: ev.cancelable };
-      if (typeof ev.clientX === 'number') return { x: ev.clientX, y: ev.clientY, cancelable: ev.cancelable !== false };
-      return null;
-    }
-
-    // touch handlers
-    function onStart(ev, source) {
-      const p = getPointFromTouchEvent(ev);
-      if (!p) return;
-      touchStartEl = ev.target || ev.srcElement;
-      if (shouldIgnore(touchStartEl)) { isTracking = false; moved = false; return; }
-      startX = p.x; startY = p.y; isTracking = true; moved = false;
-      // debug -> temporary use console.log
-    }
-
-     function onMove(ev, source) {
-      if (!isTracking) return;
-      const p = getPointFromTouchEvent(ev);
-      if (!p) return;
-      if (shouldIgnore(touchStartEl)) return;
-      const dx = p.x - startX, dy = p.y - startY;
-      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10) {
-        moved = true;
-        // استدعاء preventDefault فقط إذا كان الحدث قابلاً للإلغاء (يمنع تحذير [Intervention])
-        if (ev.cancelable && typeof ev.preventDefault === 'function') {
-          try { ev.preventDefault(); } catch(e) {}
-        }
-      } else if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 10) {
-        isTracking = false;
-        moved = false;
-      }
-    }
-
-    function onEnd(ev, source) {
-      if (!moved || !isTracking) { isTracking = false; touchStartEl = null; return; }
-      const p = getPointFromTouchEvent(ev);
-      if (!p) { isTracking = false; touchStartEl = null; return; }
-      const dx = p.x - startX;
-      isTracking = false; touchStartEl = null;
-      if (Math.abs(dx) < THRESHOLD) { return; }
-      const list = categoriesList(); if (!list.length) return;
-      const cur = getCurrentIndex(list);
-      if (dx < 0) activateIndex(cur - 1);
-      else activateIndex(cur + 1);
-    }
-
-    // attach listeners
-    document.addEventListener('touchstart', function(ev){ onStart(ev, 'touch'); }, { passive: true });
-    document.addEventListener('touchmove', function(ev){ onMove(ev, 'touch'); }, { passive: false });
-    document.addEventListener('touchend', function(ev){ onEnd(ev, 'touch'); }, { passive: true });
-
-    document.addEventListener('pointerdown', function(ev){
-      if (ev.pointerType && ev.pointerType !== 'touch') return;
-      activePointerId = ev.pointerId;
-      onStart({ clientX: ev.clientX, clientY: ev.clientY, target: ev.target, cancelable: true }, 'pointer');
-    }, { passive: true });
-
-    document.addEventListener('pointermove', function(ev){
-      if (activePointerId !== null && ev.pointerId !== activePointerId) return;
-      if (ev.pointerType && ev.pointerType !== 'touch') return;
-      onMove({ clientX: ev.clientX, clientY: ev.clientY, cancelable: true }, 'pointer');
-    }, { passive: false });
-
-    document.addEventListener('pointerup', function(ev){
-      if (activePointerId !== null && ev.pointerId !== activePointerId) return;
-      if (ev.pointerType && ev.pointerType !== 'touch') return;
-      activePointerId = null;
-      onEnd({ clientX: ev.clientX, clientY: ev.clientY, changedTouches: [{ clientX: ev.clientX, clientY: ev.clientY }], cancelable: true }, 'pointer');
-    }, { passive: true });
-
-    try {
-      if (!document.getElementById('_swipeCategoryTouchStyle')) {
-        const s = document.createElement('style');
-        s.id = '_swipeCategoryTouchStyle';
-        s.textContent = `
-          html, body { touch-action: pan-y; }
-          .categories, .filters-scroll-container, .filter-dropdown, .subcategory-circle, .subcategory { touch-action: pan-x; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
-        `;
-        document.head.appendChild(s);
-      }
-    } catch (e) {}
-  }
-
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initSwipeCategory);
-  else initSwipeCategory();
-})();
+// ===== Swipe to change category - DISABLED =====
+// تم تعطيل هذه الميزة لأنها كانت تتداخل مع حركة الرجوع للخلف في المتصفح
+// السحب الأفقي على الصفحة الآن يعمل بشكل طبيعي (رجوع للخلف)
+// شريط الفئات لا يزال قابلاً للسحب أفقياً بشكل عادي
 
 
  // ===== صفحة تفاصيل المنتج =====
@@ -2630,7 +2480,8 @@ if (filtersScroll) {
       }
 
       // ===== Swipe carousel للموبايل =====
-      if (mainWrap && media.length > 1 && window.innerWidth <= 600) {
+      const _isMobileView = window.innerWidth <= 900 || ('ontouchstart' in window);
+      if (mainWrap && media.length > 1 && _isMobileView) {
         // بناء carousel
         const carousel = document.createElement('div');
         carousel.id = 'prodCarousel';
