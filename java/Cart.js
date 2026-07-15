@@ -194,7 +194,7 @@ function updateSummary() {
       if (applied && applied.code && applied.amount) {
         const stored = JSON.parse(localStorage.getItem('x2_coupon_code') || 'null');
         if (stored && stored.code === applied.code && !stored.used) {
-          couponDiscount = Math.min(parseFloat(stored.amount) || 0, actualTotal);
+          couponDiscount = Math.min(parseFloat(applied.amount) || 0, actualTotal);
           if (couponDiscountLine) couponDiscountLine.style.display = '';
           if (couponDiscountAmtEl) couponDiscountAmtEl.textContent = '-' + window.formatCurrency(couponDiscount);
         } else {
@@ -867,11 +867,10 @@ function updateSelectedCount() {
       `الخصم: ${discount.toFixed(2)} ${sym}`,
       (() => {
         try {
-          const applied = JSON.parse(sessionStorage.getItem('x2_coupon_applied') || 'null');
+          const applied = JSON.parse(localStorage.getItem('x2_coupon_applied') || 'null');
           const stored  = JSON.parse(localStorage.getItem('x2_coupon_code')    || 'null');
           if (applied && applied.code && stored && stored.code === applied.code && !stored.used) {
-            const couponAmt = parseFloat(stored.amount) || 0;
-            return `خصم الكوبون (${applied.code}): -${couponAmt.toFixed(2)} ${sym}`;
+            return `خصم الكوبون (${applied.code}): -${parseFloat(applied.amount).toFixed(2)} ${sym}`;
           }
         } catch(e) {}
         return '';
