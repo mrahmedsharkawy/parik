@@ -942,6 +942,17 @@ function updateSelectedCount() {
           customerPhone: profile.phone || '',
           customerEmail: profile.email || '',
           address:       profile.address_full || null
+        }).then(() => {
+          // تعليم الطلب كمرفوع لمنع رفعه مرة أخرى من pushLocalOrders
+          try {
+            const cur = JSON.parse(localStorage.getItem('x2_orders')||'[]');
+            const idx = cur.findIndex(o => o.id === orderId);
+            if (idx !== -1) cur[idx]._synced = true;
+            localStorage.setItem('x2_orders', JSON.stringify(cur));
+            const synced = JSON.parse(localStorage.getItem('x2_orders_synced')||'[]');
+            if (synced.indexOf(orderId) === -1) synced.push(orderId);
+            localStorage.setItem('x2_orders_synced', JSON.stringify(synced));
+          } catch(e) {}
         }).catch(() => {});
         // إشعار للأدمن
         window.Supabase.Notifications.insert({

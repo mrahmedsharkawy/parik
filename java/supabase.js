@@ -121,9 +121,23 @@ const SupaSync = {
     try{
       var local=JSON.parse(localStorage.getItem('x2_orders')||'[]');
       var profile=JSON.parse(localStorage.getItem('x2_profile')||'{}');
+      var pushedIds = JSON.parse(localStorage.getItem('x2_orders_synced')||'[]');
       var pushed=0;
+      var changed=false;
       for(var i=0;i<local.length;i++){
-        try{ await SupaOrders.insert(Object.assign({},local[i],{customerName:local[i].customerName||profile.name||'',customerPhone:local[i].customerPhone||profile.phone||'',customerEmail:local[i].customerEmail||profile.email||''})); pushed++; }catch(e){}
+        // تخطي الطلبات التي تم رفعها مسبقاً - يمنع التكرار عند كل تحميل صفحة
+        if(local[i]._synced || pushedIds.indexOf(local[i].id)!==-1) continue;
+        try{
+          await SupaOrders.insert(Object.assign({},local[i],{customerName:local[i].customerName||profile.name||'',customerPhone:local[i].customerPhone||profile.phone||'',customerEmail:local[i].customerEmail||profile.email||''}));
+          local[i]._synced = true;
+          pushedIds.push(local[i].id);
+          changed = true;
+          pushed++;
+        }catch(e){}
+      }
+      if(changed){
+        localStorage.setItem('x2_orders', JSON.stringify(local));
+        localStorage.setItem('x2_orders_synced', JSON.stringify(pushedIds));
       }
       if(pushed) console.log('[Supabase] Pushed '+pushed+' orders');
     }catch(e){ console.warn('[Supabase]',e.message); }
