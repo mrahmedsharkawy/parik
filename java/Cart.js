@@ -884,7 +884,7 @@ function updateSelectedCount() {
     return lines.join('\n');
   }
 
-  function openWhatsAppOrder(){
+  async function openWhatsAppOrder(){
     const items = getSelectedItemsForOrder();
     if (!items.length) return;
     const phone = normalizeWhatsAppPhone(WHATSAPP_PHONE);
