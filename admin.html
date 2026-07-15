@@ -1099,22 +1099,22 @@ function saveProduct(){
   resetForm();
   toast(editing?'⏳ جارٍ تحديث المنتج...':'⏳ جارٍ حفظ المنتج...');
 
-  // ===== رفع المنتج لـ Supabase =====
+  // ===== رفع المنتج لـ Supabase (نستخدم قيم prod المحفوظة قبل resetForm) =====
   if (window.Supabase) {
     const publicImgs = imgArr.filter(function(s){ return s && !s.startsWith('data:'); });
     const sbProd = {
       name:      { ar: nameAr, en: nameEn || nameAr },
-      desc:      { ar: $('p-desc').value.trim(), en: '' },
+      desc:      { ar: prod.desc || '', en: '' },
       category:  cats,
-      price:     numOrUndef($('p-price').value)    || 0,
-      oldPrice:  numOrUndef($('p-oldprice').value) || 0,
-      stock:     numOrUndef($('p-stock').value)    || 0,
+      price:     prod.price    || 0,
+      oldPrice:  prod.oldPrice || 0,
+      stock:     numOrUndef(prod.stock) || 0,
       img:       publicImgs,
-      ratingCount: numOrUndef($('p-ratingcount').value) || 0,
-      rating:    numOrUndef($('p-rating').value)   || 5,
+      ratingCount: prod.ratingCount || 0,
+      rating:    prod.rating   || 5,
       featured:  false,
       sort:      id,
-      timerEnd:  $('p-timerend').value ? new Date($('p-timerend').value).toISOString() : null
+      timerEnd:  prod.timerEnd || null
     };
     const sbUpdate = {
       name_ar: nameAr, name_en: nameEn || nameAr,
