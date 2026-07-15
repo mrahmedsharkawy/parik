@@ -592,10 +592,15 @@ main,
   /* اسم المنتج */
 .product-name {
   font-weight: normal;
-  font-size: 14px;
-  margin-top: 4px;
-  margin-bottom: 4px;
+  font-size: 15px;
+  margin-top: 6px;
+  margin-bottom: 6px;
   color: #222;
+}
+
+
+.product-name {
+  margin-bottom: 8px !important;
 }
   /* ✅ حالة نفاذ المخزون */
 .product-stock {
@@ -604,8 +609,8 @@ main,
   background: #fff3e000;
   border-radius: 7px;
   padding: 0px;
-  margin-bottom: 0px;
-  margin-top: 0px;
+  margin-bottom: 2px;
+  margin-top: 2px;
   font-weight: bold;
   display: inline-block;
   letter-spacing: 1px;
