@@ -933,6 +933,18 @@ function updateSelectedCount() {
       // رفع الطلب لـ Supabase حتى يظهر في لوحة الأدمن
       if (window.Supabase && window.Supabase.Orders) {
         const profile = (() => { try { return JSON.parse(localStorage.getItem('x2_profile')||'{}'); } catch(e){ return {}; } })();
+
+        // تعليم الطلب كـ "قيد الرفع" فوراً لمنع pushLocalOrders من رفعه مجدداً (409 Conflict)
+        try {
+          const cur = JSON.parse(localStorage.getItem('x2_orders')||'[]');
+          const idx = cur.findIndex(o => o.id === orderId);
+          if (idx !== -1) cur[idx]._synced = true;
+          localStorage.setItem('x2_orders', JSON.stringify(cur));
+          const synced = JSON.parse(localStorage.getItem('x2_orders_synced')||'[]');
+          if (synced.indexOf(orderId) === -1) synced.push(orderId);
+          localStorage.setItem('x2_orders_synced', JSON.stringify(synced));
+        } catch(e2) {}
+
         window.Supabase.Orders.insert({
           id: orderId,
           items: orders[0].items,
@@ -944,17 +956,6 @@ function updateSelectedCount() {
           customerPhone: profile.phone || '',
           customerEmail: profile.email || '',
           address: profile.address_full || null
-        }).then(() => {
-          // تعليم الطلب كمرفوع لمنع التكرار
-          try {
-            const cur = JSON.parse(localStorage.getItem('x2_orders')||'[]');
-            const idx = cur.findIndex(o => o.id === orderId);
-            if (idx !== -1) cur[idx]._synced = true;
-            localStorage.setItem('x2_orders', JSON.stringify(cur));
-            const synced = JSON.parse(localStorage.getItem('x2_orders_synced')||'[]');
-            if (synced.indexOf(orderId) === -1) synced.push(orderId);
-            localStorage.setItem('x2_orders_synced', JSON.stringify(synced));
-          } catch(e2) {}
         }).catch(err => { console.error('فشل رفع الطلب لـ Supabase:', err); });
       }
     } catch(e) {}
