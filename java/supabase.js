@@ -8,10 +8,12 @@ const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 
 async function sbFetch(path, opts){
   opts = opts || {};
+  // استخدم JWT الأدمن لو مسجّل دخول، وإلا استخدم الـ anon key
+  const adminToken = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('admin_token')) || SUPABASE_ANON;
   const res = await fetch(SUPABASE_URL+'/rest/v1/'+path, Object.assign({}, opts, {
     headers: Object.assign({
       'apikey': SUPABASE_ANON,
-      'Authorization': 'Bearer '+SUPABASE_ANON,
+      'Authorization': 'Bearer '+adminToken,
       'Content-Type': 'application/json',
       'Prefer': opts.prefer || 'return=representation'
     }, opts.extraHeaders||{})
@@ -168,7 +170,7 @@ const SupaStorage = {
       method: 'POST',
       headers: {
         'apikey': SUPABASE_ANON,
-        'Authorization': 'Bearer ' + SUPABASE_ANON,
+        'Authorization': 'Bearer ' + ((typeof sessionStorage !== 'undefined' && sessionStorage.getItem('admin_token')) || SUPABASE_ANON),
         'Content-Type': file.type || 'application/octet-stream'
       },
       body: file
