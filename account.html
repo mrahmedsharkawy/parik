@@ -729,9 +729,12 @@
     transform: translateX(100%) !important;
     transition: transform 0.28s ease !important;
     box-shadow: -14px 0 34px rgba(0,0,0,0.18) !important;
-    padding: calc(env(safe-area-inset-top) + 10px) 10px 10px !important;
-    overflow-y: hidden !important;
+    padding: calc(env(safe-area-inset-top) + 10px) 10px 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
   }
+  /* مساحة فارغة في نهاية القائمة تمنع اختفاء المحتوى تحت شريط التنقل */
+  .acc-sidebar > *:last-child { margin-bottom: calc(env(safe-area-inset-bottom) + 80px); }
   .acc-sidebar.mobile-open {
     transform: translateX(0) !important;
   }
