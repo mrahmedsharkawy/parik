@@ -583,13 +583,13 @@
       const c = document.createElement('canvas');
       c.width = 64; c.height = 64;
       const ctx = c.getContext('2d');
-      // خلفية كحلية مدوّرة
+      // خلفية كحلية مدوّرة بدون padding
       ctx.fillStyle = '#152546';
       ctx.beginPath();
       ctx.roundRect(0, 0, 64, 64, 10);
       ctx.fill();
-      // اللوجو الأبيض
-      ctx.drawImage(img, 4, 4, 56, 56);
+      // اللوجو الأبيض يملأ كامل المساحة (بدون مسافات)
+      ctx.drawImage(img, 0, 0, 64, 64);
       // تطبيق الـ favicon
       let link = document.querySelector('link[rel="icon"][type="image/png"]');
       if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
