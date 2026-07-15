@@ -929,25 +929,6 @@ function updateSelectedCount() {
         status: 'processing'
       });
       localStorage.setItem('x2_orders', JSON.stringify(orders));
-      // رفع الطلب لـ Supabase (غير متزامن - لا يوقف العملية)
-      if (window.Supabase) {
-        const profile = (() => { try { return JSON.parse(localStorage.getItem('x2_profile')||'{}'); } catch(e){ return {}; } })();
-        const newOrder = orders[0];
-        window.Supabase.Orders.insert({
-          ...newOrder,
-          customerName:  profile.name  || '',
-          customerPhone: profile.phone || '',
-          customerEmail: profile.email || '',
-          address:       profile.address_full || null
-        }).catch(() => {});
-        // إشعار للأدمن
-        window.Supabase.Notifications.insert({
-          type: 'order_new', icon: '📦',
-          title: `طلب جديد ${orderId}`,
-          msg: `${profile.name||'عميل'} - ${totalAmt} د.إ`,
-          orderId
-        }).catch(() => {});
-      }
     } catch(e) {}
 
     // ===== استهلاك كوبون الخصم وتصفير الكاش باك =====
@@ -966,14 +947,10 @@ function updateSelectedCount() {
         cbReset.balance = 0;
         cbReset.history = []; // مسح التاريخ ليبدأ من جديد
         localStorage.setItem('x2_cashback', JSON.stringify(cbReset));
-        // وسّم الطلبات القديمة بـ "claimed" حتى لا تُحتسب مجدداً
+        // مسح تاريخ الطلبات الخاصة بالكاش باك حتى يبدأ من الصفر
         try {
           const ords = JSON.parse(localStorage.getItem('x2_orders') || '[]');
-          ords.forEach(o => {
-            if (parseFloat(o.cashback) > 0 && o.cashbackStatus !== 'pending') {
-              o.cashbackStatus = 'claimed';
-            }
-          });
+          ords.forEach(o => { o.cashback = 0; });
           localStorage.setItem('x2_orders', JSON.stringify(ords));
         } catch(e2) {}
         // مسح حالة التطبيق
