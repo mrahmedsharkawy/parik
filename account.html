@@ -1172,6 +1172,13 @@
       </div>
     </div>
 
+    <!-- تسجيل الخروج -->
+    <div style="padding:10px 14px 16px">
+      <button onclick="logoutAccount()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;border:1.5px solid #fde8e8;border-radius:10px;background:#fff5f5;color:#e53935;font-size:.88rem;font-weight:700;cursor:pointer;transition:background .2s" onmouseover="this.style.background='#fde8e8'" onmouseout="this.style.background='#fff5f5'">
+        🚪 <span data-i18n="تسجيل الخروج">تسجيل الخروج</span>
+      </button>
+    </div>
+
   </aside>
 
   <!-- المحتوى الرئيسي -->
@@ -2319,6 +2326,19 @@
   };
 
   // load profile
+  function logoutAccount() {
+    if (!confirm('هل تريد تسجيل الخروج؟')) return;
+    // مسح بيانات الجلسة
+    localStorage.removeItem('x2_profile');
+    localStorage.removeItem('x2_orders');
+    localStorage.removeItem('x2_cart');
+    localStorage.removeItem('x2_cashback');
+    localStorage.removeItem('x2_orders_synced');
+    sessionStorage.clear();
+    // توجيه لصفحة تسجيل الدخول
+    window.location.href = 'login.html';
+  }
+
   function loadProfile() {
     try {
       const p = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}');
