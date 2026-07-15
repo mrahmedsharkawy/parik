@@ -1766,19 +1766,47 @@ const REALIZED = ['confirmed','shipped','delivered'];
 let supaOrdersCache = [];
 let ordersLoaded = false;
 
+// انتظار تحميل Supabase
+function waitForSupabase(timeout = 5000) {
+  return new Promise((resolve) => {
+    if (window.Supabase) {
+      resolve(true);
+      return;
+    }
+    const start = Date.now();
+    const check = setInterval(() => {
+      if (window.Supabase) {
+        clearInterval(check);
+        resolve(true);
+      } else if (Date.now() - start > timeout) {
+        clearInterval(check);
+        console.warn('⚠️ Supabase لم يتم تحميله في الوقت المحدد');
+        resolve(false);
+      }
+    }, 100);
+  });
+}
+
 // جلب الطلبات من Supabase
 async function loadOrdersFromSupabase() {
-  if (!window.Supabase) return [];
+  // انتظار تحميل Supabase
+  const supaReady = await waitForSupabase();
+  if (!supaReady || !window.Supabase) {
+    console.warn('⚠️ Supabase غير متاح');
+    return [];
+  }
+  
   try {
+    console.log('🔄 جارٍ جلب الطلبات من Supabase...');
     const remote = await window.Supabase.Orders.getAll();
-    console.log('📦 Supabase Orders:', remote); // للتشخيص
+    console.log('📦 Supabase Orders Response:', remote); // للتشخيص
+    
     if (remote && Array.isArray(remote)) {
       supaOrdersCache = remote.map(r => {
-        // جلب بيانات العميل من العلاقة أو من الحقول المباشرة
-        const cust = r.customers || {};
-        const customerName = r.customer_name || cust.full_name || cust.name || '';
-        const customerPhone = r.customer_phone || cust.phone || '';
-        const customerEmail = r.customer_email || cust.email || '';
+        // جلب بيانات العميل من الحقول المباشرة
+        const customerName = r.customer_name || '';
+        const customerPhone = r.customer_phone || '';
+        const customerEmail = r.customer_email || '';
         
         return {
           id: r.id,
@@ -1804,10 +1832,15 @@ async function loadOrdersFromSupabase() {
       ordersLoaded = true;
       console.log('✅ تم تحميل', supaOrdersCache.length, 'طلب من Supabase');
       return supaOrdersCache;
+    } else if (remote === null || remote === undefined) {
+      console.warn('⚠️ Supabase أرجع null - قد تكون هناك مشكلة في RLS أو الاتصال');
+      ordersLoaded = false;
+      return [];
     }
     // لو رجع empty array - هذا يعني لا توجد طلبات (صحيح)
     ordersLoaded = true;
     supaOrdersCache = [];
+    console.log('📭 لا توجد طلبات في Supabase');
     return [];
   } catch(e) {
     console.error('❌ فشل تحميل الطلبات من Supabase:', e);
@@ -1845,18 +1878,55 @@ const LS_STORE_ORDERS = 'x2_orders';
 async function syncStoreOrders(silent){
   if (!silent) toast('⏳ جارٍ تحميل الطلبات من Supabase...');
   
-  // جلب الطلبات من Supabase
-  await loadOrdersFromSupabase();
+  // انتظار تحميل Supabase
+  await waitForSupabase();
   
-  if (supaOrdersCache.length > 0) {
+  // جلب الطلبات من Supabase مباشرة
+  try {
+    console.log('🔄 syncStoreOrders - جارٍ الجلب...');
+    const remote = await window.Supabase.Orders.getAll();
+    console.log('📦 syncStoreOrders - النتيجة:', remote);
+    
+    if (remote && Array.isArray(remote) && remote.length > 0) {
+      supaOrdersCache = remote.map(r => ({
+        id: r.id,
+        orderNumber: r.order_number,
+        srcId: r.id,
+        customer: r.customer_name || 'بدون اسم',
+        phone: r.customer_phone || '',
+        email: r.customer_email || '',
+        productName: (r.items||[]).map(i=>`${i.title||i.name||'منتج'}×${i.qty||1}`).join('، '),
+        qty: (r.items||[]).reduce((s,i)=>s+(Number(i.qty)||1),0) || 1,
+        unit: parseFloat(r.total) || 0,
+        total: parseFloat(r.total) || 0,
+        status: r.status || 'pending',
+        date: r.created_at,
+        items: r.items || [],
+        cashback: r.cashback,
+        cashbackStatus: r.cashback_status,
+        notes: r.notes || '',
+        city: r.shipping_city || '',
+        address: r.shipping_address || ''
+      }));
+      ordersLoaded = true;
+      renderStats();
+      renderOrders();
+      if (!silent) toast('✅ تم تحميل ' + supaOrdersCache.length + ' طلب من Supabase');
+      console.log('✅ syncStoreOrders - تم تحميل', supaOrdersCache.length, 'طلب');
+    } else {
+      ordersLoaded = true;
+      supaOrdersCache = [];
+      renderStats();
+      renderOrders();
+      if (!silent) toast('📭 لا توجد طلبات في قاعدة البيانات');
+      console.log('📭 syncStoreOrders - لا توجد طلبات');
+    }
+  } catch(e) {
+    console.error('❌ syncStoreOrders - خطأ:', e);
+    ordersLoaded = false;
     renderStats();
     renderOrders();
-    if (!silent) toast('✅ تم تحميل ' + supaOrdersCache.length + ' طلب من Supabase');
-  } else {
-    // لا توجد طلبات في Supabase - إظهار رسالة
-    renderStats();
-    renderOrders();
-    if (!silent) toast('📭 لا توجد طلبات في قاعدة البيانات');
+    if (!silent) toast('⚠️ فشل الاتصال بقاعدة البيانات');
   }
 }
 
@@ -2790,7 +2860,7 @@ window.switchTab = async function(name) {
     fillMsgProductSelect();
   }
   if (name === 'settings') { loadSettings(); }
-  if (name === 'orders') { syncStoreOrders(false); }
+  if (name === 'orders') { await syncStoreOrders(false); }
   if (name === 'marketing') {
     await loadCouponsFromSupabase();
     await loadCampaignsFromSupabase();

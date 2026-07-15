@@ -65,7 +65,10 @@ const SupaOrders = {
     }
     return sbFetch('orders',{method:'POST',body:JSON.stringify({order_number:order.id,customer_id:customerId,customer_name:customerName,customer_phone:customerPhone,customer_email:customerEmail,total:parseFloat(order.total)||0,status:order.status||'pending',payment_method:'whatsapp',payment_status:'unpaid',shipping_cost:0,notes:order.notes||null,items:order.items||[],cashback:order.cashback||5,cashback_status:order.cashbackStatus||'pending'})});
   },
-  getAll: async function(){ return sbFetch('orders?select=*,customers(full_name,phone,email)&order=created_at.desc&limit=500'); },
+  getAll: async function(){ 
+    // جلب الطلبات بدون join - أبسط وأسرع
+    return sbFetch('orders?select=*&order=created_at.desc&limit=500'); 
+  },
   updateStatus: async function(orderNum,status){ return sbFetch('orders?order_number=eq.'+encodeURIComponent(orderNum),{method:'PATCH',body:JSON.stringify({status:status})}); },
   updateCashback: async function(orderNum,cbStatus){ return sbFetch('orders?order_number=eq.'+encodeURIComponent(orderNum),{method:'PATCH',body:JSON.stringify({cashback_status:cbStatus})}); }
 };
