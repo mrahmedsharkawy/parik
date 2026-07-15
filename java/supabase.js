@@ -338,68 +338,78 @@ const SupaStorage = {
   }
 };
 
-/* === مزامنة بيانات المستخدم عبر الأجهزة === */
+/* === مزامنة بيانات المستخدم عبر الأجهزة (جدول user_sync) === */
 const SupaUserSync = {
-  // جلب بيانات المستخدم من Supabase (السلة + المفضلة)
-  pull: async function() {
+  _getEmail: function() {
+    try { return JSON.parse(localStorage.getItem('x2_profile') || '{}').email || ''; } catch(e) { return ''; }
+  },
+
+  // رفع بيانات من نوع معين إلى Supabase
+  push: async function(type) {
+    const email = this._getEmail();
+    if (!email) return;
     try {
-      const profile = JSON.parse(localStorage.getItem('x2_profile') || '{}');
-      if (!profile.email) return;
-      const rows = await sbFetch('customers?email=eq.' + encodeURIComponent(profile.email) + '&limit=1');
-      if (!rows || !rows[0]) return;
-      const remote = rows[0];
+      let data = {};
+      if (type === 'cart')     data = { items: JSON.parse(localStorage.getItem('x2_cart')    || '[]') };
+      if (type === 'wishlist') data = { items: JSON.parse(localStorage.getItem('x2_wishlist') || '[]') };
+      data.ts = Date.now();
 
-      // مزامنة السلة
-      if (remote.cart_data && Array.isArray(remote.cart_data) && remote.cart_data.length > 0) {
-        const local = JSON.parse(localStorage.getItem('x2_cart') || '[]');
-        // دمج: الأولوية للبيانات الأحدث
-        const remoteTime = remote.cart_updated_at ? new Date(remote.cart_updated_at).getTime() : 0;
-        const localTime = parseInt(localStorage.getItem('x2_cart_updated_at') || '0');
-        if (remoteTime > localTime) {
-          localStorage.setItem('x2_cart', JSON.stringify(remote.cart_data));
-          localStorage.setItem('x2_cart_updated_at', String(remoteTime));
-          window.dispatchEvent(new CustomEvent('cart:updated', { detail: { items: remote.cart_data } }));
-        }
-      }
-
-      // مزامنة المفضلة
-      if (remote.wishlist && Array.isArray(remote.wishlist) && remote.wishlist.length > 0) {
-        const localWish = JSON.parse(localStorage.getItem('x2_wishlist') || '[]');
-        if (remote.wishlist.length >= localWish.length) {
-          localStorage.setItem('x2_wishlist', JSON.stringify(remote.wishlist));
-          window.dispatchEvent(new CustomEvent('wishlist:updated', { detail: { items: remote.wishlist } }));
-        }
-      }
+      // upsert (insert أو update لو موجود)
+      await sbFetch('user_sync', {
+        method: 'POST',
+        extraHeaders: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify({ user_email: email, data_type: type, data, updated_at: new Date().toISOString() })
+      });
     } catch(e) {}
   },
 
-  // رفع بيانات المستخدم إلى Supabase
-  push: async function(type) {
+  // جلب بيانات من Supabase وتطبيقها محلياً
+  pull: async function() {
+    const email = this._getEmail();
+    if (!email) return;
     try {
-      const profile = JSON.parse(localStorage.getItem('x2_profile') || '{}');
-      if (!profile.email) return;
-      const rows = await sbFetch('customers?email=eq.' + encodeURIComponent(profile.email) + '&limit=1');
-      if (!rows || !rows[0]) return;
-      const customerId = rows[0].id;
+      const rows = await sbFetch('user_sync?user_email=eq.' + encodeURIComponent(email));
+      if (!rows || !rows.length) return;
 
-      const updateData = {};
-      const now = new Date().toISOString();
+      rows.forEach(row => {
+        const remoteTs = row.data && row.data.ts ? Number(row.data.ts) : 0;
+        const items = (row.data && row.data.items) ? row.data.items : [];
 
-      if (!type || type === 'cart') {
-        const cart = JSON.parse(localStorage.getItem('x2_cart') || '[]');
-        updateData.cart_data = cart;
-        updateData.cart_updated_at = now;
-        localStorage.setItem('x2_cart_updated_at', String(Date.now()));
-      }
-      if (!type || type === 'wishlist') {
-        const wish = JSON.parse(localStorage.getItem('x2_wishlist') || '[]');
-        updateData.wishlist = wish;
-      }
+        if (row.data_type === 'cart') {
+          const localTs = parseInt(localStorage.getItem('x2_cart_ts') || '0');
+          if (remoteTs > localTs && items.length >= 0) {
+            localStorage.setItem('x2_cart', JSON.stringify(items));
+            localStorage.setItem('x2_cart_ts', String(remoteTs));
+            // تحديث عداد السلة في الواجهة
+            const count = items.reduce((s, it) => s + (Number(it.qty) || 1), 0);
+            document.querySelectorAll('.cart-count, .cart-badge, #checkout-count').forEach(el => {
+              el.textContent = count || '';
+              if (el.setAttribute) el.setAttribute('data-count', count > 0 ? String(count) : '');
+              if (el.style) el.style.display = count > 0 ? 'flex' : 'none';
+            });
+            try { window.dispatchEvent(new CustomEvent('cart:updated', { detail: { items } })); } catch(e) {}
+          }
+        }
 
-      if (Object.keys(updateData).length > 0) {
-        await sbFetch('customers?id=eq.' + customerId, { method: 'PATCH', body: JSON.stringify(updateData) });
-      }
+        if (row.data_type === 'wishlist') {
+          const localItems = JSON.parse(localStorage.getItem('x2_wishlist') || '[]');
+          const localTs = parseInt(localStorage.getItem('x2_wishlist_ts') || '0');
+          if (remoteTs > localTs) {
+            localStorage.setItem('x2_wishlist', JSON.stringify(items));
+            localStorage.setItem('x2_wishlist_ts', String(remoteTs));
+            try { window.dispatchEvent(new CustomEvent('wishlist:updated', { detail: { items } })); } catch(e) {}
+          }
+        }
+      });
     } catch(e) {}
+  },
+
+  // بدء polling كل 30 ثانية
+  startPolling: function() {
+    if (this._pollTimer) return;
+    this._pollTimer = setInterval(() => {
+      if (localStorage.getItem('x2_logged') === '1') this.pull();
+    }, 30000);
   }
 };
 
@@ -423,9 +433,10 @@ window.addEventListener('load', function() {
   setTimeout(function() {
     SupaSync.loadSettings();
     SupaSync.pushLocalOrders();
-    // مزامنة بيانات المستخدم عند تحميل الصفحة
+    // مزامنة بيانات المستخدم عند تحميل الصفحة + بدء polling
     if (localStorage.getItem('x2_logged') === '1') {
       SupaUserSync.pull();
+      SupaUserSync.startPolling();
     }
   }, 2000);
 });

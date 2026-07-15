@@ -799,6 +799,7 @@ card.appendChild(content);
           cart.unshift(payload);
         }
         localStorage.setItem('x2_cart', JSON.stringify(cart));
+        localStorage.setItem('x2_cart_ts', String(Date.now()));
         // مزامنة السلة مع Supabase لتظهر على كل الأجهزة
         if (localStorage.getItem('x2_logged') === '1' && window.Supabase && window.Supabase.UserSync) {
           clearTimeout(window._cartSyncTimer);
