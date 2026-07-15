@@ -532,11 +532,16 @@ videoContainer.addEventListener('mouseleave', function() {
   } catch (e) {}
 } else {
   const img = document.createElement("img");
-  img.src = normalizeAssetUrl(firstImage);
-  img.alt = getTranslated(prod.name);
   img.className = "product-img";
+  img.alt = getTranslated(prod.name);
+  img.loading = "lazy";
+  img.decoding = "async";
   img.style.height = "230px";
   img.style.objectFit = "cover";
+  img.style.backgroundColor = "#f0f0f0";
+  // تحميل الصورة بعد إضافتها للصفحة
+  img.src = normalizeAssetUrl(firstImage);
+  img.onerror = function() { this.src = 'assets/logo.png'; };
   card.appendChild(img);
 }
 //

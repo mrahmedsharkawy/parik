@@ -970,6 +970,14 @@ footer a:hover {
   width: 100%;
   height: auto;
   object-fit: cover;
+  background-color: #f0f0f0;
+  transition: opacity 0.3s ease;
+}
+.product-img[src=""], .product-img:not([src]) {
+  opacity: 0;
+}
+.product-img[src]:not([src=""]) {
+  opacity: 1;
 }
 
 /* شارة العرض */
