@@ -1,18 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 64 64" width="64" height="64">
-  <style>
-    /* وضع النهار: اللوجو الأسود على خلفية شفافة */
-    .logo-dark  { display: inline; }
-    .logo-light { display: none; }
-    /* وضع الليل: اللوجو الأبيض على خلفية شفافة */
-    @media (prefers-color-scheme: dark) {
-      .logo-dark  { display: none; }
-      .logo-light { display: inline; }
-    }
-  </style>
-  <!-- النهار: لوجو أسود -->
-  <image href="icon b.png" x="0" y="0" width="64" height="64"
-         preserveAspectRatio="xMidYMid meet" class="logo-dark"/>
-  <!-- الليل: لوجو أبيض -->
-  <image href="icon w.png" x="0" y="0" width="64" height="64"
-         preserveAspectRatio="xMidYMid meet" class="logo-light"/>
+  <!-- خلفية كحلية دائماً حتى يظهر اللوجو الأبيض -->
+  <rect width="64" height="64" rx="10" fill="#152546"/>
+  <image href="icon w.png" x="2" y="2" width="60" height="60"
+         preserveAspectRatio="xMidYMid meet"/>
 </svg>
