@@ -530,6 +530,88 @@ videoContainer.addEventListener('mouseleave', function() {
       playPauseObserver.observe(videoContainer);
     }
   } catch (e) {}
+} else if (prodImages.length > 1) {
+  // ===== كارسيل سحب للصور المتعددة =====
+  const carouselWrap = document.createElement('div');
+  carouselWrap.style.cssText = 'position:relative;overflow:hidden;height:230px;border-radius:8px 8px 0 0;';
+
+  const track = document.createElement('div');
+  track.style.cssText = 'display:flex;height:100%;transition:transform 0.28s ease;will-change:transform;';
+
+  const totalSlides = prodImages.length;
+  let currentSlide = 0;
+
+  prodImages.forEach((src, i) => {
+    const slide = document.createElement('div');
+    slide.style.cssText = 'flex:0 0 100%;height:100%;overflow:hidden;';
+    const sImg = document.createElement('img');
+    sImg.src = i === 0 ? normalizeAssetUrl(src) : ''; // lazy
+    sImg.dataset.src = normalizeAssetUrl(src);
+    sImg.alt = getTranslated(prod.name);
+    sImg.className = 'product-img';
+    sImg.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;';
+    slide.appendChild(sImg);
+    track.appendChild(slide);
+  });
+
+  // نقاط التنقل
+  const dotsWrap = document.createElement('div');
+  dotsWrap.style.cssText = 'position:absolute;bottom:7px;left:50%;transform:translateX(-50%);display:flex;gap:4px;z-index:5;pointer-events:none;';
+  const dotEls = prodImages.map((_, i) => {
+    const d = document.createElement('span');
+    d.style.cssText = `width:${i===0?'14px':'5px'};height:5px;border-radius:99px;background:${i===0?'#D4AF37':'rgba(255,255,255,0.7)'};transition:all 0.25s;display:block;`;
+    dotsWrap.appendChild(d);
+    return d;
+  });
+
+  function goToSlide(idx) {
+    currentSlide = Math.max(0, Math.min(totalSlides - 1, idx));
+    track.style.transform = `translateX(${-currentSlide * 100}%)`;
+    // lazy load صورة جارية وتالية
+    [currentSlide, currentSlide + 1].forEach(si => {
+      const sImg = track.children[si]?.querySelector('img');
+      if (sImg && !sImg.src && sImg.dataset.src) sImg.src = sImg.dataset.src;
+    });
+    dotEls.forEach((d, i) => {
+      d.style.width = i === currentSlide ? '14px' : '5px';
+      d.style.background = i === currentSlide ? '#D4AF37' : 'rgba(255,255,255,0.7)';
+    });
+  }
+
+  // لمس/سحب
+  let touchSX = 0, touchSY = 0, dragging = false, hasMoved = false;
+  carouselWrap.addEventListener('touchstart', e => {
+    touchSX = e.touches[0].clientX;
+    touchSY = e.touches[0].clientY;
+    dragging = true; hasMoved = false;
+  }, { passive: true });
+  carouselWrap.addEventListener('touchmove', e => {
+    if (!dragging) return;
+    const dx = e.touches[0].clientX - touchSX;
+    const dy = e.touches[0].clientY - touchSY;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 5) {
+      hasMoved = true;
+      if (e.cancelable) e.preventDefault();
+    }
+  }, { passive: false });
+  carouselWrap.addEventListener('touchend', e => {
+    if (!dragging) return;
+    dragging = false;
+    const dx = e.changedTouches[0].clientX - touchSX;
+    if (hasMoved && Math.abs(dx) > 35) {
+      goToSlide(dx < 0 ? currentSlide + 1 : currentSlide - 1);
+    }
+  }, { passive: true });
+
+  // منع التنقل للمنتج عند السحب
+  carouselWrap.addEventListener('click', e => {
+    if (hasMoved) { e.stopPropagation(); e.preventDefault(); hasMoved = false; }
+  }, true);
+
+  carouselWrap.appendChild(track);
+  carouselWrap.appendChild(dotsWrap);
+  card.appendChild(carouselWrap);
+
 } else {
   const img = document.createElement("img");
   img.src = normalizeAssetUrl(firstImage);
@@ -2627,6 +2709,72 @@ if (filtersScroll) {
           });
           thumbs.appendChild(thumb);
         });
+      }
+
+      // ===== Swipe carousel للموبايل =====
+      if (mainWrap && media.length > 1 && window.innerWidth <= 600) {
+        // بناء carousel
+        const carousel = document.createElement('div');
+        carousel.id = 'prodCarousel';
+        carousel.style.cssText = 'display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;width:100%;height:100%;border-radius:inherit;';
+
+        let currentIdx = 0;
+        const slides = [];
+
+        media.forEach((item, i) => {
+          const slide = document.createElement('div');
+          slide.style.cssText = 'flex:0 0 100%;scroll-snap-align:center;width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;';
+          if (item.type === 'video') {
+            const vid = document.createElement('video');
+            vid.src = item.src; vid.controls = true; vid.playsInline = true;
+            vid.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+            slide.appendChild(vid);
+          } else {
+            const img = document.createElement('img');
+            img.src = item.src; img.alt = getT(p.name);
+            img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+            slide.appendChild(img);
+          }
+          carousel.appendChild(slide);
+          slides.push(slide);
+        });
+
+        // Dots
+        const dots = document.createElement('div');
+        dots.style.cssText = 'position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:10;';
+        const dotEls = media.map((_, i) => {
+          const d = document.createElement('span');
+          d.style.cssText = `width:${i===0?'18px':'7px'};height:7px;border-radius:999px;background:${i===0?'#D4AF37':'rgba(255,255,255,0.6)'};transition:all 0.3s;cursor:pointer;`;
+          d.addEventListener('click', () => { carousel.scrollTo({ left: i * carousel.offsetWidth, behavior: 'smooth' }); });
+          dots.appendChild(d);
+          return d;
+        });
+
+        // تحديث الـ dot النشط عند السكرول
+        carousel.addEventListener('scroll', () => {
+          const idx = Math.round(carousel.scrollLeft / carousel.offsetWidth);
+          if (idx !== currentIdx) {
+            dotEls[currentIdx].style.cssText = `width:7px;height:7px;border-radius:999px;background:rgba(255,255,255,0.6);transition:all 0.3s;cursor:pointer;`;
+            currentIdx = idx;
+            dotEls[idx].style.cssText = `width:18px;height:7px;border-radius:999px;background:#D4AF37;transition:all 0.3s;cursor:pointer;`;
+            // مزامنة مع الـ thumbs
+            if (thumbs) {
+              thumbs.querySelectorAll('.active').forEach(t => t.classList.remove('active'));
+              const thumbItems = thumbs.querySelectorAll('img, .thumb-video');
+              if (thumbItems[idx]) thumbItems[idx].classList.add('active');
+            }
+          }
+        }, { passive: true });
+
+        // تضمين الـ carousel وإخفاء الصورة الأصلية
+        mainWrap.style.position = 'relative';
+        if (mainImg) mainImg.style.display = 'none';
+        if (mainVid) mainVid.style.display = 'none';
+        mainWrap.appendChild(carousel);
+        mainWrap.appendChild(dots);
+
+        // إخفاء الـ thumbs على الموبايل
+        if (thumbs) thumbs.style.display = 'none';
       }
 
       /* ---- النصوص ---- */
