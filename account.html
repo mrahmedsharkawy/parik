@@ -2326,18 +2326,16 @@
   };
 
   // load profile
-  function logoutAccount() {
+  window.logoutAccount = function() {
     if (!confirm('هل تريد تسجيل الخروج؟')) return;
-    // مسح بيانات الجلسة
     localStorage.removeItem('x2_profile');
     localStorage.removeItem('x2_orders');
     localStorage.removeItem('x2_cart');
     localStorage.removeItem('x2_cashback');
     localStorage.removeItem('x2_orders_synced');
     sessionStorage.clear();
-    // توجيه لصفحة تسجيل الدخول
     window.location.href = 'login.html';
-  }
+  };
 
   function loadProfile() {
     try {
