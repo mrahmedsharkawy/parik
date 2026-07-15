@@ -2677,7 +2677,7 @@ if (filtersScroll) {
 
       set('category', getT(p.category));
       set('name', getT(p.name));
-      document.title = getT(p.name) + ' - X2 Shopping';
+      document.title = getT(p.name) + ' - Bariq';
 
       const starsEl = document.getElementById('stars');
       if (starsEl) starsEl.innerHTML =
