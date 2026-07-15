@@ -45,7 +45,8 @@ const PROD_CACHE_KEY = 'x2_prods_ss';
 const PROD_CACHE_TTL = 60 * 1000; // دقيقة واحدة فقط
 
 export async function fetchProducts() {
-  if (_productsCache) return _productsCache;
+  // لا تثق بكاش الذاكرة لو كان فاضياً - أعد المحاولة دايماً في هذه الحالة
+  if (_productsCache && _productsCache.length > 0) return _productsCache;
 
   let staleCache = null; // cache قديم كـ backup لو Supabase فشل
 
@@ -88,7 +89,12 @@ export async function fetchProducts() {
             featured:    p.featured || false
           };
         });
-        try { sessionStorage.setItem(PROD_CACHE_KEY, JSON.stringify({ ts: Date.now(), data: _productsCache })); } catch(e) {}
+        // لا تخزّن النتيجة الفاضية في الكاش - تجنّب إخفاء المنتجات لمدة دقيقة بسبب تهنيج مؤقت
+        if (_productsCache.length > 0) {
+          try { sessionStorage.setItem(PROD_CACHE_KEY, JSON.stringify({ ts: Date.now(), data: _productsCache })); } catch(e) {}
+        } else {
+          try { sessionStorage.removeItem(PROD_CACHE_KEY); } catch(e) {}
+        }
         return _productsCache;
       }
     }
