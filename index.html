@@ -576,21 +576,28 @@
     });
   }
 
-  // توليد نسخة داكنة من اللوجو تلقائياً كـ favicon في التبويب
-  // (اللوجو الأصلي أبيض → نحوّله لكحلي على خلفية شفافة للمتصفح الفاتح)
+  // توليد favicon ديناميكي: لوجو أبيض على خلفية كحلية
   (function() {
-    try {
-      const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const link = document.querySelector('link[rel="icon"][type="image/svg+xml"]');
-      if (!link) return;
-      if (isDark) {
-        // الوضع الداكن: اللوجو الأبيض ظاهر على خلفية المتصفح الداكنة
-        link.href = 'assets/favicon.svg';
-      } else {
-        // الوضع الفاتح: استخدم favicon.svg الذي له خلفية كحلية
-        link.href = 'assets/favicon.svg';
-      }
-    } catch(e) {}
+    const img = new Image();
+    img.onload = function() {
+      const c = document.createElement('canvas');
+      c.width = 64; c.height = 64;
+      const ctx = c.getContext('2d');
+      // خلفية كحلية مدوّرة
+      ctx.fillStyle = '#152546';
+      ctx.beginPath();
+      ctx.roundRect(0, 0, 64, 64, 10);
+      ctx.fill();
+      // اللوجو الأبيض
+      ctx.drawImage(img, 4, 4, 56, 56);
+      // تطبيق الـ favicon
+      let link = document.querySelector('link[rel="icon"][type="image/png"]');
+      if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
+      link.type = 'image/png';
+      link.href = c.toDataURL('image/png');
+    };
+    img.onerror = function() {};
+    img.src = 'assets/icon w.png';
   })();
 </script>
 </body>
