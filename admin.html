@@ -2038,16 +2038,24 @@ async function changeOrderStatus(id, status){
       if (status === 'delivered' && o.cashbackStatus !== 'earned') {
         updateData.cashback_status = 'earned';
       }
-      await window.Supabase.Orders.update(id, updateData);
+      console.log('🔄 تحديث حالة الطلب رقم', id, 'إلى', status);
+      const result = await window.Supabase.Orders.update(id, updateData);
+      console.log('📩 استجابة Supabase:', result);
+
+      // Prefer:return=representation يرجع الصفوف المحدَّثة فعلياً؛ لو رجعت فارغة يعني لم يتم تحديث أي صف
+      if (!result || !Array.isArray(result) || result.length === 0) {
+        throw new Error('لم يتم تحديث أي صف في قاعدة البيانات — تحقق من صلاحيات RLS أو تسجيل دخول الأدمن');
+      }
+
       if (updateData.cashback_status) o.cashbackStatus = updateData.cashback_status;
-      toast('✅ تم تحديث الحالة');
+      toast('✅ تم تحديث الحالة في قاعدة البيانات');
     } catch(e) {
-      console.error('فشل تحديث الحالة في Supabase:', e);
+      console.error('❌ فشل تحديث الحالة في Supabase:', e);
       // تراجع عن التحديث في حال الفشل
       o.status = prevStatus;
       saveOrders(orders);
       renderStats(); renderOrders();
-      toast('⚠️ فشل تحديث الحالة');
+      toast('⚠️ فشل تحديث الحالة: ' + (e.message || 'خطأ غير معروف'));
     }
   } else {
     toast('تم تحديث الحالة محلياً');

@@ -69,7 +69,16 @@ const SupaOrders = {
     // جلب الطلبات بدون join - أبسط وأسرع
     return sbFetch('orders?select=*&order=created_at.desc&limit=500'); 
   },
-  getByPhone: async function(phone){ return sbFetch('orders?customer_phone=eq.'+encodeURIComponent(phone)+'&order=created_at.desc&limit=200'); },
+  // آمنة للعميل (anon): تستدعي دالة RPC تعيد فقط طلبات هذا الرقم (بدون كشف بقية الجدول)
+  getByPhone: async function(phone){
+    try {
+      return await sbFetch('rpc/get_orders_by_phone', {method:'POST', body: JSON.stringify({p_phone: phone})});
+    } catch(e) {
+      // fallback في حال عدم وجود الدالة بعد (قبل تنفيذ SQL) - يتطلب سياسة قراءة عامة
+      console.warn('[Supabase] get_orders_by_phone RPC غير متاح، محاولة القراءة المباشرة:', e.message);
+      return sbFetch('orders?customer_phone=eq.'+encodeURIComponent(phone)+'&order=created_at.desc&limit=200');
+    }
+  },
   // ملاحظة: هذه الدوال تحدّث بالـ order_number (نص الطلب مثل "#1002") وليس id الصف
   updateStatus: async function(orderNum,status){ return sbFetch('orders?order_number=eq.'+encodeURIComponent(orderNum),{method:'PATCH',body:JSON.stringify({status:status})}); },
   updateCashback: async function(orderNum,cbStatus){ return sbFetch('orders?order_number=eq.'+encodeURIComponent(orderNum),{method:'PATCH',body:JSON.stringify({cashback_status:cbStatus})}); }

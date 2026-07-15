@@ -1541,22 +1541,26 @@
   async function syncOrdersFromSupabase() {
     try {
       const ready = await waitForSupabaseLib();
-      if (!ready || !window.Supabase) return;
+      if (!ready || !window.Supabase) { console.warn('⚠️ Supabase غير متاح لمزامنة الطلبات'); return; }
       const profile = (() => { try { return JSON.parse(localStorage.getItem(PROFILE_KEY)||'{}'); } catch(e) { return {}; } })();
-      if (!profile.phone) return;
+      if (!profile.phone) { console.warn('⚠️ لا يوجد رقم هاتف في الملف الشخصي لمزامنة الطلبات'); return; }
 
+      console.log('🔄 مزامنة حالة الطلبات لهاتف:', profile.phone);
       const remote = await window.Supabase.Orders.getByPhone(profile.phone);
-      if (!remote || !remote.length) return;
+      console.log('📦 طلبات Supabase المطابقة:', remote);
+      if (!remote || !remote.length) { console.warn('⚠️ لم يتم العثور على طلبات في Supabase بهذا الرقم'); return; }
 
       const local = getOrders();
       let changed = false;
       const cashbackToAdd = [];
 
       remote.forEach(r => {
-        const idx = local.findIndex(o => o.id === r.order_number);
-        if (idx === -1) return;
+        // مطابقة برقم الطلب (order_number) مع مقارنة نصية مرنة
+        const idx = local.findIndex(o => String(o.id) === String(r.order_number));
+        if (idx === -1) { console.warn('⚠️ لا يوجد طلب محلي مطابق لـ', r.order_number); return; }
         const lo = local[idx];
         if (r.status && lo.status !== r.status) {
+          console.log('✅ تحديث حالة الطلب', lo.id, 'من', lo.status, 'إلى', r.status);
           lo.status = r.status;
           changed = true;
         }
@@ -1568,7 +1572,10 @@
         }
       });
 
-      if (changed) localStorage.setItem(ORDERS_KEY, JSON.stringify(local));
+      if (changed) {
+        localStorage.setItem(ORDERS_KEY, JSON.stringify(local));
+        console.log('✅ تم حفظ حالات الطلبات المحدَّثة محلياً');
+      }
 
       if (cashbackToAdd.length) {
         try {
