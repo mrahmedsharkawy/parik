@@ -799,6 +799,11 @@ card.appendChild(content);
           cart.unshift(payload);
         }
         localStorage.setItem('x2_cart', JSON.stringify(cart));
+        // مزامنة السلة مع Supabase لتظهر على كل الأجهزة
+        if (localStorage.getItem('x2_logged') === '1' && window.Supabase && window.Supabase.UserSync) {
+          clearTimeout(window._cartSyncTimer);
+          window._cartSyncTimer = setTimeout(() => window.Supabase.UserSync.push('cart'), 1500);
+        }
 
         // تحديث عداد السلة
         const count = cart.reduce((s, it) => s + (Number(it.qty) || 1), 0);

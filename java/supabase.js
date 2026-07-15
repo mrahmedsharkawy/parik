@@ -338,6 +338,71 @@ const SupaStorage = {
   }
 };
 
+/* === مزامنة بيانات المستخدم عبر الأجهزة === */
+const SupaUserSync = {
+  // جلب بيانات المستخدم من Supabase (السلة + المفضلة)
+  pull: async function() {
+    try {
+      const profile = JSON.parse(localStorage.getItem('x2_profile') || '{}');
+      if (!profile.email) return;
+      const rows = await sbFetch('customers?email=eq.' + encodeURIComponent(profile.email) + '&limit=1');
+      if (!rows || !rows[0]) return;
+      const remote = rows[0];
+
+      // مزامنة السلة
+      if (remote.cart_data && Array.isArray(remote.cart_data) && remote.cart_data.length > 0) {
+        const local = JSON.parse(localStorage.getItem('x2_cart') || '[]');
+        // دمج: الأولوية للبيانات الأحدث
+        const remoteTime = remote.cart_updated_at ? new Date(remote.cart_updated_at).getTime() : 0;
+        const localTime = parseInt(localStorage.getItem('x2_cart_updated_at') || '0');
+        if (remoteTime > localTime) {
+          localStorage.setItem('x2_cart', JSON.stringify(remote.cart_data));
+          localStorage.setItem('x2_cart_updated_at', String(remoteTime));
+          window.dispatchEvent(new CustomEvent('cart:updated', { detail: { items: remote.cart_data } }));
+        }
+      }
+
+      // مزامنة المفضلة
+      if (remote.wishlist && Array.isArray(remote.wishlist) && remote.wishlist.length > 0) {
+        const localWish = JSON.parse(localStorage.getItem('x2_wishlist') || '[]');
+        if (remote.wishlist.length >= localWish.length) {
+          localStorage.setItem('x2_wishlist', JSON.stringify(remote.wishlist));
+          window.dispatchEvent(new CustomEvent('wishlist:updated', { detail: { items: remote.wishlist } }));
+        }
+      }
+    } catch(e) {}
+  },
+
+  // رفع بيانات المستخدم إلى Supabase
+  push: async function(type) {
+    try {
+      const profile = JSON.parse(localStorage.getItem('x2_profile') || '{}');
+      if (!profile.email) return;
+      const rows = await sbFetch('customers?email=eq.' + encodeURIComponent(profile.email) + '&limit=1');
+      if (!rows || !rows[0]) return;
+      const customerId = rows[0].id;
+
+      const updateData = {};
+      const now = new Date().toISOString();
+
+      if (!type || type === 'cart') {
+        const cart = JSON.parse(localStorage.getItem('x2_cart') || '[]');
+        updateData.cart_data = cart;
+        updateData.cart_updated_at = now;
+        localStorage.setItem('x2_cart_updated_at', String(Date.now()));
+      }
+      if (!type || type === 'wishlist') {
+        const wish = JSON.parse(localStorage.getItem('x2_wishlist') || '[]');
+        updateData.wishlist = wish;
+      }
+
+      if (Object.keys(updateData).length > 0) {
+        await sbFetch('customers?id=eq.' + customerId, { method: 'PATCH', body: JSON.stringify(updateData) });
+      }
+    } catch(e) {}
+  }
+};
+
 window.Supabase = { 
   Orders: SupaOrders, 
   Customers: SupaCustomers, 
@@ -350,7 +415,24 @@ window.Supabase = {
   Storage: SupaStorage,
   Coupons: SupaCoupons,
   Campaigns: SupaCampaigns,
-  Visitors: SupaVisitors
+  Visitors: SupaVisitors,
+  UserSync: SupaUserSync
 };
 
-window.addEventListener('load',function(){ setTimeout(function(){ SupaSync.loadSettings(); SupaSync.pushLocalOrders(); },2000); });
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    SupaSync.loadSettings();
+    SupaSync.pushLocalOrders();
+    // مزامنة بيانات المستخدم عند تحميل الصفحة
+    if (localStorage.getItem('x2_logged') === '1') {
+      SupaUserSync.pull();
+    }
+  }, 2000);
+});
+
+// مزامنة عند العودة للتبويب (الجهاز الثاني قد غيّر البيانات)
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState === 'visible' && localStorage.getItem('x2_logged') === '1') {
+    SupaUserSync.pull();
+  }
+});
