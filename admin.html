@@ -3387,22 +3387,35 @@ function renderTopProducts(orders) {
   orders.forEach(o => {
     (o.items || []).forEach(item => {
       const id = item.id || item.productId;
-      if (!prodMap[id]) prodMap[id] = { name: item.name || getT(item.name) || 'منتج', qty: 0, total: 0 };
-      prodMap[id].qty += item.qty || item.quantity || 1;
-      prodMap[id].total += (item.price || 0) * (item.qty || item.quantity || 1);
+      if (!id) return;
+      const qty = Number(item.qty || item.quantity || 1);
+      if (!prodMap[id]) prodMap[id] = { qty: 0 };
+      prodMap[id].qty += qty;
     });
   });
+
   const sorted = Object.entries(prodMap).sort((a, b) => b[1].qty - a[1].qty).slice(0, 10);
   if (!sorted.length) { list.innerHTML = '<div class="empty">لا توجد بيانات</div>'; return; }
-  list.innerHTML = sorted.map(([id, data], i) => `
+
+  list.innerHTML = sorted.map(([id, data], i) => {
+    // جلب بيانات المنتج الكاملة (الاسم/الصورة/السعر) من قائمة المنتجات المحمَّلة
+    const prod = products.find(p => String(p.id) === String(id));
+    const name = prod ? getT(prod.name) : 'منتج محذوف';
+    const price = prod ? (parseFloat(prod.price) || 0) : 0;
+    const imgArr = prod ? (Array.isArray(prod.img) ? prod.img : (prod.img ? [prod.img] : [])) : [];
+    const img = imgArr.find(s => s && !s.startsWith('data:')) || imgArr[0] || 'assets/logo.png';
+    const total = price * data.qty;
+    return `
     <div class="prod-row">
-      <span style="background:var(--gold);color:var(--navy);width:24px;height:24px;border-radius:50%;text-align:center;line-height:24px;font-weight:700;font-size:.75rem">${i+1}</span>
+      <span style="background:var(--gold);color:var(--navy);width:24px;height:24px;border-radius:50%;text-align:center;line-height:24px;font-weight:700;font-size:.75rem;flex-shrink:0">${i+1}</span>
+      <img src="${img}" alt="${esc(name)}" onerror="this.src='assets/logo.png'" style="width:48px;height:48px;object-fit:cover;border-radius:8px;flex-shrink:0">
       <div class="info">
-        <b>${esc(data.name)}</b>
-        <small>${data.qty} قطعة • ${data.total.toFixed(0)} د.إ</small>
+        <b>${esc(name)}</b>
+        <small>${price.toFixed(2)} د.إ × ${data.qty} = <b style="color:var(--gold)">${total.toFixed(2)} د.إ</b></small>
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
 
 function renderTopCategories(orders) {
@@ -3457,18 +3470,33 @@ function renderBestSellers(orders) {
   orders.forEach(o => {
     (o.items || []).forEach(item => {
       const id = item.id || item.productId;
-      if (!prodMap[id]) prodMap[id] = { id, name: item.name || '', qty: 0 };
-      prodMap[id].qty += item.qty || item.quantity || 1;
+      if (!id) return;
+      const qty = Number(item.qty || item.quantity || 1);
+      if (!prodMap[id]) prodMap[id] = { qty: 0 };
+      prodMap[id].qty += qty;
     });
   });
-  const sorted = Object.values(prodMap).sort((a, b) => b.qty - a.qty).slice(0, 5);
+  const sorted = Object.entries(prodMap).sort((a, b) => b[1].qty - a[1].qty).slice(0, 5);
   if (!sorted.length) { list.innerHTML = '<div class="empty">لا توجد بيانات</div>'; return; }
-  list.innerHTML = sorted.map((p, i) => `
+
+  list.innerHTML = sorted.map(([id, data], i) => {
+    const prod = products.find(p => String(p.id) === String(id));
+    const name = prod ? getT(prod.name) : 'منتج محذوف';
+    const price = prod ? (parseFloat(prod.price) || 0) : 0;
+    const imgArr = prod ? (Array.isArray(prod.img) ? prod.img : (prod.img ? [prod.img] : [])) : [];
+    const img = imgArr.find(s => s && !s.startsWith('data:')) || imgArr[0] || 'assets/logo.png';
+    const total = price * data.qty;
+    return `
     <div class="prod-row">
-      <span style="background:var(--gold);color:var(--navy);width:22px;height:22px;border-radius:50%;text-align:center;line-height:22px;font-weight:700;font-size:.7rem">${i+1}</span>
-      <div class="info"><b>${esc(p.name || 'منتج #' + p.id)}</b><small>${p.qty} مبيعات</small></div>
+      <span style="background:var(--gold);color:var(--navy);width:22px;height:22px;border-radius:50%;text-align:center;line-height:22px;font-weight:700;font-size:.7rem;flex-shrink:0">${i+1}</span>
+      <img src="${img}" alt="${esc(name)}" onerror="this.src='assets/logo.png'" style="width:44px;height:44px;object-fit:cover;border-radius:8px;flex-shrink:0">
+      <div class="info">
+        <b>${esc(name)}</b>
+        <small>${price.toFixed(2)} د.إ × ${data.qty} = <b style="color:var(--gold)">${total.toFixed(2)} د.إ</b></small>
+      </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
 
 /* ================= تصدير التقارير ================= */
