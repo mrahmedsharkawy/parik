@@ -4,10 +4,7 @@
   <meta charset="UTF-8" />
   <title data-i18n="الصفحة الرئيسية - بريق">الصفحة الرئيسية - بريق</title>
   <!-- Critical: Preload CSS for faster rendering -->
-  <link rel="preload" href="style/style.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="style/style.css"></noscript>
-  <!-- Preload LCP image -->
-  <link rel="preload" href="assets/home/1.png" as="image" fetchpriority="high">
+  <link rel="preload" href="style/style.css" as="style">
   <!-- Preconnect to external resources -->
   <link rel="preconnect" href="https://ihhkzujjafydclnvyhaq.supabase.co" crossorigin>
   <link rel="dns-prefetch" href="https://ihhkzujjafydclnvyhaq.supabase.co">
@@ -32,6 +29,7 @@
   <meta property="og:image" content="assets/logo.png">
   <meta property="og:url" content="https://bariq.com">
   <meta property="og:type" content="website">
+  <link rel="stylesheet" href="style/style.css" />
 </head>
 <body>
 
@@ -266,9 +264,7 @@
     <div class="banner-inner">
       <img src="assets/home/1.png"
            class="banner-bg-animated"
-           alt="Parik Banner"
-           fetchpriority="high"
-           width="1200" height="400">
+           alt="Parik Banner">
     </div>
   </a>
 </section>
@@ -280,7 +276,7 @@
   <a href="offers.html" class="promo-link">
     <div class="promo-inner">
       <!-- صورة الخلفية -->
-      <img src="assets/home/2.png" class="banner-bg" alt="" aria-hidden="true" loading="lazy" width="1200" height="200">
+      <img src="assets/home/2.png" class="banner-bg" alt="" aria-hidden="true">
 
       <!-- النص المتحرك في خط واحد -->
       <div class="scrolling-text-container">

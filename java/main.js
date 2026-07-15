@@ -221,7 +221,7 @@ document.addEventListener("DOMContentLoaded", function () {
       // أولاً: Supabase (المصدر الحقيقي)
       if (window.Supabase && window.Supabase.Products) {
         try {
-          const sbProds = await window.Supabase.Products.getAll(50);
+          const sbProds = await window.Supabase.Products.getAll(200);
           if (Array.isArray(sbProds) && sbProds.length > 0) {
             _productsCache = sbProds.map(function(p){
               const imgs = [];
