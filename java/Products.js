@@ -90,7 +90,7 @@ export async function fetchProducts() {
   // 2. Supabase (المصدر الحقيقي لجميع الزوار)
   try {
     if (window.Supabase && window.Supabase.Products) {
-      const sbProds = await window.Supabase.Products.getAll(500);
+      const sbProds = await window.Supabase.Products.getAll(100);
       // نجح الاتصال - نثق بالنتيجة حتى لو فاضية (يعني فعلاً لا توجد منتجات)
       if (Array.isArray(sbProds)) {
         _productsCache = sbProds.map(function(p) {
@@ -1113,9 +1113,9 @@ function renderProductsGrid(list, productsContainer, direction = null) {
   productsContainer.style.position = 'relative';
   productsContainer.appendChild(loadingIndicator);
 
-  // chunking للأداء
-  const FIRST_CHUNK = Math.min(120, sortedList.length);
-  const NEXT_CHUNK = 60;
+  // chunking للأداء - تقليل الحجم لتحسين الأداء
+  const FIRST_CHUNK = Math.min(20, sortedList.length);
+  const NEXT_CHUNK = 20;
   let i = 0;
 
   function appendChunk() {

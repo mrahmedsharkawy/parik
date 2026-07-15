@@ -645,7 +645,7 @@
       // 2. Supabase
       if (!products && window.Supabase && window.Supabase.Products) {
         try {
-          const sb = await window.Supabase.Products.getAll(500);
+          const sb = await window.Supabase.Products.getAll(100);
           if (Array.isArray(sb) && sb.length) {
             products = sb.map(p => {
               const imgs = [];

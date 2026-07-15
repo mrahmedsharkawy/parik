@@ -493,7 +493,7 @@
     const disc = (old > pr && pr > 0) ? Math.round(((old - pr) / old) * 100) : 0;
     return `
       <a class="dp-card" href="${link}">
-        <img class="dp-img" src="${img}" alt="${name}" loading="lazy" onerror="this.src='assets/logo.png'">
+        <img class="dp-img" src="${img}" alt="${name}" loading="lazy" decoding="async" onerror="this.src='assets/logo.png'">
         <div class="dp-name">${name}</div>
         ${p.rating ? `<div class="dp-stars">${renderStars(p.rating)}</div>` : ''}
         ${disc > 0 ? `<span class="dp-badge">-${disc}%</span>` : ''}
@@ -511,7 +511,7 @@
 
       if (!products && window.Supabase && window.Supabase.Products) {
         try {
-          const sb = await window.Supabase.Products.getAll(500);
+          const sb = await window.Supabase.Products.getAll(50);
           if (Array.isArray(sb) && sb.length) {
             products = sb.map(p => {
               const imgs = [];
