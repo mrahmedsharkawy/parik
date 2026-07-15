@@ -1124,6 +1124,8 @@ function switchTab(name){
   document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   $('panel-'+name).classList.add('active');
+  // حفظ التاب الحالي لاستعادته بعد الريفريش
+  sessionStorage.setItem('admin_active_tab', name);
   if(name==='comments'){ fillProductSelects(); renderComments(); }
   if(name==='orders'){ fillProductSelects(); syncStoreOrders(true); renderStats(); renderOrders(); if(!$('o-date').value) $('o-date').value = isoToLocalInput(new Date().toISOString()); }
 }
@@ -3754,6 +3756,12 @@ async function loadCampaignsFromSupabase() {
   await loadCategories();
   await loadProducts();
   fillProductSelects();
+  
+  // استعادة التاب الأخير قبل الريفريش
+  const savedTab = sessionStorage.getItem('admin_active_tab');
+  if (savedTab && $('panel-' + savedTab)) {
+    switchTab(savedTab);
+  }
   
   // مزامنة الطلبات من Supabase (مع await)
   await syncStoreOrders(true);
