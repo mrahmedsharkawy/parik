@@ -90,7 +90,7 @@ export async function fetchProducts() {
   // 2. Supabase (المصدر الحقيقي لجميع الزوار)
   try {
     if (window.Supabase && window.Supabase.Products) {
-      const sbProds = await window.Supabase.Products.getAll(100);
+      const sbProds = await window.Supabase.Products.getAll(50);
       // نجح الاتصال - نثق بالنتيجة حتى لو فاضية (يعني فعلاً لا توجد منتجات)
       if (Array.isArray(sbProds)) {
         _productsCache = sbProds.map(function(p) {
