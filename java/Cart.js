@@ -225,8 +225,6 @@ try { window.updateSummary = updateSummary; } catch(e) {}
 
 // مسح أي تطبيق قديم من localStorage عند كل تحميل (الكوبون يُطبَّق يدوياً فقط)
 try { localStorage.removeItem('x2_coupon_applied'); } catch(e) {}
-// مسح الكوبون المطبّق من sessionStorage عند كل تحميل للصفحة (يجب إدخال الكود يدوياً)
-try { sessionStorage.removeItem('x2_coupon_applied'); } catch(e) {}
 
 // ===== تطبيق كوبون الكاش باك (يدوياً فقط) =====
 function applyCoupon() {
