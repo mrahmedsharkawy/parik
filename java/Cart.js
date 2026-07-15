@@ -906,15 +906,27 @@ function updateSelectedCount() {
     // إضافة الطلب مع الكاش باك "معلّق" — يُضاف للرصيد بعد تأكيد التسليم
     try {
       const CB_KEY = 'x2_cashback';
-      const lastNum = parseInt(localStorage.getItem('x2_order_counter') || '999', 10);
-      const nextNum = lastNum + 1;
-      localStorage.setItem('x2_order_counter', String(nextNum));
-      const orderId = '#' + nextNum;
-      const orderItems = items.slice(0,2).map(i => i.title || i.name || 'منتج').join(' · ');
       const summaryTotal = readSummaryValue();
       const calcTotal = items.reduce((s,i) => s + ((i.unit || parseFloat(i.price||i.priceCurrent||0)) * (Number(i.qty)||1)), 0);
       const totalAmt = (summaryTotal > 0 ? summaryTotal : calcTotal).toFixed(2);
       const expiresAt = new Date(Date.now() + 30*24*60*60*1000).toISOString();
+
+      // جلب رقم الطلب العالمي من Supabase (متسلسل عبر كل العملاء)
+      let orderId = null;
+      if (window.Supabase && window.Supabase.Counter) {
+        try {
+          orderId = await window.Supabase.Counter.nextOrderNumber();
+        } catch(e) {}
+      }
+      // fallback محلي لو Supabase مش متاح
+      if (!orderId) {
+        const lastNum = parseInt(localStorage.getItem('x2_order_counter') || '999', 10);
+        const nextNum = lastNum + 1;
+        localStorage.setItem('x2_order_counter', String(nextNum));
+        orderId = '#' + nextNum;
+      }
+
+      const orderItems = items.slice(0,2).map(i => i.title || i.name || 'منتج').join(' · ');
       // حفظ الطلب في x2_orders مع الـ id لكل منتج
       const orders = JSON.parse(localStorage.getItem('x2_orders') || '[]');
       orders.unshift({

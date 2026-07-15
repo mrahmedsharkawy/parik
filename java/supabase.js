@@ -417,6 +417,40 @@ const SupaUserSync = {
   }
 };
 
+/* === عداد الطلبات العالمي (يضمن تسلسل الأرقام عبر كل العملاء) === */
+const SupaCounter = {
+  // جلب الرقم التالي بشكل atomic
+  nextOrderNumber: async function() {
+    try {
+      // استخدام RPC أو PATCH مع returning للحصول على قيمة atomic
+      const res = await sbFetch('rpc/increment_order_counter', {
+        method: 'POST',
+        body: JSON.stringify({})
+      });
+      if (res && res.value) return '#' + res.value;
+    } catch(e) {}
+
+    // fallback: PATCH مباشر
+    try {
+      // اقرأ القيمة الحالية أولاً
+      const current = await sbFetch('counters?name=eq.order_number&select=value');
+      if (current && current[0]) {
+        const next = (parseInt(current[0].value) || 999) + 1;
+        await sbFetch('counters?name=eq.order_number', {
+          method: 'PATCH',
+          body: JSON.stringify({ value: next })
+        });
+        return '#' + next;
+      }
+    } catch(e) {}
+
+    // fallback محلي لو Supabase مش متاح
+    const local = parseInt(localStorage.getItem('x2_order_counter') || '999') + 1;
+    localStorage.setItem('x2_order_counter', String(local));
+    return '#' + local;
+  }
+};
+
 window.Supabase = { 
   Orders: SupaOrders, 
   Customers: SupaCustomers, 
@@ -430,7 +464,8 @@ window.Supabase = {
   Coupons: SupaCoupons,
   Campaigns: SupaCampaigns,
   Visitors: SupaVisitors,
-  UserSync: SupaUserSync
+  UserSync: SupaUserSync,
+  Counter: SupaCounter
 };
 
 window.addEventListener('load', function() {
