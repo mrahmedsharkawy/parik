@@ -150,7 +150,7 @@ const SupaSync = {
         localStorage.setItem('x2_orders', JSON.stringify(local));
         localStorage.setItem('x2_orders_synced', JSON.stringify(pushedIds));
       }
-      if(pushed) console.log('[Supabase] Pushed '+pushed+' orders');
+      if(pushed)
     }catch(e){ console.warn('[Supabase]',e.message); }
   },
   pullOrders: async function(){

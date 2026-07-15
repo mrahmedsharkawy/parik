@@ -1,13 +1,13 @@
-﻿// الترجمة والعملة
+// ??????? ???????
 document.addEventListener("DOMContentLoaded", () => {
 
-  // إخفاء الصور المكسورة (404) تلقائياً
+  // ????? ????? ???????? (404) ????????
   document.querySelectorAll('img').forEach(function(img) {
     img.addEventListener('error', function() {
       this.setAttribute('data-broken', '1');
     }, { once: true });
   });
-  // مراقبة الصور المضافة لاحقاً بـ JS
+  // ?????? ????? ??????? ?????? ?? JS
   const imgObserver = new MutationObserver(function(mutations) {
     mutations.forEach(function(m) {
       m.addedNodes.forEach(function(node) {
@@ -22,10 +22,10 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   imgObserver.observe(document.body, { childList: true, subtree: true });
   const lang = localStorage.getItem("lang") || "ar";
-  const currency = localStorage.getItem("currency") || "درهم";
+  const currency = localStorage.getItem("currency") || "????";
   const elements = document.querySelectorAll("[data-i18n]");
 
-  // ضبط اتجاه الصفحة تلقائياً حسب اللغة
+  // ??? ????? ?????? ???????? ??? ?????
   document.documentElement.dir = (lang === "ar" ? "rtl" : "ltr");
   document.documentElement.lang = lang;
 
@@ -43,11 +43,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
 
-      // تحديث عنوان الصفحة تلقائياً حسب اللغة إذا كان هناك عنصر title يحمل data-i18n
+      // ????? ????? ?????? ???????? ??? ????? ??? ??? ???? ???? title ???? data-i18n
       const pageTitle = document.querySelector('title[data-i18n]');
       if (pageTitle) {
         const key = pageTitle.getAttribute('data-i18n');
-        // استخدم الترجمة الخاصة بهذه الصفحة فقط (لا تجبر على "جميع الفئات")
+        // ?????? ??????? ?????? ???? ?????? ??? (?? ???? ??? "???? ??????")
         if (data[lang] && data[lang][key]) {
           pageTitle.textContent = data[lang][key];
         } else if (data["ar"] && data["ar"][key] && document.documentElement.dir === "rtl") {
@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
     langSelect.value = lang;
     langSelect.addEventListener("change", () => {
       localStorage.setItem("lang", langSelect.value);
-      // ضبط اتجاه الصفحة عند تغيير اللغة
+      // ??? ????? ?????? ??? ????? ?????
       document.documentElement.dir = (langSelect.value === "ar" ? "rtl" : "ltr");
       document.documentElement.lang = langSelect.value;
       location.reload();
@@ -78,12 +78,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // تنفيذ استجابة التصميم للشاشات الصغيرة
+  // ????? ??????? ??????? ??????? ???????
   handleResponsive();
 });
 
 
-// إخفاء كل العناصر عند التصغير وإبقاء شريط البحث فقط
+// ????? ?? ??????? ??? ??????? ?????? ???? ????? ???
 function handleResponsive() {
   const width = window.innerWidth;
   const headerContent = document.querySelector(".header-content");
@@ -100,10 +100,10 @@ function handleResponsive() {
 window.addEventListener("resize", handleResponsive);
 
 /* ================================================================
-   حفظ واستعادة موضع التمرير عند التنقل بين الصفحات (السحب للخلف)
+   ??? ???????? ???? ??????? ??? ?????? ??? ??????? (????? ?????)
 ================================================================ */
 (function() {
-  // منع المتصفح من التحكم التلقائي (نتحكم نحن يدوياً)
+  // ??? ??????? ?? ?????? ???????? (????? ??? ??????)
   if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 
   const SCROLL_KEY = 'x2_scroll_positions';
@@ -125,7 +125,7 @@ window.addEventListener("resize", handleResponsive);
       const pos = getPositions();
       const y = pos[location.href];
       if (y > 0) {
-        // تأخير بسيط لانتظار اكتمال رسم الصفحة
+        // ????? ???? ??????? ?????? ??? ??????
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
             window.scrollTo({ top: y, behavior: 'auto' });
@@ -135,39 +135,39 @@ window.addEventListener("resize", handleResponsive);
     } catch(e) {}
   }
 
-  // حفظ الموضع عند كل تمرير (throttled لتحسين الأداء)
+  // حفظ الموضع بعد توقف التمرير بـ 500ms (تقليل الضغط على sessionStorage)
   let scrollTimer;
   window.addEventListener('scroll', function() {
     clearTimeout(scrollTimer);
-    scrollTimer = setTimeout(saveCurrentPosition, 150);
+    scrollTimer = setTimeout(saveCurrentPosition, 500);
   }, { passive: true });
 
-  // حفظ الموضع قبل مغادرة الصفحة
+  // حفظ الموضع عند مغادرة الصفحة
   window.addEventListener('pagehide', saveCurrentPosition);
   window.addEventListener('beforeunload', saveCurrentPosition);
 
-  // استعادة الموضع عند الرجوع للخلف (swipe back / زر الرجوع)
+  // ??????? ?????? ??? ?????? ????? (swipe back / ?? ??????)
   window.addEventListener('pageshow', function(e) {
-    // e.persisted = true لما يرجع من bfcache (كاش المتصفح)
+    // e.persisted = true ??? ???? ?? bfcache (??? ???????)
     if (e.persisted) {
       restorePosition();
     }
   });
 
-  // استعادة الموضع عند popstate (SPA navigation)
+  // ??????? ?????? ??? popstate (SPA navigation)
   window.addEventListener('popstate', function() {
     setTimeout(restorePosition, 100);
   });
 })();
 
-// شريط البحث 
+// ???? ????? 
 document.addEventListener("DOMContentLoaded", function () {
   const searchInput = document.getElementById("textSearch");
   const searchIcon = document.querySelector(".icon.search");
   const imageInput = document.getElementById("imageSearchInput");
   const resultsBox = document.getElementById("searchResults");
 
-  // ===== Dropdown تحت شريط البحث =====
+  // ===== Dropdown ??? ???? ????? =====
   const searchContainer = searchInput ? searchInput.closest('.search-container') : null;
   let dropdownBox = null;
   if (searchContainer) {
@@ -218,7 +218,7 @@ document.addEventListener("DOMContentLoaded", function () {
           return _productsCache;
         }
       }
-      // أولاً: Supabase (المصدر الحقيقي)
+      // ?????: Supabase (?????? ???????)
       if (window.Supabase && window.Supabase.Products) {
         try {
           const sbProds = await window.Supabase.Products.getAll(500);
@@ -249,7 +249,7 @@ document.addEventListener("DOMContentLoaded", function () {
     try { return JSON.parse(localStorage.getItem('x2_orders')||'[]'); } catch(e) { return []; }
   }
 
-  // دالة البحث النصي
+  // ???? ????? ?????
   async function performTextSearch() {
     const keyword = searchInput.value.trim().toLowerCase();
     clearDropdown();
@@ -269,7 +269,7 @@ document.addEventListener("DOMContentLoaded", function () {
     ).slice(0,3);
 
     if (!prodResults.length && !orderResults.length) {
-      showDropdown(`<p style="color:#888;padding:14px;text-align:center;font-size:.84rem">لا توجد نتائج لـ "${searchInput.value.trim()}"</p>`);
+      showDropdown(`<p style="color:#888;padding:14px;text-align:center;font-size:.84rem">?? ???? ????? ?? "${searchInput.value.trim()}"</p>`);
       return;
     }
 
@@ -279,10 +279,10 @@ document.addEventListener("DOMContentLoaded", function () {
     if (prodResults.length) {
       const t=document.createElement('div');
       t.style.cssText='font-size:.72rem;font-weight:700;color:#aaa;padding:4px 8px 6px;text-transform:uppercase;letter-spacing:.04em;';
-      t.textContent='🛒 منتجات';
+      t.textContent='?? ??????';
       wrap.appendChild(t);
       prodResults.forEach(p=>{
-        const name=typeof p.name==='object'?(p.name.ar||p.name.en):(p.name||'منتج');
+        const name=typeof p.name==='object'?(p.name.ar||p.name.en):(p.name||'????');
         const img=(Array.isArray(p.img)?p.img[0]:p.img)||'assets/logo.png';
         const link=p.id?`product.html?id=${encodeURIComponent(p.id)}`:'#';
         const a=document.createElement('a');
@@ -290,7 +290,7 @@ document.addEventListener("DOMContentLoaded", function () {
         a.style.cssText='display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:10px;text-decoration:none;color:inherit;transition:background .12s;';
         a.onmouseenter=()=>a.style.background='#f7f8fc';
         a.onmouseleave=()=>a.style.background='';
-        a.innerHTML=`<img src="${img}" alt="" style="width:40px;height:40px;object-fit:cover;border-radius:8px;flex-shrink:0;background:#f0f0f0" onerror="this.src='assets/logo.png'"><span style="font-size:.84rem;font-weight:600;color:#111;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name}</span><span style="font-size:.78rem;font-weight:700;color:#D4AF37;white-space:nowrap">${p.price?p.price+' د.إ':''}</span>`;
+        a.innerHTML=`<img src="${img}" alt="" style="width:40px;height:40px;object-fit:cover;border-radius:8px;flex-shrink:0;background:#f0f0f0" onerror="this.src='assets/logo.png'"><span style="font-size:.84rem;font-weight:600;color:#111;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name}</span><span style="font-size:.78rem;font-weight:700;color:#D4AF37;white-space:nowrap">${p.price?p.price+' ?.?':''}</span>`;
         wrap.appendChild(a);
       });
     }
@@ -301,7 +301,7 @@ document.addEventListener("DOMContentLoaded", function () {
       wrap.appendChild(sep);
       const t2=document.createElement('div');
       t2.style.cssText='font-size:.72rem;font-weight:700;color:#aaa;padding:4px 8px 6px;text-transform:uppercase;letter-spacing:.04em;';
-      t2.textContent='📦 طلبات';
+      t2.textContent='?? ?????';
       wrap.appendChild(t2);
       orderResults.forEach(o=>{
         const a=document.createElement('a');
@@ -310,14 +310,14 @@ document.addEventListener("DOMContentLoaded", function () {
         a.onmouseenter=()=>a.style.background='#f7f8fc';
         a.onmouseleave=()=>a.style.background='';
         const fi=(o.items||[])[0]||{};
-        a.innerHTML=`<span style="font-size:1.2rem;flex-shrink:0">📦</span><span style="font-size:.84rem;font-weight:600;color:#111;flex:1">طلب ${o.id||''}</span><span style="font-size:.78rem;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px">${fi.title||''}</span>`;
+        a.innerHTML=`<span style="font-size:1.2rem;flex-shrink:0">??</span><span style="font-size:.84rem;font-weight:600;color:#111;flex:1">??? ${o.id||''}</span><span style="font-size:.78rem;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px">${fi.title||''}</span>`;
         wrap.appendChild(a);
       });
     }
 
     const cb=document.createElement('div');
     cb.style.cssText='text-align:center;padding:6px 0 2px;border-top:1px solid #f5f5f5;margin-top:6px;';
-    cb.innerHTML=`<button onclick="window._clearSearch&&window._clearSearch()" style="border:none;background:none;color:#bbb;font-size:.72rem;cursor:pointer;padding:4px 10px;">إغلاق ✕</button>`;
+    cb.innerHTML=`<button onclick="window._clearSearch&&window._clearSearch()" style="border:none;background:none;color:#bbb;font-size:.72rem;cursor:pointer;padding:4px 10px;">????? ?</button>`;
     wrap.appendChild(cb);
 
     if (dropdownBox) {
@@ -333,7 +333,7 @@ document.addEventListener("DOMContentLoaded", function () {
   window._clearSearch = clearDropdown;
   window.performTextSearch = performTextSearch;
 
-  // تشغيل من أول حرف (live search)
+  // ????? ?? ??? ??? (live search)
   let _liveTimer = null;
   searchInput.addEventListener("input", function () {
     clearTimeout(_liveTimer);
@@ -341,13 +341,13 @@ document.addEventListener("DOMContentLoaded", function () {
     _liveTimer = setTimeout(performTextSearch, 220);
   });
 
-  // تشغيل عند الضغط على Enter
+  // ????? ??? ????? ??? Enter
   searchInput.addEventListener("keydown", function (e) {
     if (e.key === "Enter") { e.preventDefault(); clearTimeout(_liveTimer); performTextSearch(); }
     if (e.key === "Escape") { clearDropdown(); searchInput.value = ''; }
   });
 
-  // إغلاق النتائج عند الضغط خارج الشريط
+  // ????? ??????? ??? ????? ???? ??????
   document.addEventListener("click", function(e) {
     const target = e.target;
     const inSearch = searchInput && searchInput.contains(target);
@@ -358,7 +358,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // ===== بحث بالصورة =====
+  // ===== ??? ??????? =====
   function getDominantHue(imgSrc) {
     return new Promise(resolve => {
       const img = new Image();
@@ -388,10 +388,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const file = imageInput.files[0];
 
     resultsBox.innerHTML = `<div style="background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.10);padding:14px;margin-top:4px;text-align:center;color:#555;font-size:.84rem;">
-      🔍 جارٍ البحث بالصورة…<br><small style="color:#aaa">يتم تحليل الألوان للبحث عن أقرب المنتجات</small>
+      ?? ???? ????? ???????�<br><small style="color:#aaa">??? ????? ??????? ????? ?? ???? ????????</small>
     </div>`;
 
-    // قراءة الصورة المرفوعة
+    // ????? ?????? ????????
     const uploadedSrc = await new Promise(res => {
       const fr = new FileReader();
       fr.onload = e => res(e.target.result);
@@ -400,7 +400,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const uploadedColor = await getDominantHue(uploadedSrc);
 
     const products = await getProducts();
-    // نقارن فقط أول 30 منتج للأداء
+    // ????? ??? ??? 30 ???? ??????
     const pool = products.slice(0, 30);
     const scored = await Promise.all(pool.map(async p => {
       const imgSrc = (Array.isArray(p.img) ? p.img[0] : p.img) || '';
@@ -414,11 +414,11 @@ document.addEventListener("DOMContentLoaded", function () {
     wrap.style.cssText='background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.10);padding:10px;margin-top:4px;';
     const title = document.createElement('div');
     title.style.cssText='font-size:.75rem;font-weight:700;color:#888;padding:4px 6px 8px;';
-    title.textContent='📷 أقرب المنتجات للصورة';
+    title.textContent='?? ???? ???????? ??????';
     wrap.appendChild(title);
 
     top.forEach(({p}) => {
-      const name = typeof p.name==='object'?(p.name.ar||p.name.en):(p.name||'منتج');
+      const name = typeof p.name==='object'?(p.name.ar||p.name.en):(p.name||'????');
       const img  = (Array.isArray(p.img)?p.img[0]:p.img)||'assets/logo.png';
       const link = p.id?`product.html?id=${encodeURIComponent(p.id)}`:'#';
       const a = document.createElement('a');
@@ -426,13 +426,13 @@ document.addEventListener("DOMContentLoaded", function () {
       a.style.cssText='display:flex;align-items:center;gap:10px;padding:7px 6px;border-radius:8px;text-decoration:none;color:inherit;';
       a.onmouseenter=()=>a.style.background='#f7f8fc';
       a.onmouseleave=()=>a.style.background='';
-      a.innerHTML=`<img src="${img}" alt="" style="width:38px;height:38px;object-fit:cover;border-radius:7px;flex-shrink:0;background:#f0f0f0" onerror="this.src='assets/logo.png'"><span style="font-size:.84rem;font-weight:600;color:#111;flex:1">${name}</span><span style="font-size:.78rem;font-weight:700;color:#152546;white-space:nowrap">${p.price?p.price+' د.إ':''}</span>`;
+      a.innerHTML=`<img src="${img}" alt="" style="width:38px;height:38px;object-fit:cover;border-radius:7px;flex-shrink:0;background:#f0f0f0" onerror="this.src='assets/logo.png'"><span style="font-size:.84rem;font-weight:600;color:#111;flex:1">${name}</span><span style="font-size:.78rem;font-weight:700;color:#152546;white-space:nowrap">${p.price?p.price+' ?.?':''}</span>`;
       wrap.appendChild(a);
     });
 
     const cb=document.createElement('div');
     cb.style.cssText='text-align:center;padding-top:8px;';
-    cb.innerHTML=`<button onclick="window._clearSearch&&window._clearSearch()" style="border:none;background:none;color:#aaa;font-size:.74rem;cursor:pointer">إغلاق ✕</button>`;
+    cb.innerHTML=`<button onclick="window._clearSearch&&window._clearSearch()" style="border:none;background:none;color:#aaa;font-size:.74rem;cursor:pointer">????? ?</button>`;
     wrap.appendChild(cb);
     if (dropdownBox) {
       dropdownBox.innerHTML = '';
@@ -448,7 +448,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 // ...existing code...
-// وجعل شريط الفئات بنفس عرض محتوى الصفحة/main  (معدل: يصبح ثابتاً بعد المرور وتحكم بالإظهار حسب اتجاه التمرير)
+// ???? ???? ?????? ???? ??? ????? ??????/main  (????: ???? ?????? ??? ?????? ????? ???????? ??? ????? ???????)
 document.addEventListener("DOMContentLoaded", function () {
   const header = document.querySelector('.main-header');
   const categoriesBar = document.querySelector('.categories');
@@ -463,7 +463,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   if (!categoriesBar || !mainEl) return;
 
-  // نترك الشريط في التدفق الطبيعي في البداية (بنر يظهر تحته)
+  // ???? ?????? ?? ?????? ??????? ?? ??????? (??? ???? ????)
   categoriesBar.style.position = 'static';
   categoriesBar.style.transform = 'translateY(0)';
   categoriesBar.style.transition = 'transform 0.28s ease, opacity 0.28s ease';
@@ -494,40 +494,40 @@ document.addEventListener("DOMContentLoaded", function () {
     categoriesBar.style.zIndex = '';
   }
 
-  // نقطة التحول — عندما يكون رأس البار أعلى من الهيدر (أي استخدم موضعه الأصلي)
+  // ???? ?????? � ????? ???? ??? ????? ???? ?? ?????? (?? ?????? ????? ??????)
   let barTopOffset = categoriesBar.getBoundingClientRect().top + window.pageYOffset;
   function updateBarTopOffset() {
     barTopOffset = categoriesBar.getBoundingClientRect().top + window.pageYOffset;
   }
-  // وضع البداية للمارجن فوق المحتوى (فقط ارتفاع الهيدر لكي يظهر البنر فوراً تحته)
+  // ??? ??????? ??????? ??? ??????? (??? ?????? ?????? ??? ???? ????? ????? ????)
   if (mainEl) {
     const headerH = header ? header.offsetHeight : 0;
     mainEl.style.marginTop = (headerH) + 'px';
   }
 
-  // تحكم بالإظهار حسب اتجاه التمرير، ونقوم بتثبيت الشريط عندما نتجاوز barTopOffset
+  // ???? ???????? ??? ????? ???????? ????? ?????? ?????? ????? ?????? barTopOffset
   let lastScroll = window.pageYOffset || document.documentElement.scrollTop;
   let isFixed = false;
   let isVisible = true;
 
   function onScroll() {
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    // هل تجاوزنا موضع الشريط؟
+    // ?? ??????? ???? ???????
     if (scrollTop + (header ? header.offsetHeight : 0) >= barTopOffset) {
       if (!isFixed) {
         isFixed = true;
         setFixedStyles();
       }
-      // إخفاء/إظهار حسب الاتجاه
+      // ?????/????? ??? ???????
       if (scrollTop > lastScroll) {
-        // تمرير لأسفل -> اختفاء
+        // ????? ????? -> ??????
         if (isVisible) {
           categoriesBar.style.transform = 'translateY(-100%)';
           categoriesBar.style.opacity = '0';
           isVisible = false;
         }
       } else {
-        // تمرير لأعلى -> ظهور
+        // ????? ????? -> ????
         if (!isVisible) {
           categoriesBar.style.transform = 'translateY(0)';
           categoriesBar.style.opacity = '1';
@@ -535,33 +535,33 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       }
     } else {
-      // قبل الوصول للبار: أعده لموقعه الطبيعي واظهره
+      // ??? ?????? ?????: ???? ?????? ??????? ??????
       if (isFixed) {
         isFixed = false;
         unsetFixedStyles();
         categoriesBar.style.transform = 'translateY(0)';
         categoriesBar.style.opacity = '1';
         isVisible = true;
-        // إعادة حساب موضع لأن تغيّر التنسيق قد غير الـ layout
+        // ????? ???? ???? ??? ????? ??????? ?? ??? ??? layout
         updateBarTopOffset();
       }
     }
     lastScroll = scrollTop <= 0 ? 0 : scrollTop;
   }
 
-  // عند تغيير حجم النافذة أعد حساب العرض والنقطة
+  // ??? ????? ??? ??????? ??? ???? ????? ???????
   function onResize() {
-    // إذا ثابت، عدِّل العرض والموقع
+    // ??? ????? ????? ????? ???????
     if (isFixed) setFixedStyles();
-    // إعادة حساب موضع الشريط في التدفق الطبيعي (نحتاج موضعًا صحيحًا فقط عندما ليس fixed)
-    // لحصول قيمة صحيحة نلغي مؤقتاً الوضع الثابت لنقيس العنصر في التدفق إن لزم
+    // ????? ???? ???? ?????? ?? ?????? ??????? (????? ?????? ?????? ??? ????? ??? fixed)
+    // ????? ???? ????? ???? ?????? ????? ?????? ????? ?????? ?? ?????? ?? ???
     if (!isFixed) updateBarTopOffset();
   }
 
   window.addEventListener('scroll', onScroll, { passive: true });
   window.addEventListener('resize', onResize);
 
-  // تنفيذ أولي بعد تأخير صغير لالتقاط القياسات الصحيحة
+  // ????? ???? ??? ????? ???? ??????? ???????? ???????
   setTimeout(() => {
     updateBarTopOffset();
     onResize();
@@ -569,7 +569,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }, 120);
 });
 
-// إضافة تأثيرات انتقالية للقوائم المنسدلة مع ضبط موقعها تحت العنصر مباشرة
+// ????? ??????? ???????? ??????? ???????? ?? ??? ?????? ??? ?????? ??????
 document.addEventListener("DOMContentLoaded", () => {
   const dropdowns = document.querySelectorAll(".dropdown-content");
   const isMobileNow = () => window.matchMedia('(max-width: 992px)').matches || 'ontouchstart' in window;
@@ -602,7 +602,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   
   dropdowns.forEach(dropdown => {
-    // تعديل طريقة ظهور القوائم المنسدلة
+    // ????? ????? ???? ??????? ????????
     dropdown.style.transition = "all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
     dropdown.style.transform = isMobileNow()
       ? (isRTL ? 'translateX(-100%)' : 'translateX(100%)')
@@ -610,7 +610,7 @@ document.addEventListener("DOMContentLoaded", () => {
     dropdown.style.opacity = "0";
     dropdown.style.display = "none";
     
-    // تأكد من وضع القائمة بشكل مطلق وتحت العنصر مباشرة
+    // ???? ?? ??? ??????? ???? ???? ???? ?????? ??????
     if (isMobileNow()) {
       dropdown.style.position = "fixed";
       dropdown.style.top = "0";
@@ -623,13 +623,13 @@ document.addEventListener("DOMContentLoaded", () => {
       dropdown.style.right = isRTL ? "auto" : "0";
     } else {
       dropdown.style.position = "absolute";
-      dropdown.style.top = "130%"; // مباشرة تحت العنصر
-      dropdown.style.left = "0"; // محاذاة مع الجانب الأيسر (سيتم تعديله للغة العربية)
-      dropdown.style.zIndex = "1000"; // ضمان ظهورها فوق العناصر الأخرى
-      dropdown.style.width = "max-content"; // عرض مناسب للمحتوى
-      dropdown.style.minWidth = "100%"; // لا يقل عن عرض العنصر الأصلي
+      dropdown.style.top = "130%"; // ?????? ??? ??????
+      dropdown.style.left = "0"; // ?????? ?? ?????? ?????? (???? ?????? ???? ???????)
+      dropdown.style.zIndex = "1000"; // ???? ?????? ??? ??????? ??????
+      dropdown.style.width = "max-content"; // ??? ????? ???????
+      dropdown.style.minWidth = "100%"; // ?? ??? ?? ??? ?????? ??????
       
-      // تعديل محاذاة القائمة حسب اتجاه اللغة
+      // ????? ?????? ??????? ??? ????? ?????
       if (document.documentElement.dir === "rtl") {
         dropdown.style.left = "auto";
         dropdown.style.right = "0";
@@ -638,14 +638,14 @@ document.addEventListener("DOMContentLoaded", () => {
     
     const parent = dropdown.closest(".dropdown");
     if (parent) {
-      // تأكد من أن العنصر الأصلي له position: relative
+      // ???? ?? ?? ?????? ?????? ?? position: relative
       parent.style.position = "relative";
     }
     
     const trigger = parent ? parent.querySelector(".dropbtn") : null;
     
     if (trigger) {
-      // توقيت أطول قبل إخفاء القائمة
+      // ????? ???? ??? ????? ???????
       let hideTimer;
       let isMouseOverDropdown = false;
       
@@ -655,7 +655,7 @@ document.addEventListener("DOMContentLoaded", () => {
         showDropdown(dropdown);
       });
 
-      // على الهاتف: فتح/إغلاق بالقَرص (tap) بدل hover.
+      // ??? ??????: ???/????? ??????? (tap) ??? hover.
       trigger.addEventListener('click', (e) => {
         if (!isMobileNow()) return;
         e.preventDefault();
@@ -679,7 +679,7 @@ document.addEventListener("DOMContentLoaded", () => {
           if (!isMouseOverDropdown) {
             hideDropdown(dropdown);
           }
-        }, 100); // زيادة مدة التأخير هنا إلى 800 مللي ثانية
+        }, 100); // ????? ??? ??????? ??? ??? 800 ???? ?????
       });
       
       parent.addEventListener("mouseleave", () => {
@@ -688,12 +688,12 @@ document.addEventListener("DOMContentLoaded", () => {
           if (!isMouseOverDropdown) {
             hideDropdown(dropdown);
           }
-        }, 100); // زيادة مدة التأخير هنا إلى 800 مللي ثانية
+        }, 100); // ????? ??? ??????? ??? ??? 800 ???? ?????
       });
     }
   });
 
-  // إغلاق القوائم عند الضغط خارجها في الهاتف.
+  // ????? ??????? ??? ????? ?????? ?? ??????.
   document.addEventListener('click', (e) => {
     if (!isMobileNow()) return;
     if (!e.target.closest('.dropdown')) closeAllDropdowns();
@@ -702,14 +702,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
-// إضافة زر العودة للأعلى مع سهم ثابت للأعلى وإخفاء في الهاتف
+// ????? ?? ?????? ?????? ?? ??? ???? ?????? ?????? ?? ??????
 document.addEventListener("DOMContentLoaded", () => {
-  // إنشاء زر العودة للأعلى
+  // ????? ?? ?????? ??????
   const scrollBtn = document.createElement('button');
   scrollBtn.id = 'scroll-btn';
   
-  // استخدام سهم لأعلى ثابت
-  scrollBtn.innerHTML = '&#x2191;'; // سهم لأعلى Unicode
+  // ??????? ??? ????? ????
+  scrollBtn.innerHTML = '&#x2191;'; // ??? ????? Unicode
   
   scrollBtn.style.cssText = `
     position: fixed;
@@ -730,12 +730,12 @@ document.addEventListener("DOMContentLoaded", () => {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px; /* زيادة حجم الخط للسهم */
+    font-size: 24px; /* ????? ??? ???? ????? */
     font-weight: bold;
   `;
   document.body.appendChild(scrollBtn);
   
-  // إخفاء الزر على الأجهزة المحمولة باستخدام media query
+  // ????? ???? ??? ??????? ???????? ???????? media query
   const mobileStyle = document.createElement('style');
   mobileStyle.textContent = `
     @media (max-width: 768px) {
@@ -746,18 +746,18 @@ document.addEventListener("DOMContentLoaded", () => {
   `;
   document.head.appendChild(mobileStyle);
   
-  // تغيير اتجاه الزر في الواجهات العربية
+  // ????? ????? ???? ?? ???????? ???????
   const isRTL = document.documentElement.dir === 'rtl';
   if (isRTL) {
     scrollBtn.style.right = 'auto';
     scrollBtn.style.left = '20px';
   }
   
-  // إظهار/إخفاء الزر عند التمرير (بدون تغيير السهم)
+  // ?????/????? ???? ??? ??????? (???? ????? ?????)
   window.addEventListener('scroll', () => {
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
     
-    // إظهار الزر فقط عند التمرير لمسافة كافية
+    // ????? ???? ??? ??? ??????? ?????? ?????
     if (scrollTop > 300) {
       scrollBtn.style.opacity = '1';
       scrollBtn.style.transform = 'scale(1) translateY(0)';
@@ -767,7 +767,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
   
-  // تنقل سلس للأعلى عند النقر
+  // ???? ??? ?????? ??? ?????
   scrollBtn.addEventListener('click', () => {
     window.scrollTo({
       top: 0,
@@ -775,7 +775,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
   
-  // تأثير عند تمرير المؤشر فوق الزر
+  // ????? ??? ????? ?????? ??? ????
   scrollBtn.addEventListener('mouseenter', () => {
     scrollBtn.style.transform = 'scale(1.1) translateY(-5px)';
     scrollBtn.style.boxShadow = '0 5px 15px rgba(0,123,255,0.4)';
@@ -787,7 +787,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// كود تفعيل تنسيق الفئات   النشطة - مستقل تماماً عن أي كود آخر
+// ??? ????? ????? ??????   ?????? - ????? ?????? ?? ?? ??? ???
 (function() {
   function setupSubcategories(subcategoriesDisplay) {
     if (!subcategoriesDisplay || subcategoriesDisplay._subSetup) return;
@@ -826,14 +826,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // محاولة فورية
+  // ?????? ?????
   const immediateContainer = document.getElementById('subcategories-display');
   if (immediateContainer) {
     setupSubcategories(immediateContainer);
     return;
   }
 
-  // مراقب لإضافة الحاوية إذا أُنشئت لاحقًا
+  // ????? ?????? ??????? ??? ?????? ??????
   const mo = new MutationObserver((records, observer) => {
     const found = document.getElementById('subcategories-display');
     if (found) {
@@ -845,23 +845,23 @@ document.addEventListener("DOMContentLoaded", () => {
 })();
 
 
-// كود تفعيل تنسيق الفئات الفرعية للصور النشطة - مستقل تماماً عن أي كود آخر
+// ??? ????? ????? ?????? ??????? ????? ?????? - ????? ?????? ?? ?? ??? ???
 document.addEventListener("DOMContentLoaded", function() {
-  // تحديد جميع أزرار الفلتر
+  // ????? ???? ????? ??????
   const filterToggles = document.querySelectorAll('.filter-toggle');
   
-  // إضافة مستمع للنقر لكل زر
+  // ????? ????? ????? ??? ??
   filterToggles.forEach(toggle => {
     toggle.addEventListener('click', function() {
-      // تحقق مما إذا كان هذا الزر هو المطبق عليه كلاس active فعلاً
+      // ???? ??? ??? ??? ??? ???? ?? ?????? ???? ???? active ?????
       const isActive = this.classList.contains('active');
       
-      // إزالة كلاس active من جميع الأزرار
+      // ????? ???? active ?? ???? ???????
       filterToggles.forEach(btn => {
         btn.classList.remove('active');
       });
       
-      // إذا لم يكن نشطًا من قبل، أضف كلاس active
+      // ??? ?? ??? ????? ?? ???? ??? ???? active
       if (!isActive) {
         this.classList.add('active');
       }
@@ -870,25 +870,25 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
 
-// كود محسّن للسحب للأسفل وتحديث المنتجات
+// ??? ????? ????? ?????? ?????? ????????
 (function() {
-  // انتظر تحميل المستند بالكامل
+  // ????? ????? ??????? ???????
   document.addEventListener('DOMContentLoaded', function() {
-    // متغيرات تتبع السحب
+    // ??????? ???? ?????
     let startY = 0;
     let currentY = 0;
     let isPulling = false;
     let isRefreshing = false;
     const pullThreshold = 70;
     
-    // إنشاء مؤشر السحب للتحديث (بدون نص)
+    // ????? ???? ????? ??????? (???? ??)
     const refreshIndicator = document.createElement('div');
     refreshIndicator.className = 'pull-refresh-indicator';
     refreshIndicator.innerHTML = `
       <div class="refresh-spinner"></div>
     `;
     
-    // تطبيق التنسيقات CSS
+    // ????? ????????? CSS
     const styles = document.createElement('style');
     styles.textContent = `
       .pull-refresh-indicator {
@@ -926,7 +926,7 @@ document.addEventListener("DOMContentLoaded", function() {
       }
     `;
     
-    // إضافة التنسيقات والمؤشر للصفحة بطريقة آمنة
+    // ????? ????????? ??????? ?????? ?????? ????
     document.head.appendChild(styles);
     if (document.body) {
       document.body.insertBefore(refreshIndicator, document.body.firstChild);
@@ -936,7 +936,7 @@ document.addEventListener("DOMContentLoaded", function() {
       });
     }
     
-    // تسجيل أحداث اللمس
+    // ????? ????? ?????
     document.addEventListener('touchstart', function(e) {
       if (window.scrollY <= 5 && !isRefreshing) {
         startY = e.touches[0].clientY;
@@ -950,7 +950,7 @@ document.addEventListener("DOMContentLoaded", function() {
       currentY = e.touches[0].clientY;
       const pullDistance = currentY - startY;
       if (pullDistance > 5) {
-        // منع السلوك الافتراضي فقط إذا كان الحدث قابلاً للإلغاء (يمنع تحذير [Intervention])
+        // ??? ?????? ????????? ??? ??? ??? ????? ?????? ??????? (???? ????? [Intervention])
         if (e.cancelable) e.preventDefault();
         const resistance = 0.4;
         const movement = Math.min(pullThreshold * 1.5, pullDistance * resistance);
@@ -970,19 +970,19 @@ document.addEventListener("DOMContentLoaded", function() {
       }
     }, { passive: true });
     
-    // وظيفة إجراء التحديث (تحافظ على السلوك لكن بدون نص)
+    // ????? ????? ??????? (????? ??? ?????? ??? ???? ??)
     function doRefresh() {
       isRefreshing = true;
       const refreshSpinner = refreshIndicator.querySelector('.refresh-spinner');
       if (refreshSpinner) refreshSpinner.classList.add('rotating');
       refreshIndicator.style.transform = 'translateY(0)';
       
-      // استبدل هذه الجزئية بعملية التحديث الحقيقية عند الحاجة
+      // ?????? ??? ??????? ?????? ??????? ???????? ??? ??????
       setTimeout(function() {
-        // نفّذ إعادة ترتيب أو إعادة تحميل المنتجات هنا
+        // ???? ????? ????? ?? ????? ????? ???????? ???
         try { shuffleProducts(); } catch(e){}
         
-        // وقف الدوران وإخفاء المؤشر بعد انتهاء التحديث
+        // ??? ??????? ?????? ?????? ??? ?????? ???????
         if (refreshSpinner) refreshSpinner.classList.remove('rotating');
         setTimeout(function() {
           refreshIndicator.style.transform = 'translateY(-100%)';
@@ -991,7 +991,7 @@ document.addEventListener("DOMContentLoaded", function() {
       }, 900);
     }
     
-    // وظيفة إعادة ترتيب المنتجات (كما كانت)
+    // ????? ????? ????? ???????? (??? ????)
     function shuffleProducts() {
       try {
         const productsContainer = 
@@ -1026,14 +1026,14 @@ document.addEventListener("DOMContentLoaded", function() {
           setTimeout(() => { productsContainer.style.opacity = '1'; }, 60);
         }, 220);
       } catch (error) {
-        console.error('حدث خطأ أثناء إعادة ترتيب المنتجات:', error);
+        console.error('??? ??? ????? ????? ????? ????????:', error);
       }
     }
   });
 })();
 
 
-// محسّن: إجبار التنقل وتحويل مسارات /categories/* إلى categories.html?category=slug
+// ?????: ????? ?????? ?????? ?????? /categories/* ??? categories.html?category=slug
 (function() {
   document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('click', function(e) {
@@ -1056,7 +1056,7 @@ document.addEventListener("DOMContentLoaded", function() {
         if (hrefAttr.startsWith('#')) return;
         if (isAnchor && el.target === '_blank') return;
 
-        // احصل على URL مرجعي
+        // ???? ??? URL ?????
         let linkUrl;
         try {
           linkUrl = new URL(hrefAttr, location.href);
@@ -1064,23 +1064,23 @@ document.addEventListener("DOMContentLoaded", function() {
           return;
         }
 
-        // تحويل خاص: /categories/women  => /categories.html?category=women
-        const pathname = linkUrl.pathname.replace(/\/+$/, ''); // بدون سلاش نهائي
+        // ????? ???: /categories/women  => /categories.html?category=women
+        const pathname = linkUrl.pathname.replace(/\/+$/, ''); // ???? ???? ?????
         if (pathname === '/categories' || pathname.startsWith('/categories/')) {
-          // إذا كان الرابط بالفعل يشير إلى categories.html مع query فلا نغيّره
+          // ??? ??? ?????? ?????? ???? ??? categories.html ?? query ??? ??????
           if (!/\/categories\.html$/i.test(pathname)) {
             const parts = pathname.split('/').filter(Boolean); // ["categories","women"]
             const slug = (parts[1]) ? parts[1] : '';
             const newUrl = new URL('/categories.html', location.origin);
             if (slug) newUrl.searchParams.set('category', slug);
-            // احتفظ بـ hash إن وُجد
+            // ????? ?? hash ?? ????
             if (linkUrl.hash) newUrl.hash = linkUrl.hash;
             linkUrl = newUrl;
             hrefAttr = linkUrl.href;
           }
         }
 
-        // تأكد نفس الأصل
+        // ???? ??? ?????
         if (linkUrl.origin !== location.origin) return;
 
         const targetHref = linkUrl.href;
@@ -1129,7 +1129,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
 
-// سكربت بسيط لتبديل الشرائح تلقائياً والتعامل مع النقاط
+// ????? ???? ?????? ??????? ???????? ???????? ?? ??????
 
 (function(){
   const intervalTime = 4500;
@@ -1163,7 +1163,7 @@ document.addEventListener("DOMContentLoaded", function() {
 })();
 
 /* ============================================================
-   عداد السلة - يعمل على جميع الصفحات
+   ???? ????? - ???? ??? ???? ???????
    ============================================================ */
 (function() {
   function updateCartBadge() {
@@ -1171,16 +1171,16 @@ document.addEventListener("DOMContentLoaded", function() {
       const raw = localStorage.getItem('x2_cart');
       const count = raw ? JSON.parse(raw).reduce((s, it) => s + (Number(it.qty) || 1), 0) : 0;
 
-      // شاشة الكمبيوتر
+      // ???? ?????????
       document.querySelectorAll('#checkout-count, .cart-count').forEach(function(el) {
         el.textContent = count;
         el.style.display = count > 0 ? 'flex' : 'none';
       });
 
-      // موبايل ناف بار - window.__cartCount يُقرأ من main-navbar.js
+      // ?????? ??? ??? - window.__cartCount ????? ?? main-navbar.js
       window.__cartCount = count;
 
-      // تحديث .cart-badge مباشرةً إن كان الناف بار محملاً
+      // ????? .cart-badge ??????? ?? ??? ????? ??? ??????
       document.querySelectorAll('.cart-badge').forEach(function(el) {
         el.setAttribute('data-count', count > 0 ? String(count) : '');
       });
@@ -1203,7 +1203,7 @@ document.addEventListener("DOMContentLoaded", function() {
 })();
 
 /* ============================================================
-   نظام الحساب - يعمل على جميع الصفحات
+   ???? ?????? - ???? ??? ???? ???????
    ============================================================ */
 (function() {
   const PROFILE_KEY = 'x2_profile';
@@ -1224,21 +1224,21 @@ document.addEventListener("DOMContentLoaded", function() {
   }
   window.x2Logout = logout;
 
-  /* تحديث قائمة "الحساب" في الهيدر */
+  /* ????? ????? "??????" ?? ?????? */
   function updateAccountNav() {
-    // ابحث عن جميع dropdowns التي تحتوي على زر الحساب
+    // ???? ?? ???? dropdowns ???? ????? ??? ?? ??????
     document.querySelectorAll('.dropdown').forEach(function(dd) {
       const btn = dd.querySelector('.dropbtn');
       if (!btn) return;
       const btnText = btn.textContent || '';
-      if (!btnText.includes('الحساب') && !btnText.includes('Account')) return;
+      if (!btnText.includes('??????') && !btnText.includes('Account')) return;
 
       const menu = dd.querySelector('.dropdown-content');
       if (!menu) return;
 
       if (isLoggedIn()) {
         const p = getProfile();
-        const name = p.name || 'حسابي';
+        const name = p.name || '?????';
         const initial = name.charAt(0).toUpperCase();
         btn.innerHTML = `<span style="display:inline-flex;align-items:center;gap:5px">
           <span style="width:22px;height:22px;border-radius:50%;background:#fff;color:#D4AF37;font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center">${initial}</span>
@@ -1249,29 +1249,29 @@ document.addEventListener("DOMContentLoaded", function() {
             <div class="account-drawer-avatar">${initial}</div>
             <div class="account-drawer-meta">
               <strong>${name}</strong>
-              <span>مرحباً بك</span>
+              <span>?????? ??</span>
             </div>
           </div>
-          <a href="account.html">👤 حسابي</a>
-          <a href="account.html">📋 طلباتي</a>
-          <a href="checkout.html">🛒 إتمام الطلب</a>
-          <a href="#" onclick="window.x2Logout();return false;" style="color:#e53935">🚪 تسجيل الخروج</a>`;
+          <a href="account.html">?? ?????</a>
+          <a href="account.html">?? ??????</a>
+          <a href="checkout.html">?? ????? ?????</a>
+          <a href="#" onclick="window.x2Logout();return false;" style="color:#e53935">?? ????? ??????</a>`;
       } else {
-        btn.innerHTML = `🗣 <span>الحساب</span>`;
+        btn.innerHTML = `?? <span>??????</span>`;
         menu.innerHTML = `
           <div class="account-drawer-head">
             <div class="account-drawer-avatar">?</div>
             <div class="account-drawer-meta">
-              <strong>الضيف</strong>
-              <span>سجل الدخول لمتابعة الطلبات</span>
+              <strong>?????</strong>
+              <span>??? ?????? ??????? ???????</span>
             </div>
           </div>
-          <a href="login.html">🔑 تسجيل الدخول</a>
-          <a href="login.html?tab=register">📝 إنشاء حساب</a>`;
+          <a href="login.html">?? ????? ??????</a>
+          <a href="login.html?tab=register">?? ????? ????</a>`;
       }
     });
 
-    /* تحديث رابط الحساب في الموبايل ناف بار */
+    /* ????? ???? ?????? ?? ???????? ??? ??? */
     document.querySelectorAll('a[href*="account.html"], a[href*="account"]').forEach(function(a) {
       if (a.closest('.mobile-nav') || a.closest('.acc-nav-item')) {
         if (!isLoggedIn()) {
@@ -1284,7 +1284,7 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
-  /* إعادة توجيه صفحة account.html إذا لم يكن مسجلاً */
+  /* ????? ????? ???? account.html ??? ?? ??? ?????? */
   if (window.location.pathname.includes('account.html') && !isLoggedIn()) {
     window.location.replace('login.html');
   }
@@ -1295,15 +1295,15 @@ document.addEventListener("DOMContentLoaded", function() {
     updateAccountNav();
   }
 
-  /* تحديث بعد تحميل الموبايل ناف بار */
+  /* ????? ??? ????? ???????? ??? ??? */
   window.addEventListener('mobile-nav:ready', updateAccountNav);
 
-  /* تصدير عالمي */
+  /* ????? ????? */
   window.x2Auth = { isLoggedIn, getProfile, logout };
 })();
 
 /* ============================================================
-   نظام الإشعارات - يعمل على جميع الصفحات
+   ???? ????????? - ???? ??? ???? ???????
    ============================================================ */
 (function() {
   const NOTIF_KEY = 'x2_notifications';
@@ -1329,12 +1329,12 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   var STATUS_LABELS = {
-    pending:'قيد الانتظار', processing:'قيد المعالجة', confirmed:'مؤكد',
-    shipped:'تم الشحن', delivered:'تم التوصيل', cancelled:'ملغى', returned:'مرتجع'
+    pending:'??? ????????', processing:'??? ????????', confirmed:'????',
+    shipped:'?? ?????', delivered:'?? ???????', cancelled:'????', returned:'?????'
   };
   var STATUS_ICONS = {
-    pending:'⏳', processing:'🔄', confirmed:'✅',
-    shipped:'🚚', delivered:'🎉', cancelled:'❌', returned:'↩️'
+    pending:'?', processing:'??', confirmed:'?',
+    shipped:'??', delivered:'??', cancelled:'?', returned:'??'
   };
 
   function assignStatus(order) {
@@ -1366,39 +1366,39 @@ document.addEventListener("DOMContentLoaded", function() {
       var lastStatus = seen['ord-' + oid];
 
       if (!lastStatus) {
-        // طلب جديد — إشعار أول مرة
+        // ??? ???? � ????? ??? ???
         seen['ord-' + oid] = currentStatus;
         if (!notifs.some(function(n){ return n.orderId === oid && n.type === 'order_new'; })) {
           notifs.unshift({
-            id: makeId(), type: 'order_new', icon: '📦',
-            title: 'تم استلام طلبك',
-            msg: 'طلبك ' + oid + ' قيد المعالجة — سنبلغك بأي تحديث',
+            id: makeId(), type: 'order_new', icon: '??',
+            title: '?? ?????? ????',
+            msg: '???? ' + oid + ' ??? ???????? � ?????? ??? ?????',
             date: order.date || new Date().toISOString(),
             read: false, orderId: oid
           });
           changed = true;
         }
       } else if (lastStatus !== currentStatus) {
-        // تغيرت الحالة
+        // ????? ??????
         seen['ord-' + oid] = currentStatus;
         notifs.unshift({
           id: makeId(), type: 'order_update',
-          icon: STATUS_ICONS[currentStatus] || '🔔',
-          title: 'تحديث على طلبك',
-          msg: 'طلبك ' + oid + ' — ' + (STATUS_LABELS[currentStatus] || currentStatus),
+          icon: STATUS_ICONS[currentStatus] || '??',
+          title: '????? ??? ????',
+          msg: '???? ' + oid + ' � ' + (STATUS_LABELS[currentStatus] || currentStatus),
           date: new Date().toISOString(),
           read: false, orderId: oid
         });
         changed = true;
       }
 
-      // كاش باك
+      // ??? ???
       if (order.cashback && !seen['cb-' + oid]) {
         seen['cb-' + oid] = 1;
         notifs.unshift({
-          id: 'n-cb-' + oid, type: 'cashback', icon: '🤑',
-          title: 'كاش باك مضاف!',
-          msg: 'حصلت على ' + order.cashback + ' د.إ كاش باك من طلبك ' + oid,
+          id: 'n-cb-' + oid, type: 'cashback', icon: '??',
+          title: '??? ??? ????!',
+          msg: '???? ??? ' + order.cashback + ' ?.? ??? ??? ?? ???? ' + oid,
           date: order.date || new Date().toISOString(),
           read: false, orderId: oid
         });
@@ -1413,7 +1413,7 @@ document.addEventListener("DOMContentLoaded", function() {
     updateNotifBadge();
   }
 
-  // فحص خصومات على منتجات سبق للعميل طلبها
+  // ??? ?????? ??? ?????? ??? ?????? ?????
   async function checkDiscountNotifications() {
     try {
       var orders = JSON.parse(localStorage.getItem('x2_orders') || '[]');
@@ -1445,13 +1445,13 @@ document.addEventListener("DOMContentLoaded", function() {
         var discKey = 'disc-' + pid + '-' + Math.round(price);
         if (seen[discKey]) return;
         seen[discKey] = 1;
-        var pname = typeof p.name === 'object' ? (p.name.ar || p.name.en || 'منتج') : (p.name || 'منتج');
+        var pname = typeof p.name === 'object' ? (p.name.ar || p.name.en || '????') : (p.name || '????');
         var pct = Math.round((oldPrice - price) / oldPrice * 100);
         notifs.unshift({
           id: 'n-disc-' + pid + '-' + Date.now(),
-          type: 'discount', icon: '🏷️',
-          title: 'عرض على منتج طلبته!',
-          msg: pname + ' الآن بخصم ' + pct + '%',
+          type: 'discount', icon: '???',
+          title: '??? ??? ???? ?????!',
+          msg: pname + ' ???? ???? ' + pct + '%',
           date: new Date().toISOString(),
           read: false, productId: pid
         });
@@ -1468,7 +1468,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
   function init() {
     checkOrderNotifications();
-    setTimeout(checkDiscountNotifications, 5000); // مرة واحدة فقط عند التحميل
+    setTimeout(checkDiscountNotifications, 5000); // ??? ????? ??? ??? ???????
   }
 
   if (document.readyState === 'loading') {
@@ -1509,13 +1509,13 @@ document.addEventListener("DOMContentLoaded", function() {
 })();
 
 /* ============================================================
-   تسجيل زيارات الموقع (للإحصائيات في الأدمن)
+   ????? ?????? ?????? (?????????? ?? ??????)
    ============================================================ */
 (function() {
   try {
     const LS_VISITORS = 'x2_visitors';
     const SESSION_KEY = 'x2_visit_logged';
-    if (sessionStorage.getItem(SESSION_KEY)) return; // سجّل مرة واحدة فقط
+    if (sessionStorage.getItem(SESSION_KEY)) return; // ???? ??? ????? ???
     sessionStorage.setItem(SESSION_KEY, '1');
 
     const entry = {
@@ -1524,12 +1524,12 @@ document.addEventListener("DOMContentLoaded", function() {
       city:    '', country: '', ip: ''
     };
 
-    // حفظ الزيارة فوراً بدون انتظار الـ IP
+    // ??? ??????? ????? ???? ?????? ??? IP
     const visitors = JSON.parse(localStorage.getItem(LS_VISITORS) || '[]');
     visitors.unshift(entry);
     localStorage.setItem(LS_VISITORS, JSON.stringify(visitors.slice(0, 500)));
 
-    // رفع لـ Supabase (للأدمن يشوف كل الزوار)
+    // ??? ?? Supabase (?????? ???? ?? ??????)
     function saveVisitorToSupabase(data) {
       if (!window.Supabase) return;
       fetch(window.SUPABASE_URL ? window.SUPABASE_URL + '/rest/v1/visitors' : 'https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors', {
@@ -1545,7 +1545,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
     saveVisitorToSupabase(entry);
 
-    // محاولة الحصول على معلومات الموقع - نجرب خدمات متعددة
+    // ?????? ?????? ??? ??????? ?????? - ???? ????? ??????
     const ipServices = [
       { url: 'https://ipapi.co/json/', parse: d => ({ city: d.city, country: d.country_name, ip: d.ip }) },
       { url: 'https://ip.seeip.org/geoip', parse: d => ({ city: d.city, country: d.country, ip: d.ip }) },
@@ -1567,7 +1567,7 @@ document.addEventListener("DOMContentLoaded", function() {
             entry.ip      = geo.ip      || '';
             const v = JSON.parse(localStorage.getItem(LS_VISITORS) || '[]');
             if (v[0] && v[0].date === entry.date) { v[0] = entry; localStorage.setItem(LS_VISITORS, JSON.stringify(v)); }
-            // تحديث Supabase بالموقع
+            // ????? Supabase ???????
             saveVisitorToSupabase(entry);
             break;
           }
@@ -1578,7 +1578,7 @@ document.addEventListener("DOMContentLoaded", function() {
 })();
 
 /* ============================================================
-   تحديث روابط السوشيال ميديا من الإعدادات
+   ????? ????? ???????? ????? ?? ?????????
    ============================================================ */
 (function() {
   function applySocialLinks() {

@@ -204,7 +204,6 @@ function normalizeAssetUrl(u) {
     
     return result;
   } catch (error) {
-    console.warn('خطأ في تنسيق الرابط:', error, u);
     return u;  // في حالة حدوث أي خطأ، أعد الرابط الأصلي
   }
 }
@@ -788,7 +787,7 @@ card.appendChild(content);
 
     // استخدم addProduct إن وُجد (Cart.html)، وإلا اكتب مباشرة في localStorage
     if (typeof window.addProduct === 'function') {
-      try { window.addProduct(payload); } catch (err) { console.warn('addProduct error', err); }
+      try { window.addProduct(payload); } catch (err) { }
     } else {
       try {
         const raw = localStorage.getItem('x2_cart') || '[]';
@@ -809,7 +808,7 @@ card.appendChild(content);
           el.textContent = count;
           el.style.display = count > 0 ? 'flex' : 'none';
         });
-      } catch (err) { console.warn('cart write error:', err); }
+      } catch (err) { }
     }
 
     // إطلاق حدث عام
@@ -906,7 +905,6 @@ window.addEventListener('popstate', function(event) {
       isNavigating = false;
     }
   } catch (err) {
-    console.warn('خطأ في استرجاع موضع التمرير:', err);
     isNavigating = false;
   }
 });
@@ -1302,9 +1300,7 @@ function matchField(val) {
   // 7. دالة تحميل المنتجات حسب الفئة
   function loadProductsForCategory(categorySlug, categoriesData) {
     fetchProducts().then(data => {
-      products = data;
-      console.log(`تم تحميل ${products.length} منتج`); // تشخيص
-      console.log(`البحث عن الفئة: ${categorySlug}`); // تشخيص
+      products = data; // تشخيص // تشخيص
       
       let filteredProducts;
       if (
@@ -1320,9 +1316,7 @@ function matchField(val) {
           c.categorySlug === categorySlug || 
           (c.name && c.name.ar === categorySlug) || 
           (c.name && c.name.en === categorySlug)
-        );
-        
-        console.log('معلومات الفئة:', categoryObj); // تشخيص
+        ); // تشخيص
         
         // استخدام جميع أشكال المعرفات المحتملة للفئة
         let categoryIdentifiers = [categorySlug];
@@ -1366,13 +1360,10 @@ function matchField(val) {
             const normalizedId = id.toString().toLowerCase().trim();
             return productCats.includes(normalizedId);
           });
-        });
-        
-        console.log(`تم العثور على ${filteredProducts.length} منتج للفئة ${categorySlug}`); // تشخيص
+        }); // تشخيص
         
         // إذا لم نجد منتجات، جرب البحث بطريقة أكثر مرونة
-        if (filteredProducts.length === 0) {
-          console.log('جاري البحث بطريقة أكثر مرنة...'); // تشخيص
+        if (filteredProducts.length === 0) { // تشخيص
           filteredProducts = products.filter(p => {
             const productCats = collectCategoryValues(p);
             return categoryIdentifiers.some(id => {
@@ -1380,9 +1371,7 @@ function matchField(val) {
               // بحث جزئي (يحتوي على)
               return productCats.some(pc => pc.includes(normalizedId) || normalizedId.includes(pc));
             });
-          });
-          
-          console.log(`تم العثور على ${filteredProducts.length} منتج بالبحث المرن`); // تشخيص
+          }); // تشخيص
         }
       }
 
@@ -1446,12 +1435,8 @@ function matchField(val) {
 // 8. تفعيل أزرار الفئات في القائمة الجانبية (الميني)
 function activateCategoryMenuItems() {
   if (!sideMenu) return;
-  console.log('تفعيل أحداث النقر للقائمة الجانبية', sideMenu);
-
   // تفعيل النقر على الفئات الرئيسية في القائمة الجانبية
   const categoryItems = sideMenu.querySelectorAll('.category-item > a');
-  console.log('عدد روابط الفئات:', categoryItems.length);
-
   categoryItems.forEach(link => {
     link.addEventListener('click', function(e) {
       e.preventDefault();
@@ -1465,16 +1450,12 @@ function activateCategoryMenuItems() {
       const href = link.getAttribute('href') || '';
       const slugMatch = href.match(/\/categories\/([^\/\?]+)/);
       const categorySlug = slugMatch ? slugMatch[1] : catName;
-
-      console.log('تم النقر على فئة في القائمة:', catName, categorySlug);
-
       // حفظ موضع التمرير للصفحة الحالية قبل التنقل
       try {
         const scrollPositions = JSON.parse(sessionStorage.getItem('scrollPositions') || '{}');
         scrollPositions[window.location.href] = window.scrollY;
         sessionStorage.setItem('scrollPositions', JSON.stringify(scrollPositions));
       } catch (e) {
-        console.warn('تعذر حفظ موضع التمرير', e);
       }
 
       // التمرير إلى أعلى الصفحة فوراً قبل أي شيء آخر
@@ -1520,8 +1501,6 @@ function activateCategoryMenuItems() {
 
 // تفعيل النقر على الفئات الفرعية في القائمة الجانبية
 const subcategoryLinks = sideMenu.querySelectorAll('.subcategories a');
-console.log('عدد روابط الفئات الفرعية:', subcategoryLinks.length);
-
 const subcategoriesLists = sideMenu.querySelectorAll('.subcategories');
 subcategoriesLists.forEach(ul => {
   ul.addEventListener('click', function(e) {
@@ -1684,7 +1663,6 @@ if (categoriesContainer) {
         scrollPositions[currentCategoryId] = window.scrollY;
         sessionStorage.setItem('categoryScrollPositions', JSON.stringify(scrollPositions));
       } catch (err) {
-        console.warn('تعذر حفظ موضع التمرير', err);
       }
       
       // التحقق مما إذا كانت هذه زيارة متكررة للفئة
@@ -1922,9 +1900,7 @@ if (filtersScroll) {
       if (checkedInputs.length > 0) {
         filters[filterId] = Array.from(checkedInputs).map(input => input.value);
       }
-    });
-    
-    console.log('تطبيق الفلاتر:', filters); // للتشخيص
+    }); // للتشخيص
     
     // فلترة المنتجات بناءً على القيم المختارة
     let filtered = products.slice();
@@ -2020,9 +1996,7 @@ if (filtersScroll) {
 
   // 2. فلتر الترتيب
   function sortProducts(products, sortType) {
-    const sorted = [...products];
-    
-    console.log('ترتيب المنتجات حسب:', sortType); // للتشخيص
+    const sorted = [...products]; // للتشخيص
     
     switch (sortType) {
       case 'latest':
@@ -2386,7 +2360,6 @@ if (filtersScroll) {
       idx = Math.max(0, Math.min(list.length - 1, idx));
       const el = list[idx];
       if (!el) return;
-      console.log('activateIndex ->', idx, el.getAttribute('data-category-slug') || el.href);
       el.click();
       try { localStorage.setItem('activeCategoryIndex', String(idx)); } catch(e) {}
       const bar = document.querySelector('.categories');
@@ -2414,7 +2387,6 @@ if (filtersScroll) {
       if (shouldIgnore(touchStartEl)) { isTracking = false; moved = false; return; }
       startX = p.x; startY = p.y; isTracking = true; moved = false;
       // debug -> temporary use console.log
-      console.log('swipe:start', source, startX, startY, touchStartEl && touchStartEl.className);
     }
 
      function onMove(ev, source) {
@@ -2429,22 +2401,19 @@ if (filtersScroll) {
         if (ev.cancelable && typeof ev.preventDefault === 'function') {
           try { ev.preventDefault(); } catch(e) {}
         }
-        console.log('swipe:move horiz', dx);
       } else if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 10) {
         isTracking = false;
         moved = false;
-        console.log('swipe:move vertical - stop tracking');
       }
     }
 
     function onEnd(ev, source) {
-      console.log('swipe:end', source, 'moved=', moved, 'isTracking=', isTracking);
       if (!moved || !isTracking) { isTracking = false; touchStartEl = null; return; }
       const p = getPointFromTouchEvent(ev);
       if (!p) { isTracking = false; touchStartEl = null; return; }
       const dx = p.x - startX;
       isTracking = false; touchStartEl = null;
-      if (Math.abs(dx) < THRESHOLD) { console.log('swipe:too-short', dx); return; }
+      if (Math.abs(dx) < THRESHOLD) { return; }
       const list = categoriesList(); if (!list.length) return;
       const cur = getCurrentIndex(list);
       if (dx < 0) activateIndex(cur - 1);
