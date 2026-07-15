@@ -128,6 +128,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     // تحديث عداد الحساب
     const accountEl = nav.querySelector('.account-badge');
     if (accountEl && window.__accountCount != null) accountEl.setAttribute('data-count', String(window.__accountCount));
+
+    // تحديث اسم المستخدم في شريط التنقل لو كان مسجّل دخول
+    try {
+      const logged = localStorage.getItem('x2_logged') === '1';
+      const accountLink = nav.querySelector('a[data-key="account"]');
+      if (logged && accountLink) {
+        const p = JSON.parse(localStorage.getItem('x2_profile') || '{}');
+        const firstName = (p.name || '').split(' ')[0];
+        const labelEl = accountLink.querySelector('[data-i18n]');
+        if (labelEl && firstName) {
+          labelEl.textContent = firstName;
+          labelEl.removeAttribute('data-i18n'); // لا تُعيد الترجمة لـ"حسابي"
+        }
+        // إبراز الأيقونة بدائرة ملوّنة باللون الذهبي
+        const iconWrap = accountLink.querySelector('.icon-wrap');
+        if (iconWrap) iconWrap.style.cssText += ';outline:2px solid #D4AF37;border-radius:50%';
+      }
+    } catch(e) {}
   } catch (err) {
     console.warn('mobile-nav loader error:', err);
   }
