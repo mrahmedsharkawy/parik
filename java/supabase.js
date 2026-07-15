@@ -328,12 +328,16 @@ const SupaStorage = {
   },
   /**
    * تحويل dataURL (base64) إلى Blob ثم رفعه
+   * يُحدّد الامتداد تلقائياً من نوع الـ MIME (webp / jpeg / png / mp4 ...)
    */
   uploadDataUrl: async function(dataUrl, folder) {
     const res = await fetch(dataUrl);
     const blob = await res.blob();
     const isVideo = dataUrl.startsWith('data:video');
-    const fakeFile = new File([blob], (isVideo ? 'video' : 'image') + '.' + (blob.type.split('/')[1] || 'jpg'), { type: blob.type });
+    // استخراج الامتداد الصحيح من MIME type (مثلاً image/webp → webp)
+    const mimeExt = blob.type.split('/')[1] || (isVideo ? 'mp4' : 'jpg');
+    const ext = mimeExt === 'jpeg' ? 'jpg' : mimeExt; // توحيد jpeg → jpg
+    const fakeFile = new File([blob], (isVideo ? 'video' : 'image') + '.' + ext, { type: blob.type });
     return SupaStorage.upload(fakeFile, folder);
   }
 };
