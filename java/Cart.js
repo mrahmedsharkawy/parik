@@ -1015,6 +1015,8 @@ function updateSelectedCount() {
         banner.innerHTML = '✅ تم إرسال طلبك عبر واتساب!<br><span style="font-size:0.78rem;opacity:0.85">الطلب محفوظ في حسابك — قسم طلباتي</span>';
         document.body.appendChild(banner);
         setTimeout(() => banner.remove(), 4000);
+        // إعادة توجيه العميل للصفحة الرئيسية بعد تأكيد الطلب
+        setTimeout(() => { window.location.href = 'index.html'; }, 2000);
       }, 200);
     } catch(e) {}
   }
