@@ -1267,19 +1267,70 @@ function setSelectedCats(arr){
 }
 
 /* ================= الوسائط ================= */
-function compressImage(dataUrl, maxW, quality){
-  return new Promise(function(resolve){
+/* ================================================================
+   ضغط الصور وتحسينها تلقائياً قبل الرفع
+   - يضغط لـ WebP إن كان المتصفح يدعمه (أصغر بـ 30%)
+   - يقلص الصور الكبيرة إلى أقصى عرض 1200px
+   - يضغط بجودة ذكية حسب حجم الصورة الأصلي
+   - يحافظ على نسبة الأبعاد الأصلية (aspect ratio)
+================================================================ */
+function supportsWebP() {
+  try {
+    return document.createElement('canvas').toDataURL('image/webp').startsWith('data:image/webp');
+  } catch(e) { return false; }
+}
+
+function compressImage(dataUrl, maxW, quality) {
+  return new Promise(function(resolve) {
     const img = new Image();
-    img.onload = function(){
+    img.onload = function() {
       let w = img.width, h = img.height;
-      if (w > maxW) { h = Math.round(h * (maxW / w)); w = maxW; }
+      const origSize = Math.round(dataUrl.length * 3 / 4); // تقدير حجم الملف الأصلي بالبايت
+
+      // تحديد أقصى عرض ذكي حسب حجم الصورة
+      const autoMaxW = origSize > 2 * 1024 * 1024 ? 1200    // أكبر من 2MB → 1200px
+                     : origSize > 500 * 1024     ? 1000    // أكبر من 500KB → 1000px
+                     : maxW || 900;                         // أصغر → 900px
+
+      // تصغير مع الحفاظ على نسبة الأبعاد
+      if (w > autoMaxW) {
+        h = Math.round(h * (autoMaxW / w));
+        w = autoMaxW;
+      }
+
+      // جودة ذكية حسب الحجم
+      const autoQuality = quality || (origSize > 1024 * 1024 ? 0.78 : 0.82);
+
       const canvas = document.createElement('canvas');
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      resolve(canvas.toDataURL('image/jpeg', quality));
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      // خلفية بيضاء للصور الشفافة (PNG) قبل التحويل
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, w, h);
+      ctx.drawImage(img, 0, 0, w, h);
+
+      // تفضيل WebP لو مدعوم (أصغر حجماً بـ 25-35%)
+      const fmt = supportsWebP() ? 'image/webp' : 'image/jpeg';
+      const result = canvas.toDataURL(fmt, autoQuality);
+
+      // لو الناتج أكبر من الأصل بدون ضغط، أعِد الأصل
+      if (result.length > dataUrl.length * 0.95) {
+        resolve(dataUrl);
+        return;
+      }
+
+      // رسالة توضيحية عن نسبة الضغط
+      const newSize = Math.round(result.length * 3 / 4);
+      const savedPct = Math.round((1 - newSize / origSize) * 100);
+      if (savedPct > 5) toast(`🗜️ تم ضغط الصورة — وفّر ${savedPct}% من الحجم (${(origSize/1024).toFixed(0)}KB → ${(newSize/1024).toFixed(0)}KB)`);
+
+      resolve(result);
     };
-    img.onerror = function(){ resolve(dataUrl); };
+    img.onerror = function() { resolve(dataUrl); };
     img.src = dataUrl;
+  });
+}
   });
 }
 $('mediaDrop').addEventListener('click',()=> $('mediaInput').click());
@@ -1297,7 +1348,8 @@ $('mediaInput').addEventListener('change',e=>{
       try {
         let uploadSrc = reader.result;
         if (!isVid) {
-          uploadSrc = await compressImage(reader.result, 900, 0.75);
+          // ضغط الصورة تلقائياً (بدون قيود ثابتة - تتكيف حسب الحجم)
+          uploadSrc = await compressImage(reader.result);
         }
         if (window.Supabase && window.Supabase.Storage) {
           // رفع فعلي لـ Supabase Storage → رابط دائم يظهر لكل الزوار
