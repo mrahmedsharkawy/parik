@@ -942,17 +942,6 @@ function updateSelectedCount() {
           customerPhone: profile.phone || '',
           customerEmail: profile.email || '',
           address:       profile.address_full || null
-        }).then(() => {
-          // تعليم الطلب كمرفوع لمنع رفعه مرة أخرى من pushLocalOrders
-          try {
-            const cur = JSON.parse(localStorage.getItem('x2_orders')||'[]');
-            const idx = cur.findIndex(o => o.id === orderId);
-            if (idx !== -1) cur[idx]._synced = true;
-            localStorage.setItem('x2_orders', JSON.stringify(cur));
-            const synced = JSON.parse(localStorage.getItem('x2_orders_synced')||'[]');
-            if (synced.indexOf(orderId) === -1) synced.push(orderId);
-            localStorage.setItem('x2_orders_synced', JSON.stringify(synced));
-          } catch(e) {}
         }).catch(() => {});
         // إشعار للأدمن
         window.Supabase.Notifications.insert({
@@ -1018,30 +1007,6 @@ function updateSelectedCount() {
       }, 200);
     } catch(e) {}
   }
-
-  // ===== تحديث السلة تلقائياً لما المستخدم يرجع للتاب =====
-  document.addEventListener('visibilitychange', function() {
-    if (document.visibilityState !== 'visible') return;
-    try {
-      const cartItems = JSON.parse(localStorage.getItem('x2_cart') || '[]');
-      if (cartItems.length === 0) {
-        // السلة فاضية (تم الطلب) - حدّث الـ UI
-        if (typeof renderList === 'function') renderList([]);
-        if (typeof toggleEmptyState === 'function') toggleEmptyState();
-        if (typeof updateSummary === 'function') updateSummary();
-        // حدّث عداد السلة
-        document.querySelectorAll('.cart-badge, .cart-count, #checkout-count').forEach(el => {
-          el.setAttribute('data-count', '0');
-          el.textContent = '0';
-          el.style.display = 'none';
-        });
-      } else {
-        // في منتجات - تأكد الـ UI محدَّث
-        if (typeof renderList === 'function') renderList(cartItems);
-        if (typeof updateSummary === 'function') updateSummary();
-      }
-    } catch(e) {}
-  });
 
   // تحديث زر تأكيد الطلب عبر واتساب
   function setCheckoutState(enabled){
