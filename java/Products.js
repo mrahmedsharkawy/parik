@@ -591,7 +591,7 @@ if (
   price.classList.add("product-price-discount");
 }
 
-price.textContent = `${prod.price || ""} ${currencySymbol}`;
+price.textContent = `${prod.price != null ? prod.price : ""} ${currencySymbol}`;
 
 // بوكس التوفير والعداد قبل السعر مباشرة
 if (

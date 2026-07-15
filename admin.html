@@ -1144,16 +1144,22 @@ function saveProduct(){
         window.Supabase.Products.update(targetId, sbUpdate)
           .then(function(){
             toast('✅ تم تحديث المنتج في Supabase');
-            if (idx>=0) { products[idx].supabaseId = targetId; saveLocal(); }
+            if (idx>=0) { products[idx].supabaseId = targetId; products[idx].id = targetId; saveLocal(); renderProducts(); }
           })
           .catch(function(e){ toast('⚠️ خطأ Supabase: ' + e.message); });
       } else {
         window.Supabase.Products.insert(sbProd)
           .then(function(res){
-            toast('✅ تم حفظ المنتج في Supabase');
             if (Array.isArray(res) && res[0] && res[0].id && idx>=0) {
-              products[idx].supabaseId = res[0].id;
+              const sbId = res[0].id;
+              // حدّث الـ ID المحلي ليطابق Supabase ID - مهم لصحة الروابط
+              products[idx].supabaseId = sbId;
+              products[idx].id = sbId;
               saveLocal();
+              renderProducts(); // أعد الرسم بالـ ID الصحيح
+              toast('✅ تم حفظ المنتج في Supabase');
+            } else {
+              toast('✅ تم حفظ المنتج في Supabase');
             }
           })
           .catch(function(e){ toast('⚠️ خطأ Supabase: ' + e.message); });
