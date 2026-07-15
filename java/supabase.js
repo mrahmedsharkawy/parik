@@ -185,6 +185,16 @@ const SupaAuth = {
     if (!res.ok) throw new Error(data.error_description || data.msg || 'Login failed');
     return data; // { access_token, user, ... }
   },
+  signUp: async function(email, password, metadata) {
+    const res = await fetch(SUPABASE_URL + '/auth/v1/signup', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_ANON, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, data: metadata || {} })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error_description || data.msg || 'Signup failed');
+    return data;
+  },
   signOut: async function(token) {
     await fetch(SUPABASE_URL + '/auth/v1/logout', {
       method: 'POST',

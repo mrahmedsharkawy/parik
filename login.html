@@ -483,34 +483,64 @@
     label.style.color = l.c;
   }
 
-  function doLogin() {
+  async function doLogin() {
     hideErrors();
     const email = document.getElementById('login-email').value.trim();
-    const pass = document.getElementById('login-pass').value;
+    const pass  = document.getElementById('login-pass').value;
+    const btn   = document.querySelector('#form-login .auth-btn');
 
-    if (!email) { showError('login-error', '⚠️ من فضلك أدخل البريد الإلكتروني أو رقم الهاتف'); return; }
-    if (!pass) { showError('login-error', '⚠️ من فضلك أدخل كلمة المرور'); return; }
+    if (!email) { showError('login-error', '⚠️ من فضلك أدخل البريد الإلكتروني'); return; }
+    if (!pass)  { showError('login-error', '⚠️ من فضلك أدخل كلمة المرور'); return; }
 
-    // التحقق من بيانات مخزنة
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ جارٍ التحقق...'; }
+
+    // محاولة تسجيل الدخول عبر Supabase Auth
     try {
-      const users = JSON.parse(localStorage.getItem('x2_users') || '[]');
-      const user = users.find(u => u.email === email || u.phone === email);
-      if (!user) { showError('login-error', '❌ لم يتم العثور على حساب بهذا البريد. هل تريد إنشاء حساب جديد؟'); return; }
-      if (user.pass !== btoa(pass)) { showError('login-error', '❌ كلمة المرور غير صحيحة'); return; }
+      await new Promise(r => { if (window.Supabase) r(); else { const t = setInterval(() => { if (window.Supabase) { clearInterval(t); r(); } }, 100); setTimeout(() => { clearInterval(t); r(); }, 4000); } });
 
-      localStorage.setItem(PROFILE_KEY, JSON.stringify({ name: user.name, email: user.email, phone: user.phone }));
+      const data = await window.Supabase.Auth.signIn(email, pass);
+      const user = data.user || {};
+      const meta = user.user_metadata || {};
+      const name = meta.full_name || meta.name || email.split('@')[0];
+
+      // حفظ الجلسة
+      localStorage.setItem(PROFILE_KEY, JSON.stringify({ name, email: user.email || email, phone: meta.phone || '' }));
       localStorage.setItem('x2_logged', '1');
-    } catch(e) {
-      // fallback: accept any credentials for demo
-      localStorage.setItem(PROFILE_KEY, JSON.stringify({ name: email.split('@')[0], email }));
-      localStorage.setItem('x2_logged', '1');
+      if (data.access_token) localStorage.setItem('x2_token', data.access_token);
+
+      // مزامنة مع جدول customers
+      try { await window.Supabase.Customers.upsert({ name, email: user.email || email, phone: meta.phone || '' }); } catch(e) {}
+
+      showSuccess('تم تسجيل الدخول بنجاح! 🎉', 'مرحباً ' + name.split(' ')[0] + '! جارٍ تحويلك...');
+      setTimeout(() => { window.location.href = 'account.html'; }, 1200);
+
+    } catch(supaErr) {
+      // fallback للتحقق المحلي (لأجهزة بدون اتصال)
+      try {
+        const users = JSON.parse(localStorage.getItem('x2_users') || '[]');
+        const user = users.find(u => u.email === email || u.phone === email);
+        if (user && user.pass === btoa(pass)) {
+          localStorage.setItem(PROFILE_KEY, JSON.stringify({ name: user.name, email: user.email, phone: user.phone }));
+          localStorage.setItem('x2_logged', '1');
+          showSuccess('تم تسجيل الدخول! 🎉', 'جارٍ تحويلك...');
+          setTimeout(() => { window.location.href = 'account.html'; }, 1200);
+          return;
+        }
+      } catch(e) {}
+
+      const msg = supaErr.message || '';
+      if (msg.includes('Invalid login') || msg.includes('invalid') || msg.includes('credentials')) {
+        showError('login-error', '❌ البريد الإلكتروني أو كلمة المرور غير صحيحة');
+      } else if (msg.includes('Email not confirmed')) {
+        showError('login-error', '📧 يرجى تفعيل حسابك من البريد الإلكتروني أولاً');
+      } else {
+        showError('login-error', '❌ ' + msg);
+      }
+      if (btn) { btn.disabled = false; btn.textContent = 'تسجيل الدخول'; }
     }
-
-    showSuccess('تم تسجيل الدخول بنجاح! 🎉', 'جارٍ تحويلك إلى حسابك...');
-    setTimeout(() => { window.location.href = 'account.html'; }, 1500);
   }
 
-  function doRegister() {
+  async function doRegister() {
     hideErrors();
     const fname = document.getElementById('reg-fname').value.trim();
     const lname = document.getElementById('reg-lname').value.trim();
@@ -523,21 +553,51 @@
     if (!fname)  { showError('register-error', '⚠️ أدخل اسمك الأول'); return; }
     if (!email)  { showError('register-error', '⚠️ أدخل البريد الإلكتروني'); return; }
     if (!/^\S+@\S+\.\S+$/.test(email)) { showError('register-error', '⚠️ البريد الإلكتروني غير صحيح'); return; }
-    if (pass.length < 8) { showError('register-error', '⚠️ كلمة المرور يجب أن تكون 8 أحرف على الأقل'); return; }
-    if (pass !== pass2) { showError('register-error', '⚠️ كلمتا المرور غير متطابقتين'); return; }
-    if (!terms) { showError('register-error', '⚠️ يجب الموافقة على الشروط والأحكام'); return; }
+    if (pass.length < 6) { showError('register-error', '⚠️ كلمة المرور يجب أن تكون 6 أحرف على الأقل'); return; }
+    if (pass !== pass2)  { showError('register-error', '⚠️ كلمتا المرور غير متطابقتين'); return; }
+    if (!terms)  { showError('register-error', '⚠️ يجب الموافقة على الشروط والأحكام'); return; }
+
+    const fullName = (fname + ' ' + lname).trim();
+    const btn = document.querySelector('#form-register .auth-btn');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ جارٍ إنشاء الحساب...'; }
 
     try {
-      const users = JSON.parse(localStorage.getItem('x2_users') || '[]');
-      if (users.find(u => u.email === email)) { showError('register-error', '❌ البريد الإلكتروني مسجّل مسبقاً. هل تريد تسجيل الدخول؟'); return; }
-      users.push({ name: fname + ' ' + lname, email, phone, pass: btoa(pass), date: new Date().toISOString() });
-      localStorage.setItem('x2_users', JSON.stringify(users));
-      localStorage.setItem(PROFILE_KEY, JSON.stringify({ name: fname + ' ' + lname, email, phone }));
-      localStorage.setItem('x2_logged', '1');
-    } catch(e) {}
+      await new Promise(r => { if (window.Supabase) r(); else { const t = setInterval(() => { if (window.Supabase) { clearInterval(t); r(); } }, 100); setTimeout(() => { clearInterval(t); r(); }, 4000); } });
 
-    showSuccess('تم إنشاء حسابك بنجاح! 🎉', 'مرحباً ' + fname + '! جارٍ تحويلك...');
-    setTimeout(() => { window.location.href = 'account.html'; }, 1500);
+      await window.Supabase.Auth.signUp(email, pass, { full_name: fullName, phone });
+
+      // حفظ بيانات مؤقتة (قد يحتاج تفعيل بريد إلكتروني)
+      localStorage.setItem(PROFILE_KEY, JSON.stringify({ name: fullName, email, phone }));
+      localStorage.setItem('x2_logged', '1');
+
+      // حفظ في customers أيضاً
+      try { await window.Supabase.Customers.upsert({ name: fullName, email, phone }); } catch(e) {}
+
+      showSuccess('تم إنشاء حسابك! 🎉', 'مرحباً ' + fname + '! تحقق من بريدك لتفعيل الحساب.');
+      setTimeout(() => { window.location.href = 'account.html'; }, 2000);
+
+    } catch(err) {
+      // fallback محلي
+      try {
+        const users = JSON.parse(localStorage.getItem('x2_users') || '[]');
+        if (users.find(u => u.email === email)) { showError('register-error', '❌ البريد مسجّل مسبقاً'); if (btn) { btn.disabled = false; btn.textContent = 'إنشاء حساب'; } return; }
+        users.push({ name: fullName, email, phone, pass: btoa(pass), date: new Date().toISOString() });
+        localStorage.setItem('x2_users', JSON.stringify(users));
+        localStorage.setItem(PROFILE_KEY, JSON.stringify({ name: fullName, email, phone }));
+        localStorage.setItem('x2_logged', '1');
+        showSuccess('تم إنشاء حسابك! 🎉', 'مرحباً ' + fname + '!');
+        setTimeout(() => { window.location.href = 'account.html'; }, 1500);
+        return;
+      } catch(e2) {}
+
+      const msg = err.message || '';
+      if (msg.includes('already registered') || msg.includes('already been registered')) {
+        showError('register-error', '❌ هذا البريد الإلكتروني مسجّل بالفعل. جرّب تسجيل الدخول.');
+      } else {
+        showError('register-error', '❌ ' + msg);
+      }
+      if (btn) { btn.disabled = false; btn.textContent = 'إنشاء حساب'; }
+    }
   }
 
   function showSuccess(title, msg) {
@@ -573,7 +633,7 @@
   if (urlTab === 'register') switchTab('register');
   </script>
 
+<script src="java/supabase.js" defer></script>
 </div><!-- end page -->
 </body>
 </html>
-
