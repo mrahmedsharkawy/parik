@@ -1226,54 +1226,57 @@ document.addEventListener("DOMContentLoaded", function() {
   }
   window.x2Logout = logout;
 
-  /* ????? ????? "??????" ?? ?????? */
+  /* تحديث زر "الحساب" في الديسكتوب */
   function updateAccountNav() {
-    // ???? ?? ???? dropdowns ???? ????? ??? ?? ??????
+    // ابحث عن كل dropdowns التي تحتوي على زر الحساب
     document.querySelectorAll('.dropdown').forEach(function(dd) {
       const btn = dd.querySelector('.dropbtn');
       if (!btn) return;
       const btnText = btn.textContent || '';
-      if (!btnText.includes('??????') && !btnText.includes('Account')) return;
+      // تحقق من أن هذا زر الحساب (بالعربي أو الإنجليزي أو النص المشوّه)
+      const isAccountBtn = btnText.includes('الحساب') || btnText.includes('Account') || btn.querySelector('[data-i18n="الحساب"]');
+      if (!isAccountBtn) return;
 
       const menu = dd.querySelector('.dropdown-content');
       if (!menu) return;
 
       if (isLoggedIn()) {
         const p = getProfile();
-        const name = p.name || '?????';
+        const name = p.name || 'المستخدم';
         const initial = name.charAt(0).toUpperCase();
+        const firstName = name.split(' ')[0];
         btn.innerHTML = `<span style="display:inline-flex;align-items:center;gap:5px">
-          <span style="width:22px;height:22px;border-radius:50%;background:#fff;color:#D4AF37;font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center">${initial}</span>
-          <span style="font-size:14px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name.split(' ')[0]}</span>
+          <span style="width:26px;height:26px;border-radius:50%;background:#D4AF37;color:#152546;font-size:13px;font-weight:800;display:inline-flex;align-items:center;justify-content:center">${initial}</span>
+          <span style="font-size:14px;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600">${firstName}</span>
         </span>`;
         menu.innerHTML = `
           <div class="account-drawer-head">
             <div class="account-drawer-avatar">${initial}</div>
             <div class="account-drawer-meta">
               <strong>${name}</strong>
-              <span>?????? ??</span>
+              <span>مرحباً بك</span>
             </div>
           </div>
-          <a href="account.html">?? ?????</a>
-          <a href="account.html">?? ??????</a>
-          <a href="checkout.html">?? ????? ?????</a>
-          <a href="#" onclick="window.x2Logout();return false;" style="color:#e53935">?? ????? ??????</a>`;
+          <a href="account.html">👤 حسابي</a>
+          <a href="account.html">📦 طلباتي</a>
+          <a href="checkout.html">🛒 إتمام طلب</a>
+          <a href="#" onclick="if(window.x2Auth&&window.x2Auth.logout)window.x2Auth.logout();else{localStorage.removeItem('x2_logged');localStorage.removeItem('x2_profile');window.location.href='login.html?logout=1';}return false;" style="color:#e53935">🚪 تسجيل الخروج</a>`;
       } else {
-        btn.innerHTML = `?? <span>??????</span>`;
+        btn.innerHTML = `🗣 <span>الحساب</span>`;
         menu.innerHTML = `
           <div class="account-drawer-head">
-            <div class="account-drawer-avatar">?</div>
+            <div class="account-drawer-avatar">👤</div>
             <div class="account-drawer-meta">
-              <strong>?????</strong>
-              <span>??? ?????? ??????? ???????</span>
+              <strong>زائر</strong>
+              <span>سجّل دخولك للوصول لحسابك</span>
             </div>
           </div>
-          <a href="login.html">?? ????? ??????</a>
-          <a href="login.html?tab=register">?? ????? ????</a>`;
+          <a href="login.html">🔐 تسجيل الدخول</a>
+          <a href="login.html?tab=register">✨ إنشاء حساب</a>`;
       }
     });
 
-    /* ????? ???? ?????? ?? ???????? ??? ??? */
+    /* منع الوصول لـ account.html من الموبايل بدون تسجيل دخول */
     document.querySelectorAll('a[href*="account.html"], a[href*="account"]').forEach(function(a) {
       if (a.closest('.mobile-nav') || a.closest('.acc-nav-item')) {
         if (!isLoggedIn()) {
