@@ -2328,13 +2328,11 @@
   // load profile
   window.logoutAccount = function() {
     if (!confirm('هل تريد تسجيل الخروج؟')) return;
-    localStorage.removeItem('x2_profile');
-    localStorage.removeItem('x2_orders');
-    localStorage.removeItem('x2_cart');
-    localStorage.removeItem('x2_cashback');
-    localStorage.removeItem('x2_orders_synced');
+    // مسح كل بيانات الجلسة
+    const keysToRemove = ['x2_profile','x2_orders','x2_cart','x2_cashback','x2_orders_synced','x2_logged','x2_coupon_applied','x2_coupon_code','x2_order_counter'];
+    keysToRemove.forEach(k => localStorage.removeItem(k));
     sessionStorage.clear();
-    window.location.href = 'login.html';
+    window.location.href = 'login.html?logout=1';
   };
 
   function loadProfile() {

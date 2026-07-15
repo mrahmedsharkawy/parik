@@ -559,8 +559,9 @@
     alert('🔗 تسجيل الدخول عبر ' + names[provider] + '\n(قيد التطوير - يتطلب API خارجي)');
   }
 
-  // التحقق إذا كان مسجل دخول
-  if (localStorage.getItem('x2_logged') === '1') {
+  // التحقق إذا كان مسجل دخول (تجاهل الفحص لو قادم من تسجيل الخروج)
+  const _fromLogout = new URLSearchParams(window.location.search).get('logout') === '1';
+  if (!_fromLogout && localStorage.getItem('x2_logged') === '1') {
     const p = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}');
     if (confirm('مرحباً ' + (p.name || '') + '! أنت مسجّل الدخول بالفعل.\nهل تريد الذهاب لحسابك؟')) {
       window.location.href = 'account.html';
