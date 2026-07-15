@@ -99,6 +99,66 @@ function handleResponsive() {
 
 window.addEventListener("resize", handleResponsive);
 
+/* ================================================================
+   حفظ واستعادة موضع التمرير عند التنقل بين الصفحات (السحب للخلف)
+================================================================ */
+(function() {
+  // منع المتصفح من التحكم التلقائي (نتحكم نحن يدوياً)
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+
+  const SCROLL_KEY = 'x2_scroll_positions';
+
+  function getPositions() {
+    try { return JSON.parse(sessionStorage.getItem(SCROLL_KEY) || '{}'); } catch(e) { return {}; }
+  }
+
+  function saveCurrentPosition() {
+    try {
+      const pos = getPositions();
+      pos[location.href] = window.scrollY;
+      sessionStorage.setItem(SCROLL_KEY, JSON.stringify(pos));
+    } catch(e) {}
+  }
+
+  function restorePosition() {
+    try {
+      const pos = getPositions();
+      const y = pos[location.href];
+      if (y > 0) {
+        // تأخير بسيط لانتظار اكتمال رسم الصفحة
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            window.scrollTo({ top: y, behavior: 'auto' });
+          });
+        });
+      }
+    } catch(e) {}
+  }
+
+  // حفظ الموضع عند كل تمرير (throttled لتحسين الأداء)
+  let scrollTimer;
+  window.addEventListener('scroll', function() {
+    clearTimeout(scrollTimer);
+    scrollTimer = setTimeout(saveCurrentPosition, 150);
+  }, { passive: true });
+
+  // حفظ الموضع قبل مغادرة الصفحة
+  window.addEventListener('pagehide', saveCurrentPosition);
+  window.addEventListener('beforeunload', saveCurrentPosition);
+
+  // استعادة الموضع عند الرجوع للخلف (swipe back / زر الرجوع)
+  window.addEventListener('pageshow', function(e) {
+    // e.persisted = true لما يرجع من bfcache (كاش المتصفح)
+    if (e.persisted) {
+      restorePosition();
+    }
+  });
+
+  // استعادة الموضع عند popstate (SPA navigation)
+  window.addEventListener('popstate', function() {
+    setTimeout(restorePosition, 100);
+  });
+})();
 
 // شريط البحث 
 document.addEventListener("DOMContentLoaded", function () {
