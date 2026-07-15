@@ -1478,6 +1478,7 @@ async function saveProduct(){
           .then(function(){
             toast('✅ تم تحديث المنتج في Supabase');
             if (idx>=0) { products[idx].supabaseId = targetId; products[idx].id = targetId; saveLocal(); renderProducts(); }
+            try { localStorage.setItem('x2_products_updated', String(Date.now())); } catch(e) {}
           })
           .catch(function(e){ toast('⚠️ خطأ Supabase: ' + e.message); });
       } else {
@@ -1494,6 +1495,7 @@ async function saveProduct(){
             } else {
               toast('✅ تم حفظ المنتج في Supabase');
             }
+            try { localStorage.setItem('x2_products_updated', String(Date.now())); } catch(e) {}
           })
           .catch(function(e){ toast('⚠️ خطأ Supabase: ' + e.message); });
       }
@@ -1539,6 +1541,7 @@ function deleteProduct(id){
   if (window.Supabase && supaId) {
     window.Supabase.Products.remove(supaId).catch(function(){});
   }
+  try { localStorage.setItem('x2_products_updated', String(Date.now())); } catch(e) {}
 }
 
 function resetForm(){

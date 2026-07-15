@@ -41,13 +41,32 @@ export async function fetchCategories() {
 
 // أضف هذه الدالة بعد دالة fetchCategories
 let _productsCache = null;
+let _productsCacheTs = 0;
 const PROD_CACHE_VERSION = 'v2';
 const PROD_CACHE_KEY = 'x2_prods_ss_' + PROD_CACHE_VERSION;
-const PROD_CACHE_TTL = 10 * 60 * 1000; // 10 دقائق (بدلاً من دقيقة واحدة)
+const PROD_CACHE_TTL = 10 * 60 * 1000; // 10 دقائق كحد أقصى (يُبطَل فوراً لو الأدمن عدّل منتج)
+
+// إبطال فوري للكاش لو الأدمن عدّل منتج في تاب آخر لنفس المتصفح
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', function(e) {
+    if (e.key === 'x2_products_updated') {
+      _productsCache = null;
+      _productsCacheTs = 0;
+      try { sessionStorage.removeItem(PROD_CACHE_KEY); } catch(err) {}
+    }
+  });
+}
 
 export async function fetchProducts() {
-  // لا تثق بكاش الذاكرة لو كان فاضياً - أعد المحاولة دايماً في هذه الحالة
-  if (_productsCache && _productsCache.length > 0) return _productsCache;
+  // علم إبطال الكاش: يضعه الأدمن في localStorage بعد أي إضافة/تعديل/حذف منتج
+  // (localStorage مشترك بين كل التابات لنفس المتصفح، بعكس sessionStorage)
+  let invalidateTs = 0;
+  try { invalidateTs = parseInt(localStorage.getItem('x2_products_updated') || '0', 10); } catch(e) {}
+
+  // لا تثق بكاش الذاكرة لو كان فاضياً أو مُبطَلاً - أعد المحاولة دايماً في هذه الحالة
+  if (_productsCache && _productsCache.length > 0 && (!_productsCacheTs || _productsCacheTs > invalidateTs)) {
+    return _productsCache;
+  }
 
   let staleCache = null; // cache قديم كـ backup لو Supabase فشل
 
@@ -56,11 +75,14 @@ export async function fetchProducts() {
     const cached = sessionStorage.getItem(PROD_CACHE_KEY);
     if (cached) {
       const obj = JSON.parse(cached);
-      if (Date.now() - obj.ts < PROD_CACHE_TTL) {
+      const isFresh = Date.now() - obj.ts < PROD_CACHE_TTL;
+      const notInvalidated = obj.ts > invalidateTs; // الكاش أُنشئ بعد آخر تعديل من الأدمن
+      if (isFresh && notInvalidated) {
         _productsCache = obj.data;
+        _productsCacheTs = obj.ts;
         return _productsCache;
       }
-      // cache منتهي لكن احتفظ به كـ backup
+      // cache منتهي أو مُبطَل لكن احتفظ به كـ backup
       staleCache = obj.data;
     }
   } catch(e) {}
@@ -92,7 +114,8 @@ export async function fetchProducts() {
         });
         // لا تخزّن النتيجة الفاضية في الكاش - تجنّب إخفاء المنتجات لمدة دقيقة بسبب تهنيج مؤقت
         if (_productsCache.length > 0) {
-          try { sessionStorage.setItem(PROD_CACHE_KEY, JSON.stringify({ ts: Date.now(), data: _productsCache })); } catch(e) {}
+          _productsCacheTs = Date.now();
+          try { sessionStorage.setItem(PROD_CACHE_KEY, JSON.stringify({ ts: _productsCacheTs, data: _productsCache })); } catch(e) {}
         } else {
           try { sessionStorage.removeItem(PROD_CACHE_KEY); } catch(e) {}
         }
