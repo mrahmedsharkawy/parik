@@ -1525,6 +1525,71 @@
     try { return JSON.parse(localStorage.getItem(ORDERS_KEY) || '[]'); } catch(e) { return []; }
   }
 
+  /* مزامنة حالة الطلبات والكاش باك من Supabase (المصدر الحقيقي لحالة الطلب التي يحدّثها الأدمن) */
+  function waitForSupabaseLib(timeout) {
+    timeout = timeout || 5000;
+    return new Promise(resolve => {
+      if (window.Supabase) { resolve(true); return; }
+      const start = Date.now();
+      const check = setInterval(() => {
+        if (window.Supabase) { clearInterval(check); resolve(true); }
+        else if (Date.now() - start > timeout) { clearInterval(check); resolve(false); }
+      }, 100);
+    });
+  }
+
+  async function syncOrdersFromSupabase() {
+    try {
+      const ready = await waitForSupabaseLib();
+      if (!ready || !window.Supabase) return;
+      const profile = (() => { try { return JSON.parse(localStorage.getItem(PROFILE_KEY)||'{}'); } catch(e) { return {}; } })();
+      if (!profile.phone) return;
+
+      const remote = await window.Supabase.Orders.getByPhone(profile.phone);
+      if (!remote || !remote.length) return;
+
+      const local = getOrders();
+      let changed = false;
+      const cashbackToAdd = [];
+
+      remote.forEach(r => {
+        const idx = local.findIndex(o => o.id === r.order_number);
+        if (idx === -1) return;
+        const lo = local[idx];
+        if (r.status && lo.status !== r.status) {
+          lo.status = r.status;
+          changed = true;
+        }
+        // إضافة الكاش باك للرصيد مرة واحدة فقط عند اعتماده من الأدمن
+        if (r.cashback_status === 'earned' && lo.cashbackStatus !== 'earned') {
+          lo.cashbackStatus = 'earned';
+          cashbackToAdd.push({ orderId: lo.id, amount: parseFloat(lo.cashback || r.cashback || 5) });
+          changed = true;
+        }
+      });
+
+      if (changed) localStorage.setItem(ORDERS_KEY, JSON.stringify(local));
+
+      if (cashbackToAdd.length) {
+        try {
+          const CB_KEY = 'x2_cashback';
+          const cb = JSON.parse(localStorage.getItem(CB_KEY) || '{"balance":0,"history":[]}');
+          cb.history = cb.history || [];
+          cashbackToAdd.forEach(c => {
+            cb.balance = (parseFloat(cb.balance) || 0) + (c.amount || 5);
+            cb.history.push({
+              date: new Date().toLocaleDateString('ar-AE', { year:'numeric', month:'short', day:'numeric' }),
+              amount: c.amount,
+              orderId: c.orderId,
+              note: 'كاش باك طلب ' + c.orderId
+            });
+          });
+          localStorage.setItem(CB_KEY, JSON.stringify(cb));
+        } catch(e2) {}
+      }
+    } catch(e) { console.warn('فشل مزامنة حالة الطلبات:', e); }
+  }
+
   function getStatusLabel(s) {
     const isEn = (localStorage.getItem('lang') || document.documentElement.lang) === 'en';
     const ar = { pending:'قيد الانتظار', processing:'قيد المعالجة', confirmed:'مؤكد', shipped:'تم الشحن', delivered:'تم التوصيل', cancelled:'ملغى', returned:'مرتجع' };
@@ -2367,6 +2432,8 @@
   // init
   renderOrders();
   loadProfile();
+  // مزامنة حالة الطلبات الحقيقية من Supabase (التي حدّثها الأدمن) ثم إعادة العرض
+  syncOrdersFromSupabase().then(() => renderOrders());
 
   // فتح قسم مباشر لو جاي من رابط خارجي
   (function() {

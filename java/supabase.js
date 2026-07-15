@@ -69,6 +69,8 @@ const SupaOrders = {
     // جلب الطلبات بدون join - أبسط وأسرع
     return sbFetch('orders?select=*&order=created_at.desc&limit=500'); 
   },
+  getByPhone: async function(phone){ return sbFetch('orders?customer_phone=eq.'+encodeURIComponent(phone)+'&order=created_at.desc&limit=200'); },
+  // ملاحظة: هذه الدوال تحدّث بالـ order_number (نص الطلب مثل "#1002") وليس id الصف
   updateStatus: async function(orderNum,status){ return sbFetch('orders?order_number=eq.'+encodeURIComponent(orderNum),{method:'PATCH',body:JSON.stringify({status:status})}); },
   updateCashback: async function(orderNum,cbStatus){ return sbFetch('orders?order_number=eq.'+encodeURIComponent(orderNum),{method:'PATCH',body:JSON.stringify({cashback_status:cbStatus})}); }
 };

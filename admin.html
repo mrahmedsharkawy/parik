@@ -1942,7 +1942,7 @@ function recalcOrderTotal(){
   if(unit && qty) $('o-total').value = +(unit*qty).toFixed(2);
 }
 
-function saveOrder(){
+async function saveOrder(){
   const customer = $('o-customer').value.trim();
   const total = Number($('o-total').value)||0;
   if(!customer){ toast('اكتب اسم العميل'); return; }
@@ -1969,14 +1969,34 @@ function saveOrder(){
 
   if(editing){
     const idx = orders.findIndex(o=>Number(o.id)===order.id);
-    if(idx>=0){ order.srcId = orders[idx].srcId; orders[idx] = order; updateStoreOrderStatus(order.srcId, order.status); }
+    if(idx>=0){
+      order.srcId = orders[idx].srcId;
+      orders[idx] = order;
+      // تحديث الطلب في Supabase مباشرة عبر id الصف الحقيقي
+      if (window.Supabase) {
+        try {
+          const updateData = {
+            customer_name: order.customer,
+            customer_phone: order.phone,
+            total: order.total,
+            status: order.status,
+            notes: order.notes || null
+          };
+          if (order.status === 'delivered') updateData.cashback_status = 'earned';
+          await window.Supabase.Orders.update(order.id, updateData);
+        } catch(e) {
+          console.error('فشل تحديث الطلب في Supabase:', e);
+          toast('⚠️ تم الحفظ محلياً، فشل التحديث في قاعدة البيانات');
+        }
+      }
+    }
   } else {
     orders.unshift(order);
   }
   saveOrders(orders);
   renderOrders(); renderStats();
   resetOrderForm();
-  toast(editing?'تم تحديث الطلب':'تمت إضافة الطلب');
+  toast(editing?'✅ تم تحديث الطلب':'تمت إضافة الطلب');
 }
 
 function editOrder(id){
@@ -1996,57 +2016,42 @@ function editOrder(id){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-function changeOrderStatus(id, status){
+async function changeOrderStatus(id, status){
+  // إيجاد الطلب في الكاش (يعمل مع Supabase أو localStorage)
   const orders = getOrders();
   const o = orders.find(x=>Number(x.id)===Number(id));
-  if(o){
-    o.status=status;
-    saveOrders(orders);
-    updateStoreOrderStatus(o.srcId, status); // مزامنة الحالة مع حساب العميل
-    renderStats(); renderOrders();
-    toast('تم تحديث الحالة');
-  }
-}
+  if(!o) return;
 
-/* تحديث حالة الطلب في مخزن المتجر (x2_orders) ليظهر في صفحة حساب العميل */
-function updateStoreOrderStatus(srcId, status){
-  if(!srcId) return;
-  try{
-    const store = JSON.parse(localStorage.getItem(LS_STORE_ORDERS)||'[]');
-    const s = store.find(o=>o && o.id===srcId);
-    if(s){
-      s.status = status;
-      // عند التسليم: أضف الكاش باك المعلّق للرصيد
-      if(status === 'delivered' && s.cashback > 0 && s.cashbackStatus === 'pending'){
-        const deliveryDate = new Date().toISOString();
-        const expiresAt = new Date(Date.now() + 30*24*60*60*1000).toISOString(); // 30 يوم من التسليم
-        s.cashbackStatus = 'earned';
-        s.cashbackEarnedAt = deliveryDate;
-        s.cashbackExpiresAt = expiresAt; // يُحسب من التسليم لا من الطلب
-        try{
-          const CB_KEY = 'x2_cashback';
-          let cb = JSON.parse(localStorage.getItem(CB_KEY)||'{"balance":0,"history":[]}');
-          cb.balance = (parseFloat(cb.balance)||0) + parseFloat(s.cashback||5);
-          if(!cb.history) cb.history = [];
-          cb.history.push({
-            date: new Date().toLocaleDateString('ar-AE',{year:'numeric',month:'short',day:'numeric'}),
-            amount: s.cashback||5,
-            orderId: s.id,
-            note: 'كاش باك طلب ' + s.id
-          });
-          localStorage.setItem(CB_KEY, JSON.stringify(cb));
-        }catch(e2){}
+  const prevStatus = o.status;
+  // تحديث فوري في الواجهة (تفاؤلي)
+  o.status = status;
+  renderStats(); renderOrders();
+
+  // حفظ محلياً كـ fallback
+  saveOrders(orders);
+
+  // تحديث Supabase مباشرة عبر id الصف الحقيقي (وليس order_number)
+  if (window.Supabase) {
+    try {
+      const updateData = { status };
+      // عند التسليم: تفعيل الكاش باك (earned) ليُحسب في حساب العميل عند مزامنته
+      if (status === 'delivered' && o.cashbackStatus !== 'earned') {
+        updateData.cashback_status = 'earned';
       }
-      localStorage.setItem(LS_STORE_ORDERS, JSON.stringify(store));
-      // تحديث Supabase
-      if (window.Supabase) {
-        window.Supabase.Orders.updateStatus(srcId, status).catch(() => {});
-        if (status === 'delivered' && s.cashback > 0) {
-          window.Supabase.Orders.updateCashback(srcId, 'earned').catch(() => {});
-        }
-      }
+      await window.Supabase.Orders.update(id, updateData);
+      if (updateData.cashback_status) o.cashbackStatus = updateData.cashback_status;
+      toast('✅ تم تحديث الحالة');
+    } catch(e) {
+      console.error('فشل تحديث الحالة في Supabase:', e);
+      // تراجع عن التحديث في حال الفشل
+      o.status = prevStatus;
+      saveOrders(orders);
+      renderStats(); renderOrders();
+      toast('⚠️ فشل تحديث الحالة');
     }
-  }catch(e){}
+  } else {
+    toast('تم تحديث الحالة محلياً');
+  }
 }
 async function deleteOrder(id){
   if(!confirm('حذف هذا الطلب؟')) return;
@@ -3301,10 +3306,13 @@ async function renderReports() {
   const todayOrders = filterByPeriod(allOrders, 'today');
   const monthOrders = filterByPeriod(allOrders, 'month');
   
-  // حساب الإحصائيات
+  // حساب الإحصائيات - المبيعات والأرباح تُحسب فقط من الطلبات المحققة فعلياً
+  // (مؤكد / تم الشحن / تم التسليم) — تُستثنى الطلبات الملغاة والمرتجعة وقيد الانتظار
+  const realizedOnly = orders => orders.filter(o => REALIZED.includes(o.status));
   const calcTotal = orders => orders.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
-  const periodTotal = calcTotal(periodOrders);
-  const avgOrder = periodOrders.length ? periodTotal / periodOrders.length : 0;
+  const periodRealized = realizedOnly(periodOrders);
+  const periodTotal = calcTotal(periodRealized);
+  const avgOrder = periodRealized.length ? periodTotal / periodRealized.length : 0;
   
   // جلب عدد الزوار من Supabase
   let visitorStats = { total: 0, today: 0 };
@@ -3321,9 +3329,9 @@ async function renderReports() {
     totalCustomers = getCustomers().length;
   }
   
-  // تحديث الأرقام
-  if ($('rpt-today-sales')) $('rpt-today-sales').textContent = calcTotal(todayOrders).toFixed(0) + ' د.إ';
-  if ($('rpt-month-sales')) $('rpt-month-sales').textContent = calcTotal(monthOrders).toFixed(0) + ' د.إ';
+  // تحديث الأرقام (المبيعات المحققة فقط)
+  if ($('rpt-today-sales')) $('rpt-today-sales').textContent = calcTotal(realizedOnly(todayOrders)).toFixed(0) + ' د.إ';
+  if ($('rpt-month-sales')) $('rpt-month-sales').textContent = calcTotal(realizedOnly(monthOrders)).toFixed(0) + ' د.إ';
   if ($('rpt-total-orders')) $('rpt-total-orders').textContent = allOrders.length;
   if ($('rpt-total-customers')) $('rpt-total-customers').textContent = totalCustomers;
   
@@ -3333,9 +3341,9 @@ async function renderReports() {
                    allOrders.length ? ((delivered / allOrders.length) * 100).toFixed(1) : 0;
   if ($('rpt-conversion')) $('rpt-conversion').textContent = convRate + '%';
   
-  // تقارير الفترة
+  // تقارير الفترة (فوق إجمالي الأرباح المحققة فقط)
   if ($('rpt-period-sales')) $('rpt-period-sales').textContent = periodTotal.toFixed(2) + ' د.إ';
-  if ($('rpt-period-orders')) $('rpt-period-orders').textContent = periodOrders.length;
+  if ($('rpt-period-orders')) $('rpt-period-orders').textContent = periodRealized.length;
   if ($('rpt-avg-order')) $('rpt-avg-order').textContent = avgOrder.toFixed(2) + ' د.إ';
   if ($('rpt-profit')) $('rpt-profit').textContent = (periodTotal * 0.2).toFixed(2) + ' د.إ';
   
