@@ -147,14 +147,41 @@ document.addEventListener("DOMContentLoaded", function () {
 
   let _productsCache = null;
   async function getProducts() {
-    if (_productsCache) return _productsCache;
+    if (_productsCache && _productsCache.length > 0) return _productsCache;
     try {
-      const SS_KEY = 'x2_prods_ss';
+      const SS_KEY = 'x2_prods_ss_v2';
       const cached = sessionStorage.getItem(SS_KEY);
-      if (cached) { const obj = JSON.parse(cached); if (Date.now()-obj.ts < 300000) { _productsCache=obj.data; return _productsCache; } }
+      if (cached) {
+        const obj = JSON.parse(cached);
+        if (Date.now()-obj.ts < 60000 && Array.isArray(obj.data) && obj.data.length > 0) {
+          _productsCache = obj.data;
+          return _productsCache;
+        }
+      }
+      // أولاً: Supabase (المصدر الحقيقي)
+      if (window.Supabase && window.Supabase.Products) {
+        try {
+          const sbProds = await window.Supabase.Products.getAll(500);
+          if (Array.isArray(sbProds) && sbProds.length > 0) {
+            _productsCache = sbProds.map(function(p){
+              const imgs = [];
+              if (p.image) imgs.push(p.image);
+              if (Array.isArray(p.gallery)) p.gallery.forEach(function(g){ if(g && g!==p.image) imgs.push(g); });
+              return {
+                id: p.id,
+                name: { ar: p.name_ar||'', en: p.name_en||p.name_ar||'' },
+                desc: p.description_ar||'', img: imgs,
+                price: p.price, oldPrice: p.old_price
+              };
+            });
+            try { sessionStorage.setItem(SS_KEY, JSON.stringify({ts:Date.now(),data:_productsCache})); } catch(e2) {}
+            return _productsCache;
+          }
+        } catch(e) {}
+      }
+      // fallback: Products.json
       const r = await fetch('java/Products.json');
       _productsCache = await r.json();
-      try { sessionStorage.setItem(SS_KEY, JSON.stringify({ts:Date.now(),data:_productsCache})); } catch(e2) {}
       return _productsCache;
     } catch(e) { return []; }
   }
@@ -1345,8 +1372,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
       var res = await fetch('java/Products.json');
       if (!res.ok) return;
-      var products = await res.json();
-      try { sessionStorage.setItem('x2_prods_ss', JSON.stringify({ts:Date.now(),data:products})); } catch(e3) {}
       var products = await res.json();
       var notifs = getNotifications();
       var changed = false;

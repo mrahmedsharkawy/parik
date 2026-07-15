@@ -960,7 +960,9 @@ function saveLocal(){
     }
   }
   // مسح cache المنتجات عشان التغييرات تظهر فوراً في الموقع
-  try { sessionStorage.removeItem('x2_prods_ss'); } catch(e) {}
+  try {
+    Object.keys(sessionStorage).forEach(function(k){ if(k.indexOf('x2_prods_ss')===0) sessionStorage.removeItem(k); });
+  } catch(e) {}
 }
 
 /* ================= الأقسام ================= */
@@ -2003,7 +2005,9 @@ function deleteSubcategory(ci, si) {
 
 function saveCategoriesLocal() {
   localStorage.setItem('admin_categories', JSON.stringify(categories));
-  try { sessionStorage.removeItem('x2_prods_ss'); } catch(e) {}
+  try {
+    Object.keys(sessionStorage).forEach(function(k){ if(k.indexOf('x2_prods_ss')===0) sessionStorage.removeItem(k); });
+  } catch(e) {}
 }
 
 function addCategory() {

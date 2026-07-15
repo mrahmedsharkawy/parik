@@ -41,7 +41,8 @@ export async function fetchCategories() {
 
 // أضف هذه الدالة بعد دالة fetchCategories
 let _productsCache = null;
-const PROD_CACHE_KEY = 'x2_prods_ss';
+const PROD_CACHE_VERSION = 'v2'; // غيّر الرقم ده مع كل تحديث كبير لإبطال أي كاش قديم في متصفحات الزوار
+const PROD_CACHE_KEY = 'x2_prods_ss_' + PROD_CACHE_VERSION;
 const PROD_CACHE_TTL = 60 * 1000; // دقيقة واحدة فقط
 
 export async function fetchProducts() {
