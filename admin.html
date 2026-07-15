@@ -191,6 +191,8 @@
 <div class="tabs">
   <div class="tab active" data-tab="products" onclick="switchTab('products')">🛍️ المنتجات</div>
   <div class="tab" data-tab="orders" onclick="switchTab('orders')">📊 الطلبات</div>
+  <div class="tab" data-tab="marketing" onclick="switchTab('marketing')">🎯 التسويق</div>
+  <div class="tab" data-tab="reports" onclick="switchTab('reports')">📈 التقارير</div>
   <div class="tab" data-tab="comments" onclick="switchTab('comments')">💬 التعليقات</div>
   <div class="tab" data-tab="categories" onclick="switchTab('categories')">🗂️ الفئات</div>
   <div class="tab" data-tab="banners" onclick="switchTab('banners')">🖼️ العروض والبنرات</div>
@@ -399,6 +401,12 @@
       <!-- قائمة الطلبات -->
       <div class="card">
         <h2>🧾 الطلبات (<span id="ordCount">0</span>)</h2>
+        <!-- بحث وفلترة متقدمة -->
+        <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+          <input type="text" id="ordSearch" placeholder="🔍 بحث برقم الطلب أو اسم العميل..." oninput="ordPage=1;renderOrders()" style="flex:2;min-width:180px">
+          <input type="date" id="ordDateFrom" onchange="ordPage=1;renderOrders()" style="width:auto" title="من تاريخ">
+          <input type="date" id="ordDateTo" onchange="ordPage=1;renderOrders()" style="width:auto" title="إلى تاريخ">
+        </div>
         <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
           <select id="ordFilter" onchange="ordPage=1;renderOrders()" style="flex:1">
             <option value="all">كل الحالات</option>
@@ -409,6 +417,7 @@
             <option value="cancelled">✖ ملغى</option>
             <option value="returned">↩ مرتجع</option>
           </select>
+          <button class="btn-ghost btn-sm" onclick="clearOrderFilters()">✕ مسح الفلاتر</button>
           <button class="btn-navy btn-sm" onclick="syncStoreOrders()">↻ مزامنة طلبات المتجر</button>
           <button class="btn-gold btn-sm" onclick="exportOrders()">⬇ تنزيل orders.json</button>
         </div>
@@ -417,6 +426,231 @@
       </div>
 
     </div>
+  </div>
+
+  <!-- ============ التسويق والكوبونات ============ -->
+  <div class="panel" id="panel-marketing">
+    
+    <!-- كوبونات الخصم -->
+    <div class="card" style="margin-bottom:16px">
+      <h2>🎟️ كوبونات الخصم</h2>
+      <div class="grid">
+        <div>
+          <label>كود الكوبون</label>
+          <input type="text" id="cp-code" placeholder="مثال: SUMMER25" style="text-transform:uppercase">
+          <label>نوع الخصم</label>
+          <select id="cp-type">
+            <option value="percent">نسبة مئوية %</option>
+            <option value="fixed">مبلغ ثابت</option>
+          </select>
+          <label>قيمة الخصم</label>
+          <input type="number" id="cp-value" placeholder="25" min="0">
+          <label>الحد الأدنى للطلب (اختياري)</label>
+          <input type="number" id="cp-minorder" placeholder="100" min="0">
+        </div>
+        <div>
+          <label>تاريخ الانتهاء</label>
+          <input type="datetime-local" id="cp-expiry">
+          <label>عدد مرات الاستخدام (0 = غير محدود)</label>
+          <input type="number" id="cp-maxuse" placeholder="0" min="0">
+          <label>الحالة</label>
+          <select id="cp-active">
+            <option value="1">نشط ✅</option>
+            <option value="0">متوقف ❌</option>
+          </select>
+          <button class="btn-gold" style="width:100%;margin-top:20px" onclick="saveCoupon()">💾 حفظ الكوبون</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <h2>📋 الكوبونات الحالية</h2>
+      <div class="plist" id="couponList"><div class="empty">لا توجد كوبونات</div></div>
+      <button class="btn-ghost btn-sm" style="margin-top:10px" onclick="exportCoupons()">⬇ تنزيل JSON</button>
+    </div>
+
+    <!-- حملات العروض -->
+    <div class="card" style="margin-bottom:16px">
+      <h2>🚀 حملات العروض</h2>
+      <div class="grid">
+        <div>
+          <label>اسم الحملة</label>
+          <input type="text" id="camp-name" placeholder="عرض الصيف 🔥">
+          <label>وصف الحملة</label>
+          <textarea id="camp-desc" placeholder="خصم حتى 50% على جميع المنتجات"></textarea>
+          <label>صورة البنر</label>
+          <input type="text" id="camp-banner" placeholder="assets/campaigns/summer.png">
+        </div>
+        <div>
+          <label>تاريخ البدء</label>
+          <input type="datetime-local" id="camp-start">
+          <label>تاريخ الانتهاء</label>
+          <input type="datetime-local" id="camp-end">
+          <label>نسبة الخصم (تُطبق على المنتجات المختارة)</label>
+          <input type="number" id="camp-discount" placeholder="30" min="0" max="100">
+          <button class="btn-gold" style="width:100%;margin-top:20px" onclick="saveCampaign()">💾 حفظ الحملة</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <h2>📋 الحملات النشطة</h2>
+      <div class="plist" id="campaignList"><div class="empty">لا توجد حملات</div></div>
+    </div>
+
+    <!-- المنتجات المميزة -->
+    <div class="grid">
+      <div class="card">
+        <h2>⭐ المنتجات الأكثر مبيعاً</h2>
+        <div class="hint">تُحدد تلقائياً بناءً على عدد الطلبات.</div>
+        <div class="plist" id="bestSellersList"><div class="empty">لا توجد بيانات</div></div>
+      </div>
+      <div class="card">
+        <h2>💎 المنتجات المقترحة</h2>
+        <div class="hint">اختر المنتجات التي تريد اقتراحها للعملاء.</div>
+        <input type="text" id="sug-search" placeholder="ابحث..." oninput="renderSuggestedPicker()" style="margin-bottom:10px">
+        <div class="plist" id="suggestedPicker" style="max-height:300px;overflow-y:auto"></div>
+        <button class="btn-gold btn-sm" style="margin-top:10px" onclick="saveSuggested()">💾 حفظ</button>
+      </div>
+    </div>
+
+    <!-- SEO -->
+    <div class="card" style="margin-top:16px">
+      <h2>🔍 إعدادات SEO</h2>
+      <div class="hint">تحسين محركات البحث للمتجر.</div>
+      <div class="grid">
+        <div>
+          <label>عنوان الصفحة الرئيسية (Title)</label>
+          <input type="text" id="seo-title" placeholder="متجر بريق - أفضل المنتجات">
+          <label>وصف الميتا (Meta Description)</label>
+          <textarea id="seo-desc" placeholder="اكتشف أفضل المنتجات بأسعار تنافسية..."></textarea>
+          <label>كلمات مفتاحية (Keywords)</label>
+          <input type="text" id="seo-keywords" placeholder="متجر, تسوق, عروض, منتجات">
+        </div>
+        <div>
+          <label>صورة المشاركة (OG Image)</label>
+          <input type="text" id="seo-ogimage" placeholder="assets/og-image.png">
+          <label>رابط الفيسبوك بيكسل (اختياري)</label>
+          <input type="text" id="seo-fbpixel" placeholder="123456789">
+          <label>كود Google Analytics (اختياري)</label>
+          <input type="text" id="seo-ga" placeholder="G-XXXXXXXXXX">
+          <button class="btn-gold" style="width:100%;margin-top:20px" onclick="saveSEO()">💾 حفظ إعدادات SEO</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- روابط المشاركة -->
+    <div class="card" style="margin-top:16px">
+      <h2>📱 روابط المشاركة</h2>
+      <div class="hint">روابط سريعة لمشاركة المتجر على وسائل التواصل.</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+        <button class="btn-navy btn-sm" onclick="shareToSocial('facebook')">📘 فيسبوك</button>
+        <button class="btn-navy btn-sm" onclick="shareToSocial('twitter')">🐦 تويتر</button>
+        <button class="btn-navy btn-sm" onclick="shareToSocial('whatsapp')">💬 واتساب</button>
+        <button class="btn-navy btn-sm" onclick="shareToSocial('telegram')">✈️ تيليجرام</button>
+        <button class="btn-ghost btn-sm" onclick="copyStoreLink()">📋 نسخ الرابط</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============ التقارير ============ -->
+  <div class="panel" id="panel-reports">
+    
+    <!-- ملخص سريع -->
+    <div class="stats-cards" id="reportStatsCards" style="margin-bottom:16px">
+      <div class="stat gold">
+        <span class="ic">💰</span>
+        <div class="v" id="rpt-today-sales">0</div>
+        <div class="l">مبيعات اليوم</div>
+      </div>
+      <div class="stat green">
+        <span class="ic">📅</span>
+        <div class="v" id="rpt-month-sales">0</div>
+        <div class="l">مبيعات الشهر</div>
+      </div>
+      <div class="stat navy">
+        <span class="ic">📦</span>
+        <div class="v" id="rpt-total-orders">0</div>
+        <div class="l">إجمالي الطلبات</div>
+      </div>
+      <div class="stat orange">
+        <span class="ic">👥</span>
+        <div class="v" id="rpt-total-customers">0</div>
+        <div class="l">إجمالي العملاء</div>
+      </div>
+      <div class="stat red">
+        <span class="ic">📊</span>
+        <div class="v" id="rpt-conversion">0%</div>
+        <div class="l">معدل التحويل</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- تقارير المبيعات -->
+      <div class="card">
+        <h2>📊 تقارير المبيعات</h2>
+        <div class="period-tabs" style="margin-bottom:12px">
+          <button class="active" data-rp="today" onclick="setReportPeriod('today')">اليوم</button>
+          <button data-rp="week" onclick="setReportPeriod('week')">الأسبوع</button>
+          <button data-rp="month" onclick="setReportPeriod('month')">الشهر</button>
+          <button data-rp="year" onclick="setReportPeriod('year')">السنة</button>
+        </div>
+        <div id="salesReport" style="font-size:.9rem">
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)">
+            <span>إجمالي المبيعات</span><b id="rpt-period-sales">0 د.إ</b>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)">
+            <span>عدد الطلبات</span><b id="rpt-period-orders">0</b>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)">
+            <span>متوسط قيمة الطلب</span><b id="rpt-avg-order">0 د.إ</b>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:8px 0">
+            <span>الأرباح المقدرة (20%)</span><b id="rpt-profit" style="color:#1e8e4e">0 د.إ</b>
+          </div>
+        </div>
+      </div>
+
+      <!-- أكثر المنتجات مبيعاً -->
+      <div class="card">
+        <h2>🏆 أكثر المنتجات مبيعاً</h2>
+        <div class="plist" id="topProductsList" style="max-height:300px;overflow-y:auto">
+          <div class="empty">لا توجد بيانات</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid" style="margin-top:16px">
+      <!-- أكثر الفئات مبيعاً -->
+      <div class="card">
+        <h2>📁 أكثر الفئات مبيعاً</h2>
+        <div class="plist" id="topCategoriesList" style="max-height:250px;overflow-y:auto">
+          <div class="empty">لا توجد بيانات</div>
+        </div>
+      </div>
+
+      <!-- المخزون -->
+      <div class="card">
+        <h2>📦 تنبيهات المخزون</h2>
+        <div class="hint">المنتجات التي قاربت على النفاد (أقل من 5 قطع).</div>
+        <div class="plist" id="lowStockList" style="max-height:250px;overflow-y:auto">
+          <div class="empty">لا توجد منتجات منخفضة المخزون</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- تصدير التقارير -->
+    <div class="card" style="margin-top:16px">
+      <h2>📤 تصدير التقارير</h2>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn-gold" onclick="exportReportExcel()">📊 تصدير Excel</button>
+        <button class="btn-navy" onclick="exportReportPDF()">📄 تصدير PDF</button>
+        <button class="btn-ghost" onclick="exportReportJSON()">📋 تصدير JSON</button>
+        <button class="btn-ghost" onclick="printReport()">🖨️ طباعة</button>
+      </div>
+    </div>
+
   </div>
 
   <!-- ============ التعليقات ============ -->
@@ -667,12 +901,21 @@
             <option value="delivered">تم التسليم</option>
             <option value="processing">قيد المعالجة</option>
             <option value="shipped">تم الشحن</option>
+            <option value="blocked">محظور 🚫</option>
+          </select>
+          <select id="cust-sort" onchange="renderCustomers()" style="width:auto">
+            <option value="orders">الأكثر طلبات</option>
+            <option value="total">الأعلى مشتريات</option>
+            <option value="recent">آخر طلب</option>
+            <option value="name">الاسم</option>
           </select>
         </div>
         <div class="plist" id="custList"><div class="empty">لا يوجد عملاء</div></div>
         <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn-gold btn-sm" onclick="selectAllCustomers()">✓ تحديد الكل</button>
           <button class="btn-ghost btn-sm" onclick="deselectAllCustomers()">✗ إلغاء</button>
+          <button class="btn-danger btn-sm" onclick="blockSelectedCustomers()">🚫 حظر المحددين</button>
+          <button class="btn-ghost btn-sm" onclick="exportCustomers()">⬇ تصدير العملاء</button>
           <span id="custCount" style="font-size:.8rem;color:#7a8296;align-self:center"></span>
         </div>
       </div>
@@ -2492,6 +2735,16 @@ window.switchTab = function(name) {
   }
   if (name === 'settings') { loadSettings(); }
   if (name === 'orders') { syncStoreOrders(false); }
+  if (name === 'marketing') {
+    renderCoupons();
+    renderCampaigns();
+    renderSuggestedPicker();
+    loadSEO();
+    renderBestSellers([...getOrders(), ...JSON.parse(localStorage.getItem('x2_orders')||'[]')]);
+  }
+  if (name === 'reports') {
+    renderReports();
+  }
 };
 
 /* ================= مزامنة العملاء من Supabase ================= */
@@ -2568,6 +2821,605 @@ async function loadSettingsFromSupabase() {
   } catch(e) {}
 }
 
+/* ================= كوبونات الخصم ================= */
+const LS_COUPONS = 'admin_coupons';
+function getCoupons() { try { return JSON.parse(localStorage.getItem(LS_COUPONS)||'[]'); } catch(e) { return []; } }
+
+function saveCoupon() {
+  const code = ($('cp-code').value||'').trim().toUpperCase();
+  if (!code) { toast('أدخل كود الكوبون'); return; }
+  const coupon = {
+    id: Date.now(),
+    code: code,
+    type: $('cp-type').value,
+    value: parseFloat($('cp-value').value) || 0,
+    minOrder: parseFloat($('cp-minorder').value) || 0,
+    expiry: $('cp-expiry').value || null,
+    maxUse: parseInt($('cp-maxuse').value) || 0,
+    usedCount: 0,
+    active: $('cp-active').value === '1',
+    createdAt: new Date().toISOString()
+  };
+  const coupons = getCoupons();
+  const existIdx = coupons.findIndex(c => c.code === code);
+  if (existIdx >= 0) coupons[existIdx] = { ...coupons[existIdx], ...coupon, id: coupons[existIdx].id };
+  else coupons.unshift(coupon);
+  localStorage.setItem(LS_COUPONS, JSON.stringify(coupons));
+  renderCoupons();
+  clearCouponForm();
+  toast('✅ تم حفظ الكوبون');
+}
+
+function renderCoupons() {
+  const list = $('couponList'); if (!list) return;
+  const coupons = getCoupons();
+  if (!coupons.length) { list.innerHTML = '<div class="empty">لا توجد كوبونات</div>'; return; }
+  list.innerHTML = coupons.map(c => {
+    const expired = c.expiry && new Date(c.expiry) < new Date();
+    const statusBadge = !c.active ? '<span class="status-badge st-cancelled">متوقف</span>' :
+                        expired ? '<span class="status-badge st-returned">منتهي</span>' :
+                        '<span class="status-badge st-delivered">نشط</span>';
+    return `<div class="prod-row">
+      <div class="info">
+        <b style="font-family:monospace;letter-spacing:1px">${c.code}</b> ${statusBadge}
+        <small>
+          ${c.type === 'percent' ? c.value + '%' : c.value + ' د.إ'} خصم
+          ${c.minOrder ? '• حد أدنى ' + c.minOrder + ' د.إ' : ''}
+          ${c.maxUse ? '• استخدام ' + c.usedCount + '/' + c.maxUse : ''}
+          ${c.expiry ? '• ينتهي ' + new Date(c.expiry).toLocaleDateString('ar') : ''}
+        </small>
+      </div>
+      <button class="btn-ghost btn-sm" onclick="editCoupon('${c.code}')">✏️</button>
+      <button class="btn-danger btn-sm" onclick="deleteCoupon('${c.code}')">🗑</button>
+    </div>`;
+  }).join('');
+}
+
+function editCoupon(code) {
+  const c = getCoupons().find(x => x.code === code);
+  if (!c) return;
+  $('cp-code').value = c.code;
+  $('cp-type').value = c.type;
+  $('cp-value').value = c.value;
+  $('cp-minorder').value = c.minOrder || '';
+  $('cp-expiry').value = c.expiry ? c.expiry.slice(0, 16) : '';
+  $('cp-maxuse').value = c.maxUse || '';
+  $('cp-active').value = c.active ? '1' : '0';
+}
+
+function deleteCoupon(code) {
+  if (!confirm('حذف الكوبون ' + code + '؟')) return;
+  const coupons = getCoupons().filter(c => c.code !== code);
+  localStorage.setItem(LS_COUPONS, JSON.stringify(coupons));
+  renderCoupons();
+  toast('تم حذف الكوبون');
+}
+
+function clearCouponForm() {
+  ['cp-code','cp-value','cp-minorder','cp-expiry','cp-maxuse'].forEach(id => { if($(id)) $(id).value = ''; });
+  if ($('cp-type')) $('cp-type').value = 'percent';
+  if ($('cp-active')) $('cp-active').value = '1';
+}
+
+function exportCoupons() {
+  const data = JSON.stringify(getCoupons(), null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'coupons.json'; a.click();
+}
+
+/* ================= حملات العروض ================= */
+const LS_CAMPAIGNS = 'admin_campaigns';
+function getCampaigns() { try { return JSON.parse(localStorage.getItem(LS_CAMPAIGNS)||'[]'); } catch(e) { return []; } }
+
+function saveCampaign() {
+  const name = ($('camp-name').value||'').trim();
+  if (!name) { toast('أدخل اسم الحملة'); return; }
+  const campaign = {
+    id: Date.now(),
+    name: name,
+    desc: $('camp-desc').value || '',
+    banner: $('camp-banner').value || '',
+    start: $('camp-start').value || null,
+    end: $('camp-end').value || null,
+    discount: parseFloat($('camp-discount').value) || 0,
+    active: true,
+    createdAt: new Date().toISOString()
+  };
+  const campaigns = getCampaigns();
+  campaigns.unshift(campaign);
+  localStorage.setItem(LS_CAMPAIGNS, JSON.stringify(campaigns));
+  renderCampaigns();
+  clearCampaignForm();
+  toast('✅ تم حفظ الحملة');
+}
+
+function renderCampaigns() {
+  const list = $('campaignList'); if (!list) return;
+  const camps = getCampaigns();
+  if (!camps.length) { list.innerHTML = '<div class="empty">لا توجد حملات</div>'; return; }
+  const now = new Date();
+  list.innerHTML = camps.map(c => {
+    const started = !c.start || new Date(c.start) <= now;
+    const ended = c.end && new Date(c.end) < now;
+    const status = ended ? 'منتهية' : started ? 'نشطة' : 'قادمة';
+    const statusClass = ended ? 'st-cancelled' : started ? 'st-delivered' : 'st-pending';
+    return `<div class="prod-row">
+      <div class="info">
+        <b>${esc(c.name)}</b> <span class="status-badge ${statusClass}">${status}</span>
+        <small>
+          ${c.discount ? c.discount + '% خصم' : ''} 
+          ${c.start ? '• من ' + new Date(c.start).toLocaleDateString('ar') : ''}
+          ${c.end ? '• إلى ' + new Date(c.end).toLocaleDateString('ar') : ''}
+        </small>
+      </div>
+      <button class="btn-danger btn-sm" onclick="deleteCampaign(${c.id})">🗑</button>
+    </div>`;
+  }).join('');
+}
+
+function deleteCampaign(id) {
+  const camps = getCampaigns().filter(c => c.id !== id);
+  localStorage.setItem(LS_CAMPAIGNS, JSON.stringify(camps));
+  renderCampaigns();
+  toast('تم حذف الحملة');
+}
+
+function clearCampaignForm() {
+  ['camp-name','camp-desc','camp-banner','camp-start','camp-end','camp-discount'].forEach(id => { if($(id)) $(id).value = ''; });
+}
+
+/* ================= المنتجات المقترحة ================= */
+const LS_SUGGESTED = 'x2_suggested';
+let suggestedIds = new Set();
+function getSuggestedIds() { try { return new Set(JSON.parse(localStorage.getItem(LS_SUGGESTED)||'[]')); } catch(e) { return new Set(); } }
+
+function renderSuggestedPicker() {
+  const q = ($('sug-search').value||'').toLowerCase();
+  const list = $('suggestedPicker'); if (!list) return;
+  suggestedIds = getSuggestedIds();
+  const filtered = products.filter(p => !q || getT(p.name).toLowerCase().includes(q));
+  if (!filtered.length) { list.innerHTML='<div class="empty">لا توجد منتجات</div>'; return; }
+  list.innerHTML = filtered.slice(0, 50).map(p => {
+    const name = getT(p.name); const checked = suggestedIds.has(String(p.id));
+    return `<div class="prod-row">
+      <input type="checkbox" ${checked?'checked':''} onchange="toggleSuggested('${p.id}',this.checked)" style="width:auto">
+      <div class="info"><b>${esc(name)}</b><small>${p.price||''} د.إ</small></div>
+    </div>`;
+  }).join('');
+}
+
+function toggleSuggested(id, checked) { if(checked) suggestedIds.add(String(id)); else suggestedIds.delete(String(id)); }
+function saveSuggested() { localStorage.setItem(LS_SUGGESTED, JSON.stringify([...suggestedIds])); toast('✅ تم حفظ المنتجات المقترحة'); }
+
+/* ================= SEO ================= */
+const LS_SEO = 'admin_seo';
+function getSEO() { try { return JSON.parse(localStorage.getItem(LS_SEO)||'{}'); } catch(e) { return {}; } }
+
+function saveSEO() {
+  const seo = {
+    title: $('seo-title').value || '',
+    desc: $('seo-desc').value || '',
+    keywords: $('seo-keywords').value || '',
+    ogImage: $('seo-ogimage').value || '',
+    fbPixel: $('seo-fbpixel').value || '',
+    ga: $('seo-ga').value || ''
+  };
+  localStorage.setItem(LS_SEO, JSON.stringify(seo));
+  toast('✅ تم حفظ إعدادات SEO');
+}
+
+function loadSEO() {
+  const seo = getSEO();
+  if ($('seo-title')) $('seo-title').value = seo.title || '';
+  if ($('seo-desc')) $('seo-desc').value = seo.desc || '';
+  if ($('seo-keywords')) $('seo-keywords').value = seo.keywords || '';
+  if ($('seo-ogimage')) $('seo-ogimage').value = seo.ogImage || '';
+  if ($('seo-fbpixel')) $('seo-fbpixel').value = seo.fbPixel || '';
+  if ($('seo-ga')) $('seo-ga').value = seo.ga || '';
+}
+
+/* ================= مشاركة السوشيال ================= */
+function shareToSocial(platform) {
+  const url = encodeURIComponent(location.origin);
+  const text = encodeURIComponent('تسوق من متجر بريق - أفضل المنتجات بأسعار مميزة!');
+  const links = {
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}`,
+    twitter: `https://twitter.com/intent/tweet?url=${url}&text=${text}`,
+    whatsapp: `https://wa.me/?text=${text}%20${url}`,
+    telegram: `https://t.me/share/url?url=${url}&text=${text}`
+  };
+  window.open(links[platform], '_blank', 'width=600,height=400');
+}
+
+function copyStoreLink() {
+  navigator.clipboard.writeText(location.origin).then(() => toast('✅ تم نسخ الرابط'));
+}
+
+/* ================= التقارير ================= */
+let reportPeriod = 'today';
+
+function setReportPeriod(period) {
+  reportPeriod = period;
+  document.querySelectorAll('#panel-reports .period-tabs button').forEach(b => {
+    b.classList.toggle('active', b.dataset.rp === period);
+  });
+  renderReports();
+}
+
+function renderReports() {
+  const orders = getOrders();
+  const storeOrders = JSON.parse(localStorage.getItem('x2_orders')||'[]');
+  const allOrders = [...orders, ...storeOrders];
+  
+  const now = new Date();
+  const todayStr = now.toDateString();
+  const thisMonth = now.getMonth();
+  const thisYear = now.getFullYear();
+  
+  // فلترة حسب الفترة
+  const getDate = o => new Date(o.date || o.created_at || o.createdAt || Date.now());
+  const filterByPeriod = (orders, period) => {
+    return orders.filter(o => {
+      const d = getDate(o);
+      switch(period) {
+        case 'today': return d.toDateString() === todayStr;
+        case 'week': return (now - d) < 7 * 24 * 60 * 60 * 1000;
+        case 'month': return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
+        case 'year': return d.getFullYear() === thisYear;
+        default: return true;
+      }
+    });
+  };
+  
+  const periodOrders = filterByPeriod(allOrders, reportPeriod);
+  const todayOrders = filterByPeriod(allOrders, 'today');
+  const monthOrders = filterByPeriod(allOrders, 'month');
+  
+  // حساب الإحصائيات
+  const calcTotal = orders => orders.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+  const periodTotal = calcTotal(periodOrders);
+  const avgOrder = periodOrders.length ? periodTotal / periodOrders.length : 0;
+  
+  // تحديث الأرقام
+  if ($('rpt-today-sales')) $('rpt-today-sales').textContent = calcTotal(todayOrders).toFixed(0) + ' د.إ';
+  if ($('rpt-month-sales')) $('rpt-month-sales').textContent = calcTotal(monthOrders).toFixed(0) + ' د.إ';
+  if ($('rpt-total-orders')) $('rpt-total-orders').textContent = allOrders.length;
+  if ($('rpt-total-customers')) $('rpt-total-customers').textContent = getCustomers().length;
+  
+  // معدل التحويل (نسبة الطلبات المكتملة)
+  const delivered = allOrders.filter(o => o.status === 'delivered').length;
+  const convRate = allOrders.length ? ((delivered / allOrders.length) * 100).toFixed(1) : 0;
+  if ($('rpt-conversion')) $('rpt-conversion').textContent = convRate + '%';
+  
+  // تقارير الفترة
+  if ($('rpt-period-sales')) $('rpt-period-sales').textContent = periodTotal.toFixed(2) + ' د.إ';
+  if ($('rpt-period-orders')) $('rpt-period-orders').textContent = periodOrders.length;
+  if ($('rpt-avg-order')) $('rpt-avg-order').textContent = avgOrder.toFixed(2) + ' د.إ';
+  if ($('rpt-profit')) $('rpt-profit').textContent = (periodTotal * 0.2).toFixed(2) + ' د.إ';
+  
+  // أكثر المنتجات مبيعاً
+  renderTopProducts(allOrders);
+  renderTopCategories(allOrders);
+  renderLowStock();
+  renderBestSellers(allOrders);
+}
+
+function renderTopProducts(orders) {
+  const list = $('topProductsList'); if (!list) return;
+  const prodMap = {};
+  orders.forEach(o => {
+    (o.items || []).forEach(item => {
+      const id = item.id || item.productId;
+      if (!prodMap[id]) prodMap[id] = { name: item.name || getT(item.name) || 'منتج', qty: 0, total: 0 };
+      prodMap[id].qty += item.qty || item.quantity || 1;
+      prodMap[id].total += (item.price || 0) * (item.qty || item.quantity || 1);
+    });
+  });
+  const sorted = Object.entries(prodMap).sort((a, b) => b[1].qty - a[1].qty).slice(0, 10);
+  if (!sorted.length) { list.innerHTML = '<div class="empty">لا توجد بيانات</div>'; return; }
+  list.innerHTML = sorted.map(([id, data], i) => `
+    <div class="prod-row">
+      <span style="background:var(--gold);color:var(--navy);width:24px;height:24px;border-radius:50%;text-align:center;line-height:24px;font-weight:700;font-size:.75rem">${i+1}</span>
+      <div class="info">
+        <b>${esc(data.name)}</b>
+        <small>${data.qty} قطعة • ${data.total.toFixed(0)} د.إ</small>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderTopCategories(orders) {
+  const list = $('topCategoriesList'); if (!list) return;
+  const catMap = {};
+  orders.forEach(o => {
+    (o.items || []).forEach(item => {
+      const cats = item.category || item.categories || [];
+      (Array.isArray(cats) ? cats : [cats]).forEach(cat => {
+        if (!cat) return;
+        const catName = getT(cat);
+        if (!catMap[catName]) catMap[catName] = { qty: 0, total: 0 };
+        catMap[catName].qty += item.qty || item.quantity || 1;
+        catMap[catName].total += (item.price || 0) * (item.qty || item.quantity || 1);
+      });
+    });
+  });
+  const sorted = Object.entries(catMap).sort((a, b) => b[1].total - a[1].total).slice(0, 8);
+  if (!sorted.length) { list.innerHTML = '<div class="empty">لا توجد بيانات</div>'; return; }
+  list.innerHTML = sorted.map(([name, data]) => `
+    <div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid var(--line)">
+      <span>${esc(name)}</span>
+      <b>${data.total.toFixed(0)} د.إ</b>
+    </div>
+  `).join('');
+}
+
+function renderLowStock() {
+  const list = $('lowStockList'); if (!list) return;
+  const lowStock = products.filter(p => {
+    const stock = parseInt(p.stock);
+    return !isNaN(stock) && stock > 0 && stock < 5;
+  }).sort((a, b) => parseInt(a.stock) - parseInt(b.stock));
+  
+  if (!lowStock.length) { list.innerHTML = '<div class="empty">لا توجد منتجات منخفضة المخزون</div>'; return; }
+  list.innerHTML = lowStock.map(p => `
+    <div class="prod-row">
+      <div class="info">
+        <b>${esc(getT(p.name))}</b>
+        <small style="color:${parseInt(p.stock) <= 2 ? '#c0392b' : '#e08e0b'}">
+          ⚠️ متبقي ${p.stock} قطعة فقط
+        </small>
+      </div>
+      <button class="btn-ghost btn-sm" onclick="editProduct(${p.id})">تعديل</button>
+    </div>
+  `).join('');
+}
+
+function renderBestSellers(orders) {
+  const list = $('bestSellersList'); if (!list) return;
+  const prodMap = {};
+  orders.forEach(o => {
+    (o.items || []).forEach(item => {
+      const id = item.id || item.productId;
+      if (!prodMap[id]) prodMap[id] = { id, name: item.name || '', qty: 0 };
+      prodMap[id].qty += item.qty || item.quantity || 1;
+    });
+  });
+  const sorted = Object.values(prodMap).sort((a, b) => b.qty - a.qty).slice(0, 5);
+  if (!sorted.length) { list.innerHTML = '<div class="empty">لا توجد بيانات</div>'; return; }
+  list.innerHTML = sorted.map((p, i) => `
+    <div class="prod-row">
+      <span style="background:var(--gold);color:var(--navy);width:22px;height:22px;border-radius:50%;text-align:center;line-height:22px;font-weight:700;font-size:.7rem">${i+1}</span>
+      <div class="info"><b>${esc(p.name || 'منتج #' + p.id)}</b><small>${p.qty} مبيعات</small></div>
+    </div>
+  `).join('');
+}
+
+/* ================= تصدير التقارير ================= */
+function exportReportExcel() {
+  const orders = [...getOrders(), ...JSON.parse(localStorage.getItem('x2_orders')||'[]')];
+  let csv = 'رقم الطلب,التاريخ,العميل,الإجمالي,الحالة\n';
+  orders.forEach(o => {
+    csv += `${o.id||o.order_number||''},${o.date||o.created_at||''},${o.customer||o.customerName||''},${o.total||0},${o.status||''}\n`;
+  });
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'sales_report_' + new Date().toISOString().slice(0,10) + '.csv'; a.click();
+  toast('✅ تم تصدير التقرير');
+}
+
+function exportReportPDF() {
+  toast('⏳ جارٍ إنشاء PDF...');
+  const content = document.querySelector('#panel-reports');
+  if (!content) return;
+  const printWin = window.open('', '_blank');
+  printWin.document.write(`
+    <html dir="rtl"><head><title>تقرير المبيعات</title>
+    <style>body{font-family:Arial,sans-serif;padding:20px}h2{color:#152546}.stat{display:inline-block;margin:10px;padding:15px;border:1px solid #ddd;border-radius:8px;min-width:100px;text-align:center}.stat .v{font-size:1.5rem;font-weight:bold}.stat .l{color:#666;font-size:.85rem}</style>
+    </head><body>${content.innerHTML}</body></html>
+  `);
+  printWin.document.close();
+  setTimeout(() => { printWin.print(); }, 500);
+}
+
+function exportReportJSON() {
+  const data = {
+    generatedAt: new Date().toISOString(),
+    orders: [...getOrders(), ...JSON.parse(localStorage.getItem('x2_orders')||'[]')],
+    products: products,
+    customers: getCustomers()
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'full_report_' + new Date().toISOString().slice(0,10) + '.json'; a.click();
+}
+
+function printReport() {
+  window.print();
+}
+
+/* ================= تحسينات الطلبات ================= */
+function clearOrderFilters() {
+  if ($('ordSearch')) $('ordSearch').value = '';
+  if ($('ordDateFrom')) $('ordDateFrom').value = '';
+  if ($('ordDateTo')) $('ordDateTo').value = '';
+  if ($('ordFilter')) $('ordFilter').value = 'all';
+  ordPage = 1;
+  renderOrders();
+}
+
+/* ================= تحسينات العملاء ================= */
+const LS_BLOCKED = 'admin_blocked_customers';
+function getBlockedCustomers() { try { return JSON.parse(localStorage.getItem(LS_BLOCKED)||'[]'); } catch(e) { return []; } }
+
+function blockSelectedCustomers() {
+  const custs = getCustomers();
+  const blocked = getBlockedCustomers();
+  selectedCustomers.forEach(i => {
+    const c = custs[i];
+    if (c && c.phone && !blocked.includes(c.phone)) blocked.push(c.phone);
+  });
+  localStorage.setItem(LS_BLOCKED, JSON.stringify(blocked));
+  selectedCustomers.clear();
+  renderCustomers();
+  toast('تم حظر العملاء المحددين');
+}
+
+function unblockCustomer(phone) {
+  const blocked = getBlockedCustomers().filter(p => p !== phone);
+  localStorage.setItem(LS_BLOCKED, JSON.stringify(blocked));
+  renderCustomers();
+  toast('تم إلغاء الحظر');
+}
+
+function exportCustomers() {
+  const custs = getCustomers();
+  let csv = 'الاسم,الهاتف,الإيميل,عدد الطلبات,إجمالي المشتريات\n';
+  custs.forEach(c => {
+    const total = c.orders.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+    csv += `${c.name},${c.phone},${c.email},${c.orders.length},${total.toFixed(2)}\n`;
+  });
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'customers_' + new Date().toISOString().slice(0,10) + '.csv'; a.click();
+  toast('✅ تم تصدير العملاء');
+}
+
+/* ================= تحديث switchTab ================= */
+// تمت إضافة التابات الجديدة إلى switchTab الموجود
+
+/* ================= تحديث renderOrders لدعم البحث والتاريخ ================= */
+const _origRenderOrders = window.renderOrders;
+window.renderOrders = function() {
+  const filter = ($('ordFilter')?.value || 'all');
+  const search = ($('ordSearch')?.value || '').toLowerCase();
+  const dateFrom = $('ordDateFrom')?.value ? new Date($('ordDateFrom').value) : null;
+  const dateTo = $('ordDateTo')?.value ? new Date($('ordDateTo').value + 'T23:59:59') : null;
+  
+  let list = getOrders();
+  
+  // فلترة الحالة
+  if (filter !== 'all') list = list.filter(o => o.status === filter);
+  
+  // فلترة البحث
+  if (search) {
+    list = list.filter(o => {
+      const orderId = String(o.id || o.order_number || '').toLowerCase();
+      const customer = String(o.customer || o.customerName || '').toLowerCase();
+      return orderId.includes(search) || customer.includes(search);
+    });
+  }
+  
+  // فلترة التاريخ
+  if (dateFrom || dateTo) {
+    list = list.filter(o => {
+      const d = new Date(o.date || o.created_at || o.createdAt);
+      if (dateFrom && d < dateFrom) return false;
+      if (dateTo && d > dateTo) return false;
+      return true;
+    });
+  }
+  
+  const el = $('ordList');
+  const countEl = $('ordCount');
+  if (countEl) countEl.textContent = list.length;
+  
+  if (!list.length) {
+    if (el) el.innerHTML = '<div class="empty">لا توجد طلبات</div>';
+    return;
+  }
+  
+  // ترقيم الصفحات
+  const start = (ordPage - 1) * 10;
+  const pageList = list.slice(start, start + 10);
+  
+  if (el) {
+    el.innerHTML = pageList.map(o => {
+      const st = o.status || 'pending';
+      const stClass = 'st-' + st;
+      const stLabel = {pending:'قيد الانتظار',confirmed:'مؤكد',shipped:'تم الشحن',delivered:'تم التسليم',cancelled:'ملغى',returned:'مرتجع'}[st] || st;
+      const date = o.date ? new Date(o.date).toLocaleDateString('ar') : '';
+      return `<div class="ord-row">
+        <div class="oinfo">
+          <b>#${o.id || o.order_number || '—'}</b> <span class="status-badge ${stClass}">${stLabel}</span>
+          <small>📅 ${date} • 👤 ${esc(o.customer || o.customerName || '—')} • 💰 ${o.total || 0} د.إ</small>
+        </div>
+        <select onchange="updateOrderStatus('${o.id}', this.value)" style="width:auto;font-size:.8rem">
+          <option value="pending" ${st==='pending'?'selected':''}>⏳ قيد الانتظار</option>
+          <option value="confirmed" ${st==='confirmed'?'selected':''}>✅ مؤكد</option>
+          <option value="shipped" ${st==='shipped'?'selected':''}>🚚 تم الشحن</option>
+          <option value="delivered" ${st==='delivered'?'selected':''}>📦 تم التسليم</option>
+          <option value="cancelled" ${st==='cancelled'?'selected':''}>✖ ملغى</option>
+        </select>
+        <button class="btn-ghost btn-sm" onclick="editOrder('${o.id}')">✏️</button>
+        <button class="btn-danger btn-sm" onclick="deleteOrder('${o.id}')">🗑</button>
+      </div>`;
+    }).join('');
+  }
+};
+
+/* ================= تحديث renderCustomers لدعم الترتيب والحظر ================= */
+const _origRenderCustomers = window.renderCustomers;
+window.renderCustomers = function() {
+  const q = ($('cust-search')?.value||'').toLowerCase();
+  const statusFilter = $('cust-filter')?.value || '';
+  const sortBy = $('cust-sort')?.value || 'orders';
+  const list = $('custList'); if (!list) return;
+  const blocked = getBlockedCustomers();
+  
+  let custs = getCustomers().map(c => {
+    const totalPurchases = c.orders.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+    const lastOrder = c.orders.length ? new Date(Math.max(...c.orders.map(o => new Date(o.date || o.created_at || 0)))) : null;
+    const isBlocked = blocked.includes(c.phone);
+    return { ...c, totalPurchases, lastOrder, isBlocked };
+  });
+  
+  // فلترة
+  custs = custs.filter(c => {
+    const matchQ = !q || c.name.toLowerCase().includes(q) || c.phone.includes(q);
+    const matchS = !statusFilter || 
+                   (statusFilter === 'blocked' && c.isBlocked) ||
+                   [...c.statuses].some(s => s === statusFilter);
+    return matchQ && matchS;
+  });
+  
+  // ترتيب
+  custs.sort((a, b) => {
+    switch(sortBy) {
+      case 'orders': return b.orders.length - a.orders.length;
+      case 'total': return b.totalPurchases - a.totalPurchases;
+      case 'recent': return (b.lastOrder || 0) - (a.lastOrder || 0);
+      case 'name': return a.name.localeCompare(b.name, 'ar');
+      default: return 0;
+    }
+  });
+  
+  const countEl = $('custCount');
+  if (countEl) countEl.textContent = `${custs.length} عميل`;
+  
+  if (!custs.length) { list.innerHTML='<div class="empty">لا يوجد عملاء</div>'; return; }
+  
+  list.innerHTML = custs.map((c, i) => `
+    <div class="prod-row" ${c.isBlocked ? 'style="opacity:.5;background:#fff5f5"' : ''}>
+      <input type="checkbox" style="width:auto" ${selectedCustomers.has(i)?'checked':''} onchange="toggleCust(${i},this.checked)">
+      <div class="info">
+        <b>${esc(c.name)} ${c.isBlocked ? '<span style="color:#c0392b">🚫 محظور</span>' : ''}</b>
+        <small>
+          📱 ${c.phone||'—'} 
+          ${c.email?'• 📧 '+esc(c.email):''} 
+          • 📦 ${c.orders.length} طلب 
+          • 💰 ${c.totalPurchases.toFixed(0)} د.إ
+          ${c.lastOrder ? '• 📅 آخر طلب: ' + c.lastOrder.toLocaleDateString('ar') : ''}
+        </small>
+      </div>
+      ${c.isBlocked ? 
+        `<button class="btn-ghost btn-sm" onclick="unblockCustomer('${c.phone}')">إلغاء الحظر</button>` :
+        `<a href="https://wa.me/${(c.phone||'').replace(/\\D/g,'')}" target="_blank" class="btn-gold btn-sm" style="text-decoration:none;${!c.phone?'opacity:.4;pointer-events:none':''}">💬</a>`
+      }
+    </div>
+  `).join('');
+};
+
 /* ================= بدء ================= */
 (async function init(){
   await loadCategories();
@@ -2576,6 +3428,9 @@ async function loadSettingsFromSupabase() {
   syncStoreOrders(true);
   await loadSettingsFromSupabase();
   loadSettings();
+  loadSEO();
+  renderCoupons();
+  renderCampaigns();
   // إخبار المستخدم بعدد المنتجات المحملة
   setTimeout(function(){
     if(products.length === 0){
