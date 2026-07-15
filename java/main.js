@@ -385,13 +385,20 @@ document.addEventListener("DOMContentLoaded", function () {
     return Math.sqrt((a.r-b.r)**2+(a.g-b.g)**2+(a.b-b.b)**2);
   }
 
-  imageInput.addEventListener("change", async function () {
-    if (!imageInput.files.length) return;
-    const file = imageInput.files[0];
+  if (imageInput) {
+    imageInput.addEventListener("change", async function () {
+      if (!imageInput.files.length) return;
+      const file = imageInput.files[0];
 
-    resultsBox.innerHTML = `<div style="background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.10);padding:14px;margin-top:4px;text-align:center;color:#555;font-size:.84rem;">
-      🔍 جارٍ البحث بالصورة…<br><small style="color:#aaa">يتم تحليل الألوان للبحث عن أقرب المنتجات</small>
-    </div>`;
+      const loadingHtml = `<div style="background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.10);padding:14px;margin-top:4px;text-align:center;color:#555;font-size:.84rem;">
+        🔍 جارٍ البحث بالصورة…<br><small style="color:#aaa">يتم تحليل الألوان للبحث عن أقرب المنتجات</small>
+      </div>`;
+      if (dropdownBox) {
+        dropdownBox.innerHTML = loadingHtml;
+        dropdownBox.style.display = 'block';
+      } else if (resultsBox) {
+        resultsBox.innerHTML = loadingHtml;
+      }
 
     // قراءة الصورة المرفوعة
     const uploadedSrc = await new Promise(res => {
@@ -444,8 +451,9 @@ document.addEventListener("DOMContentLoaded", function () {
       resultsBox.innerHTML='';
       resultsBox.appendChild(wrap);
     }
-    imageInput.value='';
-  });
+      imageInput.value='';
+    });
+  }
 });
 
 
