@@ -924,6 +924,9 @@
           <select id="cust-sort" onchange="renderCustomers()" style="width:auto">
             <option value="orders">الأكثر طلبات</option>
             <option value="total">الأعلى مشتريات</option>
+            <option value="total_asc">الأقل مشتريات</option>
+            <option value="once">اشتروا مرة واحدة</option>
+            <option value="inactive">بقالهم شهر مشتروش</option>
             <option value="recent">آخر طلب</option>
             <option value="name">الاسم</option>
           </select>
@@ -3974,7 +3977,12 @@ window.renderCustomers = function() {
     // مطابقة ذكية للمدينة - تتجاهل الاختلافات البسيطة في الكتابة
     const normalizeCity = s => (s||'').replace(/[أإآا]/g,'ا').replace(/[ةه]/g,'ه').replace(/\s+/g,'').toLowerCase();
     const matchCity = !cityFilter || normalizeCity(c.city).includes(normalizeCity(cityFilter));
-    return matchQ && matchS && matchCity;
+    // فلترة "اشتروا مرة واحدة"
+    const matchOnce = sortBy !== 'once' || c.orders.length === 1;
+    // فلترة "بقالهم شهر مشتروش"
+    const oneMonthAgo = new Date(); oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+    const matchInactive = sortBy !== 'inactive' || (c.lastOrder && c.lastOrder < oneMonthAgo) || (!c.lastOrder && c.orders.length === 0);
+    return matchQ && matchS && matchCity && matchOnce && matchInactive;
   });
   
   // ترتيب
@@ -3982,6 +3990,9 @@ window.renderCustomers = function() {
     switch(sortBy) {
       case 'orders': return b.orders.length - a.orders.length;
       case 'total': return b.totalPurchases - a.totalPurchases;
+      case 'total_asc': return a.totalPurchases - b.totalPurchases;
+      case 'once': return b.orders.length - a.orders.length;
+      case 'inactive': return (a.lastOrder || 0) - (b.lastOrder || 0);
       case 'recent': return (b.lastOrder || 0) - (a.lastOrder || 0);
       case 'name': return a.name.localeCompare(b.name, 'ar');
       default: return 0;
