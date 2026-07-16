@@ -1053,7 +1053,7 @@ footer a:hover {
   color: #6e6e6e;
   background: transparent;
   border-radius: 7px;
-  padding: 0px;
+  padding: -5px;
   margin-bottom: 0px;
   margin-top: 0px;
   font-weight: bold;
