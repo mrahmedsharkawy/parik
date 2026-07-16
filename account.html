@@ -1130,16 +1130,13 @@
           <div class="acc-sidebar-email" id="sidebar-email">مرحباً بك</div>
         </div>
       </div>
-      <div style="padding:8px 14px 4px">
-        <button id="push-subscribe-btn" style="width:100%;display:none;align-items:center;justify-content:center;gap:6px;padding:9px 12px;border:1.5px solid #c9a84c;border-radius:10px;background:#fffbf0;color:#152546;font-size:.82rem;font-weight:700;cursor:pointer">🔕 تفعيل إشعارات التطبيق</button>
-      </div>
-
     <div class="acc-nav-section">
       <div class="acc-nav-title" data-i18n="طلباتك">طلباتك</div>
-      <div class="acc-nav-item active" onclick="showSection('orders','all')" data-section="orders">
-        <span class="ico">📋</span> <span data-i18n="كل الطلبات">كل الطلبات</span>
+      <div class="acc-nav-item active" id="nav-all-orders" onclick="toggleOrdersSub(); showSection('orders','all')" data-section="orders" style="display:flex;justify-content:space-between;align-items:center">
+        <span><span class="ico">📋</span> <span data-i18n="كل الطلبات">كل الطلبات</span></span>
+        <span id="orders-sub-arrow" style="font-size:.7rem;color:#aaa;transition:transform .2s">▼</span>
       </div>
-      <div class="acc-nav-sub">
+      <div class="acc-nav-sub" id="orders-sub-menu" style="display:none;overflow:hidden">
         <div class="acc-nav-item" onclick="showSection('orders','processing')"><span class="ico">⏳</span> <span data-i18n="قيد المعالجة">قيد المعالجة</span></div>
         <div class="acc-nav-item" onclick="showSection('orders','shipped')"><span class="ico">🚚</span> <span data-i18n="تم الشحن">تم الشحن</span></div>
         <div class="acc-nav-item" onclick="showSection('orders','delivered')"><span class="ico">✅</span> <span data-i18n="تم التوصيل">تم التوصيل</span></div>
@@ -1790,6 +1787,16 @@
     currentSearch = document.getElementById('order-search').value;
     currentPage = 1;
     renderOrders();
+  };
+
+  // toggle sub-menu للطلبات
+  window.toggleOrdersSub = function() {
+    const sub = document.getElementById('orders-sub-menu');
+    const arrow = document.getElementById('orders-sub-arrow');
+    if (!sub) return;
+    const isOpen = sub.style.display !== 'none';
+    sub.style.display = isOpen ? 'none' : 'block';
+    if (arrow) arrow.style.transform = isOpen ? '' : 'rotate(180deg)';
   };
 
   // section navigation
