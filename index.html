@@ -3,8 +3,23 @@
   <head>
   <meta charset="UTF-8" />
   <title data-i18n="الصفحة الرئيسية - بريق">الصفحة الرئيسية - بريق</title>
+  <!-- Critical inline CSS: Hide desktop header on mobile IMMEDIATELY -->
+  <style>
+    /* إخفاء فوري للهيدر على الموبايل لمنع الوميض */
+    @media (max-width: 900px) {
+      .main-header { display: none !important; }
+      body { background: #152546 !important; padding-bottom: calc(9% + env(safe-area-inset-bottom)); }
+      main { margin-top: 10px !important; }
+    }
+    @media (min-width: 901px) {
+      .mobile-nav { display: none !important; }
+    }
+    /* لون الخلفية الأساسي فوراً */
+    html, body { background: #152546; }
+  </style>
   <!-- Critical: Preload CSS for faster rendering -->
   <link rel="preload" href="style/style.css" as="style">
+  <link rel="preload" href="mobile-nav-bar/styles.css" as="style" media="(max-width: 900px)">
   <!-- Preconnect to external resources -->
   <link rel="preconnect" href="https://ihhkzujjafydclnvyhaq.supabase.co" crossorigin>
   <link rel="dns-prefetch" href="https://ihhkzujjafydclnvyhaq.supabase.co">
@@ -29,6 +44,8 @@
   <meta property="og:image" content="assets/logo.png">
   <meta property="og:url" content="https://bariq.com">
   <meta property="og:type" content="website">
+  <!-- Load mobile navbar CSS immediately on mobile -->
+  <link rel="stylesheet" href="mobile-nav-bar/styles.css" media="(max-width: 900px)">
   <link rel="stylesheet" href="style/style.css" />
 </head>
 <body>
