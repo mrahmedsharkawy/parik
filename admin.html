@@ -2135,6 +2135,38 @@ async function changeOrderStatus(id, status){
 
       if (updateData.cashback_status) o.cashbackStatus = updateData.cashback_status;
       toast('✅ تم تحديث الحالة في قاعدة البيانات');
+
+      // ========== إشعار Push تلقائي للعميل ==========
+      const statusLabels = {
+        pending:    { title: '⏳ طلبك قيد المراجعة',     body: `طلبك رقم #${id} يُراجَع الآن` },
+        processing: { title: '🔄 طلبك قيد المعالجة',     body: `جارٍ تجهيز طلبك رقم #${id}` },
+        shipped:    { title: '🚚 تم شحن طلبك!',           body: `طلبك رقم #${id} في الطريق إليك` },
+        delivered:  { title: '✅ تم توصيل طلبك!',         body: `طلبك رقم #${id} وصل بنجاح 🎉` },
+        cancelled:  { title: '❌ تم إلغاء طلبك',          body: `طلبك رقم #${id} تم إلغاؤه` },
+        returned:   { title: '↩️ تمت عملية الإرجاع',      body: `تمت معالجة إرجاع طلب #${id}` },
+      };
+      const notif = statusLabels[status];
+      const customerPhone = o.phone || o.customerPhone || o.customer_phone || '';
+      if (notif && customerPhone) {
+        try {
+          const adminToken = await getValidAdminToken();
+          await fetch('https://knleehjjejfeobcmpwnw.supabase.co/functions/v1/hyper-api', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + adminToken
+            },
+            body: JSON.stringify({
+              title:      notif.title,
+              body:       notif.body,
+              url:        '/account.html',
+              user_phone: customerPhone
+            })
+          });
+        } catch(pushErr) {
+          console.warn('Push notification skipped:', pushErr);
+        }
+      }
     } catch(e) {
       console.error('❌ فشل تحديث الحالة في Supabase:', e);
       // تراجع عن التحديث في حال الفشل

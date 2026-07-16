@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
-    const { title, body, url, image } = await req.json();
+    const { title, body, url, image, user_phone, user_email } = await req.json();
     if (!title || !body) {
       return new Response(JSON.stringify({ error: 'title and body required' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -37,9 +37,14 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { data: subs, error } = await supabase
-      .from('push_subscriptions')
-      .select('endpoint, p256dh, auth');
+    // إذا تم تحديد user_phone أو user_email → إرسال لعميل محدد فقط
+    let query = supabase.from('push_subscriptions').select('endpoint, p256dh, auth');
+    if (user_phone) {
+      query = query.eq('user_phone', user_phone);
+    } else if (user_email) {
+      query = query.eq('user_email', user_email);
+    }
+    const { data: subs, error } = await query;
 
     if (error) throw error;
     if (!subs || subs.length === 0) {
