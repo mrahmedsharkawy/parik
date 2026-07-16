@@ -3067,7 +3067,7 @@ async function importCustomersExcel(input) {
     const headers = rows[0].map(h => String(h||'').toLowerCase().trim());
     const nameIdx = headers.findIndex(h => h.includes('name') || h.includes('اسم'));
     const phoneIdx = headers.findIndex(h => h.includes('phone') || h.includes('هاتف') || h.includes('رقم'));
-    const emailIdx = headers.findIndex(h => h.includes('email') || h.includes('بريد') || h.includes('ايميل'));
+    const emailIdx = headers.findIndex(h => h.includes('email') || h.includes('بريد') || h.includes('ايميل') || h.includes('إيميل') || h.includes('يميل'));
     const cityIdx = headers.findIndex(h => h.includes('city') || h.includes('مدينة') || h.includes('عنوان'));
     
     if (phoneIdx < 0) { toast('❌ لم يتم العثور على عمود الهاتف'); input.value = ''; return; }
@@ -3076,7 +3076,7 @@ async function importCustomersExcel(input) {
     const customers = [];
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i];
-      const phone = String(row[phoneIdx] || '').replace(/\D/g, '');
+      const phone = String(row[phoneIdx] || '').trim().replace(/[^\d+]/g, '');
       if (!phone) continue;
       
       customers.push({

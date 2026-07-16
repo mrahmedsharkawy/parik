@@ -301,6 +301,13 @@ SupaOrders.getById = async function(id){ const r = await sbFetch('orders?id=eq.'
 SupaOrders.getByOrderNumber = async function(num){ const r = await sbFetch('orders?order_number=eq.'+encodeURIComponent(num)+'&limit=1'); return r&&r[0]?r[0]:null; };
 
 /* === تحديث CUSTOMERS بدوال إضافية === */
+SupaCustomers.addBulk = async function(list){
+  const results = [];
+  for(const c of list){
+    try { results.push(await SupaCustomers.upsert(c)); } catch(e) { console.warn('bulk upsert failed for', c.phone, e.message); }
+  }
+  return results;
+};
 SupaCustomers.update = async function(id, d){ return sbFetch('customers?id=eq.'+id,{method:'PATCH',body:JSON.stringify(d)}); };
 SupaCustomers.block = async function(id){ return sbFetch('customers?id=eq.'+id,{method:'PATCH',body:JSON.stringify({blocked:true})}); };
 SupaCustomers.unblock = async function(id){ return sbFetch('customers?id=eq.'+id,{method:'PATCH',body:JSON.stringify({blocked:false})}); };
