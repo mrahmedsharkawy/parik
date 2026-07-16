@@ -3089,32 +3089,35 @@ async function importCustomersExcel(input) {
     
     if (!customers.length) { toast('❌ لم يتم العثور على عملاء صالحين'); input.value = ''; return; }
     
-    // إضافة للـ localStorage
-    const lsKey = 'x2_customers';
-    let stored = [];
-    try { stored = JSON.parse(localStorage.getItem(lsKey) || '[]'); } catch(e) {}
+    toast(`⏳ جارٍ رفع ${customers.length} عميل لـ Supabase...`);
     
-    let added = 0, updated = 0;
-    for (const c of customers) {
-      const existing = stored.findIndex(x => x.phone === c.phone);
-      if (existing >= 0) {
-        stored[existing] = { ...stored[existing], ...c };
-        updated++;
-      } else {
-        stored.push({ ...c, orders: [], statuses: new Set() });
-        added++;
-      }
+    // رفع لـ Supabase مباشرة (bulk)
+    let supaOk = false;
+    if (window.Supabase?.Customers?.addBulk) {
+      try {
+        await window.Supabase.Customers.addBulk(customers);
+        supaOk = true;
+      } catch(e) { console.error('Supabase bulk import failed:', e); }
     }
     
-    localStorage.setItem(lsKey, JSON.stringify(stored));
-    
-    // إضافة لـ Supabase
-    if (window.Supabase?.Customers?.addBulk) {
-      try { await window.Supabase.Customers.addBulk(customers); } catch(e) {}
+    // حفظ محلي (بدون localStorage لـ 1000+ عميل لتجنب overflow)
+    if (customers.length <= 200) {
+      try {
+        const lsKey = 'x2_customers';
+        let stored = JSON.parse(localStorage.getItem(lsKey) || '[]');
+        for (const c of customers) {
+          const idx = stored.findIndex(x => x.phone === c.phone);
+          if (idx >= 0) stored[idx] = { ...stored[idx], ...c };
+          else stored.push({ ...c, orders: [] });
+        }
+        localStorage.setItem(lsKey, JSON.stringify(stored));
+      } catch(e) {}
     }
     
     renderCustomers();
-    toast(`✅ تم استيراد ${added} عميل جديد، تحديث ${updated} عميل`);
+    toast(supaOk
+      ? `✅ تم رفع ${customers.length} عميل لـ Supabase بنجاح`
+      : `⚠️ تم الحفظ محلياً فقط - تحقق من الاتصال`);
     
   } catch (e) {
     console.error('Import error:', e);

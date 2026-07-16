@@ -302,9 +302,29 @@ SupaOrders.getByOrderNumber = async function(num){ const r = await sbFetch('orde
 
 /* === تحديث CUSTOMERS بدوال إضافية === */
 SupaCustomers.addBulk = async function(list){
+  // تحويل للـ schema المناسب لـ Supabase
+  const rows = list.map(c => ({
+    full_name: c.name || '',
+    phone: c.phone || '',
+    email: c.email || '',
+    city: c.city || '',
+    address: c.address || '',
+    active: true
+  })).filter(r => r.phone);
+  if (!rows.length) return [];
+  // رفع دفعات 200 لتجنب حد الـ payload
+  const BATCH = 200;
   const results = [];
-  for(const c of list){
-    try { results.push(await SupaCustomers.upsert(c)); } catch(e) { console.warn('bulk upsert failed for', c.phone, e.message); }
+  for (let i = 0; i < rows.length; i += BATCH) {
+    const batch = rows.slice(i, i + BATCH);
+    try {
+      const r = await sbFetch('customers', {
+        method: 'POST',
+        prefer: 'resolution=merge-duplicates,return=minimal',
+        body: JSON.stringify(batch)
+      });
+      results.push(r);
+    } catch(e) { console.warn('bulk batch failed:', e.message); }
   }
   return results;
 };
