@@ -3424,6 +3424,7 @@ async function syncCustomersFromSupabase() {
     const remote = await window.Supabase.Customers.getAll();
     if (remote && remote.length) {
       supaCustomers = remote.map(c => ({
+        id:     c.id,
         name:   c.full_name || c.name || '—',
         phone:  c.phone || '',
         email:  c.email || '',
@@ -4097,6 +4098,13 @@ async function deleteSelectedCustomers() {
   }
   toast(`✅ تم حذف ${deleted} عميل`);
   selectedCustomers.clear();
+  // حذف من localStorage أيضاً
+  try {
+    const phones = selected.map(c => c.phone).filter(Boolean);
+    let ls = JSON.parse(localStorage.getItem('x2_customers') || '[]');
+    ls = ls.filter(c => !phones.includes(c.phone));
+    localStorage.setItem('x2_customers', JSON.stringify(ls));
+  } catch(e) {}
   syncCustomersFromSupabase();
 }
 
