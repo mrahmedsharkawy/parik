@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
-    const { title, body, url, image, user_phone, user_email } = await req.json();
+    const { title, body, url, image, user_phone, user_email, exclude_endpoint } = await req.json();
     if (!title || !body) {
       return new Response(JSON.stringify({ error: 'title and body required' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -53,10 +53,20 @@ Deno.serve(async (req) => {
       });
     }
 
-    // إرسال لكل مشترك
+    // إرسال لكل مشترك (مع استبعاد جهاز الأدمن لو أُرسل)
+    const filteredSubs = exclude_endpoint
+      ? subs.filter((s: any) => s.endpoint !== exclude_endpoint)
+      : subs;
+
+    if (!filteredSubs.length) {
+      return new Response(JSON.stringify({ sent: 0, message: 'No subscribers after exclusion' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
     const payload = JSON.stringify({ title, body, url: url || '/', image: image || null });
     const results = await Promise.allSettled(
-      subs.map(sub =>
+      filteredSubs.map((sub: any) =>
         webpush.sendNotification(
           {
             endpoint: sub.endpoint,

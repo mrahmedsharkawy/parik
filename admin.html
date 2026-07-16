@@ -2137,19 +2137,28 @@ async function changeOrderStatus(id, status){
       toast('✅ تم تحديث الحالة في قاعدة البيانات');
 
       // ========== إشعار Push تلقائي للعميل ==========
+      const orderNum = o.orderNumber || ('#' + id);
       const statusLabels = {
-        pending:    { title: '⏳ طلبك قيد المراجعة',     body: `طلبك رقم #${id} يُراجَع الآن` },
-        processing: { title: '🔄 طلبك قيد المعالجة',     body: `جارٍ تجهيز طلبك رقم #${id}` },
-        shipped:    { title: '🚚 تم شحن طلبك!',           body: `طلبك رقم #${id} في الطريق إليك` },
-        delivered:  { title: '✅ تم توصيل طلبك!',         body: `طلبك رقم #${id} وصل بنجاح 🎉` },
-        cancelled:  { title: '❌ تم إلغاء طلبك',          body: `طلبك رقم #${id} تم إلغاؤه` },
-        returned:   { title: '↩️ تمت عملية الإرجاع',      body: `تمت معالجة إرجاع طلب #${id}` },
+        pending:    { title: '⏳ طلبك قيد المراجعة',     body: `طلبك رقم ${orderNum} يُراجَع الآن` },
+        processing: { title: '🔄 طلبك قيد المعالجة',     body: `جارٍ تجهيز طلبك رقم ${orderNum}` },
+        shipped:    { title: '🚚 تم شحن طلبك!',           body: `طلبك رقم ${orderNum} في الطريق إليك` },
+        delivered:  { title: '✅ تم توصيل طلبك!',         body: `طلبك رقم ${orderNum} وصل بنجاح 🎉` },
+        cancelled:  { title: '❌ تم إلغاء طلبك',          body: `طلبك رقم ${orderNum} تم إلغاؤه` },
+        returned:   { title: '↩️ تمت عملية الإرجاع',      body: `تمت معالجة إرجاع طلب ${orderNum}` },
       };
       const notif = statusLabels[status];
       const customerPhone = o.phone || o.customerPhone || o.customer_phone || '';
+      // لا ترسل إشعار لو مفيش هاتف للعميل
       if (notif && customerPhone) {
         try {
           const adminToken = await getValidAdminToken();
+          // نجيب endpoint الأدمن نفسه عشان نستبعده من إشعارات العميل
+          let adminEndpoint = null;
+          try {
+            const reg = await navigator.serviceWorker.ready;
+            const sub = await reg.pushManager.getSubscription();
+            if (sub) adminEndpoint = sub.endpoint;
+          } catch(e) {}
           await fetch('https://knleehjjejfeobcmpwnw.supabase.co/functions/v1/hyper-api', {
             method: 'POST',
             headers: {
@@ -2157,10 +2166,11 @@ async function changeOrderStatus(id, status){
               'Authorization': 'Bearer ' + adminToken
             },
             body: JSON.stringify({
-              title:      notif.title,
-              body:       notif.body,
-              url:        '/account.html',
-              user_phone: customerPhone
+              title:            notif.title,
+              body:             notif.body,
+              url:              '/account.html',
+              user_phone:       customerPhone,
+              exclude_endpoint: adminEndpoint
             })
           });
         } catch(pushErr) {
