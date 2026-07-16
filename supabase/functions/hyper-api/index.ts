@@ -38,9 +38,50 @@ Deno.serve(async (req) => {
     );
 
     // إذا تم تحديد user_phone أو user_email → إرسال لعميل محدد فقط
+    // تطبيع رقم الهاتف: نجرب بالـ + وبدونه للتعامل مع فروق التخزين
     let query = supabase.from('push_subscriptions').select('endpoint, p256dh, auth');
     if (user_phone) {
-      query = query.eq('user_phone', user_phone);
+      const digits = user_phone.replace(/\D/g, '');          // أرقام فقط
+      const withPlus = '+' + digits;
+      const { data: s1 } = await supabase.from('push_subscriptions')
+        .select('endpoint, p256dh, auth').eq('user_phone', user_phone);
+      const { data: s2 } = await supabase.from('push_subscriptions')
+        .select('endpoint, p256dh, auth').eq('user_phone', withPlus);
+      const { data: s3 } = await supabase.from('push_subscriptions')
+        .select('endpoint, p256dh, auth').eq('user_phone', digits);
+      // دمج النتائج وإزالة التكرار
+      const merged = [...(s1||[]), ...(s2||[]), ...(s3||[])];
+      const seen = new Set<string>();
+      const uniqueSubs = merged.filter(s => { if (seen.has(s.endpoint)) return false; seen.add(s.endpoint); return true; });
+      if (!uniqueSubs.length) {
+        return new Response(JSON.stringify({ sent: 0, message: 'No subscribers for this phone' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      // تجاوز الـ query الأصلية واستخدام uniqueSubs مباشرة
+      const filteredSubs2 = exclude_endpoint ? uniqueSubs.filter((s: any) => s.endpoint !== exclude_endpoint) : uniqueSubs;
+      if (!filteredSubs2.length) {
+        return new Response(JSON.stringify({ sent: 0, message: 'No subscribers after exclusion' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      const payload2 = JSON.stringify({ title, body, url: url || '/', image: image || null });
+      const results2 = await Promise.allSettled(
+        filteredSubs2.map((sub: any) =>
+          webpush.sendNotification({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, payload2)
+            .catch(async (err: any) => {
+              if (err.statusCode === 410 || err.statusCode === 404) {
+                await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
+              }
+              throw err;
+            })
+        )
+      );
+      const sent2   = results2.filter(r => r.status === 'fulfilled').length;
+      const failed2 = results2.filter(r => r.status === 'rejected').length;
+      return new Response(JSON.stringify({ sent: sent2, failed: failed2, total: filteredSubs2.length }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     } else if (user_email) {
       query = query.eq('user_email', user_email);
     }
