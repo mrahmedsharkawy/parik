@@ -4199,24 +4199,22 @@ async function exportCustomers() {
 
 /* ================= تصدير المنتجات ================= */
 function exportProductsCSV() {
-  const list = (typeof products !== 'undefined' && products.length) ? products
-    : JSON.parse(localStorage.getItem('admin_products') || '[]');
-  if (!list.length) { toast('❌ لا توجد منتجات'); return; }
-  const header = 'الاسم عربي,الاسم إنجليزي,السعر,السعر القديم,القسم,الكمية,الوصف,الرابط\n';
-  const rows = list.map(p => [
-    (p.nameAr || p.name || '').replace(/,/g, '،'),
-    (p.nameEn || '').replace(/,/g, ' '),
-    p.price || '',
-    p.oldPrice || '',
-    p.category || '',
-    p.stock !== undefined ? p.stock : '',
-    (p.descAr || p.desc || '').replace(/[\r\n,]/g, ' '),
-    p.link || ''
-  ].join(',')).join('\n');
-  const blob = new Blob(['\ufeff' + header + rows], { type: 'text/csv;charset=utf-8' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = 'products_' + new Date().toISOString().slice(0,10) + '.csv'; a.click();
-  toast('✅ تم تصدير ' + list.length + ' منتج');
+  if (!products || !products.length) { toast('❌ لا توجد منتجات'); return; }
+  var header = '\uFEFFالاسم عربي,الاسم انجليزي,السعر,السعر القديم,القسم,الكمية,الوصف,الرابط\n';
+  var rows = products.map(function(p) {
+    return [
+      (p.nameAr || p.name || '').replace(/,/g, '،'),
+      (p.nameEn || '').replace(/,/g, ' '),
+      p.price || '',
+      p.oldPrice || '',
+      p.category || '',
+      p.stock !== undefined ? p.stock : '',
+      (p.descAr || p.desc || '').replace(/[\r\n,]/g, ' '),
+      p.link || ''
+    ].join(',');
+  }).join('\n');
+  download('products_' + new Date().toISOString().slice(0,10) + '.csv', header + rows);
+  toast('✅ تم تصدير ' + products.length + ' منتج');
 }
 
 /* ================= تحديث switchTab ================= */
