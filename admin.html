@@ -3149,10 +3149,13 @@ async function importCustomersExcel(input) {
       } catch(e) {}
     }
     
-    renderCustomers();
-    toast(supaOk
-      ? `✅ تم رفع ${customers.length} عميل لـ Supabase بنجاح`
-      : `⚠️ تم الحفظ محلياً فقط - تحقق من الاتصال`);
+    if (supaOk) {
+      toast(`✅ تم رفع ${customers.length} عميل لـ Supabase بنجاح`);
+      await syncCustomersFromSupabase();
+    } else {
+      renderCustomers();
+      toast(`⚠️ فشل الرفع لـ Supabase - تحقق من الـ Console`);
+    }
     
   } catch (e) {
     console.error('Import error:', e);

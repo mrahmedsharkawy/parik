@@ -305,12 +305,9 @@ SupaCustomers.addBulk = async function(list){
   // تحويل للـ schema المناسب لـ Supabase (نبعت name و full_name معاً للتوافق)
   const rows = list.map(c => ({
     full_name: c.name || '',
-    name: c.name || '',
     phone: c.phone || '',
     email: c.email || '',
-    city: c.city || '',
-    address: c.address || '',
-    active: true
+    city: c.city || ''
   })).filter(r => r.phone && r.phone.length >= 7);
   if (!rows.length) return [];
   // رفع دفعات 200 لتجنب حد الـ payload
@@ -325,7 +322,7 @@ SupaCustomers.addBulk = async function(list){
         body: JSON.stringify(batch)
       });
       results.push(r);
-    } catch(e) { console.warn('bulk batch failed:', e.message); }
+    } catch(e) { console.error('bulk batch failed:', e.message); throw e; }
   }
   return results;
 };
