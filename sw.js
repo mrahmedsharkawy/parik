@@ -1,5 +1,6 @@
 /* Service Worker - بريق PWA */
-const CACHE = 'bariq-v4';
+const CACHE = 'bariq-v5';
+let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
   '/index.html',
@@ -94,11 +95,25 @@ self.addEventListener('push', function(e) {
     renotify: true,
     actions: data.actions || []
   };
-  e.waitUntil(self.registration.showNotification(title, options));
+  e.waitUntil(
+    (async () => {
+      // زيادة العداد وتحديث أيقونة التطبيق
+      _badgeCount++;
+      if ('setAppBadge' in self.registration) {
+        await self.registration.setAppBadge(_badgeCount).catch(() => {});
+      }
+      await self.registration.showNotification(title, options);
+    })()
+  );
 });
 
 self.addEventListener('notificationclick', function(e) {
   e.notification.close();
+  // تصفير العداد عند الضغط على الإشعار
+  _badgeCount = 0;
+  if ('clearAppBadge' in self.registration) {
+    self.registration.clearAppBadge().catch(() => {});
+  }
   const url = (e.notification.data && e.notification.data.url) || '/';
   e.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(list) {
@@ -110,14 +125,16 @@ self.addEventListener('notificationclick', function(e) {
   );
 });
 
-/* Badge count sync */
+/* Badge count sync من الصفحة */
 self.addEventListener('message', function(e) {
   if (e.data && e.data.type === 'SET_BADGE') {
+    _badgeCount = e.data.count || 0;
     if ('setAppBadge' in self.registration) {
-      self.registration.setAppBadge(e.data.count || 0).catch(() => {});
+      self.registration.setAppBadge(_badgeCount).catch(() => {});
     }
   }
   if (e.data && e.data.type === 'CLEAR_BADGE') {
+    _badgeCount = 0;
     if ('clearAppBadge' in self.registration) {
       self.registration.clearAppBadge().catch(() => {});
     }

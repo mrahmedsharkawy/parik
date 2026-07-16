@@ -130,6 +130,13 @@ async function initPushButton() {
 (async () => {
   await registerSW();
   initPushButton();
+  // تصفير badge عند فتح التطبيق
+  if ('clearAppBadge' in navigator) {
+    navigator.clearAppBadge().catch(() => {});
+  }
+  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_BADGE' });
+  }
   // badge مع عدد الطلبات الجديدة
   try {
     const orders = JSON.parse(localStorage.getItem('x2_orders')||'[]');
