@@ -2203,12 +2203,23 @@
     return Number.isFinite(num) ? num : 0;
   }
 
+  // توحيد بيانات المنتج من Supabase أو Products.json
+  function normalizeProduct(p) {
+    return {
+      id:       p.id,
+      name:     { ar: p.name_ar || (p.name && p.name.ar) || p.name || 'منتج',
+                  en: p.name_en || (p.name && p.name.en) || '' },
+      price:    getPriceValue(p.price),
+      oldPrice: getPriceValue(p.old_price || p.oldPrice),
+      img:      p.image || p.img || 'assets/logo.png',
+      rating:   p.rating || 5
+    };
+  }
+
   function getDiscountedProducts(products) {
-    return (products || []).filter(product => {
-      const price = getPriceValue(product.price);
-      const oldPrice = getPriceValue(product.oldPrice);
-      return oldPrice > price && price > 0;
-    });
+    return (products || [])
+      .map(normalizeProduct)
+      .filter(p => p.oldPrice > p.price && p.price > 0);
   }
 
   function renderOfferCard(product) {
@@ -2241,21 +2252,30 @@
     const count = document.getElementById('offers-count');
     if (!list || !count) return;
 
-    if (!offersLoaded) {
-      list.innerHTML = `
-        <div class="acc-empty" style="padding:24px 12px; margin:0;">
-          <div class="acc-empty-icon" style="font-size:2rem;">⏳</div>
-          <div class="acc-empty-title">جارٍ تحميل العروض</div>
-          <div class="acc-empty-sub">سيتم عرض جميع المنتجات المخفضة هنا</div>
-        </div>`;
-    }
+    list.innerHTML = `
+      <div class="acc-empty" style="padding:24px 12px; margin:0;">
+        <div class="acc-empty-icon" style="font-size:2rem;">⏳</div>
+        <div class="acc-empty-title">جارٍ تحميل العروض</div>
+      </div>`;
 
     try {
-      const response = await fetch(PRODUCTS_URL, { cache: 'no-store' });
-      const products = await response.json();
+      let products = [];
+
+      // جلب من Supabase أولاً (المصدر الحقيقي للمنتجات)
+      if (window.Supabase && window.Supabase.Products) {
+        products = await window.Supabase.Products.getAll() || [];
+      }
+
+      // fallback على Products.json لو Supabase غير متاح
+      if (!products.length) {
+        const res = await fetch(PRODUCTS_URL, { cache: 'no-store' });
+        products = await res.json();
+      }
+
       const discounted = getDiscountedProducts(products);
       offersLoaded = true;
       count.textContent = `${discounted.length} عرض`;
+
       if (!discounted.length) {
         list.innerHTML = `
           <div class="acc-empty" style="padding:24px 12px; margin:0;">
@@ -2272,7 +2292,7 @@
         <div class="acc-empty" style="padding:24px 12px; margin:0;">
           <div class="acc-empty-icon" style="font-size:2rem;">⚠️</div>
           <div class="acc-empty-title">تعذر تحميل العروض</div>
-          <div class="acc-empty-sub">تأكد من ملف المنتجات أو أعد المحاولة</div>
+          <div class="acc-empty-sub">أعد المحاولة لاحقاً</div>
         </div>`;
     }
   }
