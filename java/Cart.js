@@ -882,6 +882,11 @@ function updateSelectedCount() {
   }
 
   async function openWhatsAppOrder(){
+    // فحص تسجيل الدخول أولاً
+    if (typeof window.isUserLoggedIn === 'function' && !window.isUserLoggedIn()) {
+      if (typeof window.showLoginModal === 'function') window.showLoginModal();
+      return;
+    }
     const items = getSelectedItemsForOrder();
     if (!items.length) return;
     const phone = normalizeWhatsAppPhone(WHATSAPP_PHONE);

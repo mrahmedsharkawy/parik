@@ -1820,3 +1820,49 @@ document.addEventListener("DOMContentLoaded", function() {
     setTimeout(showBanner, 3000);
   }
 })();
+
+/* ===== مودال تسجيل الدخول المشترك ===== */
+window.isUserLoggedIn = function() {
+  try {
+    const p = JSON.parse(localStorage.getItem('x2_profile') || '{}');
+    return !!(p.phone || p.email || p.name);
+  } catch(e) { return false; }
+};
+
+window.showLoginModal = function() {
+  if (document.getElementById('x2-login-modal')) return;
+  const modal = document.createElement('div');
+  modal.id = 'x2-login-modal';
+  modal.style.cssText = [
+    'position:fixed','inset:0','z-index:99999',
+    'display:flex','align-items:center','justify-content:center',
+    'background:rgba(0,0,0,.55)','padding:20px','direction:rtl'
+  ].join(';');
+  modal.innerHTML = `
+    <div style="background:linear-gradient(145deg,#152546,#1e3a6e);
+                color:#fff;border-radius:18px;padding:28px 22px;max-width:340px;
+                width:100%;box-shadow:0 8px 40px rgba(0,0,0,.45);text-align:center">
+      <div style="font-size:2.2rem;margin-bottom:10px">🔐</div>
+      <div style="font-weight:800;font-size:1.05rem;color:#D4AF37;margin-bottom:8px">
+        يجب تسجيل الدخول أولاً
+      </div>
+      <div style="font-size:.82rem;opacity:.88;line-height:1.6;margin-bottom:18px">
+        سجّل دخولك لإتمام طلبك وتتبع شحنته والحصول على
+        <strong style="color:#D4AF37">كاش باك</strong> مع كل عملية شراء
+      </div>
+      <a href="login.html" style="display:block;background:#D4AF37;color:#152546;
+         border-radius:10px;padding:11px;font-weight:800;font-size:.9rem;
+         text-decoration:none;margin-bottom:10px">
+        تسجيل الدخول / إنشاء حساب
+      </a>
+      <button id="x2-login-modal-close"
+        style="background:transparent;color:#fff;border:1px solid rgba(255,255,255,.3);
+               border-radius:10px;padding:9px;font-size:.82rem;cursor:pointer;width:100%">
+        ليس الآن
+      </button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  modal.querySelector('#x2-login-modal-close').addEventListener('click', function() { modal.remove(); });
+  modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+};

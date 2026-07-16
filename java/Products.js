@@ -2651,6 +2651,11 @@ if (filtersScroll) {
 
         waBtn.addEventListener('click', async function(e) {
           e.preventDefault();
+          // فحص تسجيل الدخول أولاً
+          if (typeof window.isUserLoggedIn === 'function' && !window.isUserLoggedIn()) {
+            if (typeof window.showLoginModal === 'function') window.showLoginModal();
+            return;
+          }
           const qtyVal = Math.max(1, Number(document.getElementById('qty')?.value || 1));
           const price = parseFloat(p.price) || 0;
           const total = (price * qtyVal).toFixed(2);
