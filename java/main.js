@@ -1784,7 +1784,8 @@ document.addEventListener("DOMContentLoaded", function() {
       <!-- بطاقة التعليمات -->
       <div style="position:absolute;bottom:0;left:0;right:0;
                   background:#fff;border-radius:20px 20px 0 0;
-                  padding:20px 20px 36px;pointer-events:auto;
+                  padding:20px 20px 0;pointer-events:auto;
+                  padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 100px);
                   animation:x2GuideUp .35s ease;max-width:480px;margin:0 auto">
         <div style="width:36px;height:4px;background:#ddd;border-radius:2px;
                     margin:0 auto 16px"></div>
