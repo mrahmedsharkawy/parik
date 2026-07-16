@@ -918,9 +918,14 @@
         <div class="plist" id="custList"><div class="empty">لا يوجد عملاء</div></div>
         <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn-gold btn-sm" onclick="selectAllCustomers()">✓ تحديد الكل</button>
+          <button class="btn-gold btn-sm" id="selectBatchBtn" onclick="selectNextBatch()">📌 تحديد أول 10</button>
           <button class="btn-ghost btn-sm" onclick="deselectAllCustomers()">✗ إلغاء</button>
           <button class="btn-danger btn-sm" onclick="blockSelectedCustomers()">🚫 حظر المحددين</button>
-          <button class="btn-ghost btn-sm" onclick="exportCustomers()">⬇ تصدير العملاء</button>
+          <button class="btn-ghost btn-sm" onclick="exportCustomers()">⬇ تصدير</button>
+          <label class="btn-ghost btn-sm" style="cursor:pointer;margin:0">
+            📥 استيراد Excel
+            <input type="file" id="importExcelInput" accept=".xlsx,.xls,.csv" onchange="importCustomersExcel(this)" style="display:none">
+          </label>
           <span id="custCount" style="font-size:.8rem;color:#7a8296;align-self:center"></span>
         </div>
       </div>
@@ -2823,6 +2828,187 @@ function selectAllCustomers() {
 }
 function deselectAllCustomers() { selectedCustomers.clear(); renderCustomers(); }
 
+/* ============ تحديد دفعات من 10 ============ */
+let batchStart = 0;
+function selectNextBatch() {
+  const custs = getCustomers();
+  const batchSize = 10;
+  
+  // إذا وصلنا للنهاية، ارجع للبداية
+  if (batchStart >= custs.length) batchStart = 0;
+  
+  // إلغاء التحديد السابق
+  selectedCustomers.clear();
+  
+  // تحديد الـ 10 التالية
+  const end = Math.min(batchStart + batchSize, custs.length);
+  for (let i = batchStart; i < end; i++) {
+    selectedCustomers.add(i);
+  }
+  
+  // تحديث نص الزر
+  const btn = $('selectBatchBtn');
+  const nextStart = end >= custs.length ? 0 : end;
+  const nextEnd = Math.min(nextStart + batchSize, custs.length);
+  btn.textContent = `📌 تحديد ${nextStart + 1}-${nextEnd}`;
+  
+  // تحديث الفهرس للمرة القادمة
+  batchStart = end;
+  
+  renderCustomers();
+  toast(`✅ تم تحديد ${selectedCustomers.size} عميل`);
+}
+
+/* ============ تعديل بيانات العميل ============ */
+function editCustomer(phone) {
+  const custs = getCustomers();
+  const c = custs.find(x => x.phone === phone);
+  if (!c) { toast('العميل غير موجود'); return; }
+  
+  const newName = prompt('اسم العميل:', c.name);
+  if (newName === null) return;
+  
+  const newPhone = prompt('رقم الهاتف:', c.phone);
+  if (newPhone === null) return;
+  
+  const newEmail = prompt('البريد الإلكتروني:', c.email || '');
+  if (newEmail === null) return;
+  
+  const newCity = prompt('المدينة:', c.city || '');
+  if (newCity === null) return;
+  
+  // تحديث في localStorage
+  const lsKey = 'x2_customers';
+  let stored = [];
+  try { stored = JSON.parse(localStorage.getItem(lsKey) || '[]'); } catch(e) {}
+  
+  const idx = stored.findIndex(x => x.phone === phone);
+  if (idx >= 0) {
+    stored[idx].name = newName || stored[idx].name;
+    stored[idx].phone = newPhone || stored[idx].phone;
+    stored[idx].email = newEmail;
+    stored[idx].city = newCity;
+    localStorage.setItem(lsKey, JSON.stringify(stored));
+  }
+  
+  // تحديث في Supabase
+  if (window.Supabase?.Customers?.update) {
+    window.Supabase.Customers.update(phone, {
+      name: newName, phone: newPhone, email: newEmail, city: newCity
+    }).catch(e => console.warn('Failed to update in Supabase:', e));
+  }
+  
+  renderCustomers();
+  toast('✅ تم تحديث بيانات العميل');
+}
+
+/* ============ استيراد عملاء من Excel ============ */
+async function importCustomersExcel(input) {
+  const file = input.files[0];
+  if (!file) return;
+  
+  toast('⏳ جاري قراءة الملف...');
+  
+  try {
+    // قراءة الملف كنص للـ CSV أو باستخدام SheetJS للـ Excel
+    const text = await file.text();
+    let rows = [];
+    
+    if (file.name.endsWith('.csv')) {
+      // CSV parsing
+      const lines = text.split(/\r?\n/).filter(l => l.trim());
+      rows = lines.map(line => {
+        // Handle quoted values with commas
+        const vals = [];
+        let current = '';
+        let inQuote = false;
+        for (const ch of line) {
+          if (ch === '"') inQuote = !inQuote;
+          else if (ch === ',' && !inQuote) { vals.push(current.trim()); current = ''; }
+          else current += ch;
+        }
+        vals.push(current.trim());
+        return vals;
+      });
+    } else {
+      // للـ Excel نحتاج مكتبة SheetJS - نحمّلها ديناميكياً
+      if (!window.XLSX) {
+        await new Promise((res, rej) => {
+          const s = document.createElement('script');
+          s.src = 'https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js';
+          s.onload = res; s.onerror = rej;
+          document.head.appendChild(s);
+        });
+      }
+      const data = await file.arrayBuffer();
+      const wb = XLSX.read(data, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+    }
+    
+    if (rows.length < 2) { toast('❌ الملف فارغ'); input.value = ''; return; }
+    
+    // أول صف = headers
+    const headers = rows[0].map(h => String(h||'').toLowerCase().trim());
+    const nameIdx = headers.findIndex(h => h.includes('name') || h.includes('اسم'));
+    const phoneIdx = headers.findIndex(h => h.includes('phone') || h.includes('هاتف') || h.includes('رقم'));
+    const emailIdx = headers.findIndex(h => h.includes('email') || h.includes('بريد') || h.includes('ايميل'));
+    const cityIdx = headers.findIndex(h => h.includes('city') || h.includes('مدينة') || h.includes('عنوان'));
+    
+    if (phoneIdx < 0) { toast('❌ لم يتم العثور على عمود الهاتف'); input.value = ''; return; }
+    
+    // استخراج البيانات
+    const customers = [];
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      const phone = String(row[phoneIdx] || '').replace(/\D/g, '');
+      if (!phone) continue;
+      
+      customers.push({
+        name: row[nameIdx] || 'عميل',
+        phone,
+        email: row[emailIdx] || '',
+        city: row[cityIdx] || ''
+      });
+    }
+    
+    if (!customers.length) { toast('❌ لم يتم العثور على عملاء صالحين'); input.value = ''; return; }
+    
+    // إضافة للـ localStorage
+    const lsKey = 'x2_customers';
+    let stored = [];
+    try { stored = JSON.parse(localStorage.getItem(lsKey) || '[]'); } catch(e) {}
+    
+    let added = 0, updated = 0;
+    for (const c of customers) {
+      const existing = stored.findIndex(x => x.phone === c.phone);
+      if (existing >= 0) {
+        stored[existing] = { ...stored[existing], ...c };
+        updated++;
+      } else {
+        stored.push({ ...c, orders: [], statuses: new Set() });
+        added++;
+      }
+    }
+    
+    localStorage.setItem(lsKey, JSON.stringify(stored));
+    
+    // إضافة لـ Supabase
+    if (window.Supabase?.Customers?.addBulk) {
+      try { await window.Supabase.Customers.addBulk(customers); } catch(e) {}
+    }
+    
+    renderCustomers();
+    toast(`✅ تم استيراد ${added} عميل جديد، تحديث ${updated} عميل`);
+    
+  } catch (e) {
+    console.error('Import error:', e);
+    toast('❌ خطأ في قراءة الملف');
+  }
+  
+  input.value = '';
+}
+
 let bulkIdx = 0, bulkList = [];
 let selectedCustomers = new Set();
 function toggleEmailFields() {
@@ -2873,6 +3059,12 @@ function sendBulkMsg() {
 function sendNextMsg(msg, type, delay, prodLink='', prodImg='') {
   if (bulkIdx >= bulkList.length) {
     $('bulk-progress').textContent = `✅ تم الإرسال لـ ${bulkList.length} عميل`;
+    // تحديث زر التحديد للدفعة التالية
+    const custs = getCustomers();
+    const batchSize = 10;
+    const nextEnd = Math.min(batchStart + batchSize, custs.length);
+    const btn = $('selectBatchBtn');
+    if (btn) btn.textContent = `📌 تحديد ${batchStart + 1}-${nextEnd}`;
     return;
   }
   const c = bulkList[bulkIdx];
@@ -3736,6 +3928,7 @@ window.renderCustomers = function() {
           ${c.lastOrder ? '• 📅 آخر طلب: ' + c.lastOrder.toLocaleDateString('ar') : ''}
         </small>
       </div>
+      <button class="btn-ghost btn-sm" onclick="editCustomer('${c.phone}')" title="تعديل">✏️</button>
       ${c.isBlocked ? 
         `<button class="btn-ghost btn-sm" onclick="unblockCustomer('${c.phone}')">إلغاء الحظر</button>` :
         `<a href="https://wa.me/${(c.phone||'').replace(/\\D/g,'')}" target="_blank" class="btn-gold btn-sm" style="text-decoration:none;${!c.phone?'opacity:.4;pointer-events:none':''}">💬</a>`
