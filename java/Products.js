@@ -2643,48 +2643,118 @@ if (filtersScroll) {
         setTimeout(() => { sp.textContent = orig; }, 2000);
       });
 
-      // زر واتساب - يفتح محادثة مع نص جاهز + بيانات العميل
+      // زر واتساب - يسجل الطلب ويفتح واتساب
       const waBtn = document.getElementById('whatsappOrderBtn');
       if (waBtn) {
-        const readJson = (key, fallback) => {
+        waBtn.removeAttribute('href');
+        waBtn.style.cursor = 'pointer';
+
+        waBtn.addEventListener('click', async function(e) {
+          e.preventDefault();
+          const qtyVal = Math.max(1, Number(document.getElementById('qty')?.value || 1));
+          const price = parseFloat(p.price) || 0;
+          const total = (price * qtyVal).toFixed(2);
+          const WA_PHONE = '971554423151';
+
+          // ===== تسجيل الطلب =====
+          const readJson = (key, fb) => { try { return JSON.parse(localStorage.getItem(key) || 'null') ?? fb; } catch(e){ return fb; } };
+          const profile = readJson('x2_profile', {});
+          const expiresAt = new Date(Date.now() + 30*24*60*60*1000).toISOString();
+
+          // رقم الطلب
+          let orderId;
           try {
-            const raw = localStorage.getItem(key);
-            if (!raw) return fallback;
-            const parsed = JSON.parse(raw);
-            return parsed ?? fallback;
-          } catch (e) {
-            return fallback;
+            const existing = await window.Supabase.Orders.getAll();
+            if (existing && existing.length > 0) {
+              const maxNum = existing.reduce((max, o) => {
+                const n = parseInt((o.order_number || '').replace('#','')) || 0;
+                return n > max ? n : max;
+              }, 999);
+              orderId = '#' + (maxNum + 1);
+            }
+          } catch(e) {}
+          if (!orderId) {
+            const lastNum = parseInt(localStorage.getItem('x2_order_counter') || '999', 10);
+            orderId = '#' + (lastNum + 1);
           }
-        };
+          localStorage.setItem('x2_order_counter', orderId.replace('#',''));
 
-        const profile = readJson('x2_profile', {});
-        const orders = readJson('x2_orders', []);
-        const lastOrder = Array.isArray(orders) && orders.length ? orders[0] : null;
-        const shipping = lastOrder?.shipping || {};
-        const qtyVal = Math.max(1, Number(document.getElementById('qty')?.value || 1));
+          const rawImg = Array.isArray(p.img) ? p.img[0] : (p.img || p.image || '');
+          const newOrder = {
+            id: orderId,
+            date: new Date().toISOString(),
+            cashback: 5,
+            cashbackStatus: 'pending',
+            cashbackExpiresAt: expiresAt,
+            items: [{ id: String(p.id || ''), title: getT(p.name), qty: qtyVal, img: rawImg && !rawImg.startsWith('data:') ? rawImg : '' }],
+            total,
+            status: 'processing'
+          };
 
-        const customerName = String(profile.name || shipping.name || '').trim() || 'غير متوفر';
-        const customerPhone = String(profile.phone || shipping.phone || '').trim() || 'غير متوفر';
-        const customerEmail = String(profile.email || '').trim() || 'غير متوفر';
-        const customerCity = String(shipping.city || '').trim() || 'غير متوفر';
-        const customerAddress = String(shipping.address || '').trim() || 'غير متوفر';
+          // حفظ محلي
+          const orders = readJson('x2_orders', []);
+          orders.unshift(newOrder);
+          localStorage.setItem('x2_orders', JSON.stringify(orders));
 
-        const productUrl = window.location.href;
-        const waMsg = encodeURIComponent([
-          'مرحباً، أريد تخصيص طلب لهذا المنتج:',
-          `🛍 المنتج: ${getT(p.name)}`,
-          `🔢 الكمية: ${qtyVal}`,
-          `💰 السعر: ${p.price != null ? p.price + ' ' + sym : 'غير متوفر'}`,
-          `🔗 رابط المنتج: ${productUrl}`,
-          '',
-          'بيانات العميل:',
-          `الاسم: ${customerName}`,
-          `الهاتف: ${customerPhone}`,
-          `البريد: ${customerEmail}`,
-          `المدينة: ${customerCity}`,
-          `العنوان: ${customerAddress}`
-        ].join('\n'));
-        waBtn.href = `https://wa.me/+971554423151?text=${waMsg}`;
+          // رفع لـ Supabase
+          if (window.Supabase && window.Supabase.Orders) {
+            try {
+              newOrder._synced = true;
+              orders[0]._synced = true;
+              localStorage.setItem('x2_orders', JSON.stringify(orders));
+              const synced = readJson('x2_orders_synced', []);
+              if (!synced.includes(orderId)) { synced.push(orderId); localStorage.setItem('x2_orders_synced', JSON.stringify(synced)); }
+              await window.Supabase.Orders.insert({
+                id: orderId,
+                items: newOrder.items,
+                total,
+                status: 'processing',
+                cashback: 5,
+                cashbackStatus: 'pending',
+                customerName: profile.name || '',
+                customerPhone: profile.phone || '',
+                customerEmail: profile.email || '',
+                address: profile.address_full || null
+              });
+            } catch(err) { console.warn('Supabase order save failed:', err); }
+          }
+
+          // ===== بناء رسالة واتساب =====
+          const productUrl = window.location.href;
+          const msgLines = [
+            'مرحباً، أريد تخصيص طلب:',
+            `🛍 المنتج: ${getT(p.name)}`,
+            `🔢 الكمية: ${qtyVal}`,
+            `💰 السعر: ${total} ${sym}`,
+            `📋 رقم الطلب: ${orderId}`,
+            `🔗 ${productUrl}`,
+          ];
+          if (profile.name)  msgLines.push(`الاسم: ${profile.name}`);
+          if (profile.phone) msgLines.push(`الهاتف: ${profile.phone}`);
+          const msg = encodeURIComponent(msgLines.join('\n'));
+
+          // ===== فتح واتساب وإعادة التوجيه =====
+          sessionStorage.setItem('x2_after_wa', '1');
+          function handleReturn() {
+            if (!document.hidden && sessionStorage.getItem('x2_after_wa')) {
+              sessionStorage.removeItem('x2_after_wa');
+              document.removeEventListener('visibilitychange', handleReturn);
+              window.location.href = 'account.html';
+            }
+          }
+          document.addEventListener('visibilitychange', handleReturn);
+
+          const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+          if (isMobile) {
+            window.location.href = `whatsapp://send?phone=${WA_PHONE}&text=${msg}`;
+          } else {
+            window.open(`https://wa.me/${WA_PHONE}?text=${msg}`, '_blank', 'noopener');
+          }
+          setTimeout(() => {
+            sessionStorage.removeItem('x2_after_wa');
+            window.location.href = 'account.html';
+          }, 2000);
+        });
       }
 
       /* ---- منتجات مشابهة ---- */
