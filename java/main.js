@@ -1628,3 +1628,136 @@ document.addEventListener("DOMContentLoaded", function() {
 
   window.applySocialLinks = applySocialLinks;
 })();
+
+/* ============================================================
+   PWA Install Banner — يظهر للمستخدمين في المتصفح فقط
+   ============================================================ */
+(function() {
+  // لا تُظهر إذا التطبيق مثبت (standalone) أو تم الإغلاق مسبقاً
+  const isStandalone =
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true;
+  if (isStandalone) return;
+  if (sessionStorage.getItem('x2_pwa_banner_closed')) return;
+  // على الكمبيوتر لا نظهرها (اختياري — احذف هذا السطر إذا تريدها على الكمبيوتر أيضاً)
+  if (!/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) return;
+
+  let deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', function(e) {
+    e.preventDefault();
+    deferredPrompt = e;
+  });
+
+  function showBanner() {
+    if (document.getElementById('x2-pwa-banner')) return;
+
+    const banner = document.createElement('div');
+    banner.id = 'x2-pwa-banner';
+    banner.style.cssText = [
+      'position:fixed', 'bottom:70px', 'left:50%', 'transform:translateX(-50%)',
+      'width:calc(100% - 32px)', 'max-width:480px',
+      'background:linear-gradient(135deg,#152546 0%,#1e3a6e 100%)',
+      'color:#fff', 'border-radius:16px', 'padding:14px 16px',
+      'display:flex', 'align-items:center', 'gap:12px',
+      'box-shadow:0 8px 32px rgba(0,0,0,0.35)',
+      'z-index:99998', 'direction:rtl', 'font-family:inherit',
+      'animation:x2BannerSlide .4s ease'
+    ].join(';');
+
+    banner.innerHTML = `
+      <style>
+        @keyframes x2BannerSlide {
+          from { opacity:0; transform:translateX(-50%) translateY(20px); }
+          to   { opacity:1; transform:translateX(-50%) translateY(0); }
+        }
+      </style>
+      <img src="/assets/icon w.png" width="44" height="44"
+           style="border-radius:10px;flex-shrink:0;border:1.5px solid #D4AF37"
+           onerror="this.style.display='none'">
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;font-size:.88rem;color:#D4AF37;margin-bottom:2px">
+          📲 ثبّت تطبيق بريق
+        </div>
+        <div style="font-size:.78rem;opacity:.9;line-height:1.4">
+          أدِر طلباتك واحصل على كاش باك مع كل عملية شراء
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+        <button id="x2-pwa-install-btn"
+          style="background:#D4AF37;color:#152546;border:none;border-radius:8px;
+                 padding:6px 14px;font-weight:700;font-size:.8rem;cursor:pointer;white-space:nowrap">
+          تثبيت
+        </button>
+        <button id="x2-pwa-close-btn"
+          style="background:transparent;color:#fff;border:1px solid rgba(255,255,255,.3);
+                 border-radius:8px;padding:4px 14px;font-size:.75rem;cursor:pointer">
+          لاحقاً
+        </button>
+      </div>
+    `;
+
+    document.body.appendChild(banner);
+
+    document.getElementById('x2-pwa-install-btn').addEventListener('click', function() {
+      banner.remove();
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(function() { deferredPrompt = null; });
+      } else {
+        // iOS: توجيه يدوي (iOS لا تدعم beforeinstallprompt)
+        showIOSGuide();
+      }
+    });
+
+    document.getElementById('x2-pwa-close-btn').addEventListener('click', function() {
+      sessionStorage.setItem('x2_pwa_banner_closed', '1');
+      banner.remove();
+    });
+  }
+
+  // دليل التثبيت اليدوي على iOS
+  function showIOSGuide() {
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const guide = document.createElement('div');
+    guide.style.cssText = [
+      'position:fixed','inset:0','background:rgba(0,0,0,.6)',
+      'z-index:99999','display:flex','align-items:flex-end',
+      'justify-content:center','direction:rtl'
+    ].join(';');
+
+    const instruction = isIOS
+      ? `اضغط على <strong>□↑</strong> (مشاركة) في أسفل Safari ثم اختر <strong>"إضافة إلى الشاشة الرئيسية"</strong>`
+      : `اضغط على قائمة المتصفح ⋮ ثم اختر <strong>"إضافة إلى الشاشة الرئيسية"</strong>`;
+
+    guide.innerHTML = `
+      <div style="background:#fff;width:100%;max-width:480px;border-radius:20px 20px 0 0;
+                  padding:24px 20px 36px;text-align:center">
+        <div style="font-size:2rem;margin-bottom:8px">📲</div>
+        <div style="font-weight:700;font-size:1rem;color:#152546;margin-bottom:10px">
+          كيف تثبّت التطبيق؟
+        </div>
+        <div style="font-size:.88rem;color:#444;line-height:1.6;margin-bottom:20px">
+          ${instruction}
+        </div>
+        <button style="background:#152546;color:#D4AF37;border:none;border-radius:10px;
+                       padding:12px 32px;font-weight:700;font-size:.9rem;cursor:pointer;width:100%"
+                onclick="this.closest('[style*=inset]').remove()">
+          فهمت ✓
+        </button>
+      </div>
+    `;
+    document.body.appendChild(guide);
+    guide.addEventListener('click', function(e) {
+      if (e.target === guide) guide.remove();
+    });
+  }
+
+  // أظهر البانر بعد 3 ثواني من تحميل الصفحة
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(showBanner, 3000);
+    });
+  } else {
+    setTimeout(showBanner, 3000);
+  }
+})();
