@@ -23,5 +23,8 @@
       "purpose": "maskable"
     }
   ],
-  "categories": ["shopping", "lifestyle"]
+  "categories": ["shopping", "lifestyle"],
+  "prefer_related_applications": false,
+  "display_override": ["standalone", "minimal-ui"],
+  "screenshots": []
 }

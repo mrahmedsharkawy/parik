@@ -983,6 +983,31 @@
         <button class="btn-gold" style="width:100%;margin-top:14px" onclick="sendBulkMsg()">📤 إرسال للمحددين</button>
         <div id="bulk-progress" style="margin-top:10px;font-size:.82rem;color:#7a8296"></div>
       </div>
+
+      <!-- ============ إشعارات Push ============ -->
+      <div class="card">
+        <h2>🔔 إرسال إشعار Push للعملاء</h2>
+        <div class="hint">الإشعارات تظهر على شاشة الهاتف وأيقونة التطبيق حتى لو الموقع مغلق</div>
+        <label>عنوان الإشعار</label>
+        <input type="text" id="push-title" placeholder="عرض خاص 🔥" maxlength="50">
+        <label>نص الإشعار</label>
+        <textarea id="push-body" placeholder="خصم 20% على جميع المنتجات اليوم فقط!" style="min-height:80px" maxlength="150"></textarea>
+        <label>رابط عند الضغط (اختياري)</label>
+        <input type="text" id="push-url" placeholder="/index.html">
+        <label>صورة (رابط - اختياري)</label>
+        <input type="text" id="push-image" placeholder="https://...">
+        <div style="display:flex;gap:8px;margin-top:14px">
+          <button class="btn-gold" style="flex:1" onclick="sendPushNotification()">📲 إرسال للكل</button>
+          <button class="btn-ghost btn-sm" onclick="previewPush()">👁 معاينة</button>
+        </div>
+        <div id="push-status" style="margin-top:10px;font-size:.82rem;color:#7a8296"></div>
+        <div style="margin-top:12px;padding:10px;background:#f8f9fa;border-radius:8px;font-size:.78rem;color:#5a6478">
+          <b>⚙️ الإعداد مرة واحدة:</b><br>
+          1. أنشئ جدول <code>push_subscriptions</code> في Supabase<br>
+          2. المشتركون يضغطون "تفعيل الإشعارات" في الموقع<br>
+          3. أرسل من هنا 🚀
+        </div>
+      </div>
     </div>
   </div>
 
@@ -3095,6 +3120,82 @@ function insertProductVars() {
   if (ta && !ta.value.includes('{product_link}')) {
     ta.value += (ta.value ? '\n' : '') + '🔗 شاهد المنتج: {product_link}';
   }
+}
+
+/* ============ Push Notifications ============ */
+async function sendPushNotification() {
+  const title = ($('push-title').value || '').trim();
+  const body  = ($('push-body').value  || '').trim();
+  const url   = ($('push-url').value   || '/').trim();
+  const image = ($('push-image').value || '').trim();
+  const statusEl = $('push-status');
+
+  if (!title || !body) { toast('أدخل العنوان والنص'); return; }
+
+  statusEl.textContent = '⏳ جارٍ جلب المشتركين...';
+
+  const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+  let subscriptions = [];
+  try {
+    const res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/push_subscriptions?select=endpoint,p256dh,auth', {
+      headers: { 'apikey': ANON, 'Authorization': 'Bearer ' + (await getValidAdminToken() || ANON) }
+    });
+    subscriptions = await res.json();
+  } catch(e) {
+    statusEl.textContent = '❌ تعذّر جلب المشتركين من Supabase';
+    return;
+  }
+
+  if (!subscriptions.length) {
+    statusEl.textContent = '⚠️ لا يوجد مشتركون بعد. اطلب من العملاء تفعيل الإشعارات.';
+    return;
+  }
+
+  statusEl.textContent = `📤 جارٍ الإرسال لـ ${subscriptions.length} مشترك...`;
+
+  // استدعاء Supabase Edge Function للإرسال
+  try {
+    const adminToken = await getValidAdminToken() || ANON;
+    const resp = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/functions/v1/send-push', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + adminToken
+      },
+      body: JSON.stringify({ title, body, url, image: image || undefined })
+    });
+    if (resp.ok) {
+      statusEl.textContent = `✅ تم الإرسال لـ ${subscriptions.length} مشترك`;
+      toast('✅ تم إرسال الإشعار');
+      $('push-title').value = '';
+      $('push-body').value  = '';
+    } else {
+      const err = await resp.text();
+      statusEl.textContent = '❌ خطأ: ' + err;
+    }
+  } catch(e) {
+    statusEl.textContent = '❌ تعذّر الإرسال: ' + e.message;
+  }
+}
+
+function previewPush() {
+  const title = ($('push-title').value || 'بريق 🛍️').trim();
+  const body  = ($('push-body').value  || '').trim();
+  if (!title) { toast('أدخل العنوان أولاً'); return; }
+  if (!('Notification' in window)) { toast('المتصفح لا يدعم الإشعارات'); return; }
+  Notification.requestPermission().then(p => {
+    if (p === 'granted') {
+      new Notification(title, {
+        body,
+        icon: '/assets/icon w.png',
+        badge: '/assets/icon b.png',
+        dir: 'rtl',
+        lang: 'ar'
+      });
+    } else {
+      toast('يحتاج إذن الإشعارات');
+    }
+  });
 }
 
 function sendBulkMsg() {
