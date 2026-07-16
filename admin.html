@@ -3078,14 +3078,16 @@ async function importCustomersExcel(input) {
       .replace(/^\uFEFF/, '')        // BOM
       .replace(/\u200B/g, '')        // zero-width space
       .replace(/\u00A0/g, ' ')       // non-breaking space
+      .replace(/\u0640/g, '')        // تطويل عربي ـ
+      .replace(/\s+/g, ' ')          // فراغات متعددة → فراغ واحد
       .toLowerCase().trim();
     const headers = rows[0].map(normalizeHeader);
 
     // دالة بحث مرنة في الهيدر
     const findCol = (...keywords) => headers.findIndex(h => keywords.some(k => h.includes(k)));
 
-    const nameIdx  = findCol('name','اسم الكامل','الاسم الكامل','الاسم','اسم العميل','customer name','full name');
-    const phoneIdx = findCol('phone','هاتف','الهاتف','جوال','موبايل','mobile','tel','telephone','رقم الهاتف','رقم الجوال','رقم الموبايل');
+    const nameIdx  = findCol('name','اسم','customer name','full name','عميل');
+    const phoneIdx = findCol('phone','هاتف','جوال','موبايل','موبيل','mobile','tel','telephone');
     const emailIdx = findCol('email','بريد','ايميل','إيميل','يميل','mail');
     const cityIdx  = findCol('city','مدينة','المدينة','عنوان','region','منطقة','محافظة','emirate');
     
