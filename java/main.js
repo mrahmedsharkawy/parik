@@ -1633,14 +1633,14 @@ document.addEventListener("DOMContentLoaded", function() {
    PWA Install Banner — يظهر للمستخدمين في المتصفح فقط
    ============================================================ */
 (function() {
-  // لا تُظهر إذا التطبيق مثبت (standalone) أو تم الإغلاق مسبقاً
   const isStandalone =
     window.matchMedia('(display-mode: standalone)').matches ||
     window.navigator.standalone === true;
   if (isStandalone) return;
   if (sessionStorage.getItem('x2_pwa_banner_closed')) return;
-  // على الكمبيوتر لا نظهرها (اختياري — احذف هذا السطر إذا تريدها على الكمبيوتر أيضاً)
   if (!/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) return;
+
+  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
   let deferredPrompt = null;
   window.addEventListener('beforeinstallprompt', function(e) {
@@ -1679,7 +1679,7 @@ document.addEventListener("DOMContentLoaded", function() {
           📲 ثبّت تطبيق بريق
         </div>
         <div style="font-size:.78rem;opacity:.9;line-height:1.4">
-          أدِر طلباتك واحصل على كاش باك مع كل عملية شراء
+          أدِر طلباتك واحصل على كاش باك مع كل عملية شراء ومتابعة العروض والخصومات
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
@@ -1701,10 +1701,11 @@ document.addEventListener("DOMContentLoaded", function() {
     document.getElementById('x2-pwa-install-btn').addEventListener('click', function() {
       banner.remove();
       if (deferredPrompt) {
+        // Android: تثبيت مباشر بدون خطوات إضافية
         deferredPrompt.prompt();
         deferredPrompt.userChoice.then(function() { deferredPrompt = null; });
       } else {
-        // iOS: توجيه يدوي (iOS لا تدعم beforeinstallprompt)
+        // iOS: دليل مرئي مع سهم يشير لزر المشاركة
         showIOSGuide();
       }
     });
@@ -1715,48 +1716,105 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
-  // دليل التثبيت اليدوي على iOS
+  // دليل التثبيت على iOS مع سهم متحرك يشير لزر المشاركة
   function showIOSGuide() {
-    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-    const guide = document.createElement('div');
-    guide.style.cssText = [
-      'position:fixed','inset:0','background:rgba(0,0,0,.6)',
-      'z-index:99999','display:flex','align-items:flex-end',
-      'justify-content:center','direction:rtl'
-    ].join(';');
+    const overlay = document.createElement('div');
+    overlay.id = 'x2-ios-guide';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;direction:rtl;pointer-events:none';
 
-    const instruction = isIOS
-      ? `اضغط على <strong>□↑</strong> (مشاركة) في أسفل Safari ثم اختر <strong>"إضافة إلى الشاشة الرئيسية"</strong>`
-      : `اضغط على قائمة المتصفح ⋮ ثم اختر <strong>"إضافة إلى الشاشة الرئيسية"</strong>`;
+    const androidInstr = `
+      <div style="display:flex;align-items:flex-start;gap:10px;background:#f8f9ff;
+                  border-radius:10px;padding:12px;margin-bottom:8px">
+        <span style="font-size:1.4rem;line-height:1">⋮</span>
+        <div style="font-size:.85rem;color:#333;line-height:1.5">
+          افتح قائمة المتصفح <strong>(⋮)</strong> في الأعلى
+          ثم اضغط <strong>"إضافة إلى الشاشة الرئيسية"</strong>
+        </div>
+      </div>`;
 
-    guide.innerHTML = `
-      <div style="background:#fff;width:100%;max-width:480px;border-radius:20px 20px 0 0;
-                  padding:24px 20px 36px;text-align:center">
-        <div style="font-size:2rem;margin-bottom:8px">📲</div>
-        <div style="font-weight:700;font-size:1rem;color:#152546;margin-bottom:10px">
-          كيف تثبّت التطبيق؟
+    const iosInstr = `
+      <div style="background:#f8f9ff;border-radius:10px;padding:12px;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span style="font-size:1.5rem">1️⃣</span>
+          <span style="font-size:.85rem;color:#333">
+            اضغط زر <strong>المشاركة</strong>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#007AFF"
+                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                 style="vertical-align:middle;margin-right:2px">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+              <polyline points="16 6 12 2 8 6"/>
+              <line x1="12" y1="2" x2="12" y2="15"/>
+            </svg>
+            في أسفل الشاشة
+          </span>
         </div>
-        <div style="font-size:.88rem;color:#444;line-height:1.6;margin-bottom:20px">
-          ${instruction}
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:1.5rem">2️⃣</span>
+          <span style="font-size:.85rem;color:#333">
+            اختر <strong>"إضافة إلى الشاشة الرئيسية"</strong>
+            <span style="font-size:.75rem;color:#888;display:block">Add to Home Screen</span>
+          </span>
         </div>
-        <button style="background:#152546;color:#D4AF37;border:none;border-radius:10px;
-                       padding:12px 32px;font-weight:700;font-size:.9rem;cursor:pointer;width:100%"
-                onclick="this.closest('[style*=inset]').remove()">
+      </div>`;
+
+    overlay.innerHTML = `
+      <style>
+        @keyframes x2ArrowBounce {
+          0%,100% { transform: translateX(-50%) translateY(0); }
+          50%      { transform: translateX(-50%) translateY(10px); }
+        }
+        @keyframes x2GuideUp {
+          from { transform:translateY(100%); opacity:0; }
+          to   { transform:translateY(0);    opacity:1; }
+        }
+      </style>
+
+      <!-- خلفية معتمة قابلة للنقر للإغلاق -->
+      <div id="x2-ios-backdrop" style="position:absolute;inset:0;background:rgba(0,0,0,.55);pointer-events:auto"></div>
+
+      ${isIOS ? `
+      <!-- سهم يشير لزر المشاركة في الأسفل -->
+      <div style="position:absolute;bottom:72px;left:50%;transform:translateX(-50%);
+                  animation:x2ArrowBounce 1s ease-in-out infinite;text-align:center">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="#D4AF37">
+          <path d="M12 20l-8-8h5V4h6v8h5z"/>
+        </svg>
+      </div>` : ''}
+
+      <!-- بطاقة التعليمات -->
+      <div style="position:absolute;bottom:0;left:0;right:0;
+                  background:#fff;border-radius:20px 20px 0 0;
+                  padding:20px 20px 36px;pointer-events:auto;
+                  animation:x2GuideUp .35s ease;max-width:480px;margin:0 auto">
+        <div style="width:36px;height:4px;background:#ddd;border-radius:2px;
+                    margin:0 auto 16px"></div>
+        <div style="font-weight:700;font-size:1rem;color:#152546;
+                    margin-bottom:14px;text-align:center">
+          📲 كيف تثبّت التطبيق؟
+        </div>
+        ${isIOS ? iosInstr : androidInstr}
+        <button id="x2-ios-close"
+          style="background:#152546;color:#D4AF37;border:none;border-radius:12px;
+                 padding:13px;font-weight:700;font-size:.92rem;cursor:pointer;
+                 width:100%;pointer-events:auto;margin-top:4px">
           فهمت ✓
         </button>
       </div>
     `;
-    document.body.appendChild(guide);
-    guide.addEventListener('click', function(e) {
-      if (e.target === guide) guide.remove();
+
+    document.body.appendChild(overlay);
+    overlay.style.pointerEvents = 'auto';
+
+    overlay.querySelector('#x2-ios-close').addEventListener('click', function() {
+      overlay.remove();
+    });
+    overlay.querySelector('#x2-ios-backdrop').addEventListener('click', function() {
+      overlay.remove();
     });
   }
 
-  // أظهر البانر بعد 3 ثواني من تحميل الصفحة
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() {
-      setTimeout(showBanner, 3000);
-    });
+    document.addEventListener('DOMContentLoaded', function() { setTimeout(showBanner, 3000); });
   } else {
     setTimeout(showBanner, 3000);
   }
