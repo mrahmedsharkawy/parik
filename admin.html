@@ -938,6 +938,7 @@
           <button class="btn-ghost btn-sm" onclick="deselectAllCustomers()">✗ إلغاء</button>
           <button class="btn-danger btn-sm" onclick="blockSelectedCustomers()">🚫 حظر المحددين</button>
           <button class="btn-ghost btn-sm" onclick="exportCustomers()">⬇ تصدير</button>
+          <button class="btn-danger btn-sm" onclick="deleteInvalidCustomers()" title="حذف العملاء الذين اسمهم = رقم أو بدون هاتف حقيقي">🗑 حذف الغلط</button>
           <label class="btn-ghost btn-sm" style="cursor:pointer;margin:0">
             📥 استيراد Excel
             <input type="file" id="importExcelInput" accept=".xlsx,.xls,.csv" onchange="importCustomersExcel(this)" style="display:none">
@@ -3086,8 +3087,8 @@ async function importCustomersExcel(input) {
     // دالة بحث مرنة في الهيدر
     const findCol = (...keywords) => headers.findIndex(h => keywords.some(k => h.includes(k)));
 
-    const nameIdx  = findCol('name','اسم','customer name','full name','عميل');
-    const phoneIdx = findCol('phone','هاتف','جوال','موبايل','موبيل','mobile','tel','telephone');
+    const nameIdx  = findCol('اسم','name','customer name','full name');
+    const phoneIdx = findCol('موبيل','موبايل','هاتف','جوال','phone','mobile','tel','telephone');
     const emailIdx = findCol('email','بريد','ايميل','إيميل','يميل','mail');
     const cityIdx  = findCol('city','مدينة','المدينة','عنوان','region','منطقة','محافظة','emirate');
     
@@ -3386,6 +3387,35 @@ window.switchTab = async function(name) {
 
 /* ================= مزامنة العملاء من Supabase ================= */
 let supaCustomers = []; // عملاء Supabase
+
+/* حذف العملاء الغلط (اسمهم أرقام أو هاتفهم قصير) */
+async function deleteInvalidCustomers() {
+  if (!confirm('سيتم حذف العملاء الذين اسمهم أرقام أو هاتفهم أقل من 7 أرقام. متابعة؟')) return;
+  const remote = await window.Supabase?.Customers?.getAll().catch(()=>[]) || [];
+  const toDelete = remote.filter(c => {
+    const name = (c.full_name || c.name || '').trim();
+    const phone = (c.phone || '').replace(/\D/g,'');
+    const nameIsNumber = /^\d+$/.test(name);  // الاسم أرقام فقط
+    const shortPhone = phone.length < 7;
+    return nameIsNumber || shortPhone;
+  });
+  if (!toDelete.length) { toast('✅ لا يوجد عملاء غلط'); return; }
+  toast(`⏳ جارٍ حذف ${toDelete.length} عميل...`);
+  let deleted = 0;
+  const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+  const token = await getValidAdminToken() || ANON;
+  for (const c of toDelete) {
+    try {
+      await fetch(`https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/customers?id=eq.${c.id}`, {
+        method: 'DELETE',
+        headers: { 'apikey': ANON, 'Authorization': 'Bearer ' + token }
+      });
+      deleted++;
+    } catch(e) {}
+  }
+  toast(`✅ تم حذف ${deleted} عميل غلط`);
+  syncCustomersFromSupabase();
+}
 
 async function syncCustomersFromSupabase() {
   if (!window.Supabase) return;
