@@ -912,7 +912,13 @@ function updateSelectedCount() {
     }
     document.addEventListener('visibilitychange', handleVisibilityReturn);
 
-    window.open(url, '_blank', 'noopener');
+    // على الموبايل: استخدم whatsapp:// مباشرة لتجنب in-app browser على iOS
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (isMobile) {
+      window.location.href = `whatsapp://send?phone=${phone}&text=${msg}`;
+    } else {
+      window.open(url, '_blank', 'noopener');
+    }
 
     // إضافة الطلب مع الكاش باك "معلّق" — يُضاف للرصيد بعد تأكيد التسليم
     try {
