@@ -898,6 +898,20 @@ function updateSelectedCount() {
 
     const msg = encodeURIComponent(finalText);
     const url = `https://wa.me/${phone}?text=${msg}`;
+
+    // حفظ علامة لإعادة التوجيه عند العودة من واتساب
+    sessionStorage.setItem('x2_after_wa', '1');
+
+    // عند العودة من واتساب → انتقل لصفحة الحساب مباشرة
+    function handleVisibilityReturn() {
+      if (!document.hidden && sessionStorage.getItem('x2_after_wa')) {
+        sessionStorage.removeItem('x2_after_wa');
+        document.removeEventListener('visibilitychange', handleVisibilityReturn);
+        window.location.href = 'account.html';
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityReturn);
+
     window.open(url, '_blank', 'noopener');
 
     // إضافة الطلب مع الكاش باك "معلّق" — يُضاف للرصيد بعد تأكيد التسليم
@@ -1014,8 +1028,11 @@ function updateSelectedCount() {
         banner.innerHTML = '✅ تم إرسال طلبك عبر واتساب!<br><span style="font-size:0.78rem;opacity:0.85">الطلب محفوظ في حسابك — قسم طلباتي</span>';
         document.body.appendChild(banner);
         setTimeout(() => banner.remove(), 4000);
-        // الانتقال للصفحة الرئيسية بعد ثانيتين
-        setTimeout(() => { window.location.href = 'index.html'; }, 2000);
+        // الانتقال لصفحة الحساب بعد ثانيتين إذا لم يرجع من واتساب أولاً
+        setTimeout(() => {
+          sessionStorage.removeItem('x2_after_wa');
+          window.location.href = 'account.html';
+        }, 2000);
       }, 200);
     } catch(e) {}
   }
