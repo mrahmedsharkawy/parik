@@ -15,6 +15,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">  
   <!-- Critical Mobile-First CSS to prevent layout flash -->
   <style id="critical-mobile-css">
+    /* Hide page until CSS loads to prevent flash */
+    html:not(.css-loaded) body { opacity: 0; }
+    html.css-loaded body { opacity: 1; transition: opacity 0.05s; }
     @media (max-width: 992px) {
       .dropdown-content { position: fixed !important; top: 0 !important; width: min(82vw, 320px) !important; height: 100dvh !important; transform: translateX(100%) !important; }
       html[dir="rtl"] .dropdown-content { right: 0 !important; left: auto !important; }
@@ -37,7 +40,7 @@
   <meta property="og:image" content="assets/logo.png">
   <meta property="og:url" content="https://bariq.com">
   <meta property="og:type" content="website">
-  <link rel="stylesheet" href="style/style.css" />
+  <link rel="stylesheet" href="style/style.css" onload="document.documentElement.classList.add('css-loaded')" />
 </head>
 <body class="product-page-body">
 
