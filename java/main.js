@@ -1654,7 +1654,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const banner = document.createElement('div');
     banner.id = 'x2-pwa-banner';
     banner.style.cssText = [
-      'position:fixed', 'bottom:70px', 'left:50%', 'transform:translateX(-50%)',
+      'position:fixed', 'bottom:calc(env(safe-area-inset-bottom, 0px) + 90px)', 'left:50%', 'transform:translateX(-50%)',
       'width:calc(100% - 32px)', 'max-width:480px',
       'background:linear-gradient(135deg,#152546 0%,#1e3a6e 100%)',
       'color:#fff', 'border-radius:16px', 'padding:14px 16px',
@@ -1774,7 +1774,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
       ${isIOS ? `
       <!-- سهم يشير لزر المشاركة في الأسفل -->
-      <div style="position:absolute;bottom:72px;left:50%;transform:translateX(-50%);
+      <div style="position:absolute;bottom:calc(env(safe-area-inset-bottom, 0px) + 90px);left:50%;transform:translateX(-50%);
                   animation:x2ArrowBounce 1s ease-in-out infinite;text-align:center">
         <svg width="36" height="36" viewBox="0 0 24 24" fill="#D4AF37">
           <path d="M12 20l-8-8h5V4h6v8h5z"/>
