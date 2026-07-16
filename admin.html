@@ -885,7 +885,8 @@
     <div class="grid">
       <!-- إضافة عميل يدوياً -->
       <div class="card">
-        <h2>➕ إضافة عميل</h2>
+        <h2 id="custFormTitle">➕ إضافة عميل</h2>
+        <input type="hidden" id="nc-edit-phone" value="">
         <label>الاسم الكامل</label>
         <input type="text" id="nc-fullname" placeholder="أحمد محمد">
         <label>رقم الهاتف</label>
@@ -894,13 +895,25 @@
         <input type="text" id="nc-email" placeholder="example@email.com">
         <label>المدينة / العنوان</label>
         <input type="text" id="nc-address" placeholder="دبي، الإمارات">
-        <button class="btn-gold" style="width:100%;margin-top:14px" onclick="addManualCustomer()">➕ إضافة العميل</button>
+        <button class="btn-gold" style="width:100%;margin-top:14px" id="custFormBtn" onclick="saveCustomer()">➕ إضافة العميل</button>
+        <button class="btn-ghost" style="width:100%;margin-top:8px;display:none" id="custCancelBtn" onclick="cancelEditCustomer()">✗ إلغاء التعديل</button>
       </div>
 
       <div class="card">
         <h2>👥 قائمة العملاء</h2>
         <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
           <input type="text" id="cust-search" placeholder="ابحث بالاسم أو الهاتف..." oninput="renderCustomers()" style="flex:1;min-width:150px">
+          <select id="cust-city" onchange="renderCustomers()" style="width:auto">
+            <option value="">كل المناطق</option>
+            <option value="دبي">دبي</option>
+            <option value="أبوظبي">أبوظبي</option>
+            <option value="الشارقة">الشارقة</option>
+            <option value="عجمان">عجمان</option>
+            <option value="رأس الخيمة">رأس الخيمة</option>
+            <option value="الفجيرة">الفجيرة</option>
+            <option value="أم القيوين">أم القيوين</option>
+            <option value="العين">العين</option>
+          </select>
           <select id="cust-filter" onchange="renderCustomers()" style="width:auto">
             <option value="">كل الحالات</option>
             <option value="delivered">تم التسليم</option>
@@ -2865,41 +2878,78 @@ function editCustomer(phone) {
   const c = custs.find(x => x.phone === phone);
   if (!c) { toast('العميل غير موجود'); return; }
   
-  const newName = prompt('اسم العميل:', c.name);
-  if (newName === null) return;
+  // ملء الحقول ببيانات العميل
+  $('nc-fullname').value = c.name || '';
+  $('nc-phone').value = c.phone || '';
+  $('nc-email').value = c.email || '';
+  $('nc-address').value = c.city || '';
+  $('nc-edit-phone').value = phone; // حفظ الهاتف الأصلي للتعديل
   
-  const newPhone = prompt('رقم الهاتف:', c.phone);
-  if (newPhone === null) return;
+  // تغيير عنوان الفورم والزر
+  $('custFormTitle').textContent = '✏️ تعديل عميل';
+  $('custFormBtn').textContent = '💾 حفظ التعديلات';
+  $('custCancelBtn').style.display = 'block';
   
-  const newEmail = prompt('البريد الإلكتروني:', c.email || '');
-  if (newEmail === null) return;
+  // التمرير لأعلى للفورم
+  $('nc-fullname').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  $('nc-fullname').focus();
   
-  const newCity = prompt('المدينة:', c.city || '');
-  if (newCity === null) return;
+  toast('📝 عدّل البيانات واضغط حفظ');
+}
+
+function cancelEditCustomer() {
+  // إعادة الفورم لوضع الإضافة
+  $('nc-fullname').value = '';
+  $('nc-phone').value = '';
+  $('nc-email').value = '';
+  $('nc-address').value = '';
+  $('nc-edit-phone').value = '';
   
-  // تحديث في localStorage
+  $('custFormTitle').textContent = '➕ إضافة عميل';
+  $('custFormBtn').textContent = '➕ إضافة العميل';
+  $('custCancelBtn').style.display = 'none';
+}
+
+function saveCustomer() {
+  const editPhone = $('nc-edit-phone').value;
+  const name = $('nc-fullname').value.trim();
+  const phone = $('nc-phone').value.trim();
+  const email = $('nc-email').value.trim();
+  const city = $('nc-address').value.trim();
+  
+  if (!name || !phone) { toast('أدخل الاسم والهاتف'); return; }
+  
   const lsKey = 'x2_customers';
   let stored = [];
   try { stored = JSON.parse(localStorage.getItem(lsKey) || '[]'); } catch(e) {}
   
-  const idx = stored.findIndex(x => x.phone === phone);
-  if (idx >= 0) {
-    stored[idx].name = newName || stored[idx].name;
-    stored[idx].phone = newPhone || stored[idx].phone;
-    stored[idx].email = newEmail;
-    stored[idx].city = newCity;
-    localStorage.setItem(lsKey, JSON.stringify(stored));
+  if (editPhone) {
+    // وضع التعديل
+    const idx = stored.findIndex(x => x.phone === editPhone);
+    if (idx >= 0) {
+      stored[idx].name = name;
+      stored[idx].phone = phone;
+      stored[idx].email = email;
+      stored[idx].city = city;
+      localStorage.setItem(lsKey, JSON.stringify(stored));
+      
+      // تحديث في Supabase
+      if (window.Supabase?.Customers?.update) {
+        window.Supabase.Customers.update(editPhone, { name, phone, email, city })
+          .catch(e => console.warn('Supabase update failed:', e));
+      }
+      
+      toast('✅ تم تحديث بيانات العميل');
+    }
+  } else {
+    // وضع الإضافة - استدعاء الدالة القديمة
+    addManualCustomer();
+    return;
   }
   
-  // تحديث في Supabase
-  if (window.Supabase?.Customers?.update) {
-    window.Supabase.Customers.update(phone, {
-      name: newName, phone: newPhone, email: newEmail, city: newCity
-    }).catch(e => console.warn('Failed to update in Supabase:', e));
-  }
-  
+  // إعادة الفورم لوضع الإضافة
+  cancelEditCustomer();
   renderCustomers();
-  toast('✅ تم تحديث بيانات العميل');
 }
 
 /* ============ استيراد عملاء من Excel ============ */
@@ -3879,6 +3929,7 @@ const _origRenderCustomers = window.renderCustomers;
 window.renderCustomers = function() {
   const q = ($('cust-search')?.value||'').toLowerCase();
   const statusFilter = $('cust-filter')?.value || '';
+  const cityFilter = $('cust-city')?.value || '';
   const sortBy = $('cust-sort')?.value || 'orders';
   const list = $('custList'); if (!list) return;
   const blocked = getBlockedCustomers();
@@ -3896,7 +3947,8 @@ window.renderCustomers = function() {
     const matchS = !statusFilter || 
                    (statusFilter === 'blocked' && c.isBlocked) ||
                    [...c.statuses].some(s => s === statusFilter);
-    return matchQ && matchS;
+    const matchCity = !cityFilter || (c.city && c.city.includes(cityFilter));
+    return matchQ && matchS && matchCity;
   });
   
   // ترتيب
@@ -3923,6 +3975,7 @@ window.renderCustomers = function() {
         <small>
           📱 ${c.phone||'—'} 
           ${c.email?'• 📧 '+esc(c.email):''} 
+          ${c.city?'• 📍 '+esc(c.city):''}
           • 📦 ${c.orders.length} طلب 
           • 💰 ${c.totalPurchases.toFixed(0)} د.إ
           ${c.lastOrder ? '• 📅 آخر طلب: ' + c.lastOrder.toLocaleDateString('ar') : ''}
