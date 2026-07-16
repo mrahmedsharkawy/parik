@@ -341,7 +341,7 @@ function addCard(p) {
     </div>
     <div class="image">
       ${p.id ? `<a href="product.html?id=${encodeURIComponent(p.id)}" style="display:block;width:100%;height:100%">` : ''}
-      <img src="${p.img || 'assets/logo.png'}" alt="${(p.title||'').replace(/"/g,'&quot;')}" onerror="this.src='assets/logo.png'" loading="lazy">
+      <img src="${p.img || 'assets/logo.png'}" alt="${(p.title||'').replace(/"/g,'&quot;')}" onerror="this.src='assets/logo.png'" loading="eager" width="120" height="140">
       ${p.id ? `</a>` : ''}
     </div>
     <div class="details">

@@ -3,6 +3,8 @@
   <head>
   <meta charset="UTF-8" />
   <title data-i18n="عربة التسوق- Bariq">عربة التسوق- Bariq</title>
+  <!-- Preload critical resources -->
+  <link rel="preload" href="style/style.css" as="style">
     <link rel="manifest" href="/manifest.json">
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="icon" type="image/png" href="assets/logo.png">
@@ -13,6 +15,17 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">  
+  <!-- Critical Mobile-First CSS to prevent layout flash -->
+  <style id="critical-mobile-css">
+    /* Mobile-first: default to mobile layout */
+    @media (max-width: 992px) {
+      main#main { max-width: 100% !important; padding: 0 10px !important; }
+      .cart-layout-container { flex-direction: column-reverse !important; }
+      .cart-left { width: 100% !important; position: relative !important; top: 160px !important; height: auto !important; margin-bottom: 100px !important; }
+      .cart-right { width: 100% !important; }
+      div.free-shipping-bar { max-width: 100% !important; font-size: 11px !important; border-radius: 0 !important; }
+    }
+  </style>
   <meta name="description" content="بريق - متجر إلكتروني شامل يقدم آلاف المنتجات بأفضل الأسعار. تسوق الآن ملابس، إلكترونيات، مستلزمات منزلية، أدوات تجميل، وأكثر. شحن سريع، دفع آمن، وضمان جودة المنتجات مع إمكانية الإرجاع. اكتشف عالم التسوق المميز معنا!">
   <meta name="description-en" content="Bariq - A comprehensive online store offering thousands of products at the best prices. Shop now for clothing, electronics, home essentials, beauty products, and more. Fast shipping, secure payment, and quality assurance with easy returns. Discover a world of exceptional shopping with us!">
   <meta name="keywords" content="متجر إلكتروني، قرقعيان،اليوم الوطني،حق اليله، يوم العلم، افراح، عمره، حج، تخرج، عرس، خطوبه،  مواليد، ورق، جلد، خشب، فوركس، مناسابات، هدايا، اكريلك، دفع آمن، شحن سريع، أفضل الأسعار، عروض خاصة، خصومات">
