@@ -4,7 +4,7 @@
    لإنشاء مفاتيح جديدة: npx web-push generate-vapid-keys
    ============================================================ */
 
-const VAPID_PUBLIC_KEY = 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U';
+const VAPID_PUBLIC_KEY = 'BPojY-23BXbIfa1IRkkQD3vAELjTn3nltgFBrlEIjZ3aEbphXAQvFY2E5B2R_mfikZLhGPo0lBeCedB8qoP5-SE';
 
 // ========== تحويل المفتاح لـ Uint8Array ==========
 function urlBase64ToUint8Array(base64String) {
