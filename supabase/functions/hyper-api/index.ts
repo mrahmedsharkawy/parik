@@ -24,8 +24,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // إعداد VAPID
-    const VAPID_PRIVATE = Deno.env.get('VAPID_PRIVATE_KEY') || '';
+    // إعداد VAPID - القيم الافتراضية مضمّنة كـ fallback
+    const VAPID_PRIVATE = Deno.env.get('VAPID_PRIVATE_KEY') || 'FNUfl55Aw5g1_Zlw1wQWUlbgRj2WbvWqrMqJaNTCJhg';
     const VAPID_PUBLIC  = Deno.env.get('VAPID_PUBLIC_KEY')  || 'BPojY-23BXbIfa1IRkkQD3vAELjTn3nltgFBrlEIjZ3aEbphXAQvFY2E5B2R_mfikZLhGPo0lBeCedB8qoP5-SE';
     const VAPID_EMAIL   = Deno.env.get('VAPID_EMAIL')       || 'mailto:admin@bariq.store';
 
