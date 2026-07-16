@@ -4075,6 +4075,54 @@ async function loadBlockedCustomers() {
 
 function getBlockedCustomers() { return blockedCustomersCache; }
 
+async function deleteSelectedCustomers() {
+  if (!selectedCustomers.size) { toast('اختار عملاء أولاً'); return; }
+  const custs = getCustomers();
+  const selected = [...selectedCustomers].map(i => custs[i]).filter(Boolean);
+  if (!confirm(`سيتم حذف ${selected.length} عميل نهائياً. متابعة؟`)) return;
+  toast(`⏳ جارٍ حذف ${selected.length} عميل...`);
+  const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+  const token = await getValidAdminToken() || ANON;
+  let deleted = 0;
+  for (const c of selected) {
+    if (!c.id) continue;
+    try {
+      await fetch(`https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/customers?id=eq.${c.id}`, {
+        method: 'DELETE',
+        headers: { 'apikey': ANON, 'Authorization': 'Bearer ' + token }
+      });
+      deleted++;
+    } catch(e) {}
+  }
+  toast(`✅ تم حذف ${deleted} عميل`);
+  selectedCustomers.clear();
+  syncCustomersFromSupabase();
+}
+
+async function deleteSelectedCustomers() {
+  if (!selectedCustomers.size) { toast('اختار عملاء أولاً'); return; }
+  const custs = getCustomers();
+  const selected = [...selectedCustomers].map(i => custs[i]).filter(Boolean);
+  if (!confirm(`سيتم حذف ${selected.length} عميل نهائياً. متابعة؟`)) return;
+  toast(`⏳ جارٍ حذف ${selected.length} عميل...`);
+  const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+  const token = await getValidAdminToken() || ANON;
+  let deleted = 0;
+  for (const c of selected) {
+    if (!c.id) continue;
+    try {
+      await fetch(`https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/customers?id=eq.${c.id}`, {
+        method: 'DELETE',
+        headers: { 'apikey': ANON, 'Authorization': 'Bearer ' + token }
+      });
+      deleted++;
+    } catch(e) {}
+  }
+  toast(`✅ تم حذف ${deleted} عميل`);
+  selectedCustomers.clear();
+  syncCustomersFromSupabase();
+}
+
 async function blockSelectedCustomers() {
   const custs = getCustomers();
   toast('⏳ جارٍ الحظر...');
