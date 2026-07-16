@@ -2915,32 +2915,37 @@ function saveCustomer() {
   const name = $('nc-fullname').value.trim();
   const phone = $('nc-phone').value.trim();
   const email = $('nc-email').value.trim();
-  const city = $('nc-address').value.trim();
+  const address = $('nc-address').value.trim();
   
   if (!name || !phone) { toast('أدخل الاسم والهاتف'); return; }
   
-  const lsKey = 'x2_customers';
-  let stored = [];
-  try { stored = JSON.parse(localStorage.getItem(lsKey) || '[]'); } catch(e) {}
-  
   if (editPhone) {
-    // وضع التعديل
-    const idx = stored.findIndex(x => x.phone === editPhone);
+    // وضع التعديل - تحديث أو إضافة في العملاء اليدويين
+    let stored = getManualCustomers();
+    // البحث بالهاتف القديم (editPhone) أو الهاتف الجديد (phone)
+    let idx = stored.findIndex(x => x.phone === editPhone);
+    if (idx < 0) idx = stored.findIndex(x => x.phone === phone);
+    
     if (idx >= 0) {
+      // تحديث العميل الموجود
       stored[idx].name = name;
       stored[idx].phone = phone;
       stored[idx].email = email;
-      stored[idx].city = city;
-      localStorage.setItem(lsKey, JSON.stringify(stored));
-      
-      // تحديث في Supabase
-      if (window.Supabase?.Customers?.update) {
-        window.Supabase.Customers.update(editPhone, { name, phone, email, city })
-          .catch(e => console.warn('Supabase update failed:', e));
-      }
-      
-      toast('✅ تم تحديث بيانات العميل');
+      stored[idx].address = address;
+    } else {
+      // العميل ليس في القائمة اليدوية، أضفه
+      stored.unshift({ id: Date.now(), name, phone, email, address, date: new Date().toISOString() });
     }
+    
+    localStorage.setItem(LS_MANUAL_CUSTOMERS, JSON.stringify(stored));
+    
+    // تحديث في Supabase
+    if (window.Supabase?.Customers?.upsert) {
+      window.Supabase.Customers.upsert({ full_name: name, phone, email, city: address })
+        .catch(e => console.warn('Supabase upsert failed:', e));
+    }
+    
+    toast('✅ تم حفظ بيانات العميل');
   } else {
     // وضع الإضافة - استدعاء الدالة القديمة
     addManualCustomer();
@@ -3244,24 +3249,43 @@ function getCustomers() {
     const name  = o.customerName  || o.customer || sh.name  || profile.name  || '—';
     const phone = o.customerPhone || o.phone    || sh.phone || profile.phone || '';
     const email = o.customerEmail || o.email    || sh.email || profile.email || '';
-    const city  = sh.city || sh.address || o.address || '';
+    // جلب العنوان من الطلب أو البروفايل
+    const city  = sh.city || sh.address || o.address || o.city || '';
     const key   = phone || email || name;
     if (!map[key]) map[key] = { name, phone, email, city, orders:[], statuses:new Set() };
+    // لو العنوان فاضي وموجود في البروفايل، خده من البروفايل
+    if (!map[key].city && profile.address && (phone === profile.phone || email === profile.email)) {
+      map[key].city = profile.address;
+    }
     map[key].orders.push(o);
     map[key].statuses.add(o.status||'processing');
   });
   const localCusts = Object.values(map);
 
-  // دمج عملاء Supabase
+  // دمج عملاء Supabase - يحدّث الموجودين ويضيف الجدد
   const merged = [...localCusts];
   supaCustomers.forEach(sc => {
-    const exists = merged.some(c => (sc.phone && c.phone === sc.phone) || (sc.email && c.email === sc.email));
-    if (!exists && (sc.phone || sc.email)) merged.push(sc);
+    const existing = merged.find(c => (sc.phone && c.phone === sc.phone) || (sc.email && c.email === sc.email));
+    if (existing) {
+      // تحديث العنوان من Supabase إذا كان فاضياً محلياً
+      if (!existing.city && sc.city) existing.city = sc.city;
+    } else if (sc.phone || sc.email) {
+      merged.push(sc);
+    }
   });
-  // دمج العملاء المضافين يدوياً
+  // دمج العملاء المضافين يدوياً - لهم الأولوية القصوى
   getManualCustomers().forEach(mc => {
-    const exists = merged.some(c => (mc.phone && c.phone === mc.phone) || (mc.email && c.email === mc.email));
-    if (!exists) merged.push({ name: mc.name, phone: mc.phone, email: mc.email, orders: [], statuses: new Set(['manual']) });
+    const existing = merged.find(c => (mc.phone && c.phone === mc.phone) || (mc.email && c.email === mc.email));
+    if (existing) {
+      // البيانات اليدوية تأخذ الأولوية دائماً
+      if (mc.name) existing.name = mc.name;
+      if (mc.email) existing.email = mc.email;
+      // العنوان يتحدث حتى لو فاضي (المستخدم ممكن يكون مسحه)
+      if (mc.address !== undefined) existing.city = mc.address;
+    } else {
+      // إضافة عميل جديد
+      merged.push({ name: mc.name, phone: mc.phone, email: mc.email, city: mc.address || '', orders: [], statuses: new Set(['manual']) });
+    }
   });
   return merged;
 }
