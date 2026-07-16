@@ -4199,10 +4199,11 @@ async function exportCustomers() {
 
 /* ================= تصدير المنتجات ================= */
 function exportProductsCSV() {
-  const products = JSON.parse(localStorage.getItem('x2_products') || '[]');
-  if (!products.length) { toast('❌ لا توجد منتجات'); return; }
+  const list = (typeof products !== 'undefined' && products.length) ? products
+    : JSON.parse(localStorage.getItem('admin_products') || '[]');
+  if (!list.length) { toast('❌ لا توجد منتجات'); return; }
   const header = 'الاسم عربي,الاسم إنجليزي,السعر,السعر القديم,القسم,الكمية,الوصف,الرابط\n';
-  const rows = products.map(p => [
+  const rows = list.map(p => [
     (p.nameAr || p.name || '').replace(/,/g, '،'),
     (p.nameEn || '').replace(/,/g, ' '),
     p.price || '',
@@ -4215,7 +4216,7 @@ function exportProductsCSV() {
   const blob = new Blob(['\ufeff' + header + rows], { type: 'text/csv;charset=utf-8' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
   a.download = 'products_' + new Date().toISOString().slice(0,10) + '.csv'; a.click();
-  toast('✅ تم تصدير ' + products.length + ' منتج');
+  toast('✅ تم تصدير ' + list.length + ' منتج');
 }
 
 /* ================= تحديث switchTab ================= */
