@@ -3156,7 +3156,7 @@ async function sendPushNotification() {
   // استدعاء Supabase Edge Function للإرسال
   try {
     const adminToken = await getValidAdminToken() || ANON;
-    const resp = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/functions/v1/send-push', {
+    const resp = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/functions/v1/hyper-api', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
