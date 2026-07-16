@@ -102,28 +102,33 @@ async function getPushStatus() {
 
 // ========== زر الاشتراك ==========
 async function initPushButton() {
-  const btn = document.getElementById('push-subscribe-btn');
-  if (!btn) return;
+  const btns = document.querySelectorAll('#push-subscribe-btn');
+  if (!btns.length) return;
   const status = await getPushStatus();
-  if (status === 'unsupported') { btn.style.display='none'; return; }
-  if (status === 'subscribed') {
-    btn.innerHTML = '🔔 الإشعارات مفعّلة';
-    btn.style.cssText += ';background:#27ae60;color:#fff';
-    btn.onclick = async () => {
-      await unsubscribeFromPush();
+
+  btns.forEach(btn => {
+    if (status === 'unsupported') { btn.style.display='none'; return; }
+    if (status === 'subscribed') {
+      btn.innerHTML = '🔔 الإشعارات مفعّلة';
+      btn.style.cssText += ';background:#27ae60;color:#fff';
+      btn.onclick = async () => {
+        await unsubscribeFromPush();
+        btns.forEach(b => { b.innerHTML='🔕 تفعيل الإشعارات'; b.style.background=''; });
+      };
+    } else {
       btn.innerHTML = '🔕 تفعيل الإشعارات';
-      btn.style.background = '';
-    };
-  } else {
-    btn.innerHTML = '🔕 تفعيل الإشعارات';
-    btn.onclick = async () => {
-      btn.disabled = true; btn.innerHTML = '⏳...';
-      const sub = await subscribeToPush();
-      if (sub) { btn.innerHTML='🔔 مفعّل ✅'; btn.style.cssText+=';background:#27ae60;color:#fff'; }
-      else { btn.innerHTML='🔕 تفعيل الإشعارات'; btn.disabled=false; }
-    };
-  }
-  btn.style.display = 'inline-flex';
+      btn.onclick = async () => {
+        btns.forEach(b => { b.disabled=true; b.innerHTML='⏳...'; });
+        const sub = await subscribeToPush();
+        if (sub) {
+          btns.forEach(b => { b.innerHTML='🔔 مفعّل ✅'; b.style.cssText+=';background:#27ae60;color:#fff'; });
+        } else {
+          btns.forEach(b => { b.innerHTML='🔕 تفعيل الإشعارات'; b.disabled=false; });
+        }
+      };
+    }
+    btn.style.display = 'inline-flex';
+  });
 }
 
 // ========== تشغيل ==========
