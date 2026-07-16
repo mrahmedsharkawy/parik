@@ -4,6 +4,11 @@ html,body{height:100%} body{margin:0}
 .main-header{position:fixed;inset:0 0 auto 0;z-index:1000;width:100%}
 .site-footer{margin-top:auto}
 
+/* إخفاء هيدر الكمبيوتر على الموبايل فوراً - قبل تحميل JS */
+@media (max-width: 899px) {
+  .main-header { display: none !important; }
+}
+
 /* إلغاء الشِفت للوسائط */
 img,video{max-width:100%;height:auto;border-radius: 3px;}
 img[width][height]{aspect-ratio:attr(width number)/attr(height number)}
