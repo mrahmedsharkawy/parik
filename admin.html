@@ -4203,13 +4203,13 @@ function exportProductsCSV() {
   var header = '\uFEFFالاسم عربي,الاسم انجليزي,السعر,السعر القديم,القسم,الكمية,الوصف,الرابط\n';
   var rows = products.map(function(p) {
     return [
-      (p.nameAr || p.name || '').replace(/,/g, '،'),
-      (p.nameEn || '').replace(/,/g, ' '),
+      String(p.nameAr || p.name || '').replace(/,/g, '،'),
+      String(p.nameEn || '').replace(/,/g, ' '),
       p.price || '',
       p.oldPrice || '',
-      p.category || '',
+      String(p.category || '').replace(/,/g, '،'),
       p.stock !== undefined ? p.stock : '',
-      (p.descAr || p.desc || '').replace(/[\r\n,]/g, ' '),
+      String(p.descAr || p.desc || '').replace(/[\r\n,]/g, ' '),
       p.link || ''
     ].join(',');
   }).join('\n');
