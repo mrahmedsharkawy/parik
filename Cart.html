@@ -1081,7 +1081,12 @@ h3 {
         
         <p class="summary-note" data-i18n="summary_note">تاكيد الطلب يتم علي واتساب لاكمال البيانات وتحديد الون والمقاس الدفع عند الاستلام او تحويل بنكي .</p>
 
-
+        <!-- بانر تسجيل الدخول لغير المسجلين -->
+        <div id="cart-login-banner" style="display:none;background:linear-gradient(135deg,#152546,#1e3a6e);color:#fff;border-radius:14px;padding:13px 14px;margin-bottom:12px;direction:rtl">
+          <div style="font-weight:700;font-size:.88rem;color:#D4AF37;margin-bottom:5px">👤 سجّل دخولك للاستفادة الكاملة</div>
+          <div style="font-size:.78rem;opacity:.9;line-height:1.5;margin-bottom:10px">أدِر طلباتك وتابع حالة الشحن واحصل على <strong style="color:#D4AF37">كاش باك</strong> مع كل عملية شراء</div>
+          <a href="login.html" style="display:block;text-align:center;background:#D4AF37;color:#152546;border-radius:9px;padding:8px;font-weight:700;font-size:.84rem;text-decoration:none">تسجيل الدخول / إنشاء حساب</a>
+        </div>
 
         <button class="checkout-btn" id="checkoutBtn"><span data-i18n="تأكيد الطلب عبر واتساب">تأكيد الطلب عبر واتساب</span></button>
        
@@ -1293,6 +1298,27 @@ h3 {
 <script src="java/footer-pages.js" defer></script>
 <script src="mobile-nav-bar/main-navbar.js" defer></script> 
 <script src="java/notifications.js" defer></script>
+<script>
+  // إظهار بانر تسجيل الدخول لغير المسجلين
+  (function() {
+    function checkLoginBanner() {
+      const banner = document.getElementById('cart-login-banner');
+      if (!banner) return;
+      try {
+        const profile = JSON.parse(localStorage.getItem('x2_profile') || '{}');
+        const loggedIn = !!(profile.phone || profile.email || profile.name);
+        banner.style.display = loggedIn ? 'none' : 'block';
+      } catch(e) {
+        banner.style.display = 'block';
+      }
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', checkLoginBanner);
+    } else {
+      checkLoginBanner();
+    }
+  })();
+</script>
 <script type="module" src="./java/Products.js"></script> <!-- ده يفضل يفضل في الآخر -->
 </body>
 </html>
