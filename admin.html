@@ -4223,7 +4223,7 @@ window.renderCustomers = function() {
                    (statusFilter === 'blocked' && c.isBlocked) ||
                    [...c.statuses].some(s => s === statusFilter);
     // مطابقة ذكية للمدينة - تتجاهل الاختلافات البسيطة في الكتابة
-    const normalizeCity = s => (s||'').replace(/[أإآا]/g,'ا').replace(/[ةه]/g,'ه').replace(/\s+/g,'').toLowerCase();
+    const normalizeCity = s => (s||'').replace(/[أإآا]/g,'ا').replace(/[ةه]/g,'ه').replace(/ى/g,'ي').replace(/\s+/g,'').toLowerCase();
     const matchCity = !cityFilter || normalizeCity(c.city).includes(normalizeCity(cityFilter));
     // فلترة "اشتروا مرة واحدة"
     const matchOnce = sortBy !== 'once' || c.orders.length === 1;
