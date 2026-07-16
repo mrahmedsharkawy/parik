@@ -233,7 +233,7 @@ function normalizeAssetUrl(u) {
 
 
 // ... نفس الكود الحالي لإنشاء كارت المنتج ...
-export function createProductCard(prod, index = 999) {
+export function createProductCard(prod) {
   // تسجيل عالمي للاستخدام خارج الموديول
   if (!window.createProductCard) window.createProductCard = createProductCard;
   const card = document.createElement("div");
@@ -534,9 +534,7 @@ videoContainer.addEventListener('mouseleave', function() {
   const img = document.createElement("img");
   img.className = "product-img";
   img.alt = getTranslated(prod.name);
-  // تحميل فوري للصور الأولى (6 منتجات أعلى الصفحة)
-  img.loading = index < 6 ? "eager" : "lazy";
-  if (index < 6) img.fetchPriority = "high";
+  img.loading = "lazy";
   img.decoding = "async";
   img.width = 230;
   img.height = 230;
@@ -1128,7 +1126,7 @@ function renderProductsGrid(list, productsContainer, direction = null) {
 
     for (let k = 0; k < chunkSize && i < sortedList.length; k++, i++) {
       const prod = sortedList[i];
-      const card = createProductCard(prod, i);
+      const card = createProductCard(prod);
       fragment.appendChild(card);
     }
     rowDiv.appendChild(fragment);
@@ -1166,7 +1164,7 @@ function renderBatch(items, container, clearContainer, direction = null) {
   const rowDiv = container.querySelector('.products-row');
   const fragment = document.createDocumentFragment();
   items.forEach((prod, index) => {
-    const card = createProductCard(prod, index);
+    const card = createProductCard(prod);
     card.style.setProperty('--product-index', index);
     fragment.appendChild(card);
   });

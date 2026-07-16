@@ -3,32 +3,10 @@
   <head>
   <meta charset="UTF-8" />
   <title data-i18n=" تفاصيل المنتج - Bariq">تفاصيل المنتج - Bariq</title>
-    <link rel="manifest" href="/manifest.json">
-  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-  <link rel="icon" type="image/png" href="assets/logo.png">
-  <link rel="apple-touch-icon" href="assets/logo.png">
-  <meta name="apple-mobile-web-app-title" content="بريق">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#152546">
+  <meta name="theme-color" content="#007bff">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">  
-  <!-- Critical Mobile-First CSS to prevent layout flash -->
-  <style id="critical-mobile-css">
-    /* Hide page until CSS loads to prevent flash */
-    html:not(.css-loaded) body { opacity: 0; }
-    html.css-loaded body { opacity: 1; transition: opacity 0.05s; }
-    @media (max-width: 992px) {
-      .dropdown-content { position: fixed !important; top: 0 !important; width: min(82vw, 320px) !important; height: 100dvh !important; transform: translateX(100%) !important; }
-      html[dir="rtl"] .dropdown-content { right: 0 !important; left: auto !important; }
-      .dropdown-content.show { transform: translateX(0) !important; }
-      .footer-info-bar { width: 95% !important; }
-      .footer-columns { flex-direction: column !important; }
-      .products-row { column-count: 2 !important; }
-      main#main { width: 100% !important; max-width: 100% !important; }
-      .product-card { min-height: 280px !important; }
-    }
-  </style>
   <meta name="description" content="بريق - متجر إلكتروني شامل يقدم آلاف المنتجات بأفضل الأسعار. تسوق الآن ملابس، إلكترونيات، مستلزمات منزلية، أدوات تجميل، وأكثر. شحن سريع، دفع آمن، وضمان جودة المنتجات مع إمكانية الإرجاع. اكتشف عالم التسوق المميز معنا!">
   <meta name="description-en" content="Bariq - A comprehensive online store offering thousands of products at the best prices. Shop now for clothing, electronics, home essentials, beauty products, and more. Fast shipping, secure payment, and quality assurance with easy returns. Discover a world of exceptional shopping with us!">
   <meta name="keywords" content="متجر إلكتروني، قرقعيان،اليوم الوطني،حق اليله، يوم العلم، افراح، عمره، حج، تخرج، عرس، خطوبه،  مواليد، ورق، جلد، خشب، فوركس، مناسابات، هدايا، اكريلك، دفع آمن، شحن سريع، أفضل الأسعار، عروض خاصة، خصومات">
@@ -40,7 +18,7 @@
   <meta property="og:image" content="assets/logo.png">
   <meta property="og:url" content="https://bariq.com">
   <meta property="og:type" content="website">
-  <link rel="stylesheet" href="style/style.css" onload="document.documentElement.classList.add('css-loaded')" />
+  <link rel="stylesheet" href="style/style.css" />
 </head>
 <body class="product-page-body">
 
@@ -109,13 +87,13 @@
 
     <!-- 4.  فوركس -->
     <li class="category-item">
-      <a href="/categories/Forex">🪙<span data-i18n="فوركس ">فوركس </span><span class="arrow">›</span></a>
+      <a href="/categories/forex">🪙<span data-i18n="فوركس ">فوركس </span><span class="arrow">›</span></a>
       <div class="flyout category-flyout">
         <ul class="subcategories">
-          <li><a href="/categories/Forex/tables"><img src="assets/categories/Forex/tables.png" alt="طولات "><span data-i18n="طولات ">طولات </span></a></li>
-          <li><a href="/categories/Forex/stands"><img src="assets/categories/Forex/stands.png" alt="استاند  "><span data-i18n="استاند  ">استاند  </span></a></li>
-          <li><a href="/categories/Forex/models"><img src="assets/categories/Forex/models.png" alt="مجسم "><span data-i18n="مجسم ">مجسم </span></a></li>
-          <li><a href="/categories/Forex/rotations"><img src="assets/categories/Forex/rotations.png" alt="دوران "><span data-i18n="دوران ">دوران </span></a></li>
+          <li><a href="/categories/forex/tables"><img src="assets/categories/forex/tables.png" alt="طولات "><span data-i18n="طولات ">طولات </span></a></li>
+          <li><a href="/categories/forex/stands"><img src="assets/categories/forex/stands.png" alt="استاند  "><span data-i18n="استاند  ">استاند  </span></a></li>
+          <li><a href="/categories/forex/models"><img src="assets/categories/forex/models.png" alt="مجسم "><span data-i18n="مجسم ">مجسم </span></a></li>
+          <li><a href="/categories/forex/rotations"><img src="assets/categories/forex/rotations.png" alt="دوران "><span data-i18n="دوران ">دوران </span></a></li>
         </ul>
       </div>
     </li>
@@ -152,10 +130,10 @@
       <a href="/categories/sticker">🏷️<span data-i18n="استيكر">استيكر</span><span class="arrow">›</span></a>
       <div class="flyout category-flyout">
         <ul class="subcategories">
-          <li><a href="/categories/sticker/born-in"><img src="assets/categories/Sticker/born-in.png" alt="مواليد "><span data-i18n="مواليد ">مواليد</span></a></li>
-          <li><a href="/categories/sticker/empty"><img src="assets/categories/Sticker/empty.png" alt="مفرغ "><span data-i18n="مفرغ ">مفرغ</span></a></li>
-          <li><a href="/categories/sticker/full"><img src="assets/categories/Sticker/full.png" alt="كامل "><span data-i18n="كامل ">كامل</span></a></li>
-          <li><a href="/categories/sticker/occasions"><img src="assets/categories/Sticker/occasions.png" alt="المناسبات"><span data-i18n="المناسبات">المناسبات</span></a></li>
+          <li><a href="/categories/sticker/born-in"><img src="assets/categories/sticker/born-in.png" alt="مواليد "><span data-i18n="مواليد ">مواليد</span></a></li>
+          <li><a href="/categories/sticker/empty"><img src="assets/categories/sticker/empty.png" alt="مفرغ "><span data-i18n="مفرغ ">مفرغ</span></a></li>
+          <li><a href="/categories/sticker/full"><img src="assets/categories/sticker/full.png" alt="كامل "><span data-i18n="كامل ">كامل</span></a></li>
+          <li><a href="/categories/sticker/occasions"><img src="assets/categories/sticker/occasions.png" alt="المناسبات"><span data-i18n="المناسبات">المناسبات</span></a></li>
         </ul>
       </div>
     </li>
@@ -507,14 +485,20 @@
    
 <div class="categories">
     <div><a href="/categories.html">💯 <span data-i18n="الكل">الكل</span></a></div>
-    <div><a href="/categories/Occasions">🎉 <span data-i18n="مناسابات">مناسابات</span></a></div>
-    <div><a href="/categories/Acrylic">💎 <span data-i18n=" اكريلك">اكريلك </span></a></div>
-    <div><a href="/categories/paper">📄 <span data-i18n="ورق ">ورق </span></a></div>
-    <div><a href="/categories/Forex">🖼️ <span data-i18n="فوركس ">فوركس </span></a></div>
-    <div><a href="/categories/wood">🪵 <span data-i18n="خشب  ">خشب  </span></a></div>
-    <div><a href="/categories/leather">👜 <span data-i18n="جلد  ">جلد  </span></a></div>
-    <div><a href="/categories/sticker">🏷️ <span data-i18n="استيكر ">استيكر </span></a></div>
-    <div><a href="/categories/ramadan">🌙 <span data-i18n="رمضان ">رمضان </span></a></div>
+    <div><a href="/categories/women">👗 <span data-i18n="ملابس نسائية">ملابس نسائية</span></a></div>
+    <div><a href="/categories/men">👕 <span data-i18n="ملابس رجالية">ملابس رجالية</span></a></div>
+    <div><a href="/categories/health-beauty">💄 <span data-i18n="الصحة والجمال">الصحة والجمال</span></a></div>
+    <div><a href="/categories/consumer-electronics">� <span data-i18n="الإلكترونيات الاستهلاكية">الإلكترونيات الاستهلاكية</span></a></div>
+    <div><a href="/categories/home-garden-furniture">🪑 <span data-i18n="المنزل والحديقة والاثاث">المنزل والحديقة والاثاث</span></a></div>
+    <div><a href="/categories/kids-babies">👶 <span data-i18n="ألعاب الأطفال والرضع">ألعاب الأطفال والرضع</span></a></div>
+    <div><a href="/categories/jewelry-watches">� <span data-i18n="المجوهرات والساعات">المجوهرات والساعات</span></a></div>
+    <div><a href="/categories/bags-shoes">👟 <span data-i18n="الحقائب والأحذية">الحقائب والأحذية</span></a></div>
+    <div><a href="/categories/sports-outdoors">🎽 <span data-i18n="الرياضة والهواء الطلق">الرياضة والهواء الطلق</span></a></div>
+    <div><a href="/categories/home-improvement">🏠 <span data-i18n="تحسين المنزل">تحسين المنزل</span></a></div>
+    <div><a href="/categories/automobiles-motorcycles">� <span data-i18n="السيارات والدراجات النارية">السيارات والدراجات النارية</span></a></div>
+    <div><a href="/categories/pet-supplies">🐶 <span data-i18n="مستلزمات الحيوانات الأليفة">مستلزمات الحيوانات الأليفة</span></a></div>
+    <div><a href="/categories/phones-accessories">📱 <span data-i18n="الهواتف والملحقات">الهواتف والملحقات</span></a></div>
+    <div><a href="/categories/computer-office">💻 <span data-i18n="الكمبيوتر والمكتب">الكمبيوتر والمكتب</span></a></div>
 </div>
 
 
@@ -638,7 +622,6 @@
 </div>
   </div>
 </footer>
-<script src="java/supabase.js" defer></script>
 <script src="java/main.js" defer></script>
 <script src="translations/translation.js" defer></script>
 <script src="java/footer-pages.js" defer></script>

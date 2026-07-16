@@ -18,24 +18,6 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">  
-  <!-- Critical Mobile-First CSS to prevent layout flash (FOUC) -->
-  <style id="critical-mobile-css">
-    /* Hide page until CSS loads to prevent flash */
-    html:not(.css-loaded) body { opacity: 0; }
-    html.css-loaded body { opacity: 1; transition: opacity 0.05s; }
-    /* Mobile-first critical styles */
-    @media (max-width: 992px) {
-      .dropdown-content { position: fixed !important; top: 0 !important; width: min(82vw, 320px) !important; height: 100dvh !important; transform: translateX(100%) !important; }
-      html[dir="rtl"] .dropdown-content { right: 0 !important; left: auto !important; }
-      .dropdown-content.show { transform: translateX(0) !important; }
-      .footer-info-bar { width: 95% !important; }
-      .footer-columns { flex-direction: column !important; }
-      .products-row { column-count: 2 !important; }
-      main#main { width: 100% !important; max-width: 100% !important; }
-      .header-content { padding: 0 10px !important; }
-      .product-card { min-height: 280px !important; }
-    }
-  </style>
   <meta name="description" content="بريق - متجر إلكتروني شامل يقدم آلاف المنتجات بأفضل الأسعار. تسوق الآن ملابس، إلكترونيات، مستلزمات منزلية، أدوات تجميل، وأكثر. شحن سريع، دفع آمن، وضمان جودة المنتجات مع إمكانية الإرجاع. اكتشف عالم التسوق المميز معنا!">
   <meta name="description-en" content="Bariq - A comprehensive online store offering thousands of products at the best prices. Shop now for clothing, electronics, home essentials, beauty products, and more. Fast shipping, secure payment, and quality assurance with easy returns. Discover a world of exceptional shopping with us!">
   <meta name="keywords" content="متجر إلكتروني، قرقعيان،اليوم الوطني،حق اليله، يوم العلم، افراح، عمره، حج، تخرج، عرس، خطوبه،  مواليد، ورق، جلد، خشب، فوركس، مناسابات، هدايا، اكريلك، دفع آمن، شحن سريع، أفضل الأسعار، عروض خاصة، خصومات">
@@ -47,7 +29,7 @@
   <meta property="og:image" content="assets/logo.png">
   <meta property="og:url" content="https://bariq.com">
   <meta property="og:type" content="website">
-  <link rel="stylesheet" href="style/style.css" onload="document.documentElement.classList.add('css-loaded')"/>
+  <link rel="stylesheet" href="style/style.css" />
 </head>
 <body>
 
