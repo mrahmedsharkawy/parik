@@ -4,10 +4,10 @@ html,body{height:100%} body{margin:0}
 .main-header{position:fixed;inset:0 0 auto 0;z-index:1000;width:100%}
 .site-footer{margin-top:auto}
 
-/* إخفاء الهيدر الكامل على الموبايل */
+/* إخفاء عناصر الديسكتوب فقط على الموبايل - إبقاء الشعار والبحث ظاهرَين */
 @media (max-width: 899px) {
-  .main-header { display: none !important; }
-  main { margin-top: 0; }
+  .main-header .dropdown,
+  .main-header .cart { display: none !important; }
 }
 
 /* إلغاء الشِفت للوسائط */
