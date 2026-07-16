@@ -3084,8 +3084,8 @@ async function importCustomersExcel(input) {
     // دالة بحث مرنة في الهيدر
     const findCol = (...keywords) => headers.findIndex(h => keywords.some(k => h.includes(k)));
 
-    const nameIdx  = findCol('name','اسم','الاسم','customer','عميل');
-    const phoneIdx = findCol('phone','هاتف','الهاتف','رقم','mobile','جوال','موبايل','tel');
+    const nameIdx  = findCol('name','اسم الكامل','الاسم الكامل','الاسم','اسم العميل','customer name','full name');
+    const phoneIdx = findCol('phone','هاتف','الهاتف','جوال','موبايل','mobile','tel','telephone','رقم الهاتف','رقم الجوال','رقم الموبايل');
     const emailIdx = findCol('email','بريد','ايميل','إيميل','يميل','mail');
     const cityIdx  = findCol('city','مدينة','المدينة','عنوان','region','منطقة','محافظة','emirate');
     
@@ -3101,7 +3101,7 @@ async function importCustomersExcel(input) {
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i];
       let phone = String(row[phoneIdx] || '').trim().replace(/[^\d+]/g, '');
-      if (!phone) continue;
+      if (!phone || phone.length < 7) continue; // تجاهل الأرقام القصيرة (IDs)
       // تطبيع الرقم: لو يبدأ بـ 05 (إمارات محلي) → أضف 971
       if (/^05\d{8}$/.test(phone)) phone = '971' + phone.slice(1);
       // لو يبدأ بـ 5 وطوله 9 → أضف 971

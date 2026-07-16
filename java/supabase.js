@@ -302,15 +302,16 @@ SupaOrders.getByOrderNumber = async function(num){ const r = await sbFetch('orde
 
 /* === تحديث CUSTOMERS بدوال إضافية === */
 SupaCustomers.addBulk = async function(list){
-  // تحويل للـ schema المناسب لـ Supabase
+  // تحويل للـ schema المناسب لـ Supabase (نبعت name و full_name معاً للتوافق)
   const rows = list.map(c => ({
     full_name: c.name || '',
+    name: c.name || '',
     phone: c.phone || '',
     email: c.email || '',
     city: c.city || '',
     address: c.address || '',
     active: true
-  })).filter(r => r.phone);
+  })).filter(r => r.phone && r.phone.length >= 7);
   if (!rows.length) return [];
   // رفع دفعات 200 لتجنب حد الـ payload
   const BATCH = 200;
