@@ -4563,22 +4563,8 @@ async function loadCampaignsFromSupabase() {
   }, 1500);
 })();
 
-loadSubscriberCount();
-async function loadSubscriberCount() {
-    const { count, error } = await supabase
-        .from("push_subscriptions")
-        .select("*", {
-            count: "exact",
-            head: true
-        });
 
-    if (error) {
-        console.error("Subscriber Count:", error);
-        return;
-    }
 
-    document.getElementById("subscriberCount").textContent = count;
-}
 </script>
 </body>
 </html>
