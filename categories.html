@@ -526,23 +526,59 @@
   let activeSubSlug = null;
 
   // تحميل البيانات
-  Promise.all([
-    fetch('java/Categories.json', {cache:'no-store'}).then(r=>r.json()),
-    fetch('java/Products.json', {cache:'no-store'}).then(r=>r.json())
-  ]).then(([cats, prods]) => {
+  function mapSbProduct(p) {
+    const imgs = [];
+    if (p.image) imgs.push(p.image);
+    if (Array.isArray(p.gallery)) p.gallery.forEach(g => g && g !== p.image && imgs.push(g));
+    return {
+      id: p.id,
+      name: {ar: p.name_ar || '', en: p.name_en || p.name_ar || ''},
+      desc: p.description_ar || '',
+      img: imgs.length ? imgs : undefined,
+      category: Array.isArray(p.categories) ? p.categories : (p.categories ? [p.categories] : []),
+      subcategory: p.subcategory || '',
+      price: p.price,
+      oldPrice: p.old_price || undefined,
+      stock: p.stock || undefined,
+      rating: p.rating || undefined,
+      ratingCount: p.ratingCount || undefined,
+      timerEnd: p.timer_end || undefined,
+      featured: p.featured || false
+    };
+  }
+
+  async function initPage() {
+    let cats = [], prods = [];
+    try { cats = await fetch('java/Categories.json', {cache:'no-store'}).then(r=>r.json()); } catch(e) {}
+
+    // جلب المنتجات من Supabase أولاً
+    if (window.Supabase && window.Supabase.Products) {
+      try {
+        const sb = await window.Supabase.Products.getAll(500);
+        if (Array.isArray(sb) && sb.length) prods = sb.map(mapSbProduct);
+      } catch(e) {}
+    }
+    // fallback: Products.json
+    if (!prods.length) {
+      try { prods = await fetch('java/Products.json', {cache:'no-store'}).then(r=>r.json()); } catch(e) {}
+    }
+
     allCategories = cats;
     allProducts = prods;
     buildSidebar();
     buildMobileTabs();
-    // تحقق من URL params
     const params = new URLSearchParams(location.search);
     const cat = params.get('category');
     const sub = params.get('subcategory');
     if (cat) selectMainCategory(cat, false);
     else showAllSubcategories();
     if (sub) selectSubcategory(sub);
-  }).catch(() => {
-    document.getElementById('catSubGrid').innerHTML = '<p style="color:#aaa;padding:20px">تعذّر تحميل الفئات</p>';
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    initPage().catch(() => {
+      document.getElementById('catSubGrid').innerHTML = '<p style="color:#aaa;padding:20px">تعذّر تحميل الفئات</p>';
+    });
   });
 
   // بناء الشريط الجانبي
@@ -1048,6 +1084,7 @@
 </div>
   </div>
 </footer>
+<script src="java/supabase.js" defer></script>
 <script src="java/main.js" defer></script>
 <script src="translations/translation.js" defer></script>
 <script src="java/footer-pages.js" defer></script>
