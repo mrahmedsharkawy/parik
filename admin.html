@@ -295,9 +295,9 @@
       <!-- قائمة المنتجات -->
       <div class="card" style="display:flex;flex-direction:column">
         <h2>📦 المنتجات (<span id="prodCount">0</span>)</h2>
-        <input type="text" id="searchProd" placeholder="🔍 بحث بالاسم…" oninput="prodPage=1;renderProducts()" style="margin-bottom:8px">
+        <input type="text" id="searchProd" placeholder="🔍 بحث بالاسم…" oninput="renderProducts()" style="margin-bottom:8px">
         <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
-          <select id="sortProd" onchange="prodPage=1;renderProducts()" style="flex:1;min-width:140px">
+          <select id="sortProd" onchange="renderProducts()" style="flex:1;min-width:140px">
             <option value="default">ترتيب: افتراضي</option>
             <option value="newest">الأحدث أولاً</option>
             <option value="oldest">الأقدم أولاً</option>
@@ -307,14 +307,13 @@
             <option value="rating">التقييم الأعلى</option>
             <option value="name_az">الاسم: أ → ي</option>
           </select>
-          <select id="stockFilter" onchange="prodPage=1;renderProducts()" style="width:auto">
+          <select id="stockFilter" onchange="renderProducts()" style="width:auto">
             <option value="">كل المنتجات</option>
             <option value="instock">متاح فقط</option>
             <option value="discount">عليها خصم</option>
           </select>
         </div>
-        <div class="plist" id="prodList" style="flex:1"><div class="empty">لا توجد منتجات</div></div>
-        <div class="pager" id="prodPager"></div>
+        <div class="plist" id="prodList" style="flex:1;max-height:65vh;overflow-y:auto"><div class="empty">لا توجد منتجات</div></div>
         <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn-ghost btn-sm" onclick="exportProductsCSV()">⬇ تصدير CSV</button>
           <button class="btn-gold btn-sm" onclick="$('importProdInput').click()">📥 استيراد Excel</button>
@@ -1077,8 +1076,7 @@
 let products = [];
 let categories = [];
 let currentMedia = []; // [{type:'image'|'video', src}]
-let prodPage = 1;              // صفحة المنتجات الحالية
-const PROD_PAGE_SIZE = 7;     // عدد المنتجات في كل صفحة
+
 let catFilter = '';            // القسم المختار لتصفية المنتجات ('' = الكل)
 const LS_PRODUCTS = 'admin_products';
 const LS_REVIEWS  = 'admin_reviews';
@@ -1647,7 +1645,6 @@ function renderCatCounts(){
 // تصفية المنتجات حسب القسم عند الضغط على خانته
 function filterByCat(slug){
   catFilter = slug;
-  prodPage = 1;
   renderProducts();
 }
 
@@ -1688,16 +1685,9 @@ function renderProducts(){
   });
   else if(sort === 'rating') all = [...all].sort((a,b) => (parseFloat(b.rating)||0) - (parseFloat(a.rating)||0));
   else if(sort === 'name_az') all = [...all].sort((a,b) => getT(a.name).localeCompare(getT(b.name), 'ar'));
-  if(!all.length){ $('prodList').innerHTML='<div class="empty">لا توجد منتجات</div>'; $('prodPager').innerHTML=''; return; }
+  if(!all.length){ $('prodList').innerHTML='<div class="empty">لا توجد منتجات</div>'; return; }
 
-  // ترقيم الصفحات
-  const totalPages = Math.max(1, Math.ceil(all.length / PROD_PAGE_SIZE));
-  if(prodPage > totalPages) prodPage = totalPages;
-  if(prodPage < 1) prodPage = 1;
-  const start = (prodPage-1) * PROD_PAGE_SIZE;
-  const list = all.slice(start, start + PROD_PAGE_SIZE);
-
-  $('prodList').innerHTML = list.map(p=>{
+  $('prodList').innerHTML = all.map(p=>{
     const m = firstMedia(p);
     const thumb = isVideo(m) ? `<video src="${escAttr(m)}" muted></video>` : `<img src="${escAttr(m)}" onerror="this.style.opacity=.3">`;
     const cats = (Array.isArray(p.category)?p.category:[p.category]).filter(Boolean).map(c=>`<span class="chip">${esc(getT(c))}</span>`).join('');
@@ -1718,30 +1708,7 @@ function renderProducts(){
       </div>
     </div>`;
   }).join('');
-
-  renderProdPager(totalPages);
 }
-
-function renderProdPager(totalPages){
-  const pager = $('prodPager');
-  if(totalPages<=1){ pager.innerHTML=''; return; }
-  const pages = [];
-  const add = n => pages.push(n);
-  // نافذة صفحات مع نقاط اختصار
-  const win = 1;
-  for(let i=1;i<=totalPages;i++){
-    if(i===1 || i===totalPages || (i>=prodPage-win && i<=prodPage+win)) add(i);
-    else if(pages[pages.length-1] !== '…') add('…');
-  }
-  let html = `<button onclick="gotoProdPage(${prodPage-1})" ${prodPage===1?'disabled':''}>‹</button>`;
-  html += pages.map(n=> n==='…'
-    ? `<span class="dots">…</span>`
-    : `<button class="${n===prodPage?'active':''}" onclick="gotoProdPage(${n})">${n}</button>`
-  ).join('');
-  html += `<button onclick="gotoProdPage(${prodPage+1})" ${prodPage===totalPages?'disabled':''}>›</button>`;
-  pager.innerHTML = html;
-}
-function gotoProdPage(p){ prodPage = p; renderProducts(); $('prodList').scrollIntoView({behavior:'smooth',block:'nearest'}); }
 
 /* ================= التصدير ================= */
 function download(filename, text){
