@@ -994,7 +994,11 @@
 
       <!-- ============ إشعارات Push ============ -->
       <div class="card">
-        <h2>🔔 إرسال إشعار Push للعملاء</h2>
+        <h2>🔔 إرسال إشعار Push للعملاء</h2> 
+                <div class="subscriber-box">
+    <span>👥 المشتركين في الإشعارات</span>
+    <strong id="subscriberCount">0</strong>
+
         <div class="hint">الإشعارات تظهر على شاشة الهاتف وأيقونة التطبيق حتى لو الموقع مغلق</div>
         <label>عنوان الإشعار</label>
         <input type="text" id="push-title" placeholder="عرض خاص 🔥" maxlength="50">
@@ -1008,10 +1012,6 @@
           <button class="btn-gold" style="flex:1" onclick="sendPushNotification()">📲 إرسال للكل</button>
           <button class="btn-ghost btn-sm" onclick="previewPush()">👁 معاينة</button>
         </div>
-        <div class="subscriber-box">
-    <span>👥 المشتركين في الإشعارات</span>
-    <strong id="subscriberCount">0</strong>
-</div>
         <div id="push-status" style="margin-top:10px;font-size:.82rem;color:#7a8296"></div>
         <div style="margin-top:12px;padding:10px;background:#f8f9fa;border-radius:8px;font-size:.78rem;color:#5a6478">
           <b>⚙️ الإعداد مرة واحدة:</b><br>
