@@ -1157,6 +1157,9 @@
       <div class="acc-nav-item" onclick="showSection('payment')"><span class="ico">💰</span> <span data-i18n="طرق الدفع">طرق الدفع</span></div>
       <div class="acc-nav-item" onclick="showSection('support')"><span class="ico">🤖</span> <span data-i18n="الخدمة الذاتية">الخدمة الذاتية</span></div>
       <div class="acc-nav-item" onclick="showSection('notifications')"><span class="ico">🔔</span> <span data-i18n="الإشعارات">الإشعارات</span></div>
+
+      <!-- روابط السوشيال ميديا -->
+      <div id="acc-social-links" style="display:flex;gap:8px;justify-content:center;padding:10px 14px 4px;flex-wrap:wrap"></div>
     </div>
 
     <!-- اللغة والعملة -->
@@ -2698,7 +2701,57 @@
 <script src="java/footer-pages.js" defer></script>
 <script src="mobile-nav-bar/main-navbar.js" defer></script> 
 <script src="java/notifications.js" defer></script>
-<script type="module" src="./java/Products.js"></script> <!-- ده يفضل يفضل في الآخر -->
+<script type="module" src="./java/Products.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var icons = {
+    Instagram: { emoji: '📸', color: '#E1306C' },
+    Facebook:  { emoji: '👥', color: '#1877F2' },
+    TikTok:    { emoji: '🎵', color: '#010101' },
+    Snapchat:  { emoji: '👻', color: '#FFFC00', text: '#000' },
+    YouTube:   { emoji: '▶️', color: '#FF0000' },
+    Twitter:   { emoji: '🐦', color: '#1DA1F2' },
+    WhatsApp:  { emoji: '💬', color: '#25D366' },
+    Pinterest: { emoji: '📌', color: '#E60023' },
+  };
+  function buildSocialBar(s) {
+    var container = document.getElementById('acc-social-links');
+    if (!container) return;
+    container.innerHTML = '';
+    var map = {
+      Instagram: s.instagram, Facebook: s.facebook, TikTok: s.tiktok,
+      Snapchat: s.snapchat, YouTube: s.youtube, Twitter: s.twitter,
+      WhatsApp: s.wa ? 'https://wa.me/' + String(s.wa).replace(/\D/g,'') : null,
+      Pinterest: s.pinterest
+    };
+    Object.keys(map).forEach(function(name) {
+      var url = map[name];
+      if (!url) return;
+      var ic = icons[name] || { emoji: '🔗', color: '#152546' };
+      var a = document.createElement('a');
+      a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+      a.title = name;
+      a.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;background:' + ic.color + ';font-size:18px;text-decoration:none;color:' + (ic.text||'#fff');
+      a.textContent = ic.emoji;
+      container.appendChild(a);
+    });
+  }
+  try {
+    var cached = JSON.parse(localStorage.getItem('x2_settings') || '{}');
+    if (cached.instagram || cached.facebook || cached.tiktok || cached.wa) { buildSocialBar(cached); return; }
+  } catch(e) {}
+  fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/settings?limit=1', {
+    headers: { apikey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E' }
+  }).then(function(r){return r.json()}).then(function(rows){
+    if (rows && rows[0]) {
+      var s = rows[0];
+      var settings = { instagram:s.instagram, facebook:s.facebook, tiktok:s.tiktok, snapchat:s.snapchat, youtube:s.youtube, twitter:s.twitter, pinterest:s.pinterest, wa:s.whatsapp };
+      localStorage.setItem('x2_settings', JSON.stringify(settings));
+      buildSocialBar(settings);
+    }
+  }).catch(function(){});
+});
+</script>
 </body>
 </html>
 
