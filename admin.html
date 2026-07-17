@@ -2143,6 +2143,7 @@ async function changeOrderStatus(id, status){
       const statusLabels = {
         pending:    { title: '⏳ طلبك قيد المراجعة',     body: `طلبك رقم ${orderNum} يُراجَع الآن` },
         processing: { title: '🔄 طلبك قيد المعالجة',     body: `جارٍ تجهيز طلبك رقم ${orderNum}` },
+        confirmed:  { title: '✅ تم تأكيد طلبك!',         body: `طلبك رقم ${orderNum} تم تأكيده وسيُجهَّز قريباً 🎉` },
         shipped:    { title: '🚚 تم شحن طلبك!',           body: `طلبك رقم ${orderNum} في الطريق إليك` },
         delivered:  { title: '✅ تم توصيل طلبك!',         body: `طلبك رقم ${orderNum} وصل بنجاح 🎉` },
         cancelled:  { title: '❌ تم إلغاء طلبك',          body: `طلبك رقم ${orderNum} تم إلغاؤه` },
