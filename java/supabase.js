@@ -61,7 +61,7 @@ const SupaCustomers = {
     return all;
   },
   getByPhone: async function(phone){ return sbFetch('customers?phone=eq.'+encodeURIComponent(phone)+'&limit=1'); },
-  delete: async function(id){ return sbFetch('customers?id=eq.'+id, {method:'DELETE'}); }
+  delete: async function(id){ return sbFetch('customers?id=eq.'+id, {method:'DELETE', prefer:'return=minimal'}); }
 };
 
 /* === ORDERS (order_number, customer_id, total, status, payment_method, payment_status, shipping_cost, notes, items, cashback, cashback_status) === */
