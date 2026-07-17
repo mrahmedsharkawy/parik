@@ -4308,20 +4308,26 @@ async function importProductsExcel(input) {
     const maxId = products.reduce((m, p) => Math.max(m, Number(p.id)||0), 0);
     for (let i = 1; i < rows.length; i++) {
       const r = rows[i];
-      const nameAr = nameArIdx >= 0 ? String(r[nameArIdx]||'').trim() : '';
-      const nameEn = nameEnIdx >= 0 ? String(r[nameEnIdx]||'').trim() : nameAr;
+      let nameAr = nameArIdx >= 0 ? String(r[nameArIdx]||'').trim() : '';
+      const nameEn = nameEnIdx >= 0 ? String(r[nameEnIdx]||'').trim() : '';
       const price  = priceIdx  >= 0 ? parseFloat(r[priceIdx]) || 0 : 0;
+      const descVal = descIdx >= 0 ? String(r[descIdx]||'').trim() : '';
+      // لو الاسم فارغ أو [object Object] → استخدم الوصف كاسم
+      if (!nameAr || nameAr.includes('[object') || nameAr === 'undefined') {
+        nameAr = descVal;
+      }
       if (!nameAr && !price) continue;
-      const catVal = catIdx >= 0 ? String(r[catIdx]||'').trim() : '';
+      // الفئات: يفصلها بـ ، أو ,
+      const catRaw = catIdx >= 0 ? String(r[catIdx]||'').trim() : '';
+      const cats = catRaw ? catRaw.split(/[,،]/).map(s => s.trim()).filter(Boolean) : [];
       const stockVal = stockIdx >= 0 ? String(r[stockIdx]||'').trim() : 'Available';
       imported.push({
         id: maxId + i,
-        // الفورمات الصحيح اللي يقرأه renderProducts
         name: { ar: nameAr, en: nameEn || nameAr },
-        desc: descIdx >= 0 ? String(r[descIdx]||'').trim() : '',
+        desc: descVal,
         price,
         oldPrice: oldPriceIdx >= 0 ? parseFloat(r[oldPriceIdx]) || '' : '',
-        category: catVal ? [catVal] : [],
+        category: cats,
         stock: stockVal,
         img: [],
         rating: 5
