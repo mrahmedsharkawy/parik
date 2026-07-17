@@ -1008,6 +1008,7 @@
           <button class="btn-gold" style="flex:1" onclick="sendPushNotification()">📲 إرسال للكل</button>
           <button class="btn-ghost btn-sm" onclick="previewPush()">👁 معاينة</button>
         </div>
+        <div id="push-subscribers-count" style="margin-top:10px;padding:8px 12px;background:#f0f4ff;border-radius:8px;font-size:.83rem;color:#3a4463">🔔 جارٍ جلب عدد المشتركين...</div>
         <div id="push-status" style="margin-top:10px;font-size:.82rem;color:#7a8296"></div>
         <div style="margin-top:12px;padding:10px;background:#f8f9fa;border-radius:8px;font-size:.78rem;color:#5a6478">
           <b>⚙️ الإعداد مرة واحدة:</b><br>
@@ -1185,6 +1186,22 @@ function switchTab(name){
   sessionStorage.setItem('admin_active_tab', name);
   if(name==='comments'){ fillProductSelects(); renderComments(); }
   if(name==='orders'){ fillProductSelects(); syncStoreOrders(true); renderStats(); renderOrders(); if(!$('o-date').value) $('o-date').value = isoToLocalInput(new Date().toISOString()); }
+  if(name==='marketing'){ loadPushSubscribersCount(); }
+}
+
+async function loadPushSubscribersCount() {
+  const el = $('push-subscribers-count');
+  if (!el) return;
+  try {
+    const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+    const res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/push_subscriptions?select=id', {
+      headers: { apikey: ANON, Authorization: 'Bearer ' + ANON, Prefer: 'count=exact' }
+    });
+    const count = res.headers.get('content-range')?.split('/')?.[1] || (await res.json()).length;
+    el.innerHTML = `🔔 المشتركون في الإشعارات: <b style="color:var(--gold);font-size:1rem">${count}</b> مشترك`;
+  } catch(e) {
+    el.textContent = '🔔 تعذّر جلب عدد المشتركين';
+  }
 }
 
 /* ================= تحميل البيانات ================= */
@@ -3895,15 +3912,17 @@ function renderTopProducts(orders) {
     });
   });
 
-  const sorted = Object.entries(prodMap).sort((a, b) => b[1].qty - a[1].qty).slice(0, 10);
+  // تجاهل المنتجات المحذوفة
+  const sorted = Object.entries(prodMap)
+    .filter(([id]) => products.find(p => String(p.id) === String(id)))
+    .sort((a, b) => b[1].qty - a[1].qty).slice(0, 10);
   if (!sorted.length) { list.innerHTML = '<div class="empty">لا توجد بيانات</div>'; return; }
 
   list.innerHTML = sorted.map(([id, data], i) => {
-    // جلب بيانات المنتج الكاملة (الاسم/الصورة/السعر) من قائمة المنتجات المحمَّلة
     const prod = products.find(p => String(p.id) === String(id));
-    const name = prod ? getT(prod.name) : 'منتج محذوف';
-    const price = prod ? (parseFloat(prod.price) || 0) : 0;
-    const imgArr = prod ? (Array.isArray(prod.img) ? prod.img : (prod.img ? [prod.img] : [])) : [];
+    const name = getT(prod.name);
+    const price = parseFloat(prod.price) || 0;
+    const imgArr = Array.isArray(prod.img) ? prod.img : (prod.img ? [prod.img] : []);
     const img = imgArr.find(s => s && !s.startsWith('data:')) || imgArr[0] || 'assets/logo.png';
     const total = price * data.qty;
     return `
@@ -3924,24 +3943,38 @@ function renderTopCategories(orders) {
   const catMap = {};
   orders.forEach(o => {
     (o.items || []).forEach(item => {
-      const cats = item.category || item.categories || [];
-      (Array.isArray(cats) ? cats : [cats]).forEach(cat => {
+      // أولاً: من بيانات العنصر مباشرة
+      let cats = item.category || item.categories || [];
+      // إذا فارغة، حاول من قائمة المنتجات
+      if ((!cats || (Array.isArray(cats) && !cats.length)) ) {
+        const prod = products.find(p => String(p.id) === String(item.id || item.productId));
+        if (prod) cats = prod.category || [];
+      }
+      (Array.isArray(cats) ? cats : (cats ? [cats] : [])).forEach(cat => {
         if (!cat) return;
-        const catName = getT(cat);
+        const catName = getT(cat) || String(cat);
+        if (!catName.trim()) return;
         if (!catMap[catName]) catMap[catName] = { qty: 0, total: 0 };
-        catMap[catName].qty += item.qty || item.quantity || 1;
-        catMap[catName].total += (item.price || 0) * (item.qty || item.quantity || 1);
+        catMap[catName].qty += Number(item.qty || item.quantity || 1);
+        catMap[catName].total += (parseFloat(item.price) || 0) * Number(item.qty || item.quantity || 1);
       });
     });
   });
   const sorted = Object.entries(catMap).sort((a, b) => b[1].total - a[1].total).slice(0, 8);
   if (!sorted.length) { list.innerHTML = '<div class="empty">لا توجد بيانات</div>'; return; }
-  list.innerHTML = sorted.map(([name, data]) => `
-    <div style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid var(--line)">
-      <span>${esc(name)}</span>
-      <b>${data.total.toFixed(0)} د.إ</b>
+  const maxTotal = sorted[0]?.[1].total || 1;
+  list.innerHTML = sorted.map(([name, data], i) => {
+    const pct = Math.round((data.total / maxTotal) * 100);
+    return `
+    <div style="padding:8px 4px;border-bottom:1px solid var(--line)">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+        <span><b style="background:var(--gold);color:var(--navy);border-radius:20px;padding:1px 7px;font-size:.72rem;margin-left:6px">${i+1}</b>${esc(name)}</span>
+        <b style="color:var(--gold)">${data.total.toFixed(0)} د.إ</b>
+      </div>
+      <div style="background:#eee;border-radius:4px;height:6px"><div style="background:var(--gold);width:${pct}%;height:6px;border-radius:4px"></div></div>
+      <small style="color:#888">${data.qty} قطعة</small>
     </div>
-  `).join('');
+  `}).join('');
 }
 
 function renderLowStock() {
