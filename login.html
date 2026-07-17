@@ -429,6 +429,8 @@
   <script>
   /* === Auth Logic === */
   const PROFILE_KEY = 'x2_profile';
+  const _SB_URL = 'https://knleehjjejfeobcmpwnw.supabase.co';
+  const _SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
 
   function switchTab(tab) {
     document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='register')));
@@ -612,7 +614,7 @@
 
   function socialLogin(provider) {
     const redirectTo = 'https://bariqgifts.com/login.html';
-    const oauthUrl = SUPABASE_URL + '/auth/v1/authorize?provider=' + provider
+    const oauthUrl = _SB_URL + '/auth/v1/authorize?provider=' + provider
       + '&redirect_to=' + encodeURIComponent(redirectTo);
     // فتح في متصفح خارجي لتجنب حجب Google للـ WebView
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
@@ -636,8 +638,8 @@
     history.replaceState(null, '', window.location.pathname + window.location.search);
 
     try {
-      const res = await fetch(SUPABASE_URL + '/auth/v1/user', {
-        headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + accessToken }
+      const res = await fetch(_SB_URL + '/auth/v1/user', {
+        headers: { apikey: _SB_ANON, Authorization: 'Bearer ' + accessToken }
       });
       if (!res.ok) throw new Error('auth failed');
       const user = await res.json();
