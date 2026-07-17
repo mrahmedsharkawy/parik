@@ -315,8 +315,10 @@
         </div>
         <div class="plist" id="prodList" style="flex:1"><div class="empty">لا توجد منتجات</div></div>
         <div class="pager" id="prodPager"></div>
-        <div style="margin-top:10px">
+        <div style="margin-top:10px;display:flex;gap:8px">
           <button class="btn-ghost btn-sm" onclick="exportProductsCSV()">⬇ تصدير CSV</button>
+          <button class="btn-gold btn-sm" onclick="$('importProdInput').click()">📥 استيراد Excel</button>
+          <input type="file" id="importProdInput" accept=".xlsx,.xls,.csv" onchange="importProductsExcel(this)" style="display:none">
         </div>
       </div>
 
@@ -4222,6 +4224,93 @@ function exportProductsCSV() {
   }).join('\n');
   download('products_' + new Date().toISOString().slice(0,10) + '.csv', header + rows);
   toast('✅ تم تصدير ' + products.length + ' منتج');
+}
+
+/* ================= استيراد المنتجات من Excel/CSV ================= */
+async function importProductsExcel(input) {
+  const file = input.files[0];
+  if (!file) return;
+  toast('⏳ جاري قراءة الملف...');
+  try {
+    let rows = [];
+    if (file.name.endsWith('.csv')) {
+      const text = await file.text();
+      rows = text.split(/\r?\n/).filter(l => l.trim()).map(line => {
+        const vals = []; let cur = '', inQ = false;
+        for (const ch of line) {
+          if (ch === '"') inQ = !inQ;
+          else if (ch === ',' && !inQ) { vals.push(cur.trim()); cur = ''; }
+          else cur += ch;
+        }
+        vals.push(cur.trim()); return vals;
+      });
+    } else {
+      if (!window.XLSX) {
+        await new Promise((res, rej) => {
+          const s = document.createElement('script');
+          s.src = 'https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js';
+          s.onload = res; s.onerror = rej;
+          document.head.appendChild(s);
+        });
+      }
+      const data = await file.arrayBuffer();
+      const wb = XLSX.read(data, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+    }
+    if (rows.length < 2) { toast('❌ الملف فارغ'); input.value = ''; return; }
+
+    const norm = h => String(h||'').replace(/^\uFEFF/,'').replace(/\u0640/g,'').replace(/\s+/g,' ').toLowerCase().trim();
+    const headers = rows[0].map(norm);
+    const find = (...kw) => headers.findIndex(h => kw.some(k => h.includes(k)));
+
+    const nameArIdx = find('اسم عربي','nameار','name ar','arabic');
+    const nameEnIdx = find('اسم انجليزي','name en','english','nameEn');
+    const priceIdx  = find('سعر','price');
+    const oldPriceIdx = find('سعر قديم','oldprice','old price');
+    const catIdx    = find('قسم','cat','category');
+    const stockIdx  = find('كمية','مخزون','stock','qty');
+    const descIdx   = find('وصف','desc');
+    const linkIdx   = find('رابط','link','url');
+
+    if (priceIdx < 0 && nameArIdx < 0) {
+      toast('❌ لم يتم التعرف على الأعمدة - تأكد من وجود اسم أو سعر');
+      console.log('الأعمدة:', headers);
+      input.value = ''; return;
+    }
+
+    const imported = [];
+    const maxId = products.reduce((m, p) => Math.max(m, Number(p.id)||0), 0);
+    for (let i = 1; i < rows.length; i++) {
+      const r = rows[i];
+      const nameAr = nameArIdx >= 0 ? String(r[nameArIdx]||'').trim() : '';
+      const price  = priceIdx  >= 0 ? parseFloat(r[priceIdx]) || 0 : 0;
+      if (!nameAr && !price) continue;
+      imported.push({
+        id: maxId + i,
+        nameAr,
+        nameEn:    nameEnIdx   >= 0 ? String(r[nameEnIdx]||'').trim()   : '',
+        price,
+        oldPrice:  oldPriceIdx >= 0 ? parseFloat(r[oldPriceIdx]) || ''  : '',
+        category:  catIdx      >= 0 ? String(r[catIdx]||'').trim()      : '',
+        stock:     stockIdx    >= 0 ? String(r[stockIdx]||'').trim()    : 'Available',
+        descAr:    descIdx     >= 0 ? String(r[descIdx]||'').trim()     : '',
+        link:      linkIdx     >= 0 ? String(r[linkIdx]||'').trim()     : '',
+        images: []
+      });
+    }
+    if (!imported.length) { toast('❌ لم يتم العثور على منتجات'); input.value = ''; return; }
+
+    // دمج مع المنتجات الحالية (إضافة فقط)
+    products.push(...imported);
+    saveLocal();
+    renderProducts();
+    toast('✅ تم استيراد ' + imported.length + ' منتج');
+  } catch(e) {
+    console.error('import products error:', e);
+    toast('❌ خطأ في قراءة الملف');
+  }
+  input.value = '';
 }
 
 /* ================= تحديث switchTab ================= */
