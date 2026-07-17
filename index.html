@@ -3,24 +3,43 @@
   <head>
   <meta charset="UTF-8" />
   <title data-i18n="الصفحة الرئيسية - بريق">الصفحة الرئيسية - بريق</title>
-  <!-- Critical: Preload CSS for faster rendering -->
-  <link rel="preload" href="style/style.css" as="style">
+  <!-- Non-blocking CSS load: browser downloads early, applies when ready -->
+  <link rel="preload" href="style/style.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="style/style.css"></noscript>
   <!-- Preload LCP image -->
   <link rel="preload" href="assets/home/1.webp" as="image" fetchpriority="high" type="image/webp">
-  <!-- Critical inline CSS -->
+  <!-- Critical above-fold CSS (prevents FOUC while style.css loads) -->
   <style>
+    *{box-sizing:border-box;margin:0}
+    html,body{height:100%}
+    body{background:#152546;font-family:'Cairo',Arial,sans-serif;padding-top:env(safe-area-inset-top)}
+    .page{min-height:100dvh;display:flex;flex-direction:column}
+    main{width:70%;margin:70px auto 50px;display:flex;flex-direction:column;justify-content:center}
+    header,.main-header{background-color:#152546;padding-top:env(safe-area-inset-top)}
+    .main-header{position:fixed;inset:0 0 auto 0;z-index:1000;width:100%;padding:7px 0;box-shadow:0 2px 4px rgba(0,0,0,.1)}
+    .header-content{width:70%;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;min-height:50px}
+    .logo img{height:36px}
+    .search-container{flex:1;display:flex;align-items:center;background:#fff;border-radius:20px;margin:0 15px;max-width:1100px;height:38px;padding:0 10px}
+    .search-container input{border:none;flex:1;outline:none;padding:6px 10px;font-size:16px;background:transparent}
+    .animated-promo-banner{display:block;position:relative;width:100%;height:200px;overflow:hidden;border-radius:12px;margin:15px 0;box-shadow:0 10px 25px rgba(0,0,0,.1)}
+    .animated-promo-banner .banner-inner{position:relative;width:100%;height:100%}
+    .animated-promo-banner .banner-bg-animated{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:1}
+    .flash-deal-banner{width:100%;height:50px;position:relative;overflow:hidden;border-radius:10px}
+    img,video{max-width:100%;height:auto;border-radius:3px}
+    .dp-img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:7px;background:#f0f0f0}
     @media(max-width:899px){.main-header .dropdown,.main-header .cart{display:none!important}}
     .daily-picks-grid:empty::after{content:'';display:block;height:160px;background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:12px}
     @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-    /* حجز مساحة الأقسام الديناميكية لمنع CLS */
-    #dailyPicksGrid:empty { min-height: 160px; }
-    #subcategories-display:empty { min-height: 0; }
-    #category-products:empty { min-height: 0; }
-    #searchResults:empty { display: none; }
+    #dailyPicksGrid:empty{min-height:160px}
+    #subcategories-display:empty{min-height:0}
+    #category-products:empty{min-height:0}
+    #searchResults:empty{display:none}
   </style>
   <!-- Preconnect to external resources -->
-  <link rel="preconnect" href="https://ihhkzujjafydclnvyhaq.supabase.co" crossorigin>
-  <link rel="dns-prefetch" href="https://ihhkzujjafydclnvyhaq.supabase.co">
+  <link rel="preconnect" href="https://knleehjjejfeobcmpwnw.supabase.co" crossorigin>
+  <link rel="dns-prefetch" href="https://knleehjjejfeobcmpwnw.supabase.co">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="icon" type="image/png" href="assets/logo.png">
@@ -42,7 +61,6 @@
   <meta property="og:image" content="assets/logo.png">
   <meta property="og:url" content="https://bariq.com">
   <meta property="og:type" content="website">
-  <link rel="stylesheet" href="style/style.css" />
 </head>
 <body>
 
