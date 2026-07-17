@@ -2732,8 +2732,9 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   try {
     var cached = JSON.parse(localStorage.getItem('x2_settings') || '{}');
-    if (cached.instagram || cached.facebook || cached.tiktok || cached.wa) { buildSocialBar(cached); return; }
+    if (cached.instagram || cached.facebook || cached.tiktok || cached.wa) buildSocialBar(cached);
   } catch(e) {}
+  // دايماً اجلب من Supabase عشان تاخد أحدث إعدادات
   fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/settings?limit=1', {
     headers: { apikey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E' }
   }).then(function(r){return r.json()}).then(function(rows){
