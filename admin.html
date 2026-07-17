@@ -1008,8 +1008,8 @@
           <button class="btn-gold" style="flex:1" onclick="sendPushNotification()">📲 إرسال للكل</button>
           <button class="btn-ghost btn-sm" onclick="previewPush()">👁 معاينة</button>
         </div>
-
-                        <div class="subscriber-box">
+</div>
+       <div class="subscriber-box">
     <span>👥 المشتركين في الإشعارات</span>
     <strong id="subscriberCount">0</strong>
   </div>
@@ -4562,6 +4562,23 @@ async function loadCampaignsFromSupabase() {
     }
   }, 1500);
 })();
+
+loadSubscriberCount();
+async function loadSubscriberCount() {
+    const { count, error } = await supabase
+        .from("push_subscriptions")
+        .select("*", {
+            count: "exact",
+            head: true
+        });
+
+    if (error) {
+        console.error("Subscriber Count:", error);
+        return;
+    }
+
+    document.getElementById("subscriberCount").textContent = count;
+}
 </script>
 </body>
 </html>
