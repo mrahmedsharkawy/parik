@@ -1221,7 +1221,12 @@ async function loadCategories(){
 }
 
 async function loadProducts(){
-  // أولاً: جرّب Supabase (المصدر الحقيقي)
+  // أولاً: عرض المحفوظ محلياً فوراً (سرعة عرض فورية)
+  const saved = localStorage.getItem(LS_PRODUCTS);
+  if(saved){
+    try{ const p = JSON.parse(saved); if(Array.isArray(p)&&p.length){ products=p; renderProducts(); } }catch(e){}
+  }
+  // ثانياً: جرّب Supabase (المصدر الحقيقي)
   if (window.Supabase) {
     try {
       const sbProds = await window.Supabase.Products.getAll(500);
@@ -1242,6 +1247,7 @@ async function loadProducts(){
           };
         });
         saveLocal();
+        localStorage.setItem('admin_products_cache', JSON.stringify(products));
         renderProducts();
         return;
       }
@@ -3808,23 +3814,33 @@ function setReportPeriod(period) {
 }
 
 async function renderReports() {
-  // جلب الطلبات من Supabase
+  // جلب الطلبات والعملاء من Supabase بالتوازي
   let allOrders = [];
+  let totalCustomers = 0;
+  let visitorStats = { total: 0, today: 0 };
   try {
-    const supaOrders = await window.Supabase.Orders.getAll();
-    allOrders = (supaOrders || []).map(o => ({
-      id: o.order_number || o.id,
-      date: o.created_at,
-      total: o.total,
-      status: o.status,
-      items: o.items || [],
-      customer: o.customer_name || ''
-    }));
+    const [supaOrders, customers, vStats] = await Promise.all([
+      window.Supabase.Orders.getAll().catch(() => null),
+      window.Supabase.Customers.getAll().catch(() => null),
+      window.Supabase.Visitors.getStats().catch(() => null),
+    ]);
+    if (supaOrders) {
+      allOrders = supaOrders.map(o => ({
+        id: o.order_number || o.id,
+        date: o.created_at,
+        total: o.total,
+        status: o.status,
+        items: o.items || [],
+        customer: o.customer_name || ''
+      }));
+    } else {
+      allOrders = [...getOrders(), ...JSON.parse(localStorage.getItem('x2_orders')||'[]')];
+    }
+    totalCustomers = customers ? customers.length : getCustomers().length;
+    if (vStats) visitorStats = vStats;
   } catch(e) {
-    // fallback to local
-    const orders = getOrders();
-    const storeOrders = JSON.parse(localStorage.getItem('x2_orders')||'[]');
-    allOrders = [...orders, ...storeOrders];
+    allOrders = [...getOrders(), ...JSON.parse(localStorage.getItem('x2_orders')||'[]')];
+    totalCustomers = getCustomers().length;
   }
   
   const now = new Date();
@@ -3859,20 +3875,7 @@ async function renderReports() {
   const periodTotal = calcTotal(periodRealized);
   const avgOrder = periodRealized.length ? periodTotal / periodRealized.length : 0;
   
-  // جلب عدد الزوار من Supabase
-  let visitorStats = { total: 0, today: 0 };
-  try {
-    visitorStats = await window.Supabase.Visitors.getStats();
-  } catch(e) {}
-  
-  // جلب عدد العملاء من Supabase
-  let totalCustomers = 0;
-  try {
-    const customers = await window.Supabase.Customers.getAll();
-    totalCustomers = (customers || []).length;
-  } catch(e) {
-    totalCustomers = getCustomers().length;
-  }
+  // visitorStats و totalCustomers جُلبا أعلاه بالتوازي
   
   // تحديث الأرقام (المبيعات المحققة فقط)
   if ($('rpt-today-sales')) $('rpt-today-sales').textContent = calcTotal(realizedOnly(todayOrders)).toFixed(0) + ' د.إ';
@@ -4554,9 +4557,12 @@ async function loadCampaignsFromSupabase() {
 /* ================= بدء لوحة التحكم ================= */
 (async function init(){
   
-  // تحميل الفئات والمنتجات
-  await loadCategories();
-  await loadProducts();
+  // عرض المنتجات المحلية فوراً (بدون انتظار Supabase)
+  const _cached = localStorage.getItem('admin_products_cache');
+  if (_cached) { try { const p = JSON.parse(_cached); if(Array.isArray(p)&&p.length){ products=p; renderProducts(); } } catch(e){} }
+
+  // تحميل الفئات والمنتجات بالتوازي
+  await Promise.all([loadCategories(), loadProducts()]);
   fillProductSelects();
   
   // استعادة التاب الأخير قبل الريفريش
@@ -4565,28 +4571,20 @@ async function loadCampaignsFromSupabase() {
     switchTab(savedTab);
   }
   
-  // مزامنة الطلبات من Supabase (مع await)
-  await syncStoreOrders(true);
-  
-  // تحميل الإعدادات
-  await loadSettingsFromSupabase();
-  loadSettings();
-  
-  // تحميل SEO
-  loadSEO();
-  
-  // تحميل الكوبونات والحملات من Supabase
-  await loadCouponsFromSupabase();
-  await loadCampaignsFromSupabase();
-  
-  // تحميل قائمة العملاء المحظورين
-  await loadBlockedCustomers();
+  // تشغيل باقي الطلبات بالتوازي (لا تنتظر بعضها)
+  Promise.all([
+    syncStoreOrders(true),
+    loadSettingsFromSupabase().then(() => loadSettings()),
+    loadSEO(),
+    loadCouponsFromSupabase(),
+    loadCampaignsFromSupabase(),
+    loadBlockedCustomers(),
+  ]);
   
   // إخبار المستخدم بعدد المنتجات المحملة
   setTimeout(function(){
     if(products.length === 0){
       toast('⚠️ لا توجد منتجات - اضغط "↻ تحميل من الملف" لتحميلها');
-    } else {
     }
   }, 1500);
 })();
