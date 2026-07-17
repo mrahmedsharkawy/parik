@@ -612,8 +612,15 @@
 
   function socialLogin(provider) {
     const redirectTo = 'https://bariqgifts.com/login.html';
-    window.location.href = SUPABASE_URL + '/auth/v1/authorize?provider=' + provider
+    const oauthUrl = SUPABASE_URL + '/auth/v1/authorize?provider=' + provider
       + '&redirect_to=' + encodeURIComponent(redirectTo);
+    // فتح في متصفح خارجي لتجنب حجب Google للـ WebView
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    if (isStandalone) {
+      window.open(oauthUrl, '_blank');
+    } else {
+      window.location.href = oauthUrl;
+    }
   }
 
   // معالجة رجوع OAuth (Google / Facebook)
