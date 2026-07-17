@@ -3345,7 +3345,9 @@ function saveSettings() {
   if (window.Supabase && window.Supabase.Settings) {
     window.Supabase.Settings.save({
       whatsapp: s.wa, site_name: s.name, logo: s.logo,
-      currency: 'AED', language: 'ar'
+      currency: 'AED', language: 'ar',
+      instagram: s.instagram, facebook: s.facebook, tiktok: s.tiktok,
+      snapchat: s.snapchat, youtube: s.youtube, twitter: s.twitter, pinterest: s.pinterest
     }).catch(function(){});
   }
   toast('✅ تم حفظ الإعدادات');

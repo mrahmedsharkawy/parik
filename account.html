@@ -2740,7 +2740,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }).then(function(r){return r.json()}).then(function(rows){
     if (rows && rows[0]) {
       var s = rows[0];
-      var settings = { instagram:s.instagram, facebook:s.facebook, tiktok:s.tiktok, snapchat:s.snapchat, youtube:s.youtube, twitter:s.twitter, pinterest:s.pinterest, wa:s.whatsapp };
+      var settings = { instagram:s.instagram, facebook:s.facebook, tiktok:s.tiktok, snapchat:s.snapchat, youtube:s.youtube, twitter:s.twitter, pinterest:s.pinterest, wa:s.whatsapp||s.wa };
       localStorage.setItem('x2_settings', JSON.stringify(settings));
       buildSocialBar(settings);
     }
