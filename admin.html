@@ -1254,7 +1254,6 @@ async function loadProducts(){
     } catch(e) {}
   }
   // Fallback: localStorage فقط (Supabase غير متاح)
-  const saved = localStorage.getItem(LS_PRODUCTS);
   if(saved){
     try{ const p = JSON.parse(saved); if(Array.isArray(p)) products = p; }catch(e){ products=[]; }
   }
