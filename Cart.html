@@ -560,11 +560,7 @@ h3 {
 @media (max-width: 992px) {
   main#main { padding: 0 10px; }
   .cart-layout-container { flex-direction: column-reverse; }
-  .cart-left { width: 100%; position: relative; top: 0; height: auto; overflow-y: visible; margin-bottom: 20px; }
-  /* منع وميض النقل: إخفاء cart-left في موضعه الأصلي حتى ينقله JS */
-  .cart-layout-container > .cart-left { visibility: hidden; height: 0; overflow: hidden; margin: 0; padding: 0; }
-  /* إظهاره بعد نقله داخل cart-right */
-  .cart-right > .cart-left { visibility: visible; height: auto; overflow: visible; }
+  .cart-left { width: 100%; position: relative; top: 160px; height: auto; overflow-y: visible; margin-bottom: 100px; }
 /* 5. شريط الشحن المجاني */
 div.free-shipping-bar  {
   display: flex;
