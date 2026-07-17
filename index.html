@@ -290,7 +290,7 @@
   <a href="offers.html" class="promo-link">
     <div class="promo-inner">
       <!-- صورة الخلفية -->
-      <img src="assets/home/2.png" class="banner-bg" alt="" aria-hidden="true" loading="lazy">
+      <img src="assets/home/2.webp" class="banner-bg" alt="" aria-hidden="true" loading="lazy">
 
       <!-- النص المتحرك في خط واحد -->
       <div class="scrolling-text-container">
@@ -500,15 +500,17 @@
     return '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(empty);
   }
 
-  function renderCard(p) {
+  function renderCard(p, idx) {
     const name = (p?.name?.ar || p?.name || 'منتج').toString();
     const img  = (Array.isArray(p.img) ? p.img[0] : p.img) || 'assets/logo.png';
     const link = p.id ? `product.html?id=${encodeURIComponent(p.id)}` : 'product.html';
     const pr = parseFloat(p.price), old = parseFloat(p.oldPrice);
     const disc = (old > pr && pr > 0) ? Math.round(((old - pr) / old) * 100) : 0;
+    // أول صورتين eager لتحسين LCP
+    const imgLoad = idx < 2 ? 'eager' : 'lazy';
     return `
       <a class="dp-card" href="${link}">
-        <img class="dp-img" src="${img}" alt="${name}" width="150" height="150" loading="lazy" decoding="async" onerror="this.src='assets/logo.png'">
+        <img class="dp-img" src="${img}" alt="${name}" width="150" height="150" loading="${imgLoad}" decoding="async" onerror="this.src='assets/logo.png'">
         <div class="dp-name">${name}</div>
         ${p.rating ? `<div class="dp-stars">${renderStars(p.rating)}</div>` : ''}
         ${disc > 0 ? `<span class="dp-badge">-${disc}%</span>` : ''}
@@ -517,6 +519,18 @@
 
   async function loadDailyPicks() {
     try {
+      // عرض كاش فوراً لتحسين LCP
+      try {
+        const dpCache = localStorage.getItem('x2_dp_cache');
+        if (dpCache) {
+          const { chosen, ts } = JSON.parse(dpCache);
+          const age = Date.now() - ts;
+          if (age < 10 * 60 * 1000) { // 10 دقائق
+            grid.innerHTML = chosen.map(renderCard).join('');
+          }
+        }
+      } catch(e) {}
+
       // جلب المنتجات: admin_products أولاً، ثم Supabase، ثم JSON
       let products = null;
       try {
@@ -578,6 +592,8 @@
 
       if (!chosen.length) { grid.closest('.daily-picks-section').style.display = 'none'; return; }
       grid.innerHTML = chosen.map(renderCard).join('');
+      // حفظ الكاش
+      try { localStorage.setItem('x2_dp_cache', JSON.stringify({ chosen, ts: Date.now() })); } catch(e) {}
     } catch(e) {
       const s = grid.closest('.daily-picks-section');
       if (s) s.style.display = 'none';
