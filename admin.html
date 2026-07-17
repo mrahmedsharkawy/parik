@@ -3426,10 +3426,14 @@ async function deleteInvalidCustomers() {
 
 async function syncCustomersFromSupabase() {
   if (!window.Supabase) return;
+  const PAGE = 1000;
+  let offset = 0;
+  supaCustomers = [];
   try {
-    const remote = await window.Supabase.Customers.getAll();
-    if (remote && remote.length) {
-      supaCustomers = remote.map(c => ({
+    while(true) {
+      const batch = await window.sbFetch('customers?order=created_at.desc&limit='+PAGE+'&offset='+offset);
+      if (!batch || !batch.length) break;
+      const mapped = batch.map(c => ({
         id:     c.id,
         name:   c.full_name || c.name || '—',
         phone:  c.phone || '',
@@ -3438,9 +3442,12 @@ async function syncCustomersFromSupabase() {
         orders: [],
         statuses: new Set()
       }));
-      renderCustomers();
+      supaCustomers.push(...mapped);
+      renderCustomers(); // يعرض كل دفعة فور وصولها
+      if (batch.length < PAGE) break;
+      offset += PAGE;
     }
-  } catch(e) {}
+  } catch(e) { console.error('syncCustomers error:', e); }
 }
 
 /* تعديل getCustomers لتدمج Supabase مع المحلي */
