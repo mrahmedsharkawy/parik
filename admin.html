@@ -3481,7 +3481,7 @@ function getCustomers() {
   supaCustomers.forEach(sc => {
     const existing = merged.find(c => (sc.phone && c.phone === sc.phone) || (sc.email && c.email === sc.email));
     if (existing) {
-      // تحديث العنوان من Supabase إذا كان فاضياً محلياً
+      if (!existing.id && sc.id) existing.id = sc.id; // ← مهم للحذف
       if (!existing.city && sc.city) existing.city = sc.city;
     } else if (sc.phone || sc.email) {
       merged.push(sc);
