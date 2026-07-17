@@ -315,9 +315,10 @@
         </div>
         <div class="plist" id="prodList" style="flex:1"><div class="empty">لا توجد منتجات</div></div>
         <div class="pager" id="prodPager"></div>
-        <div style="margin-top:10px;display:flex;gap:8px">
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn-ghost btn-sm" onclick="exportProductsCSV()">⬇ تصدير CSV</button>
           <button class="btn-gold btn-sm" onclick="$('importProdInput').click()">📥 استيراد Excel</button>
+          <button class="btn-danger btn-sm" onclick="deleteObjectProducts()" style="background:#ffeaea;color:#c0392b;border:1px solid #c0392b">🗑 حذف [object Object]</button>
           <input type="file" id="importProdInput" accept=".xlsx,.xls,.csv" onchange="importProductsExcel(this)" style="display:none">
         </div>
       </div>
@@ -4211,19 +4212,43 @@ function exportProductsCSV() {
   if (!products || !products.length) { toast('❌ لا توجد منتجات'); return; }
   var header = '\uFEFFالاسم عربي,الاسم انجليزي,السعر,السعر القديم,القسم,الكمية,الوصف,الرابط\n';
   var rows = products.map(function(p) {
+    var nameAr = p.nameAr || (p.name && typeof p.name === 'object' ? p.name.ar : p.name) || '';
+    var nameEn = p.nameEn || (p.name && typeof p.name === 'object' ? p.name.en : '') || '';
+    var descAr = p.descAr || (p.desc && typeof p.desc === 'object' ? p.desc.ar : p.desc) || '';
+    var cats   = Array.isArray(p.category) ? p.category.join('،') : (p.category || '');
     return [
-      String(p.nameAr || p.name || '').replace(/,/g, '،'),
-      String(p.nameEn || '').replace(/,/g, ' '),
+      String(nameAr).replace(/,/g, '،'),
+      String(nameEn).replace(/,/g, ' '),
       p.price || '',
       p.oldPrice || '',
-      String(p.category || '').replace(/,/g, '،'),
+      String(cats).replace(/,/g, '،'),
       p.stock !== undefined ? p.stock : '',
-      String(p.descAr || p.desc || '').replace(/[\r\n,]/g, ' '),
+      String(descAr).replace(/[\r\n,]/g, ' '),
       p.link || ''
     ].join(',');
   }).join('\n');
   download('products_' + new Date().toISOString().slice(0,10) + '.csv', header + rows);
   toast('✅ تم تصدير ' + products.length + ' منتج');
+}
+
+/* ================= حذف منتجات [object Object] ================= */
+async function deleteObjectProducts() {
+  const bad = products.filter(p => {
+    const n = p.nameAr || (p.name && typeof p.name === 'object' ? p.name.ar : p.name) || '';
+    return String(n).includes('[object') || String(n).trim() === '';
+  });
+  if (!bad.length) { toast('✅ لا توجد منتجات خاطئة'); return; }
+  if (!confirm(`حذف ${bad.length} منتج اسمه "[object Object]"؟`)) return;
+  toast(`⏳ جاري حذف ${bad.length} منتج...`);
+  let deleted = 0;
+  for (const p of bad) {
+    const sid = p.supabaseId || p.id;
+    if (sid && window.Supabase?.Products?.remove) {
+      try { await window.Supabase.Products.remove(sid); deleted++; } catch(e) {}
+    }
+  }
+  await loadProducts();
+  toast(`✅ تم حذف ${deleted} منتج`);
 }
 
 /* ================= استيراد المنتجات من Excel/CSV ================= */
