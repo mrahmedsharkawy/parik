@@ -319,6 +319,7 @@
           <button class="btn-ghost btn-sm" onclick="exportProductsCSV()">⬇ تصدير CSV</button>
           <button class="btn-gold btn-sm" onclick="$('importProdInput').click()">📥 استيراد Excel</button>
           <button class="btn-danger btn-sm" onclick="deleteObjectProducts()" style="background:#ffeaea;color:#c0392b;border:1px solid #c0392b">🗑 حذف [object Object]</button>
+          <button class="btn-navy btn-sm" onclick="restoreDeletedProducts()">♻️ استعادة المحذوفة</button>
           <input type="file" id="importProdInput" accept=".xlsx,.xls,.csv" onchange="importProductsExcel(this)" style="display:none">
         </div>
       </div>
@@ -4235,6 +4236,31 @@ function exportProductsCSV() {
   }).join('\n');
   download('products_' + new Date().toISOString().slice(0,10) + '.csv', header + rows);
   toast('✅ تم تصدير ' + products.length + ' منتج');
+}
+
+/* ================= استعادة المنتجات المحذوفة ================= */
+async function restoreDeletedProducts() {
+  if (!window.sbFetch) { toast('❌ Supabase غير متصل'); return; }
+  toast('⏳ جاري البحث عن منتجات محذوفة...');
+  try {
+    // جلب كل المنتجات بـ active=false
+    const deleted = await window.sbFetch('products?active=eq.false&order=sort_order.asc&limit=500');
+    if (!deleted || !deleted.length) { toast('لا توجد منتجات محذوفة'); return; }
+    // فلتر: استبعد الـ [object Object]
+    const valid = deleted.filter(p => {
+      const n = p.name_ar || '';
+      return n && !n.includes('[object') && n !== 'undefined' && n.trim() !== '';
+    });
+    if (!valid.length) { toast('لا توجد منتجات صالحة للاستعادة'); return; }
+    if (!confirm(`استعادة ${valid.length} منتج؟`)) return;
+    let ok = 0;
+    for (const p of valid) {
+      try { await window.sbFetch('products?id=eq.'+p.id, { method:'PATCH', body: JSON.stringify({ active: true }) }); ok++; }
+      catch(e) {}
+    }
+    await loadProducts();
+    toast(`✅ تم استعادة ${ok} منتج`);
+  } catch(e) { console.error(e); toast('❌ خطأ: ' + e.message); }
 }
 
 /* ================= حذف منتجات [object Object] ================= */
