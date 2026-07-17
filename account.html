@@ -2704,35 +2704,32 @@
 <script type="module" src="./java/Products.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  var icons = {
-    Instagram: { emoji: '📸', color: '#E1306C' },
-    Facebook:  { emoji: '👥', color: '#1877F2' },
-    TikTok:    { emoji: '🎵', color: '#010101' },
-    Snapchat:  { emoji: '👻', color: '#FFFC00', text: '#000' },
-    YouTube:   { emoji: '▶️', color: '#FF0000' },
-    Twitter:   { emoji: '🐦', color: '#1DA1F2' },
-    WhatsApp:  { emoji: '💬', color: '#25D366' },
-    Pinterest: { emoji: '📌', color: '#E60023' },
-  };
   function buildSocialBar(s) {
     var container = document.getElementById('acc-social-links');
     if (!container) return;
     container.innerHTML = '';
-    var map = {
-      Instagram: s.instagram, Facebook: s.facebook, TikTok: s.tiktok,
-      Snapchat: s.snapchat, YouTube: s.youtube, Twitter: s.twitter,
-      WhatsApp: s.wa ? 'https://wa.me/' + String(s.wa).replace(/\D/g,'') : null,
-      Pinterest: s.pinterest
-    };
-    Object.keys(map).forEach(function(name) {
-      var url = map[name];
-      if (!url) return;
-      var ic = icons[name] || { emoji: '🔗', color: '#152546' };
+    var map = [
+      { name: 'Instagram', img: 'assets/social/instagram.png',  url: s.instagram },
+      { name: 'Facebook',  img: 'assets/social/facebook.png',   url: s.facebook },
+      { name: 'TikTok',    img: 'assets/social/tiktok.png',     url: s.tiktok },
+      { name: 'Snapchat',  img: 'assets/social/snapchat.png',   url: s.snapchat },
+      { name: 'YouTube',   img: 'assets/social/youtube.png',    url: s.youtube },
+      { name: 'Twitter',   img: 'assets/social/twitter.png',    url: s.twitter },
+      { name: 'Pinterest', img: 'assets/social/pinterest.png',  url: s.pinterest },
+      { name: 'WhatsApp',  img: null, url: s.wa ? 'https://wa.me/' + String(s.wa).replace(/\D/g,'') : null }
+    ];
+    map.forEach(function(item) {
+      if (!item.url) return;
       var a = document.createElement('a');
-      a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
-      a.title = name;
-      a.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;background:' + ic.color + ';font-size:18px;text-decoration:none;color:' + (ic.text||'#fff');
-      a.textContent = ic.emoji;
+      a.href = item.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.title = item.name;
+      a.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:#D4AF37;overflow:hidden;flex-shrink:0';
+      if (item.img) {
+        var img = document.createElement('img');
+        img.src = item.img; img.alt = item.name; img.width = 28; img.height = 28;
+        a.appendChild(img);
+      } else {
+        a.style.fontSize = '20px'; a.textContent = '💬';
+      }
       container.appendChild(a);
     });
   }
