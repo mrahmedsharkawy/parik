@@ -1192,15 +1192,19 @@ function switchTab(name){
 async function loadPushSubscribersCount() {
   const el = $('push-subscribers-count');
   if (!el) return;
+  // عرض الكاش فوراً
+  const cached = localStorage.getItem('push_sub_count');
+  if (cached) el.innerHTML = `🔔 المشتركون في الإشعارات: <b style="color:var(--gold);font-size:1rem">${cached}</b> مشترك`;
   try {
     const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
-    const res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/push_subscriptions?select=id', {
+    const res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/push_subscriptions?select=id&limit=1', {
       headers: { apikey: ANON, Authorization: 'Bearer ' + ANON, Prefer: 'count=exact' }
     });
-    const count = res.headers.get('content-range')?.split('/')?.[1] || (await res.json()).length;
+    const count = res.headers.get('content-range')?.split('/')?.[1] ?? '?';
+    localStorage.setItem('push_sub_count', count);
     el.innerHTML = `🔔 المشتركون في الإشعارات: <b style="color:var(--gold);font-size:1rem">${count}</b> مشترك`;
   } catch(e) {
-    el.textContent = '🔔 تعذّر جلب عدد المشتركين';
+    if (!cached) el.textContent = '🔔 تعذّر جلب عدد المشتركين';
   }
 }
 
