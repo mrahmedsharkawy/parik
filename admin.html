@@ -1592,9 +1592,9 @@ function deleteProduct(id){
   saveLocal();
   renderProducts();
   toast('تم الحذف');
-  // حذف من Supabase - استخدم supabaseId المحفوظ
-  if (window.Supabase && supaId) {
-    window.Supabase.Products.remove(supaId).catch(function(){});
+  // حذف من Supabase - حذف حقيقي
+  if (window.sbFetch && supaId) {
+    window.sbFetch('products?id=eq.'+supaId, { method: 'DELETE' }).catch(function(){});
   }
   try { localStorage.setItem('x2_products_updated', String(Date.now())); } catch(e) {}
 }
@@ -4272,11 +4272,11 @@ async function deleteObjectProducts() {
   if (!bad.length) { toast('✅ لا توجد منتجات خاطئة'); return; }
   if (!confirm(`حذف ${bad.length} منتج اسمه "[object Object]"؟`)) return;
   toast(`⏳ جاري حذف ${bad.length} منتج...`);
-  let deleted = 0;
+  // حذف من Supabase - حذف حقيقي
   for (const p of bad) {
     const sid = p.supabaseId || p.id;
-    if (sid && window.Supabase?.Products?.remove) {
-      try { await window.Supabase.Products.remove(sid); deleted++; } catch(e) {}
+    if (sid && window.sbFetch) {
+      try { await window.sbFetch('products?id=eq.'+sid, { method: 'DELETE' }); deleted++; } catch(e) {}
     }
   }
   await loadProducts();
@@ -4362,7 +4362,7 @@ async function importProductsExcel(input) {
         name: { ar: nameAr, en: nameEn || nameAr },
         desc: descVal,
         price,
-        oldPrice:    oldPriceIdx  >= 0 ? parseFloat(r[oldPriceIdx])  || '' : '',
+        oldPrice:    oldPriceIdx >= 0 ? (r[oldPriceIdx] !== '' && r[oldPriceIdx] != null ? parseFloat(r[oldPriceIdx]) : '') : '',
         category:    cats,
         stock:       stockVal,
         img:         imgList,
