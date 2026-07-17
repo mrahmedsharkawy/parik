@@ -3,9 +3,9 @@
   <head>
   <meta charset="UTF-8" />
   <title data-i18n="الصفحة الرئيسية - بريق">الصفحة الرئيسية - بريق</title>
-  <!-- Non-blocking CSS load: browser downloads early, applies when ready -->
-  <link rel="preload" href="style/style.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="style/style.css"></noscript>
+  <!-- Preload CSS for faster rendering (blocking to prevent CLS) -->
+  <link rel="preload" href="style/style.css" as="style">
+  <link rel="stylesheet" href="style/style.css">
   <!-- Preload LCP image -->
   <link rel="preload" href="assets/home/1.webp" as="image" fetchpriority="high" type="image/webp">
   <!-- Critical above-fold CSS (prevents FOUC while style.css loads) -->
