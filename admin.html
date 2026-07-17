@@ -3330,6 +3330,22 @@ function loadSettings() {
   const s = getSettings();
   const ids = ['wa','instagram','facebook','tiktok','snapchat','youtube','twitter','pinterest','name','logo','user','shipping','delivery','freeship'];
   ids.forEach(id => { const el=$('s-'+id); if(el && s[id]!==undefined) el.value=s[id]; });
+  // جلب من Supabase لتحديث الحقول (حتى لو تغيرت من جهاز ثاني)
+  if (window.Supabase && window.Supabase.Settings) {
+    window.Supabase.Settings.get().then(function(rows){
+      if (!rows || !rows.length) return;
+      var r = rows[0];
+      var map = {wa:'whatsapp',instagram:'instagram',facebook:'facebook',tiktok:'tiktok',snapchat:'snapchat',youtube:'youtube',twitter:'twitter',pinterest:'pinterest',name:'site_name',logo:'logo',shipping:'shipping_policy',delivery:'delivery_days',freeship:'free_shipping_min'};
+      Object.keys(map).forEach(function(id){
+        var el=$('s-'+id);
+        if(el && r[map[id]]!==undefined && r[map[id]]!==null) el.value=r[map[id]];
+      });
+      // حفّظ في localStorage كذلك
+      var cached=getSettings();
+      Object.keys(map).forEach(function(id){if(r[map[id]]!==undefined&&r[map[id]]!==null)cached[id]=r[map[id]];});
+      localStorage.setItem(LS_SETTINGS,JSON.stringify(cached));
+    }).catch(function(){});
+  }
 }
 
 function saveSettings() {
