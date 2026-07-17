@@ -1015,10 +1015,6 @@
   </div>
         <div id="push-status" style="margin-top:10px;font-size:.82rem;color:#7a8296"></div>
         <div style="margin-top:12px;padding:10px;background:#f8f9fa;border-radius:8px;font-size:.78rem;color:#5a6478">
-          <b>⚙️ الإعداد مرة واحدة:</b><br>
-          1. أنشئ جدول <code>push_subscriptions</code> في Supabase<br>
-          2. المشتركون يضغطون "تفعيل الإشعارات" في الموقع<br>
-          3. أرسل من هنا 🚀
         </div>
       </div>
     </div>
@@ -4562,6 +4558,24 @@ async function loadCampaignsFromSupabase() {
     }
   }, 1500);
 })();
+
+
+async function loadSubscriberCount() {
+    const { count, error } = await supabase
+        .from("push_subscriptions")
+        .select("*", {
+            count: "exact",
+            head: true
+        });
+
+    if (error) {
+        console.error("Subscriber Count:", error);
+        return;
+    }
+
+    document.getElementById("subscriberCount").textContent = count;
+}
+
 </script>
 </body>
 </html>
