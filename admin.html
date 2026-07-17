@@ -1008,11 +1008,13 @@
           <button class="btn-gold" style="flex:1" onclick="sendPushNotification()">📲 إرسال للكل</button>
           <button class="btn-ghost btn-sm" onclick="previewPush()">👁 معاينة</button>
         </div>
-
-       <div class="subscriber-box">
-    <span>👥 المشتركين في الإشعارات</span>
-    <strong id="subscriberCount">0</strong>
-  </div>
+        <div id="push-status" style="margin-top:10px;font-size:.82rem;color:#7a8296"></div>
+        <div style="margin-top:12px;padding:10px;background:#f8f9fa;border-radius:8px;font-size:.78rem;color:#5a6478">
+          <b>⚙️ الإعداد مرة واحدة:</b><br>
+          1. أنشئ جدول <code>push_subscriptions</code> في Supabase<br>
+          2. المشتركون يضغطون "تفعيل الإشعارات" في الموقع<br>
+          3. أرسل من هنا 🚀
+        </div>
       </div>
     </div>
   </div>
@@ -3166,30 +3168,7 @@ function insertProductVars() {
     ta.value += (ta.value ? '\n' : '') + '🔗 شاهد المنتج: {product_link}';
   }
 }
-/* ============ عدد المشتركين ============ */
-async function loadSubscriberCount() {
-  const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
 
-  try {
-    const res = await fetch(
-      'https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/push_subscriptions?select=endpoint',
-      {
-        headers: {
-          'apikey': ANON,
-          'Authorization': 'Bearer ' + (await getValidAdminToken() || ANON)
-        }
-      }
-    );
-
-    const data = await res.json();
-
-    const el = document.getElementById('subscriberCount');
-    if (el) el.textContent = data.length;
-
-  } catch (e) {
-    console.error('Subscriber Count Error:', e);
-  }
-}
 /* ============ Push Notifications ============ */
 async function sendPushNotification() {
   const title = ($('push-title').value || '').trim();
@@ -4578,24 +4557,6 @@ async function loadCampaignsFromSupabase() {
     }
   }, 1500);
 })();
-
-
-async function loadSubscriberCount() {
-    const { count, error } = await supabase
-        .from("push_subscriptions")
-        .select("*", {
-            count: "exact",
-            head: true
-        });
-
-    if (error) {
-        console.error("Subscriber Count:", error);
-        return;
-    }
-
-    document.getElementById("subscriberCount").textContent = count;
-}
-
 </script>
 </body>
 </html>
