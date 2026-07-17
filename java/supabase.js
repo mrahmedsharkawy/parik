@@ -46,7 +46,20 @@ const SupaCustomers = {
     }
     return sbFetch('customers',{method:'POST',body:JSON.stringify({full_name:c.name||'',email:c.email||'',phone:c.phone||'',country:c.country||'',city:c.city||'',address:c.address||'',active:true})});
   },
-  getAll: async function(){ return sbFetch('customers?order=created_at.desc'); },
+  getAll: async function(){
+    // جلب كل العملاء بدفعات 1000 لتجاوز حد Supabase
+    const all = [];
+    const PAGE = 1000;
+    let offset = 0;
+    while(true){
+      const batch = await sbFetch('customers?order=created_at.desc&limit='+PAGE+'&offset='+offset);
+      if(!batch || !batch.length) break;
+      all.push(...batch);
+      if(batch.length < PAGE) break;
+      offset += PAGE;
+    }
+    return all;
+  },
   getByPhone: async function(phone){ return sbFetch('customers?phone=eq.'+encodeURIComponent(phone)+'&limit=1'); }
 };
 
