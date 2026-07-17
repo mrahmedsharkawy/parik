@@ -3166,7 +3166,30 @@ function insertProductVars() {
     ta.value += (ta.value ? '\n' : '') + '🔗 شاهد المنتج: {product_link}';
   }
 }
+/* ============ عدد المشتركين ============ */
+async function loadSubscriberCount() {
+  const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
 
+  try {
+    const res = await fetch(
+      'https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/push_subscriptions?select=endpoint',
+      {
+        headers: {
+          'apikey': ANON,
+          'Authorization': 'Bearer ' + (await getValidAdminToken() || ANON)
+        }
+      }
+    );
+
+    const data = await res.json();
+
+    const el = document.getElementById('subscriberCount');
+    if (el) el.textContent = data.length;
+
+  } catch (e) {
+    console.error('Subscriber Count Error:', e);
+  }
+}
 /* ============ Push Notifications ============ */
 async function sendPushNotification() {
   const title = ($('push-title').value || '').trim();
