@@ -3447,9 +3447,21 @@ async function syncCustomersFromSupabase() {
   } catch(e) { console.error('syncCustomers error:', e); }
 }
 
+/* قائمة سوداء للعملاء المحذوفين نهائياً */
+function getDeletedCustomerKeys() {
+  try { return new Set(JSON.parse(localStorage.getItem('x2_deleted_customers') || '[]')); } catch(e) { return new Set(); }
+}
+function addDeletedCustomerKeys(keys) {
+  const existing = getDeletedCustomerKeys();
+  keys.forEach(k => existing.add(k));
+  localStorage.setItem('x2_deleted_customers', JSON.stringify([...existing]));
+}
+
 /* تعديل getCustomers لتدمج Supabase مع المحلي */
 const _origGetCustomers = window.getCustomers;
 function getCustomers() {
+  const _deletedKeys = getDeletedCustomerKeys();
+  const isDeleted = (phone, email) => (phone && _deletedKeys.has(phone)) || (email && _deletedKeys.has(email));
   // جمع الطلبات من كلا المصدرين
   const storeOrders  = JSON.parse(localStorage.getItem('x2_orders')   || '[]');
   const adminOrders  = getOrders(); // admin_orders
@@ -3474,11 +3486,12 @@ function getCustomers() {
     map[key].orders.push(o);
     map[key].statuses.add(o.status||'processing');
   });
-  const localCusts = Object.values(map);
+  const localCusts = Object.values(map).filter(c => !isDeleted(c.phone, c.email));
 
   // دمج عملاء Supabase - يحدّث الموجودين ويضيف الجدد
   const merged = [...localCusts];
   supaCustomers.forEach(sc => {
+    if (isDeleted(sc.phone, sc.email)) return;
     const existing = merged.find(c => (sc.phone && c.phone === sc.phone) || (sc.email && c.email === sc.email));
     if (existing) {
       if (!existing.id && sc.id) existing.id = sc.id; // ← مهم للحذف
@@ -3489,6 +3502,7 @@ function getCustomers() {
   });
   // دمج العملاء المضافين يدوياً - لهم الأولوية القصوى
   getManualCustomers().forEach(mc => {
+    if (isDeleted(mc.phone, mc.email)) return;
     const existing = merged.find(c => (mc.phone && c.phone === mc.phone) || (mc.email && c.email === mc.email));
     if (existing) {
       // البيانات اليدوية تأخذ الأولوية دائماً
@@ -4101,6 +4115,14 @@ async function deleteSelectedCustomers() {
   }
   toast(`✅ تم حذف ${deleted} عميل`);
   selectedCustomers.clear();
+  // أضف للقائمة السوداء حتى لا يظهروا من الطلبات المحلية
+  const deletedKeys = [
+    ...selected.map(c => c.phone).filter(Boolean),
+    ...selected.map(c => c.email).filter(Boolean)
+  ];
+  addDeletedCustomerKeys(deletedKeys);
+  // أزل من supaCustomers فوراً
+  supaCustomers = supaCustomers.filter(sc => !deletedKeys.includes(sc.phone) && !deletedKeys.includes(sc.email));
   // حذف من localStorage أيضاً
   try {
     const phones = selected.map(c => c.phone).filter(Boolean);
@@ -4108,6 +4130,7 @@ async function deleteSelectedCustomers() {
     ls = ls.filter(c => !phones.includes(c.phone));
     localStorage.setItem('x2_customers', JSON.stringify(ls));
   } catch(e) {}
+  renderCustomers();
   syncCustomersFromSupabase();
 }
 
