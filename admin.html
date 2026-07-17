@@ -3359,11 +3359,12 @@ window.switchTab = async function(name) {
   if (name === 'banners') { renderBanners(); renderFeaturedPicker(); renderDailyPicker(); }
   if (name === 'customers') {
     selectedCustomers.clear();
-    await syncCustomersFromSupabase();
-    await loadBlockedCustomers();
-    renderCustomers();
+    // عرض فوري من الكاش، ثم تحديث في الخلفية
+    if (supaCustomers.length) renderCustomers();
     renderVisitorsStats();
     fillMsgProductSelect();
+    loadBlockedCustomers();
+    syncCustomersFromSupabase(); // بدون await — يحدّث تدريجياً
   }
   if (name === 'settings') { loadSettings(); }
   if (name === 'orders') { await syncStoreOrders(false); }
@@ -3813,19 +3814,33 @@ function setReportPeriod(period) {
 }
 
 async function renderReports() {
-  // ① عرض فوري من الكاش (بدون انتظار Supabase)
+  // جلب الطلبات والعملاء من Supabase بالتوازي
   let allOrders = [];
-  if (typeof supaOrdersCache !== 'undefined' && supaOrdersCache.length) {
-    allOrders = supaOrdersCache.map(o => ({
-      id: o.orderNumber || o.id,
-      date: o.date,
-      total: o.total,
-      status: o.status,
-      items: o.items || [],
-      customer: o.customer || ''
-    }));
-  } else {
+  let totalCustomers = 0;
+  let visitorStats = { total: 0, today: 0 };
+  try {
+    const [supaOrders, customers, vStats] = await Promise.all([
+      window.Supabase.Orders.getAll().catch(() => null),
+      window.Supabase.Customers.getAll().catch(() => null),
+      window.Supabase.Visitors.getStats().catch(() => null),
+    ]);
+    if (supaOrders) {
+      allOrders = supaOrders.map(o => ({
+        id: o.order_number || o.id,
+        date: o.created_at,
+        total: o.total,
+        status: o.status,
+        items: o.items || [],
+        customer: o.customer_name || ''
+      }));
+    } else {
+      allOrders = [...getOrders(), ...JSON.parse(localStorage.getItem('x2_orders')||'[]')];
+    }
+    totalCustomers = customers ? customers.length : getCustomers().length;
+    if (vStats) visitorStats = vStats;
+  } catch(e) {
     allOrders = [...getOrders(), ...JSON.parse(localStorage.getItem('x2_orders')||'[]')];
+    totalCustomers = getCustomers().length;
   }
   
   const now = new Date();
@@ -3833,64 +3848,58 @@ async function renderReports() {
   const thisMonth = now.getMonth();
   const thisYear = now.getFullYear();
   
+  // فلترة حسب الفترة
   const getDate = o => new Date(o.date || o.created_at || o.createdAt || Date.now());
-  const filterByPeriod = (orders, period) => orders.filter(o => {
-    const d = getDate(o);
-    switch(period) {
-      case 'today': return d.toDateString() === todayStr;
-      case 'week': return (now - d) < 7 * 24 * 60 * 60 * 1000;
-      case 'month': return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
-      case 'year': return d.getFullYear() === thisYear;
-      default: return true;
-    }
-  });
+  const filterByPeriod = (orders, period) => {
+    return orders.filter(o => {
+      const d = getDate(o);
+      switch(period) {
+        case 'today': return d.toDateString() === todayStr;
+        case 'week': return (now - d) < 7 * 24 * 60 * 60 * 1000;
+        case 'month': return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
+        case 'year': return d.getFullYear() === thisYear;
+        default: return true;
+      }
+    });
+  };
   
   const periodOrders = filterByPeriod(allOrders, reportPeriod);
-  const todayOrders  = filterByPeriod(allOrders, 'today');
-  const monthOrders  = filterByPeriod(allOrders, 'month');
-  const realizedOnly = orders => orders.filter(o => REALIZED.includes(o.status));
-  const calcTotal    = orders => orders.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
-  const periodRealized = realizedOnly(periodOrders);
-  const periodTotal    = calcTotal(periodRealized);
-  const avgOrder       = periodRealized.length ? periodTotal / periodRealized.length : 0;
-
-  // عرض الأرقام فوراً من الكاش
-  if ($('rpt-today-sales'))    $('rpt-today-sales').textContent    = calcTotal(realizedOnly(todayOrders)).toFixed(0) + ' د.إ';
-  if ($('rpt-month-sales'))    $('rpt-month-sales').textContent    = calcTotal(realizedOnly(monthOrders)).toFixed(0) + ' د.إ';
-  if ($('rpt-total-orders'))   $('rpt-total-orders').textContent   = allOrders.length;
-  if ($('rpt-period-sales'))   $('rpt-period-sales').textContent   = periodTotal.toFixed(2) + ' د.إ';
-  if ($('rpt-period-orders'))  $('rpt-period-orders').textContent  = periodRealized.length;
-  if ($('rpt-avg-order'))      $('rpt-avg-order').textContent      = avgOrder.toFixed(2) + ' د.إ';
-  if ($('rpt-profit'))         $('rpt-profit').textContent         = (periodTotal * 0.2).toFixed(2) + ' د.إ';
-  if ($('rpt-total-customers')) $('rpt-total-customers').textContent = supaCustomers.length || getCustomers().length;
+  const todayOrders = filterByPeriod(allOrders, 'today');
+  const monthOrders = filterByPeriod(allOrders, 'month');
   
-  // عرض المنتجات والفئات فوراً
+  // حساب الإحصائيات - المبيعات والأرباح تُحسب فقط من الطلبات المحققة فعلياً
+  // (مؤكد / تم الشحن / تم التسليم) — تُستثنى الطلبات الملغاة والمرتجعة وقيد الانتظار
+  const realizedOnly = orders => orders.filter(o => REALIZED.includes(o.status));
+  const calcTotal = orders => orders.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+  const periodRealized = realizedOnly(periodOrders);
+  const periodTotal = calcTotal(periodRealized);
+  const avgOrder = periodRealized.length ? periodTotal / periodRealized.length : 0;
+  
+  // visitorStats و totalCustomers جُلبا أعلاه بالتوازي
+  
+  // تحديث الأرقام (المبيعات المحققة فقط)
+  if ($('rpt-today-sales')) $('rpt-today-sales').textContent = calcTotal(realizedOnly(todayOrders)).toFixed(0) + ' د.إ';
+  if ($('rpt-month-sales')) $('rpt-month-sales').textContent = calcTotal(realizedOnly(monthOrders)).toFixed(0) + ' د.إ';
+  if ($('rpt-total-orders')) $('rpt-total-orders').textContent = allOrders.length;
+  if ($('rpt-total-customers')) $('rpt-total-customers').textContent = totalCustomers;
+  
+  // معدل التحويل (نسبة الطلبات المكتملة من الزوار)
+  const delivered = allOrders.filter(o => o.status === 'delivered').length;
+  const convRate = visitorStats.total > 0 ? ((allOrders.length / visitorStats.total) * 100).toFixed(1) : 
+                   allOrders.length ? ((delivered / allOrders.length) * 100).toFixed(1) : 0;
+  if ($('rpt-conversion')) $('rpt-conversion').textContent = convRate + '%';
+  
+  // تقارير الفترة (فوق إجمالي الأرباح المحققة فقط)
+  if ($('rpt-period-sales')) $('rpt-period-sales').textContent = periodTotal.toFixed(2) + ' د.إ';
+  if ($('rpt-period-orders')) $('rpt-period-orders').textContent = periodRealized.length;
+  if ($('rpt-avg-order')) $('rpt-avg-order').textContent = avgOrder.toFixed(2) + ' د.إ';
+  if ($('rpt-profit')) $('rpt-profit').textContent = (periodTotal * 0.2).toFixed(2) + ' د.إ';
+  
+  // أكثر المنتجات مبيعاً
   renderTopProducts(allOrders);
   renderTopCategories(allOrders);
   renderLowStock();
   renderBestSellers(allOrders);
-
-  // ② جلب العدد فقط (count=exact) بدل جلب كل البيانات — في الخلفية
-  const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
-  const countFetch = (table) => fetch(`https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/${table}?select=id`, {
-    method: 'HEAD',
-    headers: { apikey: ANON, Authorization: 'Bearer ' + ANON, Prefer: 'count=exact' }
-  }).then(r => parseInt(r.headers.get('content-range')?.split('/')?.[1] || '0')).catch(() => null);
-
-  Promise.all([countFetch('customers'), countFetch('visitors')]).then(([custCount, visitCount]) => {
-    if (custCount !== null && $('rpt-total-customers')) $('rpt-total-customers').textContent = custCount;
-    if (visitCount !== null) {
-      const delivered = allOrders.filter(o => o.status === 'delivered').length;
-      const convRate = visitCount > 0 ? ((allOrders.length / visitCount) * 100).toFixed(1)
-                     : allOrders.length ? ((delivered / allOrders.length) * 100).toFixed(1) : 0;
-      if ($('rpt-conversion')) $('rpt-conversion').textContent = convRate + '%';
-    }
-  });
-
-  // معدل التحويل المبدئي
-  const delivered = allOrders.filter(o => o.status === 'delivered').length;
-  const convRate = allOrders.length ? ((delivered / allOrders.length) * 100).toFixed(1) : 0;
-  if ($('rpt-conversion')) $('rpt-conversion').textContent = convRate + '%';
 }
 
 function renderTopProducts(orders) {
