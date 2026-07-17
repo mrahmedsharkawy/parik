@@ -4284,19 +4284,22 @@ async function importProductsExcel(input) {
     for (let i = 1; i < rows.length; i++) {
       const r = rows[i];
       const nameAr = nameArIdx >= 0 ? String(r[nameArIdx]||'').trim() : '';
+      const nameEn = nameEnIdx >= 0 ? String(r[nameEnIdx]||'').trim() : nameAr;
       const price  = priceIdx  >= 0 ? parseFloat(r[priceIdx]) || 0 : 0;
       if (!nameAr && !price) continue;
+      const catVal = catIdx >= 0 ? String(r[catIdx]||'').trim() : '';
+      const stockVal = stockIdx >= 0 ? String(r[stockIdx]||'').trim() : 'Available';
       imported.push({
         id: maxId + i,
-        nameAr,
-        nameEn:    nameEnIdx   >= 0 ? String(r[nameEnIdx]||'').trim()   : '',
+        // الفورمات الصحيح اللي يقرأه renderProducts
+        name: { ar: nameAr, en: nameEn || nameAr },
+        desc: descIdx >= 0 ? String(r[descIdx]||'').trim() : '',
         price,
-        oldPrice:  oldPriceIdx >= 0 ? parseFloat(r[oldPriceIdx]) || ''  : '',
-        category:  catIdx      >= 0 ? String(r[catIdx]||'').trim()      : '',
-        stock:     stockIdx    >= 0 ? String(r[stockIdx]||'').trim()    : 'Available',
-        descAr:    descIdx     >= 0 ? String(r[descIdx]||'').trim()     : '',
-        link:      linkIdx     >= 0 ? String(r[linkIdx]||'').trim()     : '',
-        images: []
+        oldPrice: oldPriceIdx >= 0 ? parseFloat(r[oldPriceIdx]) || '' : '',
+        category: catVal ? [catVal] : [],
+        stock: stockVal,
+        img: [],
+        rating: 5
       });
     }
     if (!imported.length) { toast('❌ لم يتم العثور على منتجات'); input.value = ''; return; }
@@ -4307,11 +4310,11 @@ async function importProductsExcel(input) {
     if (window.Supabase && window.Supabase.Products) {
       for (let i = 0; i < imported.length; i++) {
         const p = imported[i];
-        const cats = p.category ? [p.category] : [];
+        const cats = Array.isArray(p.category) ? p.category : (p.category ? [p.category] : []);
         try {
           const res = await window.Supabase.Products.insert({
-            name: { ar: p.nameAr, en: p.nameEn || p.nameAr },
-            desc: { ar: p.descAr || '', en: '' },
+            name: p.name,
+            desc: { ar: p.desc || '', en: '' },
             category: cats,
             img: [],
             price: parseFloat(p.price) || 0,
@@ -4335,6 +4338,8 @@ async function importProductsExcel(input) {
     saveLocal();
     renderProducts();
     toast(ok ? `✅ تم رفع ${ok} منتج لـ Supabase` + (fail ? ` — ⚠️ فشل ${fail}` : '') : `⚠️ تم حفظ ${imported.length} منتج محلياً فقط`);
+    // إعادة تحميل من Supabase لضمان التزامن
+    if (ok > 0) setTimeout(() => loadProducts(), 1500);
   } catch(e) {
     console.error('import products error:', e);
     toast('❌ خطأ في قراءة الملف');
