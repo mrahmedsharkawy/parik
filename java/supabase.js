@@ -137,7 +137,7 @@ const SupaProducts = {
     var desc = p.desc&&typeof p.desc==='object'?p.desc:{ar:p.desc||'',en:p.desc||''};
     var cats = Array.isArray(p.category)?p.category:(p.category?[p.category]:[]);
     var imgs = Array.isArray(p.img)?p.img.filter(function(s){return s&&!s.startsWith('data:');}):[];
-    return sbFetch('products',{method:'POST',body:JSON.stringify({name_ar:name.ar,name_en:name.en,description_ar:desc.ar,description_en:desc.en,category_id:p.categoryId||null,subcategory_id:p.subcategoryId||null,price:parseFloat(p.price)||0,old_price:parseFloat(p.oldPrice)||0,stock:parseInt(p.stock)||0,image:imgs[0]||'',gallery:imgs,categories:cats,rating:parseFloat(p.rating)||5,featured:p.featured||false,active:true,sort_order:p.sort||0,timer_end:p.timerEnd||null})});
+    return sbFetch('products',{method:'POST',body:JSON.stringify({name_ar:name.ar,name_en:name.en,description_ar:desc.ar,description_en:desc.en,category_id:p.categoryId||null,subcategory_id:p.subcategoryId||null,price:parseFloat(p.price)||0,old_price:parseFloat(p.oldPrice)||0,stock:parseInt(p.stock)||0,image:imgs[0]||'',gallery:imgs,categories:cats,rating:parseFloat(p.rating)||5,rating_count:parseInt(p.ratingCount)||0,featured:p.featured||false,active:true,sort_order:p.sort||0,timer_end:p.timerEnd||null})});
   },
   update: async function(id,d){ return sbFetch('products?id=eq.'+id,{method:'PATCH',body:JSON.stringify(d)}); },
   remove: async function(id){ return sbFetch('products?id=eq.'+id,{method:'PATCH',body:JSON.stringify({active:false})}); }

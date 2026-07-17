@@ -4210,13 +4210,13 @@ async function exportCustomers() {
 /* ================= تصدير المنتجات ================= */
 function exportProductsCSV() {
   if (!products || !products.length) { toast('❌ لا توجد منتجات'); return; }
-  var header = '\uFEFFالاسم عربي,الاسم انجليزي,السعر,السعر القديم,القسم,الكمية,الوصف,صورة,الرابط\n';
+  var header = '\uFEFFالاسم عربي,الاسم انجليزي,السعر,السعر القديم,القسم,الكمية,التقييم,عدد التقييمات,عداد العرض,مميز,الوصف,صور,الرابط\n';
   var rows = products.map(function(p) {
     var nameAr = p.nameAr || (p.name && typeof p.name === 'object' ? p.name.ar : p.name) || '';
     var nameEn = p.nameEn || (p.name && typeof p.name === 'object' ? p.name.en : '') || '';
     var descAr = p.descAr || (p.desc && typeof p.desc === 'object' ? p.desc.ar : p.desc) || '';
     var cats   = Array.isArray(p.category) ? p.category.join('،') : (p.category || '');
-    var img    = Array.isArray(p.img) ? (p.img[0]||'') : (p.img||p.image||'');
+    var imgs   = Array.isArray(p.img) ? p.img.filter(function(s){return s&&!String(s).startsWith('data:');}) : (p.img&&!String(p.img).startsWith('data:')?[p.img]:[]);
     return [
       String(nameAr).replace(/,/g, '،'),
       String(nameEn).replace(/,/g, ' '),
@@ -4224,8 +4224,12 @@ function exportProductsCSV() {
       p.oldPrice || '',
       String(cats).replace(/,/g, '،'),
       p.stock !== undefined ? p.stock : '',
+      p.rating || 5,
+      p.ratingCount || 0,
+      p.timerEnd || '',
+      p.featured ? 1 : 0,
       String(descAr).replace(/[\r\n,]/g, ' '),
-      String(img).startsWith('data:') ? '' : img,
+      imgs.join('|'),
       p.link || ''
     ].join(',');
   }).join('\n');
@@ -4291,15 +4295,19 @@ async function importProductsExcel(input) {
     const headers = rows[0].map(norm);
     const find = (...kw) => headers.findIndex(h => kw.some(k => h.includes(k)));
 
-    const nameArIdx  = find('اسم عربي','name ar','arabic');
-    const nameEnIdx  = find('اسم انجليزي','name en','english');
-    const priceIdx   = find('سعر','price');
-    const oldPriceIdx= find('سعر قديم','oldprice','old price');
-    const catIdx     = find('قسم','cat','category');
-    const stockIdx   = find('كمية','مخزون','stock','qty');
-    const descIdx    = find('وصف','desc');
-    const imgIdx     = find('صورة','image','img','photo');
-    const linkIdx    = find('رابط','link','url');
+    const nameArIdx   = find('اسم عربي','name ar','arabic');
+    const nameEnIdx   = find('اسم انجليزي','name en','english');
+    const priceIdx    = find('سعر','price');
+    const oldPriceIdx = find('سعر قديم','oldprice','old price');
+    const catIdx      = find('قسم','cat','category');
+    const stockIdx    = find('كمية','مخزون','stock','qty');
+    const ratingIdx   = find('تقييم','rating');
+    const ratingCntIdx= find('عدد التقييمات','ratingcount','rating_count');
+    const timerIdx    = find('عداد','timer','timer_end');
+    const featuredIdx = find('مميز','featured');
+    const descIdx     = find('وصف','desc');
+    const imgIdx      = find('صور','image','img','photo');
+    const linkIdx     = find('رابط','link','url');
 
     if (priceIdx < 0 && nameArIdx < 0) {
       toast('❌ لم يتم التعرف على الأعمدة - تأكد من وجود اسم أو سعر');
@@ -4315,7 +4323,8 @@ async function importProductsExcel(input) {
       const nameEn = nameEnIdx >= 0 ? String(r[nameEnIdx]||'').trim() : '';
       const price  = priceIdx  >= 0 ? parseFloat(r[priceIdx]) || 0 : 0;
       const descVal = descIdx >= 0 ? String(r[descIdx]||'').trim() : '';
-      const imgVal  = imgIdx  >= 0 ? String(r[imgIdx] ||'').trim() : '';
+      const imgRaw  = imgIdx  >= 0 ? String(r[imgIdx] ||'').trim() : '';
+      const imgList = imgRaw ? imgRaw.split('|').map(s=>s.trim()).filter(Boolean) : [];
       // لو الاسم فارغ أو [object Object] → استخدم الوصف
       if (!nameAr || nameAr.includes('[object') || nameAr === 'undefined') nameAr = descVal;
       if (!nameAr && !price) continue;
@@ -4327,11 +4336,15 @@ async function importProductsExcel(input) {
         name: { ar: nameAr, en: nameEn || nameAr },
         desc: descVal,
         price,
-        oldPrice: oldPriceIdx >= 0 ? parseFloat(r[oldPriceIdx]) || '' : '',
-        category: cats,
-        stock: stockVal,
-        img: imgVal ? [imgVal] : [],
-        rating: 5
+        oldPrice:    oldPriceIdx  >= 0 ? parseFloat(r[oldPriceIdx])  || '' : '',
+        category:    cats,
+        stock:       stockVal,
+        img:         imgList,
+        rating:      ratingIdx    >= 0 ? parseFloat(r[ratingIdx])    || 5  : 5,
+        ratingCount: ratingCntIdx >= 0 ? parseInt(r[ratingCntIdx])   || 0  : 0,
+        timerEnd:    timerIdx     >= 0 ? String(r[timerIdx]||'').trim() || null : null,
+        featured:    featuredIdx  >= 0 ? (r[featuredIdx]==1||r[featuredIdx]==='1'||r[featuredIdx]===true) : false,
+        link:        linkIdx      >= 0 ? String(r[linkIdx]||'').trim()  : ''
       });
     }
     if (!imported.length) { toast('❌ لم يتم العثور على منتجات'); input.value = ''; return; }
@@ -4348,11 +4361,14 @@ async function importProductsExcel(input) {
             name: p.name,
             desc: { ar: p.desc || '', en: '' },
             category: cats,
-            img: [],
+            img: p.img || [],
             price: parseFloat(p.price) || 0,
             oldPrice: parseFloat(p.oldPrice) || 0,
             stock: isNaN(parseInt(p.stock)) ? 0 : parseInt(p.stock),
-            rating: 5,
+            rating: p.rating || 5,
+            ratingCount: p.ratingCount || 0,
+            timerEnd: p.timerEnd || null,
+            featured: p.featured || false,
             sort: maxId + i,
             timerEnd: null
           });
