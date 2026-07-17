@@ -2716,20 +2716,17 @@ document.addEventListener('DOMContentLoaded', function() {
       { name: 'YouTube',   img: 'assets/social/youtube.png',    url: s.youtube },
       { name: 'Twitter',   img: 'assets/social/twitter.png',    url: s.twitter },
       { name: 'Pinterest', img: 'assets/social/pinterest.png',  url: s.pinterest },
-      { name: 'WhatsApp',  img: null, url: s.wa ? 'https://wa.me/' + String(s.wa).replace(/\D/g,'') : null }
+      { name: 'WhatsApp',  img: 'https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/whatsapp.svg', url: s.wa ? 'https://wa.me/' + String(s.wa).replace(/\D/g,'') : null }
     ];
     map.forEach(function(item) {
       if (!item.url) return;
       var a = document.createElement('a');
       a.href = item.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.title = item.name;
-      a.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:#D4AF37;overflow:hidden;flex-shrink:0';
-      if (item.img) {
-        var img = document.createElement('img');
-        img.src = item.img; img.alt = item.name; img.width = 28; img.height = 28;
-        a.appendChild(img);
-      } else {
-        a.style.fontSize = '20px'; a.textContent = '💬';
-      }
+      a.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;flex-shrink:0';
+      var img = document.createElement('img');
+      img.src = item.img; img.alt = item.name; img.width = 36; img.height = 36;
+      if (item.name === 'WhatsApp') img.style.filter = 'invert(33%) sepia(99%) saturate(400%) hue-rotate(90deg)';
+      a.appendChild(img);
       container.appendChild(a);
     });
   }
