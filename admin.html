@@ -4301,11 +4301,40 @@ async function importProductsExcel(input) {
     }
     if (!imported.length) { toast('❌ لم يتم العثور على منتجات'); input.value = ''; return; }
 
-    // دمج مع المنتجات الحالية (إضافة فقط)
+    toast(`⏳ جارٍ رفع ${imported.length} منتج لـ Supabase...`);
+    let ok = 0, fail = 0;
+
+    if (window.Supabase && window.Supabase.Products) {
+      for (let i = 0; i < imported.length; i++) {
+        const p = imported[i];
+        const cats = p.category ? [p.category] : [];
+        try {
+          const res = await window.Supabase.Products.insert({
+            name: { ar: p.nameAr, en: p.nameEn || p.nameAr },
+            desc: { ar: p.descAr || '', en: '' },
+            category: cats,
+            img: [],
+            price: parseFloat(p.price) || 0,
+            oldPrice: parseFloat(p.oldPrice) || 0,
+            stock: isNaN(parseInt(p.stock)) ? 0 : parseInt(p.stock),
+            rating: 5,
+            sort: maxId + i,
+            timerEnd: null
+          });
+          if (Array.isArray(res) && res[0] && res[0].id) {
+            imported[i].supabaseId = res[0].id;
+            imported[i].id = res[0].id;
+          }
+          ok++;
+        } catch(e) { fail++; console.warn('فشل رفع منتج:', p.nameAr, e.message); }
+      }
+    }
+
+    // دمج مع المنتجات الحالية
     products.push(...imported);
     saveLocal();
     renderProducts();
-    toast('✅ تم استيراد ' + imported.length + ' منتج');
+    toast(ok ? `✅ تم رفع ${ok} منتج لـ Supabase` + (fail ? ` — ⚠️ فشل ${fail}` : '') : `⚠️ تم حفظ ${imported.length} منتج محلياً فقط`);
   } catch(e) {
     console.error('import products error:', e);
     toast('❌ خطأ في قراءة الملف');
