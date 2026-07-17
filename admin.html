@@ -4210,12 +4210,13 @@ async function exportCustomers() {
 /* ================= تصدير المنتجات ================= */
 function exportProductsCSV() {
   if (!products || !products.length) { toast('❌ لا توجد منتجات'); return; }
-  var header = '\uFEFFالاسم عربي,الاسم انجليزي,السعر,السعر القديم,القسم,الكمية,الوصف,الرابط\n';
+  var header = '\uFEFFالاسم عربي,الاسم انجليزي,السعر,السعر القديم,القسم,الكمية,الوصف,صورة,الرابط\n';
   var rows = products.map(function(p) {
     var nameAr = p.nameAr || (p.name && typeof p.name === 'object' ? p.name.ar : p.name) || '';
     var nameEn = p.nameEn || (p.name && typeof p.name === 'object' ? p.name.en : '') || '';
     var descAr = p.descAr || (p.desc && typeof p.desc === 'object' ? p.desc.ar : p.desc) || '';
     var cats   = Array.isArray(p.category) ? p.category.join('،') : (p.category || '');
+    var img    = Array.isArray(p.img) ? (p.img[0]||'') : (p.img||p.image||'');
     return [
       String(nameAr).replace(/,/g, '،'),
       String(nameEn).replace(/,/g, ' '),
@@ -4224,6 +4225,7 @@ function exportProductsCSV() {
       String(cats).replace(/,/g, '،'),
       p.stock !== undefined ? p.stock : '',
       String(descAr).replace(/[\r\n,]/g, ' '),
+      String(img).startsWith('data:') ? '' : img,
       p.link || ''
     ].join(',');
   }).join('\n');
@@ -4289,14 +4291,15 @@ async function importProductsExcel(input) {
     const headers = rows[0].map(norm);
     const find = (...kw) => headers.findIndex(h => kw.some(k => h.includes(k)));
 
-    const nameArIdx = find('اسم عربي','nameار','name ar','arabic');
-    const nameEnIdx = find('اسم انجليزي','name en','english','nameEn');
-    const priceIdx  = find('سعر','price');
-    const oldPriceIdx = find('سعر قديم','oldprice','old price');
-    const catIdx    = find('قسم','cat','category');
-    const stockIdx  = find('كمية','مخزون','stock','qty');
-    const descIdx   = find('وصف','desc');
-    const linkIdx   = find('رابط','link','url');
+    const nameArIdx  = find('اسم عربي','name ar','arabic');
+    const nameEnIdx  = find('اسم انجليزي','name en','english');
+    const priceIdx   = find('سعر','price');
+    const oldPriceIdx= find('سعر قديم','oldprice','old price');
+    const catIdx     = find('قسم','cat','category');
+    const stockIdx   = find('كمية','مخزون','stock','qty');
+    const descIdx    = find('وصف','desc');
+    const imgIdx     = find('صورة','image','img','photo');
+    const linkIdx    = find('رابط','link','url');
 
     if (priceIdx < 0 && nameArIdx < 0) {
       toast('❌ لم يتم التعرف على الأعمدة - تأكد من وجود اسم أو سعر');
@@ -4312,12 +4315,10 @@ async function importProductsExcel(input) {
       const nameEn = nameEnIdx >= 0 ? String(r[nameEnIdx]||'').trim() : '';
       const price  = priceIdx  >= 0 ? parseFloat(r[priceIdx]) || 0 : 0;
       const descVal = descIdx >= 0 ? String(r[descIdx]||'').trim() : '';
-      // لو الاسم فارغ أو [object Object] → استخدم الوصف كاسم
-      if (!nameAr || nameAr.includes('[object') || nameAr === 'undefined') {
-        nameAr = descVal;
-      }
+      const imgVal  = imgIdx  >= 0 ? String(r[imgIdx] ||'').trim() : '';
+      // لو الاسم فارغ أو [object Object] → استخدم الوصف
+      if (!nameAr || nameAr.includes('[object') || nameAr === 'undefined') nameAr = descVal;
       if (!nameAr && !price) continue;
-      // الفئات: يفصلها بـ ، أو ,
       const catRaw = catIdx >= 0 ? String(r[catIdx]||'').trim() : '';
       const cats = catRaw ? catRaw.split(/[,،]/).map(s => s.trim()).filter(Boolean) : [];
       const stockVal = stockIdx >= 0 ? String(r[stockIdx]||'').trim() : 'Available';
@@ -4329,7 +4330,7 @@ async function importProductsExcel(input) {
         oldPrice: oldPriceIdx >= 0 ? parseFloat(r[oldPriceIdx]) || '' : '',
         category: cats,
         stock: stockVal,
-        img: [],
+        img: imgVal ? [imgVal] : [],
         rating: 5
       });
     }
@@ -4360,7 +4361,7 @@ async function importProductsExcel(input) {
             imported[i].id = res[0].id;
           }
           ok++;
-        } catch(e) { fail++; console.warn('فشل رفع منتج:', p.nameAr, e.message); }
+        } catch(e) { fail++; console.warn('فشل رفع منتج:', p.name?.ar, e.message); }
       }
     }
 
