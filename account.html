@@ -1557,7 +1557,7 @@
 (function() {
   const ORDERS_KEY = 'x2_orders';
   const PROFILE_KEY = 'x2_profile';
-  const PRODUCTS_URL = 'java/Products.json';
+  const PRODUCTS_URL = 'java/Products.min.json';
   let currentStatus = 'all';
   let currentSearch = '';
   let currentPage   = 1;
@@ -1679,7 +1679,7 @@
       const SS_KEY = 'x2_prods_ss';
       const cached = sessionStorage.getItem(SS_KEY);
       if (cached) { const obj = JSON.parse(cached); if (Date.now()-obj.ts < 300000) { const arr=obj.data; _prodsCache={}; arr.forEach(p=>{if(p.id)_prodsCache[String(p.id)]=p;const nm=typeof p.name==='object'?(p.name.ar||p.name.en||''):(p.name||'');if(nm)_prodsCache['__n__'+nm.trim().toLowerCase()]=p;}); return _prodsCache; } }
-      const arr = await (await fetch('java/Products.json')).json();
+      const arr = await (await fetch('java/Products.min.json')).json();
       try { sessionStorage.setItem(SS_KEY, JSON.stringify({ts:Date.now(),data:arr})); } catch(e2) {}
       _prodsCache = {};
       arr.forEach(p => {
@@ -2497,7 +2497,7 @@
     try {
       const SS_KEY = 'x2_prods_ss';
       const c = sessionStorage.getItem(SS_KEY);
-      const arr = c ? JSON.parse(c).data : await (await fetch('java/Products.json')).json();
+      const arr = c ? JSON.parse(c).data : await (await fetch('java/Products.min.json')).json();
       (arr||[]).forEach(p => { if (p.id) pMap[String(p.id)] = p; });
     } catch(e) {}
 
@@ -2706,13 +2706,13 @@
 </div>
   </div>
 </footer>
-<script src="java/supabase.js" defer></script>
-<script src="java/main.js" defer></script>
-<script src="translations/translation.js" defer></script>
-<script src="java/footer-pages.js" defer></script>
-<script src="mobile-nav-bar/main-navbar.js" defer></script> 
-<script src="java/notifications.js" defer></script>
-<script type="module" src="./java/Products.js"></script>
+<script src="java/supabase.min.js" defer></script>
+<script src="java/main.min.js" defer></script>
+<script src="translations/translation.min.js" defer></script>
+<script src="java/footer-pages.min.js" defer></script>
+<script src="mobile-nav-bar/main-navbar.min.js" defer></script> 
+<script src="java/notifications.min.js" defer></script>
+<script type="module" src="./java/Products.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   function buildSocialBar(s) {

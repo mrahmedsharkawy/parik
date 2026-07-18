@@ -511,13 +511,13 @@
 </div>
   </div>
 </footer>
-<script src="java/supabase.js" defer></script>
-<script src="java/main.js" defer></script>
-<script src="translations/translation.js" defer></script>
-<script src="java/footer-pages.js" defer></script>
-<script src="mobile-nav-bar/main-navbar.js" defer></script>  
-<script src="java/notifications.js" defer></script>
-<script type="module" src="java/Products.js" defer></script>
+<script src="java/supabase.min.js" defer></script>
+<script src="java/main.min.js" defer></script>
+<script src="translations/translation.min.js" defer></script>
+<script src="java/footer-pages.min.js" defer></script>
+<script src="mobile-nav-bar/main-navbar.min.js" defer></script>  
+<script src="java/notifications.min.js" defer></script>
+<script type="module" src="java/Products.min.js" defer></script>
 
 <script>
 (function(){
@@ -571,7 +571,7 @@
       }
 
       if (!products) {
-        const res = await fetch('java/Products.json');
+        const res = await fetch('java/Products.min.json');
         products = await res.json();
       }
 
