@@ -119,10 +119,10 @@
       <a href="/categories/forex">🪙<span data-i18n="فوركس ">فوركس </span><span class="arrow">›</span></a>
       <div class="flyout category-flyout">
         <ul class="subcategories">
-          <li><a href="/categories/forex/tables"><img src="/assets/categories/forex/tables.webp" alt="طولات "><span data-i18n="طولات ">طولات </span></a></li>
-          <li><a href="/categories/forex/stands"><img src="/assets/categories/forex/stands.webp" alt="استاند  "><span data-i18n="استاند  ">استاند  </span></a></li>
-          <li><a href="/categories/forex/models"><img src="/assets/categories/forex/models.webp" alt="مجسم "><span data-i18n="مجسم ">مجسم </span></a></li>
-          <li><a href="/categories/forex/rotations"><img src="/assets/categories/forex/rotations.webp" alt="دوران "><span data-i18n="دوران ">دوران </span></a></li>
+          <li><a href="/categories/forex/tables"><img src="/assets/categories/Forex/tables.webp" alt="طولات "><span data-i18n="طولات ">طولات </span></a></li>
+          <li><a href="/categories/forex/stands"><img src="/assets/categories/Forex/stands.webp" alt="استاند  "><span data-i18n="استاند  ">استاند  </span></a></li>
+          <li><a href="/categories/forex/models"><img src="/assets/categories/Forex/models.webp" alt="مجسم "><span data-i18n="مجسم ">مجسم </span></a></li>
+          <li><a href="/categories/forex/rotations"><img src="/assets/categories/Forex/rotations.webp" alt="دوران "><span data-i18n="دوران ">دوران </span></a></li>
         </ul>
       </div>
     </li>
@@ -1576,7 +1576,7 @@
 (function() {
   const ORDERS_KEY = 'x2_orders';
   const PROFILE_KEY = 'x2_profile';
-  const PRODUCTS_URL = 'java/Products.min.json';
+  const PRODUCTS_URL = '/java/Products.json';
   let currentStatus = 'all';
   let currentSearch = '';
   let currentPage   = 1;
@@ -1698,7 +1698,7 @@
       const SS_KEY = 'x2_prods_ss';
       const cached = sessionStorage.getItem(SS_KEY);
       if (cached) { const obj = JSON.parse(cached); if (Date.now()-obj.ts < 300000) { const arr=obj.data; _prodsCache={}; arr.forEach(p=>{if(p.id)_prodsCache[String(p.id)]=p;const nm=typeof p.name==='object'?(p.name.ar||p.name.en||''):(p.name||'');if(nm)_prodsCache['__n__'+nm.trim().toLowerCase()]=p;}); return _prodsCache; } }
-      const arr = await (await fetch('java/Products.min.json')).json();
+      const arr = await (await fetch('/java/Products.json')).json();
       try { sessionStorage.setItem(SS_KEY, JSON.stringify({ts:Date.now(),data:arr})); } catch(e2) {}
       _prodsCache = {};
       arr.forEach(p => {
@@ -2516,7 +2516,7 @@
     try {
       const SS_KEY = 'x2_prods_ss';
       const c = sessionStorage.getItem(SS_KEY);
-      const arr = c ? JSON.parse(c).data : await (await fetch('java/Products.min.json')).json();
+      const arr = c ? JSON.parse(c).data : await (await fetch('/java/Products.json')).json();
       (arr||[]).forEach(p => { if (p.id) pMap[String(p.id)] = p; });
     } catch(e) {}
 

@@ -585,7 +585,7 @@
     }
     // fallback: Products.json
     if (!prods.length) {
-      try { prods = await fetch('java/Products.min.json', {cache:'no-store'}).then(r=>r.json()); } catch(e) {}
+      try { prods = await fetch('/java/Products.json', {cache:'no-store'}).then(r=>r.json()); } catch(e) {}
     }
 
     allCategories = cats;
