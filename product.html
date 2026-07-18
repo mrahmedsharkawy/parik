@@ -345,32 +345,32 @@
 
 <!-- ============ قسم التقييمات والتعليقات ============ -->
 <style>
-  .reviews-section{max-width:1200px;margin:26px auto 10px;padding:0 16px;font-family:'Cairo',sans-serif}
-  .reviews-section .rv-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;border-bottom:1px solid #f0f0f0;padding-bottom:12px;margin-bottom:16px}
-  .reviews-section .rv-title{font-size:1.1rem;font-weight:700;color:#152546;margin:0}
-  .rv-avg{display:flex;align-items:center;gap:8px}
-  .rv-avg .num{font-size:1.6rem;font-weight:800;color:#152546;line-height:1}
-  .rv-avg .stars{color:#D4AF37;font-size:1rem;letter-spacing:1px}
-  .rv-avg small{color:#888;font-size:.8rem}
-  .rv-list{display:flex;flex-direction:column;gap:12px;margin-bottom:22px}
-  .rv-item{border:1px solid #eef0f4;border-radius:12px;padding:12px 14px;background:#fff}
-  .rv-item .top{display:flex;align-items:center;justify-content:space-between;gap:8px}
-  .rv-item .who{font-weight:700;color:#152546;font-size:.92rem}
-  .rv-item .st{color:#D4AF37;font-size:.85rem}
-  .rv-item .txt{color:#444;font-size:.9rem;line-height:1.7;margin:6px 0 2px}
-  .rv-item .dt{color:#aaa;font-size:.72rem}
-  .rv-empty{color:#999;text-align:center;padding:18px;font-size:.9rem}
-  .rv-form{background:#f8f9fc;border:1px solid #eef0f4;border-radius:14px;padding:16px}
-  .rv-form h4{margin:0 0 12px;color:#152546;font-size:1rem}
-  .rv-form .row{display:flex;gap:10px;flex-wrap:wrap}
-  .rv-form .row>*{flex:1;min-width:140px}
-  .rv-form input,.rv-form textarea{width:100%;padding:9px 11px;border:1px solid #e3e7ef;border-radius:8px;font-size:.9rem;font-family:inherit;background:#fff}
+  .reviews-section{max-width:700px;margin:18px auto 8px;padding:0 12px;font-family:'Cairo',sans-serif}
+  .reviews-section .rv-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-bottom:1px solid #f0f0f0;padding-bottom:10px;margin-bottom:12px}
+  .reviews-section .rv-title{font-size:1rem;font-weight:700;color:#152546;margin:0}
+  .rv-avg{display:flex;align-items:center;gap:6px}
+  .rv-avg .num{font-size:1.3rem;font-weight:800;color:#152546;line-height:1}
+  .rv-avg .stars{color:#D4AF37;font-size:.9rem;letter-spacing:1px}
+  .rv-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+  .rv-item{border:1px solid #eef0f4;border-radius:10px;padding:9px 12px;background:#fff}
+  .rv-item .top{display:flex;align-items:center;justify-content:space-between;gap:6px}
+  .rv-item .who{font-weight:700;color:#152546;font-size:.82rem}
+  .rv-item .st{color:#D4AF37;font-size:.78rem}
+  .rv-item .txt{color:#555;font-size:.78rem;font-weight:400;line-height:1.6;margin:4px 0 2px}
+  .rv-item .dt{color:#bbb;font-size:.68rem}
+  .rv-empty{color:#999;text-align:center;padding:14px;font-size:.82rem}
+  .rv-show-more{display:block;width:100%;background:none;border:1px solid #e3e7ef;border-radius:8px;padding:7px;font-size:.82rem;color:#152546;cursor:pointer;margin-bottom:14px;font-family:inherit}
+  .rv-show-more:hover{background:#f5f7fa}
+  .rv-form{background:#f8f9fc;border:1px solid #eef0f4;border-radius:12px;padding:12px}
+  .rv-form h4{margin:0 0 10px;color:#152546;font-size:.9rem}
+  .rv-form .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .rv-form input,.rv-form textarea{width:100%;padding:8px 10px;border:1px solid #e3e7ef;border-radius:8px;font-size:.82rem;font-family:inherit;background:#fff;box-sizing:border-box}
   .rv-form input:focus,.rv-form textarea:focus{outline:none;border-color:#D4AF37}
-  .rv-form textarea{min-height:72px;resize:vertical;margin-top:10px}
-  .rv-stars-pick{display:inline-flex;flex-direction:row-reverse;gap:2px;font-size:1.5rem;cursor:pointer}
+  .rv-form textarea{min-height:60px;resize:vertical;margin-top:8px}
+  .rv-stars-pick{display:inline-flex;flex-direction:row-reverse;gap:2px;font-size:1.3rem;cursor:pointer}
   .rv-stars-pick span{color:#ddd;transition:.1s}
   .rv-stars-pick span.on,.rv-stars-pick span:hover,.rv-stars-pick span:hover ~ span{color:#D4AF37}
-  .rv-form .submit{margin-top:12px;background:#152546;color:#fff;border:none;border-radius:50px;padding:11px 26px;font-weight:700;cursor:pointer;font-size:.92rem}
+  .rv-form .submit{margin-top:10px;background:#152546;color:#fff;border:none;border-radius:50px;padding:9px 22px;font-weight:700;cursor:pointer;font-size:.85rem}
   .rv-form .submit:hover{background:#0d1c38}
 </style>
 
@@ -381,18 +381,14 @@
   </div>
 
   <div class="rv-list" id="rvList"><div class="rv-empty">لا توجد تعليقات بعد. كن أول من يقيّم هذا المنتج!</div></div>
+  <button class="rv-show-more" id="rvShowMore" style="display:none" data-i18n="إظهار الكل">⬇ إظهار الكل</button>
 
   <div class="rv-form">
     <h4 data-i18n="أضف تقييمك">أضف تقييمك</h4>
     <div class="row">
-      <div>
-        <input type="text" id="rvName" placeholder="اسمك">
-      </div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <span style="color:#152546;font-weight:600;font-size:.85rem" data-i18n="التقييم">التقييم:</span>
-        <div class="rv-stars-pick" id="rvStars">
-          <span data-v="5">★</span><span data-v="4">★</span><span data-v="3">★</span><span data-v="2">★</span><span data-v="1">★</span>
-        </div>
+      <span style="color:#152546;font-weight:600;font-size:.82rem" data-i18n="التقييم">التقييم:</span>
+      <div class="rv-stars-pick" id="rvStars">
+        <span data-v="5">★</span><span data-v="4">★</span><span data-v="3">★</span><span data-v="2">★</span><span data-v="1">★</span>
       </div>
     </div>
     <textarea id="rvText" placeholder="اكتب تعليقك عن المنتج..."></textarea>
@@ -406,12 +402,12 @@
   if(!pid) return;
   const LS = 'admin_reviews';
   let picked = 5;
+  const SHOW = 3;
 
   const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const getLocal = () => { try{ return JSON.parse(localStorage.getItem(LS)||'{}'); }catch(e){ return {}; } };
   const saveLocal = r => localStorage.setItem(LS, JSON.stringify(r));
 
-  // تعليقات مشتركة من ملف يصدّره الأدمن + تعليقات الزائر المحلية
   async function loadBase(){
     try{
       const res = await fetch('java/reviews.json',{cache:'no-store'});
@@ -422,24 +418,19 @@
 
   function starsStr(n){ n=Math.round(n)||0; return '★'.repeat(n)+'☆'.repeat(5-n); }
 
-  async function render(){
-    const base = await loadBase();
-    const local = getLocal()[pid] || [];
-    // دمج مع منع التكرار البسيط
-    const all = [...local, ...base];
-    const list = document.getElementById('rvList');
-    const avgBox = document.getElementById('rvAvg');
+  let allReviews = [];
+  let showAll = false;
 
-    if(!all.length){
+  function renderList(){
+    const list = document.getElementById('rvList');
+    const btn = document.getElementById('rvShowMore');
+    const visible = showAll ? allReviews : allReviews.slice(0, SHOW);
+    if(!allReviews.length){
       list.innerHTML = '<div class="rv-empty">لا توجد تعليقات بعد. كن أول من يقيّم هذا المنتج!</div>';
-      avgBox.innerHTML = '';
+      btn.style.display = 'none';
       return;
     }
-    const avg = all.reduce((s,r)=>s+(Number(r.rating)||0),0)/all.length;
-    avgBox.innerHTML = `<span class="num">${avg.toFixed(1)}</span>
-      <span><span class="stars">${starsStr(avg)}</span><br><small>${all.length} تقييم</small></span>`;
-
-    list.innerHTML = all.map(r=>`
+    list.innerHTML = visible.map(r=>`
       <div class="rv-item">
         <div class="top">
           <span class="who">${esc(r.name)||'زائر'}</span>
@@ -448,7 +439,27 @@
         <div class="txt">${esc(r.text)}</div>
         <div class="dt">${r.date ? new Date(r.date).toLocaleDateString('ar') : ''}</div>
       </div>`).join('');
+    btn.style.display = (!showAll && allReviews.length > SHOW) ? 'block' : 'none';
+    btn.textContent = '⬇ إظهار الكل (' + allReviews.length + ')';
   }
+
+  async function render(){
+    const base = await loadBase();
+    const local = getLocal()[pid] || [];
+    allReviews = [...local, ...base];
+    const avgBox = document.getElementById('rvAvg');
+    if(allReviews.length){
+      const avg = allReviews.reduce((s,r)=>s+(Number(r.rating)||0),0)/allReviews.length;
+      avgBox.innerHTML = `<span class="num">${avg.toFixed(1)}</span><span class="stars">${starsStr(avg)}</span>`;
+    } else {
+      avgBox.innerHTML = '';
+    }
+    renderList();
+  }
+
+  document.getElementById('rvShowMore').addEventListener('click',function(){
+    showAll = true; renderList();
+  });
 
   // اختيار النجوم
   const starsEl = document.getElementById('rvStars');
@@ -458,17 +469,18 @@
   });
   picked = 5; paint();
 
-  // إرسال
+  // إرسال - اسم من الحساب تلقائياً
   document.getElementById('rvSubmit').addEventListener('click', ()=>{
-    const name = document.getElementById('rvName').value.trim();
     const text = document.getElementById('rvText').value.trim();
     if(!text){ alert('اكتب تعليقك أولاً'); return; }
+    let name = 'زائر';
+    try{ const p=JSON.parse(localStorage.getItem('x2_profile')||'{}'); if(p.name) name=p.name; }catch(e){}
     const r = getLocal();
-    (r[pid] = r[pid] || []).unshift({ name: name||'زائر', rating: picked, text, date: new Date().toISOString() });
+    (r[pid] = r[pid] || []).unshift({ name, rating: picked, text, date: new Date().toISOString() });
     saveLocal(r);
-    document.getElementById('rvName').value='';
     document.getElementById('rvText').value='';
     picked = 5; paint();
+    showAll = false;
     render();
   });
 
