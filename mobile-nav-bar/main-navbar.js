@@ -125,9 +125,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     // إطلاق حدث mobile-nav:ready حتى يتمكن main.js من التحديث
     window.dispatchEvent(new CustomEvent('mobile-nav:ready'));
     
-    // تحديث عداد الحساب
+    // تحديث عداد الحساب عند التحميل
     const accountEl = nav.querySelector('.account-badge');
-    if (accountEl && window.__accountCount != null) accountEl.setAttribute('data-count', String(window.__accountCount));
+    if (accountEl) {
+      const initCount = window.__accountCount != null ? String(window.__accountCount) : '0';
+      accountEl.setAttribute('data-count', initCount);
+      // تحديث العداد في الوقت الفعلي عند مسح/قراءة الإشعارات
+      window.addEventListener('x2:notif-updated', function(e) {
+        const c = e.detail && e.detail.count > 0 ? String(e.detail.count) : '0';
+        document.querySelectorAll('.account-badge').forEach(el => el.setAttribute('data-count', c));
+      });
+    }
   } catch (err) {
     console.warn('mobile-nav loader error:', err);
   }

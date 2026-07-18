@@ -105,19 +105,21 @@ body{
   box-shadow:0 6px 16px rgba(21,37,70,0.22);
 }
 
-/* تنسيق الأيقونات النشطة - تعديل لحل مشكلة عدم تغير اللون */
+/* الأيقونات النشطة - لون ذهبي */
 .mobile-nav a.active svg.icon {
   color: #D4AF37 !important;
   fill: #D4AF37 !important;
   stroke: #D4AF37 !important;
 }
 
-.mobile-nav a.active img.icon {
+.mobile-nav a.active img.icon,
+.mobile-nav a.active img.nav-icon {
   filter: brightness(0) saturate(100%) invert(76%) sepia(47%) saturate(1052%) hue-rotate(356deg) brightness(94%) contrast(91%) !important;
 }
 
-.mobile-nav a.active img.nav-icon {
-  filter: brightness(0) saturate(100%) invert(76%) sepia(47%) saturate(1052%) hue-rotate(356deg) brightness(94%) contrast(91%) !important;
+/* النص النشط - ذهبي لجميع العناصر */
+.mobile-nav a.active span:not(.fire-nav-icon):not(.icon-wrap):not(.cart-badge):not(.account-badge) {
+  color: #D4AF37 !important;
 }
 
 /* إزالة تأثير التحويم حتى لا يتعارض مع تنسيق الأيقونات النشطة */
