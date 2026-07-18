@@ -466,8 +466,10 @@
       <div class="rv-modal-body">${allReviews.map(rvItemHtml).join('')}</div>
     </div>`;
     document.body.appendChild(bg);
-    bg.querySelector('.rv-modal-close').onclick = () => bg.remove();
-    bg.addEventListener('click', e => { if(e.target===bg) bg.remove(); });
+    document.body.style.overflow = 'hidden';
+    const close = () => { bg.remove(); document.body.style.overflow = ''; };
+    bg.querySelector('.rv-modal-close').onclick = close;
+    bg.addEventListener('click', e => { if(e.target===bg) close(); });
   });
 
   async function render(){

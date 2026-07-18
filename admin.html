@@ -1184,7 +1184,7 @@ function switchTab(name){
   $('panel-'+name).classList.add('active');
   // حفظ التاب الحالي لاستعادته بعد الريفريش
   sessionStorage.setItem('admin_active_tab', name);
-  if(name==='comments'){ fillProductSelects(); renderComments(); }
+  if(name==='comments'){ fillProductSelects(); $('commentList').innerHTML='<div class="empty">جارٍ التحميل...</div>'; loadSbReviews().then(()=>renderComments()); }
   if(name==='orders'){ fillProductSelects(); syncStoreOrders(true); renderStats(); renderOrders(); if(!$('o-date').value) $('o-date').value = isoToLocalInput(new Date().toISOString()); }
   if(name==='marketing'){ loadPushSubscribersCount(); }
 }
@@ -1747,9 +1747,19 @@ function download(filename, text){
 }
 function exportProducts(){ download('Products.json', JSON.stringify(products,null,2)); toast('تم تنزيل Products.json'); }
 
-/* ================= التعليقات ================= */
-function getReviews(){ try{ return JSON.parse(localStorage.getItem(LS_REVIEWS)||'{}'); }catch(e){ return {}; } }
-function saveReviews(r){ localStorage.setItem(LS_REVIEWS, JSON.stringify(r)); }
+/* ================= التعليقات (Supabase) ================= */
+const SB_REV_URL = 'https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/reviews';
+const SB_REV_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+let _sbReviews = []; // كاش محلي للتعليقات المحملة
+
+async function loadSbReviews(){
+  try{
+    const res = await fetch(SB_REV_URL+'?order=date.desc&limit=1000',{
+      headers:{apikey:SB_REV_KEY, Authorization:'Bearer '+SB_REV_KEY}
+    });
+    _sbReviews = res.ok ? await res.json() : [];
+  } catch(e){ _sbReviews = []; }
+}
 
 function fillProductSelects(){
   const opts = products.map(p=>`<option value="${p.id}">${esc(getT(p.name))||('#'+p.id)}</option>`).join('');
@@ -1776,61 +1786,67 @@ function fillCommentCategoryFilter(){
   $('c-category').innerHTML = '<option value="">كل الأقسام</option>' +
     list.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
 }
-function addComment(){
+async function addComment(){
   const pid = $('c-product').value;
   const name = $('c-name').value.trim();
   const text = $('c-text').value.trim();
   if(!pid){ toast('اختر منتجاً'); return; }
   if(!name || !text){ toast('اكتب الاسم والتعليق'); return; }
-  const reviews = getReviews();
-  (reviews[pid] = reviews[pid]||[]).unshift({
-    name, rating:Number($('c-rating').value), text, date:new Date().toISOString()
-  });
-  saveReviews(reviews);
-  $('c-name').value=''; $('c-text').value='';
-  renderComments();
-  toast('تمت إضافة التعليق');
+  try{
+    const res = await fetch(SB_REV_URL, {
+      method:'POST',
+      headers:{apikey:SB_REV_KEY, Authorization:'Bearer '+SB_REV_KEY, 'Content-Type':'application/json', Prefer:'return=minimal'},
+      body: JSON.stringify({product_id:String(pid), name, rating:Number($('c-rating').value), text})
+    });
+    if(!res.ok) throw new Error(await res.text());
+    $('c-name').value=''; $('c-text').value='';
+    toast('تمت إضافة التعليق');
+    await loadSbReviews();
+    renderComments();
+  } catch(e){ toast('خطأ: '+e.message); }
 }
-function deleteComment(pid, idx){
-  const reviews = getReviews();
-  if(reviews[pid]){ reviews[pid].splice(idx,1); saveReviews(reviews); renderComments(); toast('تم حذف التعليق'); }
+async function deleteComment(id){
+  try{
+    await fetch(SB_REV_URL+'?id=eq.'+encodeURIComponent(id),{
+      method:'DELETE',
+      headers:{apikey:SB_REV_KEY, Authorization:'Bearer '+SB_REV_KEY}
+    });
+    toast('تم حذف التعليق');
+    _sbReviews = _sbReviews.filter(r=>r.id!==id);
+    renderComments();
+  } catch(e){ toast('خطأ في الحذف'); }
 }
 function renderComments(){
   const scope = $('c-scope').value;
   const selectedCategory = $('c-category').value;
   const sortBy = $('c-sort').value;
-  const reviews = getReviews();
-  const rows = [];
-  Object.keys(reviews).forEach(pid=>{
+
+  let rows = _sbReviews.map(r=>{
+    const pid = r.product_id;
     const p = products.find(x=>String(x.id)===String(pid));
     const pName = p ? (esc(getT(p.name))||('#'+pid)) : ('#'+pid);
     const pCats = p ? getProductCategories(p) : [];
-    (reviews[pid]||[]).forEach((r,i)=>{
-      rows.push({ pid, idx:i, pName, pCats, r });
-    });
+    return { pid, id:r.id, pName, pCats, r };
   });
 
-  let list = rows;
   if(scope==='category' && selectedCategory){
-    list = list.filter(x=>x.pCats.includes(selectedCategory));
+    rows = rows.filter(x=>x.pCats.includes(selectedCategory));
   }
-
   if(sortBy==='worst'){
-    list.sort((a,b)=>(Number(a.r.rating)||0)-(Number(b.r.rating)||0) || new Date(b.r.date)-new Date(a.r.date));
+    rows.sort((a,b)=>(Number(a.r.rating)||0)-(Number(b.r.rating)||0));
   }else if(sortBy==='best'){
-    list.sort((a,b)=>(Number(b.r.rating)||0)-(Number(a.r.rating)||0) || new Date(b.r.date)-new Date(a.r.date));
+    rows.sort((a,b)=>(Number(b.r.rating)||0)-(Number(a.r.rating)||0));
   }else if(sortBy==='oldest'){
-    list.sort((a,b)=>new Date(a.r.date)-new Date(b.r.date));
+    rows.sort((a,b)=>new Date(a.r.date)-new Date(b.r.date));
   }else{
-    list.sort((a,b)=>new Date(b.r.date)-new Date(a.r.date));
+    rows.sort((a,b)=>new Date(b.r.date)-new Date(a.r.date));
   }
 
-  if(!list.length){
+  if(!rows.length){
     $('commentList').innerHTML = '<div class="empty">لا توجد تعليقات مطابقة للفلاتر</div>';
     return;
   }
-
-  $('commentList').innerHTML = list.map(({pid,idx,pName,pCats,r})=>`
+  $('commentList').innerHTML = rows.map(({pid,id,pName,pCats,r})=>`
     <div class="prod-row" style="align-items:flex-start">
       <div class="info">
         <b>${esc(r.name)} <span class="stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</span></b>
@@ -1838,10 +1854,10 @@ function renderComments(){
         <div style="font-size:.88rem;color:#3a4256;margin:4px 0">${esc(r.text)}</div>
         <small>${new Date(r.date).toLocaleString('ar')}</small>
       </div>
-      <button class="btn-danger btn-sm" onclick="deleteComment('${pid}',${idx})">حذف</button>
+      <button class="btn-danger btn-sm" onclick="deleteComment('${esc(id)}')">حذف</button>
     </div>`).join('');
 }
-function exportComments(){ download('reviews.json', JSON.stringify(getReviews(),null,2)); toast('تم تنزيل reviews.json'); }
+function exportComments(){ download('reviews.json', JSON.stringify(_sbReviews,null,2)); toast('تم تنزيل reviews.json'); }
 
 /* ================= الطلبات والمبيعات (متزامنة مع Supabase) ================= */
 const LS_ORDERS = 'admin_orders';
