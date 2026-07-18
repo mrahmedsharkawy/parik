@@ -2097,6 +2097,8 @@
     renderNotifications();
     const b = document.getElementById('aqnNotifBadge');
     if (b) { b.textContent = ''; b.style.display = 'none'; }
+    if (typeof clearBadge === 'function') clearBadge();
+    else if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(()=>{});
   };
 
   window.clearAllNotifs = function() {
@@ -2107,6 +2109,8 @@
     if (b) { b.textContent = ''; b.style.display = 'none'; }
     // تحديث badge التنقل السفلي
     document.querySelectorAll('.account-badge').forEach(el => el.setAttribute('data-count', ''));
+    if (typeof clearBadge === 'function') clearBadge();
+    else if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(()=>{});
   };
 
   // تحديث badge الزر السريع عند التحميل
