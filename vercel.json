@@ -3,9 +3,7 @@
   "trailingSlash": false,
   "rewrites": [
     { "source": "/product/:id/:slug", "destination": "/product" },
-    { "source": "/product/:id",       "destination": "/product" },
-    { "source": "/categories/:cat/:subcat", "destination": "/categories" },
-    { "source": "/categories/:cat",         "destination": "/categories" }
+    { "source": "/product/:id",       "destination": "/product" }
   ],
   "headers": [
     {

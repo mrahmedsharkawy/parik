@@ -1,5 +1,5 @@
 /* Service Worker - بريق PWA */
-const CACHE = 'bariq-v12';
+const CACHE = 'bariq-v11';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -92,7 +92,7 @@ self.addEventListener('fetch', function(e) {
 
   const isHtml = e.request.destination === 'document'
     || url.endsWith('.html')
-    || /\/(categories|product|Cart|account|login|offers|checkout|affiliate|policy|admin)(\/.*)?$/.test(new URL(url).pathname)
+    || /\/(categories|product|Cart|account|login|offers|checkout|affiliate|policy|admin)$/.test(new URL(url).pathname)
     || new URL(url).pathname === '/';
   const isAsset = url.includes('/style/') || url.includes('/java/') || url.includes('/translations/') || url.includes('/mobile-nav-bar/');
 
