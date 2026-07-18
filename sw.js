@@ -1,16 +1,15 @@
 /* Service Worker - بريق PWA */
-const CACHE = 'bariq-v10';
+const CACHE = 'bariq-v11';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
-  '/index.html',
-  '/categories.html',
-  '/product.html',
-  '/Cart.html',
-  '/account.html',
-  '/login.html',
-  '/offers.html',
-  '/checkout.html',
+  '/categories',
+  '/product',
+  '/Cart',
+  '/account',
+  '/login',
+  '/offers',
+  '/checkout',
   '/assets/logo.webp',
   '/assets/icon w.webp',
   '/assets/cairo-arabic.woff2',
@@ -91,7 +90,10 @@ self.addEventListener('fetch', function(e) {
   if (url.includes('supabase.co') || url.includes('/rest/') || url.includes('/auth/') || url.includes('/storage/')) return;
   if (e.request.method !== 'GET') return;
 
-  const isHtml = e.request.destination === 'document' || url.endsWith('.html') || url === location.origin + '/';
+  const isHtml = e.request.destination === 'document'
+    || url.endsWith('.html')
+    || /\/(categories|product|Cart|account|login|offers|checkout|affiliate|policy|admin)$/.test(new URL(url).pathname)
+    || new URL(url).pathname === '/';
   const isAsset = url.includes('/style/') || url.includes('/java/') || url.includes('/translations/') || url.includes('/mobile-nav-bar/');
 
   // HTML: stale-while-revalidate — serve from cache instantly, fetch update silently
