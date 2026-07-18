@@ -581,8 +581,7 @@
   function renderCard(p, idx) {
     const name = (p?.name?.ar || p?.name || 'منتج').toString();
     const img  = (Array.isArray(p.img) ? p.img[0] : p.img) || 'assets/logo.png';
-    const name_slug = (p?.name?.ar || p?.name || '').toString().trim().replace(/\s+/g, '-').replace(/[^\u0600-\u06FFa-zA-Z0-9-]/g, '').substring(0, 60);
-    const link = p.id ? `/product/${encodeURIComponent(p.id)}${name_slug ? '/' + encodeURIComponent(name_slug) : ''}` : '/product';
+    const link = p.id ? `product.html?id=${encodeURIComponent(p.id)}` : 'product.html';
     const pr = parseFloat(p.price), old = parseFloat(p.oldPrice);
     const disc = (old > pr && pr > 0) ? Math.round(((old - pr) / old) * 100) : 0;
     // أول صورتين eager لتحسين LCP
