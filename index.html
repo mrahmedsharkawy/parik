@@ -3,9 +3,9 @@
   <head>
   <meta charset="UTF-8" />
   <title data-i18n="الصفحة الرئيسية - بريق">الصفحة الرئيسية - بريق</title>
-  <!-- Preload CSS for faster rendering (blocking to prevent CLS) -->
-  <link rel="preload" href="style/style.css" as="style">
-  <link rel="stylesheet" href="style/style.css">
+  <!-- style.css non-blocking: critical CSS already inlined above -->
+  <link rel="preload" href="style/style.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="style/style.css"></noscript>
   <!-- Preload LCP image -->
   <link rel="preload" href="assets/home/1.webp" as="image" fetchpriority="high" type="image/webp">
   <!-- Critical above-fold CSS (prevents FOUC while style.css loads) -->
@@ -75,7 +75,12 @@
 
     <!-- الشعار -->
     <div class="logo">
-      <a href="index.html"><img src="assets/logo.png" alt="X2 Logo" fetchpriority="high" width="50" height="50" /></a>
+      <a href="index.html">
+      <picture>
+        <source srcset="assets/logo.webp" type="image/webp">
+        <img src="assets/logo.png" alt="بريق" fetchpriority="high" width="50" height="50" />
+      </picture>
+    </a>
     </div>
 
 <!-- القائمة الجانبية للفئات -->
@@ -449,25 +454,25 @@
       <strong data-i18n="تواصل معنا">تواصل معنا</strong>
       <div class="footer-social-icons">
         <a href="#" aria-label="Instagram">
-          <img src="assets/social/instagram.png" alt="Instagram" loading="lazy" width="30" height="30">
+          <img src="assets/social/instagram.webp" alt="Instagram" loading="lazy" width="30" height="30">
         </a>
         <a href="#" aria-label="Facebook">
-          <img src="assets/social/facebook.png" alt="Facebook" loading="lazy" width="30" height="30">
+          <img src="assets/social/facebook.webp" alt="Facebook" loading="lazy" width="30" height="30">
         </a>
         <a href="#" aria-label="Twitter">
-          <img src="assets/social/twitter.png" alt="Twitter" loading="lazy" width="30" height="30">
+          <img src="assets/social/twitter.webp" alt="Twitter" loading="lazy" width="30" height="30">
         </a>
         <a href="#" aria-label="YouTube">
-          <img src="assets/social/youtube.png" alt="YouTube" loading="lazy" width="30" height="30">
+          <img src="assets/social/youtube.webp" alt="YouTube" loading="lazy" width="30" height="30">
         </a>
         <a href="#" aria-label="TikTok">
-          <img src="assets/social/tiktok.png" alt="TikTok" loading="lazy" width="30" height="30">
+          <img src="assets/social/tiktok.webp" alt="TikTok" loading="lazy" width="30" height="30">
         </a>
         <a href="#" aria-label="Pinterest">
-          <img src="assets/social/pinterest.png" alt="Pinterest" loading="lazy" width="30" height="30">
+          <img src="assets/social/pinterest.webp" alt="Pinterest" loading="lazy" width="30" height="30">
         </a>
         <a href="#" aria-label="Snapchat">
-          <img src="assets/social/snapchat.png" alt="Snapchat" loading="lazy" width="30" height="30">
+          <img src="assets/social/snapchat.webp" alt="Snapchat" loading="lazy" width="30" height="30">
         </a>
       </div>
     </div>
