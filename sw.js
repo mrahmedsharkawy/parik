@@ -1,5 +1,5 @@
 /* Service Worker - بريق PWA */
-const CACHE = 'bariq-v11';
+const CACHE = 'bariq-v12';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -90,43 +90,45 @@ self.addEventListener('fetch', function(e) {
   if (url.includes('supabase.co') || url.includes('/rest/') || url.includes('/auth/') || url.includes('/storage/')) return;
   if (e.request.method !== 'GET') return;
 
+  function fetchFresh(request) {
+    return fetch(new Request(request, { cache: 'reload' }));
+  }
+
   const isHtml = e.request.destination === 'document'
     || url.endsWith('.html')
     || /\/(categories|product|Cart|account|login|offers|checkout|affiliate|policy|admin)$/.test(new URL(url).pathname)
     || new URL(url).pathname === '/';
   const isAsset = url.includes('/style/') || url.includes('/java/') || url.includes('/translations/') || url.includes('/mobile-nav-bar/');
 
-  // HTML: stale-while-revalidate — serve from cache instantly, fetch update silently
+  // HTML: network-first so deployed changes appear on phones immediately.
   if (isHtml) {
     e.respondWith(
       caches.open(CACHE).then(function(cache) {
-        return cache.match(e.request).then(function(cached) {
-          const fetchPromise = fetch(e.request).then(function(res) {
-            if (res.ok) cache.put(e.request, res.clone());
-            return res;
-          }).catch(function() {
+        return fetchFresh(e.request).then(function(res) {
+          if (res.ok) cache.put(e.request, res.clone());
+          return res;
+        }).catch(function() {
+          return cache.match(e.request).then(function(cached) {
             return cached || caches.match('/index.html') || new Response('Offline', {status: 503});
           });
-          return cached || fetchPromise;
         });
       })
     );
     return;
   }
 
-  // CSS/JS/translations: stale-while-revalidate (instant + background update)
+  // CSS/JS/translations: network-first to avoid old app code after deploys.
   if (isAsset) {
     e.respondWith(
       caches.open(CACHE).then(function(cache) {
-        return cache.match(e.request).then(function(cached) {
-          const fetchPromise = fetch(e.request).then(function(res) {
+        return fetchFresh(e.request).then(function(res) {
             if (res.ok) cache.put(e.request, res.clone());
             return res;
           }).catch(function() {
-            return cached || new Response('', {status: 503});
+            return cache.match(e.request).then(function(cached) {
+              return cached || new Response('', {status: 503});
+            });
           });
-          return cached || fetchPromise;
-        });
       })
     );
     return;

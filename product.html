@@ -440,7 +440,15 @@
 
 <script>
 (function(){
-  const pid = new URLSearchParams(location.search).get('id');
+  function getProductIdFromUrl(){
+    const fromQuery = new URLSearchParams(location.search).get('id');
+    if(fromQuery) return fromQuery;
+    const parts = location.pathname.split('/').filter(Boolean);
+    const productIndex = parts.findIndex(p => p.toLowerCase() === 'product' || p.toLowerCase() === 'product.html');
+    return productIndex >= 0 && parts[productIndex + 1] ? decodeURIComponent(parts[productIndex + 1]) : '';
+  }
+
+  const pid = getProductIdFromUrl();
   if(!pid) return;
   const SB_URL = 'https://knleehjjejfeobcmpwnw.supabase.co';
   const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
