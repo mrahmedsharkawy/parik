@@ -372,12 +372,12 @@
   .rv-form .submit{margin-top:7px;background:#152546;color:#fff;border:none;border-radius:50px;padding:7px 18px;font-weight:700;cursor:pointer;font-size:.8rem}
   /* Modal */
   .rv-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99998;display:flex;align-items:flex-end;justify-content:center}
-  .rv-modal{background:#fff;border-radius:18px 18px 0 0;width:100%;max-width:600px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden;animation:slideUp .25s ease}
+  .rv-modal{background:#fff;border-radius:18px 18px 0 0;width:100%;max-width:600px;height:80vh;display:flex;flex-direction:column;animation:slideUp .25s ease}
   @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
   .rv-modal-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #f0f0f0;flex-shrink:0}
   .rv-modal-head h4{margin:0;font-size:.95rem;color:#152546;font-weight:700}
   .rv-modal-close{background:none;border:none;font-size:1.3rem;cursor:pointer;color:#888;padding:0;line-height:1}
-  .rv-modal-body{overflow-y:scroll;-webkit-overflow-scrolling:touch;padding:10px 14px;display:flex;flex-direction:column;gap:5px;flex:1 1 auto;min-height:0;overscroll-behavior:contain}
+  .rv-modal-body{overflow-y:scroll;-webkit-overflow-scrolling:touch;padding:10px 14px;display:flex;flex-direction:column;gap:5px;flex:1;height:0;overscroll-behavior:contain}
   .rv-modal-body .rv-item{padding:6px 9px;border-radius:7px}
   .rv-modal-body .rv-item .who{font-size:.76rem}
   .rv-modal-body .rv-item .dt{font-size:.64rem}
