@@ -36,7 +36,8 @@
     @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
     #dailyPicksGrid:empty{min-height:160px}
     #subcategories-display:empty{min-height:0}
-    #category-products:empty{min-height:0}
+    /* Reserve space while products load → prevents footer from entering viewport → CLS fix */
+    #category-products:empty{min-height:600px;background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:12px}
     #searchResults:empty{display:none}
   </style>
   <!-- Preconnect to external resources -->
@@ -310,7 +311,7 @@
            alt="Parik Banner"
            fetchpriority="high"
            width="800" height="150"
-           decoding="async">
+           decoding="sync">
     </div>
   </a>
 </section>
