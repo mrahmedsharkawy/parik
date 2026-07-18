@@ -61,6 +61,19 @@ CREATE POLICY "public_customers" ON customers FOR ALL USING (true) WITH CHECK (t
 CREATE POLICY "public_notifications" ON notifications FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "public_settings" ON settings FOR ALL USING (true) WITH CHECK (true);
 
+-- جدول التقييمات
+CREATE TABLE IF NOT EXISTS reviews (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id TEXT NOT NULL,
+  name       TEXT NOT NULL DEFAULT 'زائر',
+  rating     INT NOT NULL DEFAULT 5,
+  text       TEXT NOT NULL,
+  date       TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "public_reviews" ON reviews FOR ALL USING (true) WITH CHECK (true);
+CREATE INDEX IF NOT EXISTS idx_reviews_product ON reviews(product_id);
+
 -- Index للبحث السريع
 CREATE INDEX IF NOT EXISTS idx_orders_phone ON orders(customer_phone);
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
