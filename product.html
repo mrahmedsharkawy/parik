@@ -355,7 +355,7 @@
   .rv-item{border:1px solid #eef0f4;border-radius:8px;padding:7px 10px;background:#fff}
   .rv-item .top{display:flex;align-items:center;justify-content:space-between;gap:6px}
   .rv-item .who{font-weight:700;color:#152546;font-size:.78rem}
-  .rv-item .dt{color:#bbb;font-size:.66rem;margin-right:5px}
+  .rv-item .dt{color:#bbb;font-size:.66rem;margin-right:4px;margin-left:4px}
   .rv-item .st{color:#D4AF37;font-size:.74rem}
   .rv-item .txt{color:#555;font-size:.76rem;font-weight:400;line-height:1.5;margin:3px 0 0}
   .rv-empty{color:#999;text-align:center;padding:12px;font-size:.8rem}
@@ -377,7 +377,7 @@
   .rv-modal-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #f0f0f0;flex-shrink:0}
   .rv-modal-head h4{margin:0;font-size:.95rem;color:#152546;font-weight:700}
   .rv-modal-close{background:none;border:none;font-size:1.3rem;cursor:pointer;color:#888;padding:0;line-height:1}
-  .rv-modal-body{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 14px;display:flex;flex-direction:column;gap:5px;flex:1 1 auto}
+  .rv-modal-body{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 14px;display:flex;flex-direction:column;gap:5px;flex:1 1 auto;min-height:0}
   .rv-modal-body .rv-item{padding:6px 9px;border-radius:7px}
   .rv-modal-body .rv-item .who{font-size:.76rem}
   .rv-modal-body .rv-item .dt{font-size:.64rem}
@@ -432,7 +432,7 @@
     const dt = r.date ? new Date(r.date).toLocaleDateString('ar') : '';
     return `<div class="rv-item">
       <div class="top">
-        <span><span class="who">${esc(r.name)||'زائر'}</span><span class="dt">${dt}</span></span>
+        <span><span class="who">${esc(r.name)||'زائر'}</span><span class="dt">· ${dt}</span></span>
         <span class="st">${starsStr(r.rating)}</span>
       </div>
       <div class="txt">${esc(r.text)}</div>
