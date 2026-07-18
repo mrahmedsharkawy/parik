@@ -4,12 +4,12 @@
   <meta charset="UTF-8" />
   <title data-i18n="الصفحة الرئيسية - بريق">الصفحة الرئيسية - بريق</title>
   <!-- style.css non-blocking: critical CSS already inlined above -->
-  <link rel="preload" href="style/style.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="style/style.css"></noscript>
+  <link rel="preload" href="/style/style.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="/style/style.css"></noscript>
   <!-- Preload Cairo Arabic font for faster text rendering -->
-  <link rel="preload" href="assets/cairo-arabic.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/cairo-arabic.woff2" as="font" type="font/woff2" crossorigin>
   <!-- Preload LCP image -->
-  <link rel="preload" href="assets/home/1.webp" as="image" fetchpriority="high" type="image/webp">
+  <link rel="preload" href="/assets/home/1.webp" as="image" fetchpriority="high" type="image/webp">
   <!-- Critical above-fold CSS (prevents FOUC while style.css loads) -->
   <style>
     *{box-sizing:border-box;margin:0}
@@ -50,9 +50,9 @@
   <noscript>
 </noscript>
   <link rel="manifest" href="/manifest.json">
-  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-  <link rel="icon" type="image/png" href="assets/logo.png">
-  <link rel="apple-touch-icon" href="assets/logo.png">
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+  <link rel="icon" type="image/png" href="/assets/logo.png">
+  <link rel="apple-touch-icon" href="/assets/logo.png">
   <meta name="apple-mobile-web-app-title" content="بريق">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#152546">
@@ -124,7 +124,7 @@
       <a href="/">
       <picture>
         <source srcset="assets/logo.webp" type="image/webp">
-        <img src="assets/logo.png" alt="بريق" fetchpriority="high" width="50" height="50" />
+        <img src="/assets/logo.png" alt="بريق" fetchpriority="high" width="50" height="50" />
       </picture>
     </a>
     </div>
@@ -144,12 +144,12 @@
       <a href="/categories/Occasions">🎉<span data-i18n=" مناسابات">مناسابات </span><span class="arrow">›</span></a>
       <div class="flyout category-flyout">
         <ul class="subcategories">
-          <li><a href="/categories/Occasions/National Day"><img src="assets/categories/Occasions/National Day.png" alt="اليوم الوطني" loading="lazy"><span data-i18n="اليوم الوطني  ">اليوم الوطني  </span></a></li>
-          <li><a href="/categories/Occasions/Haq Al-Laila"><img src="assets/categories/Occasions/Haq Al-Laila.png" alt="حق الليلة" loading="lazy"><span data-i18n="حق الليلة ">حق الليلة </span></a></li>
-          <li><a href="/categories/Occasions/Mother's Day"><img src="assets/categories/Occasions/Mother's Day.png" alt="عيد الام" loading="lazy"><span data-i18n="عيد الام ">عيد الام </span></a></li>
-          <li><a href="/categories/Occasions/Graduation"><img src="assets/categories/Occasions/Graduation.webp" alt="تخرج" loading="lazy"><span data-i18n="تخرج ">تخرج </span></a></li>
-          <li><a href="/categories/Occasions/Eid"><img src="assets/categories/Occasions/Eid.webp" alt="العيد" loading="lazy"><span data-i18n="العيد ">العيد </span></a></li>
-          <li><a href="/categories/Occasions/Hajj"><img src="assets/categories/Occasions/Hajj.webp" alt="حج" loading="lazy"><span data-i18n="حج ">حج </span></a></li>
+          <li><a href="/categories/Occasions/National Day"><img src="/assets/categories/Occasions/National Day.png" alt="اليوم الوطني" loading="lazy"><span data-i18n="اليوم الوطني  ">اليوم الوطني  </span></a></li>
+          <li><a href="/categories/Occasions/Haq Al-Laila"><img src="/assets/categories/Occasions/Haq Al-Laila.png" alt="حق الليلة" loading="lazy"><span data-i18n="حق الليلة ">حق الليلة </span></a></li>
+          <li><a href="/categories/Occasions/Mother's Day"><img src="/assets/categories/Occasions/Mother's Day.png" alt="عيد الام" loading="lazy"><span data-i18n="عيد الام ">عيد الام </span></a></li>
+          <li><a href="/categories/Occasions/Graduation"><img src="/assets/categories/Occasions/Graduation.webp" alt="تخرج" loading="lazy"><span data-i18n="تخرج ">تخرج </span></a></li>
+          <li><a href="/categories/Occasions/Eid"><img src="/assets/categories/Occasions/Eid.webp" alt="العيد" loading="lazy"><span data-i18n="العيد ">العيد </span></a></li>
+          <li><a href="/categories/Occasions/Hajj"><img src="/assets/categories/Occasions/Hajj.webp" alt="حج" loading="lazy"><span data-i18n="حج ">حج </span></a></li>
         </ul>
       </div>
     </li>
@@ -159,12 +159,12 @@
       <a href="/categories/Acrylic">💎<span data-i18n=" اكريلك">اكريلك </span><span class="arrow">›</span></a>
       <div class="flyout category-flyout">
         <ul class="subcategories">
-          <li><a href="/categories/Acrylic/Box"><img src="assets/categories/Acrylic/Box.webp" alt="بوكس" loading="lazy"><span data-i18n="بوكس">بوكس</span></a></li>
-          <li><a href="/categories/Acrylic/Tables"><img src="assets/categories/Acrylic/Tables.webp" alt="طولات " loading="lazy"><span data-i18n="طولات ">طولات </span></a></li>
-          <li><a href="/categories/Acrylic/Born in"><img src="assets/categories/Acrylic/Born in.png" alt="مواليد " loading="lazy"><span data-i18n="مواليد ">مواليد </span></a></li>
-          <li><a href="/categories/Acrylic/censer"><img src="assets/categories/Acrylic/censer.webp" alt="مباخر " loading="lazy"><span data-i18n="مباخر ">مباخر </span></a></li>
-          <li><a href="/categories/Acrylic/Trays"><img src="assets/categories/Acrylic/Trays.webp" alt="صواني " loading="lazy"><span data-i18n="صواني ">صواني </span></a></li>
-          <li><a href="/categories/Acrylic/Stand"><img src="assets/categories/Acrylic/Stand.webp" alt="استاند " loading="lazy"><span data-i18n="استاند ">استاند </span></a></li>
+          <li><a href="/categories/Acrylic/Box"><img src="/assets/categories/Acrylic/Box.webp" alt="بوكس" loading="lazy"><span data-i18n="بوكس">بوكس</span></a></li>
+          <li><a href="/categories/Acrylic/Tables"><img src="/assets/categories/Acrylic/Tables.webp" alt="طولات " loading="lazy"><span data-i18n="طولات ">طولات </span></a></li>
+          <li><a href="/categories/Acrylic/Born in"><img src="/assets/categories/Acrylic/Born in.png" alt="مواليد " loading="lazy"><span data-i18n="مواليد ">مواليد </span></a></li>
+          <li><a href="/categories/Acrylic/censer"><img src="/assets/categories/Acrylic/censer.webp" alt="مباخر " loading="lazy"><span data-i18n="مباخر ">مباخر </span></a></li>
+          <li><a href="/categories/Acrylic/Trays"><img src="/assets/categories/Acrylic/Trays.webp" alt="صواني " loading="lazy"><span data-i18n="صواني ">صواني </span></a></li>
+          <li><a href="/categories/Acrylic/Stand"><img src="/assets/categories/Acrylic/Stand.webp" alt="استاند " loading="lazy"><span data-i18n="استاند ">استاند </span></a></li>
         </ul>
       </div>
     </li>
@@ -174,10 +174,10 @@
       <a href="/categories/paper">📄<span data-i18n="ورق ">ورق </span><span class="arrow">›</span></a>
       <div class="flyout category-flyout">
         <ul class="subcategories">
-          <li><a href="/categories/paper/Bags"><img src="assets/categories/paper/Bags.webp" alt="شنط  " loading="lazy"><span data-i18n="شنط  ">شنط  </span></a></li>
-          <li><a href="/categories/paper/Cups"><img src="assets/categories/paper/Cups.webp" alt="كوب " loading="lazy"><span data-i18n="كوب ">كوب </span></a></li>
-          <li><a href="/categories/paper/Tissues"><img src="assets/categories/paper/Tissues.webp" alt="تيشو " loading="lazy"><span data-i18n="تيشو ">تيشو </span></a></li>
-          <li><a href="/categories/paper/Stickers"><img src="assets/categories/paper/Stickers.webp" alt="استيكر " loading="lazy"><span data-i18n="استيكر ">استيكر </span></a></li>
+          <li><a href="/categories/paper/Bags"><img src="/assets/categories/paper/Bags.webp" alt="شنط  " loading="lazy"><span data-i18n="شنط  ">شنط  </span></a></li>
+          <li><a href="/categories/paper/Cups"><img src="/assets/categories/paper/Cups.webp" alt="كوب " loading="lazy"><span data-i18n="كوب ">كوب </span></a></li>
+          <li><a href="/categories/paper/Tissues"><img src="/assets/categories/paper/Tissues.webp" alt="تيشو " loading="lazy"><span data-i18n="تيشو ">تيشو </span></a></li>
+          <li><a href="/categories/paper/Stickers"><img src="/assets/categories/paper/Stickers.webp" alt="استيكر " loading="lazy"><span data-i18n="استيكر ">استيكر </span></a></li>
         </ul>
       </div>
     </li>
@@ -187,10 +187,10 @@
       <a href="/categories/Forex">🪙<span data-i18n="فوركس ">فوركس </span><span class="arrow">›</span></a>
       <div class="flyout category-flyout">
         <ul class="subcategories">
-          <li><a href="/categories/Forex/tables"><img src="assets/categories/Forex/tables.webp" alt="طولات " loading="lazy"><span data-i18n="طولات ">طولات </span></a></li>
-          <li><a href="/categories/Forex/stands"><img src="assets/categories/Forex/stands.webp" alt="استاند  " loading="lazy"><span data-i18n="استاند  ">استاند  </span></a></li>
-          <li><a href="/categories/Forex/models"><img src="assets/categories/Forex/models.webp" alt="مجسم " loading="lazy"><span data-i18n="مجسم ">مجسم </span></a></li>
-          <li><a href="/categories/Forex/rotations"><img src="assets/categories/Forex/rotations.webp" alt="دوران " loading="lazy"><span data-i18n="دوران ">دوران </span></a></li>
+          <li><a href="/categories/Forex/tables"><img src="/assets/categories/Forex/tables.webp" alt="طولات " loading="lazy"><span data-i18n="طولات ">طولات </span></a></li>
+          <li><a href="/categories/Forex/stands"><img src="/assets/categories/Forex/stands.webp" alt="استاند  " loading="lazy"><span data-i18n="استاند  ">استاند  </span></a></li>
+          <li><a href="/categories/Forex/models"><img src="/assets/categories/Forex/models.webp" alt="مجسم " loading="lazy"><span data-i18n="مجسم ">مجسم </span></a></li>
+          <li><a href="/categories/Forex/rotations"><img src="/assets/categories/Forex/rotations.webp" alt="دوران " loading="lazy"><span data-i18n="دوران ">دوران </span></a></li>
         </ul>
       </div>
     </li>
@@ -200,10 +200,10 @@
       <a href="/categories/wood">🪵<span data-i18n="خشب  "> خشب  </span><span class="arrow">›</span></a>
       <div class="flyout category-flyout">
         <ul class="subcategories">
-          <li><a href="/categories/wood/tables"><img src="assets/categories/wood/tables.webp" alt="طولات " loading="lazy"><span data-i18n="طولات">طولات </span></a></li>
-          <li><a href="/categories/wood/chairs"><img src="assets/categories/wood/chairs.webp" alt="دوران " loading="lazy"><span data-i18n="دوران  ">دوران  </span></a></li>
-          <li><a href="/categories/wood/benches"><img src="assets/categories/wood/benches.webp" alt="مجسم " loading="lazy"><span data-i18n="مجسم ">مجسم </span></a></li>
-          <li><a href="/categories/wood/cabinets"><img src="assets/categories/wood/cabinets.webp" alt="استاند  " loading="lazy"><span data-i18n="استاند  ">استاند  </span></a></li>
+          <li><a href="/categories/wood/tables"><img src="/assets/categories/wood/tables.webp" alt="طولات " loading="lazy"><span data-i18n="طولات">طولات </span></a></li>
+          <li><a href="/categories/wood/chairs"><img src="/assets/categories/wood/chairs.webp" alt="دوران " loading="lazy"><span data-i18n="دوران  ">دوران  </span></a></li>
+          <li><a href="/categories/wood/benches"><img src="/assets/categories/wood/benches.webp" alt="مجسم " loading="lazy"><span data-i18n="مجسم ">مجسم </span></a></li>
+          <li><a href="/categories/wood/cabinets"><img src="/assets/categories/wood/cabinets.webp" alt="استاند  " loading="lazy"><span data-i18n="استاند  ">استاند  </span></a></li>
         </ul>
       </div>
     </li>
@@ -213,10 +213,10 @@
       <a href="/categories/leather">👞<span data-i18n="جلد  ">جلد  </span><span class="arrow">›</span></a>
       <div class="flyout category-flyout">
         <ul class="subcategories">
-          <li><a href="/categories/leather/boxes"><img src="assets/categories/leather/boxes.webp" alt="بوكسات " loading="lazy"><span data-i18n="بوكسات ">بوكسات</span></a></li>
-          <li><a href="/categories/leather/born-in"><img src="assets/categories/leather/born-in.webp" alt="مواليد " loading="lazy"><span data-i18n="مواليد ">مواليد</span></a></li>
-          <li><a href="/categories/leather/trays"><img src="assets/categories/leather/trays.webp" alt="صواني " loading="lazy"><span data-i18n="صواني ">صواني</span></a></li>
-          <li><a href="/categories/leather/tables"><img src="assets/categories/leather/tables.webp" alt="طولات " loading="lazy"><span data-i18n="طولات ">طولات</span></a></li>
+          <li><a href="/categories/leather/boxes"><img src="/assets/categories/leather/boxes.webp" alt="بوكسات " loading="lazy"><span data-i18n="بوكسات ">بوكسات</span></a></li>
+          <li><a href="/categories/leather/born-in"><img src="/assets/categories/leather/born-in.webp" alt="مواليد " loading="lazy"><span data-i18n="مواليد ">مواليد</span></a></li>
+          <li><a href="/categories/leather/trays"><img src="/assets/categories/leather/trays.webp" alt="صواني " loading="lazy"><span data-i18n="صواني ">صواني</span></a></li>
+          <li><a href="/categories/leather/tables"><img src="/assets/categories/leather/tables.webp" alt="طولات " loading="lazy"><span data-i18n="طولات ">طولات</span></a></li>
         </ul>
       </div>
     </li>
@@ -227,10 +227,10 @@
       <a href="/categories/sticker">🏷️<span data-i18n="استيكر">استيكر</span><span class="arrow">›</span></a>
       <div class="flyout category-flyout">
         <ul class="subcategories">
-          <li><a href="/categories/Sticker/born-in"><img src="assets/categories/Sticker/born-in.webp" alt="مواليد " loading="lazy"><span data-i18n="مواليد ">مواليد</span></a></li>
-          <li><a href="/categories/Sticker/empty"><img src="assets/categories/Sticker/empty.webp" alt="مفرغ " loading="lazy"><span data-i18n="مفرغ ">مفرغ</span></a></li>
-          <li><a href="/categories/Sticker/full"><img src="assets/categories/Sticker/full.webp" alt="كامل " loading="lazy"><span data-i18n="كامل ">كامل</span></a></li>
-          <li><a href="/categories/Sticker/occasions"><img src="assets/categories/Sticker/occasions.webp" alt="المناسبات" loading="lazy"><span data-i18n="المناسبات">المناسبات</span></a></li>
+          <li><a href="/categories/Sticker/born-in"><img src="/assets/categories/Sticker/born-in.webp" alt="مواليد " loading="lazy"><span data-i18n="مواليد ">مواليد</span></a></li>
+          <li><a href="/categories/Sticker/empty"><img src="/assets/categories/Sticker/empty.webp" alt="مفرغ " loading="lazy"><span data-i18n="مفرغ ">مفرغ</span></a></li>
+          <li><a href="/categories/Sticker/full"><img src="/assets/categories/Sticker/full.webp" alt="كامل " loading="lazy"><span data-i18n="كامل ">كامل</span></a></li>
+          <li><a href="/categories/Sticker/occasions"><img src="/assets/categories/Sticker/occasions.webp" alt="المناسبات" loading="lazy"><span data-i18n="المناسبات">المناسبات</span></a></li>
         </ul>
       </div>
     </li>
@@ -241,10 +241,10 @@
       <a href="/categories/Ramadan">🌙<span data-i18n="رمضان">رمضان</span><span class="arrow">›</span></a>
       <div class="flyout category-flyout">
         <ul class="subcategories">
-          <li><a href="/categories/Ramadan/wood"><img src="assets/categories/Ramadan/wood.webp" alt="خشب" loading="lazy"><span data-i18n="خشب">خشب</span></a></li>
-          <li><a href="/categories/Ramadan/acrylic"><img src="assets/categories/Ramadan/acrylic.webp" alt="اكريلك " loading="lazy"><span data-i18n="اكريلك ">اكريلك</span></a></li>
-          <li><a href="/categories/Ramadan/forex"><img src="assets/categories/Ramadan/forex.webp" alt="فوركس " loading="lazy"><span data-i18n="فوركس ">فوركس </span></a></li>
-          <li><a href="/categories/Ramadan/leather"><img src="assets/categories/Ramadan/leather.webp" alt="جلد " loading="lazy"><span data-i18n="جلد "> جلد</span></a></li>
+          <li><a href="/categories/Ramadan/wood"><img src="/assets/categories/Ramadan/wood.webp" alt="خشب" loading="lazy"><span data-i18n="خشب">خشب</span></a></li>
+          <li><a href="/categories/Ramadan/acrylic"><img src="/assets/categories/Ramadan/acrylic.webp" alt="اكريلك " loading="lazy"><span data-i18n="اكريلك ">اكريلك</span></a></li>
+          <li><a href="/categories/Ramadan/forex"><img src="/assets/categories/Ramadan/forex.webp" alt="فوركس " loading="lazy"><span data-i18n="فوركس ">فوركس </span></a></li>
+          <li><a href="/categories/Ramadan/leather"><img src="/assets/categories/Ramadan/leather.webp" alt="جلد " loading="lazy"><span data-i18n="جلد "> جلد</span></a></li>
         </ul>
       </div>
     </li>
@@ -349,7 +349,7 @@
 <section class="animated-promo-banner" aria-label="بنر بريق">
   <a href="#">
     <div class="banner-inner">
-      <img src="assets/home/1.webp"
+      <img src="/assets/home/1.webp"
            class="banner-bg-animated"
            alt="Parik Banner"
            fetchpriority="high"
@@ -366,7 +366,7 @@
   <a href="/offers" class="promo-link">
     <div class="promo-inner">
       <!-- صورة الخلفية -->
-      <img src="assets/home/2.webp" class="banner-bg" alt="" aria-hidden="true" loading="lazy">
+      <img src="/assets/home/2.webp" class="banner-bg" alt="" aria-hidden="true" loading="lazy">
 
       <!-- النص المتحرك في خط واحد -->
       <div class="scrolling-text-container">
@@ -490,8 +490,8 @@
           <li data-i18n="تنبيهات توفر المنتج بكميات">تنبيهات توفر المنتج بكميات</li>
         </ul>
         <div class="footer-app-buttons">
-          <a href="#"><img src="assets/app/Google Play.png" alt="Google Play" loading="lazy" width="120" height="40"></a>
-          <a href="#"><img src="assets/app/App Store.png" alt="App Store" loading="lazy" width="120" height="40"></a>
+          <a href="#"><img src="/assets/app/Google Play.png" alt="Google Play" loading="lazy" width="120" height="40"></a>
+          <a href="#"><img src="/assets/app/App Store.png" alt="App Store" loading="lazy" width="120" height="40"></a>
         </div>
       </div>
     </div>
@@ -500,25 +500,25 @@
       <strong data-i18n="تواصل معنا">تواصل معنا</strong>
       <div class="footer-social-icons">
         <a href="#" aria-label="Instagram">
-          <img src="assets/social/instagram.webp" alt="Instagram" loading="lazy" width="30" height="30">
+          <img src="/assets/social/instagram.webp" alt="Instagram" loading="lazy" width="30" height="30">
         </a>
         <a href="#" aria-label="Facebook">
-          <img src="assets/social/facebook.webp" alt="Facebook" loading="lazy" width="30" height="30">
+          <img src="/assets/social/facebook.webp" alt="Facebook" loading="lazy" width="30" height="30">
         </a>
         <a href="#" aria-label="Twitter">
-          <img src="assets/social/twitter.webp" alt="Twitter" loading="lazy" width="30" height="30">
+          <img src="/assets/social/twitter.webp" alt="Twitter" loading="lazy" width="30" height="30">
         </a>
         <a href="#" aria-label="YouTube">
-          <img src="assets/social/youtube.webp" alt="YouTube" loading="lazy" width="30" height="30">
+          <img src="/assets/social/youtube.webp" alt="YouTube" loading="lazy" width="30" height="30">
         </a>
         <a href="#" aria-label="TikTok">
-          <img src="assets/social/tiktok.webp" alt="TikTok" loading="lazy" width="30" height="30">
+          <img src="/assets/social/tiktok.webp" alt="TikTok" loading="lazy" width="30" height="30">
         </a>
         <a href="#" aria-label="Pinterest">
-          <img src="assets/social/pinterest.webp" alt="Pinterest" loading="lazy" width="30" height="30">
+          <img src="/assets/social/pinterest.webp" alt="Pinterest" loading="lazy" width="30" height="30">
         </a>
         <a href="#" aria-label="Snapchat">
-          <img src="assets/social/snapchat.webp" alt="Snapchat" loading="lazy" width="30" height="30">
+          <img src="/assets/social/snapchat.webp" alt="Snapchat" loading="lazy" width="30" height="30">
         </a>
       </div>
     </div>
@@ -527,29 +527,29 @@
       <div class="footer-pay-methods">
         <div class="footer-pay-methods-title" data-i18n="نحن نقبل">نحن نقبل</div>
         <div class="footer-pay-icons">
-          <img src="assets/pay/visa.webp" alt="Visa" width="43" height="33" loading="lazy">
-          <img src="assets/pay/mastercard.webp" alt="MasterCard" width="43" height="33" loading="lazy">
-          <img src="assets/pay/amex.webp" alt="American Express" width="43" height="33" loading="lazy">
-          <img src="assets/pay/paypal.webp" alt="PayPal" width="43" height="33" loading="lazy">
-          <img src="assets/pay/applepay.webp" alt="Apple Pay" width="43" height="33" loading="lazy">
-          <img src="assets/pay/googlepay.webp" alt="Google Pay" width="43" height="33" loading="lazy">
-          <img src="assets/pay/miza.webp" alt="miza" width="43" height="33" loading="lazy">
-          <img src="assets/pay/tamara.webp" alt="Tamara" width="43" height="33" loading="lazy">
-          <img src="assets/pay/tabby.webp" alt="Tabby" width="43" height="33" loading="lazy">
-          <img src="assets/pay/fawri.webp" alt="fawri" width="43" height="33" loading="lazy">
-          <img src="assets/pay/Knet.webp" alt="Knet" width="43" height="33" loading="lazy">
-          <img src="assets/pay/Benefit Pay.webp" alt="Benefit Pay" width="43" height="33" loading="lazy">
-          <img src="assets/pay/Oman Net.webp" alt="Oman Net" width="43" height="33" loading="lazy">
+          <img src="/assets/pay/visa.webp" alt="Visa" width="43" height="33" loading="lazy">
+          <img src="/assets/pay/mastercard.webp" alt="MasterCard" width="43" height="33" loading="lazy">
+          <img src="/assets/pay/amex.webp" alt="American Express" width="43" height="33" loading="lazy">
+          <img src="/assets/pay/paypal.webp" alt="PayPal" width="43" height="33" loading="lazy">
+          <img src="/assets/pay/applepay.webp" alt="Apple Pay" width="43" height="33" loading="lazy">
+          <img src="/assets/pay/googlepay.webp" alt="Google Pay" width="43" height="33" loading="lazy">
+          <img src="/assets/pay/miza.webp" alt="miza" width="43" height="33" loading="lazy">
+          <img src="/assets/pay/tamara.webp" alt="Tamara" width="43" height="33" loading="lazy">
+          <img src="/assets/pay/tabby.webp" alt="Tabby" width="43" height="33" loading="lazy">
+          <img src="/assets/pay/fawri.webp" alt="fawri" width="43" height="33" loading="lazy">
+          <img src="/assets/pay/Knet.webp" alt="Knet" width="43" height="33" loading="lazy">
+          <img src="/assets/pay/Benefit Pay.webp" alt="Benefit Pay" width="43" height="33" loading="lazy">
+          <img src="/assets/pay/Oman Net.webp" alt="Oman Net" width="43" height="33" loading="lazy">
         </div>
       </div>
       <div class="footer-security-badges">
         <div class="footer-security-badges-title" data-i18n="شهادة الأمان">شهادة الأمان</div>
         <div class="footer-security-icons">
-          <img src="assets/secure/apwg.webp" alt="APWG" width="43" height="33" loading="lazy">
-          <img src="assets/secure/protectbuy.webp" alt="ProtectBuy" width="43" height="33" loading="lazy">
-          <img src="assets/secure/safekey.webp" alt="SafeKey" width="43" height="33" loading="lazy">
-          <img src="assets/secure/idcheck.webp" alt="ID Check" width="43" height="33" loading="lazy">
-          <img src="assets/secure/pci.webp" alt="PCI DSS" width="43" height="33" loading="lazy">
+          <img src="/assets/secure/apwg.webp" alt="APWG" width="43" height="33" loading="lazy">
+          <img src="/assets/secure/protectbuy.webp" alt="ProtectBuy" width="43" height="33" loading="lazy">
+          <img src="/assets/secure/safekey.webp" alt="SafeKey" width="43" height="33" loading="lazy">
+          <img src="/assets/secure/idcheck.webp" alt="ID Check" width="43" height="33" loading="lazy">
+          <img src="/assets/secure/pci.webp" alt="PCI DSS" width="43" height="33" loading="lazy">
         </div>
       </div>
     </div>
@@ -557,13 +557,13 @@
 </div>
   </div>
 </footer>
-<script src="java/supabase.min.js" defer></script>
-<script src="java/main.min.js" defer></script>
-<script src="translations/translation.min.js" defer></script>
-<script src="java/footer-pages.min.js" defer></script>
-<script src="mobile-nav-bar/main-navbar.min.js" defer></script>  
-<script src="java/notifications.min.js" defer></script>
-<script type="module" src="java/Products.min.js" defer></script>
+<script src="/java/supabase.min.js" defer></script>
+<script src="/java/main.min.js" defer></script>
+<script src="/translations/translation.min.js" defer></script>
+<script src="/java/footer-pages.min.js" defer></script>
+<script src="/mobile-nav-bar/main-navbar.min.js" defer></script>  
+<script src="/java/notifications.min.js" defer></script>
+<script type="module" src="/java/Products.min.js" defer></script>
 
 <script>
 (function(){
@@ -586,7 +586,7 @@
     const imgLoad = idx < 2 ? 'eager' : 'lazy';
     return `
       <a class="dp-card" href="${link}">
-        <img class="dp-img" src="${img}" alt="${name}" width="150" height="150" loading="${imgLoad}" decoding="async" onerror="this.src='assets/logo.png'">
+        <img class="dp-img" src="${img}" alt="${name}" width="150" height="150" loading="${imgLoad}" decoding="async" onerror="this.src='/assets/logo.png'">
         <div class="dp-name">${name}</div>
         ${p.rating ? `<div class="dp-stars">${renderStars(p.rating)}</div>` : ''}
         ${disc > 0 ? `<span class="dp-badge">-${disc}%</span>` : ''}

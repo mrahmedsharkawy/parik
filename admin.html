@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
   <link rel="manifest" href="/manifest.json">
-  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-  <link rel="icon" type="image/png" href="assets/logo.png">
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+  <link rel="icon" type="image/png" href="/assets/logo.png">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script>
@@ -182,7 +182,7 @@
   #gate h2{margin:0 0 6px;color:var(--navy)}
   #gate p{color:#7a8296;font-size:.85rem;margin:0 0 18px}
 </style>
-<script src="java/supabase.js"></script></head>
+<script src="/java/supabase.js"></script></head>
 <body>
 
 <!-- بوابة دخول بسيطة (حماية شكلية فقط) -->
@@ -4033,7 +4033,7 @@ function renderTopProducts(orders) {
     return `
     <div class="prod-row">
       <span style="background:var(--gold);color:var(--navy);width:24px;height:24px;border-radius:50%;text-align:center;line-height:24px;font-weight:700;font-size:.75rem;flex-shrink:0">${i+1}</span>
-      <img src="${img}" alt="${esc(name)}" onerror="this.src='assets/logo.png'" style="width:48px;height:48px;object-fit:cover;border-radius:8px;flex-shrink:0">
+      <img src="${img}" alt="${esc(name)}" onerror="this.src='/assets/logo.png'" style="width:48px;height:48px;object-fit:cover;border-radius:8px;flex-shrink:0">
       <div class="info">
         <b>${esc(name)}</b>
         <small>${price.toFixed(2)} د.إ × ${data.qty} = <b style="color:var(--gold)">${total.toFixed(2)} د.إ</b></small>
@@ -4128,7 +4128,7 @@ function renderBestSellers(orders) {
     return `
     <div class="prod-row">
       <span style="background:var(--gold);color:var(--navy);width:22px;height:22px;border-radius:50%;text-align:center;line-height:22px;font-weight:700;font-size:.7rem;flex-shrink:0">${i+1}</span>
-      <img src="${img}" alt="${esc(name)}" onerror="this.src='assets/logo.png'" style="width:44px;height:44px;object-fit:cover;border-radius:8px;flex-shrink:0">
+      <img src="${img}" alt="${esc(name)}" onerror="this.src='/assets/logo.png'" style="width:44px;height:44px;object-fit:cover;border-radius:8px;flex-shrink:0">
       <div class="info">
         <b>${esc(name)}</b>
         <small>${price.toFixed(2)} د.إ × ${data.qty} = <b style="color:var(--gold)">${total.toFixed(2)} د.إ</b></small>
