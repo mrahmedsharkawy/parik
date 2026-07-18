@@ -36,8 +36,6 @@
     .daily-picks-grid:empty::after{content:'';display:block;height:160px;background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:12px}
     @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
     #dailyPicksGrid:empty{min-height:160px}
-    /* allow vertical page scroll when swiping on daily picks */
-    .daily-picks-grid{touch-action:pan-x!important}
     #subcategories-display:empty{min-height:0}
     /* Reserve space while products load → prevents footer from entering viewport → CLS fix */
     #category-products:empty{min-height:600px;background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:12px}
@@ -54,7 +52,7 @@
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="icon" type="image/png" href="assets/logo.png">
-  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+  <link rel="apple-touch-icon" href="assets/logo.png">
   <meta name="apple-mobile-web-app-title" content="بريق">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#152546">
@@ -680,23 +678,6 @@
 
   // تحميل البيانات الجديدة بعد تحميل supabase.js
   setTimeout(loadDailyPicks, 150);
-
-  // Allow vertical page scroll when finger is on the horizontal grid
-  let _dpTouchStartX = 0, _dpTouchStartY = 0;
-  grid.addEventListener('touchstart', function(e) {
-    _dpTouchStartX = e.touches[0].clientX;
-    _dpTouchStartY = e.touches[0].clientY;
-  }, { passive: true });
-  grid.addEventListener('touchmove', function(e) {
-    const dx = Math.abs(e.touches[0].clientX - _dpTouchStartX);
-    const dy = Math.abs(e.touches[0].clientY - _dpTouchStartY);
-    if (dy > dx) {
-      // vertical swipe → scroll the page instead
-      window.scrollBy({ top: _dpTouchStartY - e.touches[0].clientY, behavior: 'auto' });
-      _dpTouchStartX = e.touches[0].clientX;
-      _dpTouchStartY = e.touches[0].clientY;
-    }
-  }, { passive: true });
 })();
 </script>
 <script>
