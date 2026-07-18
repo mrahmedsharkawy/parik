@@ -34,6 +34,9 @@
     /* navbar height reservation - prevents CLS */
     body{padding-bottom:calc(65px + env(safe-area-inset-bottom))}}
     .daily-picks-grid:empty::after{content:'';display:block;height:160px;background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:12px}
+    .daily-picks-grid{overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y pinch-zoom;cursor:grab}
+    .daily-picks-grid.is-dragging{cursor:grabbing;scroll-behavior:auto}
+    .daily-picks-grid.is-dragging .dp-card{pointer-events:none}
     @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
     #dailyPicksGrid:empty{min-height:160px}
     #subcategories-display:empty{min-height:0}
@@ -569,6 +572,43 @@
 (function(){
   const grid = document.getElementById('dailyPicksGrid');
   if (!grid) return;
+
+  let dragStartX = 0;
+  let dragStartY = 0;
+  let dragStartScroll = 0;
+  let dragMode = null;
+
+  function resetDrag() {
+    dragMode = null;
+    grid.classList.remove('is-dragging');
+  }
+
+  grid.addEventListener('touchstart', function(e) {
+    if (!e.touches || e.touches.length !== 1) return;
+    dragStartX = e.touches[0].clientX;
+    dragStartY = e.touches[0].clientY;
+    dragStartScroll = grid.scrollLeft;
+    dragMode = null;
+  }, { passive: true });
+
+  grid.addEventListener('touchmove', function(e) {
+    if (!e.touches || e.touches.length !== 1) return;
+    const dx = e.touches[0].clientX - dragStartX;
+    const dy = e.touches[0].clientY - dragStartY;
+
+    if (!dragMode && (Math.abs(dx) > 6 || Math.abs(dy) > 6)) {
+      dragMode = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+      if (dragMode === 'x') grid.classList.add('is-dragging');
+    }
+
+    if (dragMode === 'x') {
+      e.preventDefault();
+      grid.scrollLeft = dragStartScroll - dx;
+    }
+  }, { passive: false });
+
+  grid.addEventListener('touchend', resetDrag, { passive: true });
+  grid.addEventListener('touchcancel', resetDrag, { passive: true });
 
   function renderStars(r) {
     r = parseFloat(r) || 0;
