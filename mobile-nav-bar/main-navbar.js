@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   try {
     // Cache navbar HTML في sessionStorage لتجنب fetch في كل صفحة (يُقلّل الوميض)
-    const CACHE_KEY = 'mnav_v2';
+    const CACHE_KEY = 'mnav_v3';
     let text = sessionStorage.getItem(CACHE_KEY);
     if (!text) {
       const res = await fetch(base + 'navbar.html');
