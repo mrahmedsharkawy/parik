@@ -2,6 +2,8 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
+    { "source": "/assets/categories/sticker/:file", "destination": "/assets/categories/Sticker/:file" },
+    { "source": "/assets/categories/ramadan/:file", "destination": "/assets/categories/Ramadan/:file" },
     { "source": "/product/:id/:slug", "destination": "/product" },
     { "source": "/product/:id",       "destination": "/product" }
   ],
