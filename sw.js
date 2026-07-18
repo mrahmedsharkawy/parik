@@ -1,5 +1,5 @@
 /* Service Worker - بريق PWA */
-const CACHE = 'bariq-v7';
+const CACHE = 'bariq-v8';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -47,7 +47,15 @@ self.addEventListener('fetch', function(e) {
   if (url.includes('supabase.co') || url.includes('/rest/') || url.includes('/auth/') || url.includes('/storage/')) return;
   if (e.request.method !== 'GET') return;
 
-  if (e.request.destination === 'document' || url.endsWith('.html')) {
+  // Network-first: HTML, CSS, JS, translations — always fetch latest
+  const isLive = e.request.destination === 'document'
+    || url.endsWith('.html')
+    || url.includes('/style/')
+    || url.includes('/java/')
+    || url.includes('/translations/')
+    || url.includes('/mobile-nav-bar/');
+
+  if (isLive) {
     e.respondWith(
       fetch(e.request).then(function(res) {
         const clone = res.clone();
@@ -60,14 +68,10 @@ self.addEventListener('fetch', function(e) {
     return;
   }
 
+  // Cache-first: images, fonts — never change
   e.respondWith(
     caches.match(e.request).then(function(cached) {
-      if (cached) {
-        fetch(e.request).then(function(fresh) {
-          caches.open(CACHE).then(c => c.put(e.request, fresh));
-        }).catch(() => {});
-        return cached;
-      }
+      if (cached) return cached;
       return fetch(e.request).then(function(res) {
         const clone = res.clone();
         caches.open(CACHE).then(c => c.put(e.request, clone));
