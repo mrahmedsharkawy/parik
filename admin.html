@@ -136,6 +136,8 @@
   .st-delivered{background:#e2f6e9;color:#1e8e4e}
   .st-cancelled{background:#fdecec;color:#c0392b}
   .st-returned{background:#f0e6ff;color:#6b3fa0}
+  .st-manufacturing{background:#fff0d6;color:#c06000}
+  .st-ready{background:#d6f5e3;color:#0a7040}
   .ord-row{display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff;flex-wrap:wrap}
   .ord-row .oinfo{flex:1;min-width:150px}
   .ord-row .oinfo b{color:var(--navy);font-size:.92rem}
@@ -422,6 +424,8 @@
             <option value="all">كل الحالات</option>
             <option value="pending">⏳ قيد الانتظار</option>
             <option value="confirmed">✅ مؤكد</option>
+            <option value="manufacturing">🔨 في مرحلة التصنع</option>
+            <option value="ready">🎁 طلبك جاهز</option>
             <option value="shipped">🚚 تم الشحن</option>
             <option value="delivered">📦 تم التسليم</option>
             <option value="cancelled">✖ ملغى</option>
@@ -1903,13 +1907,15 @@ let currentPeriod = 'day';
 let ordPage = 1;               // صفحة الطلبات الحالية
 const ORDER_PAGE_SIZE = 50;    // عدد الطلبات في كل صفحة
 const STATUS = {
-  pending:  {label:'قيد الانتظار', cls:'st-pending'},
-  processing:{label:'قيد المعالجة', cls:'st-pending'},
-  confirmed:{label:'مؤكد',        cls:'st-confirmed'},
-  shipped:  {label:'تم الشحن',     cls:'st-shipped'},
-  delivered:{label:'تم التسليم',   cls:'st-delivered'},
-  cancelled:{label:'ملغى',        cls:'st-cancelled'},
-  returned: {label:'مرتجع',       cls:'st-returned'}
+  pending:       {label:'قيد الانتظار',       cls:'st-pending'},
+  processing:    {label:'قيد المعالجة',       cls:'st-pending'},
+  confirmed:     {label:'مؤكد',              cls:'st-confirmed'},
+  manufacturing: {label:'في مرحلة التصنع',   cls:'st-manufacturing'},
+  ready:         {label:'طلبك جاهز',          cls:'st-ready'},
+  shipped:       {label:'تم الشحن',           cls:'st-shipped'},
+  delivered:     {label:'تم التسليم',         cls:'st-delivered'},
+  cancelled:     {label:'ملغى',              cls:'st-cancelled'},
+  returned:      {label:'مرتجع',             cls:'st-returned'}
 };
 // الحالات التي تُحتسب كمبيعات محققة
 const REALIZED = ['confirmed','shipped','delivered'];
@@ -2195,18 +2201,21 @@ async function changeOrderStatus(id, status){
       // ========== إشعار Push تلقائي للعميل ==========
       const orderNum = o.orderNumber || ('#' + id);
       const statusLabels = {
-        pending:    { title: '⏳ طلبك قيد المراجعة',     body: `طلبك رقم ${orderNum} يُراجَع الآن` },
-        processing: { title: '🔄 طلبك قيد المعالجة',     body: `جارٍ تجهيز طلبك رقم ${orderNum}` },
-        confirmed:  { title: '✅ تم تأكيد طلبك!',         body: `طلبك رقم ${orderNum} تم تأكيده وسيُجهَّز قريباً 🎉` },
-        shipped:    { title: '🚚 تم شحن طلبك!',           body: `طلبك رقم ${orderNum} في الطريق إليك` },
-        delivered:  { title: '✅ تم توصيل طلبك!',         body: `طلبك رقم ${orderNum} وصل بنجاح 🎉` },
-        cancelled:  { title: '❌ تم إلغاء طلبك',          body: `طلبك رقم ${orderNum} تم إلغاؤه` },
-        returned:   { title: '↩️ تمت عملية الإرجاع',      body: `تمت معالجة إرجاع طلب ${orderNum}` },
+        pending:       { title: '⏳ طلبك قيد المراجعة',        body: `طلبك رقم ${orderNum} يُراجَع الآن` },
+        processing:    { title: '🔄 طلبك قيد المعالجة',        body: `جارٍ تجهيز طلبك رقم ${orderNum}` },
+        confirmed:     { title: '✅ تم تأكيد طلبك!',            body: `طلبك رقم ${orderNum} تم تأكيده وسيُجهَّز قريباً 🎉` },
+        manufacturing: { title: '🔨 طلبك في مرحلة التصنع',     body: `طلبك رقم ${orderNum} يُصنَّع الآن بعناية ✨` },
+        ready:         { title: '🎁 طلبك جاهز للاستلام!',       body: `طلبك رقم ${orderNum} جاهز وبانتظارك 🎉` },
+        shipped:       { title: '🚚 تم شحن طلبك!',              body: `طلبك رقم ${orderNum} في الطريق إليك` },
+        delivered:     { title: '✅ تم توصيل طلبك!',            body: `طلبك رقم ${orderNum} وصل بنجاح 🎉` },
+        cancelled:     { title: '❌ تم إلغاء طلبك',             body: `طلبك رقم ${orderNum} تم إلغاؤه` },
+        returned:      { title: '↩️ تمت عملية الإرجاع',         body: `تمت معالجة إرجاع طلب ${orderNum}` },
       };
       const notif = statusLabels[status];
       const customerPhone = o.phone || o.customerPhone || o.customer_phone || '';
-      // لا ترسل إشعار لو مفيش هاتف للعميل
-      if (notif && customerPhone) {
+      const customerEmail = o.email || o.customerEmail || o.customer_email || '';
+      // أرسل الإشعار عن طريق الهاتف أو الإيميل — أيهما متوفر
+      if (notif && (customerPhone || customerEmail)) {
         try {
           const adminToken = await getValidAdminToken();
           // نجيب endpoint الأدمن نفسه عشان نستبعده من إشعارات العميل
@@ -2216,19 +2225,21 @@ async function changeOrderStatus(id, status){
             const sub = await reg.pushManager.getSubscription();
             if (sub) adminEndpoint = sub.endpoint;
           } catch(e) {}
+          const pushPayload = {
+            title:            notif.title,
+            body:             notif.body,
+            url:              '/account.html',
+            exclude_endpoint: adminEndpoint
+          };
+          if (customerPhone) pushPayload.user_phone = customerPhone;
+          else pushPayload.user_email = customerEmail;
           await fetch('https://knleehjjejfeobcmpwnw.supabase.co/functions/v1/hyper-api', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'Authorization': 'Bearer ' + adminToken
             },
-            body: JSON.stringify({
-              title:            notif.title,
-              body:             notif.body,
-              url:              '/account.html',
-              user_phone:       customerPhone,
-              exclude_endpoint: adminEndpoint
-            })
+            body: JSON.stringify(pushPayload)
           });
         } catch(pushErr) {
           console.warn('Push notification skipped:', pushErr);

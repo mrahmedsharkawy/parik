@@ -533,6 +533,8 @@
 .status-processing { background: #fff3e0; color:  #152546; }
 .status-pending { background: #fff3d6; color: #a06c00; }
 .status-confirmed { background: #e0ecff; color: #1552a8; }
+.status-manufacturing { background: #fff0d6; color: #c06000; }
+.status-ready { background: #d6f5e3; color: #0a7040; }
 .status-shipped { background: #e3f2fd; color: #1565c0; }
 .status-delivered { background: #e8f5e9; color: #2e7d32; }
 .status-cancelled { background: #fdecec; color: #c0392b; }
@@ -1651,8 +1653,8 @@
 
   function getStatusLabel(s) {
     const isEn = (localStorage.getItem('lang') || document.documentElement.lang) === 'en';
-    const ar = { pending:'قيد الانتظار', processing:'قيد المعالجة', confirmed:'مؤكد', shipped:'تم الشحن', delivered:'تم التوصيل', cancelled:'ملغى', returned:'مرتجع' };
-    const en = { pending:'Pending', processing:'Processing', confirmed:'Confirmed', shipped:'Shipped', delivered:'Delivered', cancelled:'Cancelled', returned:'Returned' };
+    const ar = { pending:'قيد الانتظار', processing:'قيد المعالجة', confirmed:'مؤكد', manufacturing:'في مرحلة التصنع', ready:'طلبك جاهز', shipped:'تم الشحن', delivered:'تم التوصيل', cancelled:'ملغى', returned:'مرتجع' };
+    const en = { pending:'Pending', processing:'Processing', confirmed:'Confirmed', manufacturing:'In Manufacturing', ready:'Ready for Pickup', shipped:'Shipped', delivered:'Delivered', cancelled:'Cancelled', returned:'Returned' };
     return (isEn ? en[s] : ar[s]) || (isEn ? 'Processing' : 'قيد المعالجة');
   }
 
