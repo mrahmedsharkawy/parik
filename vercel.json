@@ -3,7 +3,7 @@
   "trailingSlash": false,
   "headers": [
     {
-      "source": "/assets/(.*\\.(webp|png|jpg|jpeg|svg|gif|ico))",
+      "source": "/assets/(.*\\.(webp|png|jpg|jpeg|svg|gif|ico|woff2|woff))",
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
     },
     {
@@ -20,6 +20,10 @@
     },
     {
       "source": "/translations/(.*\\.json)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }]
+    },
+    {
+      "source": "/translations/(.*\\.js)",
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }]
     }
   ]

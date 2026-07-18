@@ -11,6 +11,8 @@ const STATIC_URLS = [
   '/login.html',
   '/assets/logo.webp',
   '/assets/icon w.webp',
+  '/assets/cairo-arabic.woff2',
+  '/assets/cairo-latin.woff2',
   '/style/style.css',
   '/java/main.min.js',
   '/java/Products.min.js',

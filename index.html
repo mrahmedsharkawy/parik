@@ -6,6 +6,8 @@
   <!-- style.css non-blocking: critical CSS already inlined above -->
   <link rel="preload" href="style/style.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="style/style.css"></noscript>
+  <!-- Preload Cairo Arabic font for faster text rendering -->
+  <link rel="preload" href="assets/cairo-arabic.woff2" as="font" type="font/woff2" crossorigin>
   <!-- Preload LCP image -->
   <link rel="preload" href="assets/home/1.webp" as="image" fetchpriority="high" type="image/webp">
   <!-- Critical above-fold CSS (prevents FOUC while style.css loads) -->
@@ -40,11 +42,11 @@
   <!-- Preconnect to external resources -->
   <link rel="preconnect" href="https://knleehjjejfeobcmpwnw.supabase.co" crossorigin>
   <link rel="dns-prefetch" href="https://knleehjjejfeobcmpwnw.supabase.co">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
   <!-- Cairo font non-blocking (prevents render-blocking) -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap"></noscript>
+
+  <noscript>
+</noscript>
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
   <link rel="icon" type="image/png" href="assets/logo.png">
