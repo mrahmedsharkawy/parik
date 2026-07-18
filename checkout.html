@@ -6,7 +6,21 @@
   <meta name="theme-color" content="#007bff">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script>
+  (function(){
+    var vp=document.querySelector('meta[name="viewport"]');
+    if(!vp||!/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))return;
+    var base=vp.content;
+    document.addEventListener('focusin',function(e){
+      if(['INPUT','SELECT','TEXTAREA'].indexOf(e.target.tagName)>=0)
+        vp.content=base.replace(/,?\s*maximum-scale=[^,]*/i,'')+', maximum-scale=1';
+    });
+    document.addEventListener('focusout',function(){
+      setTimeout(function(){vp.content=base;},300);
+    });
+  })();
+  </script>  
   <meta name="description" content="Bariq - متجر إلكتروني شامل يقدم آلاف المنتجات بأفضل الأسعار. تسوق الآن ملابس، إلكترونيات، مستلزمات منزلية، أدوات تجميل، وأكثر. شحن سريع، دفع آمن، وضمان جودة المنتجات مع إمكانية الإرجاع. اكتشف عالم التسوق المميز معنا!">
   <meta name="description-en" content="Bariq - A comprehensive online store offering thousands of products at the best prices. Shop now for clothing, electronics, home essentials, beauty products, and more. Fast shipping, secure payment, and quality assurance with easy returns. Discover a world of exceptional shopping with us!">
   <meta name="keywords" content="متجر إلكتروني، تسوق اونلاين، ملابس، إلكترونيات، مستلزمات منزلية، أدوات تجميل، موضة، صحة وجمال، هواتف ذكية، أجهزة كمبيوتر، أثاث منزلي، ألعاب أطفال، مجوهرات، ساعات، حقائب، أحذية، رياضة، مستلزمات حيوانات أليفة، إكسسوارات سيارات، دفع آمن، شحن سريع، أفضل الأسعار، عروض خاصة، خصومات">
