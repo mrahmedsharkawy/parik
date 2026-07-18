@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
   <meta charset="UTF-8" />
@@ -377,7 +377,7 @@
   .rv-modal-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #f0f0f0;flex-shrink:0}
   .rv-modal-head h4{margin:0;font-size:.95rem;color:#152546;font-weight:700}
   .rv-modal-close{background:none;border:none;font-size:1.3rem;cursor:pointer;color:#888;padding:0;line-height:1}
-  .rv-modal-body{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 14px;display:flex;flex-direction:column;gap:5px;flex:1 1 auto;min-height:0}
+  .rv-modal-body{overflow-y:scroll;-webkit-overflow-scrolling:touch;padding:10px 14px;display:flex;flex-direction:column;gap:5px;flex:1 1 auto;min-height:0;overscroll-behavior:contain}
   .rv-modal-body .rv-item{padding:6px 9px;border-radius:7px}
   .rv-modal-body .rv-item .who{font-size:.76rem}
   .rv-modal-body .rv-item .dt{font-size:.64rem}
@@ -470,6 +470,11 @@
     const close = () => { bg.remove(); document.body.style.overflow = ''; };
     bg.querySelector('.rv-modal-close').onclick = close;
     bg.addEventListener('click', e => { if(e.target===bg) close(); });
+    bg.addEventListener('touchmove', function(e){
+      const body = bg.querySelector('.rv-modal-body');
+      if(body && body.contains(e.target)) e.stopPropagation();
+      else e.preventDefault();
+    }, {passive:false});
   });
 
   async function render(){
@@ -514,38 +519,16 @@
 })();
 </script>
 
+<!-- صور المنتج - تُعبأ بواسطة Products.js -->
+<div id="rv-product-imgs" style="display:none;gap:8px;padding:0 12px;max-width:700px;margin:0 auto 16px"></div>
+
 <hr>
 
 <h2 class="related-title" data-i18n="منتجات مشابهة">
 منتجات مشابهة
 </h2>
-
-
-  <!-- محتوى الموقع هنا -->
-  <div id="searchResults" style="margin-top: 10px;"></div>
    
-<div class="categories">
-    <div><a href="/categories.html">💯 <span data-i18n="الكل">الكل</span></a></div>
-    <div><a href="/categories/women">👗 <span data-i18n="ملابس نسائية">ملابس نسائية</span></a></div>
-    <div><a href="/categories/men">👕 <span data-i18n="ملابس رجالية">ملابس رجالية</span></a></div>
-    <div><a href="/categories/health-beauty">💄 <span data-i18n="الصحة والجمال">الصحة والجمال</span></a></div>
-    <div><a href="/categories/consumer-electronics">� <span data-i18n="الإلكترونيات الاستهلاكية">الإلكترونيات الاستهلاكية</span></a></div>
-    <div><a href="/categories/home-garden-furniture">🪑 <span data-i18n="المنزل والحديقة والاثاث">المنزل والحديقة والاثاث</span></a></div>
-    <div><a href="/categories/kids-babies">👶 <span data-i18n="ألعاب الأطفال والرضع">ألعاب الأطفال والرضع</span></a></div>
-    <div><a href="/categories/jewelry-watches">� <span data-i18n="المجوهرات والساعات">المجوهرات والساعات</span></a></div>
-    <div><a href="/categories/bags-shoes">👟 <span data-i18n="الحقائب والأحذية">الحقائب والأحذية</span></a></div>
-    <div><a href="/categories/sports-outdoors">🎽 <span data-i18n="الرياضة والهواء الطلق">الرياضة والهواء الطلق</span></a></div>
-    <div><a href="/categories/home-improvement">🏠 <span data-i18n="تحسين المنزل">تحسين المنزل</span></a></div>
-    <div><a href="/categories/automobiles-motorcycles">� <span data-i18n="السيارات والدراجات النارية">السيارات والدراجات النارية</span></a></div>
-    <div><a href="/categories/pet-supplies">🐶 <span data-i18n="مستلزمات الحيوانات الأليفة">مستلزمات الحيوانات الأليفة</span></a></div>
-    <div><a href="/categories/phones-accessories">📱 <span data-i18n="الهواتف والملحقات">الهواتف والملحقات</span></a></div>
-    <div><a href="/categories/computer-office">💻 <span data-i18n="الكمبيوتر والمكتب">الكمبيوتر والمكتب</span></a></div>
-</div>
-
-
-
-<!-- أضف هذا العنصر لعرض المنتجات الخاصة بالفئة المختارة -->
-  <div id="category-products" style="margin-bottom:30px;"></div>
+<div id="relatedProducts" style="margin-bottom:30px;"></div>
 
 
 </main>
