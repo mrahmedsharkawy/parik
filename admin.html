@@ -1305,16 +1305,20 @@ async function reloadFromFile(silent){
 }
 
 function saveLocal(){
+  // نظّف دائماً قبل الحفظ - لا base64 ولا blob مؤقت
+  const clean = products.map(function(p) {
+    const imgs = (Array.isArray(p.img) ? p.img : [p.img]).filter(function(s){ return s && !s.startsWith('data:') && !s.startsWith('blob:'); });
+    return Object.assign({}, p, { img: imgs });
+  });
   try {
-    localStorage.setItem(LS_PRODUCTS, JSON.stringify(products));
+    localStorage.setItem(LS_PRODUCTS, JSON.stringify(clean));
   } catch(e) {
     // المساحة ممتلئة - احذف الصور من أقدم المنتجات فقط (وليس كلها) للحفاظ على الأحدث
     try {
-      const trimmed = products.map(function(p, i) {
-        // أبقِ صور آخر 5 منتجات فقط، واحذف base64 من الباقي
+      const trimmed = clean.map(function(p, i) {
+        // أبقِ صور آخر 5 منتجات فقط
         if (i < 5) return p;
-        const imgs = (Array.isArray(p.img) ? p.img : [p.img]).filter(function(s){ return s && !s.startsWith('data:'); });
-        return Object.assign({}, p, { img: imgs });
+        return Object.assign({}, p, { img: [] });
       });
       localStorage.setItem(LS_PRODUCTS, JSON.stringify(trimmed));
       toast('⚠️ المساحة محدودة - احتُفظ بصور أحدث 5 منتجات فقط. استخدم روابط URL للصور القديمة.');
@@ -1489,6 +1493,13 @@ function removeMedia(i){ currentMedia.splice(i,1); renderMedia(); }
 
 /* ================= حفظ / تعديل منتج ================= */
 async function saveProduct(){
+  // ── منع الحفظ إذا في ملفات لسه بترفع ──
+  const stillUploading = currentMedia.filter(m => m.uploading);
+  if (stillUploading.length > 0) {
+    toast(`⏳ انتظر! ${stillUploading.length} ملف لسه بيترفع...`);
+    return;
+  }
+
   const nameAr = $('p-name-ar').value.trim();
   const nameEn = $('p-name-en').value.trim();
   if(!nameAr && !nameEn){ toast('اكتب اسم المنتج'); return; }
@@ -1498,8 +1509,8 @@ async function saveProduct(){
   const editing = idField !== '';
   const id = editing ? Number(idField) : (products.reduce((m,p)=>Math.max(m, Number(p.id)||0),0)+1);
 
-  // فصل الصور عن الفيديوهات مع الحفاظ على الترتيب داخل img
-  const imgArr = currentMedia.map(m=>m.src);
+  // فقط الروابط الدائمة (لا base64 ولا blob مؤقت)
+  const imgArr = currentMedia.map(m=>m.src).filter(s => s && !s.startsWith('data:') && !s.startsWith('blob:'));
 
   const prod = {
     id,
