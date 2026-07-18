@@ -10,7 +10,7 @@
   <!-- Preload Cairo Arabic font for faster text rendering -->
   <link rel="preload" href="/assets/cairo-arabic.woff2" as="font" type="font/woff2" crossorigin>
   <!-- Preload LCP image -->
-  <link rel="preload" href="/assets/home/1.webp" as="image" fetchpriority="high" type="image/webp">
+  <link rel="preload" href="/assets/home/1.webp" as="image" fetchpriority="high" type="image/webp" imagesizes="(max-width: 899px) 94vw, 70vw">
   <!-- Critical above-fold CSS (prevents FOUC while style.css loads) -->
   <style>
     *{box-sizing:border-box;margin:0}
@@ -34,12 +34,13 @@
     @media(max-width:899px){.main-header .dropdown,.main-header .cart{display:none!important}
     /* navbar height reservation - prevents CLS */
     body{padding-bottom:calc(65px + env(safe-area-inset-bottom))}}
-    .daily-picks-grid:empty::after{content:'';display:block;height:160px;background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:12px}
-    .daily-picks-grid{overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y pinch-zoom;cursor:grab}
+    .daily-picks-section{min-height:230px}
+    .daily-picks-grid:empty::after{content:'';display:block;height:184px;background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:12px}
+    .daily-picks-grid{min-height:184px;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y pinch-zoom;cursor:grab}
     .daily-picks-grid.is-dragging{cursor:grabbing;scroll-behavior:auto}
     .daily-picks-grid.is-dragging .dp-card{pointer-events:none}
     @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-    #dailyPicksGrid:empty{min-height:160px}
+    #dailyPicksGrid:empty{min-height:184px}
     #subcategories-display:empty{min-height:0}
     /* Reserve space while products load → prevents footer from entering viewport → CLS fix */
     #category-products:empty{min-height:600px;background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:12px}
