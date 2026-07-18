@@ -3,27 +3,23 @@
   "trailingSlash": false,
   "headers": [
     {
-      "source": "/assets/(.*\\.(webp|png|jpg|jpeg|svg|gif|ico|woff2|woff))",
+      "source": "/assets/:path*",
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
     },
     {
-      "source": "/style/(.*\\.css)",
+      "source": "/style/:path*",
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }]
     },
     {
-      "source": "/java/(.*\\.js)",
+      "source": "/java/:path*",
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }]
     },
     {
-      "source": "/mobile-nav-bar/(.*)",
+      "source": "/mobile-nav-bar/:path*",
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }]
     },
     {
-      "source": "/translations/(.*\\.json)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }]
-    },
-    {
-      "source": "/translations/(.*\\.js)",
+      "source": "/translations/:path*",
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }]
     }
   ]
