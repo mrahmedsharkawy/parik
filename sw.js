@@ -1,5 +1,5 @@
 /* Service Worker - بريق PWA */
-const CACHE = 'bariq-v9';
+const CACHE = 'bariq-v10';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -102,7 +102,9 @@ self.addEventListener('fetch', function(e) {
           const fetchPromise = fetch(e.request).then(function(res) {
             if (res.ok) cache.put(e.request, res.clone());
             return res;
-          }).catch(function() { return cached; });
+          }).catch(function() {
+            return cached || caches.match('/index.html') || new Response('Offline', {status: 503});
+          });
           return cached || fetchPromise;
         });
       })
@@ -118,7 +120,9 @@ self.addEventListener('fetch', function(e) {
           const fetchPromise = fetch(e.request).then(function(res) {
             if (res.ok) cache.put(e.request, res.clone());
             return res;
-          }).catch(function() { return cached; });
+          }).catch(function() {
+            return cached || new Response('', {status: 503});
+          });
           return cached || fetchPromise;
         });
       })
@@ -134,7 +138,9 @@ self.addEventListener('fetch', function(e) {
         const clone = res.clone();
         caches.open(CACHE).then(c => c.put(e.request, clone));
         return res;
-      }).catch(() => caches.match('/index.html'));
+      }).catch(function() {
+        return caches.match('/index.html') || new Response('Offline', {status: 503});
+      });
     })
   );
 });
