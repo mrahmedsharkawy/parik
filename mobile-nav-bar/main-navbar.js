@@ -2,8 +2,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!window.matchMedia('(max-width: 899px)').matches) return;
   if (document.querySelector('.mobile-nav')) return;
 
-  const scriptEl = document.currentScript || Array.from(document.scripts).find(s => s.src && s.src.includes('main-navbar.js'));
-  const scriptBase = scriptEl ? scriptEl.src.replace(/\/[^\/]*$/, '/') : './mobile-nav-bar/';
+  const scriptEl = document.currentScript || Array.from(document.scripts).find(s => s.src && /\/mobile-nav-bar\/main-navbar(?:\.min)?\.js(?:\?|$)/.test(s.src));
+  const scriptBase = scriptEl ? scriptEl.src.replace(/\/[^\/]*$/, '/') : '/mobile-nav-bar/';
   const base = scriptBase.endsWith('/') ? scriptBase : scriptBase + '/';
 
   // تحميل CSS
