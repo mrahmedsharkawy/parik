@@ -1,5 +1,5 @@
 /* Service Worker - بريق PWA */
-const CACHE = 'bariq-v20';
+const CACHE = 'bariq-v21';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -102,21 +102,18 @@ self.addEventListener('fetch', function(e) {
     || /\/(categories|product|Cart|account|login|offers|checkout|affiliate|policy|admin)$/.test(new URL(url).pathname)
     || new URL(url).pathname === '/';
   const isAsset = url.includes('/style/') || url.includes('/java/') || url.includes('/translations/') || url.includes('/mobile-nav-bar/');
-  const path = new URL(url).pathname;
-  const htmlCacheKey = /^\/product(?:\/|$)/.test(path) || path === '/product.html' ? '/product' : e.request;
+  const path = new URL(url).pathname.replace(/\/index\.html$/, '/') || '/';
+  const htmlCacheKey = /^\/product(?:\/|$)/.test(path) || path === '/product.html' ? '/product' : path;
 
   // HTML: cache-first for instant page transitions, with background refresh after deploys.
   if (isHtml) {
     e.respondWith(
       caches.open(CACHE).then(function(cache) {
-        return cache.match(e.request).then(function(cached) {
-          const cachedHtml = cached ? Promise.resolve(cached) : (htmlCacheKey !== e.request ? cache.match(htmlCacheKey) : Promise.resolve(null));
-          return cachedHtml.then(function(shell) {
+        return cache.match(htmlCacheKey).then(function(shell) {
             const fresh = refreshCache(cache, e.request).catch(function() {
               return shell || caches.match('/index.html') || new Response('Offline', {status: 503});
             });
             return shell || fresh;
-          });
         });
       })
     );
