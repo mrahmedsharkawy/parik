@@ -7,7 +7,7 @@
   --nav-shadow: 0 -6px 18px rgba(0, 0, 0, 0);
   --badge-bg: #D4AF37;
   --badge-fg: #fff;
-  --font-size: 14px;
+  --font-size: 16px;
 }
 
 /* ensure content not hidden under fixed nav */
@@ -81,8 +81,8 @@ body{
 .mobile-nav svg.icon,
 .mobile-nav img.icon,
 .mobile-nav img.nav-icon{
-  width:22px;
-  height:22px;
+  width:26px;
+  height:26px;
   display:block;
   object-fit:contain;
   flex-shrink:0;
@@ -236,11 +236,11 @@ body{
 
 /* small screens tweak */
 @media (max-width: 420px){
-  :root{ --nav-h:60px; --font-size:12px; }
-  .mobile-nav svg.icon, .mobile-nav img.icon{ width:20px; height:20px; }
+  :root{ --nav-h:60px; --font-size:13px; }
+  .mobile-nav svg.icon, .mobile-nav img.icon{ width:24px; height:24px; }
 }
 @media (min-width: 421px) and (max-width: 900px){
-  :root{ --font-size:13px; }
+  :root{ --font-size:15px; }
 }
 
 
