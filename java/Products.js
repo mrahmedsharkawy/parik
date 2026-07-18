@@ -3,35 +3,40 @@ let sideMenu,subDisplay,products=[],categories=[];"function"!=typeof window.setP
 (function(){
   const fvSrc=explicitVideos[0]||media.find(m=>m.type==='video')?.src;
   if(!fvSrc)return;
-  // ????? ???? ???? ??????
-  const wrap=mainWrap||document.querySelector('.product-image-wrap,.prod-img-wrap,[id="mainImage"]')?.parentElement;
+  const wrap=mainWrap||document.querySelector('.product-image-wrap,.prod-img-wrap')?.parentElement;
   if(!wrap)return;
   if(getComputedStyle(wrap).position==='static')wrap.style.position='relative';
   const pip=document.createElement('div');
   pip.id='pip-video-widget';
-  pip.style.cssText='position:absolute;top:50%;right:10px;transform:translateY(-50%);width:75px;height:120px;border-radius:10px;overflow:hidden;box-shadow:0 3px 14px rgba(0,0,0,.55);z-index:20;cursor:pointer;background:#000;flex-shrink:0;';
+  pip.style.cssText='position:absolute;top:50%;right:10px;transform:translateY(-50%);width:75px;height:120px;border-radius:10px;overflow:hidden;box-shadow:0 3px 14px rgba(0,0,0,.55);z-index:20;cursor:pointer;background:#000;';
   const vid=document.createElement('video');
   vid.src=fvSrc;vid.autoplay=true;vid.muted=true;vid.loop=true;vid.playsInline=true;
   vid.style.cssText='width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;';
   const closeBtn=document.createElement('button');
   closeBtn.innerHTML='&times;';
-  closeBtn.style.cssText='position:absolute;top:3px;right:4px;background:rgba(0,0,0,.65);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:12px;cursor:pointer;z-index:2;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;';
-  closeBtn.onclick=function(e){e.stopPropagation();try{vid.pause();}catch(e2){}pip.remove();};
-  // ??? ?????: ????? ??????? ??????? ?? ??????
+  closeBtn.style.cssText='position:absolute;top:3px;right:4px;background:rgba(0,0,0,.65);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:12px;cursor:pointer;z-index:3;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;';
+  closeBtn.onclick=function(e){e.stopPropagation();e.preventDefault();try{vid.pause();}catch(e2){}pip.remove();};
   pip.addEventListener('click',function(e){
     if(e.target===closeBtn||closeBtn.contains(e.target))return;
-    // Carousel: ????? ?????? ???????
-    const car=document.getElementById('prodCarousel');
-    if(car){
-      const slides=car.querySelectorAll('div');
-      let vidIdx=-1;
-      slides.forEach(function(s,i){if(s.querySelector('video'))vidIdx=i;});
-      if(vidIdx>=0){car.scrollTo({left:vidIdx*car.offsetWidth,behavior:'smooth'});setTimeout(function(){const v=slides[vidIdx]&&slides[vidIdx].querySelector('video');if(v){v.muted=false;v.play().catch(function(){});}},400);}
-      return;
-    }
-    // ???? carousel: ???? mainVideo
-    const mv=document.getElementById('mainVideo');
-    if(mv){mv.style.display='block';if(mainImg)mainImg.style.display='none';mv.muted=false;mv.play().catch(function(){});mv.scrollIntoView({behavior:'smooth',block:'center'});}
+    e.stopPropagation();e.preventDefault();
+    // ??? ??????? fullscreen ??????
+    try{
+      const fv=document.createElement('video');
+      fv.src=fvSrc;fv.controls=true;fv.autoplay=true;fv.playsInline=true;
+      fv.style.cssText='position:fixed;inset:0;width:100%;height:100%;background:#000;z-index:99999;object-fit:contain;';
+      const overlay=document.createElement('div');
+      overlay.style.cssText='position:fixed;inset:0;background:#000;z-index:99998;';
+      const closeFull=document.createElement('button');
+      closeFull.innerHTML='&times;';
+      closeFull.style.cssText='position:fixed;top:16px;right:16px;z-index:100000;background:rgba(0,0,0,.7);color:#fff;border:none;border-radius:50%;width:36px;height:36px;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;';
+      function cleanup(){try{fv.pause();}catch(e){}fv.remove();overlay.remove();closeFull.remove();}
+      closeFull.onclick=cleanup;
+      overlay.onclick=cleanup;
+      document.body.appendChild(overlay);
+      document.body.appendChild(fv);
+      document.body.appendChild(closeFull);
+      fv.play().catch(function(){});
+    }catch(er){}
   });
   pip.appendChild(vid);pip.appendChild(closeBtn);
   wrap.appendChild(pip);
