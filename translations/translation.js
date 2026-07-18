@@ -1,5 +1,5 @@
 function changeLang(lang) {
-  fetch(`translations/${lang}.json`)
+  fetch(`/translations/${lang}.json`)
     .then(res => res.json())
     .then(data => {
       // ترجمة النصوص data-i18n

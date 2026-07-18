@@ -1,5 +1,5 @@
-/* Service Worker - بريق PWA */
-const CACHE = 'bariq-v21';
+/* Service Worker - Bariq PWA */
+const CACHE = 'bariq-v22';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -154,9 +154,9 @@ self.addEventListener('fetch', function(e) {
 self.addEventListener('push', function(e) {
   let data = {};
   try { data = e.data ? e.data.json() : {}; } catch(err) {
-    data = { title: 'بريق', body: e.data ? e.data.text() : '' };
+    data = { title: 'Ø¨Ø±ÙŠÙ‚', body: e.data ? e.data.text() : '' };
   }
-  const title   = data.title || 'بريق 🛍️';
+  const title   = data.title || 'Ø¨Ø±ÙŠÙ‚ ðŸ›ï¸';
   const options = {
     body:    data.body   || '',
     icon:    data.icon   || '/assets/icon w.png',
@@ -172,7 +172,7 @@ self.addEventListener('push', function(e) {
   };
   e.waitUntil(
     (async () => {
-      // زيادة العداد وتحديث أيقونة التطبيق
+      // Ø²ÙŠØ§Ø¯Ø© Ø§Ù„Ø¹Ø¯Ø§Ø¯ ÙˆØªØ­Ø¯ÙŠØ« Ø£ÙŠÙ‚ÙˆÙ†Ø© Ø§Ù„ØªØ·Ø¨ÙŠÙ‚
       _badgeCount++;
       if ('setAppBadge' in self.registration) {
         await self.registration.setAppBadge(_badgeCount).catch(() => {});
@@ -184,7 +184,7 @@ self.addEventListener('push', function(e) {
 
 self.addEventListener('notificationclick', function(e) {
   e.notification.close();
-  // تصفير العداد عند الضغط على الإشعار
+  // ØªØµÙÙŠØ± Ø§Ù„Ø¹Ø¯Ø§Ø¯ Ø¹Ù†Ø¯ Ø§Ù„Ø¶ØºØ· Ø¹Ù„Ù‰ Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±
   _badgeCount = 0;
   if ('clearAppBadge' in self.registration) {
     self.registration.clearAppBadge().catch(() => {});
@@ -200,7 +200,7 @@ self.addEventListener('notificationclick', function(e) {
   );
 });
 
-/* Badge count sync من الصفحة */
+/* Badge count sync Ù…Ù† Ø§Ù„ØµÙØ­Ø© */
 self.addEventListener('message', function(e) {
   if (e.data && e.data.type === 'SET_BADGE') {
     _badgeCount = e.data.count || 0;
