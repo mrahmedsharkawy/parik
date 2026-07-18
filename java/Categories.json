@@ -28,19 +28,19 @@
       {
         "name": { "ar": "تخرج", "en": "Graduation" },
         "categorySlug": "Graduation",
-        "image": "assets/categories/Occasions/Graduation.png",
+        "image": "assets/categories/Occasions/Graduation.webp",
         "url": "/categories/Occasions/Graduation"
       },
       {
         "name": { "ar": "العيد", "en": "Eid" },
         "categorySlug": "Eid",
-        "image": "assets/categories/Occasions/Eid.png",
+        "image": "assets/categories/Occasions/Eid.webp",
         "url": "/categories/Occasions/Eid"
       },
       {
         "name": { "ar": "حج", "en": "Hajj" },
         "categorySlug": "Hajj",
-        "image": "assets/categories/Occasions/Hajj.png",
+        "image": "assets/categories/Occasions/Hajj.webp",
         "url": "/categories/Occasions/Hajj"
       }
     ]
@@ -48,7 +48,7 @@
   {
     "name": { "ar": "اكريلك", "en": "Acrylic" },
     "categorySlug": "Acrylic",
-    "image": "assets/categories/Acrylic/Box.png",
+    "image": "assets/categories/Acrylic/Box.webp",
     "description": { "ar": "منتجات الأكريلك.", "en": "Acrylic products." },
     "url": "/categories/Acrylic",
     "order": 2,
@@ -56,13 +56,13 @@
       {
         "name": { "ar": "بوكس", "en": "Box" },
         "categorySlug": "Box",
-        "image": "assets/categories/Acrylic/Box.png",
+        "image": "assets/categories/Acrylic/Box.webp",
         "url": "/categories/Acrylic/Box"
       },
       {
         "name": { "ar": "طولات", "en": "Tables" },
         "categorySlug": "Tables",
-        "image": "assets/categories/Acrylic/Tables.png",
+        "image": "assets/categories/Acrylic/Tables.webp",
         "url": "/categories/Acrylic/Tables"
       },
       {
@@ -74,19 +74,19 @@
       {
         "name": { "ar": "مباخر", "en": "Censer" },
         "categorySlug": "censer",
-        "image": "assets/categories/Acrylic/censer.png",
+        "image": "assets/categories/Acrylic/censer.webp",
         "url": "/categories/Acrylic/censer"
       },
       {
         "name": { "ar": "صواني", "en": "Trays" },
         "categorySlug": "Trays",
-        "image": "assets/categories/Acrylic/Trays.png",
+        "image": "assets/categories/Acrylic/Trays.webp",
         "url": "/categories/Acrylic/Trays"
       },
       {
         "name": { "ar": "استاند", "en": "Stand" },
         "categorySlug": "Stand",
-        "image": "assets/categories/Acrylic/Stand.png",
+        "image": "assets/categories/Acrylic/Stand.webp",
         "url": "/categories/Acrylic/Stand"
       }
     ]
@@ -94,7 +94,7 @@
   {
     "name": { "ar": "ورق", "en": "Paper" },
     "categorySlug": "paper",
-    "image": "assets/categories/paper/Bags.png",
+    "image": "assets/categories/paper/Bags.webp",
     "description": { "ar": "منتجات الورق.", "en": "Paper products." },
     "url": "/categories/paper",
     "order": 3,
@@ -102,25 +102,25 @@
       {
         "name": { "ar": "شنط", "en": "Bags" },
         "categorySlug": "Bags",
-        "image": "assets/categories/paper/Bags.png",
+        "image": "assets/categories/paper/Bags.webp",
         "url": "/categories/paper/Bags"
       },
       {
         "name": { "ar": "كوب", "en": "Cups" },
         "categorySlug": "Cups",
-        "image": "assets/categories/paper/Cups.png",
+        "image": "assets/categories/paper/Cups.webp",
         "url": "/categories/paper/Cups"
       },
       {
         "name": { "ar": "تيشو", "en": "Tissues" },
         "categorySlug": "Tissues",
-        "image": "assets/categories/paper/Tissues.png",
+        "image": "assets/categories/paper/Tissues.webp",
         "url": "/categories/paper/Tissues"
       },
       {
         "name": { "ar": "استيكر", "en": "Stickers" },
         "categorySlug": "Stickers",
-        "image": "assets/categories/paper/Stickers.png",
+        "image": "assets/categories/paper/Stickers.webp",
         "url": "/categories/paper/Stickers"
       }
     ]
@@ -128,7 +128,7 @@
   {
     "name": { "ar": "فوركس", "en": "Forex" },
     "categorySlug": "Forex",
-    "image": "assets/categories/Forex/tables.png",
+    "image": "assets/categories/Forex/tables.webp",
     "description": { "ar": "منتجات الفوركس.", "en": "Forex board products." },
     "url": "/categories/Forex",
     "order": 4,
@@ -136,25 +136,25 @@
       {
         "name": { "ar": "طولات", "en": "tables" },
         "categorySlug": "tables",
-        "image": "assets/categories/Forex/tables.png",
+        "image": "assets/categories/Forex/tables.webp",
         "url": "/categories/Forex/tables"
       },
       {
         "name": { "ar": "استاند", "en": "Stands" },
         "categorySlug": "stands",
-        "image": "assets/categories/Forex/stands.png",
+        "image": "assets/categories/Forex/stands.webp",
         "url": "/categories/forex/stands"
       },
       {
         "name": { "ar": "مجسم", "en": "Models" },
         "categorySlug": "models",
-        "image": "assets/categories/Forex/models.png",
+        "image": "assets/categories/Forex/models.webp",
         "url": "/categories/forex/models"
       },
       {
         "name": { "ar": "دوران", "en": "Rotations" },
         "categorySlug": "rotations",
-        "image": "assets/categories/Forex/rotations.png",
+        "image": "assets/categories/Forex/rotations.webp",
         "url": "/categories/Forex/rotations"
       }
     ]
@@ -162,7 +162,7 @@
   {
     "name": { "ar": "خشب", "en": "Wood" },
     "categorySlug": "wood",
-    "image": "assets/categories/wood/tables.png",
+    "image": "assets/categories/wood/tables.webp",
     "description": { "ar": "منتجات الخشب.", "en": "Wood products." },
     "url": "/categories/wood",
     "order": 5,
@@ -170,25 +170,25 @@
       {
         "name": { "ar": "طولات", "en": "Tables" },
         "categorySlug": "tables",
-        "image": "assets/categories/wood/tables.png",
+        "image": "assets/categories/wood/tables.webp",
         "url": "/categories/wood/tables"
       },
       {
         "name": { "ar": "دوران", "en": "Chairs" },
         "categorySlug": "chairs",
-        "image": "assets/categories/wood/chairs.png",
+        "image": "assets/categories/wood/chairs.webp",
         "url": "/categories/wood/chairs"
       },
       {
         "name": { "ar": "مجسم", "en": "Benches" },
         "categorySlug": "benches",
-        "image": "assets/categories/wood/benches.png",
+        "image": "assets/categories/wood/benches.webp",
         "url": "/categories/wood/benches"
       },
       {
         "name": { "ar": "استاند", "en": "Cabinets" },
         "categorySlug": "cabinets",
-        "image": "assets/categories/wood/cabinets.png",
+        "image": "assets/categories/wood/cabinets.webp",
         "url": "/categories/wood/cabinets"
       }
     ]
@@ -196,7 +196,7 @@
   {
     "name": { "ar": "جلد", "en": "Leather" },
     "categorySlug": "leather",
-    "image": "assets/categories/leather/boxes.png",
+    "image": "assets/categories/leather/boxes.webp",
     "description": { "ar": "منتجات الجلد.", "en": "Leather products." },
     "url": "/categories/leather",
     "order": 6,
@@ -204,25 +204,25 @@
       {
         "name": { "ar": "بوكسات", "en": "Boxes" },
         "categorySlug": "boxes",
-        "image": "assets/categories/leather/boxes.png",
+        "image": "assets/categories/leather/boxes.webp",
         "url": "/categories/leather/boxes"
       },
       {
         "name": { "ar": "مواليد", "en": "Born in" },
         "categorySlug": "born-in",
-        "image": "assets/categories/leather/born-in.png",
+        "image": "assets/categories/leather/born-in.webp",
         "url": "/categories/leather/born-in"
       },
       {
         "name": { "ar": "صواني", "en": "Trays" },
         "categorySlug": "trays",
-        "image": "assets/categories/leather/trays.png",
+        "image": "assets/categories/leather/trays.webp",
         "url": "/categories/leather/trays"
       },
       {
         "name": { "ar": "طولات", "en": "Tables" },
         "categorySlug": "tables",
-        "image": "assets/categories/leather/tables.png",
+        "image": "assets/categories/leather/tables.webp",
         "url": "/categories/leather/tables"
       }
     ]
@@ -230,7 +230,7 @@
   {
     "name": { "ar": "استيكر", "en": "Sticker" },
     "categorySlug": "Sticker",
-    "image": "assets/categories/Sticker/full.png",
+    "image": "assets/categories/Sticker/full.webp",
     "description": { "ar": "منتجات الاستيكر.", "en": "Sticker products." },
     "url": "/categories/Sticker",
     "order": 7,
@@ -238,25 +238,25 @@
       {
         "name": { "ar": "مواليد", "en": "Born in" },
         "categorySlug": "born-in",
-        "image": "assets/categories/Sticker/born-in.png",
+        "image": "assets/categories/Sticker/born-in.webp",
         "url": "/categories/Sticker/born-in"
       },
       {
         "name": { "ar": "مفرغ", "en": "Empty" },
         "categorySlug": "empty",
-        "image": "assets/categories/Sticker/empty.png",
+        "image": "assets/categories/Sticker/empty.webp",
         "url": "/categories/Sticker/empty"
       },
       {
         "name": { "ar": "كامل", "en": "Full" },
         "categorySlug": "full",
-        "image": "assets/categories/Sticker/full.png",
+        "image": "assets/categories/Sticker/full.webp",
         "url": "/categories/Sticker/full"
       },
       {
         "name": { "ar": "المناسبات", "en": "Occasions" },
         "categorySlug": "occasions",
-        "image": "assets/categories/Sticker/occasions.png",
+        "image": "assets/categories/Sticker/occasions.webp",
         "url": "/categories/Sticker/occasions"
       }
     ]
@@ -264,7 +264,7 @@
   {
     "name": { "ar": "رمضان", "en": "Ramadan" },
     "categorySlug": "Ramadan",
-    "image": "assets/categories/Ramadan/wood.png",
+    "image": "assets/categories/Ramadan/wood.webp",
     "description": { "ar": "منتجات رمضان.", "en": "Ramadan products." },
     "url": "/categories/Ramadan",
     "order": 8,
@@ -272,25 +272,25 @@
       {
         "name": { "ar": "خشب", "en": "Wood" },
         "categorySlug": "wood",
-        "image": "assets/categories/Ramadan/wood.png",
+        "image": "assets/categories/Ramadan/wood.webp",
         "url": "/categories/Ramadan/wood"
       },
       {
         "name": { "ar": "اكريلك", "en": "Acrylic" },
         "categorySlug": "acrylic",
-        "image": "assets/categories/Ramadan/acrylic.png",
+        "image": "assets/categories/Ramadan/acrylic.webp",
         "url": "/categories/Ramadan/acrylic"
       },
       {
         "name": { "ar": "فوركس", "en": "Forex" },
         "categorySlug": "forex",
-        "image": "assets/categories/Ramadan/forex.png",
+        "image": "assets/categories/Ramadan/forex.webp",
         "url": "/categories/Ramadan/forex"
       },
       {
         "name": { "ar": "جلد", "en": "Leather" },
         "categorySlug": "leather",
-        "image": "assets/categories/Ramadan/leather.png",
+        "image": "assets/categories/Ramadan/leather.webp",
         "url": "/categories/Ramadan/leather"
       }
     ]

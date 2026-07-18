@@ -1,5 +1,5 @@
 /* Service Worker - بريق PWA */
-const CACHE = 'bariq-v8';
+const CACHE = 'bariq-v9';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -9,6 +9,8 @@ const STATIC_URLS = [
   '/Cart.html',
   '/account.html',
   '/login.html',
+  '/offers.html',
+  '/checkout.html',
   '/assets/logo.webp',
   '/assets/icon w.webp',
   '/assets/cairo-arabic.woff2',
@@ -16,12 +18,54 @@ const STATIC_URLS = [
   '/style/style.css',
   '/java/main.min.js',
   '/java/Products.min.js',
-  '/java/Cart.js',
+  '/java/Cart.min.js',
   '/java/supabase.min.js',
+  '/java/footer-pages.min.js',
+  '/java/notifications.min.js',
   '/translations/translation.min.js',
+  '/translations/ar.json',
+  '/translations/en.json',
   '/mobile-nav-bar/main-navbar.min.js',
   '/mobile-nav-bar/navbar.html',
-  '/mobile-nav-bar/styles.css'
+  '/mobile-nav-bar/styles.css',
+  '/assets/home/1.webp',
+  '/assets/home/2.webp',
+  '/assets/categories/Acrylic/Born in.webp',
+  '/assets/categories/Acrylic/Box.webp',
+  '/assets/categories/Acrylic/censer.webp',
+  '/assets/categories/Acrylic/Stand.webp',
+  '/assets/categories/Acrylic/Tables.webp',
+  '/assets/categories/Acrylic/Trays.webp',
+  '/assets/categories/Forex/models.webp',
+  '/assets/categories/Forex/rotations.webp',
+  '/assets/categories/Forex/stands.webp',
+  '/assets/categories/Forex/tables.webp',
+  '/assets/categories/leather/born-in.webp',
+  '/assets/categories/leather/boxes.webp',
+  '/assets/categories/leather/tables.webp',
+  '/assets/categories/leather/trays.webp',
+  '/assets/categories/Occasions/Eid.webp',
+  '/assets/categories/Occasions/Graduation.webp',
+  '/assets/categories/Occasions/Hajj.webp',
+  "/assets/categories/Occasions/Haq Al-Laila.webp",
+  "/assets/categories/Occasions/Mother's Day.webp",
+  '/assets/categories/Occasions/National Day.webp',
+  '/assets/categories/paper/Bags.webp',
+  '/assets/categories/paper/Cups.webp',
+  '/assets/categories/paper/Stickers.webp',
+  '/assets/categories/paper/Tissues.webp',
+  '/assets/categories/Ramadan/acrylic.webp',
+  '/assets/categories/Ramadan/forex.webp',
+  '/assets/categories/Ramadan/leather.webp',
+  '/assets/categories/Ramadan/wood.webp',
+  '/assets/categories/Sticker/born-in.webp',
+  '/assets/categories/Sticker/empty.webp',
+  '/assets/categories/Sticker/full.webp',
+  '/assets/categories/Sticker/occasions.webp',
+  '/assets/categories/wood/benches.webp',
+  '/assets/categories/wood/cabinets.webp',
+  '/assets/categories/wood/chairs.webp',
+  '/assets/categories/wood/tables.webp'
 ];
 
 self.addEventListener('install', function(e) {
@@ -47,28 +91,42 @@ self.addEventListener('fetch', function(e) {
   if (url.includes('supabase.co') || url.includes('/rest/') || url.includes('/auth/') || url.includes('/storage/')) return;
   if (e.request.method !== 'GET') return;
 
-  // Network-first: HTML, CSS, JS, translations — always fetch latest
-  const isLive = e.request.destination === 'document'
-    || url.endsWith('.html')
-    || url.includes('/style/')
-    || url.includes('/java/')
-    || url.includes('/translations/')
-    || url.includes('/mobile-nav-bar/');
+  const isHtml = e.request.destination === 'document' || url.endsWith('.html') || url === location.origin + '/';
+  const isAsset = url.includes('/style/') || url.includes('/java/') || url.includes('/translations/') || url.includes('/mobile-nav-bar/');
 
-  if (isLive) {
+  // HTML: stale-while-revalidate — serve from cache instantly, fetch update silently
+  if (isHtml) {
     e.respondWith(
-      fetch(e.request).then(function(res) {
-        const clone = res.clone();
-        caches.open(CACHE).then(c => c.put(e.request, clone));
-        return res;
-      }).catch(function() {
-        return caches.match(e.request).then(r => r || caches.match('/index.html'));
+      caches.open(CACHE).then(function(cache) {
+        return cache.match(e.request).then(function(cached) {
+          const fetchPromise = fetch(e.request).then(function(res) {
+            if (res.ok) cache.put(e.request, res.clone());
+            return res;
+          }).catch(function() { return cached; });
+          return cached || fetchPromise;
+        });
       })
     );
     return;
   }
 
-  // Cache-first: images, fonts — never change
+  // CSS/JS/translations: stale-while-revalidate (instant + background update)
+  if (isAsset) {
+    e.respondWith(
+      caches.open(CACHE).then(function(cache) {
+        return cache.match(e.request).then(function(cached) {
+          const fetchPromise = fetch(e.request).then(function(res) {
+            if (res.ok) cache.put(e.request, res.clone());
+            return res;
+          }).catch(function() { return cached; });
+          return cached || fetchPromise;
+        });
+      })
+    );
+    return;
+  }
+
+  // Images/fonts: cache-first (immutable)
   e.respondWith(
     caches.match(e.request).then(function(cached) {
       if (cached) return cached;
