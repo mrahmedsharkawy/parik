@@ -1405,39 +1405,66 @@ function compressImage(dataUrl, maxW, quality) {
     img.src = dataUrl;
   });
 }
+// ── Cloudinary للفيديوهات (unsigned) ─────────────────────────────────
+const CLOUDINARY_CLOUD = 'hqyyfj6g';
+const CLOUDINARY_PRESET = 'bariq_videos';
+async function uploadVideoCloudinary(file) {
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('upload_preset', CLOUDINARY_PRESET);
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/video/upload`, {
+    method: 'POST', body: fd
+  });
+  if (!res.ok) { const t = await res.text(); throw new Error(t); }
+  const data = await res.json();
+  return data.secure_url;
+}
+
 $('mediaDrop').addEventListener('click',()=> $('mediaInput').click());
 $('mediaInput').addEventListener('change',e=>{
   const files = Array.from(e.target.files||[]);
   files.forEach(f=>{
-    const reader = new FileReader();
-    reader.onload = async ()=>{
-      // إضافة معاينة فورية (base64 مؤقت) أثناء الرفع
+    const isVid = f.type.startsWith('video');
+    if (isVid) {
+      // ── فيديو → Cloudinary مباشرة بدون base64 ──
       const tempIdx = currentMedia.length;
-      const isVid = f.type.startsWith('video');
-      currentMedia.push({ type: isVid?'video':'image', src: reader.result, uploading: true });
+      const previewUrl = URL.createObjectURL(f);
+      currentMedia.push({ type: 'video', src: previewUrl, uploading: true });
       renderMedia();
-
-      try {
-        let uploadSrc = reader.result;
-        if (!isVid) {
-          // ضغط الصورة تلقائياً (بدون قيود ثابتة - تتكيف حسب الحجم)
-          uploadSrc = await compressImage(reader.result);
-        }
-        if (window.Supabase && window.Supabase.Storage) {
-          // رفع فعلي لـ Supabase Storage → رابط دائم يظهر لكل الزوار
-          const publicUrl = await window.Supabase.Storage.uploadDataUrl(uploadSrc, isVid ? 'videos' : 'images');
-          currentMedia[tempIdx] = { type: isVid?'video':'image', src: publicUrl, uploading: false };
-          toast('✅ تم رفع الصورة بنجاح');
-        } else {
-          currentMedia[tempIdx] = { type: isVid?'video':'image', src: uploadSrc, uploading: false };
-        }
-      } catch(err) {
-        toast('⚠️ فشل رفع الصورة لـ Supabase - محفوظة محلياً فقط: ' + err.message);
+      uploadVideoCloudinary(f).then(url => {
+        URL.revokeObjectURL(previewUrl);
+        currentMedia[tempIdx] = { type: 'video', src: url, uploading: false };
+        toast('✅ تم رفع الفيديو على Cloudinary');
+        renderMedia();
+      }).catch(err => {
+        toast('⚠️ فشل رفع الفيديو: ' + err.message);
         currentMedia[tempIdx].uploading = false;
-      }
-      renderMedia();
-    };
-    reader.readAsDataURL(f);
+        renderMedia();
+      });
+    } else {
+      // ── صورة → Supabase Storage ──
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const tempIdx = currentMedia.length;
+        currentMedia.push({ type: 'image', src: reader.result, uploading: true });
+        renderMedia();
+        try {
+          const uploadSrc = await compressImage(reader.result);
+          if (window.Supabase && window.Supabase.Storage) {
+            const publicUrl = await window.Supabase.Storage.uploadDataUrl(uploadSrc, 'images');
+            currentMedia[tempIdx] = { type: 'image', src: publicUrl, uploading: false };
+            toast('✅ تم رفع الصورة بنجاح');
+          } else {
+            currentMedia[tempIdx] = { type: 'image', src: uploadSrc, uploading: false };
+          }
+        } catch(err) {
+          toast('⚠️ فشل رفع الصورة: ' + err.message);
+          currentMedia[tempIdx].uploading = false;
+        }
+        renderMedia();
+      };
+      reader.readAsDataURL(f);
+    }
   });
   e.target.value='';
 });
