@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   try {
     // Cache navbar HTML في sessionStorage لتجنب fetch في كل صفحة (يُقلّل الوميض)
-    const CACHE_KEY = 'mnav_v3';
+    const CACHE_KEY = 'mnav_v4';
     let text = sessionStorage.getItem(CACHE_KEY);
     if (!text) {
       const res = await fetch(base + 'navbar.html');
@@ -31,6 +31,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const doc = parser.parseFromString(text, 'text/html');
     const nav = doc.querySelector('.mobile-nav') || doc.querySelector('nav');
     if (!nav) throw new Error('no .mobile-nav in navbar.html');
+
+    const fixedLinks = { home: '/', categories: '/categories', offers: '/offers', account: '/account', cart: '/Cart' };
+    nav.querySelectorAll('a[data-key]').forEach(a => {
+      const key = a.getAttribute('data-key');
+      if (fixedLinks[key]) a.setAttribute('href', fixedLinks[key]);
+    });
 
     // إصلاح المسارات النسبية (src / data-src)
     nav.querySelectorAll('[src],[data-src]').forEach(el => {
