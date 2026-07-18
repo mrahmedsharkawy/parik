@@ -12,8 +12,8 @@ let sideMenu,subDisplay,products=[],categories=[];"function"!=typeof window.setP
   // تحديد الموضع بعد الرندر
   setTimeout(function(){
     const ref=wrap||document.querySelector('#mainImage');
-    if(ref){const r=ref.getBoundingClientRect();pip.style.top=(r.top+r.height/2-pip.offsetHeight/2)+'px';}
-    else{pip.style.top=(window.innerHeight/2-72)+'px';}
+    if(ref){const r=ref.getBoundingClientRect();pip.style.top=(r.top+r.height/2-145/2+40)+'px';}
+    else{pip.style.top=(window.innerHeight/2-32)+'px';}
     pip.style.right='12px';pip.style.left='auto';
   },200);
   const vid=document.createElement('video');
