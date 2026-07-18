@@ -7,7 +7,7 @@
   --nav-shadow: 0 -6px 18px rgba(0, 0, 0, 0);
   --badge-bg: #D4AF37;
   --badge-fg: #fff;
-  --font-size: 16px;
+  --font-size: 14px;
 }
 
 /* ensure content not hidden under fixed nav */
@@ -81,8 +81,8 @@ body{
 .mobile-nav svg.icon,
 .mobile-nav img.icon,
 .mobile-nav img.nav-icon{
-  width:26px;
-  height:26px;
+  width:24px;
+  height:24px;
   display:block;
   object-fit:contain;
   flex-shrink:0;
@@ -105,21 +105,19 @@ body{
   box-shadow:0 6px 16px rgba(21,37,70,0.22);
 }
 
-/* الأيقونات النشطة - لون ذهبي */
+/* تنسيق الأيقونات النشطة - تعديل لحل مشكلة عدم تغير اللون */
 .mobile-nav a.active svg.icon {
   color: #D4AF37 !important;
   fill: #D4AF37 !important;
   stroke: #D4AF37 !important;
 }
 
-.mobile-nav a.active img.icon,
-.mobile-nav a.active img.nav-icon {
+.mobile-nav a.active img.icon {
   filter: brightness(0) saturate(100%) invert(76%) sepia(47%) saturate(1052%) hue-rotate(356deg) brightness(94%) contrast(91%) !important;
 }
 
-/* النص النشط - ذهبي لجميع العناصر */
-.mobile-nav a.active span:not(.fire-nav-icon):not(.icon-wrap):not(.cart-badge):not(.account-badge) {
-  color: #D4AF37 !important;
+.mobile-nav a.active img.nav-icon {
+  filter: brightness(0) saturate(100%) invert(76%) sepia(47%) saturate(1052%) hue-rotate(356deg) brightness(94%) contrast(91%) !important;
 }
 
 /* إزالة تأثير التحويم حتى لا يتعارض مع تنسيق الأيقونات النشطة */
@@ -238,11 +236,11 @@ body{
 
 /* small screens tweak */
 @media (max-width: 420px){
-  :root{ --nav-h:60px; --font-size:13px; }
-  .mobile-nav svg.icon, .mobile-nav img.icon{ width:24px; height:24px; }
+  :root{ --nav-h:60px; --font-size:12px; }
+  .mobile-nav svg.icon, .mobile-nav img.icon{ width:20px; height:20px; }
 }
 @media (min-width: 421px) and (max-width: 900px){
-  :root{ --font-size:15px; }
+  :root{ --font-size:13px; }
 }
 
 
