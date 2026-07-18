@@ -9,11 +9,13 @@ let sideMenu,subDisplay,products=[],categories=[];"function"!=typeof window.setP
   pip.id='pip-video-widget';
   pip.style.cssText='position:fixed;width:90px;height:145px;border-radius:12px;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.6);z-index:9999;cursor:grab;touch-action:none;background:#000;';
   // ????? ?????? ????????? ????? ???? ??????
-  (function setInitPos(){
+  // تحديد الموضع بعد الرندر
+  setTimeout(function(){
     const ref=wrap||document.querySelector('#mainImage');
-    if(ref){const r=ref.getBoundingClientRect();pip.style.top=Math.max(80,r.top+r.height/2-72)+'px';pip.style.right='12px';}
-    else{pip.style.top='160px';pip.style.right='12px';}
-  })();
+    if(ref){const r=ref.getBoundingClientRect();pip.style.top=(r.top+r.height/2-pip.offsetHeight/2)+'px';}
+    else{pip.style.top=(window.innerHeight/2-72)+'px';}
+    pip.style.right='12px';pip.style.left='auto';
+  },200);
   const vid=document.createElement('video');
   vid.src=fvSrc;vid.autoplay=true;vid.muted=true;vid.loop=true;vid.playsInline=true;
   vid.style.cssText='width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;';
