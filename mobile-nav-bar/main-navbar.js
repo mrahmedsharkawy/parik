@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', async () => {
+  if (!window.matchMedia('(max-width: 899px)').matches) return;
   if (document.querySelector('.mobile-nav')) return;
 
   const scriptEl = document.currentScript || Array.from(document.scripts).find(s => s.src && s.src.includes('main-navbar.js'));
@@ -7,7 +8,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // تحميل CSS
   const cssHref = base + 'styles.css';
-  if (!Array.from(document.styleSheets).some(s => s.href && s.href.endsWith('styles.css'))) {
+  if (!Array.from(document.styleSheets).some(s => s.href && s.href.includes('/mobile-nav-bar/styles.css'))) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
     link.href = cssHref;
