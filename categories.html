@@ -18,7 +18,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script>
   (function(){
-    if (/\/categories\/Occasions(?:\/|$)/i.test(location.pathname)) {
+    var params = new URLSearchParams(location.search);
+    if (/\/categories\/Occasions(?:\/|$)/i.test(location.pathname) || /^Occasions$/i.test(params.get('category') || '')) {
       document.documentElement.classList.add('occasions-category-page');
     }
   })();
@@ -611,8 +612,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     buildSidebar();
     buildMobileTabs();
     const params = new URLSearchParams(location.search);
-    const cat = params.get('category');
-    const sub = params.get('subcategory');
+    const parts = location.pathname.split('/').filter(Boolean).map(decodeURIComponent);
+    const pathCat = parts[0] === 'categories' ? parts[1] : '';
+    const pathSub = parts[0] === 'categories' ? parts.slice(2).join('/') : '';
+    const cat = params.get('category') || pathCat;
+    const sub = params.get('subcategory') || pathSub;
     if (cat) selectMainCategory(cat, false);
     else showAllSubcategories();
     if (sub) selectSubcategory(sub);

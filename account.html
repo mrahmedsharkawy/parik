@@ -2195,7 +2195,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   window.clearAllNotifs = async function() {
     markCurrentOrdersSeen();
-    try { localStorage.setItem('x2_notifications', '[]'); } catch(e) {}
+    try {
+      localStorage.setItem('x2_notifications', '[]');
+      localStorage.setItem('x2_notif_clear_until', String(Date.now() + 10 * 60 * 1000));
+    } catch(e) {}
     await clearPushInboxStore();
     renderNotifications();
     const b = document.getElementById('aqnNotifBadge');
