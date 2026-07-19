@@ -1343,7 +1343,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="acc-form-group"><label data-i18n="الاسم الكامل">الاسم الكامل</label><input type="text" id="pf-name" placeholder="أدخل اسمك"></div>
         <div class="acc-form-group"><label data-i18n="البريد الإلكتروني">البريد الإلكتروني</label><input type="email" id="pf-email" placeholder="example@email.com"></div>
         <div class="acc-form-group"><label data-i18n="عنواني">العنوان</label><input type="text" id="pf-address" placeholder="أدخل عنوانك"></div>
-        <div class="acc-form-group"><label data-i18n="رقم الهاتف">رقم الهاتف</label><input type="tel" id="pf-phone" placeholder="+971 XX XXX XXXX"></div>
+        <div class="acc-form-group"><label data-i18n="رقم الهاتف">رقم الهاتف</label><input type="tel" id="pf-phone" value="+971 " placeholder="+971 XX XXX XXXX" inputmode="tel" dir="ltr" autocomplete="tel"></div>
         <div class="acc-form-group">
           <label data-i18n="كلمة السر">كلمة السر</label>
           <div class="acc-password-field">
@@ -1616,6 +1616,25 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   function fmt(n) { return (parseFloat(n)||0).toFixed(2) + ' ' + getCurrSym(); }
 
+  function normalizeUaePhone(value) {
+    let digits = String(value || '').replace(/\D/g, '');
+    if (digits.startsWith('00971')) digits = digits.slice(2);
+    if (digits.startsWith('971')) digits = digits.slice(3);
+    if (digits.startsWith('0')) digits = digits.slice(1);
+    digits = digits.slice(0, 9);
+    return digits ? '+971' + digits : '';
+  }
+
+  function formatUaePhoneInput(value) {
+    const phone = normalizeUaePhone(value);
+    return phone ? phone.replace('+971', '+971 ') : '+971 ';
+  }
+
+  function enforceUaePhoneInput(input) {
+    if (!input) return;
+    input.value = formatUaePhoneInput(input.value);
+  }
+
   function getOrders() {
     try { return JSON.parse(localStorage.getItem(ORDERS_KEY) || '[]'); } catch(e) { return []; }
   }
@@ -1638,8 +1657,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const ready = await waitForSupabaseLib();
       if (!ready || !window.Supabase) { return; }
       const profile = (() => { try { return JSON.parse(localStorage.getItem(PROFILE_KEY)||'{}'); } catch(e) { return {}; } })();
-      if (!profile.phone) { return; }
-      const remote = await window.Supabase.Orders.getByPhone(profile.phone);
+      const normalizedPhone = normalizeUaePhone(profile.phone);
+      if (!normalizedPhone) { return; }
+      if (profile.phone !== normalizedPhone) {
+        profile.phone = normalizedPhone;
+        try { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); } catch(e) {}
+      }
+      const remote = await window.Supabase.Orders.getByPhone(normalizedPhone);
       // remote === null/undefined يعني فشل الاتصال - لا تلمس البيانات المحلية
       if (!remote) { return; }
 
@@ -2340,14 +2364,27 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   };
 
   window.saveProfile = function() {
+    const oldProfile = (() => { try { return JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}'); } catch(e) { return {}; } })();
+    const phone = normalizeUaePhone(document.getElementById('pf-phone').value);
+    if (!phone) {
+      alert('⚠️ أدخل رقم هاتف إماراتي صحيح بعد +971');
+      enforceUaePhoneInput(document.getElementById('pf-phone'));
+      return;
+    }
     const p = {
+      ...oldProfile,
       name: document.getElementById('pf-name').value.trim(),
-      email: document.getElementById('pf-email').value.trim(),
+      email: document.getElementById('pf-email').value.trim().toLowerCase(),
       address: document.getElementById('pf-address').value.trim(),
-      phone: document.getElementById('pf-phone').value.trim(),
+      phone,
       password: document.getElementById('pf-password').value
     };
+    document.getElementById('pf-phone').value = formatUaePhoneInput(phone);
     try { localStorage.setItem(PROFILE_KEY, JSON.stringify(p)); } catch(e) {}
+    if (window.Supabase?.Customers?.upsert) {
+      window.Supabase.Customers.upsert({ name: p.name, email: p.email, phone: p.phone, city: p.address, address: p.address }).catch(()=>{});
+    }
+    syncOrdersFromSupabase().then(() => renderOrders());
     if (p.name) {
       document.getElementById('profile-name').textContent = p.name;
       document.getElementById('avatar-letter').textContent = p.name.charAt(0);
@@ -2621,6 +2658,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   function loadProfile() {
     try {
       const p = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}');
+      const normalizedPhone = normalizeUaePhone(p.phone);
+      if (normalizedPhone && p.phone !== normalizedPhone) {
+        p.phone = normalizedPhone;
+        localStorage.setItem(PROFILE_KEY, JSON.stringify(p));
+      }
       if (p.name) {
         document.getElementById('pf-name').value = p.name;
         document.getElementById('profile-name').textContent = p.name;
@@ -2639,7 +2681,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         if (a.zip)      { const el=document.getElementById('addr-zip');      if(el) el.value=a.zip; }
         if (a.notes)    { const el=document.getElementById('addr-notes');    if(el) el.value=a.notes; }
       }
-      if (p.phone) document.getElementById('pf-phone').value = p.phone;
+      document.getElementById('pf-phone').value = formatUaePhoneInput(p.phone);
       if (p.password) document.getElementById('pf-password').value = p.password;
       updateSidebarProfile(p);
     } catch(e) {}
@@ -2740,6 +2782,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   document.documentElement.classList.remove('account-auth-pending');
   renderOrders();
   loadProfile();
+  const profilePhoneInput = document.getElementById('pf-phone');
+  if (profilePhoneInput) {
+    profilePhoneInput.addEventListener('focus', function(){ enforceUaePhoneInput(profilePhoneInput); });
+    profilePhoneInput.addEventListener('input', function(){ enforceUaePhoneInput(profilePhoneInput); });
+    enforceUaePhoneInput(profilePhoneInput);
+  }
   // مزامنة حالة الطلبات الحقيقية من Supabase (التي حدّثها/حذفها الأدمن) ثم إعادة العرض
   syncOrdersFromSupabase().then(() => renderOrders());
 
