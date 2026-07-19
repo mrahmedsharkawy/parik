@@ -1,5 +1,5 @@
 ﻿/* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v89';
+const CACHE = 'bariq-v90';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -216,24 +216,34 @@ self.addEventListener('push', function(e) {
   };
   e.waitUntil(
     (async () => {
-      const inboxItem = {
-        id: data.id || ('push-' + Date.now()),
-        type: data.type || 'push',
-        icon: data.iconText || data.emoji || '🔔',
-        title: title,
-        msg: data.body || '',
-        date: data.date || (new Date()).toISOString(),
-        read: false,
-        orderId: data.orderId || data.order_id || '',
-        url: data.url || '/'
-      };
-      await savePushInboxItem(inboxItem);
-      const pages = await clients.matchAll({ type: 'window', includeUncontrolled: true });
-      pages.forEach(client => client.postMessage({ type: 'X2_PUSH_NOTIFICATION', notification: inboxItem }));
-      // Update the app badge count before showing the notification.
-      _badgeCount++;
-      if ('setAppBadge' in self.registration) {
-        await self.registration.setAppBadge(_badgeCount).catch(() => {});
+      // نضمن ظهور الإشعار بالعنوان/الإيموجي الصحيح دائماً حتى لو فشلت
+      // خطوات إضافية (حفظ IndexedDB أو تحديث الشارة) — أي خطأ هناك كان
+      // يمنع الوصول لـ showNotification فيظهر إشعار المتصفح الافتراضي
+      // الإنجليزي بدل رسالتنا العربية.
+      try {
+        const inboxItem = {
+          id: data.id || ('push-' + Date.now()),
+          type: data.type || 'push',
+          icon: data.iconText || data.emoji || '🔔',
+          title: title,
+          msg: data.body || '',
+          date: data.date || (new Date()).toISOString(),
+          read: false,
+          orderId: data.orderId || data.order_id || '',
+          url: data.url || '/'
+        };
+        await savePushInboxItem(inboxItem);
+        try {
+          const pages = await clients.matchAll({ type: 'window', includeUncontrolled: true });
+          pages.forEach(client => client.postMessage({ type: 'X2_PUSH_NOTIFICATION', notification: inboxItem }));
+        } catch(e2) {}
+        // Update the app badge count before showing the notification.
+        _badgeCount++;
+        if ('setAppBadge' in self.registration) {
+          await self.registration.setAppBadge(_badgeCount).catch(() => {});
+        }
+      } catch(err) {
+        // تجاهل أي خطأ هنا — الأهم إظهار الإشعار نفسه بالمحتوى الصحيح
       }
       await self.registration.showNotification(title, options);
     })()
