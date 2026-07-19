@@ -37,6 +37,6 @@
       if(!('Notification'in window)||Notification.permission==='granted')window.dismissPushWelcome();
     },1200);
   });
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',window.maybeShowPushWelcome,{once:true});
-  else window.maybeShowPushWelcome();
+  if(document.body)window.maybeShowPushWelcome();
+  else document.addEventListener('DOMContentLoaded',window.maybeShowPushWelcome,{once:true});
 })();
