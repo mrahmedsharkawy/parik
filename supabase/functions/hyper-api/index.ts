@@ -41,16 +41,21 @@ Deno.serve(async (req) => {
     // تطبيع رقم الهاتف: نجرب بالـ + وبدونه للتعامل مع فروق التخزين
     let query = supabase.from('push_subscriptions').select('endpoint, p256dh, auth');
     if (user_phone) {
-      const digits = user_phone.replace(/\D/g, '');          // أرقام فقط
-      const withPlus = '+' + digits;
-      const { data: s1 } = await supabase.from('push_subscriptions')
-        .select('endpoint, p256dh, auth').eq('user_phone', user_phone);
-      const { data: s2 } = await supabase.from('push_subscriptions')
-        .select('endpoint, p256dh, auth').eq('user_phone', withPlus);
-      const { data: s3 } = await supabase.from('push_subscriptions')
-        .select('endpoint, p256dh, auth').eq('user_phone', digits);
+      const digits = user_phone.replace(/\D/g, '');
+      const phoneVariants = new Set([user_phone, digits, '+' + digits]);
+      if (digits.startsWith('0')) {
+        phoneVariants.add('971' + digits.slice(1));
+        phoneVariants.add('+971' + digits.slice(1));
+      } else if (digits.startsWith('971')) {
+        phoneVariants.add('0' + digits.slice(3));
+      }
+      const phoneResults = await Promise.all([...phoneVariants].filter(Boolean).map(async phone => {
+        const { data } = await supabase.from('push_subscriptions')
+          .select('endpoint, p256dh, auth').eq('user_phone', phone);
+        return data || [];
+      }));
       // دمج النتائج وإزالة التكرار
-      const merged = [...(s1||[]), ...(s2||[]), ...(s3||[])];
+      const merged = phoneResults.flat();
       const seen = new Set<string>();
       const uniqueSubs = merged.filter(s => { if (seen.has(s.endpoint)) return false; seen.add(s.endpoint); return true; });
       if (!uniqueSubs.length) {

@@ -1639,7 +1639,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       if (!ready || !window.Supabase) { return; }
       const profile = (() => { try { return JSON.parse(localStorage.getItem(PROFILE_KEY)||'{}'); } catch(e) { return {}; } })();
       if (!profile.phone) { return; }
-      const remote = await window.Supabase.Orders.getByPhone(profile.phone);
+      const phoneDigits = String(profile.phone).replace(/\D/g, '');
+      const phoneVariants = new Set([profile.phone, phoneDigits, '+' + phoneDigits]);
+      if (phoneDigits.startsWith('0')) {
+        phoneVariants.add('971' + phoneDigits.slice(1));
+        phoneVariants.add('+971' + phoneDigits.slice(1));
+      } else if (phoneDigits.startsWith('971')) {
+        phoneVariants.add('0' + phoneDigits.slice(3));
+      }
+      const remoteGroups = await Promise.all([...phoneVariants].filter(Boolean).map(phone =>
+        window.Supabase.Orders.getByPhone(phone)
+      ));
+      const remoteById = new Map();
+      remoteGroups.flat().forEach(order => remoteById.set(String(order.id || order.order_number), order));
+      const remote = [...remoteById.values()];
       // remote === null/undefined يعني فشل الاتصال - لا تلمس البيانات المحلية
       if (!remote) { return; }
 
@@ -1650,8 +1663,23 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       remote.forEach(r => {
         // مطابقة برقم الطلب (order_number) مع مقارنة نصية مرنة
-        const idx = local.findIndex(o => String(o.id) === String(r.order_number));
-        if (idx === -1) { return; }
+        const orderNumber = r.order_number || String(r.id);
+        let idx = local.findIndex(o => String(o.id) === String(orderNumber));
+        if (idx === -1) {
+          local.unshift({
+            id: orderNumber,
+            date: r.created_at,
+            items: r.items || [],
+            total: r.total,
+            status: r.status || 'processing',
+            cashback: r.cashback || 5,
+            cashbackStatus: r.cashback_status || 'pending',
+            cashbackExpiresAt: r.cashback_expires_at || null,
+            _synced: true
+          });
+          idx = 0;
+          changed = true;
+        }
         const lo = local[idx];
         if (r.status && lo.status !== r.status) {
           lo.status = r.status;
@@ -2113,6 +2141,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     if (!listEl) return;
 
     const notifs = window.x2Notifications ? window.x2Notifications.getAll() : [];
+    let repairedIcons = false;
+    notifs.forEach(notification => {
+      if (/ðŸ|Ø|Ù|Â|â/.test(notification.icon || '')) {
+        notification.icon = '\uD83D\uDD14';
+        repairedIcons = true;
+      }
+    });
+    if (repairedIcons) {
+      try { localStorage.setItem('x2_notifications', JSON.stringify(notifs)); } catch(e) {}
+    }
     const unread = notifs.filter(n => !n.read).length;
 
     if (countEl) { countEl.textContent = unread > 0 ? unread + ' جديد' : ''; countEl.style.display = unread > 0 ? 'inline' : 'none'; }
@@ -2215,6 +2253,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   // تحديث badge الزر السريع عند التحميل
   function mergeNotificationItem(item) {
     if (!item || (!item.title && !item.msg)) return false;
+    if (/ðŸ|Ø|Ù|Â|â/.test(item.icon || '')) item.icon = '\uD83D\uDD14';
     const notifs = window.x2Notifications ? window.x2Notifications.getAll() : (() => { try { return JSON.parse(localStorage.getItem('x2_notifications') || '[]'); } catch(e) { return []; } })();
     const id = item.id || ('push-' + Date.now());
     if (notifs.some(n => n.id === id)) return false;
@@ -2412,10 +2451,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     try {
       let products = [];
+      let campaigns = [];
 
       // جلب من Supabase أولاً (المصدر الحقيقي للمنتجات)
       if (window.Supabase && window.Supabase.Products) {
         products = await window.Supabase.Products.getAll() || [];
+      }
+      if (window.Supabase && window.Supabase.Campaigns) {
+        campaigns = await window.Supabase.Campaigns.getActive().catch(() => []);
       }
 
       // fallback على Products.json لو Supabase غير متاح
@@ -2426,9 +2469,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       const discounted = getDiscountedProducts(products);
       offersLoaded = true;
-      count.textContent = `${discounted.length} عرض`;
+      count.textContent = `${discounted.length + campaigns.length} عرض`;
 
-      if (!discounted.length) {
+      if (!discounted.length && !campaigns.length) {
         list.innerHTML = `
           <div class="acc-empty" style="padding:24px 12px; margin:0;">
             <div class="acc-empty-icon" style="font-size:2rem;">🎁</div>
@@ -2437,7 +2480,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           </div>`;
         return;
       }
-      list.innerHTML = discounted.map(renderOfferCard).join('');
+      const campaignHtml = campaigns.map(campaign => `
+        <a href="/offers.html" class="acc-order-card" style="text-decoration:none;grid-column:1/-1;align-items:center;">
+          ${campaign.banner ? `<img src="${campaign.banner}" alt="${campaign.name || 'عرض'}" onerror="this.style.display='none'">` : ''}
+          <div class="acc-order-info">
+            <div class="acc-order-name">${campaign.name || 'عرض جديد'}</div>
+            <div class="acc-order-id">${campaign.description || ''}</div>
+            ${campaign.discount ? `<span class="offer-badge" style="position:static;display:inline-block;margin-top:6px;">خصم ${campaign.discount}%</span>` : ''}
+          </div>
+        </a>`).join('');
+      list.innerHTML = campaignHtml + discounted.map(renderOfferCard).join('');
     } catch (error) {
       count.textContent = '0 عرض';
       list.innerHTML = `

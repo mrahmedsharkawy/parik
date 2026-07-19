@@ -1,5 +1,5 @@
 ﻿/* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v84';
+const CACHE = 'bariq-v85';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -219,7 +219,7 @@ self.addEventListener('push', function(e) {
       const inboxItem = {
         id: data.id || ('push-' + Date.now()),
         type: data.type || 'push',
-        icon: data.iconText || data.emoji || 'ðŸ””',
+        icon: data.iconText || data.emoji || '\uD83D\uDD14',
         title: title,
         msg: data.body || '',
         date: data.date || (new Date()).toISOString(),
