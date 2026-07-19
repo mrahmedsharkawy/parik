@@ -658,6 +658,7 @@
       <div class="card">
         <h2>📋 سجل مصاريف الإعلانات</h2>
         <div id="emFilterAdList"></div>
+        <div class="hint" id="emAdListTotal" style="margin-bottom:10px">إجمالي مصاريف الإعلان: 0 د.إ</div>
         <div class="plist rank-list scroll-4" id="emAdList"><div class="empty">لا توجد مصاريف مسجلة</div></div>
       </div>
     </div>
@@ -3124,7 +3125,9 @@ function emPeriodMatch(date, period){
 }
 function emNormArea(area){ return String(area||'غير محدد').trim(); }
 function emMakeOptions(values, allLabel){
-  const sorted = [...new Set(values.filter(Boolean).map(String))].sort((a,b)=>a.localeCompare(b,'ar'));
+  const basePlatforms = Object.values(EM_PLATFORM_LABELS);
+  const source = allLabel === 'كل المنصات' ? [...basePlatforms, ...values] : values;
+  const sorted = [...new Set(source.filter(Boolean).map(String))].sort((a,b)=>a.localeCompare(b,'ar'));
   return `<option value="">${allLabel}</option>` + sorted.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
 }
 function emFilterBox(id, areas, platforms){
@@ -3181,6 +3184,12 @@ function emRankHTML(entries, type){
   return entries.slice(0,10).map(([name,d],i) => `<div class="rank-item"><span><b>${i+1}. ${esc(name)}</b><div class="rank-meta">${d.orders||0} طلب • ${d.visits||0} زيارة</div></span><b>${type==='qty' ? (d.qty||0) + ' قطعة' : moneyFmt(d.sales||0)}</b></div>`).join('');
 }
 function emProductName(id, fallback){ const p = products.find(x=>String(x.id)===String(id)); return p ? getT(p.name) : (fallback || 'منتج'); }
+function emProductByKey(key){ return products.find(p=>String(p.id)===String(key)||getT(p.name)===key)||null; }
+function emProductImage(p){ const imgs = p ? (Array.isArray(p.img)?p.img:(p.img?[p.img]:[])) : []; return imgs.find(s=>s&&!String(s).startsWith('data:')) || imgs[0] || '/assets/logo.png'; }
+function emProductCardsHTML(entries){
+  if(!entries.length) return '<div class="empty">لا توجد بيانات</div>';
+  return entries.slice(0,10).map(([name,d],i)=>{ const p=emProductByKey(name); const title=p?getT(p.name):name; const price=p ? (parseFloat(p.price)||0) : 0; const old=p ? (parseFloat(p.oldPrice)||0) : 0; const stock=p && p.stock!==undefined ? p.stock : '—'; const img=emProductImage(p); return `<div class="prod-row"><span style="background:var(--gold);color:var(--navy);width:24px;height:24px;border-radius:50%;text-align:center;line-height:24px;font-weight:800;font-size:.72rem;flex-shrink:0">${i+1}</span><img src="${esc(img)}" alt="${esc(title)}" onerror="this.src='/assets/logo.png'"><div class="info"><b>${esc(title)}</b><small>${d.qty||0} قطعة • ${d.orders||0} طلب • ${moneyFmt(d.sales||0)}</small><br><small>السعر: <b>${moneyFmt(price)}</b>${old?` <span class="price-old">${moneyFmt(old)}</span>`:''} • المخزون: ${esc(stock)}</small></div>${p?`<button class="btn-ghost btn-sm" onclick="editProduct(${Number(p.id)||0})">تعديل</button>`:''}</div>`; }).join('');
+}
 function emProductViews(visitors){
   const map = {};
   visitors.forEach(v => {
@@ -3231,6 +3240,7 @@ function renderExternalAdList(){
   const list = $('emAdList'); if(!list) return;
   const filter = emGetFilter('emFilterAdList');
   const rows = getExternalAds().filter(a=>emAdMatchesWidget(a,filter)).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  if($('emAdListTotal')) $('emAdListTotal').textContent = 'إجمالي مصاريف الإعلان: ' + moneyFmt(rows.reduce((s,r)=>s+(Number(r.cost)||0),0));
   if(!rows.length){ list.innerHTML = '<div class="empty">لا توجد مصاريف مسجلة</div>'; return; }
   list.innerHTML = rows.map(r => `<div class="ord-row"><div class="oinfo"><b>${esc(EM_PLATFORM_LABELS[r.platform]||r.platform||'أخرى')} — ${moneyFmt(r.cost)}</b><br><small>${esc(r.date||'')} • ${esc(r.area||'كل المناطق')} ${r.note ? '• '+esc(r.note) : ''}</small></div><button class="btn-danger btn-sm" onclick="deleteExternalAdSpend(${Number(r.id)})">حذف</button></div>`).join('');
 }
@@ -3284,7 +3294,7 @@ async function renderExternalMarketing(){
   const attrData = emBuildMarketingMaps(orders.filter(o=>emOrderMatchesWidget(o,attrFilter)), [], []);
   if($('emTopAreas')) $('emTopAreas').innerHTML = emRankHTML(Object.entries(areaData.areaMap).sort((a,b)=>(b[1].orders-a[1].orders)||(b[1].sales-a[1].sales)), 'sales');
   if($('emTopPlatforms')) $('emTopPlatforms').innerHTML = emRankHTML(Object.entries(platformData.platformMap).sort((a,b)=>(b[1].sales+b[1].visits)-(a[1].sales+a[1].visits)), 'sales');
-  if($('emTopSoldProducts')) $('emTopSoldProducts').innerHTML = emRankHTML(Object.entries(soldData.productSold).sort((a,b)=>b[1].qty-a[1].qty), 'qty');
+  if($('emTopSoldProducts')) $('emTopSoldProducts').innerHTML = emProductCardsHTML(Object.entries(soldData.productSold).sort((a,b)=>b[1].qty-a[1].qty));
   if($('emTopViewedProducts')) $('emTopViewedProducts').innerHTML = emRankHTML(emProductViews(viewVisitors), 'qty');
   if($('emMonthlySales')) $('emMonthlySales').innerHTML = Object.entries(monthlyData.monthMap).sort((a,b)=>a[0].localeCompare(b[0])).map(([m,d]) => `<tr><td>${esc(emMonthLabel(m))}</td><td>${d.orders||0}</td><td>${moneyFmt(d.sales||0)}</td><td>${moneyFmt(d.cost||0)}</td><td>${moneyFmt((d.sales||0)-(d.cost||0))}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">لا توجد بيانات</td></tr>';
   if($('emAttributionRows')) $('emAttributionRows').innerHTML = Object.entries(attrData.attrMap).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,80).map(([k,d]) => { const [date,platform,area]=k.split('|'); return `<tr><td>${esc(date)}</td><td>${esc(platform)}</td><td>${esc(area)}</td><td>${d.orders||0}</td><td>${moneyFmt(d.sales||0)}</td></tr>`; }).join('') || '<tr><td colspan="5" class="empty">لا توجد بيانات</td></tr>';
@@ -3310,10 +3320,19 @@ function exportExternalMarketingCSV(){
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'external_marketing_' + emDateKey(new Date()) + '.csv'; a.click();
 }
 
-function clearVisitors() {
+async function clearVisitors() {
   if (!confirm('مسح سجل الزيارات؟')) return;
   localStorage.removeItem(LS_VISITORS);
+  const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+  try {
+    const adminToken = await getValidAdminToken() || ANON;
+    await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors?visited_at=not.is.null', {
+      method:'DELETE',
+      headers:{apikey:ANON,Authorization:'Bearer '+adminToken,Prefer:'return=minimal'}
+    });
+  } catch(e) { console.warn('Supabase visitors clear failed:', e); }
   renderVisitorsStats();
+  renderExternalMarketing();
   toast('تم مسح السجل');
 }
 
