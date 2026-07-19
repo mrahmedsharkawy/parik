@@ -1441,20 +1441,26 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <button onclick="clearAllNotifs()" style="border:none;background:none;color:#e57373;font-size:.74rem;cursor:pointer">🗑 مسح</button>
           </div>
         </div>
-        <div style="margin-top:0;margin-bottom:14px;padding:8px 0;border-top:1px solid #f0f0f0;border-bottom:1px solid #f0f0f0">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-            <button type="button" onclick="toggleNotifSettings()" style="display:flex;align-items:center;gap:5px;border:none;background:none;padding:0;color:#888;font-size:.8rem;font-weight:700;cursor:pointer">
-              <span>⚙️</span><span id="notifSettingsArrow" style="font-size:.72rem;transition:transform .2s">▼</span><span>الإعدادات</span>
-            </button>
-            <button id="push-subscribe-btn" style="display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:3px 9px;min-height:26px;border:1.5px solid #c9a84c;border-radius:8px;background:#fff;color:#152546;font-size:.72rem;font-weight:800;cursor:pointer;white-space:nowrap">🔕 تفعيل الإشعارات</button>
-          </div>
-          <div id="notifSettingsBody" style="display:none;flex-direction:column;gap:12px;margin-top:10px">
-            <label style="display:flex;justify-content:space-between;align-items:center;font-size:.88rem;cursor:pointer">تحديثات الطلبات <input type="checkbox" checked style="accent-color:#D4AF37;width:18px;height:18px"></label>
-            <label style="display:flex;justify-content:space-between;align-items:center;font-size:.88rem;cursor:pointer">العروض والتخفيضات <input type="checkbox" checked style="accent-color:#D4AF37;width:18px;height:18px"></label>
-            <label style="display:flex;justify-content:space-between;align-items:center;font-size:.88rem;cursor:pointer">الكاش باك والمكافآت <input type="checkbox" checked style="accent-color:#D4AF37;width:18px;height:18px"></label>
-          </div>
-        </div>
         <div id="notifList"></div>
+      </div>
+    </div>
+
+    <div id="pushWelcomeModal" style="display:none;position:fixed;inset:0;z-index:100000;background:rgba(21,37,70,.54);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:18px">
+      <div style="width:min(360px,100%);background:#fff;border-radius:18px;box-shadow:0 18px 60px rgba(21,37,70,.28);overflow:hidden;text-align:center;direction:rtl">
+        <div style="background:linear-gradient(135deg,#152546,#24447d);padding:18px 18px 16px;color:#fff">
+          <div style="width:54px;height:54px;border-radius:50%;margin:0 auto 10px;background:rgba(212,175,55,.18);border:1.5px solid rgba(212,175,55,.45);display:flex;align-items:center;justify-content:center;font-size:1.65rem">🔔</div>
+          <div style="font-size:1.05rem;font-weight:900;margin-bottom:4px">فعّل إشعارات Bariq</div>
+          <div style="font-size:.78rem;line-height:1.7;color:rgba(255,255,255,.78)">كن على علم دائم بالعروض والخصومات التي تصل إلى 70%</div>
+        </div>
+        <div style="padding:16px 18px 18px">
+          <div style="display:grid;gap:8px;text-align:right;margin-bottom:14px;color:#152546;font-size:.84rem;font-weight:700">
+            <div>🚚 تنبيهات الشحن وحالة الطلبات</div>
+            <div>🤑 تحديثات الكاش باك والمكافآت</div>
+            <div>🎁 عروض وخصومات حصرية فور نزولها</div>
+          </div>
+          <button id="push-subscribe-btn" style="width:100%;display:flex;align-items:center;justify-content:center;gap:7px;padding:11px 14px;min-height:42px;border:none;border-radius:12px;background:#D4AF37;color:#152546;font-size:.9rem;font-weight:900;cursor:pointer">🔕 تفعيل الإشعارات</button>
+          <button type="button" onclick="dismissPushWelcome()" style="margin-top:9px;width:100%;border:none;background:none;color:#9aa3b2;font-size:.8rem;font-weight:700;cursor:pointer;padding:8px">لاحقًا</button>
+        </div>
       </div>
     </div>
 
@@ -2219,14 +2225,27 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     window.dispatchEvent(new Event('x2:notif-updated'));
   };
 
-  window.toggleNotifSettings = function() {
-    const body = document.getElementById('notifSettingsBody');
-    const arrow = document.getElementById('notifSettingsArrow');
-    if (!body) return;
-    const open = body.style.display !== 'none';
-    body.style.display = open ? 'none' : 'flex';
-    if (arrow) arrow.style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)';
+  window.dismissPushWelcome = function() {
+    try { localStorage.setItem('x2_push_welcome_seen', '1'); } catch(e) {}
+    const modal = document.getElementById('pushWelcomeModal');
+    if (modal) modal.style.display = 'none';
   };
+
+  function maybeShowPushWelcome() {
+    try {
+      if (localStorage.getItem('x2_push_welcome_seen') === '1') return;
+      if (!('Notification' in window) || Notification.permission === 'granted' || Notification.permission === 'denied') return;
+      const modal = document.getElementById('pushWelcomeModal');
+      if (modal) setTimeout(() => { modal.style.display = 'flex'; }, 700);
+    } catch(e) {}
+  }
+
+  document.getElementById('push-subscribe-btn')?.addEventListener('pointerdown', function() {
+    const modal = document.getElementById('pushWelcomeModal');
+    if (modal && modal.style.display !== 'none') {
+      setTimeout(() => dismissPushWelcome(), 220);
+    }
+  });
 
   // تحديث badge الزر السريع عند التحميل
   function mergeNotificationItem(item) {
@@ -2702,6 +2721,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   document.documentElement.classList.remove('account-auth-pending');
   renderOrders();
   loadProfile();
+  maybeShowPushWelcome();
   // مزامنة حالة الطلبات الحقيقية من Supabase (التي حدّثها/حذفها الأدمن) ثم إعادة العرض
   syncOrdersFromSupabase().then(() => renderOrders());
 
