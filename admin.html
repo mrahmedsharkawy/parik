@@ -2352,7 +2352,9 @@ async function changeOrderStatus(id, status){
       // أرسل الإشعار عن طريق الهاتف أو الإيميل — أيهما متوفر
       if (notif && (customerPhone || customerEmail)) {
         try {
-          const adminToken = await getValidAdminToken();
+          // ANON key كـ fallback إذا كان توكن الأدمن مفقود/منتهي (نفس نمط بقية الدوال في هذا الملف)
+          const ANON_PUSH = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+          const adminToken = (await getValidAdminToken()) || ANON_PUSH;
           // ملاحظة: لا نستثني جهاز الأدمن هنا لأن الإشعار موجَّه أصلاً لهاتف/إيميل
           // العميل تحديداً (وليس بثاً عاماً) — استثناء الجهاز كان يمنع وصول الإشعار
           // عندما يكون الأدمن يختبر الحساب بنفس رقمه/جهازه.
@@ -2372,15 +2374,22 @@ async function changeOrderStatus(id, status){
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              'apikey': ANON_PUSH,
               'Authorization': 'Bearer ' + adminToken
             },
             body: JSON.stringify(pushPayload)
           });
           if (!pushResp.ok) throw new Error(await pushResp.text());
           const pushResult = await pushResp.json().catch(() => null);
-          if (!pushResult || !pushResult.sent) console.warn('No customer push subscribers matched this order:', pushResult);
+          if (!pushResult || !pushResult.sent) {
+            console.warn('No customer push subscribers matched this order:', pushResult);
+            toast('⚠️ لم يتم العثور على اشتراك إشعارات مفعّل لهذا العميل');
+          } else {
+            toast('📲 تم إرسال إشعار الحالة للعميل');
+          }
         } catch(pushErr) {
           console.warn('Push notification skipped:', pushErr);
+          toast('⚠️ تعذّر إرسال إشعار الدفع: ' + (pushErr.message || 'خطأ غير معروف'));
         }
       }
     } catch(e) {
