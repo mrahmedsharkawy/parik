@@ -463,6 +463,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     try { return JSON.parse(localStorage.getItem('x2_users') || '[]'); } catch(e) { return []; }
   }
 
+  function isDuplicateRegisterError(err) {
+    const msg = String(err?.message || err?.error_description || err?.msg || '').toLowerCase();
+    return msg.includes('already registered') || msg.includes('already been registered') || msg.includes('user already registered') || msg.includes('already exists');
+  }
+
   function buildProfile(data) {
     const prev = (() => { try { return JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}'); } catch(e) { return {}; } })();
     const email = String(data.email || prev.email || '').trim().toLowerCase();
@@ -622,7 +627,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         return;
       }
 
-      await window.Supabase.Auth.signUp(email, pass, { full_name: fullName, phone, address });
+      const signupData = await window.Supabase.Auth.signUp(email, pass, { full_name: fullName, phone, address });
+      const signupUser = signupData?.user || signupData;
+      if (signupUser && Array.isArray(signupUser.identities) && signupUser.identities.length === 0) {
+        showError('register-error', '❌ هذا البريد الإلكتروني أو رقم الهاتف مسجّل بالفعل. جرّب تسجيل الدخول.');
+        if (btn) { btn.disabled = false; btn.textContent = 'إنشاء حساب جديد'; }
+        return;
+      }
 
       // حفظ كل بيانات العميل في حسابه (localStorage) بعد التسجيل
       saveProfile({ name: fullName, email, phone, address, password: pass });
@@ -634,6 +645,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       setTimeout(() => { window.location.href = 'account.html'; }, 2000);
 
     } catch(err) {
+      if (isDuplicateRegisterError(err)) {
+        showError('register-error', '❌ هذا البريد الإلكتروني أو رقم الهاتف مسجّل بالفعل. جرّب تسجيل الدخول.');
+        if (btn) { btn.disabled = false; btn.textContent = 'إنشاء حساب جديد'; }
+        return;
+      }
+
       // fallback محلي
       try {
         const users = readLocalUsers();
@@ -647,7 +664,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       } catch(e2) {}
 
       const msg = err.message || '';
-      if (msg.includes('already registered') || msg.includes('already been registered') || msg.includes('User already registered')) {
+      if (isDuplicateRegisterError(err)) {
         showError('register-error', '❌ هذا البريد الإلكتروني أو رقم الهاتف مسجّل بالفعل. جرّب تسجيل الدخول.');
       } else {
         showError('register-error', '❌ ' + msg);
