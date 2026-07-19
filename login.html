@@ -477,8 +477,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const meta = user.user_metadata || {};
       const name = meta.full_name || meta.name || email.split('@')[0];
 
-      // حفظ الجلسة
-      localStorage.setItem(PROFILE_KEY, JSON.stringify({ name, email: user.email || email, phone: meta.phone || '' }));
+      // حفظ الجلسة (مع دمج البيانات السابقة المخزّنة محلياً مثل العنوان، والاحتفاظ بكلمة السر)
+      const prevProfile = (() => { try { return JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}'); } catch(e) { return {}; } })();
+      localStorage.setItem(PROFILE_KEY, JSON.stringify({ ...prevProfile, name, email: user.email || email, phone: meta.phone || prevProfile.phone || '', address: meta.address || prevProfile.address || '', password: pass }));
       localStorage.setItem('x2_logged', '1');
       if (data.access_token) localStorage.setItem('x2_token', data.access_token);
 
@@ -494,7 +495,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const users = JSON.parse(localStorage.getItem('x2_users') || '[]');
         const user = users.find(u => u.email === email || u.phone === email);
         if (user && user.pass === btoa(pass)) {
-          localStorage.setItem(PROFILE_KEY, JSON.stringify({ name: user.name, email: user.email, phone: user.phone }));
+          localStorage.setItem(PROFILE_KEY, JSON.stringify({ name: user.name, email: user.email, phone: user.phone, address: user.address || '', password: pass }));
           localStorage.setItem('x2_logged', '1');
           showSuccess('تم تسجيل الدخول! 🎉', 'جارٍ تحويلك...');
           setTimeout(() => { window.location.href = 'account.html'; }, 1200);
@@ -540,7 +541,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       await window.Supabase.Auth.signUp(email, pass, { full_name: fullName, phone, address });
 
       // حفظ كل بيانات العميل في حسابه (localStorage) بعد التسجيل
-      localStorage.setItem(PROFILE_KEY, JSON.stringify({ name: fullName, email, phone, address }));
+      localStorage.setItem(PROFILE_KEY, JSON.stringify({ name: fullName, email, phone, address, password: pass }));
       localStorage.setItem('x2_logged', '1');
 
       // حفظ في customers أيضاً
@@ -556,7 +557,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         if (users.find(u => u.email === email)) { showError('register-error', '❌ البريد مسجّل مسبقاً'); if (btn) { btn.disabled = false; btn.textContent = 'إنشاء حساب'; } return; }
         users.push({ name: fullName, email, phone, address, pass: btoa(pass), date: new Date().toISOString() });
         localStorage.setItem('x2_users', JSON.stringify(users));
-        localStorage.setItem(PROFILE_KEY, JSON.stringify({ name: fullName, email, phone, address }));
+        localStorage.setItem(PROFILE_KEY, JSON.stringify({ name: fullName, email, phone, address, password: pass }));
         localStorage.setItem('x2_logged', '1');
         showSuccess('تم إنشاء حسابك! 🎉', 'مرحباً ' + fname + '!');
         setTimeout(() => { window.location.href = 'account.html'; }, 1500);

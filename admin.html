@@ -2353,13 +2353,9 @@ async function changeOrderStatus(id, status){
       if (notif && (customerPhone || customerEmail)) {
         try {
           const adminToken = await getValidAdminToken();
-          // نجيب endpoint الأدمن نفسه عشان نستبعده من إشعارات العميل
-          let adminEndpoint = null;
-          try {
-            const reg = await navigator.serviceWorker.ready;
-            const sub = await reg.pushManager.getSubscription();
-            if (sub) adminEndpoint = sub.endpoint;
-          } catch(e) {}
+          // ملاحظة: لا نستثني جهاز الأدمن هنا لأن الإشعار موجَّه أصلاً لهاتف/إيميل
+          // العميل تحديداً (وليس بثاً عاماً) — استثناء الجهاز كان يمنع وصول الإشعار
+          // عندما يكون الأدمن يختبر الحساب بنفس رقمه/جهازه.
           const pushPayload = {
             title:            notif.title,
             body:             notif.body,
@@ -2368,8 +2364,7 @@ async function changeOrderStatus(id, status){
             status:           status,
             orderId:          orderNum,
             iconText:         notif.icon,
-            emoji:            notif.icon,
-            exclude_endpoint: adminEndpoint
+            emoji:            notif.icon
           };
           if (customerPhone) pushPayload.user_phone = customerPhone;
           else pushPayload.user_email = customerEmail;
