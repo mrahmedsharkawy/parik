@@ -1,5 +1,5 @@
 /* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v58';
+const CACHE = 'bariq-v60';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -88,6 +88,19 @@ async function savePushInboxItem(item) {
     await new Promise(function(resolve, reject) {
       const tx = db.transaction(PUSH_STORE, 'readwrite');
       tx.objectStore(PUSH_STORE).put(item);
+      tx.oncomplete = resolve;
+      tx.onerror = function() { reject(tx.error); };
+    });
+    db.close();
+  } catch(e) {}
+}
+
+async function clearPushInbox() {
+  try {
+    const db = await openPushDb();
+    await new Promise(function(resolve, reject) {
+      const tx = db.transaction(PUSH_STORE, 'readwrite');
+      tx.objectStore(PUSH_STORE).clear();
       tx.oncomplete = resolve;
       tx.onerror = function() { reject(tx.error); };
     });
@@ -255,5 +268,8 @@ self.addEventListener('message', function(e) {
     if ('clearAppBadge' in self.registration) {
       self.registration.clearAppBadge().catch(() => {});
     }
+  }
+  if (e.data && e.data.type === 'CLEAR_PUSH_INBOX') {
+    e.waitUntil(clearPushInbox());
   }
 });

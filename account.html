@@ -2160,16 +2160,60 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     else if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(()=>{});
   };
 
-  window.clearAllNotifs = function() {
-    try { localStorage.removeItem('x2_notifications'); } catch(e) {}
-    if (window.x2Notifications) window.x2Notifications.markAllRead();
+  async function clearPushInboxStore() {
+    if (!('indexedDB' in window)) return;
+    try {
+      const db = await new Promise((resolve, reject) => {
+        const req = indexedDB.open('bariq-push-inbox', 1);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction('notifications', 'readwrite');
+        tx.objectStore('notifications').clear();
+        tx.oncomplete = resolve;
+        tx.onerror = () => reject(tx.error);
+      });
+      db.close();
+    } catch(e) {}
+  }
+
+  function markCurrentOrdersSeen() {
+    try {
+      const seen = JSON.parse(localStorage.getItem('x2_notif_seen') || '{}');
+      const orders = JSON.parse(localStorage.getItem('x2_orders') || '[]');
+      orders.forEach(order => {
+        const oid = order.id || '';
+        if (!oid) return;
+        const status = order.status || 'processing';
+        seen['ord-' + oid] = status;
+        if (order.cashback) seen['cb-' + oid] = 1;
+      });
+      localStorage.setItem('x2_notif_seen', JSON.stringify(seen));
+    } catch(e) {}
+  }
+
+  window.clearAllNotifs = async function() {
+    markCurrentOrdersSeen();
+    try { localStorage.setItem('x2_notifications', '[]'); } catch(e) {}
+    await clearPushInboxStore();
     renderNotifications();
     const b = document.getElementById('aqnNotifBadge');
     if (b) { b.textContent = ''; b.style.display = 'none'; }
     // تحديث badge التنقل السفلي
-    document.querySelectorAll('.account-badge').forEach(el => el.setAttribute('data-count', ''));
+    window.__accountCount = '';
+    document.querySelectorAll('.account-badge').forEach(el => el.setAttribute('data-count', '0'));
     if (typeof clearBadge === 'function') clearBadge();
     else if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(()=>{});
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then(reg => {
+        if (reg.active) {
+          reg.active.postMessage({ type: 'CLEAR_BADGE' });
+          reg.active.postMessage({ type: 'CLEAR_PUSH_INBOX' });
+        }
+      }).catch(()=>{});
+    }
+    window.dispatchEvent(new Event('x2:notif-updated'));
   };
 
   window.toggleNotifSettings = function() {
