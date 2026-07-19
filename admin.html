@@ -76,6 +76,15 @@
 
   .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:0 1px 4px rgba(20,37,70,.05)}
   .card h2{margin:0 0 14px;font-size:1.05rem;color:var(--navy);display:flex;align-items:center;gap:8px}
+  .admin-table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:#fff}
+  .admin-table{width:100%;border-collapse:collapse;min-width:680px;font-size:.86rem}
+  .admin-table th,.admin-table td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:right;vertical-align:middle}
+  .admin-table th{background:#f7f9ff;color:var(--navy);font-weight:800;white-space:nowrap}
+  .admin-table tr:last-child td{border-bottom:none}
+  .rank-list{display:flex;flex-direction:column;gap:8px}
+  .rank-item{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:#fff}
+  .rank-item b{color:var(--navy)}
+  .rank-meta{color:#7a8296;font-size:.78rem}
 
   label{display:block;font-weight:600;font-size:.85rem;margin:12px 0 5px;color:#3a4256}
   input[type=text],input[type=number],input[type=datetime-local],textarea,select{
@@ -212,6 +221,7 @@
   <div class="tab active" data-tab="products" onclick="switchTab('products')">🛍️ المنتجات</div>
   <div class="tab" data-tab="orders" onclick="switchTab('orders')">📊 الطلبات</div>
   <div class="tab" data-tab="marketing" onclick="switchTab('marketing')">🎯 التسويق</div>
+  <div class="tab" data-tab="external-marketing" onclick="switchTab('external-marketing')">🌍 تسويق خارجي</div>
   <div class="tab" data-tab="reports" onclick="switchTab('reports')">📈 التقارير</div>
   <div class="tab" data-tab="comments" onclick="switchTab('comments')">💬 التعليقات</div>
   <div class="tab" data-tab="categories" onclick="switchTab('categories')">🗂️ الفئات</div>
@@ -581,6 +591,96 @@
       </div>
     </div>
 
+  </div>
+
+  <!-- ============ التسويق الخارجي ============ -->
+  <div class="panel" id="panel-external-marketing">
+    <div class="stats-cards" style="margin-bottom:16px">
+      <div class="stat gold"><span class="ic">🌍</span><div class="v" id="em-top-area">—</div><div class="l">أكثر منطقة شراء</div></div>
+      <div class="stat navy"><span class="ic">📣</span><div class="v" id="em-top-platform">—</div><div class="l">أقوى منصة</div></div>
+      <div class="stat green"><span class="ic">💰</span><div class="v" id="em-ad-sales">0 د.إ</div><div class="l">مبيعات من التسويق الخارجي</div></div>
+      <div class="stat orange"><span class="ic">💸</span><div class="v" id="em-ad-spend">0 د.إ</div><div class="l">مصاريف الإعلانات</div></div>
+      <div class="stat red"><span class="ic">📈</span><div class="v" id="em-ad-profit">0 د.إ</div><div class="l">الربح بعد الإعلان</div></div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <h2>🧭 فلترة التقرير</h2>
+      <div class="row">
+        <div>
+          <label>من تاريخ</label>
+          <input type="date" id="em-from" onchange="renderExternalMarketing()">
+        </div>
+        <div>
+          <label>إلى تاريخ</label>
+          <input type="date" id="em-to" onchange="renderExternalMarketing()">
+        </div>
+        <div>
+          <label>المنصة</label>
+          <select id="em-platform-filter" onchange="renderExternalMarketing()">
+            <option value="">كل المنصات</option>
+            <option value="instagram">انستجرام</option>
+            <option value="facebook">فيسبوك</option>
+            <option value="google">جوجل</option>
+            <option value="tiktok">تيك توك</option>
+            <option value="snapchat">سناب شات</option>
+            <option value="whatsapp">واتساب</option>
+            <option value="direct">مباشر</option>
+          </select>
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:8px">
+          <button class="btn-navy" onclick="renderExternalMarketing()">↻ تحديث</button>
+          <button class="btn-gold" onclick="exportExternalMarketingCSV()">⬇ CSV</button>
+        </div>
+      </div>
+      <div class="hint" style="margin-top:12px;margin-bottom:0">يعتمد التقرير على الطلبات والزيارات المتاحة. المنصة تُقرأ من UTM/referrer إن وجدت، أو تُصنف تلقائياً من الروابط والصفحات المحفوظة.</div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>💸 مصاريف الإعلانات</h2>
+        <div class="row">
+          <div><label>التاريخ</label><input type="date" id="em-ad-date"></div>
+          <div><label>المنصة</label><select id="em-ad-platform"><option value="instagram">انستجرام</option><option value="facebook">فيسبوك</option><option value="google">جوجل</option><option value="tiktok">تيك توك</option><option value="snapchat">سناب شات</option><option value="whatsapp">واتساب</option><option value="other">أخرى</option></select></div>
+        </div>
+        <div class="row">
+          <div><label>المنطقة المستهدفة</label><input type="text" id="em-ad-area" placeholder="دبي، أبوظبي، رأس الخيمة"></div>
+          <div><label>مبلغ الإعلان</label><input type="number" id="em-ad-cost" min="0" step="0.01" placeholder="0"></div>
+        </div>
+        <label>اسم الحملة / ملاحظات</label>
+        <input type="text" id="em-ad-note" placeholder="مثال: إعلان انستا لمنتجات رمضان">
+        <button class="btn-gold" style="width:100%;margin-top:12px" onclick="saveExternalAdSpend()">💾 إضافة المصروف</button>
+      </div>
+      <div class="card">
+        <h2>📋 سجل مصاريف الإعلانات</h2>
+        <div class="plist" id="emAdList" style="max-height:310px;overflow-y:auto"><div class="empty">لا توجد مصاريف مسجلة</div></div>
+      </div>
+    </div>
+
+    <div class="grid" style="margin-top:16px">
+      <div class="card"><h2>🏙️ أكثر المناطق شراء</h2><div class="rank-list" id="emTopAreas"><div class="empty">لا توجد بيانات</div></div></div>
+      <div class="card"><h2>📣 أكثر المنصات زواراً ومبيعاً</h2><div class="rank-list" id="emTopPlatforms"><div class="empty">لا توجد بيانات</div></div></div>
+    </div>
+
+    <div class="grid" style="margin-top:16px">
+      <div class="card"><h2>🏆 منتجات أكثر مبيعاً</h2><div class="rank-list" id="emTopSoldProducts"><div class="empty">لا توجد بيانات</div></div></div>
+      <div class="card"><h2>👁️ منتجات أكثر مشاهدة</h2><div class="rank-list" id="emTopViewedProducts"><div class="empty">لا توجد بيانات</div></div></div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h2>📅 شهر المبيعات</h2>
+      <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>الشهر</th><th>عدد الطلبات</th><th>المبيعات</th><th>مصروف الإعلان</th><th>الربح بعد الإعلان</th></tr></thead><tbody id="emMonthlySales"><tr><td colspan="5" class="empty">لا توجد بيانات</td></tr></tbody></table></div>
+    </div>
+
+    <div class="grid" style="margin-top:16px">
+      <div class="card">
+        <h2>🧾 التاريخ / المنصة / المنطقة</h2>
+        <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>التاريخ</th><th>المنصة</th><th>المنطقة</th><th>الطلبات</th><th>المبيعات</th></tr></thead><tbody id="emAttributionRows"><tr><td colspan="5" class="empty">لا توجد بيانات</td></tr></tbody></table></div>
+      </div>
+      <div class="card">
+        <h2>📊 ربح الإعلان</h2>
+        <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>الفترة</th><th>المبيعات</th><th>مصاريف الإعلان</th><th>الربح</th><th>ROAS</th></tr></thead><tbody id="emAdSummary"><tr><td colspan="5" class="empty">لا توجد بيانات</td></tr></tbody></table></div>
+      </div>
+    </div>
   </div>
 
   <!-- ============ التقارير ============ -->
@@ -1205,6 +1305,7 @@ function switchTab(name){
   if(name==='comments'){ fillProductSelects(); $('commentList').innerHTML='<div class="empty">جارٍ التحميل...</div>'; loadSbReviews().then(()=>renderComments()); }
   if(name==='orders'){ fillProductSelects(); syncStoreOrders(true); renderStats(); renderOrders(); if(!$('o-date').value) $('o-date').value = isoToLocalInput(new Date().toISOString()); }
   if(name==='marketing'){ loadPushSubscribersCount(); }
+  if(name==='external-marketing'){ renderExternalMarketing(); }
 }
 
 async function loadPushSubscribersCount() {
@@ -2954,6 +3055,191 @@ async function renderVisitorsStats() {
   });
 }
 
+/* ================= التسويق الخارجي ================= */
+const LS_EXTERNAL_ADS = 'x2_external_ad_spend';
+const EM_PLATFORM_LABELS = {instagram:'انستجرام',facebook:'فيسبوك',google:'جوجل',tiktok:'تيك توك',snapchat:'سناب شات',whatsapp:'واتساب',direct:'مباشر',other:'أخرى'};
+const EM_MONTHS = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+
+function getExternalAds(){ try { return JSON.parse(localStorage.getItem(LS_EXTERNAL_ADS)||'[]'); } catch(e) { return []; } }
+function saveExternalAds(rows){ localStorage.setItem(LS_EXTERNAL_ADS, JSON.stringify(rows)); }
+function moneyFmt(n){ return (Number(n)||0).toLocaleString('ar-EG',{maximumFractionDigits:2}) + ' د.إ'; }
+function emDateValue(v){ const d = new Date(v||Date.now()); return isNaN(d) ? new Date() : d; }
+function emDateKey(v){ const d = emDateValue(v); return d.toISOString().slice(0,10); }
+function emMonthKey(v){ const d = emDateValue(v); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'); }
+function emMonthLabel(key){ const parts = String(key).split('-'); const m = Math.max(0, Math.min(11, Number(parts[1])-1)); return EM_MONTHS[m] + ' ' + parts[0]; }
+function emNormalizePlatform(value){
+  const s = String(value||'').toLowerCase();
+  if(/instagram|insta|ig|انستا|انستجرام/.test(s)) return 'instagram';
+  if(/facebook|fb|فيس|فيسبوك/.test(s)) return 'facebook';
+  if(/google|gclid|جوجل/.test(s)) return 'google';
+  if(/tiktok|تيك/.test(s)) return 'tiktok';
+  if(/snap|snapchat|سناب/.test(s)) return 'snapchat';
+  if(/whatsapp|wa\.me|واتساب/.test(s)) return 'whatsapp';
+  if(/direct|مباشر/.test(s)) return 'direct';
+  return s ? 'other' : 'direct';
+}
+function emGuessPlatform(row){
+  const txt = [row.platform,row.source,row.utm_source,row.referrer,row.ref,row.page,row.url,row.notes,row.note].filter(Boolean).join(' ');
+  return emNormalizePlatform(txt);
+}
+function emAreaFromOrder(o){
+  const address = o.address || o.shipping_address || o.shippingAddress || '';
+  const full = o.address_full || o.shipping || {};
+  const area = o.city || o.shipping_city || o.customerCity || full.city || full.area || address || 'غير محدد';
+  return String(area||'غير محدد').split('،')[0].split(',')[0].trim() || 'غير محدد';
+}
+function emOrderPlatform(o){ return emGuessPlatform(o) || emNormalizePlatform(o.platform || o.source || o.utm_source); }
+function emOrderItems(o){ return Array.isArray(o.items) ? o.items : []; }
+function emAllOrders(){
+  let local = [];
+  try { local = JSON.parse(localStorage.getItem('x2_orders')||'[]'); } catch(e) {}
+  const seen = new Set();
+  return [...getOrders(), ...local].filter(o => {
+    const id = o.id || o.orderNumber || o.order_number || JSON.stringify([o.date,o.total,o.customer]);
+    if(seen.has(id)) return false;
+    seen.add(id); return true;
+  });
+}
+function emInRange(date, from, to){
+  const key = emDateKey(date);
+  return (!from || key >= from) && (!to || key <= to);
+}
+async function emFetchVisitors(){
+  const cached = getVisitors();
+  const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+  try {
+    const adminToken = await getValidAdminToken() || ANON;
+    const headers = { apikey: ANON, Authorization: 'Bearer ' + adminToken };
+    let res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors?select=visited_at,page,city,country,referrer,source,utm_source&order=visited_at.desc&limit=1000', { headers });
+    let rows = await res.json();
+    if(!Array.isArray(rows)) {
+      res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors?select=visited_at,page,city,country&order=visited_at.desc&limit=1000', { headers });
+      rows = await res.json();
+    }
+    if(Array.isArray(rows)) return rows;
+  } catch(e) {}
+  return cached;
+}
+function emAddToMap(map, key, data){
+  const k = key || 'غير محدد';
+  if(!map[k]) map[k] = {orders:0, sales:0, visits:0, cost:0, qty:0};
+  Object.keys(data||{}).forEach(p => map[k][p] = (map[k][p]||0) + (Number(data[p])||0));
+}
+function emRankHTML(entries, type){
+  if(!entries.length) return '<div class="empty">لا توجد بيانات</div>';
+  return entries.slice(0,10).map(([name,d],i) => `<div class="rank-item"><span><b>${i+1}. ${esc(name)}</b><div class="rank-meta">${d.orders||0} طلب • ${d.visits||0} زيارة</div></span><b>${type==='qty' ? (d.qty||0) + ' قطعة' : moneyFmt(d.sales||0)}</b></div>`).join('');
+}
+function emProductName(id, fallback){ const p = products.find(x=>String(x.id)===String(id)); return p ? getT(p.name) : (fallback || 'منتج'); }
+function emProductViews(visitors){
+  const map = {};
+  visitors.forEach(v => {
+    const page = String(v.page||v.url||'');
+    const m = page.match(/product\.html\?id=([^&]+)/i) || page.match(/product[^0-9]*([0-9]+)/i);
+    if(!m) return;
+    const id = decodeURIComponent(m[1]);
+    const name = emProductName(id, 'منتج #' + id);
+    if(!map[name]) map[name] = {visits:0, sales:0, orders:0, qty:0};
+    map[name].visits++;
+  });
+  return Object.entries(map).sort((a,b)=>b[1].visits-a[1].visits);
+}
+function renderExternalAdList(){
+  const list = $('emAdList'); if(!list) return;
+  const rows = getExternalAds().sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  if(!rows.length){ list.innerHTML = '<div class="empty">لا توجد مصاريف مسجلة</div>'; return; }
+  list.innerHTML = rows.map(r => `<div class="ord-row"><div class="oinfo"><b>${esc(EM_PLATFORM_LABELS[r.platform]||r.platform||'أخرى')} — ${moneyFmt(r.cost)}</b><br><small>${esc(r.date||'')} • ${esc(r.area||'كل المناطق')} ${r.note ? '• '+esc(r.note) : ''}</small></div><button class="btn-danger btn-sm" onclick="deleteExternalAdSpend(${Number(r.id)})">حذف</button></div>`).join('');
+}
+function saveExternalAdSpend(){
+  const cost = Number($('em-ad-cost')?.value)||0;
+  if(cost<=0){ toast('أدخل مبلغ الإعلان'); return; }
+  const rows = getExternalAds();
+  rows.unshift({id:Date.now(),date:$('em-ad-date').value||emDateKey(new Date()),platform:$('em-ad-platform').value||'other',area:$('em-ad-area').value.trim(),cost,note:$('em-ad-note').value.trim()});
+  saveExternalAds(rows);
+  ['em-ad-cost','em-ad-area','em-ad-note'].forEach(id=>{ if($(id)) $(id).value=''; });
+  renderExternalMarketing();
+  toast('✅ تم حفظ مصروف الإعلان');
+}
+function deleteExternalAdSpend(id){
+  if(!confirm('حذف مصروف الإعلان؟')) return;
+  saveExternalAds(getExternalAds().filter(r=>Number(r.id)!==Number(id)));
+  renderExternalMarketing();
+}
+async function renderExternalMarketing(){
+  if(!$('panel-external-marketing')) return;
+  const today = emDateKey(new Date());
+  if($('em-ad-date') && !$('em-ad-date').value) $('em-ad-date').value = today;
+  const from = $('em-from')?.value || '';
+  const to = $('em-to')?.value || '';
+  const platformFilter = $('em-platform-filter')?.value || '';
+  const orders = emAllOrders().filter(o => o.status !== 'cancelled' && emInRange(o.date||o.created_at||o.createdAt, from, to)).filter(o => !platformFilter || emOrderPlatform(o) === platformFilter);
+  const visitors = (await emFetchVisitors()).filter(v => emInRange(v.visited_at||v.date, from, to)).filter(v => !platformFilter || emGuessPlatform(v) === platformFilter);
+  const ads = getExternalAds().filter(a => emInRange(a.date, from, to)).filter(a => !platformFilter || a.platform === platformFilter);
+  const areaMap = {}, platformMap = {}, monthMap = {}, attrMap = {}, productSold = {};
+  orders.forEach(o => {
+    const sales = Number(o.total)||0;
+    const area = emAreaFromOrder(o);
+    const platform = emOrderPlatform(o);
+    const date = emDateKey(o.date||o.created_at||o.createdAt);
+    emAddToMap(areaMap, area, {orders:1, sales});
+    emAddToMap(platformMap, EM_PLATFORM_LABELS[platform]||platform, {orders:1, sales});
+    emAddToMap(monthMap, emMonthKey(o.date||o.created_at||o.createdAt), {orders:1, sales});
+    emAddToMap(attrMap, [date, EM_PLATFORM_LABELS[platform]||platform, area].join('|'), {orders:1, sales});
+    emOrderItems(o).forEach(item => {
+      const id = item.id || item.productId || item.title || item.name;
+      const qty = Number(item.qty||item.quantity||1);
+      const name = emProductName(id, item.title||item.name||'منتج');
+      if(!productSold[name]) productSold[name] = {qty:0, sales:0, orders:0, visits:0};
+      productSold[name].qty += qty;
+      productSold[name].orders += 1;
+      productSold[name].sales += sales;
+    });
+  });
+  visitors.forEach(v => {
+    const platform = emGuessPlatform(v);
+    const area = [v.city,v.country].filter(Boolean).join('، ') || 'غير محدد';
+    emAddToMap(platformMap, EM_PLATFORM_LABELS[platform]||platform, {visits:1});
+    if(area !== 'غير محدد') emAddToMap(areaMap, area, {visits:1});
+  });
+  ads.forEach(a => {
+    emAddToMap(platformMap, EM_PLATFORM_LABELS[a.platform]||a.platform, {cost:Number(a.cost)||0});
+    emAddToMap(monthMap, emMonthKey(a.date), {cost:Number(a.cost)||0});
+  });
+  const totalSales = orders.reduce((s,o)=>s+(Number(o.total)||0),0);
+  const totalCost = ads.reduce((s,a)=>s+(Number(a.cost)||0),0);
+  const topArea = Object.entries(areaMap).sort((a,b)=>(b[1].orders-b[1].orders)||(b[1].sales-a[1].sales))[0];
+  const topPlatform = Object.entries(platformMap).sort((a,b)=>(b[1].sales+b[1].visits)-(a[1].sales+a[1].visits))[0];
+  if($('em-top-area')) $('em-top-area').textContent = topArea ? topArea[0] : '—';
+  if($('em-top-platform')) $('em-top-platform').textContent = topPlatform ? topPlatform[0] : '—';
+  if($('em-ad-sales')) $('em-ad-sales').textContent = moneyFmt(totalSales);
+  if($('em-ad-spend')) $('em-ad-spend').textContent = moneyFmt(totalCost);
+  if($('em-ad-profit')) $('em-ad-profit').textContent = moneyFmt(totalSales-totalCost);
+  if($('emTopAreas')) $('emTopAreas').innerHTML = emRankHTML(Object.entries(areaMap).sort((a,b)=>(b[1].orders-a[1].orders)||(b[1].sales-a[1].sales)), 'sales');
+  if($('emTopPlatforms')) $('emTopPlatforms').innerHTML = emRankHTML(Object.entries(platformMap).sort((a,b)=>(b[1].sales+b[1].visits)-(a[1].sales+a[1].visits)), 'sales');
+  if($('emTopSoldProducts')) $('emTopSoldProducts').innerHTML = emRankHTML(Object.entries(productSold).sort((a,b)=>b[1].qty-a[1].qty), 'qty');
+  if($('emTopViewedProducts')) $('emTopViewedProducts').innerHTML = emRankHTML(emProductViews(visitors), 'qty');
+  if($('emMonthlySales')) $('emMonthlySales').innerHTML = Object.entries(monthMap).sort((a,b)=>a[0].localeCompare(b[0])).map(([m,d]) => `<tr><td>${esc(emMonthLabel(m))}</td><td>${d.orders||0}</td><td>${moneyFmt(d.sales||0)}</td><td>${moneyFmt(d.cost||0)}</td><td>${moneyFmt((d.sales||0)-(d.cost||0))}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">لا توجد بيانات</td></tr>';
+  if($('emAttributionRows')) $('emAttributionRows').innerHTML = Object.entries(attrMap).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,80).map(([k,d]) => { const [date,platform,area]=k.split('|'); return `<tr><td>${esc(date)}</td><td>${esc(platform)}</td><td>${esc(area)}</td><td>${d.orders||0}</td><td>${moneyFmt(d.sales||0)}</td></tr>`; }).join('') || '<tr><td colspan="5" class="empty">لا توجد بيانات</td></tr>';
+  const periodRanges = {
+    daily: d => emDateKey(d) === today,
+    monthly: d => { const x = emDateValue(d), n = new Date(); return x.getFullYear() === n.getFullYear() && x.getMonth() === n.getMonth(); },
+    yearly: d => emDateValue(d).getFullYear() === new Date().getFullYear()
+  };
+  if($('emAdSummary')) $('emAdSummary').innerHTML = ['daily','monthly','yearly'].map(period => {
+    const label = period==='daily'?'يومي':period==='monthly'?'شهري':'سنوي';
+    const sales = orders.filter(o => periodRanges[period](o.date||o.created_at||o.createdAt)).reduce((s,o)=>s+(Number(o.total)||0),0);
+    const cost = ads.filter(a => periodRanges[period](a.date)).reduce((s,a)=>s+(Number(a.cost)||0),0);
+    const profit = sales-cost, roas = cost>0 ? (sales/cost).toFixed(2) : '—';
+    return `<tr><td>${label}</td><td>${moneyFmt(sales)}</td><td>${moneyFmt(cost)}</td><td>${moneyFmt(profit)}</td><td>${roas}</td></tr>`;
+  }).join('');
+  renderExternalAdList();
+}
+function exportExternalMarketingCSV(){
+  const rows = [['التاريخ','المنصة','المنطقة','مبلغ الإعلان']].concat(getExternalAds().map(a => [a.date, EM_PLATFORM_LABELS[a.platform]||a.platform, a.area||'', a.cost||0]));
+  const csv = rows.map(r => r.map(v => '"'+String(v||'').replace(/"/g,'""')+'"').join(',')).join('\n');
+  const blob = new Blob(['\ufeff'+csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'external_marketing_' + emDateKey(new Date()) + '.csv'; a.click();
+}
+
 function clearVisitors() {
   if (!confirm('مسح سجل الزيارات؟')) return;
   localStorage.removeItem(LS_VISITORS);
@@ -3482,6 +3768,9 @@ window.switchTab = async function(name) {
     } catch(e) {
       renderBestSellers([...getOrders(), ...JSON.parse(localStorage.getItem('x2_orders')||'[]')]);
     }
+  }
+  if (name === 'external-marketing') {
+    renderExternalMarketing();
   }
   if (name === 'reports') {
     renderReports(); // بدون await — يعرض الكاش فوراً ويحدّث في الخلفية
