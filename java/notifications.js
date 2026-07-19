@@ -1,1 +1,123 @@
-﻿const VAPID_PUBLIC_KEY="BPojY-23BXbIfa1IRkkQD3vAELjTn3nltgFBrlEIjZ3aEbphXAQvFY2E5B2R_mfikZLhGPo0lBeCedB8qoP5-SE";function urlBase64ToUint8Array(base64String){const base64=(base64String+"=".repeat((4-base64String.length%4)%4)).replace(/-/g,"+").replace(/_/g,"/"),raw=window.atob(base64);return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)))}async function registerSW(){if(!("serviceWorker"in navigator))return null;try{return await navigator.serviceWorker.register("/sw.js")}catch(e){return null}}async function subscribeToPush(){if(!("serviceWorker"in navigator)||!("PushManager"in window))return null;try{const reg=await navigator.serviceWorker.ready;if("granted"!==await Notification.requestPermission())return null;let sub=await reg.pushManager.getSubscription();if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:!0,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)});updateBadge(0);saveSubscriptionToSupabase(sub).catch(e=>console.warn("Failed to save subscription:",e));return sub}catch(err){return console.warn("Push subscription failed:",err),null}}async function saveSubscriptionToSupabase(sub){const ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E";try{const profile=(()=>{try{return JSON.parse(localStorage.getItem("x2_profile")||"{}")}catch(e){return{}}})(),p256dh=sub.getKey("p256dh"),auth=sub.getKey("auth");return(await fetch("https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/push_subscriptions",{method:"POST",headers:{apikey:ANON,Authorization:"Bearer "+ANON,"Content-Type":"application/json",Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({endpoint:sub.endpoint,p256dh:p256dh?btoa(String.fromCharCode(...new Uint8Array(p256dh))):"",auth:auth?btoa(String.fromCharCode(...new Uint8Array(auth))):"",user_phone:profile.phone||"",user_email:profile.email||"",created_at:(new Date).toISOString()})})).ok}catch(e){return console.warn("Failed to save subscription:",e),!1}}async function unsubscribeFromPush(){if(!("serviceWorker"in navigator))return;const reg=await navigator.serviceWorker.ready,sub=await reg.pushManager.getSubscription();sub&&await sub.unsubscribe(),clearBadge()}function updateBadge(count){"setAppBadge"in navigator&&(count>0?navigator.setAppBadge(count).catch(()=>{}):navigator.clearAppBadge().catch(()=>{}))}function clearBadge(){updateBadge(0)}async function getPushStatus(){if(!("serviceWorker"in navigator)||!("PushManager"in window))return"unsupported";if("denied"===Notification.permission)return"denied";const reg=await navigator.serviceWorker.ready;return await reg.pushManager.getSubscription()?"subscribed":"unsubscribed"}async function initPushButton(){const btns=document.querySelectorAll("#push-subscribe-btn");if(!btns.length)return;const ACTIVE="&#128276; &#1605;&#1601;&#1593;&#1604; &#10003;",ACTIVE_FULL="&#128276; &#1575;&#1604;&#1573;&#1588;&#1593;&#1575;&#1585;&#1575;&#1578; &#1605;&#1601;&#1593;&#1604;&#1577;",INACTIVE="&#128277; &#1578;&#1601;&#1593;&#1610;&#1604; &#1575;&#1604;&#1573;&#1588;&#1593;&#1575;&#1585;&#1575;&#1578;",UNSUPPORTED="&#128276; &#1575;&#1604;&#1573;&#1588;&#1593;&#1575;&#1585;&#1575;&#1578; &#1594;&#1610;&#1585; &#1605;&#1583;&#1593;&#1608;&#1605;&#1577; &#1593;&#1604;&#1609; &#1607;&#1584;&#1575; &#1575;&#1604;&#1605;&#1578;&#1589;&#1601;&#1581;";function paint(active,text){btns.forEach(b=>{b.disabled=!1;b.style.display="inline-flex";b.style.opacity="";b.innerHTML=text||(active?ACTIVE:INACTIVE);b.style.background=active?"#27ae60":"";b.style.color=active?"#fff":""})}function setDisabled(text){btns.forEach(b=>{b.disabled=!0;b.style.display="inline-flex";b.style.opacity=".75";b.innerHTML=text})}const status=await getPushStatus();if("unsupported"===status){setDisabled(UNSUPPORTED);return}if("subscribed"===status)paint(!0,ACTIVE_FULL);else paint(!1,INACTIVE);btns.forEach(btn=>{btn.onclick=async()=>{const wasActive=(await getPushStatus())==="subscribed";if(wasActive){paint(!1,INACTIVE);unsubscribeFromPush().catch(()=>{});return}btns.forEach(b=>{b.disabled=!0;b.innerHTML="&#9203;..."});const sub=await subscribeToPush();if(sub)paint(!0,ACTIVE);else paint(!1,INACTIVE)}})}(async()=>{await registerSW(),initPushButton(),"clearAppBadge"in navigator&&navigator.clearAppBadge().catch(()=>{}),"serviceWorker"in navigator&&navigator.serviceWorker.controller&&navigator.serviceWorker.controller.postMessage({type:"CLEAR_BADGE"});try{const unseen=JSON.parse(localStorage.getItem("x2_orders")||"[]").filter(o=>!o.seen).length;unseen>0&&updateBadge(unseen)}catch(e){}})();
+const VAPID_PUBLIC_KEY = "BPojY-23BXbIfa1IRkkQD3vAELjTn3nltgFBrlEIjZ3aEbphXAQvFY2E5B2R_mfikZLhGPo0lBeCedB8qoP5-SE";
+
+function urlBase64ToUint8Array(e) {
+    const r = (e + "=".repeat((4 - e.length % 4) % 4)).replace(/-/g, "+").replace(/_/g, "/"), t = window.atob(r);
+    return Uint8Array.from([ ...t ].map(e => e.charCodeAt(0)));
+}
+
+async function registerSW() {
+    if (!("serviceWorker" in navigator)) return null;
+    try {
+        return await navigator.serviceWorker.register("/sw.js");
+    } catch (e) {
+        return null;
+    }
+}
+
+async function subscribeToPush() {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) return null;
+    try {
+        const e = await navigator.serviceWorker.ready;
+        if ("granted" !== await Notification.requestPermission()) return null;
+        let r = await e.pushManager.getSubscription();
+        return r || (r = await e.pushManager.subscribe({
+            userVisibleOnly: !0,
+            applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+        })), updateBadge(0), saveSubscriptionToSupabase(r).catch(e => console.warn("Failed to save subscription:", e)), 
+        r;
+    } catch (e) {
+        return console.warn("Push subscription failed:", e), null;
+    }
+}
+
+async function saveSubscriptionToSupabase(e) {
+    const r = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E";
+    try {
+        const t = (() => {
+            try {
+                return JSON.parse(localStorage.getItem("x2_profile") || "{}");
+            } catch (e) {
+                return {};
+            }
+        })(), a = e.getKey("p256dh"), i = e.getKey("auth"), l = String(t.email || t.authEmail || "").trim().toLowerCase();
+        return (await fetch("https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/push_subscriptions", {
+            method: "POST",
+            headers: {
+                apikey: r,
+                Authorization: "Bearer " + r,
+                "Content-Type": "application/json",
+                Prefer: "resolution=merge-duplicates,return=minimal"
+            },
+            body: JSON.stringify({
+                endpoint: e.endpoint,
+                p256dh: a ? btoa(String.fromCharCode(...new Uint8Array(a))) : "",
+                auth: i ? btoa(String.fromCharCode(...new Uint8Array(i))) : "",
+                user_phone: t.phone || "",
+                user_email: l,
+                created_at: (new Date).toISOString()
+            })
+        })).ok;
+    } catch (e) {
+        return console.warn("Failed to save subscription:", e), !1;
+    }
+}
+
+async function unsubscribeFromPush() {
+    if (!("serviceWorker" in navigator)) return;
+    const e = await navigator.serviceWorker.ready, r = await e.pushManager.getSubscription();
+    r && await r.unsubscribe(), clearBadge();
+}
+
+function updateBadge(e) {
+    "setAppBadge" in navigator && (e > 0 ? navigator.setAppBadge(e).catch(() => {}) : navigator.clearAppBadge().catch(() => {}));
+}
+
+function clearBadge() {
+    updateBadge(0);
+}
+
+async function getPushStatus() {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) return "unsupported";
+    if ("denied" === Notification.permission) return "denied";
+    const e = await navigator.serviceWorker.ready;
+    return await e.pushManager.getSubscription() ? "subscribed" : "unsubscribed";
+}
+
+async function initPushButton() {
+    const e = document.querySelectorAll("#push-subscribe-btn");
+    if (!e.length) return;
+    const r = "&#128276; &#1605;&#1601;&#1593;&#1604; &#10003;", t = "&#128277; &#1578;&#1601;&#1593;&#1610;&#1604; &#1575;&#1604;&#1573;&#1588;&#1593;&#1575;&#1585;&#1575;&#1578;";
+    function a(a, i) {
+        e.forEach(e => {
+            e.disabled = !1, e.style.display = "inline-flex", e.style.opacity = "", e.innerHTML = i || (a ? r : t), 
+            e.style.background = a ? "#27ae60" : "", e.style.color = a ? "#fff" : "";
+        });
+    }
+    const i = await getPushStatus();
+    if ("unsupported" === i) return n = "&#128276; &#1575;&#1604;&#1573;&#1588;&#1593;&#1575;&#1585;&#1575;&#1578; &#1594;&#1610;&#1585; &#1605;&#1583;&#1593;&#1608;&#1605;&#1577; &#1593;&#1604;&#1609; &#1607;&#1584;&#1575; &#1575;&#1604;&#1605;&#1578;&#1589;&#1601;&#1581;", 
+    void e.forEach(e => {
+        e.disabled = !0, e.style.display = "inline-flex", e.style.opacity = ".75", e.innerHTML = n;
+    });
+    var n;
+    "subscribed" === i ? a(!0, "&#128276; &#1575;&#1604;&#1573;&#1588;&#1593;&#1575;&#1585;&#1575;&#1578; &#1605;&#1601;&#1593;&#1604;&#1577;") : a(!1, t), 
+    e.forEach(i => {
+        i.onclick = async () => {
+            if ("subscribed" === await getPushStatus()) return a(!1, t), void unsubscribeFromPush().catch(() => {});
+            e.forEach(e => {
+                e.disabled = !0, e.innerHTML = "&#9203;...";
+            });
+            await subscribeToPush() ? a(!0, r) : a(!1, t);
+        };
+    });
+}
+
+(async () => {
+    await registerSW(), initPushButton(), "clearAppBadge" in navigator && navigator.clearAppBadge().catch(() => {}), 
+    "serviceWorker" in navigator && navigator.serviceWorker.controller && navigator.serviceWorker.controller.postMessage({
+        type: "CLEAR_BADGE"
+    });
+    try {
+        const e = JSON.parse(localStorage.getItem("x2_orders") || "[]").filter(e => !e.seen).length;
+        e > 0 && updateBadge(e);
+    } catch (e) {}
+})();

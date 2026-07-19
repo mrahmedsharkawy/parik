@@ -1,5 +1,5 @@
 ﻿/* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v88';
+const CACHE = 'bariq-v92';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -200,9 +200,21 @@ self.addEventListener('push', function(e) {
   try { data = e.data ? e.data.json() : {}; } catch(err) {
     data = { title: '\u0628\u0631\u064a\u0642', body: e.data ? e.data.text() : '' };
   }
-  const title   = data.title || '\u0628\u0631\u064a\u0642';
+  const titleText = data.title || '\u0628\u0631\u064a\u0642';
+  const textForIcon = String((data.type || '') + ' ' + (data.status || '') + ' ' + title + ' ' + (data.body || '')).toLowerCase();
+  const inferredEmoji = data.iconText || data.emoji || (
+    /ship|\u0634\u062d\u0646|delivered|\u062a\u0648\u0635\u064a\u0644|delivery/.test(textForIcon) ? '🚚' :
+    /pending|processing|\u0642\u064a\u062f|\u0627\u0644\u0645\u0639\u0627\u0644\u062c/.test(textForIcon) ? '⏳' :
+    /confirm|\u0645\u0624\u0643\u062f/.test(textForIcon) ? '✅' :
+    /cancel|\u0645\u0644\u063a/.test(textForIcon) ? '❌' :
+    /return|\u0645\u0631\u062a\u062c\u0639/.test(textForIcon) ? '↩️' :
+    /cashback|\u0643\u0627\u0634\s*\u0628\u0627\u0643/.test(textForIcon) ? '🤑' :
+    /offer|discount|\u0639\u0631\u0636|\u062e\u0635\u0645/.test(textForIcon) ? '🎁' : '🔔'
+  );
+  const displayTitle = titleText.startsWith(inferredEmoji) ? titleText : (inferredEmoji + ' ' + titleText);
+  const displayBody  = (data.body || '').trim();
   const options = {
-    body:    data.body   || '',
+    body:    displayBody,
     icon:    data.icon   || '/assets/icon w.png',
     badge:   '/assets/icon b.png',
     image:   data.image  || undefined,
@@ -219,8 +231,8 @@ self.addEventListener('push', function(e) {
       const inboxItem = {
         id: data.id || ('push-' + Date.now()),
         type: data.type || 'push',
-        icon: data.iconText || data.emoji || 'ðŸ””',
-        title: title,
+        icon: inferredEmoji,
+        title: displayTitle,
         msg: data.body || '',
         date: data.date || (new Date()).toISOString(),
         read: false,
@@ -235,7 +247,7 @@ self.addEventListener('push', function(e) {
       if ('setAppBadge' in self.registration) {
         await self.registration.setAppBadge(_badgeCount).catch(() => {});
       }
-      await self.registration.showNotification(title, options);
+      await self.registration.showNotification(displayTitle, options);
     })()
   );
 });

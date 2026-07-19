@@ -2375,10 +2375,12 @@ async function changeOrderStatus(id, status){
             title:            notif.title,
             body:             notif.body,
             url:              '/account.html',
+            type:             'order_update',
+            status:           status,
             exclude_endpoint: adminEndpoint
           };
           if (customerPhone) pushPayload.user_phone = customerPhone;
-          else pushPayload.user_email = customerEmail;
+          if (customerEmail) pushPayload.user_email = customerEmail;
           await fetch('https://knleehjjejfeobcmpwnw.supabase.co/functions/v1/hyper-api', {
             method: 'POST',
             headers: {

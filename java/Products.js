@@ -1236,7 +1236,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                     cashbackStatus: "pending",
                     customerName: profile.name || "",
                     customerPhone: profile.phone || "",
-                    customerEmail: profile.email || "",
+                    customerEmail: profile.email || profile.authEmail || "",
                     address: profile.address_full || null
                 });
             } catch (err) {
@@ -1314,12 +1314,14 @@ document.addEventListener("DOMContentLoaded", async function() {
             const msgText = msgLines.join("\n");
             const msg = encodeURIComponent(msgText);
             let accountReturnTimer;
+            let didReturnToAccount = !1;
             const returnToAccount = () => {
-                if (!sessionStorage.getItem("x2_after_wa")) return;
+                if (didReturnToAccount) return;
+                didReturnToAccount = !0;
                 sessionStorage.removeItem("x2_after_wa");
                 document.removeEventListener("visibilitychange", handleReturn);
                 clearTimeout(accountReturnTimer);
-                setTimeout(() => window.location.replace(`/account.html?from=whatsapp&t=${Date.now()}`), 150);
+                setTimeout(() => window.location.replace(`/account.html?from=whatsapp&section=orders&t=${Date.now()}`), 120);
             };
             function handleReturn() {
                 if (!document.hidden) returnToAccount();
@@ -1327,7 +1329,9 @@ document.addEventListener("DOMContentLoaded", async function() {
             sessionStorage.setItem("x2_after_wa", "1");
             document.addEventListener("visibilitychange", handleReturn);
             window.open(`https://wa.me/971554423151?text=${msg}`, "_blank", "noopener");
-            accountReturnTimer = setTimeout(returnToAccount, 2e3);
+            accountReturnTimer = setTimeout(() => {
+                if (!document.hidden) returnToAccount();
+            }, 2400);
         }));
         const relEl = document.getElementById("relatedProducts");
         if (relEl && "function" == typeof createProductCard) {

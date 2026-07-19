@@ -11,7 +11,8 @@
       var profile={};
       try{profile=JSON.parse(localStorage.getItem('x2_profile')||'{}');}catch(e){}
       var p256dh=sub.getKey('p256dh'),auth=sub.getKey('auth');
-      await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/push_subscriptions',{method:'POST',headers:{apikey:anon,Authorization:'Bearer '+anon,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({endpoint:sub.endpoint,p256dh:p256dh?btoa(String.fromCharCode.apply(null,new Uint8Array(p256dh))):'',auth:auth?btoa(String.fromCharCode.apply(null,new Uint8Array(auth))):'',user_phone:profile.phone||'',user_email:profile.email||'',created_at:(new Date).toISOString()})});
+      var email=(profile.email||profile.authEmail||'').trim().toLowerCase();
+      await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/push_subscriptions',{method:'POST',headers:{apikey:anon,Authorization:'Bearer '+anon,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({endpoint:sub.endpoint,p256dh:p256dh?btoa(String.fromCharCode.apply(null,new Uint8Array(p256dh))):'',auth:auth?btoa(String.fromCharCode.apply(null,new Uint8Array(auth))):'',user_phone:profile.phone||'',user_email:email,created_at:(new Date).toISOString()})});
     }catch(e){}
   }
   async function activatePushFromWelcome(btn){
