@@ -30,11 +30,13 @@
       if(modal)setTimeout(function(){modal.style.display='flex';},700);
     }catch(e){}
   };
-  document.addEventListener('pointerdown',function(e){
+  document.addEventListener('click',function(e){
     var btn=e.target&&e.target.closest&&e.target.closest('#push-subscribe-btn');
     var modal=document.getElementById('pushWelcomeModal');
-    if(btn&&modal&&modal.style.display!=='none')setTimeout(function(){window.dismissPushWelcome();},220);
-  },true);
+    if(btn&&modal&&modal.style.display!=='none')setTimeout(function(){
+      if(!('Notification'in window)||Notification.permission==='granted')window.dismissPushWelcome();
+    },1200);
+  });
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',window.maybeShowPushWelcome,{once:true});
   else window.maybeShowPushWelcome();
 })();
