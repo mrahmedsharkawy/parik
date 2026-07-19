@@ -553,10 +553,19 @@ function x2VisitorAreaFallback() {
         }) ];
         let finalText = variants.find(v => v.length <= 2500) || variants[variants.length - 1].slice(0, 2400);
         const msg = encodeURIComponent(finalText), url = `https://wa.me/${phone}?text=${msg}`;
-        sessionStorage.setItem("x2_after_wa", "1"), document.addEventListener("visibilitychange", function handleVisibilityReturn() {
-            !document.hidden && sessionStorage.getItem("x2_after_wa") && (sessionStorage.removeItem("x2_after_wa"), 
-            document.removeEventListener("visibilitychange", handleVisibilityReturn), window.location.href = "/account.html");
-        });
+        let accountReturnTimer;
+        const returnToAccount = () => {
+            if (!sessionStorage.getItem("x2_after_wa")) return;
+            sessionStorage.removeItem("x2_after_wa");
+            document.removeEventListener("visibilitychange", handleVisibilityReturn);
+            clearTimeout(accountReturnTimer);
+            setTimeout(() => window.location.replace(`/account.html?from=whatsapp&t=${Date.now()}`), 150);
+        };
+        function handleVisibilityReturn() {
+            if (!document.hidden) returnToAccount();
+        }
+        sessionStorage.setItem("x2_after_wa", "1");
+        document.addEventListener("visibilitychange", handleVisibilityReturn);
         window.open(url, "_blank", "noopener");
         try {
             const summaryTotal = function() {
@@ -672,9 +681,7 @@ function x2VisitorAreaFallback() {
                 const banner = document.createElement("div");
                 banner.style.cssText = "position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#152546;color:#D4AF37;padding:14px 24px;border-radius:12px;font-size:0.9rem;font-weight:700;z-index:99999;box-shadow:0 6px 24px rgba(0,0,0,0.25);text-align:center;direction:rtl;max-width:90vw", 
                 banner.innerHTML = '✅ تم إرسال طلبك عبر واتساب!<br><span style="font-size:0.78rem;opacity:0.85">الطلب محفوظ في حسابك — قسم طلباتي</span>', 
-                document.body.appendChild(banner), setTimeout(() => banner.remove(), 4e3), setTimeout(() => {
-                    sessionStorage.removeItem("x2_after_wa"), window.location.href = "/account.html";
-                }, 2e3);
+                document.body.appendChild(banner), setTimeout(() => banner.remove(), 4e3), accountReturnTimer = setTimeout(returnToAccount, 2e3);
             }, 200);
         } catch (e) {}
     }

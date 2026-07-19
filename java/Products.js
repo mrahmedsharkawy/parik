@@ -1313,13 +1313,21 @@ document.addEventListener("DOMContentLoaded", async function() {
             const msgLines = [ "مرحباً، أريد تخصيص طلب:", "", `رقم الطلب: ${orderId}`, "", "بيانات العميل:", `الاسم: ${customerName || "غير متوفر"}`, `الهاتف: ${customerPhone || "غير متوفر"}`, `البريد: ${customerEmail || "غير متوفر"}`, `العنوان: ${customerAddress || "موقع العميل"}`, "", "تفاصيل الطلب:", `المنتج: ${getT(p.name)}`, `الكمية: ${qtyVal}`, `السعر: ${total} ${sym}`, `الرابط: ${productUrl}` ];
             const msgText = msgLines.join("\n");
             const msg = encodeURIComponent(msgText);
-            sessionStorage.setItem("x2_after_wa", "1"), document.addEventListener("visibilitychange", function handleReturn() {
-                !document.hidden && sessionStorage.getItem("x2_after_wa") && (sessionStorage.removeItem("x2_after_wa"), 
-                document.removeEventListener("visibilitychange", handleReturn), window.location.href = "/account.html");
-            });
-            window.open(`https://wa.me/971554423151?text=${msg}`, "_blank", "noopener"), setTimeout(() => {
-                sessionStorage.removeItem("x2_after_wa"), window.location.href = "/account.html";
-            }, 2e3);
+            let accountReturnTimer;
+            const returnToAccount = () => {
+                if (!sessionStorage.getItem("x2_after_wa")) return;
+                sessionStorage.removeItem("x2_after_wa");
+                document.removeEventListener("visibilitychange", handleReturn);
+                clearTimeout(accountReturnTimer);
+                setTimeout(() => window.location.replace(`/account.html?from=whatsapp&t=${Date.now()}`), 150);
+            };
+            function handleReturn() {
+                if (!document.hidden) returnToAccount();
+            }
+            sessionStorage.setItem("x2_after_wa", "1");
+            document.addEventListener("visibilitychange", handleReturn);
+            window.open(`https://wa.me/971554423151?text=${msg}`, "_blank", "noopener");
+            accountReturnTimer = setTimeout(returnToAccount, 2e3);
         }));
         const relEl = document.getElementById("relatedProducts");
         if (relEl && "function" == typeof createProductCard) {
