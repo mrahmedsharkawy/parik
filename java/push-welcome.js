@@ -19,13 +19,20 @@
       btn.innerHTML='غير مدعوم على هذا الجهاز';
       return false;
     }
+    if(Notification.permission==='denied'){
+      btn.disabled=false;
+      btn.innerHTML='افتح إعدادات الهاتف واسمح بالإشعارات';
+      alert('الإشعارات مقفولة من إعدادات الهاتف. افتح إعدادات الهاتف، ثم التطبيقات، ثم Bariq، وفعّل الإشعارات وبعدها ارجع واضغط الزر مرة أخرى.');
+      return false;
+    }
     try{
       btn.disabled=true;
       btn.innerHTML='⏳ جارٍ التفعيل...';
       var permission=await Notification.requestPermission();
       if(permission!=='granted'){
         btn.disabled=false;
-        btn.innerHTML='🔕 تفعيل الإشعارات';
+        btn.innerHTML=permission==='denied'?'افتح إعدادات الهاتف واسمح بالإشعارات':'🔕 تفعيل الإشعارات';
+        if(permission==='denied')alert('تم رفض إذن الإشعارات. فعّله من إعدادات الهاتف للتطبيق ثم حاول مرة أخرى.');
         return false;
       }
       var reg=await navigator.serviceWorker.getRegistration('/');
@@ -86,6 +93,9 @@
       activatePushFromWelcome(btn).then(function(ok){if(ok)setTimeout(window.dismissPushWelcome,500);});
     }
   });
-  if(document.body)window.maybeShowPushWelcome();
-  else document.addEventListener('DOMContentLoaded',window.maybeShowPushWelcome,{once:true});
+  function initPushWelcome(){
+    window.maybeShowPushWelcome();
+  }
+  if(document.body)initPushWelcome();
+  else document.addEventListener('DOMContentLoaded',initPushWelcome,{once:true});
 })();
