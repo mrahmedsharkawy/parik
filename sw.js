@@ -1,5 +1,5 @@
 /* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v57';
+const CACHE = 'bariq-v58';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -66,6 +66,34 @@ const STATIC_URLS = [
   '/assets/categories/wood/chairs.webp',
   '/assets/categories/wood/tables.webp'
 ];
+
+const PUSH_DB = 'bariq-push-inbox';
+const PUSH_STORE = 'notifications';
+
+function openPushDb() {
+  return new Promise(function(resolve, reject) {
+    const req = indexedDB.open(PUSH_DB, 1);
+    req.onupgradeneeded = function() {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(PUSH_STORE)) db.createObjectStore(PUSH_STORE, { keyPath: 'id' });
+    };
+    req.onsuccess = function() { resolve(req.result); };
+    req.onerror = function() { reject(req.error); };
+  });
+}
+
+async function savePushInboxItem(item) {
+  try {
+    const db = await openPushDb();
+    await new Promise(function(resolve, reject) {
+      const tx = db.transaction(PUSH_STORE, 'readwrite');
+      tx.objectStore(PUSH_STORE).put(item);
+      tx.oncomplete = resolve;
+      tx.onerror = function() { reject(tx.error); };
+    });
+    db.close();
+  } catch(e) {}
+}
 
 self.addEventListener('install', function(e) {
   e.waitUntil(
@@ -172,6 +200,20 @@ self.addEventListener('push', function(e) {
   };
   e.waitUntil(
     (async () => {
+      const inboxItem = {
+        id: data.id || ('push-' + Date.now()),
+        type: data.type || 'push',
+        icon: data.iconText || data.emoji || '🔔',
+        title: title,
+        msg: data.body || '',
+        date: data.date || (new Date()).toISOString(),
+        read: false,
+        orderId: data.orderId || data.order_id || '',
+        url: data.url || '/'
+      };
+      await savePushInboxItem(inboxItem);
+      const pages = await clients.matchAll({ type: 'window', includeUncontrolled: true });
+      pages.forEach(client => client.postMessage({ type: 'X2_PUSH_NOTIFICATION', notification: inboxItem }));
       // Update the app badge count before showing the notification.
       _badgeCount++;
       if ('setAppBadge' in self.registration) {

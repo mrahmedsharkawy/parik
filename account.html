@@ -1680,6 +1680,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       if (changed) {
         localStorage.setItem(ORDERS_KEY, JSON.stringify(local));
+        if (window.x2Notifications && typeof window.x2Notifications.refresh === 'function') window.x2Notifications.refresh();
       }
 
       if (cashbackToAdd.length) {
@@ -2181,12 +2182,58 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   };
 
   // تحديث badge الزر السريع عند التحميل
+  function mergeNotificationItem(item) {
+    if (!item || (!item.title && !item.msg)) return false;
+    const notifs = window.x2Notifications ? window.x2Notifications.getAll() : (() => { try { return JSON.parse(localStorage.getItem('x2_notifications') || '[]'); } catch(e) { return []; } })();
+    const id = item.id || ('push-' + Date.now());
+    if (notifs.some(n => n.id === id)) return false;
+    notifs.unshift({ id, type: item.type || 'push', icon: item.icon || '🔔', title: item.title || 'إشعار جديد', msg: item.msg || item.body || '', date: item.date || new Date().toISOString(), read: item.read === true ? true : false, orderId: item.orderId || item.order_id || '', url: item.url || '' });
+    try { localStorage.setItem('x2_notifications', JSON.stringify(notifs.slice(0, 60))); } catch(e) {}
+    if (typeof updateAqnBadge === 'function') updateAqnBadge();
+    if (document.getElementById('section-notifications')?.style.display !== 'none') renderNotifications();
+    return true;
+  }
+
+  async function importPushInbox() {
+    if (!('indexedDB' in window)) return;
+    try {
+      const db = await new Promise((resolve, reject) => {
+        const req = indexedDB.open('bariq-push-inbox', 1);
+        req.onupgradeneeded = function() {
+          const db = req.result;
+          if (!db.objectStoreNames.contains('notifications')) db.createObjectStore('notifications', { keyPath: 'id' });
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+      const items = await new Promise((resolve, reject) => {
+        const tx = db.transaction('notifications', 'readonly');
+        const req = tx.objectStore('notifications').getAll();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error);
+      });
+      db.close();
+      if (items.length) {
+        let changed = false;
+        items.sort((a,b) => new Date(b.date || 0) - new Date(a.date || 0)).forEach(item => { if (mergeNotificationItem(item)) changed = true; });
+        if (changed && window.x2Notifications) window.dispatchEvent(new Event('x2:notif-updated'));
+      }
+    } catch(e) {}
+  }
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', function(e) {
+      if (e.data && e.data.type === 'X2_PUSH_NOTIFICATION') mergeNotificationItem(e.data.notification);
+    });
+  }
+
   function updateAqnBadge() {
     const count = window.x2Notifications ? window.x2Notifications.getCount() : 0;
     const b = document.getElementById('aqnNotifBadge');
     if (b) { b.textContent = count > 0 ? String(count) : ''; b.style.display = count > 0 ? 'inline' : 'none'; }
   }
   setTimeout(updateAqnBadge, 500);
+  importPushInbox().then(updateAqnBadge);
   window.addEventListener('x2:notif-updated', updateAqnBadge);
 
   window.saveAddress = function() {
