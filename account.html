@@ -1639,6 +1639,51 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     try { return JSON.parse(localStorage.getItem(ORDERS_KEY) || '[]'); } catch(e) { return []; }
   }
 
+  function customerToProfile(customer, current) {
+    current = current || {};
+    if (!customer) return current;
+    const addressText = typeof customer.address === 'string'
+      ? customer.address
+      : [customer.city, customer.area, customer.street, customer.building].filter(Boolean).join(' ').trim();
+    return {
+      ...current,
+      name: customer.full_name || customer.name || current.name || '',
+      email: String(customer.email || current.email || '').trim().toLowerCase(),
+      phone: normalizeUaePhone(customer.phone || current.phone || ''),
+      address: addressText || customer.city || current.address || '',
+      city: customer.city || current.city || ''
+    };
+  }
+
+  async function findCustomerProfile(profile) {
+    const ready = await waitForSupabaseLib();
+    if (!ready || !window.sbFetch) return null;
+    const email = String(profile.email || '').trim().toLowerCase();
+    const phone = normalizeUaePhone(profile.phone || '');
+    const queries = [];
+    if (email) queries.push('customers?email=eq.' + encodeURIComponent(email) + '&limit=1');
+    if (phone) queries.push('customers?phone=eq.' + encodeURIComponent(phone) + '&limit=1');
+    for (const query of queries) {
+      try {
+        const rows = await window.sbFetch(query);
+        if (rows && rows[0]) return rows[0];
+      } catch(e) {}
+    }
+    return null;
+  }
+
+  async function hydrateProfileFromSupabase() {
+    try {
+      const current = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}');
+      const customer = await findCustomerProfile(current);
+      if (!customer) return current;
+      const merged = customerToProfile(customer, current);
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(merged));
+      loadProfile();
+      return merged;
+    } catch(e) { return null; }
+  }
+
   /* مزامنة حالة الطلبات والكاش باك من Supabase (المصدر الحقيقي لحالة الطلب التي يحدّثها الأدمن) */
   function waitForSupabaseLib(timeout) {
     timeout = timeout || 5000;
@@ -2788,8 +2833,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     profilePhoneInput.addEventListener('input', function(){ enforceUaePhoneInput(profilePhoneInput); });
     enforceUaePhoneInput(profilePhoneInput);
   }
-  // مزامنة حالة الطلبات الحقيقية من Supabase (التي حدّثها/حذفها الأدمن) ثم إعادة العرض
-  syncOrdersFromSupabase().then(() => renderOrders());
+  // مزامنة بيانات العميل أولاً ثم الطلبات المرتبطة برقم الهاتف الصحيح
+  hydrateProfileFromSupabase().then(() => syncOrdersFromSupabase()).then(() => renderOrders());
 
   // إعادة المزامنة عند العودة لتبويب الحساب (يعكس حذف/تحديث الأدمن فوراً)
   document.addEventListener('visibilitychange', function() {
