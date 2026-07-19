@@ -612,6 +612,16 @@
       <h2>🧭 فلترة التقرير</h2>
       <div class="row">
         <div>
+          <label>الفترة</label>
+          <select id="em-period" onchange="setExternalMarketingPeriod(this.value)">
+            <option value="">مخصص</option>
+            <option value="today">يومي</option>
+            <option value="week">أسبوعي</option>
+            <option value="month">شهري</option>
+            <option value="year">سنوي</option>
+          </select>
+        </div>
+        <div>
           <label>من تاريخ</label>
           <input type="date" id="em-from" onchange="renderExternalMarketing()">
         </div>
@@ -3077,6 +3087,18 @@ function emDateValue(v){ const d = new Date(v||Date.now()); return isNaN(d) ? ne
 function emDateKey(v){ const d = emDateValue(v); return d.toISOString().slice(0,10); }
 function emMonthKey(v){ const d = emDateValue(v); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'); }
 function emMonthLabel(key){ const parts = String(key).split('-'); const m = Math.max(0, Math.min(11, Number(parts[1])-1)); return EM_MONTHS[m] + ' ' + parts[0]; }
+function setExternalMarketingPeriod(period){
+  const now = new Date(), pad = n => String(n).padStart(2,'0'), key = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  let from = '', to = key(now);
+  if(period === 'today') from = to;
+  else if(period === 'week'){ const d = new Date(now); d.setDate(d.getDate()-6); from = key(d); }
+  else if(period === 'month') from = `${now.getFullYear()}-${pad(now.getMonth()+1)}-01`;
+  else if(period === 'year') from = `${now.getFullYear()}-01-01`;
+  else to = '';
+  if($('em-from')) $('em-from').value = from;
+  if($('em-to')) $('em-to').value = to;
+  renderExternalMarketing();
+}
 function emNormalizePlatform(value){
   const s = String(value||'').toLowerCase();
   if(/instagram|insta|ig|انستا|انستجرام/.test(s)) return 'instagram';
@@ -3194,10 +3216,10 @@ function emProductViews(visitors){
   const map = {};
   visitors.forEach(v => {
     const page = String(v.page||v.url||'');
-    const m = page.match(/product\.html\?id=([^&]+)/i) || page.match(/product[^0-9]*([0-9]+)/i);
-    if(!m) return;
-    const id = decodeURIComponent(m[1]);
-    const name = emProductName(id, 'منتج #' + id);
+    if(!/product/i.test(page)) return;
+    const m = page.match(/[?&]id=([^&]+)/i) || page.match(/product[^0-9]*([0-9]+)/i);
+    const id = m ? decodeURIComponent(m[1]) : '';
+    const name = id ? emProductName(id, 'منتج #' + id) : 'صفحة المنتج';
     if(!map[name]) map[name] = {visits:0, sales:0, orders:0, qty:0};
     map[name].visits++;
   });
