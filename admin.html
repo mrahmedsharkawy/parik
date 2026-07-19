@@ -77,14 +77,19 @@
   .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:0 1px 4px rgba(20,37,70,.05)}
   .card h2{margin:0 0 14px;font-size:1.05rem;color:var(--navy);display:flex;align-items:center;gap:8px}
   .admin-table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:#fff}
+  .admin-table-wrap.scroll-4{max-height:210px;overflow:auto}
   .admin-table{width:100%;border-collapse:collapse;min-width:680px;font-size:.86rem}
   .admin-table th,.admin-table td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:right;vertical-align:middle}
   .admin-table th{background:#f7f9ff;color:var(--navy);font-weight:800;white-space:nowrap}
   .admin-table tr:last-child td{border-bottom:none}
   .rank-list{display:flex;flex-direction:column;gap:8px}
+  .rank-list.scroll-4{max-height:262px;overflow-y:auto;padding-inline-end:2px}
   .rank-item{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:#fff}
   .rank-item b{color:var(--navy)}
   .rank-meta{color:#7a8296;font-size:.78rem}
+  .mini-filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 12px}
+  .mini-filters select,.mini-filters input{padding:7px 9px;font-size:.78rem;border:1px solid var(--line);border-radius:8px;background:#fbfcfe}
+  @media(max-width:640px){.mini-filters{grid-template-columns:1fr}}
 
   label{display:block;font-weight:600;font-size:.85rem;margin:12px 0 5px;color:#3a4256}
   input[type=text],input[type=number],input[type=datetime-local],textarea,select{
@@ -652,33 +657,37 @@
       </div>
       <div class="card">
         <h2>📋 سجل مصاريف الإعلانات</h2>
-        <div class="plist" id="emAdList" style="max-height:310px;overflow-y:auto"><div class="empty">لا توجد مصاريف مسجلة</div></div>
+        <div id="emFilterAdList"></div>
+        <div class="plist rank-list scroll-4" id="emAdList"><div class="empty">لا توجد مصاريف مسجلة</div></div>
       </div>
     </div>
 
     <div class="grid" style="margin-top:16px">
-      <div class="card"><h2>🏙️ أكثر المناطق شراء</h2><div class="rank-list" id="emTopAreas"><div class="empty">لا توجد بيانات</div></div></div>
-      <div class="card"><h2>📣 أكثر المنصات زواراً ومبيعاً</h2><div class="rank-list" id="emTopPlatforms"><div class="empty">لا توجد بيانات</div></div></div>
+      <div class="card"><h2>🏙️ أكثر المناطق شراء</h2><div id="emFilterAreas"></div><div class="rank-list scroll-4" id="emTopAreas"><div class="empty">لا توجد بيانات</div></div></div>
+      <div class="card"><h2>📣 أكثر المنصات زواراً ومبيعاً</h2><div id="emFilterPlatforms"></div><div class="rank-list scroll-4" id="emTopPlatforms"><div class="empty">لا توجد بيانات</div></div></div>
     </div>
 
     <div class="grid" style="margin-top:16px">
-      <div class="card"><h2>🏆 منتجات أكثر مبيعاً</h2><div class="rank-list" id="emTopSoldProducts"><div class="empty">لا توجد بيانات</div></div></div>
-      <div class="card"><h2>👁️ منتجات أكثر مشاهدة</h2><div class="rank-list" id="emTopViewedProducts"><div class="empty">لا توجد بيانات</div></div></div>
+      <div class="card"><h2>🏆 منتجات أكثر مبيعاً</h2><div id="emFilterSoldProducts"></div><div class="rank-list scroll-4" id="emTopSoldProducts"><div class="empty">لا توجد بيانات</div></div></div>
+      <div class="card"><h2>👁️ منتجات أكثر مشاهدة</h2><div id="emFilterViewedProducts"></div><div class="rank-list scroll-4" id="emTopViewedProducts"><div class="empty">لا توجد بيانات</div></div></div>
     </div>
 
     <div class="card" style="margin-top:16px">
       <h2>📅 شهر المبيعات</h2>
-      <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>الشهر</th><th>عدد الطلبات</th><th>المبيعات</th><th>مصروف الإعلان</th><th>الربح بعد الإعلان</th></tr></thead><tbody id="emMonthlySales"><tr><td colspan="5" class="empty">لا توجد بيانات</td></tr></tbody></table></div>
+      <div id="emFilterMonthly"></div>
+      <div class="admin-table-wrap scroll-4"><table class="admin-table"><thead><tr><th>الشهر</th><th>عدد الطلبات</th><th>المبيعات</th><th>مصروف الإعلان</th><th>الربح بعد الإعلان</th></tr></thead><tbody id="emMonthlySales"><tr><td colspan="5" class="empty">لا توجد بيانات</td></tr></tbody></table></div>
     </div>
 
     <div class="grid" style="margin-top:16px">
       <div class="card">
         <h2>🧾 التاريخ / المنصة / المنطقة</h2>
-        <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>التاريخ</th><th>المنصة</th><th>المنطقة</th><th>الطلبات</th><th>المبيعات</th></tr></thead><tbody id="emAttributionRows"><tr><td colspan="5" class="empty">لا توجد بيانات</td></tr></tbody></table></div>
+        <div id="emFilterAttribution"></div>
+        <div class="admin-table-wrap scroll-4"><table class="admin-table"><thead><tr><th>التاريخ</th><th>المنصة</th><th>المنطقة</th><th>الطلبات</th><th>المبيعات</th></tr></thead><tbody id="emAttributionRows"><tr><td colspan="5" class="empty">لا توجد بيانات</td></tr></tbody></table></div>
       </div>
       <div class="card">
         <h2>📊 ربح الإعلان</h2>
-        <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>الفترة</th><th>المبيعات</th><th>مصاريف الإعلان</th><th>الربح</th><th>ROAS</th></tr></thead><tbody id="emAdSummary"><tr><td colspan="5" class="empty">لا توجد بيانات</td></tr></tbody></table></div>
+        <div id="emFilterAdSummary"></div>
+        <div class="admin-table-wrap scroll-4"><table class="admin-table"><thead><tr><th>الفترة</th><th>المبيعات</th><th>مصاريف الإعلان</th><th>الربح</th><th>ROAS</th></tr></thead><tbody id="emAdSummary"><tr><td colspan="5" class="empty">لا توجد بيانات</td></tr></tbody></table></div>
       </div>
     </div>
   </div>
@@ -3104,6 +3113,48 @@ function emInRange(date, from, to){
   const key = emDateKey(date);
   return (!from || key >= from) && (!to || key <= to);
 }
+function emPeriodMatch(date, period){
+  if(!period) return true;
+  const d = emDateValue(date), now = new Date();
+  if(period === 'today') return d.toDateString() === now.toDateString();
+  if(period === 'week') return now - d < 7*24*60*60*1000;
+  if(period === 'month') return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  if(period === 'year') return d.getFullYear() === now.getFullYear();
+  return true;
+}
+function emNormArea(area){ return String(area||'غير محدد').trim(); }
+function emMakeOptions(values, allLabel){
+  const sorted = [...new Set(values.filter(Boolean).map(String))].sort((a,b)=>a.localeCompare(b,'ar'));
+  return `<option value="">${allLabel}</option>` + sorted.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
+}
+function emFilterBox(id, areas, platforms){
+  const el = $(id); if(!el) return;
+  const keep = {period:$(id+'-period')?.value||'', area:$(id+'-area')?.value||'', platform:$(id+'-platform')?.value||''};
+  el.innerHTML = `<div class="mini-filters">
+    <select id="${id}-period" onchange="renderExternalMarketing()"><option value="">كل المدد</option><option value="today">اليوم</option><option value="week">آخر 7 أيام</option><option value="month">هذا الشهر</option><option value="year">هذه السنة</option></select>
+    <select id="${id}-area" onchange="renderExternalMarketing()">${emMakeOptions(areas,'كل المناطق')}</select>
+    <select id="${id}-platform" onchange="renderExternalMarketing()">${emMakeOptions(platforms,'كل المنصات')}</select>
+  </div>`;
+  if($(id+'-period')) $(id+'-period').value = keep.period;
+  if($(id+'-area')) $(id+'-area').value = keep.area;
+  if($(id+'-platform')) $(id+'-platform').value = keep.platform;
+}
+function emGetFilter(id){ return {period:$(id+'-period')?.value||'', area:$(id+'-area')?.value||'', platform:$(id+'-platform')?.value||''}; }
+function emOrderMatchesWidget(o, filter){
+  const date = o.date||o.created_at||o.createdAt;
+  const area = emAreaFromOrder(o);
+  const platform = EM_PLATFORM_LABELS[emOrderPlatform(o)]||emOrderPlatform(o);
+  return emPeriodMatch(date, filter.period) && (!filter.area || area === filter.area) && (!filter.platform || platform === filter.platform);
+}
+function emVisitorMatchesWidget(v, filter){
+  const area = [v.city,v.country].filter(Boolean).join('، ') || 'غير محدد';
+  const platform = EM_PLATFORM_LABELS[emGuessPlatform(v)]||emGuessPlatform(v);
+  return emPeriodMatch(v.visited_at||v.date, filter.period) && (!filter.area || area === filter.area) && (!filter.platform || platform === filter.platform);
+}
+function emAdMatchesWidget(a, filter){
+  const platform = EM_PLATFORM_LABELS[a.platform]||a.platform;
+  return emPeriodMatch(a.date, filter.period) && (!filter.area || emNormArea(a.area||'غير محدد') === filter.area) && (!filter.platform || platform === filter.platform);
+}
 async function emFetchVisitors(){
   const cached = getVisitors();
   const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
@@ -3143,37 +3194,7 @@ function emProductViews(visitors){
   });
   return Object.entries(map).sort((a,b)=>b[1].visits-a[1].visits);
 }
-function renderExternalAdList(){
-  const list = $('emAdList'); if(!list) return;
-  const rows = getExternalAds().sort((a,b)=>String(b.date).localeCompare(String(a.date)));
-  if(!rows.length){ list.innerHTML = '<div class="empty">لا توجد مصاريف مسجلة</div>'; return; }
-  list.innerHTML = rows.map(r => `<div class="ord-row"><div class="oinfo"><b>${esc(EM_PLATFORM_LABELS[r.platform]||r.platform||'أخرى')} — ${moneyFmt(r.cost)}</b><br><small>${esc(r.date||'')} • ${esc(r.area||'كل المناطق')} ${r.note ? '• '+esc(r.note) : ''}</small></div><button class="btn-danger btn-sm" onclick="deleteExternalAdSpend(${Number(r.id)})">حذف</button></div>`).join('');
-}
-function saveExternalAdSpend(){
-  const cost = Number($('em-ad-cost')?.value)||0;
-  if(cost<=0){ toast('أدخل مبلغ الإعلان'); return; }
-  const rows = getExternalAds();
-  rows.unshift({id:Date.now(),date:$('em-ad-date').value||emDateKey(new Date()),platform:$('em-ad-platform').value||'other',area:$('em-ad-area').value.trim(),cost,note:$('em-ad-note').value.trim()});
-  saveExternalAds(rows);
-  ['em-ad-cost','em-ad-area','em-ad-note'].forEach(id=>{ if($(id)) $(id).value=''; });
-  renderExternalMarketing();
-  toast('✅ تم حفظ مصروف الإعلان');
-}
-function deleteExternalAdSpend(id){
-  if(!confirm('حذف مصروف الإعلان؟')) return;
-  saveExternalAds(getExternalAds().filter(r=>Number(r.id)!==Number(id)));
-  renderExternalMarketing();
-}
-async function renderExternalMarketing(){
-  if(!$('panel-external-marketing')) return;
-  const today = emDateKey(new Date());
-  if($('em-ad-date') && !$('em-ad-date').value) $('em-ad-date').value = today;
-  const from = $('em-from')?.value || '';
-  const to = $('em-to')?.value || '';
-  const platformFilter = $('em-platform-filter')?.value || '';
-  const orders = emAllOrders().filter(o => o.status !== 'cancelled' && emInRange(o.date||o.created_at||o.createdAt, from, to)).filter(o => !platformFilter || emOrderPlatform(o) === platformFilter);
-  const visitors = (await emFetchVisitors()).filter(v => emInRange(v.visited_at||v.date, from, to)).filter(v => !platformFilter || emGuessPlatform(v) === platformFilter);
-  const ads = getExternalAds().filter(a => emInRange(a.date, from, to)).filter(a => !platformFilter || a.platform === platformFilter);
+function emBuildMarketingMaps(orders, visitors, ads){
   const areaMap = {}, platformMap = {}, monthMap = {}, attrMap = {}, productSold = {};
   orders.forEach(o => {
     const sales = Number(o.total)||0;
@@ -3204,6 +3225,45 @@ async function renderExternalMarketing(){
     emAddToMap(platformMap, EM_PLATFORM_LABELS[a.platform]||a.platform, {cost:Number(a.cost)||0});
     emAddToMap(monthMap, emMonthKey(a.date), {cost:Number(a.cost)||0});
   });
+  return {areaMap, platformMap, monthMap, attrMap, productSold};
+}
+function renderExternalAdList(){
+  const list = $('emAdList'); if(!list) return;
+  const filter = emGetFilter('emFilterAdList');
+  const rows = getExternalAds().filter(a=>emAdMatchesWidget(a,filter)).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  if(!rows.length){ list.innerHTML = '<div class="empty">لا توجد مصاريف مسجلة</div>'; return; }
+  list.innerHTML = rows.map(r => `<div class="ord-row"><div class="oinfo"><b>${esc(EM_PLATFORM_LABELS[r.platform]||r.platform||'أخرى')} — ${moneyFmt(r.cost)}</b><br><small>${esc(r.date||'')} • ${esc(r.area||'كل المناطق')} ${r.note ? '• '+esc(r.note) : ''}</small></div><button class="btn-danger btn-sm" onclick="deleteExternalAdSpend(${Number(r.id)})">حذف</button></div>`).join('');
+}
+function saveExternalAdSpend(){
+  const cost = Number($('em-ad-cost')?.value)||0;
+  if(cost<=0){ toast('أدخل مبلغ الإعلان'); return; }
+  const rows = getExternalAds();
+  rows.unshift({id:Date.now(),date:$('em-ad-date').value||emDateKey(new Date()),platform:$('em-ad-platform').value||'other',area:$('em-ad-area').value.trim(),cost,note:$('em-ad-note').value.trim()});
+  saveExternalAds(rows);
+  ['em-ad-cost','em-ad-area','em-ad-note'].forEach(id=>{ if($(id)) $(id).value=''; });
+  renderExternalMarketing();
+  toast('✅ تم حفظ مصروف الإعلان');
+}
+function deleteExternalAdSpend(id){
+  if(!confirm('حذف مصروف الإعلان؟')) return;
+  saveExternalAds(getExternalAds().filter(r=>Number(r.id)!==Number(id)));
+  renderExternalMarketing();
+}
+async function renderExternalMarketing(){
+  if(!$('panel-external-marketing')) return;
+  const today = emDateKey(new Date());
+  if($('em-ad-date') && !$('em-ad-date').value) $('em-ad-date').value = today;
+  const from = $('em-from')?.value || '';
+  const to = $('em-to')?.value || '';
+  const platformFilter = $('em-platform-filter')?.value || '';
+  const orders = emAllOrders().filter(o => o.status !== 'cancelled' && emInRange(o.date||o.created_at||o.createdAt, from, to)).filter(o => !platformFilter || emOrderPlatform(o) === platformFilter);
+  const visitors = (await emFetchVisitors()).filter(v => emInRange(v.visited_at||v.date, from, to)).filter(v => !platformFilter || emGuessPlatform(v) === platformFilter);
+  const ads = getExternalAds().filter(a => emInRange(a.date, from, to)).filter(a => !platformFilter || a.platform === platformFilter);
+  const allAreas = [...orders.map(emAreaFromOrder), ...visitors.map(v=>[v.city,v.country].filter(Boolean).join('، ')||'غير محدد'), ...ads.map(a=>emNormArea(a.area||'غير محدد'))];
+  const allPlatforms = [...orders.map(o=>EM_PLATFORM_LABELS[emOrderPlatform(o)]||emOrderPlatform(o)), ...visitors.map(v=>EM_PLATFORM_LABELS[emGuessPlatform(v)]||emGuessPlatform(v)), ...ads.map(a=>EM_PLATFORM_LABELS[a.platform]||a.platform)];
+  ['emFilterAdList','emFilterAreas','emFilterPlatforms','emFilterSoldProducts','emFilterViewedProducts','emFilterMonthly','emFilterAttribution','emFilterAdSummary'].forEach(id=>emFilterBox(id, allAreas, allPlatforms));
+  const maps = emBuildMarketingMaps(orders, visitors, ads);
+  const {areaMap, platformMap, monthMap, attrMap} = maps;
   const totalSales = orders.reduce((s,o)=>s+(Number(o.total)||0),0);
   const totalCost = ads.reduce((s,a)=>s+(Number(a.cost)||0),0);
   const topArea = Object.entries(areaMap).sort((a,b)=>(b[1].orders-b[1].orders)||(b[1].sales-a[1].sales))[0];
@@ -3213,12 +3273,21 @@ async function renderExternalMarketing(){
   if($('em-ad-sales')) $('em-ad-sales').textContent = moneyFmt(totalSales);
   if($('em-ad-spend')) $('em-ad-spend').textContent = moneyFmt(totalCost);
   if($('em-ad-profit')) $('em-ad-profit').textContent = moneyFmt(totalSales-totalCost);
-  if($('emTopAreas')) $('emTopAreas').innerHTML = emRankHTML(Object.entries(areaMap).sort((a,b)=>(b[1].orders-a[1].orders)||(b[1].sales-a[1].sales)), 'sales');
-  if($('emTopPlatforms')) $('emTopPlatforms').innerHTML = emRankHTML(Object.entries(platformMap).sort((a,b)=>(b[1].sales+b[1].visits)-(a[1].sales+a[1].visits)), 'sales');
-  if($('emTopSoldProducts')) $('emTopSoldProducts').innerHTML = emRankHTML(Object.entries(productSold).sort((a,b)=>b[1].qty-a[1].qty), 'qty');
-  if($('emTopViewedProducts')) $('emTopViewedProducts').innerHTML = emRankHTML(emProductViews(visitors), 'qty');
-  if($('emMonthlySales')) $('emMonthlySales').innerHTML = Object.entries(monthMap).sort((a,b)=>a[0].localeCompare(b[0])).map(([m,d]) => `<tr><td>${esc(emMonthLabel(m))}</td><td>${d.orders||0}</td><td>${moneyFmt(d.sales||0)}</td><td>${moneyFmt(d.cost||0)}</td><td>${moneyFmt((d.sales||0)-(d.cost||0))}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">لا توجد بيانات</td></tr>';
-  if($('emAttributionRows')) $('emAttributionRows').innerHTML = Object.entries(attrMap).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,80).map(([k,d]) => { const [date,platform,area]=k.split('|'); return `<tr><td>${esc(date)}</td><td>${esc(platform)}</td><td>${esc(area)}</td><td>${d.orders||0}</td><td>${moneyFmt(d.sales||0)}</td></tr>`; }).join('') || '<tr><td colspan="5" class="empty">لا توجد بيانات</td></tr>';
+  const areaData = emBuildMarketingMaps(orders.filter(o=>emOrderMatchesWidget(o,emGetFilter('emFilterAreas'))), visitors.filter(v=>emVisitorMatchesWidget(v,emGetFilter('emFilterAreas'))), ads.filter(a=>emAdMatchesWidget(a,emGetFilter('emFilterAreas'))));
+  const platformData = emBuildMarketingMaps(orders.filter(o=>emOrderMatchesWidget(o,emGetFilter('emFilterPlatforms'))), visitors.filter(v=>emVisitorMatchesWidget(v,emGetFilter('emFilterPlatforms'))), ads.filter(a=>emAdMatchesWidget(a,emGetFilter('emFilterPlatforms'))));
+  const soldData = emBuildMarketingMaps(orders.filter(o=>emOrderMatchesWidget(o,emGetFilter('emFilterSoldProducts'))), [], []);
+  const viewFilter = emGetFilter('emFilterViewedProducts');
+  const viewVisitors = visitors.filter(v=>emVisitorMatchesWidget(v,viewFilter));
+  const monthlyFilter = emGetFilter('emFilterMonthly');
+  const monthlyData = emBuildMarketingMaps(orders.filter(o=>emOrderMatchesWidget(o,monthlyFilter)), [], ads.filter(a=>emAdMatchesWidget(a,monthlyFilter)));
+  const attrFilter = emGetFilter('emFilterAttribution');
+  const attrData = emBuildMarketingMaps(orders.filter(o=>emOrderMatchesWidget(o,attrFilter)), [], []);
+  if($('emTopAreas')) $('emTopAreas').innerHTML = emRankHTML(Object.entries(areaData.areaMap).sort((a,b)=>(b[1].orders-a[1].orders)||(b[1].sales-a[1].sales)), 'sales');
+  if($('emTopPlatforms')) $('emTopPlatforms').innerHTML = emRankHTML(Object.entries(platformData.platformMap).sort((a,b)=>(b[1].sales+b[1].visits)-(a[1].sales+a[1].visits)), 'sales');
+  if($('emTopSoldProducts')) $('emTopSoldProducts').innerHTML = emRankHTML(Object.entries(soldData.productSold).sort((a,b)=>b[1].qty-a[1].qty), 'qty');
+  if($('emTopViewedProducts')) $('emTopViewedProducts').innerHTML = emRankHTML(emProductViews(viewVisitors), 'qty');
+  if($('emMonthlySales')) $('emMonthlySales').innerHTML = Object.entries(monthlyData.monthMap).sort((a,b)=>a[0].localeCompare(b[0])).map(([m,d]) => `<tr><td>${esc(emMonthLabel(m))}</td><td>${d.orders||0}</td><td>${moneyFmt(d.sales||0)}</td><td>${moneyFmt(d.cost||0)}</td><td>${moneyFmt((d.sales||0)-(d.cost||0))}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">لا توجد بيانات</td></tr>';
+  if($('emAttributionRows')) $('emAttributionRows').innerHTML = Object.entries(attrData.attrMap).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,80).map(([k,d]) => { const [date,platform,area]=k.split('|'); return `<tr><td>${esc(date)}</td><td>${esc(platform)}</td><td>${esc(area)}</td><td>${d.orders||0}</td><td>${moneyFmt(d.sales||0)}</td></tr>`; }).join('') || '<tr><td colspan="5" class="empty">لا توجد بيانات</td></tr>';
   const periodRanges = {
     daily: d => emDateKey(d) === today,
     monthly: d => { const x = emDateValue(d), n = new Date(); return x.getFullYear() === n.getFullYear() && x.getMonth() === n.getMonth(); },
@@ -3226,8 +3295,9 @@ async function renderExternalMarketing(){
   };
   if($('emAdSummary')) $('emAdSummary').innerHTML = ['daily','monthly','yearly'].map(period => {
     const label = period==='daily'?'يومي':period==='monthly'?'شهري':'سنوي';
-    const sales = orders.filter(o => periodRanges[period](o.date||o.created_at||o.createdAt)).reduce((s,o)=>s+(Number(o.total)||0),0);
-    const cost = ads.filter(a => periodRanges[period](a.date)).reduce((s,a)=>s+(Number(a.cost)||0),0);
+    const adFilter = emGetFilter('emFilterAdSummary');
+    const sales = orders.filter(o => emOrderMatchesWidget(o,adFilter) && periodRanges[period](o.date||o.created_at||o.createdAt)).reduce((s,o)=>s+(Number(o.total)||0),0);
+    const cost = ads.filter(a => emAdMatchesWidget(a,adFilter) && periodRanges[period](a.date)).reduce((s,a)=>s+(Number(a.cost)||0),0);
     const profit = sales-cost, roas = cost>0 ? (sales/cost).toFixed(2) : '—';
     return `<tr><td>${label}</td><td>${moneyFmt(sales)}</td><td>${moneyFmt(cost)}</td><td>${moneyFmt(profit)}</td><td>${roas}</td></tr>`;
   }).join('');
