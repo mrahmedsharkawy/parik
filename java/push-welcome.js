@@ -15,25 +15,37 @@
     }catch(e){}
   }
   async function activatePushFromWelcome(btn){
-    if(!('serviceWorker'in navigator)||!('PushManager'in window)||!('Notification'in window))return false;
-    btn.disabled=true;
-    btn.innerHTML='⏳ جارٍ التفعيل...';
-    var permission=await Notification.requestPermission();
-    if(permission!=='granted'){
-      btn.disabled=false;
-      btn.innerHTML='🔕 تفعيل الإشعارات';
+    if(!('serviceWorker'in navigator)||!('PushManager'in window)||!('Notification'in window)){
+      btn.innerHTML='غير مدعوم على هذا الجهاز';
       return false;
     }
-    var reg=await navigator.serviceWorker.ready;
-    var sub=await reg.pushManager.getSubscription();
-    if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)});
-    saveSubscriptionToSupabase(sub);
-    btn.disabled=false;
-    btn.style.background='#27ae60';
-    btn.style.color='#fff';
-    btn.innerHTML='🔔 مفعل ✓';
-    localStorage.setItem('x2_push_welcome_seen','1');
-    return true;
+    try{
+      btn.disabled=true;
+      btn.innerHTML='⏳ جارٍ التفعيل...';
+      var permission=await Notification.requestPermission();
+      if(permission!=='granted'){
+        btn.disabled=false;
+        btn.innerHTML='🔕 تفعيل الإشعارات';
+        return false;
+      }
+      var reg=await navigator.serviceWorker.getRegistration('/');
+      if(!reg)reg=await navigator.serviceWorker.register('/sw.js');
+      await navigator.serviceWorker.ready;
+      var sub=await reg.pushManager.getSubscription();
+      if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)});
+      saveSubscriptionToSupabase(sub);
+      btn.disabled=false;
+      btn.style.background='#27ae60';
+      btn.style.color='#fff';
+      btn.innerHTML='🔔 مفعل ✓';
+      localStorage.setItem('x2_push_welcome_seen','1');
+      return true;
+    }catch(e){
+      console.warn('Push activation failed:',e);
+      btn.disabled=false;
+      btn.innerHTML='تعذر التفعيل - حاول مرة أخرى';
+      return false;
+    }
   }
   function isInstalledMobileApp(){
     var mobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
