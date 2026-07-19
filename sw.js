@@ -1,5 +1,5 @@
 /* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v56';
+const CACHE = 'bariq-v57';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -106,15 +106,14 @@ self.addEventListener('fetch', function(e) {
   const isProductPath = /^\/product(?:\/|$)/.test(path) || path === '/product.html';
   const htmlCacheKey = isProductPath ? '/product' : path;
 
-  // HTML: cache-first for instant page transitions, with background refresh after deploys.
+  // HTML: network-first so page changes appear immediately after deployment.
   if (isHtml) {
     e.respondWith(
       caches.open(CACHE).then(function(cache) {
-        return cache.match(htmlCacheKey).then(function(shell) {
-            const fresh = refreshCache(cache, e.request).catch(function() {
-              return shell || caches.match('/index.html') || new Response('Offline', {status: 503});
-            });
-            return shell || fresh;
+        return refreshCache(cache, e.request).catch(function() {
+          return cache.match(htmlCacheKey)
+            || caches.match('/index.html')
+            || new Response('Offline', {status: 503});
         });
       })
     );

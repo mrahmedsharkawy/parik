@@ -2602,6 +2602,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   };
 
   // init
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistration('/sw.js').then(reg => { if (reg) reg.update(); }).catch(()=>{});
+  }
   document.documentElement.classList.remove('account-auth-pending');
   renderOrders();
   loadProfile();
