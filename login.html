@@ -473,6 +473,25 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     };
   }
 
+  function orderProfileData(order) {
+    if (!order) return {};
+    return {
+      name: order.customer_name || '',
+      email: order.customer_email || '',
+      phone: order.customer_phone || ''
+    };
+  }
+
+  async function findLatestOrderByEmail(email) {
+    if (!window.sbFetch) return null;
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    if (!cleanEmail) return null;
+    try {
+      const rows = await window.sbFetch('orders?customer_email=eq.' + encodeURIComponent(cleanEmail) + '&order=created_at.desc&limit=1');
+      return rows && rows[0] ? rows[0] : null;
+    } catch(e) { return null; }
+  }
+
   function readLocalUsers() {
     try { return JSON.parse(localStorage.getItem('x2_users') || '[]'); } catch(e) { return []; }
   }
@@ -571,7 +590,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const meta = user.user_metadata || {};
       const name = meta.full_name || meta.name || email.split('@')[0];
       const existingCustomer = await findExistingCustomer(user.email || email, meta.phone || '');
-      const customerData = customerProfileData(existingCustomer);
+      const latestOrder = await findLatestOrderByEmail(user.email || email);
+      const customerData = { ...orderProfileData(latestOrder), ...customerProfileData(existingCustomer) };
 
       // حفظ الجلسة مع دمج بيانات العميل المخزنة سابقاً في customers
       const profile = saveProfile({ ...customerData, name: customerData.name || name, email: user.email || customerData.email || email, phone: meta.phone || customerData.phone || '', address: meta.address || customerData.address || '', password: pass });
