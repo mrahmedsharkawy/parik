@@ -308,6 +308,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <img id="mainImage" src="">
         </div>
 
+        <div class="product-share-strip" aria-label="مشاركة المنتج">
+          <button type="button" class="pshare-btn pshare-wa" data-share="whatsapp" title="واتساب" aria-label="مشاركة على واتساب">☘</button>
+          <button type="button" class="pshare-btn pshare-fb" data-share="facebook" title="فيسبوك" aria-label="مشاركة على فيسبوك">f</button>
+          <button type="button" class="pshare-btn pshare-x" data-share="x" title="X" aria-label="مشاركة على X">𝕏</button>
+          <button type="button" class="pshare-btn pshare-tg" data-share="telegram" title="تيليجرام" aria-label="مشاركة على تيليجرام">✈</button>
+          <button type="button" class="pshare-btn pshare-pin" data-share="pinterest" title="Pinterest" aria-label="مشاركة على Pinterest">P</button>
+          <button type="button" class="pshare-btn pshare-copy" data-share="copy" title="نسخ الرابط" aria-label="نسخ رابط المنتج">⛓</button>
+        </div>
+
     </div>
 
     <!-- بيانات المنتج -->
@@ -389,6 +398,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <!-- ============ قسم التقييمات والتعليقات ============ -->
 <style>
+  .product-share-strip{display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 0 2px;direction:ltr;flex-wrap:wrap}
+  .pshare-btn{width:30px;height:30px;border:0;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:.85rem;line-height:1;box-shadow:0 3px 10px rgba(21,37,70,.12);cursor:pointer;transition:transform .15s ease,filter .15s ease}
+  .pshare-btn:hover{transform:translateY(-1px);filter:brightness(1.06)}
+  .pshare-wa{background:#25d366}.pshare-fb{background:#1877f2}.pshare-x{background:#111}.pshare-tg{background:#229ed9}.pshare-pin{background:#bd081c}.pshare-copy{background:#152546}
+  @media(max-width:600px){.product-share-strip{gap:7px;margin:7px 0 0}.pshare-btn{width:28px;height:28px;font-size:.78rem}}
   .reviews-section{max-width:700px;margin:18px auto 8px;padding:0 12px;font-family:'Cairo',sans-serif}
   .reviews-section .rv-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-bottom:1px solid #f0f0f0;padding-bottom:8px;margin-bottom:10px}
   .reviews-section .rv-title{font-size:.95rem;font-weight:700;color:#152546;margin:0}
@@ -704,6 +718,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="/translations/translation.min.js" defer></script>
 <script src="/java/footer-pages.min.js" defer></script>
 <script src="/mobile-nav-bar/main-navbar.min.js" defer></script>  
+<script>
+document.addEventListener('click',function(e){
+  const btn=e.target.closest('[data-share]');
+  if(!btn)return;
+  const type=btn.dataset.share,url=location.href,title=(document.getElementById('name')?.textContent||document.title||'Bariq').trim(),text=title+' - '+url;
+  const open=u=>window.open(u,'_blank','noopener,width=640,height=520');
+  if(type==='whatsapp')open('https://wa.me/?text='+encodeURIComponent(text));
+  else if(type==='facebook')open('https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(url));
+  else if(type==='x')open('https://twitter.com/intent/tweet?text='+encodeURIComponent(title)+'&url='+encodeURIComponent(url));
+  else if(type==='telegram')open('https://t.me/share/url?url='+encodeURIComponent(url)+'&text='+encodeURIComponent(title));
+  else if(type==='pinterest')open('https://www.pinterest.com/pin/create/button/?url='+encodeURIComponent(url)+'&description='+encodeURIComponent(title));
+  else if(type==='copy'){navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(url).then(()=>{btn.textContent='✓';setTimeout(()=>btn.textContent='⛓',1200)}):prompt('انسخ رابط المنتج',url)}
+});
+</script>
 <script type="module" src="/java/Products.min.js"></script> <!-- ده يفضل يفضل في الآخر -->
 </body>
 </html>
