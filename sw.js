@@ -1,5 +1,5 @@
 ﻿/* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v78';
+const CACHE = 'bariq-v79';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
