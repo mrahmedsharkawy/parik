@@ -3208,9 +3208,9 @@ function emRankHTML(entries, type){
 function emProductName(id, fallback){ const p = products.find(x=>String(x.id)===String(id)); return p ? getT(p.name) : (fallback || 'منتج'); }
 function emProductByKey(key){ return products.find(p=>String(p.id)===String(key)||getT(p.name)===key)||null; }
 function emProductImage(p){ const imgs = p ? (Array.isArray(p.img)?p.img:(p.img?[p.img]:[])) : []; return imgs.find(s=>s&&!String(s).startsWith('data:')) || imgs[0] || '/assets/logo.png'; }
-function emProductCardsHTML(entries){
+function emProductCardsHTML(entries, mode){
   if(!entries.length) return '<div class="empty">لا توجد بيانات</div>';
-  return entries.slice(0,10).map(([name,d],i)=>{ const p=emProductByKey(name); const title=p?getT(p.name):name; const price=p ? (parseFloat(p.price)||0) : 0; const old=p ? (parseFloat(p.oldPrice)||0) : 0; const stock=p && p.stock!==undefined ? p.stock : '—'; const img=emProductImage(p); return `<div class="prod-row"><span style="background:var(--gold);color:var(--navy);width:24px;height:24px;border-radius:50%;text-align:center;line-height:24px;font-weight:800;font-size:.72rem;flex-shrink:0">${i+1}</span><img src="${esc(img)}" alt="${esc(title)}" onerror="this.src='/assets/logo.png'"><div class="info"><b>${esc(title)}</b><small>${d.qty||0} قطعة • ${d.orders||0} طلب • ${moneyFmt(d.sales||0)}</small><br><small>السعر: <b>${moneyFmt(price)}</b>${old?` <span class="price-old">${moneyFmt(old)}</span>`:''} • المخزون: ${esc(stock)}</small></div>${p?`<button class="btn-ghost btn-sm" onclick="editProduct(${Number(p.id)||0})">تعديل</button>`:''}</div>`; }).join('');
+  return entries.slice(0,10).map(([name,d],i)=>{ const p=emProductByKey(name); const title=p?getT(p.name):name; const price=p ? (parseFloat(p.price)||0) : 0; const old=p ? (parseFloat(p.oldPrice)||0) : 0; const stock=p && p.stock!==undefined ? p.stock : '—'; const img=emProductImage(p); const primary = mode==='views' ? `${d.visits||0} زيارة` : `${d.qty||0} قطعة • ${d.orders||0} طلب • ${moneyFmt(d.sales||0)}`; const fallbackNote = !p && mode==='views' ? '<br><small style="color:#c0392b">زيارة قديمة بدون رقم منتج؛ ستظهر التفاصيل للزيارات الجديدة.</small>' : ''; return `<div class="prod-row"><span style="background:var(--gold);color:var(--navy);width:24px;height:24px;border-radius:50%;text-align:center;line-height:24px;font-weight:800;font-size:.72rem;flex-shrink:0">${i+1}</span><img src="${esc(img)}" alt="${esc(title)}" onerror="this.src='/assets/logo.png'"><div class="info"><b>${esc(title)}</b><small>${primary}</small><br><small>السعر: <b>${moneyFmt(price)}</b>${old?` <span class="price-old">${moneyFmt(old)}</span>`:''} • المخزون: ${esc(stock)}</small>${fallbackNote}</div>${p?`<button class="btn-ghost btn-sm" onclick="editProduct(${Number(p.id)||0})">تعديل</button>`:''}</div>`; }).join('');
 }
 function emProductViews(visitors){
   const map = {};
@@ -3219,7 +3219,7 @@ function emProductViews(visitors){
     if(!/product/i.test(page)) return;
     const m = page.match(/[?&]id=([^&]+)/i) || page.match(/product[^0-9]*([0-9]+)/i);
     const id = m ? decodeURIComponent(m[1]) : '';
-    const name = id ? emProductName(id, 'منتج #' + id) : 'صفحة المنتج';
+    const name = id || 'صفحة المنتج';
     if(!map[name]) map[name] = {visits:0, sales:0, orders:0, qty:0};
     map[name].visits++;
   });
@@ -3317,7 +3317,7 @@ async function renderExternalMarketing(){
   if($('emTopAreas')) $('emTopAreas').innerHTML = emRankHTML(Object.entries(areaData.areaMap).sort((a,b)=>(b[1].orders-a[1].orders)||(b[1].sales-a[1].sales)), 'sales');
   if($('emTopPlatforms')) $('emTopPlatforms').innerHTML = emRankHTML(Object.entries(platformData.platformMap).sort((a,b)=>(b[1].sales+b[1].visits)-(a[1].sales+a[1].visits)), 'sales');
   if($('emTopSoldProducts')) $('emTopSoldProducts').innerHTML = emProductCardsHTML(Object.entries(soldData.productSold).sort((a,b)=>b[1].qty-a[1].qty));
-  if($('emTopViewedProducts')) $('emTopViewedProducts').innerHTML = emRankHTML(emProductViews(viewVisitors), 'qty');
+  if($('emTopViewedProducts')) $('emTopViewedProducts').innerHTML = emProductCardsHTML(emProductViews(viewVisitors), 'views');
   if($('emMonthlySales')) $('emMonthlySales').innerHTML = Object.entries(monthlyData.monthMap).sort((a,b)=>a[0].localeCompare(b[0])).map(([m,d]) => `<tr><td>${esc(emMonthLabel(m))}</td><td>${d.orders||0}</td><td>${moneyFmt(d.sales||0)}</td><td>${moneyFmt(d.cost||0)}</td><td>${moneyFmt((d.sales||0)-(d.cost||0))}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">لا توجد بيانات</td></tr>';
   if($('emAttributionRows')) $('emAttributionRows').innerHTML = Object.entries(attrData.attrMap).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,80).map(([k,d]) => { const [date,platform,area]=k.split('|'); return `<tr><td>${esc(date)}</td><td>${esc(platform)}</td><td>${esc(area)}</td><td>${d.orders||0}</td><td>${moneyFmt(d.sales||0)}</td></tr>`; }).join('') || '<tr><td colspan="5" class="empty">لا توجد بيانات</td></tr>';
   const periodRanges = {
