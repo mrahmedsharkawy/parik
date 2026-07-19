@@ -816,7 +816,7 @@ main,
   align-items: center;
   padding:  5px;
 }
-
+.daily-picks-section+.trust-bar{margin-top:-6px!important}
 
 }
 
