@@ -554,14 +554,12 @@ function x2VisitorAreaFallback() {
         let finalText = variants.find(v => v.length <= 2500) || variants[variants.length - 1].slice(0, 2400);
         const msg = encodeURIComponent(finalText), url = `https://wa.me/${phone}?text=${msg}`;
         let accountReturnTimer;
-        let didReturnToAccount = !1;
         const returnToAccount = () => {
-            if (didReturnToAccount) return;
-            didReturnToAccount = !0;
+            if (!sessionStorage.getItem("x2_after_wa")) return;
             sessionStorage.removeItem("x2_after_wa");
             document.removeEventListener("visibilitychange", handleVisibilityReturn);
             clearTimeout(accountReturnTimer);
-                setTimeout(() => window.location.replace(`/account.html?from=whatsapp&section=orders&t=${Date.now()}`), 120);
+            setTimeout(() => window.location.replace(`/account.html?from=whatsapp&t=${Date.now()}`), 150);
         };
         function handleVisibilityReturn() {
             if (!document.hidden) returnToAccount();
@@ -637,7 +635,7 @@ function x2VisitorAreaFallback() {
                     cashbackStatus: "pending",
                     customerName: profile.name || "",
                     customerPhone: profile.phone || "",
-                    customerEmail: profile.email || profile.authEmail || "",
+                    customerEmail: profile.email || "",
                     address: profile.address_full || null
                 }).catch(err => {
                     console.error("فشل رفع الطلب:", err.message);
@@ -683,9 +681,7 @@ function x2VisitorAreaFallback() {
                 const banner = document.createElement("div");
                 banner.style.cssText = "position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#152546;color:#D4AF37;padding:14px 24px;border-radius:12px;font-size:0.9rem;font-weight:700;z-index:99999;box-shadow:0 6px 24px rgba(0,0,0,0.25);text-align:center;direction:rtl;max-width:90vw", 
                 banner.innerHTML = '✅ تم إرسال طلبك عبر واتساب!<br><span style="font-size:0.78rem;opacity:0.85">الطلب محفوظ في حسابك — قسم طلباتي</span>', 
-                document.body.appendChild(banner), setTimeout(() => banner.remove(), 4e3), accountReturnTimer = setTimeout(() => {
-                    if (!document.hidden) returnToAccount();
-                }, 2400);
+                document.body.appendChild(banner), setTimeout(() => banner.remove(), 4e3), accountReturnTimer = setTimeout(returnToAccount, 2e3);
             }, 200);
         } catch (e) {}
     }

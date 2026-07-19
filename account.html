@@ -23,21 +23,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <script>
   (function(){
     document.documentElement.classList.add('account-auth-pending');
-    var fromWa = false;
-    try { fromWa = new URLSearchParams(location.search).get('from') === 'whatsapp'; } catch(e) {}
     function revealAccount(){
       document.documentElement.classList.remove('account-auth-pending');
     }
     window.addEventListener('pageshow', revealAccount);
     document.addEventListener('DOMContentLoaded', revealAccount, { once: true });
     setTimeout(revealAccount, 1200);
-    if (fromWa) {
-      window.addEventListener('pageshow', function(e){
-        if (e.persisted) {
-          try { location.replace('/account.html?section=orders&t=' + Date.now()); } catch(err) {}
-        }
-      });
-    }
     try {
       if (localStorage.getItem('x2_logged') !== '1') {
         location.replace('login.html?next=account');
@@ -1350,10 +1341,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="acc-profile-name" id="profile-name">مستخدم</div>
         <div class="acc-profile-email" id="profile-email">لم يتم تسجيل الدخول</div>
         <div class="acc-form-group"><label data-i18n="الاسم الكامل">الاسم الكامل</label><input type="text" id="pf-name" placeholder="أدخل اسمك"></div>
-        <div class="acc-form-group"><label>اسم المستخدم / معرف الدخول</label><input type="text" id="pf-identifier" placeholder="example@email.com أو username"></div>
-        <div class="acc-form-group"><label>اسم المستخدم</label><input type="text" id="pf-username" placeholder="username"></div>
         <div class="acc-form-group"><label data-i18n="البريد الإلكتروني">البريد الإلكتروني</label><input type="email" id="pf-email" placeholder="example@email.com"></div>
-        <div class="acc-form-group"><label data-i18n="المدينة">المدينة</label><input type="text" id="pf-city" placeholder="دبي"></div>
         <div class="acc-form-group"><label data-i18n="عنواني">العنوان</label><input type="text" id="pf-address" placeholder="أدخل عنوانك"></div>
         <div class="acc-form-group"><label data-i18n="رقم الهاتف">رقم الهاتف</label><input type="tel" id="pf-phone" placeholder="+971 XX XXX XXXX"></div>
         <div class="acc-form-group">
@@ -1620,11 +1608,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   const PAGE_SIZE   = 3;
   let offersLoaded = false;
 
-  window.getProfile = function() {
-    try { return JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}'); }
-    catch(e) { return {}; }
-  };
-
   function getCurrSym() {
     const code = localStorage.getItem('currency') || 'AED';
     const map = { AED:'د.إ', USD:'$', EUR:'€', SAR:'ر.س', EGP:'ج.م', KWD:'د.ك', JOD:'د.أ', GBP:'£' };
@@ -1655,23 +1638,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const ready = await waitForSupabaseLib();
       if (!ready || !window.Supabase) { return; }
       const profile = (() => { try { return JSON.parse(localStorage.getItem(PROFILE_KEY)||'{}'); } catch(e) { return {}; } })();
-      const phone = String(profile.phone || '').trim();
-      const email = String(profile.email || profile.authEmail || '').trim().toLowerCase();
-      if (!phone && !email) { return; }
-
-      let remote = null;
-      if (phone) {
-        try { remote = await window.Supabase.Orders.getByPhone(phone); } catch(e) {}
-      }
-      // fallback للمستخدمين المسجلين بالبريد بدون رقم هاتف
-      if ((!remote || !remote.length) && email && typeof window.sbFetch === 'function') {
-        try {
-          remote = await window.sbFetch('orders?customer_email=eq.' + encodeURIComponent(email) + '&order=created_at.desc&limit=200');
-        } catch(e) {}
-      }
+      if (!profile.phone) { return; }
+      const remote = await window.Supabase.Orders.getByPhone(profile.phone);
       // remote === null/undefined يعني فشل الاتصال - لا تلمس البيانات المحلية
       if (!remote) { return; }
-      if (!Array.isArray(remote)) { remote = []; }
 
       let local = getOrders();
       let changed = false;
@@ -2295,11 +2265,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   }
   setTimeout(updateAqnBadge, 500);
   importPushInbox().then(updateAqnBadge);
-  window.addEventListener('x2:notif-updated', function() {
-    updateAqnBadge();
-    const sec = document.getElementById('section-notifications');
-    if (sec && sec.style.display !== 'none') renderNotifications();
-  });
+  window.addEventListener('x2:notif-updated', updateAqnBadge);
 
   window.saveAddress = function() {
     const addr = {
@@ -2314,43 +2280,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     try {
       const p = JSON.parse(localStorage.getItem('x2_profile') || '{}');
       p.address_full = addr;
-      if (addr.city) p.city = addr.city;
-      if (!p.address && (addr.street || addr.area || addr.city)) {
-        p.address = [addr.street, addr.area, addr.city].filter(Boolean).join('، ');
-      }
       localStorage.setItem('x2_profile', JSON.stringify(p));
     } catch(e) {}
     alert('✅ تم حفظ العنوان');
   };
 
   window.saveProfile = function() {
-    const prev = (() => {
-      try { return JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}'); }
-      catch(e) { return {}; }
-    })();
-    const nameInput = document.getElementById('pf-name').value.trim();
-    const identifierInput = document.getElementById('pf-identifier').value.trim();
-    const usernameInput = document.getElementById('pf-username').value.trim();
-    const emailInput = document.getElementById('pf-email').value.trim();
-    const cityInput = document.getElementById('pf-city').value.trim();
-    const phoneInput = document.getElementById('pf-phone').value.trim();
-    const addressInput = document.getElementById('pf-address').value.trim();
     const p = {
-      ...prev,
-      name: nameInput || prev.name || '',
-      email: emailInput || prev.email || '',
-      address: addressInput || prev.address || '',
-      phone: phoneInput || prev.phone || '',
-      password: document.getElementById('pf-password').value || prev.password || '',
-      authEmail: prev.authEmail || (emailInput || prev.email || ''),
-      identifier: identifierInput || prev.identifier || (emailInput || prev.email || ''),
-      username: usernameInput || prev.username || '',
-      city: cityInput || prev.city || ((prev.address_full && prev.address_full.city) || ''),
-      address_full: prev.address_full || {}
+      name: document.getElementById('pf-name').value.trim(),
+      email: document.getElementById('pf-email').value.trim(),
+      address: document.getElementById('pf-address').value.trim(),
+      phone: document.getElementById('pf-phone').value.trim(),
+      password: document.getElementById('pf-password').value
     };
-    if (!p.address_full || typeof p.address_full !== 'object') p.address_full = {};
-    if (p.city && !p.address_full.city) p.address_full.city = p.city;
-    if (!p.email && p.authEmail && !String(p.authEmail).endsWith('@users.bariqgifts.com')) p.email = p.authEmail;
     try { localStorage.setItem(PROFILE_KEY, JSON.stringify(p)); } catch(e) {}
     if (p.name) {
       document.getElementById('profile-name').textContent = p.name;
@@ -2363,10 +2305,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   window.changePassword = function() {
     const newPassword = document.getElementById('pf-new-password').value;
     const confirmPassword = document.getElementById('pf-confirm-password').value;
-    const profile = (() => {
-      try { return JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}'); }
-      catch(e) { return {}; }
-    })();
+    const profile = getProfile();
 
     if (!newPassword || !confirmPassword) {
       alert('⚠️ من فضلك املأ كل حقول تغيير كلمة السر');
@@ -2399,12 +2338,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   };
 
   function updateSidebarProfile(p) {
-    const profile = p || (() => {
-      try { return JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}'); }
-      catch(e) { return {}; }
-    })();
+    const profile = p || getProfile();
     const name = (profile.name || 'حسابي').trim();
-    const email = (profile.email || profile.authEmail || profile.username || 'مرحباً بك').trim();
+    const email = (profile.email || 'مرحباً بك').trim();
     const avatar = name ? name.charAt(0) : 'م';
     const nameEl = document.getElementById('sidebar-name');
     const emailEl = document.getElementById('sidebar-email');
@@ -2636,15 +2572,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         document.getElementById('profile-name').textContent = p.name;
         document.getElementById('avatar-letter').textContent = p.name.charAt(0);
       }
-      if (p.identifier) document.getElementById('pf-identifier').value = p.identifier;
-      if (p.username) document.getElementById('pf-username').value = p.username;
-      const displayEmail = p.email || p.authEmail || p.username || '';
-      if (displayEmail) {
-        document.getElementById('pf-email').value = displayEmail;
-        document.getElementById('profile-email').textContent = displayEmail;
-      }
-      if (p.city) document.getElementById('pf-city').value = p.city;
-      else if (p.address_full && p.address_full.city) document.getElementById('pf-city').value = p.address_full.city;
+      if (p.email) { document.getElementById('pf-email').value = p.email; document.getElementById('profile-email').textContent = p.email; }
       if (p.address) document.getElementById('pf-address').value = p.address;
       // تحميل العنوان الكامل
       if (p.address_full) {

@@ -301,7 +301,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="auth-error" id="login-error"></div>
 
         <div class="auth-input-group">
-          <label>البريد الإلكتروني أو رقم الهاتف أو اسم المستخدم</label>
+          <label>البريد الإلكتروني أو رقم الهاتف</label>
           <div class="auth-input-wrap">
             <input type="text" id="login-email" placeholder="example@email.com" autocomplete="email">
             <span class="input-ico">📧</span>
@@ -323,6 +323,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
         <button class="auth-btn" onclick="doLogin()">تسجيل الدخول</button>
 
+        <div class="auth-divider">أو</div>
+
+        <div class="auth-social">
+          <button class="auth-social-btn" onclick="socialLogin('google')">
+            <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            Google
+          </button>
+        </div>
       </div>
 
       <!-- ===== نموذج إنشاء الحساب ===== -->
@@ -330,34 +338,35 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
         <div class="auth-error" id="register-error"></div>
 
-        <div class="auth-input-group">
-          <label>الاسم</label>
-          <div class="auth-input-wrap">
-            <input type="text" id="reg-name" placeholder="الاسم الكامل" autocomplete="name">
-            <span class="input-ico">👤</span>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="auth-input-group" style="margin-bottom:0">
+            <label>الاسم الأول</label>
+            <div class="auth-input-wrap">
+              <input type="text" id="reg-fname" placeholder="محمد">
+              <span class="input-ico">👤</span>
+            </div>
+          </div>
+          <div class="auth-input-group" style="margin-bottom:0">
+            <label>الاسم الأخير</label>
+            <div class="auth-input-wrap">
+              <input type="text" id="reg-lname" placeholder="أحمد">
+              <span class="input-ico">�</span>
+            </div>
           </div>
         </div>
 
-        <div class="auth-input-group">
-          <label>البريد الإلكتروني أو رقم الهاتف أو اسم المستخدم</label>
+        <div class="auth-input-group" style="margin-top:16px">
+          <label>البريد الإلكتروني</label>
           <div class="auth-input-wrap">
-            <input type="text" id="reg-identifier" placeholder="example@email.com أو اسم المستخدم" autocomplete="username">
-            <span class="input-ico">📧</span>
-          </div>
-        </div>
-
-        <div class="auth-input-group">
-          <label>المدينة</label>
-          <div class="auth-input-wrap">
-            <input type="text" id="reg-city" placeholder="دبي" autocomplete="address-level2">
-            <span class="input-ico">📍</span>
+            <input type="email" id="reg-email" placeholder="example@email.com" autocomplete="email">
+            <span class="input-ico">�</span>
           </div>
         </div>
 
         <div class="auth-input-group">
           <label>رقم الهاتف</label>
           <div class="auth-input-wrap">
-            <input type="tel" id="reg-phone" placeholder="+971 XX XXX XXXX" autocomplete="tel">
+            <input type="tel" id="reg-phone" placeholder="+971 XX XXX XXXX">
             <span class="input-ico">📱</span>
           </div>
         </div>
@@ -373,7 +382,31 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <div class="strength-label" id="strength-label"></div>
         </div>
 
+        <div class="auth-input-group">
+          <label>تأكيد كلمة المرور</label>
+          <div class="auth-input-wrap">
+            <input type="password" id="reg-pass2" placeholder="أعد كتابة كلمة المرور" autocomplete="new-password">
+            <span class="input-ico">🔒</span>
+          </div>
+        </div>
+
+        <div class="auth-terms">
+          <input type="checkbox" id="reg-terms">
+          <label for="reg-terms">
+            أوافق على <a href="policy.html">شروط الاستخدام</a> و<a href="policy.html">سياسة الخصوصية</a> الخاصة بـ Bariq
+          </label>
+        </div>
+
         <button class="auth-btn" onclick="doRegister()">إنشاء حساب جديد</button>
+
+        <div class="auth-divider">أو</div>
+
+        <div class="auth-social">
+          <button class="auth-social-btn" onclick="socialLogin('google')">
+            <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            Google
+          </button>
+        </div>
       </div>
 
       <!-- نجاح -->
@@ -451,25 +484,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     label.style.color = l.c;
   }
 
-  function normalizePhone(value) {
-    return String(value || '').replace(/[^\d+]/g, '').replace(/(?!^)\+/g, '');
-  }
-
-  function identifierToAuthEmail(identifier) {
-    const value = String(identifier || '').trim().toLowerCase();
-    if (/^\S+@\S+\.\S+$/.test(value)) return value;
-    const normalized = value.replace(/[^a-z0-9._-]/g, '') || Array.from(value).map(ch => ch.codePointAt(0).toString(16)).join('');
-    return normalized + '@users.bariqgifts.com';
-  }
-
   async function doLogin() {
     hideErrors();
-    const identifier = document.getElementById('login-email').value.trim();
-    const email = identifierToAuthEmail(identifier);
+    const email = document.getElementById('login-email').value.trim();
     const pass  = document.getElementById('login-pass').value;
     const btn   = document.querySelector('#form-login .auth-btn');
 
-    if (!identifier) { showError('login-error', '⚠️ أدخل البريد الإلكتروني أو رقم الهاتف أو اسم المستخدم'); return; }
+    if (!email) { showError('login-error', '⚠️ من فضلك أدخل البريد الإلكتروني'); return; }
     if (!pass)  { showError('login-error', '⚠️ من فضلك أدخل كلمة المرور'); return; }
 
     if (btn) { btn.disabled = true; btn.textContent = '⏳ جارٍ التحقق...'; }
@@ -482,16 +503,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const user = data.user || {};
       const meta = user.user_metadata || {};
       const name = meta.full_name || meta.name || email.split('@')[0];
-      const identifier = meta.identifier || user.email || email;
-      const publicEmail = /^\S+@\S+\.\S+$/.test(identifier) ? identifier.toLowerCase() : '';
 
       // حفظ الجلسة
-      localStorage.setItem(PROFILE_KEY, JSON.stringify({ name, identifier, username: publicEmail ? '' : identifier, email: publicEmail, authEmail: user.email || email, phone: meta.phone || '', city: meta.city || '', address_full: { city: meta.city || '' } }));
+      localStorage.setItem(PROFILE_KEY, JSON.stringify({ name, email: user.email || email, phone: meta.phone || '' }));
       localStorage.setItem('x2_logged', '1');
       if (data.access_token) localStorage.setItem('x2_token', data.access_token);
 
       // مزامنة مع جدول customers
-      try { await window.Supabase.Customers.upsert({ name, email: publicEmail, phone: meta.phone || '', city: meta.city || '' }); } catch(e) {}
+      try { await window.Supabase.Customers.upsert({ name, email: user.email || email, phone: meta.phone || '' }); } catch(e) {}
 
       showSuccess('تم تسجيل الدخول بنجاح! 🎉', 'مرحباً ' + name.split(' ')[0] + '! جارٍ تحويلك...');
       setTimeout(() => { window.location.href = 'account.html'; }, 1200);
@@ -500,10 +519,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       // fallback للتحقق المحلي (لأجهزة بدون اتصال)
       try {
         const users = JSON.parse(localStorage.getItem('x2_users') || '[]');
-        const user = users.find(u => u.identifier === identifier || u.email === identifier || u.phone === normalizePhone(identifier));
+        const user = users.find(u => u.email === email || u.phone === email);
         if (user && user.pass === btoa(pass)) {
-          const publicEmail = /^\S+@\S+\.\S+$/.test(user.identifier || '') ? user.identifier.toLowerCase() : '';
-          localStorage.setItem(PROFILE_KEY, JSON.stringify({ name: user.name, identifier: user.identifier || identifier, username: publicEmail ? '' : user.identifier || identifier, email: publicEmail, authEmail: user.email || email, phone: user.phone || '', city: user.city || '', address_full: { city: user.city || '' } }));
+          localStorage.setItem(PROFILE_KEY, JSON.stringify({ name: user.name, email: user.email, phone: user.phone }));
           localStorage.setItem('x2_logged', '1');
           showSuccess('تم تسجيل الدخول! 🎉', 'جارٍ تحويلك...');
           setTimeout(() => { window.location.href = 'account.html'; }, 1200);
@@ -525,48 +543,50 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   async function doRegister() {
     hideErrors();
-    const fullName = document.getElementById('reg-name').value.trim();
-    const identifier = document.getElementById('reg-identifier').value.trim();
-    const city = document.getElementById('reg-city').value.trim();
-    const phone = normalizePhone(document.getElementById('reg-phone').value);
-    const email = identifierToAuthEmail(identifier);
+    const fname = document.getElementById('reg-fname').value.trim();
+    const lname = document.getElementById('reg-lname').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const phone = document.getElementById('reg-phone').value.trim();
     const pass  = document.getElementById('reg-pass').value;
+    const pass2 = document.getElementById('reg-pass2').value;
+    const terms = document.getElementById('reg-terms').checked;
 
-    if (!fullName) { showError('register-error', '⚠️ أدخل الاسم'); return; }
-    if (!identifier) { showError('register-error', '⚠️ أدخل البريد الإلكتروني أو رقم الهاتف أو اسم المستخدم'); return; }
-    if (!city) { showError('register-error', '⚠️ أدخل المدينة'); return; }
-    if (phone.replace(/\D/g, '').length < 7) { showError('register-error', '⚠️ أدخل رقم هاتف صحيح'); return; }
+    if (!fname)  { showError('register-error', '⚠️ أدخل اسمك الأول'); return; }
+    if (!email)  { showError('register-error', '⚠️ أدخل البريد الإلكتروني'); return; }
+    if (!/^\S+@\S+\.\S+$/.test(email)) { showError('register-error', '⚠️ البريد الإلكتروني غير صحيح'); return; }
     if (pass.length < 6) { showError('register-error', '⚠️ كلمة المرور يجب أن تكون 6 أحرف على الأقل'); return; }
+    if (pass !== pass2)  { showError('register-error', '⚠️ كلمتا المرور غير متطابقتين'); return; }
+    if (!terms)  { showError('register-error', '⚠️ يجب الموافقة على الشروط والأحكام'); return; }
 
+    const fullName = (fname + ' ' + lname).trim();
     const btn = document.querySelector('#form-register .auth-btn');
     if (btn) { btn.disabled = true; btn.textContent = '⏳ جارٍ إنشاء الحساب...'; }
 
     try {
       await new Promise(r => { if (window.Supabase) r(); else { const t = setInterval(() => { if (window.Supabase) { clearInterval(t); r(); } }, 100); setTimeout(() => { clearInterval(t); r(); }, 4000); } });
 
-      await window.Supabase.Auth.signUp(email, pass, { full_name: fullName, phone, city, identifier });
+      await window.Supabase.Auth.signUp(email, pass, { full_name: fullName, phone });
 
       // حفظ بيانات مؤقتة (قد يحتاج تفعيل بريد إلكتروني)
-      const publicEmail = /^\S+@\S+\.\S+$/.test(identifier) ? identifier.toLowerCase() : '';
-      localStorage.setItem(PROFILE_KEY, JSON.stringify({ name: fullName, identifier, username: publicEmail ? '' : identifier, email: publicEmail, authEmail: email, phone, city, address_full: { city } }));
+      localStorage.setItem(PROFILE_KEY, JSON.stringify({ name: fullName, email, phone }));
       localStorage.setItem('x2_logged', '1');
 
       // حفظ في customers أيضاً
-      await window.Supabase.Customers.upsert({ name: fullName, email: publicEmail, phone, city });
+      try { await window.Supabase.Customers.upsert({ name: fullName, email, phone }); } catch(e) {}
 
-      showSuccess('تم إنشاء حسابك! 🎉', 'مرحباً ' + fullName.split(' ')[0] + '!');
+      showSuccess('تم إنشاء حسابك! 🎉', 'مرحباً ' + fname + '! تحقق من بريدك لتفعيل الحساب.');
       setTimeout(() => { window.location.href = 'account.html'; }, 2000);
 
     } catch(err) {
       // fallback محلي
       try {
         const users = JSON.parse(localStorage.getItem('x2_users') || '[]');
-        if (users.find(u => u.identifier === identifier || u.email === email || u.phone === phone)) { showError('register-error', '❌ بيانات الدخول أو رقم الهاتف مسجلة مسبقاً'); if (btn) { btn.disabled = false; btn.textContent = 'إنشاء حساب'; } return; }
-        users.push({ name: fullName, identifier, email, phone, city, pass: btoa(pass), date: new Date().toISOString() });
+        if (users.find(u => u.email === email)) { showError('register-error', '❌ البريد مسجّل مسبقاً'); if (btn) { btn.disabled = false; btn.textContent = 'إنشاء حساب'; } return; }
+        users.push({ name: fullName, email, phone, pass: btoa(pass), date: new Date().toISOString() });
         localStorage.setItem('x2_users', JSON.stringify(users));
-        localStorage.setItem(PROFILE_KEY, JSON.stringify({ name: fullName, identifier, email: /^\S+@\S+\.\S+$/.test(identifier) ? identifier.toLowerCase() : '', authEmail: email, phone, city, address_full: { city } }));
+        localStorage.setItem(PROFILE_KEY, JSON.stringify({ name: fullName, email, phone }));
         localStorage.setItem('x2_logged', '1');
-        showSuccess('تم إنشاء حسابك! 🎉', 'مرحباً ' + fullName.split(' ')[0] + '!');
+        showSuccess('تم إنشاء حسابك! 🎉', 'مرحباً ' + fname + '!');
         setTimeout(() => { window.location.href = 'account.html'; }, 1500);
         return;
       } catch(e2) {}
@@ -595,6 +615,62 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     alert('📧 تم إرسال رابط إعادة تعيين كلمة المرور إلى: ' + email + '\n(ميزة قيد التطوير)');
   }
 
+  function socialLogin(provider) {
+    const redirectTo = 'https://bariqgifts.com/login.html';
+    const oauthUrl = _SB_URL + '/auth/v1/authorize?provider=' + provider
+      + '&redirect_to=' + encodeURIComponent(redirectTo);
+    // فتح في متصفح خارجي لتجنب حجب Google للـ WebView
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    if (isStandalone) {
+      window.open(oauthUrl, '_blank');
+    } else {
+      window.location.href = oauthUrl;
+    }
+  }
+
+  // معالجة رجوع OAuth (Google / Facebook)
+  async function handleOAuthCallback() {
+    const hash = window.location.hash;
+    if (!hash || !hash.includes('access_token')) return;
+
+    const params = new URLSearchParams(hash.substring(1));
+    const accessToken = params.get('access_token');
+    if (!accessToken) return;
+
+    // إزالة الهاش من URL
+    history.replaceState(null, '', window.location.pathname + window.location.search);
+
+    try {
+      const res = await fetch(_SB_URL + '/auth/v1/user', {
+        headers: { apikey: _SB_ANON, Authorization: 'Bearer ' + accessToken }
+      });
+      if (!res.ok) throw new Error('auth failed');
+      const user = await res.json();
+
+      const meta = user.user_metadata || {};
+      const fullName = meta.full_name || meta.name || user.email || '';
+      const nameParts = fullName.trim().split(' ');
+      const profile = {
+        fname: nameParts[0] || '',
+        lname: nameParts.slice(1).join(' ') || '',
+        name: fullName,
+        email: user.email || '',
+        phone: meta.phone || '',
+        avatar: meta.avatar_url || meta.picture || ''
+      };
+
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+      localStorage.setItem('x2_logged', '1');
+      showSuccess('مرحباً ' + (profile.fname || '') + '!', 'تم تسجيل الدخول بنجاح عبر ' + (meta.iss || 'OAuth'));
+      setTimeout(() => { window.location.href = 'account.html'; }, 1500);
+    } catch (e) {
+      showError('login-error', '❌ فشل تسجيل الدخول الاجتماعي. حاول مرة أخرى.');
+    }
+  }
+
+  // معالجة رجوع OAuth أولاً
+  handleOAuthCallback();
+
   // التحقق إذا كان مسجل دخول (تجاهل الفحص لو قادم من تسجيل الخروج)
   const _fromLogout = new URLSearchParams(window.location.search).get('logout') === '1';
   if (!_fromLogout && localStorage.getItem('x2_logged') === '1') {
@@ -610,4 +686,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </script>
 
 <script src="/java/supabase.js" defer></script>
+</div><!-- end page -->
+</body>
 </html>
