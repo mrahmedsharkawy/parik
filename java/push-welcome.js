@@ -1,4 +1,40 @@
 (function(){
+  var VAPID_PUBLIC_KEY='BPojY-23BXbIfa1IRkkQD3vAELjTn3nltgFBrlEIjZ3aEbphXAQvFY2E5B2R_mfikZLhGPo0lBeCedB8qoP5-SE';
+  function urlBase64ToUint8Array(base64String){
+    var base64=(base64String+'='.repeat((4-base64String.length%4)%4)).replace(/-/g,'+').replace(/_/g,'/');
+    var raw=window.atob(base64);
+    return Uint8Array.from([].map.call(raw,function(c){return c.charCodeAt(0);}));
+  }
+  async function saveSubscriptionToSupabase(sub){
+    var anon='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+    try{
+      var profile={};
+      try{profile=JSON.parse(localStorage.getItem('x2_profile')||'{}');}catch(e){}
+      var p256dh=sub.getKey('p256dh'),auth=sub.getKey('auth');
+      await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/push_subscriptions',{method:'POST',headers:{apikey:anon,Authorization:'Bearer '+anon,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({endpoint:sub.endpoint,p256dh:p256dh?btoa(String.fromCharCode.apply(null,new Uint8Array(p256dh))):'',auth:auth?btoa(String.fromCharCode.apply(null,new Uint8Array(auth))):'',user_phone:profile.phone||'',user_email:profile.email||'',created_at:(new Date).toISOString()})});
+    }catch(e){}
+  }
+  async function activatePushFromWelcome(btn){
+    if(!('serviceWorker'in navigator)||!('PushManager'in window)||!('Notification'in window))return false;
+    btn.disabled=true;
+    btn.innerHTML='⏳ جارٍ التفعيل...';
+    var permission=await Notification.requestPermission();
+    if(permission!=='granted'){
+      btn.disabled=false;
+      btn.innerHTML='🔕 تفعيل الإشعارات';
+      return false;
+    }
+    var reg=await navigator.serviceWorker.ready;
+    var sub=await reg.pushManager.getSubscription();
+    if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)});
+    saveSubscriptionToSupabase(sub);
+    btn.disabled=false;
+    btn.style.background='#27ae60';
+    btn.style.color='#fff';
+    btn.innerHTML='🔔 مفعل ✓';
+    localStorage.setItem('x2_push_welcome_seen','1');
+    return true;
+  }
   function isInstalledMobileApp(){
     var mobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     var standalone=(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||window.navigator.standalone===true||document.referrer.indexOf('android-app://')===0;
@@ -33,9 +69,10 @@
   document.addEventListener('click',function(e){
     var btn=e.target&&e.target.closest&&e.target.closest('#push-subscribe-btn');
     var modal=document.getElementById('pushWelcomeModal');
-    if(btn&&modal&&modal.style.display!=='none')setTimeout(function(){
-      if(!('Notification'in window)||Notification.permission==='granted')window.dismissPushWelcome();
-    },1200);
+    if(btn&&modal&&modal.style.display!=='none'){
+      e.preventDefault();
+      activatePushFromWelcome(btn).then(function(ok){if(ok)setTimeout(window.dismissPushWelcome,500);});
+    }
   });
   if(document.body)window.maybeShowPushWelcome();
   else document.addEventListener('DOMContentLoaded',window.maybeShowPushWelcome,{once:true});
