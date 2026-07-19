@@ -2336,15 +2336,15 @@ async function changeOrderStatus(id, status){
       // ========== إشعار Push تلقائي للعميل ==========
       const orderNum = o.orderNumber || ('#' + id);
       const statusLabels = {
-        pending:       { title: '⏳ طلبك قيد المراجعة',        body: `طلبك رقم ${orderNum} يُراجَع الآن` },
-        processing:    { title: '🔄 طلبك قيد المعالجة',        body: `جارٍ تجهيز طلبك رقم ${orderNum}` },
-        confirmed:     { title: '✅ تم تأكيد طلبك!',            body: `طلبك رقم ${orderNum} تم تأكيده وسيُجهَّز قريباً 🎉` },
-        manufacturing: { title: '🔨 طلبك في مرحلة التصنع',     body: `طلبك رقم ${orderNum} يُصنَّع الآن بعناية ✨` },
-        ready:         { title: '🎁 طلبك جاهز للاستلام!',       body: `طلبك رقم ${orderNum} جاهز وبانتظارك 🎉` },
-        shipped:       { title: '🚚 تم شحن طلبك!',              body: `طلبك رقم ${orderNum} في الطريق إليك` },
-        delivered:     { title: '✅ تم توصيل طلبك!',            body: `طلبك رقم ${orderNum} وصل بنجاح 🎉` },
-        cancelled:     { title: '❌ تم إلغاء طلبك',             body: `طلبك رقم ${orderNum} تم إلغاؤه` },
-        returned:      { title: '↩️ تمت عملية الإرجاع',         body: `تمت معالجة إرجاع طلب ${orderNum}` },
+        pending:       { icon: '⏳', title: '⏳ طلبك قيد المراجعة',        body: `طلبك رقم ${orderNum} يُراجَع الآن` },
+        processing:    { icon: '🔄', title: '🔄 طلبك قيد المعالجة',        body: `جارٍ تجهيز طلبك رقم ${orderNum}` },
+        confirmed:     { icon: '✅', title: '✅ تم تأكيد طلبك!',            body: `طلبك رقم ${orderNum} تم تأكيده وسيُجهَّز قريباً 🎉` },
+        manufacturing: { icon: '🔨', title: '🔨 طلبك في مرحلة التصنيع',    body: `طلبك رقم ${orderNum} يُصنَّع الآن بعناية ✨` },
+        ready:         { icon: '🎁', title: '🎁 طلبك جاهز للاستلام!',       body: `طلبك رقم ${orderNum} جاهز وبانتظارك 🎉` },
+        shipped:       { icon: '🚚', title: '🚚 تم شحن طلبك!',              body: `طلبك رقم ${orderNum} في الطريق إليك` },
+        delivered:     { icon: '✅', title: '✅ تم توصيل طلبك!',            body: `طلبك رقم ${orderNum} وصل بنجاح 🎉` },
+        cancelled:     { icon: '❌', title: '❌ تم إلغاء طلبك',             body: `طلبك رقم ${orderNum} تم إلغاؤه` },
+        returned:      { icon: '↩️', title: '↩️ تمت عملية الإرجاع',         body: `تمت معالجة إرجاع طلب ${orderNum}` },
       };
       const notif = statusLabels[status];
       const customerPhone = o.phone || o.customerPhone || o.customer_phone || '';
@@ -2363,12 +2363,17 @@ async function changeOrderStatus(id, status){
           const pushPayload = {
             title:            notif.title,
             body:             notif.body,
-            url:              '/account.html',
+            url:              '/account.html?section=orders',
+            type:             'order_status',
+            status:           status,
+            orderId:          orderNum,
+            iconText:         notif.icon,
+            emoji:            notif.icon,
             exclude_endpoint: adminEndpoint
           };
           if (customerPhone) pushPayload.user_phone = customerPhone;
           else pushPayload.user_email = customerEmail;
-          await fetch('https://knleehjjejfeobcmpwnw.supabase.co/functions/v1/hyper-api', {
+          const pushResp = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/functions/v1/hyper-api', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -2376,6 +2381,9 @@ async function changeOrderStatus(id, status){
             },
             body: JSON.stringify(pushPayload)
           });
+          if (!pushResp.ok) throw new Error(await pushResp.text());
+          const pushResult = await pushResp.json().catch(() => null);
+          if (!pushResult || !pushResult.sent) console.warn('No customer push subscribers matched this order:', pushResult);
         } catch(pushErr) {
           console.warn('Push notification skipped:', pushErr);
         }

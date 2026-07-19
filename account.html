@@ -2105,6 +2105,40 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   };
 
   // ===== عرض الإشعارات =====
+  function normalizeOrderNotification(n) {
+    n = n || {};
+    const rawText = `${n.title || ''} ${n.msg || n.body || ''}`.toLowerCase();
+    const inferredStatus =
+      (/delivered|تم التوصيل|وصل بنجاح/.test(rawText) ? 'delivered' :
+      /shipped|تم شحن|في الطريق/.test(rawText) ? 'shipped' :
+      /ready|جاهز/.test(rawText) ? 'ready' :
+      /manufactur|تصنيع|يصن/.test(rawText) ? 'manufacturing' :
+      /confirm|تأكيد|مؤكد/.test(rawText) ? 'confirmed' :
+      /cancel|إلغاء|الغاء|ملغ/.test(rawText) ? 'cancelled' :
+      /return|إرجاع|ارجاع|مرتجع/.test(rawText) ? 'returned' :
+      /pending|مراجعة|انتظار/.test(rawText) ? 'pending' :
+      /processing|معالجة|تجهيز/.test(rawText) ? 'processing' : '');
+    const status = n.status || n.orderStatus || inferredStatus || (n.type === 'order_status' ? 'processing' : '');
+    const isOrder = n.type === 'order_status' || n.orderId || n.order_id || status;
+    if (!isOrder) return n;
+    const orderId = n.orderId || n.order_id || '';
+    const orderText = orderId ? ` رقم ${orderId}` : '';
+    const map = {
+      pending:       { icon: '⏳', title: 'طلبك قيد المراجعة',     msg: `طلبك${orderText} يُراجَع الآن` },
+      processing:    { icon: '🔄', title: 'طلبك قيد المعالجة',     msg: `جارٍ تجهيز طلبك${orderText}` },
+      confirmed:     { icon: '✅', title: 'تم تأكيد طلبك',          msg: `طلبك${orderText} تم تأكيده وسيُجهَّز قريباً 🎉` },
+      manufacturing: { icon: '🔨', title: 'طلبك في مرحلة التصنيع', msg: `طلبك${orderText} يُصنَّع الآن بعناية ✨` },
+      ready:         { icon: '🎁', title: 'طلبك جاهز للاستلام',    msg: `طلبك${orderText} جاهز وبانتظارك 🎉` },
+      shipped:       { icon: '🚚', title: 'تم شحن طلبك',           msg: `طلبك${orderText} في الطريق إليك` },
+      delivered:     { icon: '✅', title: 'تم توصيل طلبك',         msg: `طلبك${orderText} وصل بنجاح 🎉` },
+      cancelled:     { icon: '❌', title: 'تم إلغاء طلبك',         msg: `طلبك${orderText} تم إلغاؤه` },
+      returned:      { icon: '↩️', title: 'تمت عملية الإرجاع',      msg: `تمت معالجة إرجاع طلبك${orderText}` }
+    };
+    const ar = map[status] || null;
+    if (!ar) return { ...n, icon: n.icon || '🔔' };
+    return { ...n, type: 'order_status', status, icon: n.icon || ar.icon, title: ar.icon + ' ' + ar.title, msg: ar.msg, orderId };
+  }
+
   function renderNotifications() {
     const listEl   = document.getElementById('notifList');
     const countEl  = document.getElementById('notifUnreadCount');
@@ -2112,7 +2146,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const aqnBadge = document.getElementById('aqnNotifBadge');
     if (!listEl) return;
 
-    const notifs = window.x2Notifications ? window.x2Notifications.getAll() : [];
+    const notifs = (window.x2Notifications ? window.x2Notifications.getAll() : []).map(normalizeOrderNotification);
     const unread = notifs.filter(n => !n.read).length;
 
     if (countEl) { countEl.textContent = unread > 0 ? unread + ' جديد' : ''; countEl.style.display = unread > 0 ? 'inline' : 'none'; }
@@ -2215,6 +2249,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   // تحديث badge الزر السريع عند التحميل
   function mergeNotificationItem(item) {
     if (!item || (!item.title && !item.msg)) return false;
+    item = normalizeOrderNotification(item);
     const notifs = window.x2Notifications ? window.x2Notifications.getAll() : (() => { try { return JSON.parse(localStorage.getItem('x2_notifications') || '[]'); } catch(e) { return []; } })();
     const id = item.id || ('push-' + Date.now());
     if (notifs.some(n => n.id === id)) return false;

@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
-    const { title, body, url, image, user_phone, user_email, exclude_endpoint, type, status, iconText } = await req.json();
+    const { title, body, url, image, user_phone, user_email, exclude_endpoint, type, status, iconText, emoji, orderId, order_id } = await req.json();
     if (!title || !body) {
       return new Response(JSON.stringify({ error: 'title and body required' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -91,7 +91,10 @@ Deno.serve(async (req) => {
       image: image || null,
       type: type || 'general',
       status: status || null,
-      iconText: iconText || null
+      iconText: iconText || emoji || null,
+      emoji: emoji || iconText || null,
+      orderId: orderId || order_id || null,
+      order_id: order_id || orderId || null
     });
     const results = await Promise.allSettled(
       filteredSubs.map((sub: any) =>

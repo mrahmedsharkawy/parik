@@ -566,7 +566,7 @@ function x2VisitorAreaFallback() {
         }
         sessionStorage.setItem("x2_after_wa", "1");
         document.addEventListener("visibilitychange", handleVisibilityReturn);
-        window.open(url, "_blank", "noopener");
+        window.open(url, "_self");
         try {
             const summaryTotal = function() {
                 const totalEl = document.querySelector(".order-summary .summary-total, .summary-total"), subtotalEl = document.querySelector(".order-summary .subtotal, .subtotal");
