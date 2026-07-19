@@ -38,7 +38,9 @@ window.applyCategoryNames = applyCategoryNames;
 
 // عند تحميل الصفحة، حمّل اللغة المحفوظة
 window.addEventListener('DOMContentLoaded', () => {
-  const savedLang = localStorage.getItem('lang') || 'ar';
+  const urlLang = new URLSearchParams(location.search).get('lang');
+  const savedLang = (urlLang === 'en' || urlLang === 'ar') ? urlLang : (localStorage.getItem('lang') || 'ar');
+  localStorage.setItem('lang', savedLang);
   changeLang(savedLang);
   const sel = document.querySelector('select');
   if (sel) sel.value = savedLang;
