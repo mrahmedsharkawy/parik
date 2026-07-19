@@ -1,5 +1,5 @@
 /* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v49';
+const CACHE = 'bariq-v51';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -155,9 +155,9 @@ self.addEventListener('fetch', function(e) {
 self.addEventListener('push', function(e) {
   let data = {};
   try { data = e.data ? e.data.json() : {}; } catch(err) {
-    data = { title: 'Ø¨Ø±ÙŠÙ‚', body: e.data ? e.data.text() : '' };
+    data = { title: '\u0628\u0631\u064a\u0642', body: e.data ? e.data.text() : '' };
   }
-  const title   = data.title || 'Ø¨Ø±ÙŠÙ‚ ðŸ›ï¸';
+  const title   = data.title || '\u0628\u0631\u064a\u0642';
   const options = {
     body:    data.body   || '',
     icon:    data.icon   || '/assets/icon w.png',
@@ -173,7 +173,7 @@ self.addEventListener('push', function(e) {
   };
   e.waitUntil(
     (async () => {
-      // Ø²ÙŠØ§Ø¯Ø© Ø§Ù„Ø¹Ø¯Ø§Ø¯ ÙˆØªØ­Ø¯ÙŠØ« Ø£ÙŠÙ‚ÙˆÙ†Ø© Ø§Ù„ØªØ·Ø¨ÙŠÙ‚
+      // Update the app badge count before showing the notification.
       _badgeCount++;
       if ('setAppBadge' in self.registration) {
         await self.registration.setAppBadge(_badgeCount).catch(() => {});
@@ -185,7 +185,7 @@ self.addEventListener('push', function(e) {
 
 self.addEventListener('notificationclick', function(e) {
   e.notification.close();
-  // ØªØµÙÙŠØ± Ø§Ù„Ø¹Ø¯Ø§Ø¯ Ø¹Ù†Ø¯ Ø§Ù„Ø¶ØºØ· Ø¹Ù„Ù‰ Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±
+  // Clear the badge count when the notification is opened.
   _badgeCount = 0;
   if ('clearAppBadge' in self.registration) {
     self.registration.clearAppBadge().catch(() => {});
@@ -201,7 +201,7 @@ self.addEventListener('notificationclick', function(e) {
   );
 });
 
-/* Badge count sync Ù…Ù† Ø§Ù„ØµÙØ­Ø© */
+/* Badge count sync from the page */
 self.addEventListener('message', function(e) {
   if (e.data && e.data.type === 'SET_BADGE') {
     _badgeCount = e.data.count || 0;
