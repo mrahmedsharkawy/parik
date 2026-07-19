@@ -1445,9 +1445,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <button id="push-subscribe-btn" style="width:100%;display:flex;align-items:center;justify-content:center;gap:4px;padding:2px 8px;min-height:24px;border:1.5px solid #c9a84c;border-radius:7px;background:#fff;color:#152546;font-size:.72rem;font-weight:800;cursor:pointer">🔕 تفعيل إشعارات التطبيق</button>
           <div style="margin-top:2px;text-align:center;color:#8a7430;font-size:.58rem;line-height:1.1">فعّل إشعارات التطبيق لتصلك تحديثات الطلبات والعروض مباشرة</div>
         </div>
-        <div style="margin-top:0;margin-bottom:14px;padding:10px 0 12px;border-top:1px solid #f0f0f0;border-bottom:1px solid #f0f0f0">
-          <div style="font-size:.8rem;font-weight:700;color:#888;margin-bottom:10px">⚙️ الإعدادات</div>
-          <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="margin-top:0;margin-bottom:14px;padding:8px 0;border-top:1px solid #f0f0f0;border-bottom:1px solid #f0f0f0">
+          <button type="button" onclick="toggleNotifSettings()" style="width:100%;display:flex;align-items:center;justify-content:space-between;border:none;background:none;padding:0;color:#888;font-size:.8rem;font-weight:700;cursor:pointer">
+            <span>⚙️ الإعدادات</span>
+            <span id="notifSettingsArrow" style="font-size:.78rem;transition:transform .2s">▼</span>
+          </button>
+          <div id="notifSettingsBody" style="display:none;flex-direction:column;gap:12px;margin-top:10px">
             <label style="display:flex;justify-content:space-between;align-items:center;font-size:.88rem;cursor:pointer">تحديثات الطلبات <input type="checkbox" checked style="accent-color:#D4AF37;width:18px;height:18px"></label>
             <label style="display:flex;justify-content:space-between;align-items:center;font-size:.88rem;cursor:pointer">العروض والتخفيضات <input type="checkbox" checked style="accent-color:#D4AF37;width:18px;height:18px"></label>
             <label style="display:flex;justify-content:space-between;align-items:center;font-size:.88rem;cursor:pointer">الكاش باك والمكافآت <input type="checkbox" checked style="accent-color:#D4AF37;width:18px;height:18px"></label>
@@ -2168,6 +2171,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     document.querySelectorAll('.account-badge').forEach(el => el.setAttribute('data-count', ''));
     if (typeof clearBadge === 'function') clearBadge();
     else if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(()=>{});
+  };
+
+  window.toggleNotifSettings = function() {
+    const body = document.getElementById('notifSettingsBody');
+    const arrow = document.getElementById('notifSettingsArrow');
+    if (!body) return;
+    const open = body.style.display !== 'none';
+    body.style.display = open ? 'none' : 'flex';
+    if (arrow) arrow.style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)';
   };
 
   // تحديث badge الزر السريع عند التحميل
