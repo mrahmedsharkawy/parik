@@ -920,6 +920,9 @@
   // إتمام الطلب
   window.placeOrder = function() {
     const fname = document.getElementById('co-first-name').value.trim();
+    const lname = document.getElementById('co-last-name').value.trim();
+    const email = document.getElementById('co-email').value.trim();
+    const country = document.getElementById('co-country').value;
     const phone = document.getElementById('co-phone').value.trim();
     const city = document.getElementById('co-city').value.trim();
     const address = document.getElementById('co-address').value.trim();
@@ -935,7 +938,12 @@
       date: new Date().toISOString(),
       items: cartItems,
       total: totalPrice,
-      shipping: { name: fname, phone, city, address },
+      shipping: { name: (fname + ' ' + lname).trim(), phone, email, country, city, address },
+      customerName: (fname + ' ' + lname).trim(),
+      customerPhone: phone,
+      customerEmail: email,
+      address: { country, city, street: address, building: '' },
+      status: 'processing',
       payment
     };
 
@@ -943,11 +951,43 @@
       const orders = JSON.parse(localStorage.getItem('x2_orders') || '[]');
       orders.unshift(order);
       localStorage.setItem('x2_orders', JSON.stringify(orders));
+      const profile = JSON.parse(localStorage.getItem('x2_profile') || '{}');
+      if (!profile.name) profile.name = order.customerName;
+      if (!profile.phone) profile.phone = phone;
+      if (!profile.email && email) profile.email = email;
+      if (!profile.address) profile.address = address;
+      if (!profile.address_full) profile.address_full = { country, city, area: '', street: address, building: '', zip: '', notes: '' };
+      localStorage.setItem('x2_profile', JSON.stringify(profile));
       localStorage.removeItem(CART_KEY);
     } catch(e) {}
 
+    try {
+      if (window.Supabase && window.Supabase.Orders) {
+        window.Supabase.Orders.insert(order).catch(err => console.warn('Supabase order save failed:', err));
+      }
+    } catch(e) {}
+
+    const itemsText = cartItems.map(it => `- ${it.name || it.title || 'Product'} x${Number(it.qty || 1)}`).join('\n');
+    const msg = encodeURIComponent([
+      'مرحباً، أريد تأكيد الطلب',
+      '',
+      'رقم الطلب: ' + order.id,
+      '',
+      'بيانات العميل:',
+      'الاسم: ' + order.customerName,
+      'الهاتف: ' + phone,
+      'البريد: ' + (email || 'غير متوفر'),
+      'العنوان: ' + address,
+      '',
+      'محتويات السلة:',
+      itemsText,
+      '',
+      'المدينة: ' + city,
+      'الإجمالي: ' + fmt(totalPrice)
+    ].join('\n'));
     alert('✅ تم تأكيد طلبك!\nرقم الطلب: ' + order.id);
-    window.location.href = 'index.html';
+    window.open('https://wa.me/971554423151?text=' + msg, '_blank', 'noopener');
+    window.location.href = 'account.html';
   };
 })();
 </script>
@@ -1095,6 +1135,7 @@
   </div>
 </footer>
 <script src="/java/main.min.js" defer></script>
+<script src="/java/supabase.min.js" defer></script>
 <script src="/translations/translation.min.js" defer></script>
 <script src="/java/footer-pages.min.js" defer></script>
 <script src="/mobile-nav-bar/main-navbar.min.js" defer></script>  

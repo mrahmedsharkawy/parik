@@ -575,7 +575,8 @@
     const discount = oldPrice > price ? Math.round(((oldPrice - price) / oldPrice) * 100) : 0;
     const saved    = (oldPrice - price).toFixed(2);
     const img      = Array.isArray(p.img) ? p.img[0] : (p.img || 'assets/logo.png');
-    const link     = p.id ? `product.html?id=${encodeURIComponent(p.id)}` : 'product.html';
+    const langParam = (localStorage.getItem('lang') || document.documentElement.lang) === 'en' ? '&lang=en' : '';
+    const link     = p.id ? `product.html?id=${encodeURIComponent(p.id)}${langParam}` : 'product.html';
     const sym      = getCurrSym();
 
     return `

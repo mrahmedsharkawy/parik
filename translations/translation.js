@@ -18,10 +18,39 @@ function changeLang(lang) {
         if (data[key]) el.title = data[key];
       });
       applyCategoryNames(lang);
+      applyTextNodeTranslations(lang, data);
       localStorage.setItem('lang', lang);
       document.documentElement.lang = lang;
       document.documentElement.dir  = lang === 'ar' ? 'rtl' : 'ltr';
     });
+}
+
+function applyTextNodeTranslations(lang, data) {
+  if (lang !== 'en') return;
+  const skip = new Set(['SCRIPT','STYLE','TEXTAREA','INPUT','SELECT','OPTION']);
+  const translate = root => {
+    const walker = document.createTreeWalker(root || document.body, NodeFilter.SHOW_TEXT, {
+      acceptNode(node) {
+        const parent = node.parentElement;
+        if (!parent || skip.has(parent.tagName)) return NodeFilter.FILTER_REJECT;
+        const key = node.nodeValue.replace(/\s+/g, ' ').trim();
+        return key && data[key] ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+      }
+    });
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(node => {
+      const raw = node.nodeValue;
+      const key = raw.replace(/\s+/g, ' ').trim();
+      node.nodeValue = raw.replace(key, data[key]);
+    });
+  };
+  translate(document.body);
+  let runs = 0;
+  const timer = setInterval(() => {
+    translate(document.body);
+    if (++runs > 8) clearInterval(timer);
+  }, 350);
 }
 
 // يطبّق أسماء الفئات المخزّنة في السمات data-i18n-ar / data-i18n-en
@@ -44,5 +73,20 @@ window.addEventListener('DOMContentLoaded', () => {
   changeLang(savedLang);
   const sel = document.querySelector('select');
   if (sel) sel.value = savedLang;
+
+  if (savedLang === 'en') {
+    document.addEventListener('click', e => {
+      const a = e.target.closest && e.target.closest('a[href]');
+      if (!a) return;
+      const href = a.getAttribute('href') || '';
+      if (!href || href.startsWith('#') || /^(https?:|mailto:|tel:|wa:|javascript:)/i.test(href)) return;
+      try {
+        const url = new URL(href, location.origin);
+        if (url.origin !== location.origin) return;
+        url.searchParams.set('lang', 'en');
+        a.setAttribute('href', url.pathname + url.search + url.hash);
+      } catch(e) {}
+    }, true);
+  }
 });
 
