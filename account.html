@@ -19,7 +19,19 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <meta name="theme-color" content="#152546">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+  <script>
+  (function(){
+    document.documentElement.classList.add('account-auth-pending');
+    try {
+      if (localStorage.getItem('x2_logged') !== '1') {
+        location.replace('login.html?next=account');
+      }
+    } catch(e) {
+      location.replace('login.html?next=account');
+    }
+  })();
+  </script>
   <script>
   (function(){
     var vp=document.querySelector('meta[name="viewport"]');
@@ -45,7 +57,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <meta property="og:image" content="assets/logo.png">
   <meta property="og:url" content="https://bariq.com">
   <meta property="og:type" content="website">
-  <style>*{box-sizing:border-box;margin:0}html,body{height:100%}body{background:#152546;font-family:'Cairo',Arial,sans-serif;padding-top:env(safe-area-inset-top)}.page{min-height:100dvh;display:flex;flex-direction:column}main{width:70%;margin:70px auto 50px;display:flex;flex-direction:column;justify-content:center}header,.main-header{background-color:#152546;padding-top:env(safe-area-inset-top)}.main-header{position:fixed;inset:0 0 auto 0;z-index:1000;width:100%;padding:7px 0;box-shadow:0 2px 4px rgba(0,0,0,.1)}.header-content{width:70%;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;min-height:50px}.logo img{height:36px}.search-container{flex:1;display:flex;align-items:center;background:#fff;border-radius:20px;margin:0 15px;max-width:1100px;height:38px;padding:0 10px}.search-container input{border:none;flex:1;outline:none;padding:6px 10px;font-size:16px;background:transparent}img,video{max-width:100%;height:auto;border-radius:3px}.dp-img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:7px;background:#f0f0f0}@media(max-width:899px){.main-header .dropdown,.main-header .cart{display:none!important}body{padding-bottom:calc(65px + env(safe-area-inset-bottom))}}</style>
+  <style>*{box-sizing:border-box;margin:0}html,body{height:100%}html.account-auth-pending body{visibility:hidden}body{background:#152546;font-family:'Cairo',Arial,sans-serif;padding-top:env(safe-area-inset-top)}.page{min-height:100dvh;display:flex;flex-direction:column}main{width:70%;margin:70px auto 50px;display:flex;flex-direction:column;justify-content:center}header,.main-header{background-color:#152546;padding-top:env(safe-area-inset-top)}.main-header{position:fixed;inset:0 0 auto 0;z-index:1000;width:100%;padding:7px 0;box-shadow:0 2px 4px rgba(0,0,0,.1)}.header-content{width:70%;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;min-height:50px}.logo img{height:36px}.search-container{flex:1;display:flex;align-items:center;background:#fff;border-radius:20px;margin:0 15px;max-width:1100px;height:38px;padding:0 10px}.search-container input{border:none;flex:1;outline:none;padding:6px 10px;font-size:16px;background:transparent}img,video{max-width:100%;height:auto;border-radius:3px}.dp-img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:7px;background:#f0f0f0}@media(max-width:899px){.main-header .dropdown,.main-header .cart{display:none!important}body{padding-bottom:calc(65px + env(safe-area-inset-bottom))}}</style>
   <link rel="stylesheet" href="/style/style.css">
   <link rel="stylesheet" href="/mobile-nav-bar/styles.css" media="(max-width: 899px)">
   <style>html,body,.page{background:#fff!important}</style>
@@ -910,6 +922,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   .acc-profile-card .acc-form-group { margin-bottom: 6px; }
   .acc-profile-card .acc-form-group label { font-size: 0.74rem; margin-bottom: 3px; }
   .acc-form-group input { font-size: 0.82rem; padding: 8px 10px; }
+  input,
+  select,
+  textarea,
+  .acc-form-group input,
+  .acc-form-group select,
+  .acc-search input,
+  .sc-input { font-size: 16px !important; }
   .acc-password-toggle { font-size: 0.74rem; }
   .acc-save-btn { width: 100%; padding: 9px 10px; font-size: 0.8rem; border-radius: 10px; }
   #section-profile > div > div[style*="قسم الأمان"] + div {
@@ -1422,6 +1441,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <button onclick="clearAllNotifs()" style="border:none;background:none;color:#e57373;font-size:.74rem;cursor:pointer">🗑 مسح</button>
           </div>
         </div>
+        <div style="margin-bottom:14px;padding:12px;border:1.5px solid rgba(212,175,55,.35);border-radius:12px;background:#fffbf0">
+          <button id="push-subscribe-btn" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:11px 14px;border:1.5px solid #c9a84c;border-radius:10px;background:#fff;color:#152546;font-size:.88rem;font-weight:800;cursor:pointer">🔕 تفعيل إشعارات التطبيق</button>
+          <div style="margin-top:8px;text-align:center;color:#8a7430;font-size:.74rem;line-height:1.6">فعّل إشعارات التطبيق لتصلك تحديثات الطلبات والعروض مباشرة</div>
+        </div>
         <div id="notifList"></div>
         <div style="margin-top:18px;padding-top:14px;border-top:1px solid #f0f0f0">
           <div style="font-size:.8rem;font-weight:700;color:#888;margin-bottom:10px">⚙️ الإعدادات</div>
@@ -1429,9 +1452,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <label style="display:flex;justify-content:space-between;align-items:center;font-size:.88rem;cursor:pointer">تحديثات الطلبات <input type="checkbox" checked style="accent-color:#D4AF37;width:18px;height:18px"></label>
             <label style="display:flex;justify-content:space-between;align-items:center;font-size:.88rem;cursor:pointer">العروض والتخفيضات <input type="checkbox" checked style="accent-color:#D4AF37;width:18px;height:18px"></label>
             <label style="display:flex;justify-content:space-between;align-items:center;font-size:.88rem;cursor:pointer">الكاش باك والمكافآت <input type="checkbox" checked style="accent-color:#D4AF37;width:18px;height:18px"></label>
-            <div style="padding-top:4px;border-top:1px solid #f5f5f5">
-              <button id="push-subscribe-btn" style="width:100%;display:none;align-items:center;justify-content:center;gap:8px;padding:11px 14px;border:1.5px solid #c9a84c;border-radius:10px;background:#fffbf0;color:#152546;font-size:.85rem;font-weight:700;cursor:pointer">🔕 تفعيل إشعارات التطبيق</button>
-            </div>
           </div>
         </div>
       </div>
@@ -2572,6 +2592,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   };
 
   // init
+  document.documentElement.classList.remove('account-auth-pending');
   renderOrders();
   loadProfile();
   // مزامنة حالة الطلبات الحقيقية من Supabase (التي حدّثها/حذفها الأدمن) ثم إعادة العرض
