@@ -1,14 +1,14 @@
 try {
     Object.defineProperty(navigator, "geolocation", {
         value: null,
-        configurable: !0
+        configurable: true
     });
 } catch (e) {}
 
 function x2VisitorAreaFallback() {
     try {
-        const e = JSON.parse(localStorage.getItem("x2_visitors") || "[]"), t = Array.isArray(e) ? e.find(e => e && (e.city || e.country)) : null;
-        return t ? [ t.city, t.country ].filter(Boolean).join("، ") : "";
+        const visitors = JSON.parse(localStorage.getItem("x2_visitors") || "[]"), v = Array.isArray(visitors) ? visitors.find(v => v && (v.city || v.country)) : null;
+        return v ? [ v.city, v.country ].filter(Boolean).join("، ") : "";
     } catch (e) {
         return "";
     }
@@ -16,102 +16,17 @@ function x2VisitorAreaFallback() {
 
 !function() {
     if (window.X2CartInitialized) return;
-    let e = document.querySelector(".cart-right .cart-items-list");
-    if (e || (e = document.querySelector(".cart-items-list")), e) {
-        window.X2CartInitialized = !0, window.currencySymbolFor = r, window.getSelectedCurrency = o, 
-        window.parseCurrency = n, window.formatCurrency = c;
+    let listRoot = document.querySelector(".cart-right .cart-items-list");
+    if (listRoot || (listRoot = document.querySelector(".cart-items-list")), !listRoot) return;
+    window.X2CartInitialized = !0;
+    function cssEsc(s) {
         try {
-            window.updateSummary = m;
-        } catch (e) {}
-        try {
-            localStorage.removeItem("x2_coupon_applied");
-        } catch (e) {}
-        window.applyCoupon = function() {
-            const e = document.getElementById("couponCodeInput"), t = document.getElementById("couponMsg");
-            if (!e || !t) return;
-            const r = (e.value || "").trim().toUpperCase(), o = (e, r) => {
-                t.textContent = e, t.style.display = "block", t.style.background = r ? "#e8f5e9" : "#fce4ec", 
-                t.style.color = r ? "#2e7d32" : "#c62828";
-            };
-            if (r) try {
-                const t = JSON.parse(localStorage.getItem("x2_coupon_code") || "null");
-                if (!t) return void o("❌ الكود غير صحيح", !1);
-                if (t.used) return void o("❌ هذا الكود تم استخدامه مسبقاً", !1);
-                if (t.code !== r) return void o("❌ الكود غير صحيح", !1);
-                sessionStorage.setItem("x2_coupon_applied", JSON.stringify({
-                    code: t.code,
-                    amount: t.amount
-                }));
-                const n = "function" == typeof window.currencySymbolFor ? window.currencySymbolFor(window.getSelectedCurrency()) : "د.إ";
-                o(`✅ تم تطبيق خصم ${parseFloat(t.amount).toFixed(2)} ${n}!`, !0), e.disabled = !0;
-                const c = e.nextElementSibling;
-                c && (c.disabled = !0, c.textContent = "✔ مطبّق"), m();
-            } catch (e) {
-                o("❌ حدث خطأ، حاول مرة أخرى", !1);
-            } else o("❌ أدخل كود الخصم أولاً", !1);
-        }, window.addProduct || (window.addProduct = function(e) {
-            const t = i(), r = a(e), o = t.findIndex(e => a(e) === r);
-            o >= 0 ? t[o].qty += Number(e.qty || 1) : t.unshift({
-                ...e,
-                qty: Number(e.qty || 1)
-            }), l(s(t));
-        }), document.addEventListener("DOMContentLoaded", function() {
-            try {
-                const e = document.getElementById("mainHeader") || document.querySelector(".main-header") || document.querySelector("header"), t = document.querySelector(".free-shipping-bar"), r = (e?.offsetHeight || 0) + (t?.offsetHeight || 0) + 10;
-                document.documentElement.style.setProperty("--cart-sticky-top", r + "px");
-            } catch {}
-            l(i()), requestAnimationFrame(function() {
-                e.querySelectorAll('.card-checkbox input[type="checkbox"]').forEach(e => {
-                    e.checked || (e.checked = !0, e.dispatchEvent(new Event("change", {
-                        bubbles: !0
-                    })));
-                });
-                const t = document.getElementById("selectAllCheckbox") || document.querySelector(".select-all-checkbox input");
-                t && (t.checked = !0), m();
-            }), async function() {
-                try {
-                    const t = await fetch("/java/Products.json");
-                    if (!t.ok) return;
-                    const r = await t.json(), o = {};
-                    if ((Array.isArray(r) ? r : []).forEach(e => {
-                        if (!e.id) return;
-                        const t = Array.isArray(e.img) ? e.img[0] : e.img;
-                        t && "string" == typeof t && (o[String(e.id)] = t);
-                    }), !Object.keys(o).length) return;
-                    e.querySelectorAll(".product-card").forEach(e => {
-                        const t = e.dataset.itemId || e.dataset.key?.split("|")[0] || "";
-                        if (!t) return;
-                        const r = e.querySelector(".image img");
-                        if (!r) return;
-                        const n = r.getAttribute("src") || "";
-                        if (!n || n.includes("logo.png") || "" === n) {
-                            const e = o[String(t)];
-                            e && (r.src = e, r.onerror = function() {
-                                this.src = "assets/logo.png";
-                            });
-                        }
-                    });
-                } catch (e) {}
-            }();
-            const t = document.getElementById("currency");
-            t && !t._boundCart && (t.addEventListener("change", () => {
-                m();
-            }), t._boundCart = !0);
-            const r = document.getElementById("checkoutBtn");
-            r && !r._bound && (r.addEventListener("click", e => {
-                n(document.querySelector(".summary-total")?.dataset.amount || "0") <= 0 && (e.preventDefault(), 
-                r.classList.add("shake"), setTimeout(() => r.classList.remove("shake"), 600));
-            }), r._bound = !0);
-        });
-    }
-    function t(e) {
-        try {
-            return window.CSS && CSS.escape ? CSS.escape(String(e)) : String(e).replace(/"/g, '\\"');
+            return window.CSS && CSS.escape ? CSS.escape(String(s)) : String(s).replace(/"/g, '\\"');
         } catch {
-            return String(e).replace(/"/g, '\\"');
+            return String(s).replace(/"/g, '\\"');
         }
     }
-    function r(e) {
+    function currencySymbolFor(code) {
         return {
             AED: "د.إ",
             USD: "$",
@@ -121,625 +36,752 @@ function x2VisitorAreaFallback() {
             KWD: "د.ك",
             JOD: "د.أ",
             GBP: "£"
-        }[e] || e;
+        }[code] || code;
     }
-    function o() {
-        const e = document.getElementById("currency");
-        return e ? e.value : localStorage.getItem("currency") || "AED";
+    function getSelectedCurrency() {
+        const sel = document.getElementById("currency");
+        return sel ? sel.value : localStorage.getItem("currency") || "AED";
     }
-    function n(e) {
-        if (!e && 0 !== e) return 0;
-        if ("number" == typeof e) return Number(e) || 0;
-        const t = String(e).trim().match(/-?\d{1,3}(?:[.,]\d{3})*(?:[.,]\d+)?|-?\d+(?:[.,]\d+)?/);
-        return t && Number(t[0].replace(/,/g, "").replace(/,/g, ".").replace(/[^\d.\-]/g, "")) || 0;
+    function parseCurrency(text) {
+        if (!text && 0 !== text) return 0;
+        if ("number" == typeof text) return Number(text) || 0;
+        const ds = String(text).trim().match(/-?\d{1,3}(?:[.,]\d{3})*(?:[.,]\d+)?|-?\d+(?:[.,]\d+)?/);
+        return ds && Number(ds[0].replace(/,/g, "").replace(/,/g, ".").replace(/[^\d.\-]/g, "")) || 0;
     }
-    function c(e) {
-        const t = r(o()), n = Number(e) || 0;
+    function formatCurrency(value) {
+        const symbol = currencySymbolFor(getSelectedCurrency()), n = Number(value) || 0;
         try {
             return new Intl.NumberFormat("en-US", {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
-            }).format(n) + " " + t;
+            }).format(n) + " " + symbol;
         } catch (e) {
-            return n.toFixed(2) + " " + t;
+            return n.toFixed(2) + " " + symbol;
         }
     }
-    function a(e) {
-        return e?.id ? String(e.id) : `${(e?.title || "").trim().toLowerCase()}|${(e?.meta || "").trim().toLowerCase()}|${Number(e?.priceCurrent || 0).toFixed(2)}|${e?.img || ""}`;
+    function makeKey(p) {
+        if (p?.id) return String(p.id);
+        return `${(p?.title || "").trim().toLowerCase()}|${(p?.meta || "").trim().toLowerCase()}|${Number(p?.priceCurrent || 0).toFixed(2)}|${p?.img || ""}`;
     }
-    function d(e) {
-        const t = new Map;
-        for (const r of e || []) {
-            const e = a(r);
-            t.has(e) ? t.get(e).qty += Number(r.qty || 1) : t.set(e, {
-                ...r,
-                qty: Number(r.qty || 1)
+    function dedupe(items) {
+        const map = new Map;
+        for (const it of items || []) {
+            const key = makeKey(it);
+            map.has(key) ? map.get(key).qty += Number(it.qty || 1) : map.set(key, {
+                ...it,
+                qty: Number(it.qty || 1)
             });
         }
-        return Array.from(t.values());
+        return Array.from(map.values());
     }
-    function i() {
+    function readCart() {
         try {
-            const e = localStorage.getItem("x2_cart"), t = e ? JSON.parse(e) : [];
-            return d(Array.isArray(t) ? t : []);
+            const raw = localStorage.getItem("x2_cart"), arr = raw ? JSON.parse(raw) : [];
+            return dedupe(Array.isArray(arr) ? arr : []);
         } catch {
             return [];
         }
     }
-    function s(e) {
-        const t = d(e || []);
-        localStorage.setItem("x2_cart", JSON.stringify(t)), function(e) {
+    function writeCart(items) {
+        const clean = dedupe(items || []);
+        localStorage.setItem("x2_cart", JSON.stringify(clean)), function(items) {
             try {
-                const t = (Array.isArray(e) ? e : i()).reduce((e, t) => e + (Number(t.qty) || 1), 0);
-                [ document.getElementById("checkout-count"), document.querySelector(".cart-count") ].forEach(e => {
-                    e && (e.dataset.count = String(t), e.textContent = t);
+                const count = (Array.isArray(items) ? items : readCart()).reduce((s, it) => s + (Number(it.qty) || 1), 0);
+                [ document.getElementById("checkout-count"), document.querySelector(".cart-count") ].forEach(el => {
+                    el && (el.dataset.count = String(count), el.textContent = count);
                 });
             } catch {}
-        }(t);
+        }(clean);
         try {
             window.dispatchEvent(new CustomEvent("cart:updated", {
                 detail: {
-                    items: t
+                    items: clean
                 }
             }));
         } catch {}
-        return t;
+        return clean;
     }
-    function l(t) {
-        e.querySelectorAll(".product-card-cart, .product-card").forEach(e => e.remove()), 
-        t.forEach(y), g(), m();
+    function renderList(items) {
+        listRoot.querySelectorAll(".product-card-cart, .product-card").forEach(n => n.remove()), 
+        items.forEach(addCard), toggleEmptyState(), updateSummary();
     }
-    function u() {
-        const t = Array.from(e.querySelectorAll(".product-card-cart, .product-card")).map(e => {
-            const t = e.querySelector('.card-checkbox input[type="checkbox"]'), r = e.querySelector(".image img")?.src || "", o = Number(e.dataset.priceCurrent ?? n(e.querySelector(".price-current, .current-price")?.textContent || "0")) || 0, c = Number(e.dataset.priceOld ?? n(e.querySelector(".old-price")?.textContent || "0")) || 0, a = e.querySelector('.qty-dropdown input[type="number"], input[type="number"]'), d = e.querySelector(".qty-dropdown .qty-value, .qty-value"), i = Number(a ? a.value || 1 : d ? d.textContent || e.dataset.qty || 1 : e.dataset.qty || 1);
+    function persistFromDOM() {
+        const items = Array.from(listRoot.querySelectorAll(".product-card-cart, .product-card")).map(card => {
+            const cb = card.querySelector('.card-checkbox input[type="checkbox"]'), img = card.querySelector(".image img")?.src || "", priceCur = Number(card.dataset.priceCurrent ?? parseCurrency(card.querySelector(".price-current, .current-price")?.textContent || "0")) || 0, priceOld = Number(card.dataset.priceOld ?? parseCurrency(card.querySelector(".old-price")?.textContent || "0")) || 0, inpt = card.querySelector('.qty-dropdown input[type="number"], input[type="number"]'), valEl = card.querySelector(".qty-dropdown .qty-value, .qty-value"), qty = Number(inpt ? inpt.value || 1 : valEl ? valEl.textContent || card.dataset.qty || 1 : card.dataset.qty || 1);
             return {
-                id: e.dataset.itemId || "",
-                title: e.querySelector(".title")?.textContent?.trim() || "",
-                meta: e.querySelector(".meta")?.textContent?.trim() || "",
-                img: r,
-                priceCurrent: o,
-                priceOld: c,
-                qty: Math.max(1, Number(i || 1)),
-                selected: !(!t || !t.checked)
+                id: card.dataset.itemId || "",
+                title: card.querySelector(".title")?.textContent?.trim() || "",
+                meta: card.querySelector(".meta")?.textContent?.trim() || "",
+                img: img,
+                priceCurrent: priceCur,
+                priceOld: priceOld,
+                qty: Math.max(1, Number(qty || 1)),
+                selected: !(!cb || !cb.checked)
             };
         });
         try {
-            localStorage.setItem("x2_cart", JSON.stringify(t));
+            localStorage.setItem("x2_cart", JSON.stringify(items));
         } catch (e) {
             console.error(e);
         }
         try {
             window.dispatchEvent(new CustomEvent("cart:persisted", {
                 detail: {
-                    items: t
+                    items: items
                 }
             }));
         } catch (e) {}
-        return t;
+        return items;
     }
-    function m() {
-        const t = ".product-card-cart, .product-card", r = void 0 !== e && e ? e.querySelectorAll(t) : document.querySelectorAll(t);
-        let o = 0, n = 0, c = 0;
-        r.forEach(e => {
-            const t = e.querySelector('.card-checkbox input[type="checkbox"]');
-            if (t && !t.checked) return;
-            const r = Number(window.parseCurrency(e.dataset.priceCurrent ?? e.querySelector(".price-current, .current-price")?.textContent ?? "0")) || 0, a = Number(window.parseCurrency(e.dataset.priceOld ?? e.querySelector(".old-price")?.textContent ?? "0")) || 0, d = Math.max(r, a), i = e.querySelector('.qty-dropdown input[type="number"], input[type="number"]'), s = e.querySelector(".qty-dropdown .qty-value, .qty-value");
-            let l = 1;
-            l = i ? Math.max(1, Number(i.value || 1)) : s ? Math.max(1, Number(String(s.textContent).replace(/[^\d]/g, "") || e.dataset.qty || 1)) : Math.max(1, Number(e.dataset.qty || 1)), 
-            o += r * l, n += d * l, c += l, e.dataset.lineTotal = (r * l).toFixed(2);
+    function updateSummary() {
+        const selector = ".product-card-cart, .product-card", cards = void 0 !== listRoot && listRoot ? listRoot.querySelectorAll(selector) : document.querySelectorAll(selector);
+        let actualTotal = 0, oldTotal = 0, totalQty = 0;
+        cards.forEach(card => {
+            const cb = card.querySelector('.card-checkbox input[type="checkbox"]');
+            if (cb && !cb.checked) return;
+            const cur = Number(window.parseCurrency(card.dataset.priceCurrent ?? card.querySelector(".price-current, .current-price")?.textContent ?? "0")) || 0, oldCandidate = Number(window.parseCurrency(card.dataset.priceOld ?? card.querySelector(".old-price")?.textContent ?? "0")) || 0, originalPrice = Math.max(cur, oldCandidate), inpt = card.querySelector('.qty-dropdown input[type="number"], input[type="number"]'), valEl = card.querySelector(".qty-dropdown .qty-value, .qty-value");
+            let qty = 1;
+            qty = inpt ? Math.max(1, Number(inpt.value || 1)) : valEl ? Math.max(1, Number(String(valEl.textContent).replace(/[^\d]/g, "") || card.dataset.qty || 1)) : Math.max(1, Number(card.dataset.qty || 1)), 
+            actualTotal += cur * qty, oldTotal += originalPrice * qty, totalQty += qty, card.dataset.lineTotal = (cur * qty).toFixed(2);
         });
-        const a = Math.max(0, n - o), d = document.querySelector(".order-summary .subtotal, .subtotal"), i = document.querySelector(".order-summary .discount, .discount"), s = document.querySelector(".order-summary .shipping, .shipping"), l = document.querySelector(".order-summary .summary-total, .summary-total");
-        if (d && (d.dataset.amount = n.toFixed(2), d.textContent = window.formatCurrency(n)), 
-        i && (i.dataset.amount = a.toFixed(2), a > 0 ? (i.style.display = "", i.textContent = "-" + window.formatCurrency(a)) : i.style.display = "none"), 
-        s && (s.dataset.amount = (0).toFixed(2), s.textContent = "ar" === document.documentElement.lang ? "يتم تحديده لاحقاً" : "TBD"), 
-        l) {
-            let e = 0;
-            const t = document.getElementById("couponDiscountLine"), r = document.getElementById("couponDiscountAmount");
+        const discount = Math.max(0, oldTotal - actualTotal), subtotalEl = document.querySelector(".order-summary .subtotal, .subtotal"), discountEl = document.querySelector(".order-summary .discount, .discount"), shippingEl = document.querySelector(".order-summary .shipping, .shipping"), totalEl = document.querySelector(".order-summary .summary-total, .summary-total");
+        if (subtotalEl && (subtotalEl.dataset.amount = oldTotal.toFixed(2), subtotalEl.textContent = window.formatCurrency(oldTotal)), 
+        discountEl && (discountEl.dataset.amount = discount.toFixed(2), discount > 0 ? (discountEl.style.display = "", 
+        discountEl.textContent = "-" + window.formatCurrency(discount)) : discountEl.style.display = "none"), 
+        shippingEl && (shippingEl.dataset.amount = (0).toFixed(2), shippingEl.textContent = "ar" === document.documentElement.lang ? "يتم تحديده لاحقاً" : "TBD"), 
+        totalEl) {
+            let couponDiscount = 0;
+            const couponDiscountLine = document.getElementById("couponDiscountLine"), couponDiscountAmtEl = document.getElementById("couponDiscountAmount");
             try {
-                const n = JSON.parse(sessionStorage.getItem("x2_coupon_applied") || "null");
-                if (n && n.code && n.amount) {
-                    const c = JSON.parse(localStorage.getItem("x2_coupon_code") || "null");
-                    c && c.code === n.code && !c.used ? (e = Math.min(parseFloat(n.amount) || 0, o), 
-                    t && (t.style.display = ""), r && (r.textContent = "-" + window.formatCurrency(e))) : (sessionStorage.removeItem("x2_coupon_applied"), 
-                    t && (t.style.display = "none"));
-                } else t && (t.style.display = "none");
+                const applied = JSON.parse(sessionStorage.getItem("x2_coupon_applied") || "null");
+                if (applied && applied.code && applied.amount) {
+                    const stored = JSON.parse(localStorage.getItem("x2_coupon_code") || "null");
+                    stored && stored.code === applied.code && !stored.used ? (couponDiscount = Math.min(parseFloat(applied.amount) || 0, actualTotal), 
+                    couponDiscountLine && (couponDiscountLine.style.display = ""), couponDiscountAmtEl && (couponDiscountAmtEl.textContent = "-" + window.formatCurrency(couponDiscount))) : (sessionStorage.removeItem("x2_coupon_applied"), 
+                    couponDiscountLine && (couponDiscountLine.style.display = "none"));
+                } else couponDiscountLine && (couponDiscountLine.style.display = "none");
             } catch (e) {
-                t && (t.style.display = "none");
+                couponDiscountLine && (couponDiscountLine.style.display = "none");
             }
-            const n = Math.max(0, o + 0 - e);
-            l.dataset.amount = n.toFixed(2), l.textContent = window.formatCurrency(n);
+            const grandTotal = Math.max(0, actualTotal + 0 - couponDiscount);
+            totalEl.dataset.amount = grandTotal.toFixed(2), totalEl.textContent = window.formatCurrency(grandTotal);
         }
-        const u = document.getElementById("checkout-count");
-        u && (u.dataset.count = String(c), u.textContent = c);
+        const checkoutCount = document.getElementById("checkout-count");
+        checkoutCount && (checkoutCount.dataset.count = String(totalQty), checkoutCount.textContent = totalQty);
         try {
             window.dispatchEvent(new CustomEvent("cart:summary-updated", {
                 detail: {
-                    oldTotal: n,
-                    actualTotal: o,
-                    totalQty: c,
-                    discount: a
+                    oldTotal: oldTotal,
+                    actualTotal: actualTotal,
+                    totalQty: totalQty,
+                    discount: discount
                 }
             }));
         } catch (e) {}
     }
-    function y(r) {
-        const o = Number(r.priceCurrent || r.price || r.priceSale || 0), n = Number(r.priceOld ?? r.priceOriginal ?? r.priceCurrent ?? r.price ?? 0), d = a(r), i = n > o ? Math.round((n - o) / n * 100) : 0, s = e.querySelector(`.product-card[data-key="${t(d)}"]`) || (r.id ? e.querySelector(`.product-card[data-item-id="${t(r.id)}"]`) : null);
-        if (s) {
-            const e = s.querySelector('input[type="number"]');
-            if (e) e.value = Math.max(1, Number(e.value || 1) + Number(r.qty || 1)); else {
-                const e = s.querySelector(".qty-value");
-                e && (e.textContent = Math.max(1, Number(e.textContent || 1) + Number(r.qty || 1)));
+    window.currencySymbolFor = currencySymbolFor, window.getSelectedCurrency = getSelectedCurrency, 
+    window.parseCurrency = parseCurrency, window.formatCurrency = formatCurrency;
+    try {
+        window.updateSummary = updateSummary;
+    } catch (e) {}
+    try {
+        localStorage.removeItem("x2_coupon_applied");
+    } catch (e) {}
+    function addCard(p) {
+        const cur = Number(p.priceCurrent || p.price || p.priceSale || 0), old = Number(p.priceOld ?? p.priceOriginal ?? p.priceCurrent ?? p.price ?? 0), key = makeKey(p), discountPercent = old > cur ? Math.round((old - cur) / old * 100) : 0, exists = listRoot.querySelector(`.product-card[data-key="${cssEsc(key)}"]`) || (p.id ? listRoot.querySelector(`.product-card[data-item-id="${cssEsc(p.id)}"]`) : null);
+        if (exists) {
+            const input = exists.querySelector('input[type="number"]');
+            if (input) input.value = Math.max(1, Number(input.value || 1) + Number(p.qty || 1)); else {
+                const valEl = exists.querySelector(".qty-value");
+                valEl && (valEl.textContent = Math.max(1, Number(valEl.textContent || 1) + Number(p.qty || 1)));
             }
-            if (r.description) {
-                let e = s.querySelector(".description");
-                if (!e) {
-                    e = document.createElement("div"), e.className = "description";
-                    const t = s.querySelector(".title");
-                    t && t.parentNode && t.parentNode.insertBefore(e, t.nextSibling);
+            if (p.description) {
+                let descEl = exists.querySelector(".description");
+                if (!descEl) {
+                    descEl = document.createElement("div"), descEl.className = "description";
+                    const titleEl = exists.querySelector(".title");
+                    titleEl && titleEl.parentNode && titleEl.parentNode.insertBefore(descEl, titleEl.nextSibling);
                 }
-                e && (e.textContent = r.description);
+                descEl && (descEl.textContent = p.description);
             }
             return;
         }
-        const l = document.createElement("div");
-        if (l.className = "product-card product-card-cart", l.dataset.key = d, r.id && (l.dataset.itemId = String(r.id)), 
-        l.dataset.priceCurrent = o.toFixed(2), l.dataset.priceOld = n.toFixed(2), !document.getElementById("cart-item-styles")) {
-            const e = document.createElement("style");
-            e.id = "cart-item-styles", e.textContent = "\n      .description {\n        font-size: 11px;\n        color: #555;\n        margin: 5px 0;\n        line-height: 1.4;\n        margin-bottom: -1px;\n      }\n      .urgency-text {\n        font-size: 10px;\n        color: #d32f2f;\n        margin-top: 5px;\n        margin-bottom: -5px;\n      }\n      .hurry-text {\n        font-size: 11px;\n        color: #d32f2f;\n        font-weight: bold;\n        margin-bottom: -5px;\n      }\n    ", 
-            document.head.appendChild(e);
+        const card = document.createElement("div");
+        if (card.className = "product-card product-card-cart", card.dataset.key = key, p.id && (card.dataset.itemId = String(p.id)), 
+        card.dataset.priceCurrent = cur.toFixed(2), card.dataset.priceOld = old.toFixed(2), 
+        !document.getElementById("cart-item-styles")) {
+            const style = document.createElement("style");
+            style.id = "cart-item-styles", style.textContent = "\n      .description {\n        font-size: 11px;\n        color: #555;\n        margin: 5px 0;\n        line-height: 1.4;\n        margin-bottom: -1px;\n      }\n      .urgency-text {\n        font-size: 10px;\n        color: #d32f2f;\n        margin-top: 5px;\n        margin-bottom: -5px;\n      }\n      .hurry-text {\n        font-size: 11px;\n        color: #d32f2f;\n        font-weight: bold;\n        margin-bottom: -5px;\n      }\n    ", 
+            document.head.appendChild(style);
         }
-        l.innerHTML = `\n    <button type="button" class="remove-btn" aria-label="إزالة المنتج">🗑️</button>\n    <div class="card-checkbox">\n      <input type="checkbox" checked>\n    </div>\n    <div class="qty-container">\n      <div class="qty-dropdown">\n        <span>الكمية</span>\n        <span class="qty-value">${Number(r.qty || 1)}</span>\n        <span class="dropdown-icon">▼</span>\n      </div>\n    </div>\n    <div class="image">\n      ${r.id ? `<a href="/product?id=${encodeURIComponent(r.id)}" style="display:block;width:100%;height:100%">` : ""}\n      <img src="${r.img || "assets/logo.png"}" alt="${(r.title || "").replace(/"/g, "&quot;")}" onerror="this.src='assets/logo.png'" loading="lazy">\n      ${r.id ? "</a>" : ""}\n    </div>\n    <div class="details">\n      <div class="title">${r.title || ""}</div>\n      <div class="description">${r.description || ""}</div>\n      <div class="meta">${r.meta || ""}</div>\n      <div class="urgency-text">⏱️ ينتهي العرض قريبا</div>\n      <div class="hurry-text">سارع بالشراء قبل نفاد الكمية!</div>\n      <div class="discount-info">\n        <span>عروض كبيرة</span>\n        <span class="dot">•</span>\n        <span class="since">انخفض ${i}% منذ إضافته</span>\n      </div>\n      <div class="price-container">\n        <span class="current-price">${c(o)}</span>\n        <span class="old-price">${c(n)}</span>\n        <span class="discount-badge">-${i}%</span>\n      </div>\n    </div>\n  `, 
-        l.querySelector(".card-checkbox input")?.addEventListener("change", e => {
-            l.classList.toggle("selected", e.target.checked), function() {
-                const e = document.querySelectorAll(".product-card-cart .card-checkbox input:checked").length, t = document.querySelectorAll(".product-card-cart").length, r = document.querySelector(".selection-count");
-                r && (r.textContent = `تحديد (${e})`);
-                const o = document.querySelector(".select-all-checkbox input");
-                o && (o.checked = e === t && t > 0);
+        card.innerHTML = `\n    <button type="button" class="remove-btn" aria-label="إزالة المنتج">🗑️</button>\n    <div class="card-checkbox">\n      <input type="checkbox" checked>\n    </div>\n    <div class="qty-container">\n      <div class="qty-dropdown">\n        <span>الكمية</span>\n        <span class="qty-value">${Number(p.qty || 1)}</span>\n        <span class="dropdown-icon">▼</span>\n      </div>\n    </div>\n    <div class="image">\n      ${p.id ? `<a href="/product?id=${encodeURIComponent(p.id)}" style="display:block;width:100%;height:100%">` : ""}\n      <img src="${p.img || "assets/logo.png"}" alt="${(p.title || "").replace(/"/g, "&quot;")}" onerror="this.src='assets/logo.png'" loading="lazy">\n      ${p.id ? "</a>" : ""}\n    </div>\n    <div class="details">\n      <div class="title">${p.title || ""}</div>\n      <div class="description">${p.description || ""}</div>\n      <div class="meta">${p.meta || ""}</div>\n      <div class="urgency-text">⏱️ ينتهي العرض قريبا</div>\n      <div class="hurry-text">سارع بالشراء قبل نفاد الكمية!</div>\n      <div class="discount-info">\n        <span>عروض كبيرة</span>\n        <span class="dot">•</span>\n        <span class="since">انخفض ${discountPercent}% منذ إضافته</span>\n      </div>\n      <div class="price-container">\n        <span class="current-price">${formatCurrency(cur)}</span>\n        <span class="old-price">${formatCurrency(old)}</span>\n        <span class="discount-badge">-${discountPercent}%</span>\n      </div>\n    </div>\n  `, 
+        card.querySelector(".card-checkbox input")?.addEventListener("change", e => {
+            card.classList.toggle("selected", e.target.checked), function() {
+                const selectedItems = document.querySelectorAll(".product-card-cart .card-checkbox input:checked").length, totalItems = document.querySelectorAll(".product-card-cart").length, countDisplay = document.querySelector(".selection-count");
+                countDisplay && (countDisplay.textContent = `تحديد (${selectedItems})`);
+                const selectAllCheckbox = document.querySelector(".select-all-checkbox input");
+                selectAllCheckbox && (selectAllCheckbox.checked = selectedItems === totalItems && totalItems > 0);
             }();
-        }), l.querySelector(".remove-btn")?.addEventListener("click", () => {
-            !function(e) {
-                e.remove(), m(), u(), g();
-            }(l);
-        }), l.querySelector(".qty-dropdown")?.addEventListener("click", e => {
-            e.stopPropagation(), function(e, t) {
+        }), card.querySelector(".remove-btn")?.addEventListener("click", () => {
+            !function(card) {
+                card.remove(), updateSummary(), persistFromDOM(), toggleEmptyState();
+            }(card);
+        }), card.querySelector(".qty-dropdown")?.addEventListener("click", e => {
+            e.stopPropagation(), function(card, target) {
                 if (!document.getElementById("qty-dropdown-arrow-style")) {
-                    const e = document.createElement("style");
-                    e.id = "qty-dropdown-arrow-style", e.textContent = "\n      .qty-dropdown .dropdown-icon { display:inline-block; transition: transform .18s ease; transform-origin: center; }\n      .qty-options { box-sizing: border-box; max-height: 240px; overflow:auto; background:white; border:1px solid rgba(0,0,0,.08); border-radius:4px; }\n    ", 
-                    document.head.appendChild(e);
+                    const s = document.createElement("style");
+                    s.id = "qty-dropdown-arrow-style", s.textContent = "\n      .qty-dropdown .dropdown-icon { display:inline-block; transition: transform .18s ease; transform-origin: center; }\n      .qty-options { box-sizing: border-box; max-height: 240px; overflow:auto; background:white; border:1px solid rgba(0,0,0,.08); border-radius:4px; }\n    ", 
+                    document.head.appendChild(s);
                 }
-                const r = e.dataset.key || e.dataset.itemId || String(Math.random()), o = document.querySelector(`.qty-options[data-owner="${r}"]`);
-                if (o) {
-                    o.remove(), t.classList.remove("open");
-                    const e = t.querySelector(".dropdown-icon");
-                    return void (e && (e.style.transform = ""));
+                const ownerKey = card.dataset.key || card.dataset.itemId || String(Math.random()), existing = document.querySelector(`.qty-options[data-owner="${ownerKey}"]`);
+                if (existing) {
+                    existing.remove(), target.classList.remove("open");
+                    const icon = target.querySelector(".dropdown-icon");
+                    return void (icon && (icon.style.transform = ""));
                 }
-                p();
-                const n = e.querySelector(".qty-value"), c = Math.max(1, parseInt(n ? n.textContent : e.dataset.qty) || 1), a = document.createElement("div");
-                a.className = "qty-options", a.dataset.owner = r, a.setAttribute("role", "listbox"), 
-                a.style.position = "fixed", a.style.zIndex = 99999, a.style.visibility = "hidden", 
-                a.style.maxHeight = "240px", a.style.overflow = "auto", a.style.background = "white";
-                for (let e = 1; e <= 10; e++) {
-                    const t = document.createElement("div");
-                    t.className = "qty-option" + (e === c ? " selected" : ""), t.dataset.value = String(e), 
-                    t.innerHTML = `<span class="label">${e}</span><span class="check">${e === c ? "✓" : ""}</span>`, 
-                    a.appendChild(t);
+                closeQtyDropdowns();
+                const curValEl = card.querySelector(".qty-value"), cur = Math.max(1, parseInt(curValEl ? curValEl.textContent : card.dataset.qty) || 1), dropdown = document.createElement("div");
+                dropdown.className = "qty-options", dropdown.dataset.owner = ownerKey, dropdown.setAttribute("role", "listbox"), 
+                dropdown.style.position = "fixed", dropdown.style.zIndex = 99999, dropdown.style.visibility = "hidden", 
+                dropdown.style.maxHeight = "240px", dropdown.style.overflow = "auto", dropdown.style.background = "white";
+                for (let i = 1; i <= 10; i++) {
+                    const opt = document.createElement("div");
+                    opt.className = "qty-option" + (i === cur ? " selected" : ""), opt.dataset.value = String(i), 
+                    opt.innerHTML = `<span class="label">${i}</span><span class="check">${i === cur ? "✓" : ""}</span>`, 
+                    dropdown.appendChild(opt);
                 }
-                document.body.appendChild(a);
-                const d = t.getBoundingClientRect(), i = a.getBoundingClientRect(), s = "rtl" === document.dir || "rtl" === getComputedStyle(e).direction ? d.right - Math.max(i.width, d.width) : d.left, l = Math.max(8, Math.min(s, window.innerWidth - Math.max(i.width, d.width) - 8)), y = Math.min(window.innerHeight - 8, d.bottom + 6);
-                a.style.left = Math.round(l) + "px", a.style.top = Math.round(y) + "px", a.style.minWidth = Math.max(80, d.width) + "px", 
-                a.style.visibility = "visible";
-                const g = t.querySelector(".dropdown-icon");
-                g && (g.style.transition = "transform .18s ease", g.style.transform = "rotate(180deg)"), 
-                t.classList.add("open"), a.addEventListener("click", t => {
-                    const r = t.target.closest(".qty-option");
-                    if (!r) return;
-                    const o = Math.max(1, parseInt(r.dataset.value) || 1), n = e.querySelector(".qty-value");
-                    n && (n.textContent = o), a.querySelectorAll(".qty-option").forEach(e => {
-                        e.classList.toggle("selected", e === r);
-                        const t = e.querySelector(".check");
-                        t && (t.textContent = e === r ? "✓" : "");
-                    }), function(e, t) {
-                        e.dataset.qty = t, m(), u();
-                    }(e, o), p();
+                document.body.appendChild(dropdown);
+                const tgtRect = target.getBoundingClientRect(), ddRect = dropdown.getBoundingClientRect(), margin = 8, leftRaw = "rtl" === document.dir || "rtl" === getComputedStyle(card).direction ? tgtRect.right - Math.max(ddRect.width, tgtRect.width) : tgtRect.left, left = Math.max(margin, Math.min(leftRaw, window.innerWidth - Math.max(ddRect.width, tgtRect.width) - margin)), top = Math.min(window.innerHeight - 8, tgtRect.bottom + 6);
+                dropdown.style.left = Math.round(left) + "px", dropdown.style.top = Math.round(top) + "px", 
+                dropdown.style.minWidth = Math.max(80, tgtRect.width) + "px", dropdown.style.visibility = "visible";
+                const icon = target.querySelector(".dropdown-icon");
+                icon && (icon.style.transition = "transform .18s ease", icon.style.transform = "rotate(180deg)");
+                target.classList.add("open"), dropdown.addEventListener("click", ev => {
+                    const opt = ev.target.closest(".qty-option");
+                    if (!opt) return;
+                    const v = Math.max(1, parseInt(opt.dataset.value) || 1), valEl = card.querySelector(".qty-value");
+                    valEl && (valEl.textContent = v), dropdown.querySelectorAll(".qty-option").forEach(o => {
+                        o.classList.toggle("selected", o === opt);
+                        const c = o.querySelector(".check");
+                        c && (c.textContent = o === opt ? "✓" : "");
+                    }), updateCardQuantity(card, v), closeQtyDropdowns();
                 });
-                const h = e => {
-                    a.contains(e.target) || t.contains(e.target) || (p(), document.removeEventListener("click", h));
+                const onDocClick = ev => {
+                    dropdown.contains(ev.target) || target.contains(ev.target) || (closeQtyDropdowns(), 
+                    document.removeEventListener("click", onDocClick));
                 };
-                setTimeout(() => document.addEventListener("click", h), 0);
-            }(l, e.currentTarget);
-        }), e.insertBefore(l, e.firstElementChild || null);
+                setTimeout(() => document.addEventListener("click", onDocClick), 0);
+            }(card, e.currentTarget);
+        }), listRoot.insertBefore(card, listRoot.firstElementChild || null);
     }
-    function p() {
-        document.querySelectorAll(".qty-options").forEach(e => e.remove()), document.querySelectorAll(".qty-dropdown").forEach(e => {
-            e.classList.remove("open");
-            const t = e.querySelector(".dropdown-icon");
-            t && (t.style.transform = "", t.style.transition = "");
+    function closeQtyDropdowns() {
+        document.querySelectorAll(".qty-options").forEach(n => n.remove()), document.querySelectorAll(".qty-dropdown").forEach(d => {
+            d.classList.remove("open");
+            const icon = d.querySelector(".dropdown-icon");
+            icon && (icon.style.transform = "", icon.style.transition = "");
         });
     }
-    function g() {
-        const t = null != e.querySelector(".product-card"), r = document.querySelector(".empty-cart-wrap");
-        r && (r.style.display = t ? "none" : "");
+    function updateCardQuantity(card, qty) {
+        card.dataset.qty = qty, updateSummary(), persistFromDOM();
     }
-    function u() {
-        s(Array.from(e.querySelectorAll(".product-card")).map(e => ({
-            id: e.dataset.itemId || "",
-            title: e.querySelector(".title")?.textContent?.trim() || "",
-            meta: e.querySelector(".meta")?.textContent?.trim() || "",
-            img: e.querySelector(".image img")?.src || "",
-            priceCurrent: Number(e.dataset.priceCurrent || n(e.querySelector(".price-current")?.textContent || "0")) || 0,
-            priceOld: Number(e.dataset.priceOld || n(e.querySelector(".old-price")?.textContent || "0")) || 0,
-            qty: Number(e.querySelector('input[type="number"]')?.value || 1)
+    function toggleEmptyState() {
+        const hasItems = null != listRoot.querySelector(".product-card"), emptyWrap = document.querySelector(".empty-cart-wrap");
+        emptyWrap && (emptyWrap.style.display = hasItems ? "none" : "");
+    }
+    function persistFromDOM() {
+        writeCart(Array.from(listRoot.querySelectorAll(".product-card")).map(card => ({
+            id: card.dataset.itemId || "",
+            title: card.querySelector(".title")?.textContent?.trim() || "",
+            meta: card.querySelector(".meta")?.textContent?.trim() || "",
+            img: card.querySelector(".image img")?.src || "",
+            priceCurrent: Number(card.dataset.priceCurrent || parseCurrency(card.querySelector(".price-current")?.textContent || "0")) || 0,
+            priceOld: Number(card.dataset.priceOld || parseCurrency(card.querySelector(".old-price")?.textContent || "0")) || 0,
+            qty: Number(card.querySelector('input[type="number"]')?.value || 1)
         })));
     }
-}(), function() {
-    function e() {
-        const e = document.querySelector(".cart-layout-container"), t = document.querySelector(".cart-left"), r = document.querySelector(".cart-right"), o = document.querySelector(".cart-items-list");
-        e && t && r && o && (window.innerWidth <= 992 ? (t.parentElement !== r || o.nextElementSibling !== t) && r.insertBefore(t, o.nextSibling) : t.parentElement !== e && e.insertBefore(t, r));
-    }
-    let t;
-    window.addEventListener("load", e), window.addEventListener("resize", function() {
-        clearTimeout(t), t = setTimeout(e, 120);
-    }), window.addEventListener("orientationchange", function() {
-        setTimeout(e, 150);
-    }), document.addEventListener("DOMContentLoaded", e);
-}(), function() {
-    function e(e) {
-        if (!e) return 0;
-        const t = String(e).replace(/[^\d.,-]/g, "").replace(/,/g, ".").trim(), r = parseFloat(t);
-        return isNaN(r) ? 0 : r;
-    }
-    function t() {
-        let e = 0;
-        const t = document.querySelectorAll(".product-card-cart");
-        if (!t.length) return 0;
-        let r = !1;
-        return t.forEach(e => {
-            e.querySelector('.card-checkbox input[type="checkbox"]') && (r = !0);
-        }), t.forEach(t => {
-            const o = t.querySelector('.card-checkbox input[type="checkbox"]');
-            if (r && o && !o.checked) return;
-            const n = t.querySelector(".qty-dropdown .qty-value"), c = t.querySelector('.qty-dropdown input[type="number"]'), a = t.dataset.qty, d = c ? Number(c.value || 1) : n ? Number(n.textContent || 1) : a ? Number(a || 1) : 1;
-            e += Math.max(1, Number(d || 1));
-        }), e;
-    }
-    function r(e, t) {
-        try {
-            const r = localStorage.getItem(e);
-            return r ? JSON.parse(r) ?? t : t;
+    window.applyCoupon = function() {
+        const input = document.getElementById("couponCodeInput"), msgEl = document.getElementById("couponMsg");
+        if (!input || !msgEl) return;
+        const code = (input.value || "").trim().toUpperCase(), show = (txt, ok) => {
+            msgEl.textContent = txt, msgEl.style.display = "block", msgEl.style.background = ok ? "#e8f5e9" : "#fce4ec", 
+            msgEl.style.color = ok ? "#2e7d32" : "#c62828";
+        };
+        if (code) try {
+            const stored = JSON.parse(localStorage.getItem("x2_coupon_code") || "null");
+            if (!stored) return void show("❌ الكود غير صحيح", !1);
+            if (stored.used) return void show("❌ هذا الكود تم استخدامه مسبقاً", !1);
+            if (stored.code !== code) return void show("❌ الكود غير صحيح", !1);
+            sessionStorage.setItem("x2_coupon_applied", JSON.stringify({
+                code: stored.code,
+                amount: stored.amount
+            }));
+            const sym = "function" == typeof window.currencySymbolFor ? window.currencySymbolFor(window.getSelectedCurrency()) : "د.إ";
+            show(`✅ تم تطبيق خصم ${parseFloat(stored.amount).toFixed(2)} ${sym}!`, !0), input.disabled = !0;
+            const btn = input.nextElementSibling;
+            btn && (btn.disabled = !0, btn.textContent = "✔ مطبّق"), updateSummary();
         } catch (e) {
-            return t;
+            show("❌ حدث خطأ، حاول مرة أخرى", !1);
+        } else show("❌ أدخل كود الخصم أولاً", !1);
+    }, window.addProduct || (window.addProduct = function(product) {
+        const current = readCart(), key = makeKey(product), ix = current.findIndex(it => makeKey(it) === key);
+        ix >= 0 ? current[ix].qty += Number(product.qty || 1) : current.unshift({
+            ...product,
+            qty: Number(product.qty || 1)
+        }), renderList(writeCart(current));
+    }), document.addEventListener("DOMContentLoaded", function() {
+        try {
+            const header = document.getElementById("mainHeader") || document.querySelector(".main-header") || document.querySelector("header"), freeBar = document.querySelector(".free-shipping-bar"), top = (header?.offsetHeight || 0) + (freeBar?.offsetHeight || 0) + 10;
+            document.documentElement.style.setProperty("--cart-sticky-top", top + "px");
+        } catch {}
+        renderList(readCart()), requestAnimationFrame(function() {
+            listRoot.querySelectorAll('.card-checkbox input[type="checkbox"]').forEach(cb => {
+                cb.checked || (cb.checked = !0, cb.dispatchEvent(new Event("change", {
+                    bubbles: !0
+                })));
+            });
+            const selAllCb = document.getElementById("selectAllCheckbox") || document.querySelector(".select-all-checkbox input");
+            selAllCb && (selAllCb.checked = !0), updateSummary();
+        }), async function() {
+            try {
+                const res = await fetch("/java/Products.json");
+                if (!res.ok) return;
+                const products = await res.json(), imgMap = {};
+                if ((Array.isArray(products) ? products : []).forEach(p => {
+                    if (!p.id) return;
+                    const rawImg = Array.isArray(p.img) ? p.img[0] : p.img;
+                    rawImg && "string" == typeof rawImg && (imgMap[String(p.id)] = rawImg);
+                }), !Object.keys(imgMap).length) return;
+                listRoot.querySelectorAll(".product-card").forEach(card => {
+                    const itemId = card.dataset.itemId || card.dataset.key?.split("|")[0] || "";
+                    if (!itemId) return;
+                    const imgEl = card.querySelector(".image img");
+                    if (!imgEl) return;
+                    const currentSrc = imgEl.getAttribute("src") || "";
+                    if (!currentSrc || currentSrc.includes("logo.png") || "" === currentSrc) {
+                        const newSrc = imgMap[String(itemId)];
+                        newSrc && (imgEl.src = newSrc, imgEl.onerror = function() {
+                            this.src = "assets/logo.png";
+                        });
+                    }
+                });
+            } catch (e) {}
+        }();
+        const curSel = document.getElementById("currency");
+        curSel && !curSel._boundCart && (curSel.addEventListener("change", () => {
+            updateSummary();
+        }), curSel._boundCart = !0);
+        const checkoutBtn = document.getElementById("checkoutBtn");
+        checkoutBtn && !checkoutBtn._bound && (checkoutBtn.addEventListener("click", e => {
+            parseCurrency(document.querySelector(".summary-total")?.dataset.amount || "0") <= 0 && (e.preventDefault(), 
+            checkoutBtn.classList.add("shake"), setTimeout(() => checkoutBtn.classList.remove("shake"), 600));
+        }), checkoutBtn._bound = !0);
+    });
+}(), function() {
+    function moveOrderSummary() {
+        const container = document.querySelector(".cart-layout-container"), cartLeft = document.querySelector(".cart-left"), cartRight = document.querySelector(".cart-right"), cartItems = document.querySelector(".cart-items-list");
+        container && cartLeft && cartRight && cartItems && (window.innerWidth <= 992 ? (cartLeft.parentElement !== cartRight || cartItems.nextElementSibling !== cartLeft) && cartRight.insertBefore(cartLeft, cartItems.nextSibling) : cartLeft.parentElement !== container && container.insertBefore(cartLeft, cartRight));
+    }
+    let rTimer;
+    window.addEventListener("load", moveOrderSummary), window.addEventListener("resize", function() {
+        clearTimeout(rTimer), rTimer = setTimeout(moveOrderSummary, 120);
+    }), window.addEventListener("orientationchange", function() {
+        setTimeout(moveOrderSummary, 150);
+    }), document.addEventListener("DOMContentLoaded", moveOrderSummary);
+}(), function() {
+    if (window.X2CheckoutStateInited) return;
+    window.X2CheckoutStateInited = !0;
+    function parseNumber(text) {
+        if (!text) return 0;
+        const cleaned = String(text).replace(/[^\d.,-]/g, "").replace(/,/g, ".").trim(), n = parseFloat(cleaned);
+        return isNaN(n) ? 0 : n;
+    }
+    function getSelectedQuantity() {
+        let total = 0;
+        const cards = document.querySelectorAll(".product-card-cart");
+        if (!cards.length) return 0;
+        let anyCheckbox = !1;
+        return cards.forEach(c => {
+            c.querySelector('.card-checkbox input[type="checkbox"]') && (anyCheckbox = !0);
+        }), cards.forEach(card => {
+            const cb = card.querySelector('.card-checkbox input[type="checkbox"]');
+            if (anyCheckbox && cb && !cb.checked) return;
+            const valEl = card.querySelector(".qty-dropdown .qty-value"), input = card.querySelector('.qty-dropdown input[type="number"]'), ds = card.dataset.qty, qty = input ? Number(input.value || 1) : valEl ? Number(valEl.textContent || 1) : ds ? Number(ds || 1) : 1;
+            total += Math.max(1, Number(qty || 1));
+        }), total;
+    }
+    function readJson(key, fallback) {
+        try {
+            const raw = localStorage.getItem(key);
+            if (!raw) return fallback;
+            return JSON.parse(raw) ?? fallback;
+        } catch (e) {
+            return fallback;
         }
     }
-    function o() {
-        const t = Array.from(document.querySelectorAll(".product-card-cart")), r = t.filter(e => {
-            const t = e.querySelector('.card-checkbox input[type="checkbox"]');
-            return !t || t.checked;
+    function getSelectedItemsForOrder() {
+        const cards = Array.from(document.querySelectorAll(".product-card-cart")), selectedCards = cards.filter(card => {
+            const cb = card.querySelector('.card-checkbox input[type="checkbox"]');
+            return !cb || cb.checked;
         });
-        return (r.length ? r : t).map(t => {
-            const r = t.querySelector('.qty-dropdown input[type="number"]'), o = t.querySelector(".qty-dropdown .qty-value"), n = Math.max(1, Number(r?.value || o?.textContent || t.dataset.qty || 1)), c = e(t.dataset.priceCurrent || "0"), a = e(t.querySelector(".current-price, .price-current")?.textContent || "0"), d = c > 0 ? c : a, i = String(t.dataset.itemId || "").trim(), s = String(t.querySelector(".image img")?.src || "").trim(), l = i ? new URL(`/product?id=${encodeURIComponent(i)}`, window.location.href).href : "";
+        return (selectedCards.length ? selectedCards : cards).map(card => {
+            const qtyInput = card.querySelector('.qty-dropdown input[type="number"]'), qtyValue = card.querySelector(".qty-dropdown .qty-value"), qty = Math.max(1, Number(qtyInput?.value || qtyValue?.textContent || card.dataset.qty || 1)), dsPrice = parseNumber(card.dataset.priceCurrent || "0"), domPrice = parseNumber(card.querySelector(".current-price, .price-current")?.textContent || "0"), unit = dsPrice > 0 ? dsPrice : domPrice, productId = String(card.dataset.itemId || "").trim(), imgSrc = String(card.querySelector(".image img")?.src || "").trim(), productUrl = productId ? new URL(`/product?id=${encodeURIComponent(productId)}`, window.location.href).href : "";
             return {
-                title: (t.querySelector(".title")?.textContent || "منتج").trim(),
-                qty: n,
-                unit: d,
-                line: d * n,
-                image: s,
-                productUrl: l
+                title: (card.querySelector(".title")?.textContent || "منتج").trim(),
+                qty: qty,
+                unit: unit,
+                line: unit * qty,
+                image: imgSrc,
+                productUrl: productUrl
             };
         });
     }
-    function n(t) {
-        const n = t || {}, c = n.orderId || "ORD-" + Date.now(), a = !1 !== n.includeProductLinks, d = !1 !== n.includeImages, i = Math.max(1, Number(n.maxItems || 50)), s = o(), l = function() {
-            const e = r("x2_profile", {}), t = r("x2_orders", []), o = Array.isArray(t) && t.length ? t[0] : null, c = o?.shipping || {};
+    function buildWhatsAppMessage(options) {
+        const opts = options || {}, orderId = opts.orderId || "ORD-" + Date.now(), includeProductLinks = !1 !== opts.includeProductLinks, includeImages = !1 !== opts.includeImages, maxItems = Math.max(1, Number(opts.maxItems || 50)), items = getSelectedItemsForOrder(), customer = function() {
+            const profile = readJson("x2_profile", {}), orders = readJson("x2_orders", []), lastOrder = Array.isArray(orders) && orders.length ? orders[0] : null, shipping = lastOrder?.shipping || {};
             return {
-                name: (e.name || c.name || "").trim(),
-                phone: (e.phone || c.phone || "").trim(),
-                email: (e.email || "").trim(),
+                name: (profile.name || shipping.name || "").trim(),
+                phone: (profile.phone || shipping.phone || "").trim(),
+                email: (profile.email || "").trim(),
                 city: "".trim(),
                 address: function() {
-                    let t = c.address || [ e.address_full && e.address_full.street, e.address_full && e.address_full.building, e.address_full && e.address_full.area, e.address_full && e.address_full.city ].filter(Boolean).join("، ") || e.address || n.customerAddressFallback || "";
-                    return /(?:google\.[^/]+\/maps|maps\.google|goo\.gl\/maps|^https?:\/\/|@?-?\d{1,3}\.\d+\s*,\s*-?\d{1,3}\.\d+)/i.test(t) && (t = [ e.address_full && e.address_full.city, e.address_full && e.address_full.area ].filter(Boolean).join("، ") || n.customerAddressFallback || ""), 
-                    t;
+                    let address = shipping.address || [ profile.address_full && profile.address_full.street, profile.address_full && profile.address_full.building, profile.address_full && profile.address_full.area, profile.address_full && profile.address_full.city ].filter(Boolean).join("، ") || profile.address || opts.customerAddressFallback || "";
+                    if (/(?:google\.[^/]+\/maps|maps\.google|goo\.gl\/maps|^https?:\/\/|@?-?\d{1,3}\.\d+\s*,\s*-?\d{1,3}\.\d+)/i.test(address)) address = [ profile.address_full && profile.address_full.city, profile.address_full && profile.address_full.area ].filter(Boolean).join("، ") || opts.customerAddressFallback || "";
+                    return address;
                 }().trim()
             };
-        }(), u = e(document.querySelector(".subtotal")?.dataset.amount || document.querySelector(".subtotal")?.textContent || "0"), m = e(document.querySelector(".discount")?.dataset.amount || document.querySelector(".discount")?.textContent || "0"), y = e(document.querySelector(".summary-total")?.dataset.amount || document.querySelector(".summary-total")?.textContent || "0"), p = "function" == typeof window.getSelectedCurrency ? window.getSelectedCurrency() : localStorage.getItem("currency") || "AED", g = "function" == typeof window.currencySymbolFor ? window.currencySymbolFor(p) : p, h = s.slice(0, i), f = h.length ? h.map((e, t) => [ `${t + 1}) ${e.title}`, `   الكمية: ${e.qty}`, `   سعر الوحدة: ${e.unit.toFixed(2)} ${g}`, `   الإجمالي: ${e.line.toFixed(2)} ${g}`, a && e.productUrl ? `   رابط المنتج: ${e.productUrl}` : "", d && e.image ? `   صورة المنتج: ${e.image}` : "" ].filter(Boolean).join("\n")).join("\n\n") : "لا توجد منتجات في السلة";
-        return [ "طلب جديد من الموقع", "", `رقم الطلب: ${c}`, `التاريخ: ${(new Date).toLocaleString("ar")}`, "", "بيانات العميل:", `الاسم: ${l.name || "غير متوفر"}`, `الهاتف: ${l.phone || "غير متوفر"}`, `البريد: ${l.email || "غير متوفر"}`, `العنوان: ${l.address || "موقع العميل"}`, "", "محتويات السلة:", f, s.length > h.length ? `\n... وتم اختصار ${s.length - h.length} منتج بسبب طول الرسالة` : "", "", `الإجمالي قبل الخصم: ${u.toFixed(2)} ${g}`, `الخصم: ${m.toFixed(2)} ${g}`, (() => {
+        }(), subtotal = parseNumber(document.querySelector(".subtotal")?.dataset.amount || document.querySelector(".subtotal")?.textContent || "0"), discount = parseNumber(document.querySelector(".discount")?.dataset.amount || document.querySelector(".discount")?.textContent || "0"), total = parseNumber(document.querySelector(".summary-total")?.dataset.amount || document.querySelector(".summary-total")?.textContent || "0"), curr = "function" == typeof window.getSelectedCurrency ? window.getSelectedCurrency() : localStorage.getItem("currency") || "AED", sym = "function" == typeof window.currencySymbolFor ? window.currencySymbolFor(curr) : curr, slicedItems = items.slice(0, maxItems), itemsText = slicedItems.length ? slicedItems.map((it, idx) => [ `${idx + 1}) ${it.title}`, `   الكمية: ${it.qty}`, `   سعر الوحدة: ${it.unit.toFixed(2)} ${sym}`, `   الإجمالي: ${it.line.toFixed(2)} ${sym}`, includeProductLinks && it.productUrl ? `   رابط المنتج: ${it.productUrl}` : "", includeImages && it.image ? `   صورة المنتج: ${it.image}` : "" ].filter(Boolean).join("\n")).join("\n\n") : "لا توجد منتجات في السلة";
+        return [ "طلب جديد من الموقع", "", `رقم الطلب: ${orderId}`, `التاريخ: ${(new Date).toLocaleString("ar")}`, "", "بيانات العميل:", `الاسم: ${customer.name || "غير متوفر"}`, `الهاتف: ${customer.phone || "غير متوفر"}`, `البريد: ${customer.email || "غير متوفر"}`, `العنوان: ${customer.address || "موقع العميل"}`, "", "محتويات السلة:", itemsText, items.length > slicedItems.length ? `\n... وتم اختصار ${items.length - slicedItems.length} منتج بسبب طول الرسالة` : "", "", `الإجمالي قبل الخصم: ${subtotal.toFixed(2)} ${sym}`, `الخصم: ${discount.toFixed(2)} ${sym}`, (() => {
             try {
-                const e = JSON.parse(localStorage.getItem("x2_coupon_applied") || "null"), t = JSON.parse(localStorage.getItem("x2_coupon_code") || "null");
-                if (e && e.code && t && t.code === e.code && !t.used) return `خصم الكوبون (${e.code}): -${parseFloat(e.amount).toFixed(2)} ${g}`;
+                const applied = JSON.parse(localStorage.getItem("x2_coupon_applied") || "null"), stored = JSON.parse(localStorage.getItem("x2_coupon_code") || "null");
+                if (applied && applied.code && stored && stored.code === applied.code && !stored.used) return `خصم الكوبون (${applied.code}): -${parseFloat(applied.amount).toFixed(2)} ${sym}`;
             } catch (e) {}
             return "";
-        })(), `الإجمالي النهائي: ${y.toFixed(2)} ${g}` ].filter(e => null != e).join("\n");
+        })(), `الإجمالي النهائي: ${total.toFixed(2)} ${sym}` ].filter(l => null != l).join("\n");
     }
-    function c() {
-        !function(c) {
-            const a = document.getElementById("checkoutBtn") || document.querySelector(".checkout-btn"), d = document.getElementById("paypalBtn") || document.querySelector(".paypal-btn"), i = t();
-            a && (c ? (a.textContent = i > 0 ? `تأكيد الطلب عبر واتساب (${i} قطعة)` : "تأكيد الطلب عبر واتساب", 
-            a.classList.remove("disabled"), a.removeAttribute("aria-disabled"), a.disabled = !1, 
-            a.dataset.enabled = "1", a.onclick = t => {
-                t.preventDefault(), async function() {
-                    if ("function" == typeof window.isUserLoggedIn && !window.isUserLoggedIn()) return void ("function" == typeof window.showLoginModal && window.showLoginModal());
-                    const t = o();
-                    if (!t.length) return;
-                    const c = String("+971554423151").replace(/\D/g, "");
-                    if (!c) return;
-                    const a = "ORD-" + Date.now();
-                    let d = "";
-                    try {
-                        const e = r("x2_profile", {});
-                        let t = [ e.address_full && e.address_full.street, e.address_full && e.address_full.building, e.address_full && e.address_full.area, e.address_full && e.address_full.city ].filter(Boolean).join("، ") || e.address || "";
-                        /(?:google\.[^/]+\/maps|maps\.google|goo\.gl\/maps|^https?:\/\/|@?-?\d{1,3}\.\d+\s*,\s*-?\d{1,3}\.\d+)/i.test(t) && (t = [ e.address_full && e.address_full.city, e.address_full && e.address_full.area ].filter(Boolean).join("، ") || "", 
-                        e.address && /(?:google\.[^/]+\/maps|maps\.google|goo\.gl\/maps|^https?:\/\/|@?-?\d{1,3}\.\d+\s*,\s*-?\d{1,3}\.\d+)/i.test(e.address) && (e.address = t, 
-                        localStorage.setItem("x2_profile", JSON.stringify(e)))), t || (d = x2VisitorAreaFallback()), 
-                        d || t || !navigator.geolocation || (d = await new Promise(e => {
-                            let t = !1;
-                            const r = r => {
-                                t || (t = !0, e(r || ""));
-                            }, o = setTimeout(() => r("موقع العميل"), 7500);
-                            navigator.geolocation.getCurrentPosition(async e => {
-                                const t = e.coords.latitude.toFixed(6), n = e.coords.longitude.toFixed(6);
-                                try {
-                                    const e = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${t}&lon=${n}&accept-language=ar`), c = e.ok ? await e.json() : null, a = c && c.address || {}, d = a.city || a.town || a.village || a.municipality || a.county || a.state || c && c.display_name && String(c.display_name).split(",")[0] || "موقع العميل";
-                                    clearTimeout(o);
-                                    try {
-                                        const e = JSON.parse(localStorage.getItem("x2_profile") || "{}");
-                                        e.address = d, e.address_full = e.address_full || {
-                                            country: a.country || "",
-                                            city: d,
-                                            area: "",
-                                            street: "",
-                                            building: "",
-                                            zip: "",
-                                            notes: "تم التقاط المنطقة من المتصفح"
-                                        }, localStorage.setItem("x2_profile", JSON.stringify(e));
-                                    } catch (e) {}
-                                    r(d);
-                                } catch (e) {
-                                    clearTimeout(o), r("موقع العميل");
-                                }
-                            }, () => {
-                                clearTimeout(o), r("لم يسمح بتحديد المنطقة");
-                            }, {
-                                enableHighAccuracy: !1,
-                                timeout: 6500,
-                                maximumAge: 3e5
-                            });
-                        }));
-                    } catch (e) {}
-                    const i = [ n({
-                        orderId: a,
-                        customerAddressFallback: d,
-                        includeProductLinks: !0,
-                        includeImages: !0,
-                        maxItems: 50
-                    }), n({
-                        orderId: a,
-                        customerAddressFallback: d,
-                        includeProductLinks: !0,
-                        includeImages: !1,
-                        maxItems: 25
-                    }), n({
-                        orderId: a,
-                        customerAddressFallback: d,
-                        includeProductLinks: !0,
-                        includeImages: !1,
-                        maxItems: 10
-                    }), n({
-                        orderId: a,
-                        customerAddressFallback: d,
-                        includeProductLinks: !1,
-                        includeImages: !1,
-                        maxItems: 10
-                    }) ];
-                    let s = i.find(e => e.length <= 2500) || i[i.length - 1].slice(0, 2400);
-                    const l = `https://wa.me/${c}?text=${encodeURIComponent(s)}`;
-                    sessionStorage.setItem("x2_after_wa", "1"), document.addEventListener("visibilitychange", function e() {
-                        !document.hidden && sessionStorage.getItem("x2_after_wa") && (sessionStorage.removeItem("x2_after_wa"), 
-                        document.removeEventListener("visibilitychange", e), window.location.replace("/account.html?from=whatsapp"));
-                    }), window.open(l, "_blank", "noopener");
-                    try {
-                        const r = function() {
-                            const t = document.querySelector(".order-summary .summary-total, .summary-total"), r = document.querySelector(".order-summary .subtotal, .subtotal");
-                            let o = 0;
-                            return t ? o = t.dataset?.amount ? e(t.dataset.amount) : e(t.textContent) : r && (o = r.dataset?.amount ? e(r.dataset.amount) : e(r.textContent)), 
-                            o || 0;
-                        }(), o = t.reduce((e, t) => e + (t.unit || parseFloat(t.price || t.priceCurrent || 0)) * (Number(t.qty) || 1), 0), n = (r > 0 ? r : o).toFixed(2), c = new Date(Date.now() + 2592e6).toISOString();
-                        let a;
+    async function openWhatsAppOrder() {
+        if ("function" == typeof window.isUserLoggedIn && !window.isUserLoggedIn()) return void ("function" == typeof window.showLoginModal && window.showLoginModal());
+        const items = getSelectedItemsForOrder();
+        if (!items.length) return;
+        const phone = function(phone) {
+            return String(phone || "").replace(/\D/g, "");
+        }("+971554423151");
+        if (!phone) return;
+        const orderId = "ORD-" + Date.now();
+        let customerAddressFallback = "";
+        try {
+            const prof = readJson("x2_profile", {});
+            let saved = [ prof.address_full && prof.address_full.street, prof.address_full && prof.address_full.building, prof.address_full && prof.address_full.area, prof.address_full && prof.address_full.city ].filter(Boolean).join("، ") || prof.address || "";
+            if (/(?:google\.[^/]+\/maps|maps\.google|goo\.gl\/maps|^https?:\/\/|@?-?\d{1,3}\.\d+\s*,\s*-?\d{1,3}\.\d+)/i.test(saved)) {
+                saved = [ prof.address_full && prof.address_full.city, prof.address_full && prof.address_full.area ].filter(Boolean).join("، ") || "";
+                if (prof.address && /(?:google\.[^/]+\/maps|maps\.google|goo\.gl\/maps|^https?:\/\/|@?-?\d{1,3}\.\d+\s*,\s*-?\d{1,3}\.\d+)/i.test(prof.address)) {
+                    prof.address = saved;
+                    localStorage.setItem("x2_profile", JSON.stringify(prof));
+                }
+            }
+            if (!saved) customerAddressFallback = x2VisitorAreaFallback();
+            if (!customerAddressFallback && !saved && navigator.geolocation) {
+                customerAddressFallback = await new Promise(resolve => {
+                    let done = false;
+                    const finish = v => {
+                        if (done) return;
+                        done = true;
+                        resolve(v || "");
+                    };
+                    const timer = setTimeout(() => finish("موقع العميل"), 7500);
+                    navigator.geolocation.getCurrentPosition(async pos => {
+                        const lat = pos.coords.latitude.toFixed(6), lng = pos.coords.longitude.toFixed(6);
                         try {
-                            const e = await window.Supabase.Orders.getAll();
-                            e && e.length > 0 && (a = "#" + (e.reduce((e, t) => {
-                                const r = parseInt((t.order_number || "").replace("#", "")) || 0;
-                                return r > e ? r : e;
-                            }, 999) + 1));
-                        } catch (e) {}
-                        a || (a = "#" + (parseInt(localStorage.getItem("x2_order_counter") || "999", 10) + 1)), 
-                        localStorage.setItem("x2_order_counter", a.replace("#", ""));
-                        const d = JSON.parse(localStorage.getItem("x2_orders") || "[]"), i = {
-                            id: a,
-                            date: (new Date).toISOString(),
-                            cashback: 5,
-                            cashbackStatus: "pending",
-                            cashbackExpiresAt: c,
-                            items: t.map(e => {
-                                const t = e.image || e.img || "";
-                                return {
-                                    id: e.productId || (e.productUrl ? (() => {
-                                        try {
-                                            return new URL(e.productUrl).searchParams.get("id") || "";
-                                        } catch (e) {
-                                            return "";
-                                        }
-                                    })() : ""),
-                                    title: e.title || e.name || "منتج",
-                                    qty: e.qty,
-                                    img: t && !t.startsWith("data:") ? t : ""
+                            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&accept-language=ar`);
+                            const data = res.ok ? await res.json() : null;
+                            const a = data && data.address || {};
+                            const area = a.city || a.town || a.village || a.municipality || a.county || a.state || data && data.display_name && String(data.display_name).split(",")[0] || "موقع العميل";
+                            clearTimeout(timer);
+                            try {
+                                const prof = JSON.parse(localStorage.getItem("x2_profile") || "{}");
+                                prof.address = area;
+                                prof.address_full = prof.address_full || {
+                                    country: a.country || "",
+                                    city: area,
+                                    area: "",
+                                    street: "",
+                                    building: "",
+                                    zip: "",
+                                    notes: "تم التقاط المنطقة من المتصفح"
                                 };
-                            }),
-                            total: n,
-                            status: "processing"
-                        };
-                        if (d.unshift(i), localStorage.setItem("x2_orders", JSON.stringify(d)), window.Supabase && window.Supabase.Orders) {
-                            const e = (() => {
-                                try {
-                                    return JSON.parse(localStorage.getItem("x2_profile") || "{}");
-                                } catch (e) {
-                                    return {};
-                                }
-                            })();
-                            try {
-                                i._synced = !0, d[0]._synced = !0, localStorage.setItem("x2_orders", JSON.stringify(d));
-                                const e = JSON.parse(localStorage.getItem("x2_orders_synced") || "[]");
-                                e.includes(a) || (e.push(a), localStorage.setItem("x2_orders_synced", JSON.stringify(e)));
+                                localStorage.setItem("x2_profile", JSON.stringify(prof));
                             } catch (e) {}
-                            window.Supabase.Orders.insert({
-                                id: a,
-                                items: i.items,
-                                total: n,
-                                status: "processing",
-                                cashback: 5,
-                                cashbackStatus: "pending",
-                                customerName: e.name || "",
-                                customerPhone: e.phone || "",
-                                customerEmail: e.email || "",
-                                address: e.address_full || null
-                            }).catch(e => {
-                                console.error("فشل رفع الطلب:", e.message);
-                            });
+                            finish(area);
+                        } catch (e) {
+                            clearTimeout(timer);
+                            finish("موقع العميل");
                         }
+                    }, () => {
+                        clearTimeout(timer);
+                        finish("لم يسمح بتحديد المنطقة");
+                    }, {
+                        enableHighAccuracy: false,
+                        timeout: 6500,
+                        maximumAge: 3e5
+                    });
+                });
+            }
+        } catch (e) {}
+        const variants = [ buildWhatsAppMessage({
+            orderId: orderId,
+            customerAddressFallback: customerAddressFallback,
+            includeProductLinks: !0,
+            includeImages: !0,
+            maxItems: 50
+        }), buildWhatsAppMessage({
+            orderId: orderId,
+            customerAddressFallback: customerAddressFallback,
+            includeProductLinks: !0,
+            includeImages: !1,
+            maxItems: 25
+        }), buildWhatsAppMessage({
+            orderId: orderId,
+            customerAddressFallback: customerAddressFallback,
+            includeProductLinks: !0,
+            includeImages: !1,
+            maxItems: 10
+        }), buildWhatsAppMessage({
+            orderId: orderId,
+            customerAddressFallback: customerAddressFallback,
+            includeProductLinks: !1,
+            includeImages: !1,
+            maxItems: 10
+        }) ];
+        let finalText = variants.find(v => v.length <= 2500) || variants[variants.length - 1].slice(0, 2400);
+        const msg = encodeURIComponent(finalText), url = `https://wa.me/${phone}?text=${msg}`;
+        sessionStorage.setItem("x2_after_wa", "1"), document.addEventListener("visibilitychange", function handleVisibilityReturn() {
+            !document.hidden && sessionStorage.getItem("x2_after_wa") && (sessionStorage.removeItem("x2_after_wa"), 
+            document.removeEventListener("visibilitychange", handleVisibilityReturn), window.location.href = "/account.html");
+        });
+        window.open(url, "_blank", "noopener");
+        try {
+            const summaryTotal = function() {
+                const totalEl = document.querySelector(".order-summary .summary-total, .summary-total"), subtotalEl = document.querySelector(".order-summary .subtotal, .subtotal");
+                let v = 0;
+                return totalEl ? v = totalEl.dataset?.amount ? parseNumber(totalEl.dataset.amount) : parseNumber(totalEl.textContent) : subtotalEl && (v = subtotalEl.dataset?.amount ? parseNumber(subtotalEl.dataset.amount) : parseNumber(subtotalEl.textContent)), 
+                v || 0;
+            }(), calcTotal = items.reduce((s, i) => s + (i.unit || parseFloat(i.price || i.priceCurrent || 0)) * (Number(i.qty) || 1), 0), totalAmt = (summaryTotal > 0 ? summaryTotal : calcTotal).toFixed(2), expiresAt = new Date(Date.now() + 2592e6).toISOString();
+            let orderId;
+            try {
+                const existing = await window.Supabase.Orders.getAll();
+                if (existing && existing.length > 0) {
+                    orderId = "#" + (existing.reduce((max, o) => {
+                        const n = parseInt((o.order_number || "").replace("#", "")) || 0;
+                        return n > max ? n : max;
+                    }, 999) + 1);
+                }
+            } catch (e) {}
+            if (!orderId) {
+                orderId = "#" + (parseInt(localStorage.getItem("x2_order_counter") || "999", 10) + 1);
+            }
+            localStorage.setItem("x2_order_counter", orderId.replace("#", ""));
+            const orders = JSON.parse(localStorage.getItem("x2_orders") || "[]"), newOrder = {
+                id: orderId,
+                date: (new Date).toISOString(),
+                cashback: 5,
+                cashbackStatus: "pending",
+                cashbackExpiresAt: expiresAt,
+                items: items.map(i => {
+                    const rawImg = i.image || i.img || "";
+                    return {
+                        id: i.productId || (i.productUrl ? (() => {
+                            try {
+                                return new URL(i.productUrl).searchParams.get("id") || "";
+                            } catch (e) {
+                                return "";
+                            }
+                        })() : ""),
+                        title: i.title || i.name || "منتج",
+                        qty: i.qty,
+                        img: rawImg && !rawImg.startsWith("data:") ? rawImg : ""
+                    };
+                }),
+                total: totalAmt,
+                status: "processing"
+            };
+            if (orders.unshift(newOrder), localStorage.setItem("x2_orders", JSON.stringify(orders)), 
+            window.Supabase && window.Supabase.Orders) {
+                const profile = (() => {
+                    try {
+                        return JSON.parse(localStorage.getItem("x2_profile") || "{}");
                     } catch (e) {
-                        console.error("خطأ في إنشاء الطلب:", e);
+                        return {};
                     }
+                })();
+                try {
+                    newOrder._synced = !0, orders[0]._synced = !0, localStorage.setItem("x2_orders", JSON.stringify(orders));
+                    const synced = JSON.parse(localStorage.getItem("x2_orders_synced") || "[]");
+                    synced.includes(orderId) || (synced.push(orderId), localStorage.setItem("x2_orders_synced", JSON.stringify(synced)));
+                } catch (e2) {}
+                window.Supabase.Orders.insert({
+                    id: orderId,
+                    items: newOrder.items,
+                    total: totalAmt,
+                    status: "processing",
+                    cashback: 5,
+                    cashbackStatus: "pending",
+                    customerName: profile.name || "",
+                    customerPhone: profile.phone || "",
+                    customerEmail: profile.email || "",
+                    address: profile.address_full || null
+                }).catch(err => {
+                    console.error("فشل رفع الطلب:", err.message);
+                });
+            }
+        } catch (e) {
+            console.error("خطأ في إنشاء الطلب:", e);
+        }
+        try {
+            const applied = JSON.parse(sessionStorage.getItem("x2_coupon_applied") || localStorage.getItem("x2_coupon_applied") || "null");
+            if (applied && applied.code) {
+                let storedCoupon = JSON.parse(localStorage.getItem("x2_coupon_code") || "null");
+                storedCoupon && storedCoupon.code === applied.code && (storedCoupon.used = !0, localStorage.setItem("x2_coupon_code", JSON.stringify(storedCoupon)));
+                let cbReset = JSON.parse(localStorage.getItem("x2_cashback") || '{"balance":0,"history":[]}');
+                cbReset.balance = 0, cbReset.history = [], localStorage.setItem("x2_cashback", JSON.stringify(cbReset));
+                try {
+                    const ords = JSON.parse(localStorage.getItem("x2_orders") || "[]");
+                    ords.forEach(o => {
+                        o.cashback = 0;
+                    }), localStorage.setItem("x2_orders", JSON.stringify(ords));
+                } catch (e2) {}
+                sessionStorage.removeItem("x2_coupon_applied"), localStorage.removeItem("x2_coupon_applied"), 
+                setTimeout(() => {
                     try {
-                        const e = JSON.parse(sessionStorage.getItem("x2_coupon_applied") || localStorage.getItem("x2_coupon_applied") || "null");
-                        if (e && e.code) {
-                            let t = JSON.parse(localStorage.getItem("x2_coupon_code") || "null");
-                            t && t.code === e.code && (t.used = !0, localStorage.setItem("x2_coupon_code", JSON.stringify(t)));
-                            let r = JSON.parse(localStorage.getItem("x2_cashback") || '{"balance":0,"history":[]}');
-                            r.balance = 0, r.history = [], localStorage.setItem("x2_cashback", JSON.stringify(r));
-                            try {
-                                const e = JSON.parse(localStorage.getItem("x2_orders") || "[]");
-                                e.forEach(e => {
-                                    e.cashback = 0;
-                                }), localStorage.setItem("x2_orders", JSON.stringify(e));
-                            } catch (e) {}
-                            sessionStorage.removeItem("x2_coupon_applied"), localStorage.removeItem("x2_coupon_applied"), 
-                            setTimeout(() => {
-                                try {
-                                    "function" == typeof updateSummary && updateSummary();
-                                } catch (e) {}
-                            }, 300);
-                        }
+                        "function" == typeof updateSummary && updateSummary();
                     } catch (e) {}
-                    try {
-                        localStorage.setItem("x2_cart", "[]"), document.querySelectorAll(".cart-badge").forEach(e => e.setAttribute("data-count", "")), 
-                        window.__cartCount = 0;
-                        try {
-                            window.dispatchEvent(new CustomEvent("cart:updated", {
-                                detail: {
-                                    items: []
-                                }
-                            }));
-                        } catch (e) {}
-                        setTimeout(() => {
-                            "function" == typeof renderList && renderList([]), "function" == typeof toggleEmptyState && toggleEmptyState(), 
-                            "function" == typeof updateSummary && updateSummary();
-                            const e = document.createElement("div");
-                            e.style.cssText = "position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#152546;color:#D4AF37;padding:14px 24px;border-radius:12px;font-size:0.9rem;font-weight:700;z-index:99999;box-shadow:0 6px 24px rgba(0,0,0,0.25);text-align:center;direction:rtl;max-width:90vw", 
-                            e.innerHTML = '✅ تم إرسال طلبك عبر واتساب!<br><span style="font-size:0.78rem;opacity:0.85">الطلب محفوظ في حسابك — قسم طلباتي</span>', 
-                            document.body.appendChild(e), setTimeout(() => e.remove(), 4e3);
-                        }, 200);
-                    } catch (e) {}
-                }();
-            }) : (a.textContent = "السلة فارغة", a.classList.add("disabled"), a.setAttribute("aria-disabled", "true"), 
-            a.disabled = !0, a.dataset.enabled = "0", a.onclick = e => {
+                }, 300);
+            }
+        } catch (e) {}
+        try {
+            localStorage.setItem("x2_cart", "[]"), document.querySelectorAll(".cart-badge").forEach(el => el.setAttribute("data-count", "")), 
+            window.__cartCount = 0;
+            try {
+                window.dispatchEvent(new CustomEvent("cart:updated", {
+                    detail: {
+                        items: []
+                    }
+                }));
+            } catch (e) {}
+            setTimeout(() => {
+                "function" == typeof renderList && renderList([]), "function" == typeof toggleEmptyState && toggleEmptyState(), 
+                "function" == typeof updateSummary && updateSummary();
+                const banner = document.createElement("div");
+                banner.style.cssText = "position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#152546;color:#D4AF37;padding:14px 24px;border-radius:12px;font-size:0.9rem;font-weight:700;z-index:99999;box-shadow:0 6px 24px rgba(0,0,0,0.25);text-align:center;direction:rtl;max-width:90vw", 
+                banner.innerHTML = '✅ تم إرسال طلبك عبر واتساب!<br><span style="font-size:0.78rem;opacity:0.85">الطلب محفوظ في حسابك — قسم طلباتي</span>', 
+                document.body.appendChild(banner), setTimeout(() => banner.remove(), 4e3), setTimeout(() => {
+                    sessionStorage.removeItem("x2_after_wa"), window.location.href = "/account.html";
+                }, 2e3);
+            }, 200);
+        } catch (e) {}
+    }
+    function evaluateCheckout() {
+        !function(enabled) {
+            const mainBtn = document.getElementById("checkoutBtn") || document.querySelector(".checkout-btn"), paypalBtn = document.getElementById("paypalBtn") || document.querySelector(".paypal-btn"), qty = getSelectedQuantity();
+            mainBtn && (enabled ? (mainBtn.textContent = qty > 0 ? `تأكيد الطلب عبر واتساب (${qty} قطعة)` : "تأكيد الطلب عبر واتساب", 
+            mainBtn.classList.remove("disabled"), mainBtn.removeAttribute("aria-disabled"), 
+            mainBtn.disabled = !1, mainBtn.dataset.enabled = "1", mainBtn.onclick = e => {
+                e.preventDefault(), openWhatsAppOrder();
+            }) : (mainBtn.textContent = "السلة فارغة", mainBtn.classList.add("disabled"), mainBtn.setAttribute("aria-disabled", "true"), 
+            mainBtn.disabled = !0, mainBtn.dataset.enabled = "0", mainBtn.onclick = e => {
                 e.preventDefault(), (document.querySelector(".cart-left") || document.querySelector("#main"))?.scrollIntoView({
                     behavior: "smooth",
                     block: "center"
                 });
-            })), d && (d.style.display = "none", "A" === d.tagName ? d.href = "#" : d.onclick = e => e.preventDefault());
-        }(t() > 0);
+            })), paypalBtn && (paypalBtn.style.display = "none", "A" === paypalBtn.tagName ? paypalBtn.href = "#" : paypalBtn.onclick = e => e.preventDefault());
+        }(getSelectedQuantity() > 0);
     }
-    window.X2CheckoutStateInited || (window.X2CheckoutStateInited = !0, function() {
-        c();
-        const e = document.querySelector(".order-summary .summary-total, .summary-total") || document.querySelector(".order-summary .subtotal, .subtotal");
-        e && new MutationObserver(() => c()).observe(e, {
-            childList: !0,
-            characterData: !0,
-            subtree: !0
-        });
-        const t = document.querySelector(".cart-items-list") || document.querySelector(".cart-right .cart-items-list");
-        t && (new MutationObserver(() => setTimeout(c, 20)).observe(t, {
-            childList: !0,
-            subtree: !0,
-            attributes: !0,
-            attributeFilter: [ "data-qty" ]
-        }), t.addEventListener("input", e => {
-            e.target.matches('.qty-dropdown input[type="number"], .qty-select') && setTimeout(c, 0);
-        }, {
-            passive: !0
-        }), t.addEventListener("change", e => {
-            e.target.matches('.card-checkbox input[type="checkbox"], .qty-dropdown input[type="number"], .qty-select, .qty-dropdown .qty-value') && setTimeout(c, 0);
-        })), window.addEventListener("load", c), document.addEventListener("DOMContentLoaded", c);
-    }());
+    !function() {
+        evaluateCheckout();
+        const summaryTarget = document.querySelector(".order-summary .summary-total, .summary-total") || document.querySelector(".order-summary .subtotal, .subtotal");
+        if (summaryTarget) {
+            new MutationObserver(() => evaluateCheckout()).observe(summaryTarget, {
+                childList: !0,
+                characterData: !0,
+                subtree: !0
+            });
+        }
+        const cartList = document.querySelector(".cart-items-list") || document.querySelector(".cart-right .cart-items-list");
+        if (cartList) {
+            new MutationObserver(() => setTimeout(evaluateCheckout, 20)).observe(cartList, {
+                childList: !0,
+                subtree: !0,
+                attributes: !0,
+                attributeFilter: [ "data-qty" ]
+            }), cartList.addEventListener("input", e => {
+                e.target.matches('.qty-dropdown input[type="number"], .qty-select') && setTimeout(evaluateCheckout, 0);
+            }, {
+                passive: !0
+            }), cartList.addEventListener("change", e => {
+                e.target.matches('.card-checkbox input[type="checkbox"], .qty-dropdown input[type="number"], .qty-select, .qty-dropdown .qty-value') && setTimeout(evaluateCheckout, 0);
+            });
+        }
+        window.addEventListener("load", evaluateCheckout), document.addEventListener("DOMContentLoaded", evaluateCheckout);
+    }();
 }(), function() {
     if (window.__x2_cartCentralBound) return;
     window.__x2_cartCentralBound = !0;
-    const e = document.querySelector(".cart-items-list") || document.querySelector(".cart-right .cart-items-list");
-    if (e) {
-        document.addEventListener("change", function(t) {
-            if (t.target.matches("#selectAllCheckbox") || t.target.matches('.select-all-checkbox input[type="checkbox"]')) return r = !!t.target.checked, 
-            Array.from(e.querySelectorAll('.card-checkbox input[type="checkbox"]')).forEach(e => {
-                e.checked = r;
-                const t = e.closest(".product-card-cart, .product-card");
-                t && t.classList.toggle("selected", r);
-            }), n(), c(), void o();
-            var r;
-            if (t.target.matches('.card-checkbox input[type="checkbox"]')) {
-                const e = t.target.closest(".product-card-cart, .product-card");
-                return e && e.classList.toggle("selected", t.target.checked), n(), c(), void o();
+    const listRoot = document.querySelector(".cart-items-list") || document.querySelector(".cart-right .cart-items-list");
+    if (listRoot) {
+        document.addEventListener("change", function(e) {
+            if (e.target.matches("#selectAllCheckbox") || e.target.matches('.select-all-checkbox input[type="checkbox"]')) return checked = !!e.target.checked, 
+            Array.from(listRoot.querySelectorAll('.card-checkbox input[type="checkbox"]')).forEach(cb => {
+                cb.checked = checked;
+                const card = cb.closest(".product-card-cart, .product-card");
+                card && card.classList.toggle("selected", checked);
+            }), safeUpdateSelectedCount(), safeUpdateSummary(), void safePersist();
+            var checked;
+            if (e.target.matches('.card-checkbox input[type="checkbox"]')) {
+                const card = e.target.closest(".product-card-cart, .product-card");
+                return card && card.classList.toggle("selected", e.target.checked), safeUpdateSelectedCount(), 
+                safeUpdateSummary(), void safePersist();
             }
-            return t.target.matches('.qty-dropdown input[type="number"], .qty-dropdown .qty-value') ? (c(), 
-            void o()) : void 0;
-        }, !1), document.addEventListener("click", function(t) {
-            if (t.target.closest && t.target.closest("#deleteSelectedBtn")) return t.preventDefault(), 
+            return e.target.matches('.qty-dropdown input[type="number"], .qty-dropdown .qty-value') ? (safeUpdateSummary(), 
+            void safePersist()) : void 0;
+        }, !1), document.addEventListener("click", function(e) {
+            if (e.target.closest && e.target.closest("#deleteSelectedBtn")) return e.preventDefault(), 
             void function() {
-                const t = Array.from(e.querySelectorAll(".product-card-cart, .product-card .card-checkbox input:checked"));
-                if (!t.length) return;
-                t.forEach(e => {
-                    const t = e.closest(".product-card-cart, .product-card");
-                    if (t) {
+                const boxes = Array.from(listRoot.querySelectorAll(".product-card-cart, .product-card .card-checkbox input:checked"));
+                if (!boxes.length) return;
+                boxes.forEach(cb => {
+                    const card = cb.closest(".product-card-cart, .product-card");
+                    if (card) {
                         if ("function" == typeof window.removeCard) try {
-                            return void window.removeCard(t);
+                            return void window.removeCard(card);
                         } catch (e) {}
-                        t.remove();
+                        card.remove();
                     }
-                }), o(), n(), c();
-                const r = document.getElementById("selectAllCheckbox");
-                r && (r.checked = !1);
+                }), safePersist(), safeUpdateSelectedCount(), safeUpdateSummary();
+                const selAll = document.getElementById("selectAllCheckbox");
+                selAll && (selAll.checked = !1);
             }();
         }, !0), document.addEventListener("DOMContentLoaded", function() {
-            a(), n(), c();
+            restoreSelections(), safeUpdateSelectedCount(), safeUpdateSummary();
         }), window.addEventListener("load", function() {
-            a(), n(), c();
+            restoreSelections(), safeUpdateSelectedCount(), safeUpdateSummary();
         });
         try {
-            let t = null;
-            const r = new MutationObserver(e => {
-                t && clearTimeout(t), t = setTimeout(() => {
+            let obsTimer = null;
+            const mo = new MutationObserver(mutations => {
+                obsTimer && clearTimeout(obsTimer), obsTimer = setTimeout(() => {
                     try {
-                        n(), c();
+                        safeUpdateSelectedCount(), safeUpdateSummary();
                     } catch (e) {
                         console.error("cart observer error", e);
                     }
                 }, 120);
             });
-            r.observe(e, {
+            mo.observe(listRoot, {
                 childList: !0,
                 subtree: !0,
                 attributes: !0,
                 attributeFilter: [ "data-qty", "data-key", "data-item-id" ]
             }), window.addEventListener("beforeunload", () => {
                 try {
-                    r.disconnect();
+                    mo.disconnect();
                 } catch (e) {}
             });
         } catch (e) {
@@ -747,130 +789,134 @@ function x2VisitorAreaFallback() {
         }
         console.log("cartCentralManager initialized (safe)");
     } else console.warn("cartCentralManager: cart list not found — aborting");
-    function t(e) {
-        if (!e && 0 !== e) return 0;
-        const t = String(e).trim().match(/-?\d{1,3}(?:[.,]\d{3})*(?:[.,]\d+)?|-?\d+(?:[.,]\d+)?/);
-        return t && Number(t[0].replace(/,/g, "").replace(/,/g, ".")) || 0;
+    function parseNum(s) {
+        if (!s && 0 !== s) return 0;
+        const m = String(s).trim().match(/-?\d{1,3}(?:[.,]\d{3})*(?:[.,]\d+)?|-?\d+(?:[.,]\d+)?/);
+        return m && Number(m[0].replace(/,/g, "").replace(/,/g, ".")) || 0;
     }
-    function r(t = e) {
-        return Array.from((t || document).querySelectorAll(".product-card-cart, .product-card"));
+    function allCards(root = listRoot) {
+        return Array.from((root || document).querySelectorAll(".product-card-cart, .product-card"));
     }
-    function o() {
+    function updateSummary() {
+        const selector = ".product-card-cart, .product-card", cards = void 0 !== listRoot && listRoot ? listRoot.querySelectorAll(selector) : document.querySelectorAll(selector);
+        let actualTotal = 0, oldTotal = 0, totalQty = 0;
+        cards.forEach(card => {
+            const cb = card.querySelector('.card-checkbox input[type="checkbox"]');
+            if (cb && !cb.checked) return;
+            const cur = Number(window.parseCurrency(card.dataset.priceCurrent ?? card.querySelector(".price-current, .current-price")?.textContent ?? "0")) || 0, oldCandidate = Number(window.parseCurrency(card.dataset.priceOld ?? card.querySelector(".old-price")?.textContent ?? "0")) || 0, originalPrice = Math.max(cur, oldCandidate), inpt = card.querySelector('.qty-dropdown input[type="number"], input[type="number"]'), valEl = card.querySelector(".qty-dropdown .qty-value, .qty-value");
+            let qty = 1;
+            qty = inpt ? Math.max(1, Number(inpt.value || 1)) : valEl ? Math.max(1, Number(String(valEl.textContent).replace(/[^\d]/g, "") || card.dataset.qty || 1)) : Math.max(1, Number(card.dataset.qty || 1)), 
+            actualTotal += cur * qty, oldTotal += originalPrice * qty, totalQty += qty, card.dataset.lineTotal = (cur * qty).toFixed(2);
+            const hasDiscount = oldCandidate > cur, oldEl = card.querySelector(".old-price"), badge = card.querySelector(".discount-badge");
+            oldEl && (hasDiscount ? (oldEl.style.display = "", oldEl.textContent = window.formatCurrency(oldCandidate)) : oldEl.style.display = "none"), 
+            badge && (badge.style.display = hasDiscount ? "" : "none");
+        });
+        const discount = Math.max(0, oldTotal - actualTotal), subtotalEl = document.querySelector(".order-summary .subtotal, .subtotal"), discountEl = document.querySelector(".order-summary .discount, .discount"), shippingEl = document.querySelector(".order-summary .shipping, .shipping"), totalEl = document.querySelector(".order-summary .summary-total, .summary-total");
+        if (subtotalEl && (subtotalEl.dataset.amount = oldTotal.toFixed(2), subtotalEl.textContent = window.formatCurrency(oldTotal)), 
+        discountEl && (discountEl.dataset.amount = discount.toFixed(2), discount > 0 ? (discountEl.style.display = "", 
+        discountEl.textContent = "-" + window.formatCurrency(discount)) : discountEl.style.display = "none"), 
+        shippingEl && (shippingEl.dataset.amount = (0).toFixed(2), shippingEl.textContent = "ar" === document.documentElement.lang ? "يتم تحديده لاحقاً" : "TBD"), 
+        totalEl) {
+            const grandTotal = actualTotal + 0;
+            totalEl.dataset.amount = grandTotal.toFixed(2), totalEl.textContent = window.formatCurrency(grandTotal);
+        }
+        const checkoutCount = document.getElementById("checkout-count");
+        checkoutCount && (checkoutCount.dataset.count = String(totalQty), checkoutCount.textContent = totalQty);
+        try {
+            window.dispatchEvent(new CustomEvent("cart:summary-updated", {
+                detail: {
+                    oldTotal: oldTotal,
+                    actualTotal: actualTotal,
+                    totalQty: totalQty,
+                    discount: discount
+                }
+            }));
+        } catch (e) {}
+    }
+    function safePersist() {
         if ("function" == typeof window.persistFromDOM) try {
             return window.persistFromDOM();
         } catch (e) {}
-        const e = r().map(e => {
-            const r = e.querySelector('.card-checkbox input[type="checkbox"]'), o = e.querySelector(".image img"), n = o?.src || o?.currentSrc || o?.getAttribute("data-src") || "";
+        const items = allCards().map(card => {
+            const cb = card.querySelector('.card-checkbox input[type="checkbox"]'), imgEl = card.querySelector(".image img"), imgSrc = imgEl?.src || imgEl?.currentSrc || imgEl?.getAttribute("data-src") || "";
             return {
-                id: e.dataset.itemId || "",
-                title: e.querySelector(".title")?.textContent?.trim() || "",
-                meta: e.querySelector(".meta")?.textContent?.trim() || "",
-                img: n,
-                priceCurrent: Number(e.dataset.priceCurrent || t(e.querySelector(".price-current")?.textContent || 0)) || 0,
-                priceOld: Number(e.dataset.priceOld || t(e.querySelector(".old-price")?.textContent || 0)) || 0,
-                qty: Number(e.querySelector('.qty-dropdown input[type="number"]')?.value || e.querySelector(".qty-dropdown .qty-value")?.textContent || e.dataset.qty || 1),
-                selected: !(!r || !r.checked)
+                id: card.dataset.itemId || "",
+                title: card.querySelector(".title")?.textContent?.trim() || "",
+                meta: card.querySelector(".meta")?.textContent?.trim() || "",
+                img: imgSrc,
+                priceCurrent: Number(card.dataset.priceCurrent || parseNum(card.querySelector(".price-current")?.textContent || 0)) || 0,
+                priceOld: Number(card.dataset.priceOld || parseNum(card.querySelector(".old-price")?.textContent || 0)) || 0,
+                qty: Number(card.querySelector('.qty-dropdown input[type="number"]')?.value || card.querySelector(".qty-dropdown .qty-value")?.textContent || card.dataset.qty || 1),
+                selected: !(!cb || !cb.checked)
             };
         });
         try {
-            localStorage.setItem("x2_cart", JSON.stringify(e));
+            localStorage.setItem("x2_cart", JSON.stringify(items));
         } catch (e) {
             console.error(e);
         }
         try {
             window.dispatchEvent(new CustomEvent("cart:persisted", {
                 detail: {
-                    items: e
+                    items: items
                 }
             }));
         } catch (e) {}
-        return e;
+        return items;
     }
-    function n() {
-        const t = function(t = e) {
-            return Array.from((t || document).querySelectorAll('.product-card-cart, .product-card .card-checkbox input[type="checkbox"]'));
-        }().filter(e => !!e.checked).length, o = r().length;
-        document.querySelectorAll(".selection-count").forEach(e => {
+    function safeUpdateSelectedCount() {
+        const selected = function(root = listRoot) {
+            return Array.from((root || document).querySelectorAll('.product-card-cart, .product-card .card-checkbox input[type="checkbox"]'));
+        }().filter(cb => !!cb.checked).length, total = allCards().length;
+        document.querySelectorAll(".selection-count").forEach(el => {
             try {
-                e.textContent = `تحديد (${t})`;
+                el.textContent = `تحديد (${selected})`;
             } catch (e) {}
         });
-        const n = document.getElementById("selectedItemsCount");
-        n && (n.textContent = String(t)), Array.from(document.querySelectorAll('#selectAllCheckbox, .select-all-checkbox input[type="checkbox"], .select-all input[type="checkbox"]')).forEach(e => {
+        const disp = document.getElementById("selectedItemsCount");
+        disp && (disp.textContent = String(selected));
+        Array.from(document.querySelectorAll('#selectAllCheckbox, .select-all-checkbox input[type="checkbox"], .select-all input[type="checkbox"]')).forEach(i => {
             try {
-                e.checked = t > 0 && t === o && o > 0;
+                i.checked = selected > 0 && selected === total && total > 0;
             } catch (e) {}
-        }), document.querySelectorAll(".select-all, .select-all-checkbox").forEach(e => {
-            if (!e.querySelector || !e.querySelector('input[type="checkbox"]')) try {
-                t > 0 && t === o && o > 0 ? (e.classList.add("checked"), e.setAttribute("aria-checked", "true")) : (e.classList.remove("checked"), 
-                e.setAttribute("aria-checked", "false"));
+        }), document.querySelectorAll(".select-all, .select-all-checkbox").forEach(w => {
+            if (!w.querySelector || !w.querySelector('input[type="checkbox"]')) try {
+                selected > 0 && selected === total && total > 0 ? (w.classList.add("checked"), w.setAttribute("aria-checked", "true")) : (w.classList.remove("checked"), 
+                w.setAttribute("aria-checked", "false"));
             } catch (e) {}
         });
-        const c = document.getElementById("deleteSelectedBtn");
-        c && (c.disabled = 0 === t);
+        const delBtn = document.getElementById("deleteSelectedBtn");
+        delBtn && (delBtn.disabled = 0 === selected);
     }
-    function c() {
+    function safeUpdateSummary() {
         if ("function" == typeof window.updateSummary) try {
             return void window.updateSummary();
         } catch (e) {}
         try {
-            return void function() {
-                const t = ".product-card-cart, .product-card", r = void 0 !== e && e ? e.querySelectorAll(t) : document.querySelectorAll(t);
-                let o = 0, n = 0, c = 0;
-                r.forEach(e => {
-                    const t = e.querySelector('.card-checkbox input[type="checkbox"]');
-                    if (t && !t.checked) return;
-                    const r = Number(window.parseCurrency(e.dataset.priceCurrent ?? e.querySelector(".price-current, .current-price")?.textContent ?? "0")) || 0, a = Number(window.parseCurrency(e.dataset.priceOld ?? e.querySelector(".old-price")?.textContent ?? "0")) || 0, d = Math.max(r, a), i = e.querySelector('.qty-dropdown input[type="number"], input[type="number"]'), s = e.querySelector(".qty-dropdown .qty-value, .qty-value");
-                    let l = 1;
-                    l = i ? Math.max(1, Number(i.value || 1)) : s ? Math.max(1, Number(String(s.textContent).replace(/[^\d]/g, "") || e.dataset.qty || 1)) : Math.max(1, Number(e.dataset.qty || 1)), 
-                    o += r * l, n += d * l, c += l, e.dataset.lineTotal = (r * l).toFixed(2);
-                    const u = a > r, m = e.querySelector(".old-price"), y = e.querySelector(".discount-badge");
-                    m && (u ? (m.style.display = "", m.textContent = window.formatCurrency(a)) : m.style.display = "none"), 
-                    y && (y.style.display = u ? "" : "none");
-                });
-                const a = Math.max(0, n - o), d = document.querySelector(".order-summary .subtotal, .subtotal"), i = document.querySelector(".order-summary .discount, .discount"), s = document.querySelector(".order-summary .shipping, .shipping"), l = document.querySelector(".order-summary .summary-total, .summary-total");
-                if (d && (d.dataset.amount = n.toFixed(2), d.textContent = window.formatCurrency(n)), 
-                i && (i.dataset.amount = a.toFixed(2), a > 0 ? (i.style.display = "", i.textContent = "-" + window.formatCurrency(a)) : i.style.display = "none"), 
-                s && (s.dataset.amount = (0).toFixed(2), s.textContent = "ar" === document.documentElement.lang ? "يتم تحديده لاحقاً" : "TBD"), 
-                l) {
-                    const e = o + 0;
-                    l.dataset.amount = e.toFixed(2), l.textContent = window.formatCurrency(e);
-                }
-                const u = document.getElementById("checkout-count");
-                u && (u.dataset.count = String(c), u.textContent = c);
-                try {
-                    window.dispatchEvent(new CustomEvent("cart:summary-updated", {
-                        detail: {
-                            oldTotal: n,
-                            actualTotal: o,
-                            totalQty: c,
-                            discount: a
-                        }
-                    }));
-                } catch (e) {}
-            }();
+            return void updateSummary();
         } catch (e) {}
     }
-    function a() {
-        let e = [];
+    function restoreSelections() {
+        let saved = [];
         try {
-            e = JSON.parse(localStorage.getItem("x2_cart") || "[]");
-        } catch (t) {
-            e = [];
+            saved = JSON.parse(localStorage.getItem("x2_cart") || "[]");
+        } catch (e) {
+            saved = [];
         }
-        Array.isArray(e) && 0 !== e.length && (r().forEach(t => {
-            let r = null;
-            const o = t.dataset.itemId || "";
-            if (o && (r = e.find(e => String(e.id) === String(o))), !r) {
-                const o = t.querySelector(".title")?.textContent?.trim() || "", n = Number(t.dataset.priceCurrent || 0);
-                r = e.find(e => (e.title || "") === o && Number(e.priceCurrent || 0) === n);
+        if (!Array.isArray(saved) || 0 === saved.length) return;
+        allCards().forEach(card => {
+            let matched = null;
+            const id = card.dataset.itemId || "";
+            if (id && (matched = saved.find(it => String(it.id) === String(id))), !matched) {
+                const title = card.querySelector(".title")?.textContent?.trim() || "", price = Number(card.dataset.priceCurrent || 0);
+                matched = saved.find(it => (it.title || "") === title && Number(it.priceCurrent || 0) === price);
             }
-            const n = t.querySelector('.card-checkbox input[type="checkbox"]');
-            if (n && (n.checked = !(r && !r.selected), t.classList.toggle("selected", n.checked)), 
-            r && r.img) {
-                const e = t.querySelector(".image img");
-                !e || e.src && "" !== e.src.trim() || (e.src = r.img, e.getAttribute("data-src") || e.setAttribute("data-src", r.img));
+            const cb = card.querySelector('.card-checkbox input[type="checkbox"]');
+            if (cb && (cb.checked = !(matched && !matched.selected), card.classList.toggle("selected", cb.checked)), 
+            matched && matched.img) {
+                const imgEl = card.querySelector(".image img");
+                !imgEl || imgEl.src && "" !== imgEl.src.trim() || (imgEl.src = matched.img, imgEl.getAttribute("data-src") || imgEl.setAttribute("data-src", matched.img));
             }
-        }), n(), c());
+        }), safeUpdateSelectedCount(), safeUpdateSummary();
     }
 }();

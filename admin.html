@@ -4187,19 +4187,6 @@ async function saveCampaign() {
     renderCampaigns();
     clearCampaignForm();
     toast('✅ تم حفظ الحملة في قاعدة البيانات');
-    const adminToken = await getValidAdminToken();
-    if (adminToken) {
-      fetch('https://knleehjjejfeobcmpwnw.supabase.co/functions/v1/hyper-api', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + adminToken },
-        body: JSON.stringify({
-          title: 'عرض جديد من بريق',
-          body: campaign.desc || `${campaign.name}${campaign.discount ? ` - خصم ${campaign.discount}%` : ''}`,
-          url: '/account.html?section=offers',
-          image: campaign.banner || undefined
-        })
-      }).catch(error => console.warn('Campaign push skipped:', error));
-    }
   } catch(e) {
     toast('⚠️ خطأ: ' + e.message);
   }
