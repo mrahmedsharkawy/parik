@@ -1648,10 +1648,29 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const cashbackToAdd = [];
       const remoteIds = new Set(remote.map(r => String(r.order_number)));
 
+      function remoteOrderToLocal(r) {
+        return {
+          id: String(r.order_number || r.id || ''),
+          date: r.created_at || r.updated_at || new Date().toISOString(),
+          items: Array.isArray(r.items) ? r.items : [],
+          total: parseFloat(r.total) || 0,
+          status: r.status || 'processing',
+          cashback: parseFloat(r.cashback) || 5,
+          cashbackStatus: r.cashback_status || 'pending',
+          cashbackExpiresAt: r.cashback_expires_at || '',
+          shipping: r.address || {},
+          _synced: true
+        };
+      }
+
       remote.forEach(r => {
         // مطابقة برقم الطلب (order_number) مع مقارنة نصية مرنة
         const idx = local.findIndex(o => String(o.id) === String(r.order_number));
-        if (idx === -1) { return; }
+        if (idx === -1) {
+          local.unshift(remoteOrderToLocal(r));
+          changed = true;
+          return;
+        }
         const lo = local[idx];
         if (r.status && lo.status !== r.status) {
           lo.status = r.status;

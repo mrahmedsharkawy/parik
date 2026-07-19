@@ -356,7 +356,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="auth-input-group">
           <label>رقم الهاتف</label>
           <div class="auth-input-wrap">
-            <input type="tel" id="reg-phone" placeholder="+971 XX XXX XXXX">
+            <input type="tel" id="reg-phone" value="+971 " placeholder="+971 XX XXX XXXX" inputmode="tel" dir="ltr" autocomplete="tel">
             <span class="input-ico">📱</span>
           </div>
         </div>
@@ -428,6 +428,81 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     el.style.display = 'block';
   }
 
+  function normalizeUaePhone(value) {
+    let digits = String(value || '').replace(/\D/g, '');
+    if (digits.startsWith('00971')) digits = digits.slice(2);
+    if (digits.startsWith('971')) digits = digits.slice(3);
+    if (digits.startsWith('0')) digits = digits.slice(1);
+    digits = digits.slice(0, 9);
+    return digits ? '+971' + digits : '';
+  }
+
+  function enforceUaePhoneInput(input) {
+    if (!input) return;
+    const phone = normalizeUaePhone(input.value);
+    input.value = phone ? phone.replace('+971', '+971 ') : '+971 ';
+  }
+
+  async function findExistingCustomer(email, phone) {
+    if (!window.sbFetch) return null;
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    const cleanPhone = normalizeUaePhone(phone);
+    const queries = [];
+    if (cleanEmail) queries.push('customers?email=eq.' + encodeURIComponent(cleanEmail) + '&limit=1');
+    if (cleanPhone) queries.push('customers?phone=eq.' + encodeURIComponent(cleanPhone) + '&limit=1');
+    for (const query of queries) {
+      try {
+        const rows = await window.sbFetch(query);
+        if (rows && rows[0]) return rows[0];
+      } catch(e) {}
+    }
+    return null;
+  }
+
+  function readLocalUsers() {
+    try { return JSON.parse(localStorage.getItem('x2_users') || '[]'); } catch(e) { return []; }
+  }
+
+  function buildProfile(data) {
+    const prev = (() => { try { return JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}'); } catch(e) { return {}; } })();
+    const email = String(data.email || prev.email || '').trim().toLowerCase();
+    const phone = normalizeUaePhone(data.phone || prev.phone || '');
+    return { ...prev, ...data, email, phone, address: data.address || data.city || prev.address || '', password: data.password || prev.password || '' };
+  }
+
+  function saveProfile(data) {
+    const profile = buildProfile(data);
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+    localStorage.setItem('x2_logged', '1');
+    syncCurrentPushSubscription(profile);
+    return profile;
+  }
+
+  async function syncCurrentPushSubscription(profile) {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return false;
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      if (!sub) return false;
+      const p256dh = sub.getKey('p256dh');
+      const auth = sub.getKey('auth');
+      const payload = {
+        endpoint: sub.endpoint,
+        p256dh: p256dh ? btoa(String.fromCharCode(...new Uint8Array(p256dh))) : '',
+        auth: auth ? btoa(String.fromCharCode(...new Uint8Array(auth))) : '',
+        user_phone: normalizeUaePhone(profile.phone || ''),
+        user_email: String(profile.email || '').trim().toLowerCase(),
+        created_at: new Date().toISOString()
+      };
+      const res = await fetch(_SB_URL + '/rest/v1/push_subscriptions', {
+        method: 'POST',
+        headers: { apikey: _SB_ANON, Authorization: 'Bearer ' + _SB_ANON, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify(payload)
+      });
+      return res.ok;
+    } catch(e) { return false; }
+  }
+
   function hideErrors() {
     ['login-error','register-error'].forEach(id => {
       const el = document.getElementById(id);
@@ -476,15 +551,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const user = data.user || {};
       const meta = user.user_metadata || {};
       const name = meta.full_name || meta.name || email.split('@')[0];
+      const existingCustomer = await findExistingCustomer(user.email || email, meta.phone || '');
 
-      // حفظ الجلسة (مع دمج البيانات السابقة المخزّنة محلياً مثل العنوان، والاحتفاظ بكلمة السر)
-      const prevProfile = (() => { try { return JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}'); } catch(e) { return {}; } })();
-      localStorage.setItem(PROFILE_KEY, JSON.stringify({ ...prevProfile, name, email: user.email || email, phone: meta.phone || prevProfile.phone || '', address: meta.address || prevProfile.address || '', password: pass }));
-      localStorage.setItem('x2_logged', '1');
+      // حفظ الجلسة مع دمج بيانات العميل المخزنة سابقاً في customers
+      const profile = saveProfile({ name, email: user.email || email, phone: meta.phone || existingCustomer?.phone || '', address: meta.address || existingCustomer?.address || existingCustomer?.city || '', password: pass });
       if (data.access_token) localStorage.setItem('x2_token', data.access_token);
 
       // مزامنة مع جدول customers
-      try { await window.Supabase.Customers.upsert({ name, email: user.email || email, phone: meta.phone || '' }); } catch(e) {}
+      try { await window.Supabase.Customers.upsert({ name: profile.name, email: profile.email, phone: profile.phone, city: profile.address, address: profile.address }); } catch(e) {}
 
       showSuccess('تم تسجيل الدخول بنجاح! 🎉', 'مرحباً ' + name.split(' ')[0] + '! جارٍ تحويلك...');
       setTimeout(() => { window.location.href = 'account.html'; }, 1200);
@@ -495,8 +569,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const users = JSON.parse(localStorage.getItem('x2_users') || '[]');
         const user = users.find(u => u.email === email || u.phone === email);
         if (user && user.pass === btoa(pass)) {
-          localStorage.setItem(PROFILE_KEY, JSON.stringify({ name: user.name, email: user.email, phone: user.phone, address: user.address || '', password: pass }));
-          localStorage.setItem('x2_logged', '1');
+          saveProfile({ name: user.name, email: user.email, phone: user.phone, address: user.address || '', password: pass });
           showSuccess('تم تسجيل الدخول! 🎉', 'جارٍ تحويلك...');
           setTimeout(() => { window.location.href = 'account.html'; }, 1200);
           return;
@@ -519,8 +592,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     hideErrors();
     const fullName = document.getElementById('reg-fname').value.trim();
     const address = document.getElementById('reg-address').value.trim();
-    const email = document.getElementById('reg-email').value.trim();
-    const phone = document.getElementById('reg-phone').value.trim();
+    const email = document.getElementById('reg-email').value.trim().toLowerCase();
+    const phoneInput = document.getElementById('reg-phone');
+    const phone = normalizeUaePhone(phoneInput.value);
     const pass  = document.getElementById('reg-pass').value;
     const terms = document.getElementById('reg-terms').checked;
 
@@ -528,8 +602,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     if (!email)  { showError('register-error', '⚠️ أدخل البريد الإلكتروني'); return; }
     if (!/^\S+@\S+\.\S+$/.test(email)) { showError('register-error', '⚠️ البريد الإلكتروني غير صحيح'); return; }
     if (!phone)  { showError('register-error', '⚠️ أدخل رقم الهاتف'); return; }
+    if (!/^\+971\d{8,9}$/.test(phone)) { showError('register-error', '⚠️ أدخل رقم إمارات صحيح بعد +971'); return; }
     if (pass.length < 6) { showError('register-error', '⚠️ كلمة المرور يجب أن تكون 6 أحرف على الأقل'); return; }
     if (!terms)  { showError('register-error', '⚠️ يجب الموافقة على الشروط والأحكام'); return; }
+    phoneInput.value = phone.replace('+971', '+971 ');
 
     const fname = fullName.split(' ')[0];
     const btn = document.querySelector('#form-register .auth-btn');
@@ -538,14 +614,21 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     try {
       await new Promise(r => { if (window.Supabase) r(); else { const t = setInterval(() => { if (window.Supabase) { clearInterval(t); r(); } }, 100); setTimeout(() => { clearInterval(t); r(); }, 4000); } });
 
+      const localDuplicate = readLocalUsers().find(u => String(u.email || '').toLowerCase() === email || normalizeUaePhone(u.phone || '') === phone);
+      const existingCustomer = localDuplicate || await findExistingCustomer(email, phone);
+      if (existingCustomer) {
+        showError('register-error', '❌ هذا البريد الإلكتروني أو رقم الهاتف مسجّل بالفعل. جرّب تسجيل الدخول.');
+        if (btn) { btn.disabled = false; btn.textContent = 'إنشاء حساب جديد'; }
+        return;
+      }
+
       await window.Supabase.Auth.signUp(email, pass, { full_name: fullName, phone, address });
 
       // حفظ كل بيانات العميل في حسابه (localStorage) بعد التسجيل
-      localStorage.setItem(PROFILE_KEY, JSON.stringify({ name: fullName, email, phone, address, password: pass }));
-      localStorage.setItem('x2_logged', '1');
+      saveProfile({ name: fullName, email, phone, address, password: pass });
 
       // حفظ في customers أيضاً
-      try { await window.Supabase.Customers.upsert({ name: fullName, email, phone, city: address }); } catch(e) {}
+      try { await window.Supabase.Customers.upsert({ name: fullName, email, phone, city: address, address }); } catch(e) {}
 
       showSuccess('تم إنشاء حسابك! 🎉', 'مرحباً ' + fname + '! تحقق من بريدك لتفعيل الحساب.');
       setTimeout(() => { window.location.href = 'account.html'; }, 2000);
@@ -553,20 +636,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     } catch(err) {
       // fallback محلي
       try {
-        const users = JSON.parse(localStorage.getItem('x2_users') || '[]');
-        if (users.find(u => u.email === email)) { showError('register-error', '❌ البريد مسجّل مسبقاً'); if (btn) { btn.disabled = false; btn.textContent = 'إنشاء حساب'; } return; }
+        const users = readLocalUsers();
+        if (users.find(u => String(u.email || '').toLowerCase() === email || normalizeUaePhone(u.phone || '') === phone)) { showError('register-error', '❌ هذا البريد الإلكتروني أو رقم الهاتف مسجّل بالفعل'); if (btn) { btn.disabled = false; btn.textContent = 'إنشاء حساب جديد'; } return; }
         users.push({ name: fullName, email, phone, address, pass: btoa(pass), date: new Date().toISOString() });
         localStorage.setItem('x2_users', JSON.stringify(users));
-        localStorage.setItem(PROFILE_KEY, JSON.stringify({ name: fullName, email, phone, address, password: pass }));
-        localStorage.setItem('x2_logged', '1');
+        saveProfile({ name: fullName, email, phone, address, password: pass });
         showSuccess('تم إنشاء حسابك! 🎉', 'مرحباً ' + fname + '!');
         setTimeout(() => { window.location.href = 'account.html'; }, 1500);
         return;
       } catch(e2) {}
 
       const msg = err.message || '';
-      if (msg.includes('already registered') || msg.includes('already been registered')) {
-        showError('register-error', '❌ هذا البريد الإلكتروني مسجّل بالفعل. جرّب تسجيل الدخول.');
+      if (msg.includes('already registered') || msg.includes('already been registered') || msg.includes('User already registered')) {
+        showError('register-error', '❌ هذا البريد الإلكتروني أو رقم الهاتف مسجّل بالفعل. جرّب تسجيل الدخول.');
       } else {
         showError('register-error', '❌ ' + msg);
       }
@@ -643,6 +725,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   // معالجة رجوع OAuth أولاً
   handleOAuthCallback();
+
+  const regPhoneInput = document.getElementById('reg-phone');
+  if (regPhoneInput) {
+    regPhoneInput.addEventListener('focus', function(){ enforceUaePhoneInput(regPhoneInput); });
+    regPhoneInput.addEventListener('input', function(){ enforceUaePhoneInput(regPhoneInput); });
+    enforceUaePhoneInput(regPhoneInput);
+  }
 
   // التحقق إذا كان مسجل دخول (تجاهل الفحص لو قادم من تسجيل الخروج)
   const _fromLogout = new URLSearchParams(window.location.search).get('logout') === '1';

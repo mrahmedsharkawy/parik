@@ -5,13 +5,21 @@
     var raw=window.atob(base64);
     return Uint8Array.from([].map.call(raw,function(c){return c.charCodeAt(0);}));
   }
+  function normalizeUaePhone(value){
+    var digits=String(value||'').replace(/\D/g,'');
+    if(digits.indexOf('00971')===0)digits=digits.slice(2);
+    if(digits.indexOf('971')===0)digits=digits.slice(3);
+    if(digits.indexOf('0')===0)digits=digits.slice(1);
+    digits=digits.slice(0,9);
+    return digits?'+971'+digits:'';
+  }
   async function saveSubscriptionToSupabase(sub){
     var anon='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
     try{
       var profile={};
       try{profile=JSON.parse(localStorage.getItem('x2_profile')||'{}');}catch(e){}
       var p256dh=sub.getKey('p256dh'),auth=sub.getKey('auth');
-      await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/push_subscriptions',{method:'POST',headers:{apikey:anon,Authorization:'Bearer '+anon,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({endpoint:sub.endpoint,p256dh:p256dh?btoa(String.fromCharCode.apply(null,new Uint8Array(p256dh))):'',auth:auth?btoa(String.fromCharCode.apply(null,new Uint8Array(auth))):'',user_phone:profile.phone||'',user_email:profile.email||'',created_at:(new Date).toISOString()})});
+      await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/push_subscriptions',{method:'POST',headers:{apikey:anon,Authorization:'Bearer '+anon,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({endpoint:sub.endpoint,p256dh:p256dh?btoa(String.fromCharCode.apply(null,new Uint8Array(p256dh))):'',auth:auth?btoa(String.fromCharCode.apply(null,new Uint8Array(auth))):'',user_phone:normalizeUaePhone(profile.phone||''),user_email:String(profile.email||'').trim().toLowerCase(),created_at:(new Date).toISOString()})});
     }catch(e){}
   }
   async function activatePushFromWelcome(btn){
