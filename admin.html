@@ -5061,6 +5061,15 @@ async function importProductsExcel(input) {
 
 /* ================= تحديث renderCustomers لدعم الترتيب والحظر ================= */
 const _origRenderCustomers = window.renderCustomers;
+const CUSTOMER_RENDER_BATCH = 100;
+let customerRenderLimit = CUSTOMER_RENDER_BATCH;
+let customerRenderSignature = '';
+
+function showMoreCustomers() {
+  customerRenderLimit += CUSTOMER_RENDER_BATCH;
+  renderCustomers();
+}
+
 window.renderCustomers = async function() {
   if (!ordersLoaded && !window._customersOrdersLoading) {
     window._customersOrdersLoading = true;
@@ -5119,11 +5128,17 @@ window.renderCustomers = async function() {
   });
   
   const countEl = $('custCount');
-  if (countEl) countEl.textContent = `${custs.length} عميل`;
+  const renderSignature = [q, statusFilter, cityFilter, sortBy, custs.length].join('|');
+  if (customerRenderSignature !== renderSignature) {
+    customerRenderSignature = renderSignature;
+    customerRenderLimit = CUSTOMER_RENDER_BATCH;
+  }
+  const visibleCusts = custs.slice(0, customerRenderLimit);
+  if (countEl) countEl.textContent = `${custs.length} عميل${visibleCusts.length < custs.length ? ' • ظاهر ' + visibleCusts.length : ''}`;
   
   if (!custs.length) { list.innerHTML='<div class="empty">لا يوجد عملاء</div>'; return; }
   
-  list.innerHTML = custs.map((c, i) => `
+  list.innerHTML = visibleCusts.map((c, i) => `
     <div class="prod-row" ${c.isBlocked ? 'style="opacity:.5;background:#fff5f5"' : ''}>
       <input type="checkbox" style="width:auto" ${selectedCustomers.has(i)?'checked':''} onchange="toggleCust(${i},this.checked)">
       <div class="info">
@@ -5143,7 +5158,7 @@ window.renderCustomers = async function() {
         `<a href="https://wa.me/${(c.phone||'').replace(/\\D/g,'')}" target="_blank" class="btn-gold btn-sm" style="text-decoration:none;${!c.phone?'opacity:.4;pointer-events:none':''}">💬</a>`
       }
     </div>
-  `).join('');
+  `).join('') + (visibleCusts.length < custs.length ? `<button class="btn-ghost" style="width:100%;margin-top:10px" onclick="showMoreCustomers()">عرض المزيد (${custs.length - visibleCusts.length})</button>` : '');
 };
 
 /* ================= تحميل الكوبونات والحملات من Supabase ================= */
