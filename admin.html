@@ -197,7 +197,7 @@
   #gate h2{margin:0 0 6px;color:var(--navy)}
   #gate p{color:#7a8296;font-size:.85rem;margin:0 0 18px}
 </style>
-<script src="/java/supabase.js?v=20260720v8"></script></head>
+<script src="/java/supabase.js?v=20260720v9"></script></head>
 <body>
 
 <!-- بوابة دخول بسيطة (حماية شكلية فقط) -->
@@ -1299,11 +1299,19 @@ async function checkGate(){
     // 1. تسجيل الدخول عبر Supabase Auth
     const authData = await window.Supabase.Auth.signIn(email, password);
 
-    // 2. التحقق أن المستخدم admin نشط في جدول admins أو ضمن الإيميلات المسموحة
-    const admin = await window.Supabase.Auth.getAdmin(authData.user.id, authData.access_token);
-    const emailAllowed = ALLOWED_ADMIN_EMAILS.includes((authData.user.email || email).toLowerCase());
+    // 2. التحقق: هل الإيميل مسموح؟
+    const emailAllowed = ALLOWED_ADMIN_EMAILS.includes(email.toLowerCase());
+
+    // 3. محاولة جلب بيانات الأدمن من الجدول (لا يهم لو فشل)
+    let admin = null;
+    try {
+      if (authData.user && authData.user.id) {
+        admin = await window.Supabase.Auth.getAdmin(authData.user.id, authData.access_token);
+      }
+    } catch(adminErr) { /* admins table might not exist or be blocked */ }
+
     if (!admin && !emailAllowed) {
-      await window.Supabase.Auth.signOut(authData.access_token);
+      try { await window.Supabase.Auth.signOut(authData.access_token); } catch(_){}
       showErr('❌ ليس لديك صلاحية دخول لوحة التحكم');
       btn.disabled = false; btn.textContent = 'دخول';
       return;
