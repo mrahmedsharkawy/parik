@@ -3962,6 +3962,11 @@ function customersFromOrders(orders) {
 }
 
 async function syncOrderCustomersFromSupabase() {
+  if (ordersLoaded) {
+    orderCustomers = customersFromOrders(supaOrdersCache);
+    orderCustomersLoaded = true;
+    return orderCustomers;
+  }
   if (!window.sbFetch) return [];
   const PAGE = 1000;
   let offset = 0;
@@ -4051,7 +4056,7 @@ function getCustomers() {
   const isDeleted = (phone, email) => (phone && _deletedKeys.has(phone)) || (email && _deletedKeys.has(email));
   // جمع الطلبات من كلا المصدرين
   const storeOrders  = ordersLoaded ? [] : JSON.parse(localStorage.getItem('x2_orders')   || '[]');
-  const adminOrders  = getOrders(); // admin_orders
+  const adminOrders  = orderCustomersLoaded ? [] : getOrders(); // admin_orders
   const allOrders    = [...storeOrders, ...adminOrders];
   const profile = (() => { try { return JSON.parse(localStorage.getItem('x2_profile')||'{}'); }catch(e){return{};} })();
 
