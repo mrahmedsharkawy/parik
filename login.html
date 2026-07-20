@@ -542,6 +542,30 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     } catch(e) { return false; }
   }
 
+  async function syncProfileToUserSync(profile, token) {
+    const email = String(profile.email || '').trim().toLowerCase();
+    const authToken = token || localStorage.getItem('x2_token') || '';
+    if (!email || !authToken) return false;
+    const payload = {
+      name: profile.name || '',
+      email,
+      phone: normalizeUaePhone(profile.phone || ''),
+      address: profile.address || profile.city || '',
+      ts: Date.now()
+    };
+    const headers = { apikey: _SB_ANON, Authorization: 'Bearer ' + authToken, 'Content-Type': 'application/json' };
+    try {
+      const existing = await fetch(_SB_URL + '/rest/v1/user_sync?user_email=eq.' + encodeURIComponent(email) + '&data_type=eq.profile&select=id&limit=1', { headers });
+      const rows = existing.ok ? await existing.json() : [];
+      const body = JSON.stringify({ user_email: email, data_type: 'profile', data: payload, updated_at: new Date().toISOString() });
+      const url = rows && rows[0]
+        ? _SB_URL + '/rest/v1/user_sync?id=eq.' + rows[0].id
+        : _SB_URL + '/rest/v1/user_sync';
+      const res = await fetch(url, { method: rows && rows[0] ? 'PATCH' : 'POST', headers: { ...headers, Prefer: 'return=minimal' }, body });
+      return res.ok;
+    } catch(e) { return false; }
+  }
+
   function hideErrors() {
     ['login-error','register-error'].forEach(id => {
       const el = document.getElementById(id);
@@ -587,6 +611,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       await new Promise(r => { if (window.Supabase) r(); else { const t = setInterval(() => { if (window.Supabase) { clearInterval(t); r(); } }, 100); setTimeout(() => { clearInterval(t); r(); }, 4000); } });
 
       const data = await window.Supabase.Auth.signIn(email, pass);
+      if (data.access_token) localStorage.setItem('x2_token', data.access_token);
       const user = data.user || {};
       const meta = user.user_metadata || {};
       const name = meta.full_name || meta.name || email.split('@')[0];
@@ -611,10 +636,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       // حفظ الجلسة مع دمج بيانات العميل المخزنة سابقاً في customers
       const profile = saveProfile({ ...customerData, name: customerData.name || name, email: user.email || customerData.email || email, phone: meta.phone || customerData.phone || repairedPhone || '', address: meta.address || customerData.address || '', password: pass });
-      if (data.access_token) localStorage.setItem('x2_token', data.access_token);
 
       // مزامنة مع جدول customers
       try { await window.Supabase.Customers.upsert({ name: profile.name, email: profile.email, phone: profile.phone, city: profile.address, address: profile.address }); } catch(e) {}
+      syncProfileToUserSync(profile, data.access_token).catch(()=>{});
 
       showSuccess('تم تسجيل الدخول بنجاح! 🎉', 'مرحباً ' + name.split(' ')[0] + '! جارٍ تحويلك...');
       setTimeout(() => { window.location.href = 'account.html'; }, 1200);
@@ -667,6 +692,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       }
 
       const signupData = await window.Supabase.Auth.signUp(email, pass, { full_name: fullName, phone, address });
+      if (signupData?.access_token) localStorage.setItem('x2_token', signupData.access_token);
       const signupUser = signupData?.user || signupData;
       if (signupUser && Array.isArray(signupUser.identities) && signupUser.identities.length === 0) {
         showError('register-error', '❌ هذا البريد الإلكتروني أو رقم الهاتف مسجّل بالفعل. جرّب تسجيل الدخول.');
@@ -675,10 +701,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       }
 
       // حفظ كل بيانات العميل في حسابه (localStorage) بعد التسجيل
-      saveProfile({ name: fullName, email, phone, address, password: pass });
+  const profile = saveProfile({ name: fullName, email, phone, address, password: pass });
 
       // حفظ في customers أيضاً
       try { await window.Supabase.Customers.upsert({ name: fullName, email, phone, city: address, address }); } catch(e) {}
+  syncProfileToUserSync(profile, signupData?.access_token).catch(()=>{});
 
       showSuccess('تم إنشاء حسابك! 🎉', 'مرحباً ' + fname + '! تحقق من بريدك لتفعيل الحساب.');
       setTimeout(() => { window.location.href = 'account.html'; }, 2000);

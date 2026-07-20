@@ -2416,6 +2416,39 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   importPushInbox().then(updateAqnBadge);
   window.addEventListener('x2:notif-updated', updateAqnBadge);
 
+  function getJwtEmail() {
+    try {
+      const token = localStorage.getItem('x2_token') || '';
+      const payload = token.split('.')[1];
+      if (!payload) return '';
+      const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+      return String(JSON.parse(atob(normalized)).email || '').trim().toLowerCase();
+    } catch(e) { return ''; }
+  }
+
+  async function syncProfileToUserSync(profile, oldProfile) {
+    if (!window.sbFetch || !profile) return false;
+    const authEmail = getJwtEmail();
+    const rowEmail = authEmail || String(oldProfile?.email || profile.email || '').trim().toLowerCase();
+    if (!rowEmail) return false;
+    const data = {
+      name: profile.name || '',
+      email: String(profile.email || rowEmail).trim().toLowerCase(),
+      phone: normalizeUaePhone(profile.phone || ''),
+      address: profile.address || '',
+      address_full: profile.address_full || null,
+      ts: Date.now()
+    };
+    try {
+      const existing = await window.sbFetch('user_sync?user_email=eq.' + encodeURIComponent(rowEmail) + '&data_type=eq.profile&select=id&limit=1');
+      const body = { user_email: rowEmail, data_type: 'profile', data, updated_at: new Date().toISOString() };
+      if (existing && existing[0]) {
+        return await window.sbFetch('user_sync?id=eq.' + existing[0].id, { method: 'PATCH', prefer: 'return=minimal', body: JSON.stringify(body) });
+      }
+      return await window.sbFetch('user_sync', { method: 'POST', prefer: 'return=minimal', body: JSON.stringify(body) });
+    } catch(e) { return false; }
+  }
+
   window.saveAddress = function() {
     const addr = {
       country:  document.getElementById('addr-country').value,
@@ -2430,6 +2463,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const p = JSON.parse(localStorage.getItem('x2_profile') || '{}');
       p.address_full = addr;
       localStorage.setItem('x2_profile', JSON.stringify(p));
+      syncProfileToUserSync(p, p).catch(()=>{});
     } catch(e) {}
     alert('✅ تم حفظ العنوان');
   };
@@ -2455,6 +2489,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     if (window.Supabase?.Customers?.upsert) {
       window.Supabase.Customers.upsert({ name: p.name, email: p.email, phone: p.phone, city: p.address, address: p.address }).catch(()=>{});
     }
+    syncProfileToUserSync(p, oldProfile).catch(()=>{});
     syncOrdersFromSupabase().then(() => renderOrders());
     if (p.name) {
       document.getElementById('profile-name').textContent = p.name;
