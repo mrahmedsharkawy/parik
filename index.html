@@ -592,13 +592,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="/java/footer-pages.min.js" defer></script>
 <script src="/mobile-nav-bar/main-navbar.min.js" defer></script>  
 <script src="/java/notifications.min.js" defer></script>
-<script>
-  (function(){
-    const loadProducts = function(){ import('/java/Products.min.js').catch(function(){}); };
-    if ('requestIdleCallback' in window) requestIdleCallback(loadProducts, { timeout: 1800 });
-    else setTimeout(loadProducts, 900);
-  })();
-</script>
+<script type="module" src="/java/Products.min.js" defer></script>
 
 <script>
 (function(){
