@@ -225,8 +225,7 @@ self.addEventListener('push', function(e) {
         const inboxItem = {
           id: data.id || ('push-' + Date.now()),
           type: data.type || 'push',
-          status: data.status || '',
-          icon: data.iconText || data.emoji || '\u{1F514}',
+          icon: data.iconText || data.emoji || '🔔',
           title: title,
           msg: data.body || '',
           date: data.date || (new Date()).toISOString(),

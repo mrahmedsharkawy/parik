@@ -15,7 +15,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
   <link rel="icon" type="image/png" href="/assets/logo.png">
   <link rel="apple-touch-icon" href="/assets/icon.png">
-  <meta name="apple-mobile-web-app-title" content="بريـــق">
+  <meta name="apple-mobile-web-app-title" content="بريق">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#152546">
   <meta name="mobile-web-app-capable" content="yes">
@@ -2250,7 +2250,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     };
     const ar = map[status] || null;
     if (!ar) return { ...n, icon: n.icon || '🔔' };
-    return { ...n, type: 'order_status', status, icon: ar.icon, title: ar.icon + ' ' + ar.title, msg: ar.msg, orderId };
+    return { ...n, type: 'order_status', status, icon: n.icon || ar.icon, title: ar.icon + ' ' + ar.title, msg: ar.msg, orderId };
   }
 
   function renderNotifications() {
@@ -2367,7 +2367,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const notifs = window.x2Notifications ? window.x2Notifications.getAll() : (() => { try { return JSON.parse(localStorage.getItem('x2_notifications') || '[]'); } catch(e) { return []; } })();
     const id = item.id || ('push-' + Date.now());
     if (notifs.some(n => n.id === id)) return false;
-    notifs.unshift({ id, type: item.type || 'push', status: item.status || '', icon: item.icon || '🔔', title: item.title || 'إشعار جديد', msg: item.msg || item.body || '', date: item.date || new Date().toISOString(), read: item.read === true ? true : false, orderId: item.orderId || item.order_id || '', url: item.url || '' });
+    notifs.unshift({ id, type: item.type || 'push', icon: item.icon || '🔔', title: item.title || 'إشعار جديد', msg: item.msg || item.body || '', date: item.date || new Date().toISOString(), read: item.read === true ? true : false, orderId: item.orderId || item.order_id || '', url: item.url || '' });
     try { localStorage.setItem('x2_notifications', JSON.stringify(notifs.slice(0, 60))); } catch(e) {}
     if (typeof updateAqnBadge === 'function') updateAqnBadge();
     if (document.getElementById('section-notifications')?.style.display !== 'none') renderNotifications();
