@@ -197,7 +197,7 @@
   #gate h2{margin:0 0 6px;color:var(--navy)}
   #gate p{color:#7a8296;font-size:.85rem;margin:0 0 18px}
 </style>
-<script src="/java/supabase.js?v=20260720v6"></script></head>
+<script src="/java/supabase.js?v=20260720v7"></script></head>
 <body>
 
 <!-- بوابة دخول بسيطة (حماية شكلية فقط) -->
@@ -208,6 +208,12 @@
     <input type="email" id="gateUser" placeholder="البريد الإلكتروني" style="text-align:center;margin-bottom:10px">
     <input type="password" id="gatePass" placeholder="كلمة المرور" style="text-align:center;margin-bottom:12px">
     <button class="btn-gold" style="width:100%" onclick="checkGate()" id="gateBtn">دخول</button>
+    <button type="button" class="btn-ghost" style="width:100%;margin-top:8px;color:#152546;border-color:#c8cfda" onclick="resetAdminPassword()">نسيت كلمة المرور؟</button>
+    <div id="resetPasswordBox" style="display:none">
+      <input type="password" id="newAdminPassword" placeholder="كلمة المرور الجديدة" minlength="8" style="text-align:center;margin:12px 0 8px">
+      <input type="password" id="confirmAdminPassword" placeholder="تأكيد كلمة المرور" minlength="8" style="text-align:center;margin-bottom:12px">
+      <button type="button" class="btn-gold" style="width:100%" onclick="saveNewAdminPassword()">حفظ كلمة المرور الجديدة</button>
+    </div>
     <p id="gateMsg" style="margin-top:10px;font-size:.8rem;color:#e53935;display:none"></p>
   </div>
 </div>
@@ -1311,10 +1317,78 @@ async function checkGate(){
     toast('✅ مرحباً ' + (admin.full_name || 'بالأدمن'));
 
   } catch(e) {
-    showErr('❌ ' + (e.message || 'الإيميل أو كلمة المرور غير صحيحة'));
+    const invalid = /invalid login credentials/i.test(e.message || '');
+    showErr(invalid
+      ? '❌ البريد أو كلمة المرور غير صحيحة. استخدم استعادة كلمة المرور إذا نسيتها.'
+      : '❌ ' + (e.message || 'تعذر تسجيل الدخول'));
     btn.disabled = false; btn.textContent = 'دخول';
   }
 }
+
+async function resetAdminPassword() {
+  const email = ($('gateUser').value || '').trim().toLowerCase();
+  const msgEl = $('gateMsg');
+  if (!email) {
+    msgEl.textContent = 'أدخل بريد الأدمن أولاً';
+    msgEl.style.color = '#e53935';
+    msgEl.style.display = 'block';
+    return;
+  }
+  try {
+    await window.Supabase.Auth.resetPassword(email);
+    msgEl.textContent = 'تم إرسال رابط تغيير كلمة المرور إلى البريد إذا كان مسجلاً';
+    msgEl.style.color = '#1e8e4e';
+    msgEl.style.display = 'block';
+  } catch (e) {
+    msgEl.textContent = 'تعذر إرسال رابط الاستعادة: ' + (e.message || 'خطأ غير معروف');
+    msgEl.style.color = '#e53935';
+    msgEl.style.display = 'block';
+  }
+}
+
+let adminRecoveryToken = '';
+function prepareAdminPasswordRecovery() {
+  const params = new URLSearchParams(location.hash.replace(/^#/, ''));
+  if (params.get('type') !== 'recovery' || !params.get('access_token')) return;
+  adminRecoveryToken = params.get('access_token');
+  $('gateUser').style.display = 'none';
+  $('gatePass').style.display = 'none';
+  $('gateBtn').style.display = 'none';
+  $('gateBtn').nextElementSibling.style.display = 'none';
+  $('resetPasswordBox').style.display = 'block';
+  $('gate').style.display = 'flex';
+  const msgEl = $('gateMsg');
+  msgEl.textContent = 'اكتب كلمة مرور جديدة لحساب الأدمن';
+  msgEl.style.color = '#152546';
+  msgEl.style.display = 'block';
+}
+
+async function saveNewAdminPassword() {
+  const password = $('newAdminPassword').value;
+  const confirmPassword = $('confirmAdminPassword').value;
+  const msgEl = $('gateMsg');
+  if (password.length < 8) {
+    msgEl.textContent = 'كلمة المرور يجب أن تكون 8 أحرف على الأقل';
+    msgEl.style.color = '#e53935';
+    return;
+  }
+  if (password !== confirmPassword) {
+    msgEl.textContent = 'كلمتا المرور غير متطابقتين';
+    msgEl.style.color = '#e53935';
+    return;
+  }
+  try {
+    await window.Supabase.Auth.updatePassword(adminRecoveryToken, password);
+    history.replaceState(null, '', '/admin.html');
+    msgEl.textContent = 'تم تغيير كلمة المرور. افتح لوحة التحكم وسجّل الدخول بالكلمة الجديدة.';
+    msgEl.style.color = '#1e8e4e';
+    setTimeout(() => location.reload(), 1800);
+  } catch (e) {
+    msgEl.textContent = 'تعذر تغيير كلمة المرور: ' + (e.message || 'الرابط منتهي');
+    msgEl.style.color = '#e53935';
+  }
+}
+prepareAdminPasswordRecovery();
 
 async function restoreAdminSession() {
   if (sessionStorage.getItem('admin_ok') !== '1') return;
