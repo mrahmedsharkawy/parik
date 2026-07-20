@@ -197,7 +197,7 @@
   #gate h2{margin:0 0 6px;color:var(--navy)}
   #gate p{color:#7a8296;font-size:.85rem;margin:0 0 18px}
 </style>
-<script src="/java/supabase.js?v=20260720v7"></script></head>
+<script src="/java/supabase.js?v=20260720v8"></script></head>
 <body>
 
 <!-- بوابة دخول بسيطة (حماية شكلية فقط) -->
@@ -1228,6 +1228,7 @@ const LS_PRODUCTS = 'admin_products';
 const LS_REVIEWS  = 'admin_reviews';
 const GATE_PASS   = '123456789'; // الباسورد الافتراضي
 const GATE_USER   = 'admin';     // اسم المستخدم الافتراضي
+const ALLOWED_ADMIN_EMAILS = ['nedsharkawy@gmail.com'];
 
 /* ================= أدوات ================= */
 const $ = id => document.getElementById(id);
@@ -1298,9 +1299,10 @@ async function checkGate(){
     // 1. تسجيل الدخول عبر Supabase Auth
     const authData = await window.Supabase.Auth.signIn(email, password);
 
-    // 2. التحقق أن المستخدم admin نشط في جدول admins
+    // 2. التحقق أن المستخدم admin نشط في جدول admins أو ضمن الإيميلات المسموحة
     const admin = await window.Supabase.Auth.getAdmin(authData.user.id, authData.access_token);
-    if (!admin) {
+    const emailAllowed = ALLOWED_ADMIN_EMAILS.includes((authData.user.email || email).toLowerCase());
+    if (!admin && !emailAllowed) {
       await window.Supabase.Auth.signOut(authData.access_token);
       showErr('❌ ليس لديك صلاحية دخول لوحة التحكم');
       btn.disabled = false; btn.textContent = 'دخول';
@@ -1312,9 +1314,9 @@ async function checkGate(){
     sessionStorage.setItem('admin_token', authData.access_token);
     sessionStorage.setItem('admin_refresh_token', authData.refresh_token || '');
     sessionStorage.setItem('admin_token_exp', String(Date.now() + (authData.expires_in || 3600) * 1000));
-    sessionStorage.setItem('admin_name', admin.full_name || email.split('@')[0]);
+    sessionStorage.setItem('admin_name', (admin && admin.full_name) || email.split('@')[0]);
     $('gate').style.display = 'none';
-    toast('✅ مرحباً ' + (admin.full_name || 'بالأدمن'));
+    toast('✅ مرحباً ' + ((admin && admin.full_name) || 'بالأدمن'));
 
   } catch(e) {
     const invalid = /invalid login credentials/i.test(e.message || '');
