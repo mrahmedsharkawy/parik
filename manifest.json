@@ -1,10 +1,8 @@
 {
-  "name": "بريـــــق",
-  "short_name": "بريـــــق",
+  "name": "بريق",
+  "short_name": "بريق",
   "description": "متجر بريق الإلكتروني - تسوق أفضل المنتجات بأسعار مميزة",
-  "id": "/",
-  "start_url": "/",
-  "scope": "/",
+  "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#152546",
   "theme_color": "#152546",

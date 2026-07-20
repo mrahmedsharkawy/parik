@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8" />
-<script src="/java/auth-reset.js?v=20260720v2"></script>
+<script src="/java/auth-reset.js"></script>
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
   <link rel="icon" type="image/png" href="/assets/logo.png">
@@ -197,7 +197,7 @@
   #gate h2{margin:0 0 6px;color:var(--navy)}
   #gate p{color:#7a8296;font-size:.85rem;margin:0 0 18px}
 </style>
-<script src="/java/supabase.js?v=20260720v9"></script></head>
+<script src="/java/supabase.js"></script></head>
 <body>
 
 <!-- بوابة دخول بسيطة (حماية شكلية فقط) -->
@@ -208,12 +208,6 @@
     <input type="email" id="gateUser" placeholder="البريد الإلكتروني" style="text-align:center;margin-bottom:10px">
     <input type="password" id="gatePass" placeholder="كلمة المرور" style="text-align:center;margin-bottom:12px">
     <button class="btn-gold" style="width:100%" onclick="checkGate()" id="gateBtn">دخول</button>
-    <button type="button" class="btn-ghost" style="width:100%;margin-top:8px;color:#152546;border-color:#c8cfda" onclick="resetAdminPassword()">نسيت كلمة المرور؟</button>
-    <div id="resetPasswordBox" style="display:none">
-      <input type="password" id="newAdminPassword" placeholder="كلمة المرور الجديدة" minlength="8" style="text-align:center;margin:12px 0 8px">
-      <input type="password" id="confirmAdminPassword" placeholder="تأكيد كلمة المرور" minlength="8" style="text-align:center;margin-bottom:12px">
-      <button type="button" class="btn-gold" style="width:100%" onclick="saveNewAdminPassword()">حفظ كلمة المرور الجديدة</button>
-    </div>
     <p id="gateMsg" style="margin-top:10px;font-size:.8rem;color:#e53935;display:none"></p>
   </div>
 </div>
@@ -481,7 +475,7 @@
 
   <!-- ============ التسويق والكوبونات ============ -->
   <div class="panel" id="panel-marketing">
-
+    
     <!-- كوبونات الخصم -->
     <div class="card" style="margin-bottom:16px">
       <h2>🎟️ كوبونات الخصم</h2>
@@ -712,7 +706,7 @@
 
   <!-- ============ التقارير ============ -->
   <div class="panel" id="panel-reports">
-
+    
     <!-- ملخص سريع -->
     <div class="stats-cards" id="reportStatsCards" style="margin-bottom:16px">
       <div class="stat gold">
@@ -1139,7 +1133,7 @@
 
       <!-- ============ إشعارات Push ============ -->
       <div class="card">
-        <h2>🔔 إرسال إشعار Push للعملاء</h2>
+        <h2>🔔 إرسال إشعار Push للعملاء</h2> 
         <div class="hint">الإشعارات تظهر على شاشة الهاتف وأيقونة التطبيق حتى لو الموقع مغلق</div>
         <label>عنوان الإشعار</label>
         <input type="text" id="push-title" placeholder="عرض خاص 🔥" maxlength="50">
@@ -1228,7 +1222,6 @@ const LS_PRODUCTS = 'admin_products';
 const LS_REVIEWS  = 'admin_reviews';
 const GATE_PASS   = '123456789'; // الباسورد الافتراضي
 const GATE_USER   = 'admin';     // اسم المستخدم الافتراضي
-const ALLOWED_ADMIN_EMAILS = ['nedsharkawy@gmail.com'];
 
 /* ================= أدوات ================= */
 const $ = id => document.getElementById(id);
@@ -1267,18 +1260,12 @@ async function refreshAdminToken() {
 async function getValidAdminToken() {
   const token = sessionStorage.getItem('admin_token');
   const exp   = parseInt(sessionStorage.getItem('admin_token_exp') || '0');
-  const tokenIsUsable = token && (typeof isJwtUsable !== 'function' || isJwtUsable(token));
-  // تجديد التوكن المفقود أو المنتهي أو الذي بقي له أقل من 5 دقائق.
-  if (!tokenIsUsable || (exp && (exp - Date.now()) < 5 * 60 * 1000)) {
+  // تجديد لو باقي أقل من 5 دقائق
+  if (token && exp && (exp - Date.now()) < 5 * 60 * 1000) {
     const newToken = await refreshAdminToken();
-    return newToken || null;
+    return newToken || token;
   }
-  return token;
-}
-
-function clearAdminSession() {
-  ['admin_ok', 'admin_token', 'admin_refresh_token', 'admin_token_exp', 'admin_name']
-    .forEach(key => sessionStorage.removeItem(key));
+  return token || null;
 }
 
 /* ================= البوابة ================= */
@@ -1299,19 +1286,10 @@ async function checkGate(){
     // 1. تسجيل الدخول عبر Supabase Auth
     const authData = await window.Supabase.Auth.signIn(email, password);
 
-    // 2. التحقق: هل الإيميل مسموح؟
-    const emailAllowed = ALLOWED_ADMIN_EMAILS.includes(email.toLowerCase());
-
-    // 3. محاولة جلب بيانات الأدمن من الجدول (لا يهم لو فشل)
-    let admin = null;
-    try {
-      if (authData.user && authData.user.id) {
-        admin = await window.Supabase.Auth.getAdmin(authData.user.id, authData.access_token);
-      }
-    } catch(adminErr) { /* admins table might not exist or be blocked */ }
-
-    if (!admin && !emailAllowed) {
-      try { await window.Supabase.Auth.signOut(authData.access_token); } catch(_){}
+    // 2. التحقق أن المستخدم admin نشط في جدول admins
+    const admin = await window.Supabase.Auth.getAdmin(authData.user.id, authData.access_token);
+    if (!admin) {
+      await window.Supabase.Auth.signOut(authData.access_token);
       showErr('❌ ليس لديك صلاحية دخول لوحة التحكم');
       btn.disabled = false; btn.textContent = 'دخول';
       return;
@@ -1322,100 +1300,19 @@ async function checkGate(){
     sessionStorage.setItem('admin_token', authData.access_token);
     sessionStorage.setItem('admin_refresh_token', authData.refresh_token || '');
     sessionStorage.setItem('admin_token_exp', String(Date.now() + (authData.expires_in || 3600) * 1000));
-    sessionStorage.setItem('admin_name', (admin && admin.full_name) || email.split('@')[0]);
+    sessionStorage.setItem('admin_name', admin.full_name || email.split('@')[0]);
     $('gate').style.display = 'none';
-    toast('✅ مرحباً ' + ((admin && admin.full_name) || 'بالأدمن'));
+    toast('✅ مرحباً ' + (admin.full_name || 'بالأدمن'));
 
   } catch(e) {
-    const invalid = /invalid login credentials/i.test(e.message || '');
-    showErr(invalid
-      ? '❌ البريد أو كلمة المرور غير صحيحة. استخدم استعادة كلمة المرور إذا نسيتها.'
-      : '❌ ' + (e.message || 'تعذر تسجيل الدخول'));
+    showErr('❌ ' + (e.message || 'الإيميل أو كلمة المرور غير صحيحة'));
     btn.disabled = false; btn.textContent = 'دخول';
   }
 }
 
-async function resetAdminPassword() {
-  const email = ($('gateUser').value || '').trim().toLowerCase();
-  const msgEl = $('gateMsg');
-  if (!email) {
-    msgEl.textContent = 'أدخل بريد الأدمن أولاً';
-    msgEl.style.color = '#e53935';
-    msgEl.style.display = 'block';
-    return;
-  }
-  try {
-    await window.Supabase.Auth.resetPassword(email);
-    msgEl.textContent = 'تم إرسال رابط تغيير كلمة المرور إلى البريد إذا كان مسجلاً';
-    msgEl.style.color = '#1e8e4e';
-    msgEl.style.display = 'block';
-  } catch (e) {
-    msgEl.textContent = 'تعذر إرسال رابط الاستعادة: ' + (e.message || 'خطأ غير معروف');
-    msgEl.style.color = '#e53935';
-    msgEl.style.display = 'block';
-  }
+if(sessionStorage.getItem('admin_ok') === '1'){
+  $('gate').style.display = 'none';
 }
-
-let adminRecoveryToken = '';
-function prepareAdminPasswordRecovery() {
-  const params = new URLSearchParams(location.hash.replace(/^#/, ''));
-  if (params.get('type') !== 'recovery' || !params.get('access_token')) return;
-  adminRecoveryToken = params.get('access_token');
-  $('gateUser').style.display = 'none';
-  $('gatePass').style.display = 'none';
-  $('gateBtn').style.display = 'none';
-  $('gateBtn').nextElementSibling.style.display = 'none';
-  $('resetPasswordBox').style.display = 'block';
-  $('gate').style.display = 'flex';
-  const msgEl = $('gateMsg');
-  msgEl.textContent = 'اكتب كلمة مرور جديدة لحساب الأدمن';
-  msgEl.style.color = '#152546';
-  msgEl.style.display = 'block';
-}
-
-async function saveNewAdminPassword() {
-  const password = $('newAdminPassword').value;
-  const confirmPassword = $('confirmAdminPassword').value;
-  const msgEl = $('gateMsg');
-  if (password.length < 8) {
-    msgEl.textContent = 'كلمة المرور يجب أن تكون 8 أحرف على الأقل';
-    msgEl.style.color = '#e53935';
-    return;
-  }
-  if (password !== confirmPassword) {
-    msgEl.textContent = 'كلمتا المرور غير متطابقتين';
-    msgEl.style.color = '#e53935';
-    return;
-  }
-  try {
-    await window.Supabase.Auth.updatePassword(adminRecoveryToken, password);
-    history.replaceState(null, '', '/admin.html');
-    msgEl.textContent = 'تم تغيير كلمة المرور. افتح لوحة التحكم وسجّل الدخول بالكلمة الجديدة.';
-    msgEl.style.color = '#1e8e4e';
-    setTimeout(() => location.reload(), 1800);
-  } catch (e) {
-    msgEl.textContent = 'تعذر تغيير كلمة المرور: ' + (e.message || 'الرابط منتهي');
-    msgEl.style.color = '#e53935';
-  }
-}
-prepareAdminPasswordRecovery();
-
-async function restoreAdminSession() {
-  if (sessionStorage.getItem('admin_ok') !== '1') return;
-  const token = await getValidAdminToken();
-  if (token) {
-    $('gate').style.display = 'none';
-    return;
-  }
-  clearAdminSession();
-  $('gate').style.display = 'flex';
-  const msgEl = $('gateMsg');
-  if (msgEl) {
-    msgEl.textContent = 'انتهت جلسة الأدمن، سجّل الدخول مرة أخرى';
-    msgEl.style.display = 'block';
-  }
-}
-restoreAdminSession();
 
 $('gatePass').addEventListener('keydown', e=>{ if(e.key==='Enter') checkGate(); });
 $('gateUser').addEventListener('keydown', e=>{ if(e.key==='Enter') $('gatePass').focus(); });
@@ -2192,17 +2089,17 @@ async function loadOrdersFromSupabase() {
     console.warn('⚠️ Supabase غير متاح');
     return [];
   }
-
+  
   try {
     const remote = await window.Supabase.Orders.getAll(); // للتشخيص
-
+    
     if (remote && Array.isArray(remote)) {
       supaOrdersCache = remote.map(r => {
         // جلب بيانات العميل من الحقول المباشرة
         const customerName = r.customer_name || '';
         const customerPhone = r.customer_phone || '';
         const customerEmail = r.customer_email || '';
-
+        
         return {
           id: r.id,
           orderNumber: r.order_number,
@@ -2243,7 +2140,7 @@ async function loadOrdersFromSupabase() {
 }
 
 // دالة الطلبات - تعيد الكاش إذا تم التحميل من Supabase
-function getOrders() {
+function getOrders() { 
   // لو تم التحميل من Supabase (حتى لو فارغ) - استخدم الكاش
   if (ordersLoaded) {
     return supaOrdersCache;
@@ -2270,14 +2167,14 @@ function clearFakeOrders() {
 const LS_STORE_ORDERS = 'x2_orders';
 async function syncStoreOrders(silent){
   if (!silent) toast('⏳ جارٍ تحميل الطلبات من Supabase...');
-
+  
   // انتظار تحميل Supabase
   await waitForSupabase();
-
+  
   // جلب الطلبات من Supabase مباشرة
   try {
     const remote = await window.Supabase.Orders.getAll();
-
+    
     if (remote && Array.isArray(remote) && remote.length > 0) {
       supaOrdersCache = remote.map(r => ({
         id: r.id,
@@ -2406,14 +2303,6 @@ function editOrder(id){
 }
 
 async function changeOrderStatus(id, status){
-  const adminToken = await getValidAdminToken();
-  if (!adminToken) {
-    clearAdminSession();
-    $('gate').style.display = 'flex';
-    toast('❌ انتهت جلسة الأدمن، سجّل الدخول مرة أخرى');
-    return;
-  }
-
   // إيجاد الطلب في الكاش (يعمل مع Supabase أو localStorage)
   const orders = getOrders();
   const o = orders.find(x=>Number(x.id)===Number(id));
@@ -2693,7 +2582,7 @@ function renderOrders(){
           <span style="background:var(--navy);color:#fff;padding:2px 8px;border-radius:4px;font-size:.75rem;font-weight:700">#${orderNum}</span>
           <span class="status-badge ${st.cls}" style="font-size:.7rem">${st.label}</span>
         </div>
-        <b style="color:var(--navy);font-size:.95rem">${esc(custName)}</b>
+        <b style="color:var(--navy);font-size:.95rem">${esc(custName)}</b> 
         ${o.phone?`<small style="color:#7a8296"> · 📱 ${esc(o.phone)}</small>`:''}
         <div style="font-size:.82rem;color:#5a6478;margin-top:4px">
           ${o.productName?'🛒 '+esc(o.productName)+' — ':''}<b style="color:var(--gold)">${money(o.total)} د.إ</b>
@@ -3519,28 +3408,28 @@ let batchStart = 0;
 function selectNextBatch() {
   const custs = getCustomers();
   const batchSize = 10;
-
+  
   // إذا وصلنا للنهاية، ارجع للبداية
   if (batchStart >= custs.length) batchStart = 0;
-
+  
   // إلغاء التحديد السابق
   selectedCustomers.clear();
-
+  
   // تحديد الـ 10 التالية
   const end = Math.min(batchStart + batchSize, custs.length);
   for (let i = batchStart; i < end; i++) {
     selectedCustomers.add(i);
   }
-
+  
   // تحديث نص الزر
   const btn = $('selectBatchBtn');
   const nextStart = end >= custs.length ? 0 : end;
   const nextEnd = Math.min(nextStart + batchSize, custs.length);
   btn.textContent = `📌 تحديد ${nextStart + 1}-${nextEnd}`;
-
+  
   // تحديث الفهرس للمرة القادمة
   batchStart = end;
-
+  
   renderCustomers();
   toast(`✅ تم تحديد ${selectedCustomers.size} عميل`);
 }
@@ -3550,23 +3439,23 @@ function editCustomer(phone) {
   const custs = getCustomers();
   const c = custs.find(x => x.phone === phone);
   if (!c) { toast('العميل غير موجود'); return; }
-
+  
   // ملء الحقول ببيانات العميل
   $('nc-fullname').value = c.name || '';
   $('nc-phone').value = c.phone || '';
   $('nc-email').value = c.email || '';
   $('nc-address').value = c.city || '';
   $('nc-edit-phone').value = phone; // حفظ الهاتف الأصلي للتعديل
-
+  
   // تغيير عنوان الفورم والزر
   $('custFormTitle').textContent = '✏️ تعديل عميل';
   $('custFormBtn').textContent = '💾 حفظ التعديلات';
   $('custCancelBtn').style.display = 'block';
-
+  
   // التمرير لأعلى للفورم
   $('nc-fullname').scrollIntoView({ behavior: 'smooth', block: 'center' });
   $('nc-fullname').focus();
-
+  
   toast('📝 عدّل البيانات واضغط حفظ');
 }
 
@@ -3577,7 +3466,7 @@ function cancelEditCustomer() {
   $('nc-email').value = '';
   $('nc-address').value = '';
   $('nc-edit-phone').value = '';
-
+  
   $('custFormTitle').textContent = '➕ إضافة عميل';
   $('custFormBtn').textContent = '➕ إضافة العميل';
   $('custCancelBtn').style.display = 'none';
@@ -3589,16 +3478,16 @@ function saveCustomer() {
   const phone = $('nc-phone').value.trim();
   const email = $('nc-email').value.trim();
   const address = $('nc-address').value.trim();
-
+  
   if (!name || !phone) { toast('أدخل الاسم والهاتف'); return; }
-
+  
   if (editPhone) {
     // وضع التعديل - تحديث أو إضافة في العملاء اليدويين
     let stored = getManualCustomers();
     // البحث بالهاتف القديم (editPhone) أو الهاتف الجديد (phone)
     let idx = stored.findIndex(x => x.phone === editPhone);
     if (idx < 0) idx = stored.findIndex(x => x.phone === phone);
-
+    
     if (idx >= 0) {
       // تحديث العميل الموجود
       stored[idx].name = name;
@@ -3609,22 +3498,22 @@ function saveCustomer() {
       // العميل ليس في القائمة اليدوية، أضفه
       stored.unshift({ id: Date.now(), name, phone, email, address, date: new Date().toISOString() });
     }
-
+    
     localStorage.setItem(LS_MANUAL_CUSTOMERS, JSON.stringify(stored));
-
+    
     // تحديث في Supabase
     if (window.Supabase?.Customers?.upsert) {
       window.Supabase.Customers.upsert({ full_name: name, phone, email, city: address })
         .catch(e => console.warn('Supabase upsert failed:', e));
     }
-
+    
     toast('✅ تم حفظ بيانات العميل');
   } else {
     // وضع الإضافة - استدعاء الدالة القديمة
     addManualCustomer();
     return;
   }
-
+  
   // إعادة الفورم لوضع الإضافة
   cancelEditCustomer();
   renderCustomers();
@@ -3634,14 +3523,14 @@ function saveCustomer() {
 async function importCustomersExcel(input) {
   const file = input.files[0];
   if (!file) return;
-
+  
   toast('⏳ جاري قراءة الملف...');
-
+  
   try {
     // قراءة الملف كنص للـ CSV أو باستخدام SheetJS للـ Excel
     const text = await file.text();
     let rows = [];
-
+    
     if (file.name.endsWith('.csv')) {
       // CSV parsing
       const lines = text.split(/\r?\n/).filter(l => l.trim());
@@ -3673,9 +3562,9 @@ async function importCustomersExcel(input) {
       const ws = wb.Sheets[wb.SheetNames[0]];
       rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
     }
-
+    
     if (rows.length < 2) { toast('❌ الملف فارغ'); input.value = ''; return; }
-
+    
     // أول صف = headers (مع إزالة BOM وأي مسافات غير مرئية)
     const normalizeHeader = h => String(h||'')
       .replace(/^\uFEFF/, '')        // BOM
@@ -3693,14 +3582,14 @@ async function importCustomersExcel(input) {
     const phoneIdx = findCol('موبيل','موبايل','هاتف','جوال','phone','mobile','tel','telephone');
     const emailIdx = findCol('email','بريد','ايميل','إيميل','يميل','mail');
     const cityIdx  = findCol('city','مدينة','المدينة','عنوان','region','منطقة','محافظة','emirate');
-
+    
     if (phoneIdx < 0) {
       toast('❌ لم يتم العثور على عمود الهاتف — تأكد أن فيه عمود باسم: هاتف أو phone أو رقم');
       console.log('الأعمدة الموجودة:', headers);
       input.value = '';
       return;
     }
-
+    
     // استخراج البيانات
     const customers = [];
     for (let i = 1; i < rows.length; i++) {
@@ -3713,7 +3602,7 @@ async function importCustomersExcel(input) {
       else if (/^5\d{8}$/.test(phone)) phone = '971' + phone;
       // لو يبدأ بـ 009 → حوّل لـ +
       else if (phone.startsWith('009')) phone = '+' + phone.slice(2);
-
+      
       const name = nameIdx >= 0 ? String(row[nameIdx] || '').trim() : '';
       customers.push({
         name: name || 'عميل',
@@ -3722,11 +3611,11 @@ async function importCustomersExcel(input) {
         city: row[cityIdx] || ''
       });
     }
-
+    
     if (!customers.length) { toast('❌ لم يتم العثور على عملاء صالحين'); input.value = ''; return; }
-
+    
     toast(`⏳ جارٍ رفع ${customers.length} عميل لـ Supabase...`);
-
+    
     // رفع لـ Supabase مباشرة (bulk)
     let supaOk = false;
     if (window.Supabase?.Customers?.addBulk) {
@@ -3735,7 +3624,7 @@ async function importCustomersExcel(input) {
         supaOk = true;
       } catch(e) { console.error('Supabase bulk import failed:', e); }
     }
-
+    
     // حفظ محلي (بدون localStorage لـ 1000+ عميل لتجنب overflow)
     if (customers.length <= 200) {
       try {
@@ -3749,7 +3638,7 @@ async function importCustomersExcel(input) {
         localStorage.setItem(lsKey, JSON.stringify(stored));
       } catch(e) {}
     }
-
+    
     if (supaOk) {
       toast(`✅ تم رفع ${customers.length} عميل لـ Supabase بنجاح`);
       await syncCustomersFromSupabase();
@@ -3757,12 +3646,12 @@ async function importCustomersExcel(input) {
       renderCustomers();
       toast(`⚠️ فشل الرفع لـ Supabase - تحقق من الـ Console`);
     }
-
+    
   } catch (e) {
     console.error('Import error:', e);
     toast('❌ خطأ في قراءة الملف');
   }
-
+  
   input.value = '';
 }
 
@@ -4166,7 +4055,7 @@ function getCoupons() { return couponsCache; }
 async function saveCoupon() {
   const code = ($('cp-code').value||'').trim().toUpperCase();
   if (!code) { toast('أدخل كود الكوبون'); return; }
-
+  
   const coupon = {
     code: code,
     type: $('cp-type').value,
@@ -4178,7 +4067,7 @@ async function saveCoupon() {
   };
 
   toast('⏳ جارٍ الحفظ...');
-
+  
   try {
     // تحقق إذا الكوبون موجود
     const existing = await window.Supabase.Coupons.getByCode(code);
@@ -4282,7 +4171,7 @@ function getCampaigns() { return campaignsCache; }
 async function saveCampaign() {
   const name = ($('camp-name').value||'').trim();
   if (!name) { toast('أدخل اسم الحملة'); return; }
-
+  
   const campaign = {
     name: name,
     desc: $('camp-desc').value || '',
@@ -4293,7 +4182,7 @@ async function saveCampaign() {
   };
 
   toast('⏳ جارٍ الحفظ...');
-
+  
   try {
     await window.Supabase.Campaigns.insert(campaign);
     await loadCampaignsFromSupabase();
@@ -4319,7 +4208,7 @@ function renderCampaigns() {
       <div class="info">
         <b>${esc(c.name)}</b> <span class="status-badge ${statusClass}">${status}</span>
         <small>
-          ${c.discount ? c.discount + '% خصم' : ''}
+          ${c.discount ? c.discount + '% خصم' : ''} 
           ${c.start_date ? '• من ' + new Date(c.start_date).toLocaleDateString('ar') : ''}
           ${c.end_date ? '• إلى ' + new Date(c.end_date).toLocaleDateString('ar') : ''}
         </small>
@@ -4378,7 +4267,7 @@ async function saveSEO() {
     fb_pixel: $('seo-fbpixel').value || '',
     google_analytics: $('seo-ga').value || ''
   };
-
+  
   toast('⏳ جارٍ الحفظ...');
   try {
     await window.Supabase.Settings.save(seo);
@@ -4612,7 +4501,7 @@ function renderLowStock() {
     const stock = parseInt(p.stock);
     return !isNaN(stock) && stock > 0 && stock < 5;
   }).sort((a, b) => parseInt(a.stock) - parseInt(b.stock));
-
+  
   if (!lowStock.length) { list.innerHTML = '<div class="empty">لا توجد منتجات منخفضة المخزون</div>'; return; }
   list.innerHTML = lowStock.map(p => `
     <div class="prod-row">
@@ -4779,7 +4668,7 @@ function selectInvalidCustomers() {
 async function blockSelectedCustomers() {
   const custs = getCustomers();
   toast('⏳ جارٍ الحظر...');
-
+  
   for (const i of selectedCustomers) {
     const c = custs[i];
     if (c && c.id) {
@@ -4795,7 +4684,7 @@ async function blockSelectedCustomers() {
       }
     }
   }
-
+  
   await loadBlockedCustomers();
   selectedCustomers.clear();
   renderCustomers();
@@ -4834,7 +4723,7 @@ async function exportCustomers() {
   } catch(e) {
     custs = getCustomers();
   }
-
+  
   let csv = 'الاسم,الهاتف,الإيميل,عدد الطلبات,إجمالي المشتريات\n';
   custs.forEach(c => {
     const total = (c.orders || []).reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
@@ -5073,18 +4962,18 @@ window.renderCustomers = function() {
   const sortBy = $('cust-sort')?.value || 'orders';
   const list = $('custList'); if (!list) return;
   const blocked = getBlockedCustomers();
-
+  
   let custs = getCustomers().map(c => {
     const totalPurchases = c.orders.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
     const lastOrder = c.orders.length ? new Date(Math.max(...c.orders.map(o => new Date(o.date || o.created_at || 0)))) : null;
     const isBlocked = blocked.includes(c.phone);
     return { ...c, totalPurchases, lastOrder, isBlocked };
   });
-
+  
   // فلترة
   custs = custs.filter(c => {
     const matchQ = !q || c.name.toLowerCase().includes(q) || c.phone.includes(q);
-    const matchS = !statusFilter ||
+    const matchS = !statusFilter || 
                    (statusFilter === 'blocked' && c.isBlocked) ||
                    [...c.statuses].some(s => s === statusFilter);
     // مطابقة ذكية للمدينة - تتجاهل الاختلافات البسيطة في الكتابة
@@ -5097,7 +4986,7 @@ window.renderCustomers = function() {
     const matchInactive = sortBy !== 'inactive' || (c.lastOrder && c.lastOrder < oneMonthAgo) || (!c.lastOrder && c.orders.length === 0);
     return matchQ && matchS && matchCity && matchOnce && matchInactive;
   });
-
+  
   // ترتيب
   custs.sort((a, b) => {
     switch(sortBy) {
@@ -5111,28 +5000,28 @@ window.renderCustomers = function() {
       default: return 0;
     }
   });
-
+  
   const countEl = $('custCount');
   if (countEl) countEl.textContent = `${custs.length} عميل`;
-
+  
   if (!custs.length) { list.innerHTML='<div class="empty">لا يوجد عملاء</div>'; return; }
-
+  
   list.innerHTML = custs.map((c, i) => `
     <div class="prod-row" ${c.isBlocked ? 'style="opacity:.5;background:#fff5f5"' : ''}>
       <input type="checkbox" style="width:auto" ${selectedCustomers.has(i)?'checked':''} onchange="toggleCust(${i},this.checked)">
       <div class="info">
         <b>${esc(c.name)} ${c.isBlocked ? '<span style="color:#c0392b">🚫 محظور</span>' : ''}</b>
         <small>
-          📱 ${c.phone||'—'}
-          ${c.email?'• 📧 '+esc(c.email):''}
+          📱 ${c.phone||'—'} 
+          ${c.email?'• 📧 '+esc(c.email):''} 
           ${c.city?'• 📍 '+esc(c.city):''}
-          • 📦 ${c.orders.length} طلب
+          • 📦 ${c.orders.length} طلب 
           • 💰 ${c.totalPurchases.toFixed(0)} د.إ
           ${c.lastOrder ? '• 📅 آخر طلب: ' + c.lastOrder.toLocaleDateString('ar') : ''}
         </small>
       </div>
       <button class="btn-ghost btn-sm" onclick="editCustomer('${c.phone}')" title="تعديل">✏️</button>
-      ${c.isBlocked ?
+      ${c.isBlocked ? 
         `<button class="btn-ghost btn-sm" onclick="unblockCustomer('${c.phone}')">إلغاء الحظر</button>` :
         `<a href="https://wa.me/${(c.phone||'').replace(/\\D/g,'')}" target="_blank" class="btn-gold btn-sm" style="text-decoration:none;${!c.phone?'opacity:.4;pointer-events:none':''}">💬</a>`
       }
@@ -5182,7 +5071,7 @@ async function loadCampaignsFromSupabase() {
 
 /* ================= بدء لوحة التحكم ================= */
 (async function init(){
-
+  
   // عرض المنتجات المحلية فوراً (بدون انتظار Supabase)
   const _cached = localStorage.getItem('admin_products_cache');
   if (_cached) { try { const p = JSON.parse(_cached); if(Array.isArray(p)&&p.length){ products=p; renderProducts(); } } catch(e){} }
@@ -5190,13 +5079,13 @@ async function loadCampaignsFromSupabase() {
   // تحميل الفئات والمنتجات بالتوازي
   await Promise.all([loadCategories(), loadProducts()]);
   fillProductSelects();
-
+  
   // استعادة التاب الأخير قبل الريفريش
   const savedTab = sessionStorage.getItem('admin_active_tab');
   if (savedTab && $('panel-' + savedTab)) {
     switchTab(savedTab);
   }
-
+  
   // تشغيل باقي الطلبات بالتوازي (لا تنتظر بعضها)
   Promise.all([
     syncStoreOrders(true),
@@ -5209,7 +5098,7 @@ async function loadCampaignsFromSupabase() {
 
   // تحميل عدد المشتركين في الخلفية فوراً
   loadPushSubscribersCount();
-
+  
   // إخبار المستخدم بعدد المنتجات المحملة
   setTimeout(function(){
     if(products.length === 0){
