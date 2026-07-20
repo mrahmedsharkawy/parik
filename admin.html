@@ -2077,11 +2077,15 @@ function normalizeAdminArea(value) {
   return first || raw;
 }
 
+function adminPhoneDigits(value) {
+  return String(value || '').replace(/\D/g, '');
+}
+
 function customerAreaByIdentity(phone, email) {
-  const cleanPhone = String(phone || '').replace(/\D/g, '');
+  const cleanPhone = adminPhoneDigits(phone);
   const cleanEmail = String(email || '').trim().toLowerCase();
   const customer = supaCustomers.find(c =>
-    (cleanPhone && String(c.phone || '').replace(/\D/g, '') === cleanPhone) ||
+    (cleanPhone && adminPhoneDigits(c.phone) === cleanPhone) ||
     (cleanEmail && String(c.email || '').trim().toLowerCase() === cleanEmail)
   );
   return normalizeAdminArea(customer?.city || customer?.address || '');
@@ -3999,7 +4003,7 @@ function getCustomers() {
     const email = o.customerEmail || o.customer_email || o.email    || sh.email || profile.email || '';
     // جلب العنوان من الطلب أو البروفايل
     const city  = normalizeAdminArea(sh.city || sh.address || o.shipping_city || o.shipping_address || o.address || o.city || customerAreaByIdentity(phone, email) || '');
-    const key   = phone || email || name;
+    const key   = adminPhoneDigits(phone) || String(email || '').trim().toLowerCase() || name;
     if (!map[key]) map[key] = { name, phone, email, city, orders:[], statuses:new Set() };
     // لو العنوان فاضي وموجود في البروفايل، خده من البروفايل
     if (!map[key].city && profile.address && (phone === profile.phone || email === profile.email)) {
@@ -4014,7 +4018,9 @@ function getCustomers() {
   const merged = [...localCusts];
   supaCustomers.forEach(sc => {
     if (isDeleted(sc.phone, sc.email)) return;
-    const existing = merged.find(c => (sc.phone && c.phone === sc.phone) || (sc.email && c.email === sc.email));
+    const scPhone = adminPhoneDigits(sc.phone);
+    const scEmail = String(sc.email || '').trim().toLowerCase();
+    const existing = merged.find(c => (scPhone && adminPhoneDigits(c.phone) === scPhone) || (scEmail && String(c.email || '').trim().toLowerCase() === scEmail));
     if (existing) {
       if (!existing.id && sc.id) existing.id = sc.id; // ← مهم للحذف
       if (!existing.city && sc.city) existing.city = normalizeAdminArea(sc.city);
@@ -4025,7 +4031,9 @@ function getCustomers() {
   // دمج العملاء المضافين يدوياً - لهم الأولوية القصوى
   getManualCustomers().forEach(mc => {
     if (isDeleted(mc.phone, mc.email)) return;
-    const existing = merged.find(c => (mc.phone && c.phone === mc.phone) || (mc.email && c.email === mc.email));
+    const mcPhone = adminPhoneDigits(mc.phone);
+    const mcEmail = String(mc.email || '').trim().toLowerCase();
+    const existing = merged.find(c => (mcPhone && adminPhoneDigits(c.phone) === mcPhone) || (mcEmail && String(c.email || '').trim().toLowerCase() === mcEmail));
     if (existing) {
       // البيانات اليدوية تأخذ الأولوية دائماً
       if (mc.name) existing.name = mc.name;
@@ -4994,7 +5002,8 @@ window.renderCustomers = async function() {
   
   // فلترة
   custs = custs.filter(c => {
-    const matchQ = !q || c.name.toLowerCase().includes(q) || c.phone.includes(q) || String(c.email || '').toLowerCase().includes(q);
+    const qDigits = adminPhoneDigits(q);
+    const matchQ = !q || c.name.toLowerCase().includes(q) || String(c.phone || '').includes(q) || (qDigits && adminPhoneDigits(c.phone).includes(qDigits)) || String(c.email || '').toLowerCase().includes(q);
     const matchS = !statusFilter || 
                    (statusFilter === 'blocked' && c.isBlocked) ||
                    [...c.statuses].some(s => s === statusFilter);
