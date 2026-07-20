@@ -948,6 +948,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const order = {
       id: 'ORD-' + Date.now(),
       date: new Date().toISOString(),
+      cashback: 5,
+      cashbackStatus: 'pending',
+      cashbackExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       items: cartItems,
       total: totalPrice,
       shipping: { name: (fname + ' ' + lname).trim(), phone, email, country, city, address },

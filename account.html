@@ -1686,6 +1686,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   async function findCustomerProfile(profile) {
     const ready = await waitForSupabaseLib();
     if (!ready || !window.sbFetch) return null;
+    if (typeof getStoredAuthToken !== 'function' || !getStoredAuthToken()) return null;
     const email = String(profile.email || '').trim().toLowerCase();
     const phone = normalizeUaePhone(profile.phone || '');
     const queries = [];
@@ -2225,8 +2226,60 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   };
 
   // ===== عرض الإشعارات =====
+  function hasBrokenNotificationText(value) {
+    return /^\s*[\?\s\uFFFD\.]+\s*$/.test(String(value || ''));
+  }
+
+  function isMostlyBrokenNotificationText(value) {
+    const text = String(value || '');
+    if (!text) return false;
+    const brokenCount = (text.match(/[\?\uFFFD]/g) || []).length;
+    const letterCount = (text.match(/[A-Za-z\u0600-\u06FF]/g) || []).length;
+    return brokenCount >= 3 && brokenCount > letterCount;
+  }
+
+  function getLocalOrderStatus(orderId) {
+    if (!orderId) return '';
+    try {
+      const orders = JSON.parse(localStorage.getItem(ORDERS_KEY) || '[]');
+      const order = orders.find(o => String(o.id || o.order_number || '') === String(orderId));
+      return order ? (order.status || 'processing') : '';
+    } catch(e) { return ''; }
+  }
+
+  function getLocalOrderCashback(orderId) {
+    if (!orderId) return 0;
+    try {
+      const orders = JSON.parse(localStorage.getItem(ORDERS_KEY) || '[]');
+      const order = orders.find(o => String(o.id || o.order_number || '') === String(orderId));
+      return order ? (parseFloat(order.cashback) || 0) : 0;
+    } catch(e) { return 0; }
+  }
+
+  function normalizeCashbackNotification(n) {
+    n = n || {};
+    const rawText = `${n.title || ''} ${n.msg || n.body || ''}`;
+    let orderId = n.orderId || n.order_id || '';
+    if (!orderId) {
+      const match = rawText.match(/#?\s*([A-Z]*-?\d{3,})/i);
+      if (match) orderId = match[1];
+    }
+    const amountMatch = rawText.match(/(\d+(?:\.\d+)?)/);
+    const amount = parseFloat(n.amount || n.cashback || getLocalOrderCashback(orderId) || (amountMatch && amountMatch[1]) || 5) || 5;
+    const orderText = orderId ? ` من طلبك رقم ${orderId}` : '';
+    return {
+      ...n,
+      type: 'cashback',
+      icon: '🤑',
+      title: '🤑 كاش باك بانتظارك',
+      msg: `حصلت على ${amount.toFixed(amount % 1 ? 2 : 0)} د.إ كاش باك${orderText}. سيتم تفعيله بعد اعتماد الطلب.`,
+      orderId
+    };
+  }
+
   function normalizeOrderNotification(n) {
     n = n || {};
+    if (n.type === 'cashback') return normalizeCashbackNotification(n);
     const rawText = `${n.title || ''} ${n.msg || n.body || ''}`.toLowerCase();
     const inferredStatus =
       (/delivered|تم التوصيل|وصل بنجاح/.test(rawText) ? 'delivered' :
@@ -2238,10 +2291,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       /return|إرجاع|ارجاع|مرتجع/.test(rawText) ? 'returned' :
       /pending|مراجعة|انتظار/.test(rawText) ? 'pending' :
       /processing|معالجة|تجهيز/.test(rawText) ? 'processing' : '');
-    const status = n.status || n.orderStatus || inferredStatus || (n.type === 'order_status' ? 'processing' : '');
-    const isOrder = n.type === 'order_status' || n.orderId || n.order_id || status;
+    let orderId = n.orderId || n.order_id || '';
+    if (!orderId) {
+      const match = rawText.match(/#?\s*(\d{3,})/);
+      if (match) orderId = match[1];
+    }
+    const localStatus = getLocalOrderStatus(orderId);
+    const isBrokenOrderText = isMostlyBrokenNotificationText(rawText) || hasBrokenNotificationText(n.icon) || hasBrokenNotificationText(n.title);
+    const status = n.status || n.orderStatus || inferredStatus || localStatus || ((n.type === 'order_status' || n.type === 'order_new' || (orderId && isBrokenOrderText)) ? 'processing' : '');
+    const isOrder = n.type === 'order_status' || n.type === 'order_new' || orderId || status;
     if (!isOrder) return n;
-    const orderId = n.orderId || n.order_id || '';
     const orderText = orderId ? ` رقم ${orderId}` : '';
     const map = {
       pending:       { icon: '⏳', title: 'طلبك قيد المراجعة',     msg: `طلبك${orderText} يُراجَع الآن` },
@@ -2256,7 +2315,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     };
     const ar = map[status] || null;
     if (!ar) return { ...n, icon: n.icon || '🔔' };
-    return { ...n, type: 'order_status', status, icon: n.icon || ar.icon, title: ar.icon + ' ' + ar.title, msg: ar.msg, orderId };
+    const icon = hasBrokenNotificationText(n.icon) ? ar.icon : (n.icon || ar.icon);
+    return { ...n, type: 'order_status', status, icon, title: icon + ' ' + ar.title, msg: ar.msg, orderId };
   }
 
   function renderNotifications() {
@@ -2945,6 +3005,41 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     if (main) { main.value = val; main.dispatchEvent(new Event('change')); }
     else { localStorage.setItem('currency', val); location.reload(); }
   };
+
+  (function repairSearchDropdownText() {
+    function repairNodeText(node) {
+      const before = node.nodeValue || '';
+      let after = before
+        .replace(/\?\? \?\?\?\?\? \?\?/g, 'لا توجد نتائج عن')
+        .replace(/\?\? \?\?\?\?\?\?/g, 'المنتجات')
+        .replace(/\?\? \?\?\?\?\?/g, 'الطلبات')
+        .replace(/\?\? \?\?\?\? \?\?\?\?\? \?\?\?\?\?\?\?.*$/g, 'جاري تحليل الصورة...')
+        .replace(/\?\?\? \?\?\?\?\? \?\?\?\?\?\?\? \?\?\?\?\? \?\? \?\?\?\? \?\?\?\?\?\?\?\?/g, 'نبحث عن المنتجات الأقرب من حيث الألوان')
+        .replace(/\?\? \?\?\?\? \?\?\?\?\?\?\?\? \?\?\?\?\?\?/g, 'منتجات مشابهة للصورة')
+        .replace(/\?\?\?\?\? \?/g, 'مسح البحث')
+        .replace(/\?\.\?/g, 'د.إ')
+        .replace(/^\?\?\?\s+/g, 'طلب ')
+        .replace(/^\?\?$/g, '📦')
+        .replace(/^\?\?\?\?$/g, 'منتج');
+      if (after !== before) node.nodeValue = after;
+    }
+
+    function repairDropdown(root) {
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      const nodes = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+      nodes.forEach(repairNodeText);
+    }
+
+    function observe() {
+      const dropdown = document.getElementById('searchDropdown') || document.getElementById('searchResults');
+      if (!dropdown) { setTimeout(observe, 100); return; }
+      repairDropdown(dropdown);
+      new MutationObserver(() => repairDropdown(dropdown)).observe(dropdown, { childList: true, subtree: true, characterData: true });
+    }
+
+    observe();
+  })();
 })();
 </script>
 
