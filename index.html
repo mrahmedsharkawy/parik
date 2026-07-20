@@ -1,15 +1,27 @@
 ﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
-<!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-PR8J7RM7');</script>
+<!-- Google Tag Manager: lazy loaded after first interaction to protect initial render speed. -->
+<script>
+(function(w,d,s,l,i){
+  w[l]=w[l]||[];
+  function loadGtm(){
+    if(loadGtm.done) return;
+    loadGtm.done = true;
+    w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});
+    var f=d.getElementsByTagName(s)[0], j=d.createElement(s), dl=l!='dataLayer'?'&l='+l:'';
+    j.async=true; j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
+    f.parentNode.insertBefore(j,f);
+  }
+  ['pointerdown','keydown','touchstart','scroll'].forEach(function(evt){
+    w.addEventListener(evt, loadGtm, {once:true, passive:true});
+  });
+  w.addEventListener('pagehide', loadGtm, {once:true});
+})(window,document,'script','dataLayer','GTM-PR8J7RM7');
+</script>
 <!-- End Google Tag Manager -->
   <meta charset="UTF-8" />
-  <script src="/java/auth-reset.js"></script>
+  <script src="/java/auth-reset.js" defer></script>
   <title data-i18n="الصفحة الرئيسية - بريق">الصفحة الرئيسية - بريق</title>
   <!-- Full CSS loads asynchronously; critical above-fold CSS is inlined below. -->
   <link rel="preload" href="/style/style.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
@@ -141,7 +153,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div class="logo">
       <a href="/">
       <picture>
-        <img src="/assets/logo.png" alt="بريق" width="50" height="50" decoding="async" />
+        <img src="/assets/logo-header.png" alt="بريق" width="50" height="50" decoding="async" />
       </picture>
     </a>
     </div>
@@ -580,7 +592,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="/java/footer-pages.min.js" defer></script>
 <script src="/mobile-nav-bar/main-navbar.min.js" defer></script>  
 <script src="/java/notifications.min.js" defer></script>
-<script type="module" src="/java/Products.min.js" defer></script>
+<script>
+  (function(){
+    const loadProducts = function(){ import('/java/Products.min.js').catch(function(){}); };
+    if ('requestIdleCallback' in window) requestIdleCallback(loadProducts, { timeout: 1800 });
+    else setTimeout(loadProducts, 900);
+  })();
+</script>
 
 <script>
 (function(){
@@ -657,6 +675,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         if (ap) { const p = JSON.parse(ap); if (Array.isArray(p) && p.length) products = p; }
       } catch(e) {}
 
+      if (!products) {
+        try {
+          const res = await fetch('/java/Products.json');
+          products = await res.json();
+        } catch(e) {}
+      }
+
       if (!products && window.Supabase && window.Supabase.Products) {
         try {
           const sb = await window.Supabase.Products.getAll(50);
@@ -669,11 +694,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             });
           }
         } catch(e) {}
-      }
-
-      if (!products) {
-        const res = await fetch('/java/Products.json');
-        products = await res.json();
       }
 
       // اختيارات اليوم من الأدمن
