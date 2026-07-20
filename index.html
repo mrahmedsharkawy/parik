@@ -13,10 +13,9 @@
     j.async=true; j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
     f.parentNode.insertBefore(j,f);
   }
-  ['pointerdown','keydown','touchstart','scroll'].forEach(function(evt){
+  ['pointerdown','keydown','touchstart'].forEach(function(evt){
     w.addEventListener(evt, loadGtm, {once:true, passive:true});
   });
-  w.addEventListener('pagehide', loadGtm, {once:true});
 })(window,document,'script','dataLayer','GTM-PR8J7RM7');
 </script>
 <!-- End Google Tag Manager -->
