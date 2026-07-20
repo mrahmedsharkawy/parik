@@ -1,5 +1,5 @@
 ﻿/* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v90';
+const CACHE = 'bariq-v91';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -13,11 +13,12 @@ const STATIC_URLS = [
   '/login.html',
   '/offers',
   '/checkout',
-  '/assets/logo.webp',
-  '/assets/icon w.webp',
+  '/assets/logo.png',
+  '/assets/icon.png',
   '/assets/cairo-arabic.woff2',
   '/assets/cairo-latin.woff2',
   '/style/style.css',
+  '/java/auth-reset.js',
   '/java/main.min.js',
   '/java/Products.min.js',
   '/java/Cart.min.js',
@@ -203,8 +204,8 @@ self.addEventListener('push', function(e) {
   const title   = data.title || '\u0628\u0631\u064a\u0642';
   const options = {
     body:    data.body   || '',
-    icon:    data.icon   || '/assets/icon w.png',
-    badge:   '/assets/icon b.png',
+    icon:    data.icon   || '/assets/icon.png',
+    badge:   '/assets/icon.png',
     image:   data.image  || undefined,
     data:    { url: data.url || '/' },
     dir:     'rtl',
