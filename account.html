@@ -3040,6 +3040,62 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     observe();
   })();
+
+  (function repairExternalNotificationText() {
+    if (!('ServiceWorkerRegistration' in window) || !ServiceWorkerRegistration.prototype.showNotification) return;
+    const originalShowNotification = ServiceWorkerRegistration.prototype.showNotification;
+    if (originalShowNotification.__bariqTextRepair) return;
+
+    function extractOrderId(text, tag) {
+      const match = String(text || '').match(/#?\s*([A-Z]*-?\d{3,})/i) || String(tag || '').match(/(?:cb|ord)-([A-Z]*-?\d{3,})/i);
+      return match ? match[1] : '';
+    }
+
+    function normalizeNotificationPayload(title, options) {
+      options = options || {};
+      const raw = `${title || ''} ${options.body || ''}`;
+      const tag = options.tag || '';
+      const orderId = extractOrderId(raw, tag);
+      const isCashback = /cashback|cash\s*back|كاش|cb-|n-cb/i.test(raw + ' ' + tag) || /\?\.\?/.test(raw);
+      const isBroken = isMostlyBrokenNotificationText(raw) || hasBrokenNotificationText(title) || hasBrokenNotificationText(options.body);
+      if (!isBroken && !isCashback) return { title, options };
+
+      if (isCashback) {
+        const amountMatch = raw.match(/(\d+(?:\.\d+)?)/);
+        const amount = parseFloat(getLocalOrderCashback(orderId) || (amountMatch && amountMatch[1]) || 5) || 5;
+        return {
+          title: '🤑 كاش باك بانتظارك',
+          options: { ...options, body: `حصلت على ${amount.toFixed(amount % 1 ? 2 : 0)} د.إ كاش باك${orderId ? ` من طلبك رقم ${orderId}` : ''}. سيتم تفعيله بعد اعتماد الطلب.` }
+        };
+      }
+
+      if (orderId) {
+        const status = getLocalOrderStatus(orderId) || 'processing';
+        const map = {
+          pending:       { icon: '⏳', title: 'طلبك قيد المراجعة',     body: `طلبك رقم ${orderId} يُراجَع الآن` },
+          processing:    { icon: '🔄', title: 'طلبك قيد المعالجة',     body: `جارٍ تجهيز طلبك رقم ${orderId}` },
+          confirmed:     { icon: '✅', title: 'تم تأكيد طلبك',          body: `طلبك رقم ${orderId} تم تأكيده وسيُجهَّز قريباً 🎉` },
+          manufacturing: { icon: '🔨', title: 'طلبك في مرحلة التصنيع', body: `طلبك رقم ${orderId} يُصنَّع الآن بعناية ✨` },
+          ready:         { icon: '🎁', title: 'طلبك جاهز للاستلام',    body: `طلبك رقم ${orderId} جاهز وبانتظارك 🎉` },
+          shipped:       { icon: '🚚', title: 'تم شحن طلبك',           body: `طلبك رقم ${orderId} في الطريق إليك` },
+          delivered:     { icon: '✅', title: 'تم توصيل طلبك',         body: `طلبك رقم ${orderId} وصل بنجاح 🎉` },
+          cancelled:     { icon: '❌', title: 'تم إلغاء طلبك',         body: `طلبك رقم ${orderId} تم إلغاؤه` },
+          returned:      { icon: '↩️', title: 'تمت عملية الإرجاع',      body: `تمت معالجة إرجاع طلبك رقم ${orderId}` }
+        };
+        const item = map[status] || map.processing;
+        return { title: item.icon + ' ' + item.title, options: { ...options, body: item.body } };
+      }
+
+      return { title: title || 'بريق', options };
+    }
+
+    function repairedShowNotification(title, options) {
+      const fixed = normalizeNotificationPayload(title, options);
+      return originalShowNotification.call(this, fixed.title, fixed.options);
+    }
+    repairedShowNotification.__bariqTextRepair = true;
+    ServiceWorkerRegistration.prototype.showNotification = repairedShowNotification;
+  })();
 })();
 </script>
 

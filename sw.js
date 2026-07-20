@@ -196,11 +196,65 @@ self.addEventListener('fetch', function(e) {
 });
 
 /* ===================== Push Notifications ===================== */
+function hasBrokenNotificationText(value) {
+  return /^\s*[\?\s\uFFFD\.]+\s*$/.test(String(value || ''));
+}
+
+function isMostlyBrokenNotificationText(value) {
+  const text = String(value || '');
+  if (!text) return false;
+  const brokenCount = (text.match(/[\?\uFFFD]/g) || []).length;
+  const letterCount = (text.match(/[A-Za-z\u0600-\u06FF]/g) || []).length;
+  return brokenCount >= 3 && brokenCount > letterCount;
+}
+
+function extractOrderIdFromNotification(text, tag) {
+  const match = String(text || '').match(/#?\s*([A-Z]*-?\d{3,})/i) || String(tag || '').match(/(?:cb|ord)-([A-Z]*-?\d{3,})/i);
+  return match ? match[1] : '';
+}
+
+function normalizePushNotificationData(data) {
+  data = data || {};
+  const raw = `${data.title || ''} ${data.body || ''}`;
+  const tag = data.tag || data.id || '';
+  const orderId = data.orderId || data.order_id || extractOrderIdFromNotification(raw, tag);
+  const isCashback = data.type === 'cashback' || /cashback|cash\s*back|كاش|cb-|n-cb/i.test(raw + ' ' + tag) || /\?\.\?/.test(raw);
+  const isBroken = isMostlyBrokenNotificationText(raw) || hasBrokenNotificationText(data.title) || hasBrokenNotificationText(data.body);
+  if (!isBroken && !isCashback) return data;
+
+  if (isCashback) {
+    const amountMatch = raw.match(/(\d+(?:\.\d+)?)/);
+    const amount = parseFloat(data.amount || data.cashback || (amountMatch && amountMatch[1]) || 5) || 5;
+    return Object.assign({}, data, {
+      type: 'cashback',
+      iconText: '🤑',
+      emoji: '🤑',
+      title: '🤑 كاش باك بانتظارك',
+      body: `حصلت على ${amount.toFixed(amount % 1 ? 2 : 0)} د.إ كاش باك${orderId ? ` من طلبك رقم ${orderId}` : ''}. سيتم تفعيله بعد اعتماد الطلب.`,
+      orderId
+    });
+  }
+
+  if (orderId) {
+    return Object.assign({}, data, {
+      type: 'order_status',
+      iconText: '🔄',
+      emoji: '🔄',
+      title: '🔄 طلبك قيد المعالجة',
+      body: `جارٍ تجهيز طلبك رقم ${orderId}`,
+      orderId
+    });
+  }
+
+  return Object.assign({}, data, { title: data.title || 'بريق', body: data.body || '' });
+}
+
 self.addEventListener('push', function(e) {
   let data = {};
   try { data = e.data ? e.data.json() : {}; } catch(err) {
     data = { title: '\u0628\u0631\u064a\u0642', body: e.data ? e.data.text() : '' };
   }
+  data = normalizePushNotificationData(data);
   const title   = data.title || '\u0628\u0631\u064a\u0642';
   const options = {
     body:    data.body   || '',
