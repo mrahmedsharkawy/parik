@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const payload = JSON.stringify({
+    const payloadStr = JSON.stringify({
       title,
       body,
       url: url || '/',
@@ -96,6 +96,8 @@ Deno.serve(async (req) => {
       orderId: orderId || order_id || null,
       order_id: order_id || orderId || null
     });
+    // تحويل صريح إلى Buffer بترميز UTF-8 لمنع تشويه الإيموجي والعربي
+    const payload = new TextEncoder().encode(payloadStr);
     const results = await Promise.allSettled(
       filteredSubs.map((sub: any) =>
         webpush.sendNotification(
