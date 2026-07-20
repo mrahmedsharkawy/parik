@@ -122,21 +122,7 @@ export async function fetchProducts() {
             }
         }
     } catch (e) {}
-    const paths = [ "/java/Products.json", "/java/Products.json", location.origin + "/java/Products.json" ];
-    for (const path of paths) try {
-        const res = await fetch(path);
-        if (res.ok) {
-            _productsCache = await res.json();
-            try {
-                sessionStorage.setItem("x2_prods_ss_v2", JSON.stringify({
-                    ts: Date.now(),
-                    data: _productsCache
-                }));
-            } catch (e) {}
-            return _productsCache;
-        }
-    } catch (e) {}
-    throw new Error("Products.json not found!");
+    throw new Error("Products source not available!");
 }
 
 function getCategoryFromUrl() {
@@ -745,7 +731,7 @@ document.addEventListener("DOMContentLoaded", async function() {
         try {
             products = await fetchProducts();
         } catch (fetchErr) {
-            console.error("تعذر جلب Products.json:", fetchErr), products = [];
+            console.error("تعذر جلب المنتجات:", fetchErr), products = [];
         }
         const fallbackCategories = [];
         window.categoriesData = fallbackCategories, loadProductsForCategory(categoryFromUrl, fallbackCategories);
