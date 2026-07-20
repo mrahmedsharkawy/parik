@@ -1,6 +1,6 @@
 (function(){
   try {
-    var version = 'bariq-auth-reset-20260720-v1';
+    var version = 'bariq-auth-reset-20260720-v2';
     if (localStorage.getItem('x2_force_logout_version') === version) return;
     [
       'x2_profile',
