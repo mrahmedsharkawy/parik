@@ -3893,6 +3893,7 @@ window.switchTab = async function(name) {
   if (name === 'customers') {
     selectedCustomers.clear();
     await syncStoreOrders(true);
+    await syncOrderCustomersFromSupabase();
     renderCustomers();
     renderVisitorsStats();
     fillMsgProductSelect();
@@ -3924,6 +3925,66 @@ window.switchTab = async function(name) {
 
 /* ================= مزامنة العملاء من Supabase ================= */
 let supaCustomers = []; // عملاء Supabase
+let orderCustomers = []; // عملاء مستخرجون مباشرة من طلبات المتجر
+let orderCustomersLoaded = false;
+
+function mergeCustomerOrders(target, source) {
+  const seen = new Set((target.orders || []).map(o => String(o.orderNumber || o.id || o.order_number || '')));
+  (source.orders || []).forEach(o => {
+    const id = String(o.orderNumber || o.id || o.order_number || '');
+    if (!id || !seen.has(id)) {
+      target.orders.push(o);
+      if (id) seen.add(id);
+    }
+  });
+  (source.statuses || new Set()).forEach(s => target.statuses.add(s));
+}
+
+function customersFromOrders(orders) {
+  const map = {};
+  (orders || []).forEach(o => {
+    const sh = o.shipping || {};
+    const name = o.customerName || o.customer_name || o.customer || sh.name || '—';
+    const phone = o.customerPhone || o.customer_phone || o.phone || sh.phone || '';
+    const email = o.customerEmail || o.customer_email || o.email || sh.email || '';
+    const city = normalizeAdminArea(sh.city || sh.address || o.shipping_city || o.shipping_address || o.address || o.city || '');
+    const key = adminPhoneDigits(phone) || String(email || '').trim().toLowerCase() || name;
+    if (!key) return;
+    if (!map[key]) map[key] = { name, phone, email, city, orders: [], statuses: new Set() };
+    if (!map[key].name || map[key].name === '—') map[key].name = name;
+    if (!map[key].phone && phone) map[key].phone = phone;
+    if (!map[key].email && email) map[key].email = email;
+    if (!map[key].city && city) map[key].city = city;
+    map[key].orders.push(o);
+    map[key].statuses.add(o.status || 'processing');
+  });
+  return Object.values(map);
+}
+
+async function syncOrderCustomersFromSupabase() {
+  if (!window.sbFetch) return [];
+  const PAGE = 1000;
+  let offset = 0;
+  const orders = [];
+  try {
+    while (true) {
+      const batch = await window.sbFetch('orders?select=*&order=created_at.desc&limit=' + PAGE + '&offset=' + offset);
+      if (!batch || !batch.length) break;
+      orders.push(...batch.map(remoteOrderToAdminOrder));
+      if (batch.length < PAGE) break;
+      offset += PAGE;
+    }
+    supaOrdersCache = orders;
+    ordersLoaded = true;
+    orderCustomers = customersFromOrders(orders);
+    orderCustomersLoaded = true;
+    return orderCustomers;
+  } catch(e) {
+    console.error('syncOrderCustomers error:', e);
+    orderCustomersLoaded = false;
+    return [];
+  }
+}
 
 /* حذف العملاء الغلط (اسمهم أرقام أو هاتفهم قصير) */
 async function deleteInvalidCustomers() {
@@ -4016,6 +4077,21 @@ function getCustomers() {
 
   // دمج عملاء Supabase - يحدّث الموجودين ويضيف الجدد
   const merged = [...localCusts];
+  orderCustomers.forEach(oc => {
+    if (isDeleted(oc.phone, oc.email)) return;
+    const ocPhone = adminPhoneDigits(oc.phone);
+    const ocEmail = String(oc.email || '').trim().toLowerCase();
+    const existing = merged.find(c => (ocPhone && adminPhoneDigits(c.phone) === ocPhone) || (ocEmail && String(c.email || '').trim().toLowerCase() === ocEmail));
+    if (existing) {
+      if ((!existing.name || existing.name === '—') && oc.name) existing.name = oc.name;
+      if (!existing.phone && oc.phone) existing.phone = oc.phone;
+      if (!existing.email && oc.email) existing.email = oc.email;
+      if (!existing.city && oc.city) existing.city = oc.city;
+      mergeCustomerOrders(existing, oc);
+    } else {
+      merged.push(oc);
+    }
+  });
   supaCustomers.forEach(sc => {
     if (isDeleted(sc.phone, sc.email)) return;
     const scPhone = adminPhoneDigits(sc.phone);
@@ -4985,6 +5061,11 @@ window.renderCustomers = async function() {
     window._customersOrdersLoading = true;
     await syncStoreOrders(true);
     window._customersOrdersLoading = false;
+  }
+  if (!orderCustomersLoaded && !window._customersOrderCustomersLoading) {
+    window._customersOrderCustomersLoading = true;
+    await syncOrderCustomersFromSupabase();
+    window._customersOrderCustomersLoading = false;
   }
   const q = ($('cust-search')?.value||'').toLowerCase();
   const statusFilter = $('cust-filter')?.value || '';
