@@ -1,5 +1,5 @@
-/* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v96';
+﻿/* Service Worker - Bariq PWA */
+const CACHE = 'bariq-v97';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -26,6 +26,7 @@ const STATIC_URLS = [
   '/java/supabase.min.js',
   '/java/footer-pages.min.js',
   '/java/notifications.min.js',
+  '/java/push-welcome.js',
   '/translations/translation.min.js',
   '/translations/ar.json',
   '/translations/en.json',
