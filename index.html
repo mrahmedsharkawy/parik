@@ -23,8 +23,8 @@
   <script src="/java/auth-reset.js" defer></script>
   <title data-i18n="الصفحة الرئيسية - بريق">الصفحة الرئيسية - بريق</title>
   <!-- Full CSS loads asynchronously; critical above-fold CSS is inlined below. -->
-  <link rel="preload" href="/style/style.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <link rel="preload" href="/mobile-nav-bar/styles.css" as="style" media="(max-width: 899px)" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="/style/style.css" as="style" fetchpriority="low" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="/mobile-nav-bar/styles.css" as="style" fetchpriority="low" media="(max-width: 899px)" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="/style/style.css"><link rel="stylesheet" href="/mobile-nav-bar/styles.css" media="(max-width: 899px)"></noscript>
   <style>html,body,.page{background:#fff!important}</style>
   <!-- Preload Cairo Arabic font for faster text rendering -->
@@ -381,8 +381,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
            class="banner-bg-animated"
            alt="Parik Banner"
            fetchpriority="high"
-           width="800" height="150"
-           decoding="async">
+           loading="eager"
+           width="1000" height="200"
+           decoding="sync">
     </div>
   </a>
 </section>
