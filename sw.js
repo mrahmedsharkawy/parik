@@ -1,5 +1,5 @@
 ﻿/* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v93';
+const CACHE = 'bariq-v94';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -19,10 +19,10 @@ const STATIC_URLS = [
   '/assets/cairo-latin.woff2',
   '/style/style.css',
   '/java/auth-reset.js',
-  '/java/main.min.js',
+  '/java/main.min.js?v=20260720v4',
   '/java/Products.min.js',
   '/java/Cart.min.js',
-  '/java/supabase.min.js',
+  '/java/supabase.min.js?v=20260720v4',
   '/java/footer-pages.min.js',
   '/java/notifications.min.js',
   '/translations/translation.min.js',
