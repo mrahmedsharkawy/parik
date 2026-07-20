@@ -3994,11 +3994,11 @@ function getCustomers() {
   allOrders.forEach(o => {
     // x2_orders بيخزن البيانات في shipping أو customerName مباشرة
     const sh    = o.shipping || {};
-    const name  = o.customerName  || o.customer || sh.name  || profile.name  || '—';
-    const phone = o.customerPhone || o.phone    || sh.phone || profile.phone || '';
-    const email = o.customerEmail || o.email    || sh.email || profile.email || '';
+    const name  = o.customerName  || o.customer_name  || o.customer || sh.name  || profile.name  || '—';
+    const phone = o.customerPhone || o.customer_phone || o.phone    || sh.phone || profile.phone || '';
+    const email = o.customerEmail || o.customer_email || o.email    || sh.email || profile.email || '';
     // جلب العنوان من الطلب أو البروفايل
-    const city  = normalizeAdminArea(sh.city || sh.address || o.address || o.city || customerAreaByIdentity(phone, email) || '');
+    const city  = normalizeAdminArea(sh.city || sh.address || o.shipping_city || o.shipping_address || o.address || o.city || customerAreaByIdentity(phone, email) || '');
     const key   = phone || email || name;
     if (!map[key]) map[key] = { name, phone, email, city, orders:[], statuses:new Set() };
     // لو العنوان فاضي وموجود في البروفايل، خده من البروفايل
@@ -4972,7 +4972,12 @@ async function importProductsExcel(input) {
 
 /* ================= تحديث renderCustomers لدعم الترتيب والحظر ================= */
 const _origRenderCustomers = window.renderCustomers;
-window.renderCustomers = function() {
+window.renderCustomers = async function() {
+  if (!ordersLoaded && !window._customersOrdersLoading) {
+    window._customersOrdersLoading = true;
+    await syncStoreOrders(true);
+    window._customersOrdersLoading = false;
+  }
   const q = ($('cust-search')?.value||'').toLowerCase();
   const statusFilter = $('cust-filter')?.value || '';
   const cityFilter = $('cust-city')?.value || '';
@@ -4989,7 +4994,7 @@ window.renderCustomers = function() {
   
   // فلترة
   custs = custs.filter(c => {
-    const matchQ = !q || c.name.toLowerCase().includes(q) || c.phone.includes(q);
+    const matchQ = !q || c.name.toLowerCase().includes(q) || c.phone.includes(q) || String(c.email || '').toLowerCase().includes(q);
     const matchS = !statusFilter || 
                    (statusFilter === 'blocked' && c.isBlocked) ||
                    [...c.statuses].some(s => s === statusFilter);
@@ -5100,7 +5105,7 @@ async function loadCampaignsFromSupabase() {
   // استعادة التاب الأخير قبل الريفريش
   const savedTab = sessionStorage.getItem('admin_active_tab');
   if (savedTab && $('panel-' + savedTab)) {
-    switchTab(savedTab);
+    await switchTab(savedTab);
   }
   
   // تشغيل باقي الطلبات بالتوازي (لا تنتظر بعضها)
