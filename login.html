@@ -590,19 +590,27 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const user = data.user || {};
       const meta = user.user_metadata || {};
       const name = meta.full_name || meta.name || email.split('@')[0];
-      const existingCustomer = await findExistingCustomer(user.email || email, meta.phone || '');
-      if (!existingCustomer) {
+      const latestOrder = await findLatestOrderByEmail(user.email || email);
+      let existingCustomer = await findExistingCustomer(user.email || email, meta.phone || latestOrder?.customer_phone || '');
+      let customerData = { ...orderProfileData(latestOrder), ...customerProfileData(existingCustomer) };
+      const repairedPhone = normalizeUaePhone(meta.phone || customerData.phone || '');
+      if (!existingCustomer && repairedPhone) {
+        try {
+          await window.Supabase.Customers.upsert({ name: customerData.name || name, email: user.email || customerData.email || email, phone: repairedPhone, city: meta.address || customerData.address || '', address: meta.address || customerData.address || '' });
+          existingCustomer = await findExistingCustomer(user.email || email, repairedPhone);
+          customerData = { ...customerData, ...customerProfileData(existingCustomer) };
+        } catch(e) {}
+      }
+      if (!existingCustomer && !repairedPhone) {
         ['x2_profile','x2_logged','x2_token','x2_users','x2_orders','x2_orders_synced','x2_cashback'].forEach(function(k){ localStorage.removeItem(k); });
         try { await window.Supabase.Auth.signOut(data.access_token); } catch(e) {}
-        showError('login-error', '❌ هذا البريد غير مسجّل في الموقع حالياً. من فضلك أنشئ حساباً جديداً ببياناتك كاملة.');
+        showError('login-error', '❌ حسابك موجود لكن بيانات الهاتف غير مكتملة. من فضلك أنشئ حساباً جديداً أو تواصل معنا لتحديث بياناتك.');
         if (btn) { btn.disabled = false; btn.textContent = 'تسجيل الدخول'; }
         return;
       }
-      const latestOrder = await findLatestOrderByEmail(user.email || email);
-      const customerData = { ...orderProfileData(latestOrder), ...customerProfileData(existingCustomer) };
 
       // حفظ الجلسة مع دمج بيانات العميل المخزنة سابقاً في customers
-      const profile = saveProfile({ ...customerData, name: customerData.name || name, email: user.email || customerData.email || email, phone: meta.phone || customerData.phone || '', address: meta.address || customerData.address || '', password: pass });
+      const profile = saveProfile({ ...customerData, name: customerData.name || name, email: user.email || customerData.email || email, phone: meta.phone || customerData.phone || repairedPhone || '', address: meta.address || customerData.address || '', password: pass });
       if (data.access_token) localStorage.setItem('x2_token', data.access_token);
 
       // مزامنة مع جدول customers
