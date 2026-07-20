@@ -3060,6 +3060,10 @@ const LS_VISITORS = 'x2_visitors';
 
 function getVisitors() { try { return JSON.parse(localStorage.getItem(LS_VISITORS)||'[]'); } catch(e) { return []; } }
 
+function visitorArea(v) {
+  return normalizeAdminArea([v.city, v.country].filter(Boolean).join('، ')) || 'غير محدد';
+}
+
 async function renderVisitorsStats() {
   const todayEl = $('visitorsTodayCount');
   const allEl   = $('visitorsAllCount');
@@ -3083,7 +3087,7 @@ async function renderVisitorsStats() {
     if (locEl) {
       const locMap = {};
       rows.forEach(v => {
-        const loc = [v.city, v.country].filter(Boolean).join('، ') || 'غير محدد';
+        const loc = visitorArea(v);
         locMap[loc] = (locMap[loc]||0) + 1;
       });
       const sorted = Object.entries(locMap).sort((a,b) => b[1]-a[1]).slice(0, 10);
@@ -3147,6 +3151,7 @@ function emAreaFromOrder(o){
 function emOrderPlatform(o){ return emGuessPlatform(o) || emNormalizePlatform(o.platform || o.source || o.utm_source); }
 function emOrderItems(o){ return Array.isArray(o.items) ? o.items : []; }
 function emAllOrders(){
+  if (ordersLoaded) return getOrders();
   let local = [];
   try { local = JSON.parse(localStorage.getItem('x2_orders')||'[]'); } catch(e) {}
   const seen = new Set();
@@ -3196,7 +3201,7 @@ function emOrderMatchesWidget(o, filter){
   return emPeriodMatch(date, filter.period) && (!filter.area || area === filter.area) && (!filter.platform || platform === filter.platform);
 }
 function emVisitorMatchesWidget(v, filter){
-  const area = [v.city,v.country].filter(Boolean).join('، ') || 'غير محدد';
+  const area = visitorArea(v);
   const platform = EM_PLATFORM_LABELS[emGuessPlatform(v)]||emGuessPlatform(v);
   return emPeriodMatch(v.visited_at||v.date, filter.period) && (!filter.area || area === filter.area) && (!filter.platform || platform === filter.platform);
 }
@@ -3272,7 +3277,7 @@ function emBuildMarketingMaps(orders, visitors, ads){
   });
   visitors.forEach(v => {
     const platform = emGuessPlatform(v);
-    const area = [v.city,v.country].filter(Boolean).join('، ') || 'غير محدد';
+    const area = visitorArea(v);
     emAddToMap(platformMap, EM_PLATFORM_LABELS[platform]||platform, {visits:1});
     if(area !== 'غير محدد') emAddToMap(areaMap, area, {visits:1});
   });
@@ -3307,6 +3312,7 @@ function deleteExternalAdSpend(id){
 }
 async function renderExternalMarketing(){
   if(!$('panel-external-marketing')) return;
+  if (!ordersLoaded) await syncStoreOrders(true);
   const today = emDateKey(new Date());
   if($('em-ad-date') && !$('em-ad-date').value) $('em-ad-date').value = today;
   const from = $('em-from')?.value || '';
@@ -3315,21 +3321,21 @@ async function renderExternalMarketing(){
   const orders = emAllOrders().filter(o => o.status !== 'cancelled' && emInRange(o.date||o.created_at||o.createdAt, from, to)).filter(o => !platformFilter || emOrderPlatform(o) === platformFilter);
   const visitors = (await emFetchVisitors()).filter(v => emInRange(v.visited_at||v.date, from, to)).filter(v => !platformFilter || emGuessPlatform(v) === platformFilter);
   const ads = getExternalAds().filter(a => emInRange(a.date, from, to)).filter(a => !platformFilter || a.platform === platformFilter);
-  const allAreas = [...orders.map(emAreaFromOrder), ...visitors.map(v=>[v.city,v.country].filter(Boolean).join('، ')||'غير محدد'), ...ads.map(a=>emNormArea(a.area||'غير محدد'))];
+  const allAreas = [...orders.map(emAreaFromOrder), ...visitors.map(visitorArea), ...ads.map(a=>emNormArea(a.area||'غير محدد'))];
   const allPlatforms = [...orders.map(o=>EM_PLATFORM_LABELS[emOrderPlatform(o)]||emOrderPlatform(o)), ...visitors.map(v=>EM_PLATFORM_LABELS[emGuessPlatform(v)]||emGuessPlatform(v)), ...ads.map(a=>EM_PLATFORM_LABELS[a.platform]||a.platform)];
   ['emFilterAdList','emFilterAreas','emFilterPlatforms','emFilterSoldProducts','emFilterViewedProducts','emFilterMonthly','emFilterAttribution','emFilterAdSummary'].forEach(id=>emFilterBox(id, allAreas, allPlatforms));
   const maps = emBuildMarketingMaps(orders, visitors, ads);
   const {areaMap, platformMap, monthMap, attrMap} = maps;
   const totalSales = orders.reduce((s,o)=>s+(Number(o.total)||0),0);
   const totalCost = ads.reduce((s,a)=>s+(Number(a.cost)||0),0);
-  const topArea = Object.entries(areaMap).sort((a,b)=>(b[1].orders-b[1].orders)||(b[1].sales-a[1].sales))[0];
+  const topArea = Object.entries(areaMap).sort((a,b)=>(b[1].orders-a[1].orders)||(b[1].sales-a[1].sales))[0];
   const topPlatform = Object.entries(platformMap).sort((a,b)=>(b[1].sales+b[1].visits)-(a[1].sales+a[1].visits))[0];
   if($('em-top-area')) $('em-top-area').textContent = topArea ? topArea[0] : '—';
   if($('em-top-platform')) $('em-top-platform').textContent = topPlatform ? topPlatform[0] : '—';
   if($('em-ad-sales')) $('em-ad-sales').textContent = moneyFmt(totalSales);
   if($('em-ad-spend')) $('em-ad-spend').textContent = moneyFmt(totalCost);
   if($('em-ad-profit')) $('em-ad-profit').textContent = moneyFmt(totalSales-totalCost);
-  const areaData = emBuildMarketingMaps(orders.filter(o=>emOrderMatchesWidget(o,emGetFilter('emFilterAreas'))), visitors.filter(v=>emVisitorMatchesWidget(v,emGetFilter('emFilterAreas'))), ads.filter(a=>emAdMatchesWidget(a,emGetFilter('emFilterAreas'))));
+  const areaData = emBuildMarketingMaps(orders.filter(o=>emOrderMatchesWidget(o,emGetFilter('emFilterAreas'))), [], ads.filter(a=>emAdMatchesWidget(a,emGetFilter('emFilterAreas'))));
   const platformData = emBuildMarketingMaps(orders.filter(o=>emOrderMatchesWidget(o,emGetFilter('emFilterPlatforms'))), visitors.filter(v=>emVisitorMatchesWidget(v,emGetFilter('emFilterPlatforms'))), ads.filter(a=>emAdMatchesWidget(a,emGetFilter('emFilterPlatforms'))));
   const soldData = emBuildMarketingMaps(orders.filter(o=>emOrderMatchesWidget(o,emGetFilter('emFilterSoldProducts'))), [], []);
   const viewFilter = emGetFilter('emFilterViewedProducts');
@@ -3883,8 +3889,7 @@ window.switchTab = async function(name) {
   if (name === 'customers') {
     selectedCustomers.clear();
     await syncStoreOrders(true);
-    // عرض فوري من الكاش، ثم تحديث في الخلفية
-    if (supaCustomers.length) renderCustomers();
+    renderCustomers();
     renderVisitorsStats();
     fillMsgProductSelect();
     loadBlockedCustomers();
@@ -3980,7 +3985,7 @@ function getCustomers() {
   const _deletedKeys = getDeletedCustomerKeys();
   const isDeleted = (phone, email) => (phone && _deletedKeys.has(phone)) || (email && _deletedKeys.has(email));
   // جمع الطلبات من كلا المصدرين
-  const storeOrders  = JSON.parse(localStorage.getItem('x2_orders')   || '[]');
+  const storeOrders  = ordersLoaded ? [] : JSON.parse(localStorage.getItem('x2_orders')   || '[]');
   const adminOrders  = getOrders(); // admin_orders
   const allOrders    = [...storeOrders, ...adminOrders];
   const profile = (() => { try { return JSON.parse(localStorage.getItem('x2_profile')||'{}'); }catch(e){return{};} })();
