@@ -197,7 +197,7 @@
   #gate h2{margin:0 0 6px;color:var(--navy)}
   #gate p{color:#7a8296;font-size:.85rem;margin:0 0 18px}
 </style>
-<script src="/java/supabase.js?v=20260720v5"></script></head>
+<script src="/java/supabase.js?v=20260720v6"></script></head>
 <body>
 
 <!-- بوابة دخول بسيطة (حماية شكلية فقط) -->
@@ -1260,12 +1260,18 @@ async function refreshAdminToken() {
 async function getValidAdminToken() {
   const token = sessionStorage.getItem('admin_token');
   const exp   = parseInt(sessionStorage.getItem('admin_token_exp') || '0');
-  // تجديد لو باقي أقل من 5 دقائق
-  if (token && exp && (exp - Date.now()) < 5 * 60 * 1000) {
+  const tokenIsUsable = token && (typeof isJwtUsable !== 'function' || isJwtUsable(token));
+  // تجديد التوكن المفقود أو المنتهي أو الذي بقي له أقل من 5 دقائق.
+  if (!tokenIsUsable || (exp && (exp - Date.now()) < 5 * 60 * 1000)) {
     const newToken = await refreshAdminToken();
-    return newToken || token;
+    return newToken || null;
   }
-  return token || null;
+  return token;
+}
+
+function clearAdminSession() {
+  ['admin_ok', 'admin_token', 'admin_refresh_token', 'admin_token_exp', 'admin_name']
+    .forEach(key => sessionStorage.removeItem(key));
 }
 
 /* ================= البوابة ================= */
@@ -1310,9 +1316,22 @@ async function checkGate(){
   }
 }
 
-if(sessionStorage.getItem('admin_ok') === '1'){
-  $('gate').style.display = 'none';
+async function restoreAdminSession() {
+  if (sessionStorage.getItem('admin_ok') !== '1') return;
+  const token = await getValidAdminToken();
+  if (token) {
+    $('gate').style.display = 'none';
+    return;
+  }
+  clearAdminSession();
+  $('gate').style.display = 'flex';
+  const msgEl = $('gateMsg');
+  if (msgEl) {
+    msgEl.textContent = 'انتهت جلسة الأدمن، سجّل الدخول مرة أخرى';
+    msgEl.style.display = 'block';
+  }
 }
+restoreAdminSession();
 
 $('gatePass').addEventListener('keydown', e=>{ if(e.key==='Enter') checkGate(); });
 $('gateUser').addEventListener('keydown', e=>{ if(e.key==='Enter') $('gatePass').focus(); });
@@ -2303,6 +2322,14 @@ function editOrder(id){
 }
 
 async function changeOrderStatus(id, status){
+  const adminToken = await getValidAdminToken();
+  if (!adminToken) {
+    clearAdminSession();
+    $('gate').style.display = 'flex';
+    toast('❌ انتهت جلسة الأدمن، سجّل الدخول مرة أخرى');
+    return;
+  }
+
   // إيجاد الطلب في الكاش (يعمل مع Supabase أو localStorage)
   const orders = getOrders();
   const o = orders.find(x=>Number(x.id)===Number(id));
