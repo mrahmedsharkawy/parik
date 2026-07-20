@@ -1750,6 +1750,40 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const cashbackToAdd = [];
       const remoteIds = new Set(remote.map(r => String(r.order_number)));
 
+      function hasCashbackCredit(orderId) {
+        try {
+          const cb = JSON.parse(localStorage.getItem('x2_cashback') || '{"history":[]}');
+          return Array.isArray(cb.history) && cb.history.some(h => String(h.orderId || '') === String(orderId));
+        } catch(e) { return false; }
+      }
+
+      function pushCashbackNotification(orderId, amount) {
+        const formatted = (parseFloat(amount) || 5).toFixed((parseFloat(amount) || 5) % 1 ? 2 : 0);
+        const notif = {
+          id: 'n-cb-earned-' + orderId + '-' + Date.now(),
+          type: 'cashback',
+          icon: '🤑',
+          title: '🤑 تم إضافة كاش باك',
+          msg: `تم إضافة ${formatted} د.إ كاش باك في حسابك من طلبك رقم ${orderId}.`,
+          cashbackStatus: 'earned',
+          amount: parseFloat(amount) || 5,
+          orderId,
+          date: new Date().toISOString(),
+          read: false,
+          url: '/account?section=credit'
+        };
+        if (window.x2Notifications && typeof window.x2Notifications.add === 'function') {
+          window.x2Notifications.add(notif);
+          return;
+        }
+        try {
+          const notifs = JSON.parse(localStorage.getItem('x2_notifications') || '[]');
+          notifs.unshift(notif);
+          localStorage.setItem('x2_notifications', JSON.stringify(notifs.slice(0, 60)));
+          window.dispatchEvent(new Event('x2:notif-updated'));
+        } catch(e) {}
+      }
+
       function remoteOrderToLocal(r) {
         return {
           id: String(r.order_number || r.id || ''),
@@ -1769,7 +1803,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         // مطابقة برقم الطلب (order_number) مع مقارنة نصية مرنة
         const idx = local.findIndex(o => String(o.id) === String(r.order_number));
         if (idx === -1) {
-          local.unshift(remoteOrderToLocal(r));
+          const newLocalOrder = remoteOrderToLocal(r);
+          local.unshift(newLocalOrder);
+          if (r.cashback_status === 'earned' && !hasCashbackCredit(newLocalOrder.id)) {
+            cashbackToAdd.push({ orderId: newLocalOrder.id, amount: parseFloat(newLocalOrder.cashback || r.cashback || 5) });
+          }
           changed = true;
           return;
         }
@@ -1779,9 +1817,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           changed = true;
         }
         // إضافة الكاش باك للرصيد مرة واحدة فقط عند اعتماده من الأدمن
-        if (r.cashback_status === 'earned' && lo.cashbackStatus !== 'earned') {
+        if (r.cashback_status === 'earned' && (lo.cashbackStatus !== 'earned' || !hasCashbackCredit(lo.id))) {
           lo.cashbackStatus = 'earned';
-          cashbackToAdd.push({ orderId: lo.id, amount: parseFloat(lo.cashback || r.cashback || 5) });
+          if (!hasCashbackCredit(lo.id)) cashbackToAdd.push({ orderId: lo.id, amount: parseFloat(lo.cashback || r.cashback || 5) });
           changed = true;
         }
       });
@@ -1810,6 +1848,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
               orderId: c.orderId,
               note: 'كاش باك طلب ' + c.orderId
             });
+            pushCashbackNotification(c.orderId, c.amount || 5);
           });
           localStorage.setItem(CB_KEY, JSON.stringify(cb));
         } catch(e2) {}
@@ -2267,6 +2306,18 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const amountMatch = rawText.match(/(\d+(?:\.\d+)?)/);
     const amount = parseFloat(n.amount || n.cashback || getLocalOrderCashback(orderId) || (amountMatch && amountMatch[1]) || 5) || 5;
     const orderText = orderId ? ` من طلبك رقم ${orderId}` : '';
+    const isEarned = n.cashbackStatus === 'earned' || n.status === 'earned' || /^n-cb-earned-/.test(String(n.id || '')) || /تم\s+إضافة|تم\s+اضافة|في حسابك/.test(rawText);
+    if (isEarned) {
+      return {
+        ...n,
+        type: 'cashback',
+        cashbackStatus: 'earned',
+        icon: '🤑',
+        title: '🤑 تم إضافة كاش باك',
+        msg: `تم إضافة ${amount.toFixed(amount % 1 ? 2 : 0)} د.إ كاش باك في حسابك${orderText}.`,
+        orderId
+      };
+    }
     return {
       ...n,
       type: 'cashback',
@@ -3063,6 +3114,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       if (isCashback) {
         const amountMatch = raw.match(/(\d+(?:\.\d+)?)/);
         const amount = parseFloat(getLocalOrderCashback(orderId) || (amountMatch && amountMatch[1]) || 5) || 5;
+        const isEarned = /تم\s+إضافة|تم\s+اضافة|في حسابك|earned|n-cb-earned/i.test(raw + ' ' + tag);
+        if (isEarned) {
+          return {
+            title: '🤑 تم إضافة كاش باك',
+            options: { ...options, body: `تم إضافة ${amount.toFixed(amount % 1 ? 2 : 0)} د.إ كاش باك في حسابك${orderId ? ` من طلبك رقم ${orderId}` : ''}.` }
+          };
+        }
         return {
           title: '🤑 كاش باك بانتظارك',
           options: { ...options, body: `حصلت على ${amount.toFixed(amount % 1 ? 2 : 0)} د.إ كاش باك${orderId ? ` من طلبك رقم ${orderId}` : ''}. سيتم تفعيله بعد اعتماد الطلب.` }
