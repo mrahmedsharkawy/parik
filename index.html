@@ -672,7 +672,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       if (!products) {
         try {
           const res = await fetch('/java/Products.json');
-          products = await res.json();
+          const jsonProducts = await res.json();
+          if (Array.isArray(jsonProducts) && jsonProducts.length) products = jsonProducts;
         } catch(e) {}
       }
 
