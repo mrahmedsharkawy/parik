@@ -119,6 +119,7 @@
 
   /* قائمة المنتجات */
   .plist{display:flex;flex-direction:column;gap:10px;max-height:600px;overflow-y:auto}
+  #custList{max-height:350px}
   .prod-row{display:flex;gap:12px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff}
   .prod-row img,.prod-row video{width:56px;height:56px;object-fit:cover;border-radius:8px;flex-shrink:0;background:#eef1f7}
   .prod-row .info{flex:1;min-width:0}
@@ -2060,6 +2061,61 @@ const REALIZED = ['confirmed','shipped','delivered'];
 let supaOrdersCache = [];
 let ordersLoaded = false;
 
+function normalizeAdminArea(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  const first = raw.split('،')[0].split(',')[0].trim();
+  const low = first.toLowerCase();
+  if (/ras\s*al\s*khaimah|rak|راس\s*الخيمه|رأس\s*الخيمة/.test(low)) return 'رأس الخيمة';
+  if (/dubai|دبي/.test(low)) return 'دبي';
+  if (/abu\s*dhabi|ابوظبي|أبوظبي/.test(low)) return 'أبوظبي';
+  if (/sharjah|الشارقه|الشارقة/.test(low)) return 'الشارقة';
+  if (/ajman|عجمان/.test(low)) return 'عجمان';
+  if (/fujairah|الفجيره|الفجيرة/.test(low)) return 'الفجيرة';
+  if (/umm\s*al\s*quwain|ام\s*القيوين|أم\s*القيوين/.test(low)) return 'أم القيوين';
+  if (/al\s*ain|العين/.test(low)) return 'العين';
+  return first || raw;
+}
+
+function customerAreaByIdentity(phone, email) {
+  const cleanPhone = String(phone || '').replace(/\D/g, '');
+  const cleanEmail = String(email || '').trim().toLowerCase();
+  const customer = supaCustomers.find(c =>
+    (cleanPhone && String(c.phone || '').replace(/\D/g, '') === cleanPhone) ||
+    (cleanEmail && String(c.email || '').trim().toLowerCase() === cleanEmail)
+  );
+  return normalizeAdminArea(customer?.city || customer?.address || '');
+}
+
+function remoteOrderToAdminOrder(r) {
+  const customerName = r.customer_name || '';
+  const customerPhone = r.customer_phone || '';
+  const customerEmail = r.customer_email || '';
+  const addressObj = r.address && typeof r.address === 'object' ? r.address : {};
+  const orderArea = normalizeAdminArea(r.shipping_city || r.customer_city || addressObj.city || addressObj.area || r.shipping_address || r.address || '');
+  return {
+    id: r.id,
+    orderNumber: r.order_number,
+    srcId: r.id,
+    customer: customerName || 'بدون اسم',
+    phone: customerPhone,
+    email: customerEmail,
+    productName: (r.items||[]).map(i=>`${i.title||i.name||'منتج'}×${i.qty||1}`).join('، '),
+    qty: (r.items||[]).reduce((s,i)=>s+(Number(i.qty)||1),0) || 1,
+    unit: parseFloat(r.total) || 0,
+    total: parseFloat(r.total) || 0,
+    status: r.status || 'pending',
+    date: r.created_at,
+    created_at: r.created_at,
+    items: r.items || [],
+    cashback: r.cashback,
+    cashbackStatus: r.cashback_status,
+    notes: r.notes || '',
+    city: orderArea || customerAreaByIdentity(customerPhone, customerEmail),
+    address: orderArea || customerAreaByIdentity(customerPhone, customerEmail)
+  };
+}
+
 // انتظار تحميل Supabase
 function waitForSupabase(timeout = 5000) {
   return new Promise((resolve) => {
@@ -2094,33 +2150,7 @@ async function loadOrdersFromSupabase() {
     const remote = await window.Supabase.Orders.getAll(); // للتشخيص
     
     if (remote && Array.isArray(remote)) {
-      supaOrdersCache = remote.map(r => {
-        // جلب بيانات العميل من الحقول المباشرة
-        const customerName = r.customer_name || '';
-        const customerPhone = r.customer_phone || '';
-        const customerEmail = r.customer_email || '';
-        
-        return {
-          id: r.id,
-          orderNumber: r.order_number,
-          srcId: r.id,
-          customer: customerName || 'بدون اسم',
-          phone: customerPhone,
-          email: customerEmail,
-          productName: (r.items||[]).map(i=>`${i.title||i.name||'منتج'}×${i.qty||1}`).join('، '),
-          qty: (r.items||[]).reduce((s,i)=>s+(Number(i.qty)||1),0) || 1,
-          unit: parseFloat(r.total) || 0,
-          total: parseFloat(r.total) || 0,
-          status: r.status || 'pending',
-          date: r.created_at,
-          items: r.items || [],
-          cashback: r.cashback,
-          cashbackStatus: r.cashback_status,
-          notes: r.notes || '',
-          city: r.shipping_city || '',
-          address: r.shipping_address || ''
-        };
-      });
+      supaOrdersCache = remote.map(remoteOrderToAdminOrder);
       ordersLoaded = true;
       return supaOrdersCache;
     } else if (remote === null || remote === undefined) {
@@ -2176,26 +2206,7 @@ async function syncStoreOrders(silent){
     const remote = await window.Supabase.Orders.getAll();
     
     if (remote && Array.isArray(remote) && remote.length > 0) {
-      supaOrdersCache = remote.map(r => ({
-        id: r.id,
-        orderNumber: r.order_number,
-        srcId: r.id,
-        customer: r.customer_name || 'بدون اسم',
-        phone: r.customer_phone || '',
-        email: r.customer_email || '',
-        productName: (r.items||[]).map(i=>`${i.title||i.name||'منتج'}×${i.qty||1}`).join('، '),
-        qty: (r.items||[]).reduce((s,i)=>s+(Number(i.qty)||1),0) || 1,
-        unit: parseFloat(r.total) || 0,
-        total: parseFloat(r.total) || 0,
-        status: r.status || 'pending',
-        date: r.created_at,
-        items: r.items || [],
-        cashback: r.cashback,
-        cashbackStatus: r.cashback_status,
-        notes: r.notes || '',
-        city: r.shipping_city || '',
-        address: r.shipping_address || ''
-      }));
+      supaOrdersCache = remote.map(remoteOrderToAdminOrder);
       ordersLoaded = true;
       renderStats();
       renderOrders();
@@ -3130,8 +3141,8 @@ function emGuessPlatform(row){
 function emAreaFromOrder(o){
   const address = o.address || o.shipping_address || o.shippingAddress || '';
   const full = o.address_full || o.shipping || {};
-  const area = o.city || o.shipping_city || o.customerCity || full.city || full.area || address || 'غير محدد';
-  return String(area||'غير محدد').split('،')[0].split(',')[0].trim() || 'غير محدد';
+  const area = o.city || o.shipping_city || o.customerCity || full.city || full.area || address || customerAreaByIdentity(o.phone || o.customerPhone || o.customer_phone, o.email || o.customerEmail || o.customer_email) || 'غير محدد';
+  return normalizeAdminArea(area) || 'غير محدد';
 }
 function emOrderPlatform(o){ return emGuessPlatform(o) || emNormalizePlatform(o.platform || o.source || o.utm_source); }
 function emOrderItems(o){ return Array.isArray(o.items) ? o.items : []; }
@@ -3158,7 +3169,7 @@ function emPeriodMatch(date, period){
   if(period === 'year') return d.getFullYear() === now.getFullYear();
   return true;
 }
-function emNormArea(area){ return String(area||'غير محدد').trim(); }
+function emNormArea(area){ return normalizeAdminArea(area) || 'غير محدد'; }
 function emMakeOptions(values, allLabel){
   const basePlatforms = Object.values(EM_PLATFORM_LABELS);
   const source = allLabel === 'كل المنصات' ? [...basePlatforms, ...values] : values;
@@ -3871,6 +3882,7 @@ window.switchTab = async function(name) {
   if (name === 'banners') { renderBanners(); renderFeaturedPicker(); renderDailyPicker(); }
   if (name === 'customers') {
     selectedCustomers.clear();
+    await syncStoreOrders(true);
     // عرض فوري من الكاش، ثم تحديث في الخلفية
     if (supaCustomers.length) renderCustomers();
     renderVisitorsStats();
@@ -3981,7 +3993,7 @@ function getCustomers() {
     const phone = o.customerPhone || o.phone    || sh.phone || profile.phone || '';
     const email = o.customerEmail || o.email    || sh.email || profile.email || '';
     // جلب العنوان من الطلب أو البروفايل
-    const city  = sh.city || sh.address || o.address || o.city || '';
+    const city  = normalizeAdminArea(sh.city || sh.address || o.address || o.city || customerAreaByIdentity(phone, email) || '');
     const key   = phone || email || name;
     if (!map[key]) map[key] = { name, phone, email, city, orders:[], statuses:new Set() };
     // لو العنوان فاضي وموجود في البروفايل، خده من البروفايل
@@ -4000,9 +4012,9 @@ function getCustomers() {
     const existing = merged.find(c => (sc.phone && c.phone === sc.phone) || (sc.email && c.email === sc.email));
     if (existing) {
       if (!existing.id && sc.id) existing.id = sc.id; // ← مهم للحذف
-      if (!existing.city && sc.city) existing.city = sc.city;
+      if (!existing.city && sc.city) existing.city = normalizeAdminArea(sc.city);
     } else if (sc.phone || sc.email) {
-      merged.push(sc);
+      merged.push({ ...sc, city: normalizeAdminArea(sc.city || sc.address || '') });
     }
   });
   // دمج العملاء المضافين يدوياً - لهم الأولوية القصوى
@@ -4014,10 +4026,10 @@ function getCustomers() {
       if (mc.name) existing.name = mc.name;
       if (mc.email) existing.email = mc.email;
       // العنوان يتحدث حتى لو فاضي (المستخدم ممكن يكون مسحه)
-      if (mc.address !== undefined) existing.city = mc.address;
+      if (mc.address !== undefined) existing.city = normalizeAdminArea(mc.address);
     } else {
       // إضافة عميل جديد
-      merged.push({ name: mc.name, phone: mc.phone, email: mc.email, city: mc.address || '', orders: [], statuses: new Set(['manual']) });
+      merged.push({ name: mc.name, phone: mc.phone, email: mc.email, city: normalizeAdminArea(mc.address || ''), orders: [], statuses: new Set(['manual']) });
     }
   });
   return merged;
