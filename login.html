@@ -201,6 +201,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     }
     .auth-social-btn:hover { border-color: #D4AF37; background: rgba(21,37,70,0.07); }
     .auth-social-btn img { width: 18px; height: 18px; }
+    .auth-social-btn.google-btn {
+      border-color: #dadce0;
+      background: linear-gradient(90deg, #4285F4 0 25%, #34A853 25% 50%, #FBBC05 50% 75%, #EA4335 75% 100%);
+      color: #fff;
+      box-shadow: 0 8px 18px rgba(66,133,244,.18);
+    }
+    .auth-social-btn.google-btn:hover { border-color: #c9ccd1; filter: brightness(.98); background: linear-gradient(90deg, #4285F4 0 25%, #34A853 25% 50%, #FBBC05 50% 75%, #EA4335 75% 100%); }
+    .google-mark { width:22px;height:22px;border-radius:50%;background:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;letter-spacing:0;color:#4285F4;box-shadow:0 1px 4px rgba(0,0,0,.16);font-family:Arial,sans-serif; }
 
     /* قوة كلمة المرور */
     .strength-bar {
@@ -325,8 +333,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <button class="auth-btn" onclick="doLogin()">تسجيل الدخول</button>
 
         <div class="auth-social" style="margin-top:12px">
-          <button type="button" class="auth-social-btn" onclick="socialLogin('google')">
-            <img src="/assets/social/google.webp" alt="Google" onerror="this.style.display='none'">
+          <button type="button" class="auth-social-btn google-btn" onclick="socialLogin('google')">
+            <span class="google-mark" aria-hidden="true">G</span>
             <span>الدخول بحساب Google</span>
           </button>
         </div>
