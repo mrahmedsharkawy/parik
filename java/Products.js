@@ -1455,7 +1455,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                     return src;
                 }
             }
-            const miniVideoSources = [ optimizeCloudinaryVideoUrl(fvSrc, "f_mp4,vc_h264,q_auto:eco,w_360,c_limit"), optimizeCloudinaryVideoUrl(fvSrc, "f_mp4,vc_h264,q_auto,w_360,c_limit"), optimizeCloudinaryVideoUrl(fvSrc, "q_auto,w_360,c_limit"), fvSrc ].filter((src, i, arr) => src && arr.indexOf(src) === i), fullVideoSrc = optimizeCloudinaryVideoUrl(fvSrc, "f_mp4,vc_h264,q_auto,w_720,c_limit"), posterSrc = normalizeAssetUrl(imgs[0] || "") || "/assets/logo.png";
+            const miniVideoSources = [ optimizeCloudinaryVideoUrl(fvSrc, "f_mp4,vc_h264,ac_aac,q_auto:eco,w_360,c_limit"), optimizeCloudinaryVideoUrl(fvSrc, "f_mp4,vc_h264,ac_aac,q_auto,w_360,c_limit"), optimizeCloudinaryVideoUrl(fvSrc, "f_mp4,vc_h264,q_auto:eco,w_360,c_limit"), optimizeCloudinaryVideoUrl(fvSrc, "q_auto,w_360,c_limit"), fvSrc ].filter((src, i, arr) => src && arr.indexOf(src) === i), fullVideoSrc = optimizeCloudinaryVideoUrl(fvSrc, "f_mp4,vc_h264,ac_aac,q_auto,w_720,c_limit"), posterSrc = normalizeAssetUrl(imgs[0] || "") || "/assets/logo.png";
             const startMiniVideo = function() {
                 const wrap = mainWrap || document.querySelector("#mainImage")?.parentElement;
                 const pip = document.createElement("div");
