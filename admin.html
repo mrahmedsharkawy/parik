@@ -3136,12 +3136,11 @@ async function renderVisitorsStats() {
   // استخدم JWT الأدمن مع تجديد تلقائي عند الانتهاء
   const adminToken = await getValidAdminToken() || ANON;
 
-  fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors?select=visited_at,page,city,country,user_agent&order=visited_at.desc&limit=500', {
-    headers: {
-      'apikey': ANON,
-      'Authorization': 'Bearer ' + adminToken
-    }
-  }).then(r => r.json()).then(function(rows) {
+  const headers = {
+    'apikey': ANON,
+    'Authorization': 'Bearer ' + adminToken
+  };
+  const renderRows = function(rows) {
     if (!Array.isArray(rows)) throw new Error('no data');
     rows = rows.filter(isUsefulVisitor);
     const today = new Date().toDateString();
@@ -3161,11 +3160,24 @@ async function renderVisitorsStats() {
           <span>🌍 ${esc(loc)}</span><b style="color:var(--navy)">${count}</b>
         </div>`).join('') : '<span style="color:#aaa;font-size:.8rem">لا توجد زيارات بعد</span>';
     }
-  }).catch(function() {
-    if (todayEl) todayEl.textContent = '—';
-    if (allEl)   allEl.textContent   = '—';
-    if (locEl)   locEl.innerHTML = '<span style="color:#e53935;font-size:.8rem">⚠️ تأكد من تسجيل الدخول لعرض الزوار</span>';
-  });
+  };
+  try {
+    let res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors?select=visited_at,page,city,country,user_agent&order=visited_at.desc&limit=500', { headers });
+    let rows = await res.json();
+    if (!res.ok || !Array.isArray(rows)) {
+      res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors?select=visited_at,page,city,country&order=visited_at.desc&limit=500', { headers });
+      rows = await res.json();
+    }
+    renderRows(rows);
+  } catch(e) {
+    const cached = getVisitors().filter(isUsefulVisitor);
+    if (cached.length) renderRows(cached);
+    else {
+      if (todayEl) todayEl.textContent = '0';
+      if (allEl)   allEl.textContent   = '0';
+      if (locEl)   locEl.innerHTML = '<span style="color:#aaa;font-size:.8rem">لا توجد زيارات بعد</span>';
+    }
+  }
 }
 
 /* ================= التسويق الخارجي ================= */
