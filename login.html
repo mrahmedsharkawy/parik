@@ -635,7 +635,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           active: true
         };
         if (!row.email || String(row.email).trim().toLowerCase() === email) payload.email = email;
-        if (!row.phone || normalizeUaePhone(row.phone || '') === phone) payload.phone = phone;
+        if (phone && (!row.phone || normalizeUaePhone(row.phone || '') === phone)) payload.phone = phone;
         const update = await fetch(_SB_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(row.id), {
           method: 'PATCH',
           headers: { apikey: _SB_ANON, Authorization: 'Bearer ' + _SB_ANON, 'Content-Type': 'application/json', Prefer: 'return=representation' },
@@ -649,7 +649,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       return lastSaved;
     }
 
-    const body = JSON.stringify({ full_name: customer.name, email, phone, city: customer.city, address: customer.address, active: true });
+    const insertPayload = { full_name: customer.name, email, city: customer.city, address: customer.address, active: true };
+    if (phone) insertPayload.phone = phone;
+    const body = JSON.stringify(insertPayload);
     const res = await fetch(_SB_URL + '/rest/v1/customers', {
       method: 'POST',
       headers: { apikey: _SB_ANON, Authorization: 'Bearer ' + _SB_ANON, 'Content-Type': 'application/json', Prefer: 'return=representation' },
@@ -714,6 +716,34 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     return true;
   }
 
+  async function loginExistingAccountAfterSignup(email, pass, fallback) {
+    try {
+      const data = await window.Supabase.Auth.signIn(email, pass);
+      if (data?.access_token) localStorage.setItem('x2_token', data.access_token);
+      const user = data.user || {};
+      const meta = user.user_metadata || {};
+      const cleanEmail = String(user.email || email || '').trim().toLowerCase();
+      const existingCustomer = await findExistingCustomer(cleanEmail, fallback?.phone || meta.phone || '');
+      const customerData = customerProfileData(existingCustomer);
+      const profile = saveProfile({
+        ...customerData,
+        name: customerData.name || meta.full_name || fallback?.name || cleanEmail.split('@')[0],
+        email: customerData.email || cleanEmail,
+        phone: customerData.phone || normalizeUaePhone(meta.phone || fallback?.phone || ''),
+        address: customerData.address || meta.address || fallback?.address || '',
+        password: pass
+      });
+      rememberLocalUser(profile, pass);
+      await ensureCustomerSaved(profile).catch(() => {});
+      syncProfileToUserSync(profile, data.access_token).catch(()=>{});
+      showSuccess('تم تسجيل الدخول بنجاح! 🎉', 'مرحباً ' + (profile.name || cleanEmail.split('@')[0]).split(' ')[0] + '! جارٍ تحويلك...');
+      setTimeout(() => { window.location.href = 'account.html'; }, 1200);
+      return true;
+    } catch(e) {
+      return false;
+    }
+  }
+
   async function doLogin() {
     hideErrors();
     const email = document.getElementById('login-email').value.trim();
@@ -745,19 +775,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           customerData = { ...customerData, ...customerProfileData(existingCustomer) };
         } catch(e) {}
       }
-      if (!existingCustomer && !repairedPhone) {
-        ['x2_profile','x2_logged','x2_token','x2_users','x2_orders','x2_orders_synced','x2_cashback'].forEach(function(k){ localStorage.removeItem(k); });
-        try { await window.Supabase.Auth.signOut(data.access_token); } catch(e) {}
-        showError('login-error', '❌ حسابك موجود لكن بيانات الهاتف غير مكتملة. من فضلك أنشئ حساباً جديداً أو تواصل معنا لتحديث بياناتك.');
-        if (btn) { btn.disabled = false; btn.textContent = 'تسجيل الدخول'; }
-        return;
-      }
 
       // حفظ الجلسة مع دمج بيانات العميل المخزنة سابقاً في customers
       const profile = saveProfile({ ...customerData, name: customerData.name || name, email: user.email || customerData.email || email, phone: meta.phone || customerData.phone || repairedPhone || '', address: meta.address || customerData.address || '', password: pass });
 
       // مزامنة مع جدول customers
-      try { await window.Supabase.Customers.upsert({ name: profile.name, email: profile.email, phone: profile.phone, city: profile.address, address: profile.address }); } catch(e) {}
+      try { await ensureCustomerSaved(profile); } catch(e) {}
       syncProfileToUserSync(profile, data.access_token).catch(()=>{});
 
       showSuccess('تم تسجيل الدخول بنجاح! 🎉', 'مرحباً ' + name.split(' ')[0] + '! جارٍ تحويلك...');
@@ -807,6 +830,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       if (signupData?.access_token) localStorage.setItem('x2_token', signupData.access_token);
       const signupUser = signupData?.user || signupData;
       if (signupUser && Array.isArray(signupUser.identities) && signupUser.identities.length === 0) {
+        if (await loginExistingAccountAfterSignup(email, pass, { name: fullName, phone, address })) return;
         showError('register-error', '❌ هذا البريد الإلكتروني أو رقم الهاتف مسجّل بالفعل. جرّب تسجيل الدخول.');
         if (btn) { btn.disabled = false; btn.textContent = 'إنشاء حساب جديد'; }
         return;
@@ -842,6 +866,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       }
 
       if (isDuplicateRegisterError(err)) {
+        if (await loginExistingAccountAfterSignup(email, pass, { name: fullName, phone, address })) return;
         showError('register-error', duplicateRegisterMessage(err));
         if (btn) { btn.disabled = false; btn.textContent = 'إنشاء حساب جديد'; }
         return;
@@ -849,6 +874,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       const msg = err.message || '';
       if (isDuplicateRegisterError(err)) {
+        if (await loginExistingAccountAfterSignup(email, pass, { name: fullName, phone, address })) return;
         showError('register-error', duplicateRegisterMessage(err));
       } else {
         showError('register-error', '❌ ' + msg);
