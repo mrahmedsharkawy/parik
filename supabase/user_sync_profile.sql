@@ -38,14 +38,6 @@ where s.id = ranked.id
 create unique index if not exists user_sync_email_type_uidx
 on public.user_sync (user_email, data_type);
 
-delete from public.user_sync s
-where s.data_type = 'profile'
-  and not exists (
-    select 1
-    from auth.users u
-    where lower(trim(u.email)) = lower(trim(s.user_email))
-  );
-
 drop policy if exists "Users can read own sync rows" on public.user_sync;
 create policy "Users can read own sync rows"
 on public.user_sync
@@ -82,11 +74,6 @@ select
   now() as updated_at
 from public.customers c
 where coalesce(trim(email), '') <> ''
-  and exists (
-    select 1
-    from auth.users u
-    where lower(trim(u.email)) = lower(trim(c.email))
-  )
   and not exists (
     select 1
     from public.user_sync s
@@ -102,14 +89,6 @@ set search_path = public
 as $$
 begin
   if coalesce(trim(new.email), '') = '' then
-    return new;
-  end if;
-
-  if not exists (
-    select 1
-    from auth.users u
-    where lower(trim(u.email)) = lower(trim(new.email))
-  ) then
     return new;
   end if;
 

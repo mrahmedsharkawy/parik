@@ -834,7 +834,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const signupUser = signupData?.user || signupData;
       if (!signupUser && !signupData?.access_token) throw new Error('تعذر إنشاء الحساب حالياً. حاول مرة أخرى بعد قليل.');
       if (signupUser && Array.isArray(signupUser.identities) && signupUser.identities.length === 0) {
-        if (await loginExistingAccountAfterSignup(email, pass, { name: fullName, phone, address })) return;
         showError('register-error', '❌ هذا البريد الإلكتروني أو رقم الهاتف مسجّل بالفعل. جرّب تسجيل الدخول.');
         if (btn) { btn.disabled = false; btn.textContent = 'إنشاء حساب جديد'; }
         return;
@@ -854,6 +853,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     } catch(err) {
       if (isEmailRateLimitError(err)) {
+        const existingCustomer = await findExistingCustomer(email, phone);
+        if (existingCustomer) {
+          showError('register-error', '❌ هذا البريد الإلكتروني أو رقم الهاتف مسجّل بالفعل. جرّب تسجيل الدخول.');
+          if (btn) { btn.disabled = false; btn.textContent = 'إنشاء حساب جديد'; }
+          return;
+        }
         const profile = buildProfile({ name: fullName, email, phone, address, password: pass });
         try {
           await ensureCustomerSaved(profile);
@@ -871,7 +876,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       }
 
       if (isDuplicateRegisterError(err)) {
-        if (await loginExistingAccountAfterSignup(email, pass, { name: fullName, phone, address })) return;
         showError('register-error', duplicateRegisterMessage(err));
         if (btn) { btn.disabled = false; btn.textContent = 'إنشاء حساب جديد'; }
         return;
@@ -879,7 +883,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       const msg = err.message || '';
       if (isDuplicateRegisterError(err)) {
-        if (await loginExistingAccountAfterSignup(email, pass, { name: fullName, phone, address })) return;
         showError('register-error', duplicateRegisterMessage(err));
       } else {
         showError('register-error', '❌ ' + msg);
