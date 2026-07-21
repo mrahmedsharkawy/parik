@@ -1446,15 +1446,18 @@ document.addEventListener("DOMContentLoaded", async function() {
                 const wrap = mainWrap || document.querySelector("#mainImage")?.parentElement;
                 const pip = document.createElement("div");
                 pip.id = "pip-video-widget";
-                pip.style.cssText = "position:fixed;width:90px;height:145px;border-radius:12px;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.6);z-index:9999;cursor:grab;touch-action:none;background:#000;";
+                pip.style.cssText = "position:fixed;width:90px;height:145px;border-radius:12px;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.6);z-index:99999;cursor:grab;touch-action:none;background:#000;";
                 setTimeout(function() {
+                    const pipHeight = 145, topGap = 12, bottomGap = window.innerWidth <= 899 ? 84 : 12;
+                    let desiredTop;
                     const ref = wrap || document.querySelector("#mainImage");
                     if (ref) {
                         const r = ref.getBoundingClientRect();
-                        pip.style.top = r.top + r.height / 2 - 145 / 2 + 40 + "px";
+                        desiredTop = r.top + r.height / 2 - pipHeight / 2 + 40;
                     } else {
-                        pip.style.top = window.innerHeight / 2 - 32 + "px";
+                        desiredTop = window.innerHeight / 2 - 32;
                     }
+                    pip.style.top = Math.max(topGap, Math.min(desiredTop, window.innerHeight - pipHeight - bottomGap)) + "px";
                     pip.style.right = "12px";
                     pip.style.left = "auto";
                 }, 200);
@@ -1542,8 +1545,9 @@ document.addEventListener("DOMContentLoaded", async function() {
                     const pt = e.touches ? e.touches[0] : e;
                     const dx = pt.clientX - sx, dy = pt.clientY - sy;
                     if (Math.abs(dx) > 4 || Math.abs(dy) > 4) moved = true;
+                    const bottomGap = window.innerWidth <= 899 ? 84 : 0;
                     pip.style.left = Math.max(0, Math.min(ox + dx, window.innerWidth - pip.offsetWidth)) + "px";
-                    pip.style.top = Math.max(0, Math.min(oy + dy, window.innerHeight - pip.offsetHeight)) + "px";
+                    pip.style.top = Math.max(0, Math.min(oy + dy, window.innerHeight - pip.offsetHeight - bottomGap)) + "px";
                     pip.style.right = "auto";
                 }
                 function onEnd() {
