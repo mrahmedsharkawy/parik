@@ -15,6 +15,7 @@ function x2VisitorAreaFallback() {
 }
 
 let sideMenu, subDisplay, products = [], categories = [], _priorityProductImages = 0;
+const CATEGORIES_SESSION_CACHE_KEY = "x2_cats_ss_v1", CATEGORIES_LOCAL_CACHE_KEY = "x2_categories_cache_v1", CATEGORIES_CACHE_TTL = 18e5;
 
 "function" != typeof window.setPageTitleI18n && (window.setPageTitleI18n = function(titleAr, titleEn) {
     try {
@@ -26,23 +27,102 @@ let sideMenu, subDisplay, products = [], categories = [], _priorityProductImages
 }), window._videoPosterCache || (window._videoPosterCache = new Map);
 
 export async function fetchCategories() {
+    for (const source of [ [ sessionStorage, CATEGORIES_SESSION_CACHE_KEY ], [ localStorage, CATEGORIES_LOCAL_CACHE_KEY ] ]) try {
+        const obj = JSON.parse(source[0].getItem(source[1]) || "null");
+        if (obj && Array.isArray(obj.data) && obj.data.length && Date.now() - obj.ts < CATEGORIES_CACHE_TTL) return categories = obj.data, 
+        categories;
+    } catch (e) {}
     const paths = [ "/java/Categories.json", "/java/Categories.json", location.origin + "/java/Categories.json" ];
     for (const path of paths) try {
         const res = await fetch(path, {
-            cache: "no-store"
+            cache: "default"
         });
-        if (res.ok) return categories = await res.json(), categories;
+        if (res.ok) {
+            categories = await res.json();
+            const payload = JSON.stringify({
+                ts: Date.now(),
+                data: categories
+            });
+            try {
+                sessionStorage.setItem(CATEGORIES_SESSION_CACHE_KEY, payload);
+            } catch (e) {}
+            try {
+                localStorage.setItem(CATEGORIES_LOCAL_CACHE_KEY, payload);
+            } catch (e) {}
+            return categories;
+        }
     } catch (_) {}
     throw new Error("Categories.json not found!");
 }
 
-let _productsCache = null, _productsCacheTs = 0;
+let _productsCache = null, _productsCacheTs = 0, _productsRefreshPromise = null;
+const PRODUCTS_SESSION_CACHE_KEY = "x2_prods_ss_v2", PRODUCTS_LOCAL_CACHE_KEY = "x2_products_cache_v1", PRODUCTS_LOCAL_CACHE_TTL = 18e5;
+
+function mapSupabaseProducts(sbProds) {
+    return sbProds.map(function(p) {
+        const imgs = [];
+        return p.image && imgs.push(p.image), Array.isArray(p.gallery) && p.gallery.forEach(function(g) {
+            g && g !== p.image && imgs.push(g);
+        }), {
+            id: p.id,
+            name: {
+                ar: p.name_ar || "",
+                en: p.name_en || p.name_ar || ""
+            },
+            desc: p.description_ar || "",
+            img: imgs.length ? imgs : void 0,
+            category: Array.isArray(p.categories) ? p.categories : p.categories ? [ p.categories ] : [],
+            price: p.price,
+            oldPrice: p.old_price || void 0,
+            stock: p.stock || void 0,
+            rating: p.rating || void 0,
+            ratingCount: p.ratingCount || void 0,
+            timerEnd: p.timer_end || void 0,
+            featured: p.featured || !1
+        };
+    });
+}
+
+function saveProductsCache(data, ts) {
+    if (!Array.isArray(data) || !data.length) return;
+    const payload = JSON.stringify({
+        ts: ts || Date.now(),
+        data: data
+    });
+    try {
+        sessionStorage.setItem(PRODUCTS_SESSION_CACHE_KEY, payload);
+    } catch (e) {}
+    try {
+        localStorage.setItem(PRODUCTS_LOCAL_CACHE_KEY, payload);
+    } catch (e) {}
+}
+
+function readProductsCache(storage, key, invalidateTs, maxAge) {
+    try {
+        const raw = storage.getItem(key);
+        if (!raw) return null;
+        const obj = JSON.parse(raw), age = Date.now() - Number(obj.ts || 0);
+        if (Array.isArray(obj.data) && obj.data.length && obj.ts > invalidateTs && age < maxAge) return obj;
+    } catch (e) {}
+    return null;
+}
+
+function refreshProductsInBackground() {
+    if (_productsRefreshPromise || !(window.Supabase && window.Supabase.Products)) return;
+    _productsRefreshPromise = window.Supabase.Products.getAll(100).then(function(sbProds) {
+        if (!Array.isArray(sbProds) || !sbProds.length) return;
+        const mapped = mapSupabaseProducts(sbProds), ts = Date.now();
+        _productsCache = mapped, _productsCacheTs = ts, saveProductsCache(mapped, ts);
+    }).catch(function() {}).finally(function() {
+        _productsRefreshPromise = null;
+    });
+}
 
 "undefined" != typeof window && window.addEventListener("storage", function(e) {
     if ("x2_products_updated" === e.key) {
         _productsCache = null, _productsCacheTs = 0;
         try {
-            sessionStorage.removeItem("x2_prods_ss_v2");
+            sessionStorage.removeItem(PRODUCTS_SESSION_CACHE_KEY), localStorage.removeItem(PRODUCTS_LOCAL_CACHE_KEY);
         } catch (err) {}
     }
 });
@@ -55,49 +135,25 @@ export async function fetchProducts() {
     if (_productsCache && _productsCache.length > 0 && (!_productsCacheTs || _productsCacheTs > invalidateTs)) return _productsCache;
     let staleCache = null;
     try {
-        const cached = sessionStorage.getItem("x2_prods_ss_v2");
-        if (cached) {
-            const obj = JSON.parse(cached), isFresh = Date.now() - obj.ts < 6e5, notInvalidated = obj.ts > invalidateTs;
-            if (isFresh && notInvalidated) return _productsCache = obj.data, _productsCacheTs = obj.ts, 
-            _productsCache;
-            staleCache = obj.data;
-        }
+        const obj = readProductsCache(sessionStorage, PRODUCTS_SESSION_CACHE_KEY, invalidateTs, 6e5);
+        if (obj) return _productsCache = obj.data, _productsCacheTs = obj.ts, _productsCache;
+        const cached = sessionStorage.getItem(PRODUCTS_SESSION_CACHE_KEY);
+        cached && (staleCache = JSON.parse(cached).data);
+    } catch (e) {}
+    try {
+        const obj = readProductsCache(localStorage, PRODUCTS_LOCAL_CACHE_KEY, invalidateTs, PRODUCTS_LOCAL_CACHE_TTL);
+        if (obj) return _productsCache = obj.data, _productsCacheTs = obj.ts, saveProductsCache(_productsCache, _productsCacheTs), 
+        refreshProductsInBackground(), _productsCache;
     } catch (e) {}
     try {
         if (window.Supabase && window.Supabase.Products) {
             const sbProds = await window.Supabase.Products.getAll(100);
             if (Array.isArray(sbProds)) {
-                if (_productsCache = sbProds.map(function(p) {
-                    const imgs = [];
-                    return p.image && imgs.push(p.image), Array.isArray(p.gallery) && p.gallery.forEach(function(g) {
-                        g && g !== p.image && imgs.push(g);
-                    }), {
-                        id: p.id,
-                        name: {
-                            ar: p.name_ar || "",
-                            en: p.name_en || p.name_ar || ""
-                        },
-                        desc: p.description_ar || "",
-                        img: imgs.length ? imgs : void 0,
-                        category: Array.isArray(p.categories) ? p.categories : p.categories ? [ p.categories ] : [],
-                        price: p.price,
-                        oldPrice: p.old_price || void 0,
-                        stock: p.stock || void 0,
-                        rating: p.rating || void 0,
-                        ratingCount: p.ratingCount || void 0,
-                        timerEnd: p.timer_end || void 0,
-                        featured: p.featured || !1
-                    };
-                }), _productsCache.length > 0) {
+                if (_productsCache = mapSupabaseProducts(sbProds), _productsCache.length > 0) {
                     _productsCacheTs = Date.now();
-                    try {
-                        sessionStorage.setItem("x2_prods_ss_v2", JSON.stringify({
-                            ts: _productsCacheTs,
-                            data: _productsCache
-                        }));
-                    } catch (e) {}
+                    saveProductsCache(_productsCache, _productsCacheTs);
                 } else try {
-                    sessionStorage.removeItem("x2_prods_ss_v2");
+                    sessionStorage.removeItem(PRODUCTS_SESSION_CACHE_KEY), localStorage.removeItem(PRODUCTS_LOCAL_CACHE_KEY);
                 } catch (e) {}
                 return _productsCache;
             }
@@ -113,10 +169,7 @@ export async function fetchProducts() {
             if (Array.isArray(parsed) && parsed.length > 0) {
                 _productsCache = parsed;
                 try {
-                    sessionStorage.setItem("x2_prods_ss_v2", JSON.stringify({
-                        ts: Date.now(),
-                        data: _productsCache
-                    }));
+                    saveProductsCache(_productsCache, Date.now());
                 } catch (e) {}
                 return _productsCache;
             }
