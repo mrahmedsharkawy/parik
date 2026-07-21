@@ -1442,6 +1442,15 @@ document.addEventListener("DOMContentLoaded", async function() {
         (function() {
             const fvSrc = explicitVideos[0] || media.find(m => m.type === "video")?.src;
             if (!fvSrc) return;
+            function optimizeCloudinaryVideoUrl(src, width) {
+                try {
+                    if (!/res\.cloudinary\.com\/[^/]+\/video\/upload\/v\d+\//.test(String(src || ""))) return src;
+                    return String(src).replace("/video/upload/", `/video/upload/q_auto,w_${width || 360},c_limit/`);
+                } catch (e) {
+                    return src;
+                }
+            }
+            const miniVideoSrc = optimizeCloudinaryVideoUrl(fvSrc, 360), fullVideoSrc = optimizeCloudinaryVideoUrl(fvSrc, 720);
             const startMiniVideo = function() {
                 const wrap = mainWrap || document.querySelector("#mainImage")?.parentElement;
                 const pip = document.createElement("div");
@@ -1472,13 +1481,12 @@ document.addEventListener("DOMContentLoaded", async function() {
                 vid.setAttribute("playsinline", "");
                 vid.setAttribute("webkit-playsinline", "");
                 vid.preload = "auto";
-                vid.src = fvSrc;
                 let videoRetryDone = false;
                 vid.addEventListener("error", function() {
-                    if (videoRetryDone || !fvSrc) return;
+                    if (videoRetryDone || !miniVideoSrc) return;
                     videoRetryDone = true;
-                    const separator = fvSrc.includes("?") ? "&" : "?";
-                    vid.src = fvSrc + separator + "retry=" + Date.now();
+                    const separator = miniVideoSrc.includes("?") ? "&" : "?";
+                    vid.src = miniVideoSrc + separator + "retry=" + Date.now();
                     try {
                         vid.load();
                     } catch (e) {}
@@ -1502,6 +1510,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                 document.addEventListener("click", playMiniVideo, {
                     once: true
                 });
+                vid.src = miniVideoSrc;
                 vid.style.cssText = "width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;";
                 const closeBtn = document.createElement("button");
                 closeBtn.innerHTML = "&times;";
@@ -1520,7 +1529,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                     e.preventDefault();
                     try {
                         const fv = document.createElement("video");
-                        fv.src = fvSrc;
+                        fv.src = fullVideoSrc;
                         fv.controls = true;
                         fv.autoplay = true;
                         fv.playsInline = true;
