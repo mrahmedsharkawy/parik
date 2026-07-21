@@ -211,6 +211,21 @@ function normalizeAssetUrl(u) {
     }
 }
 
+function optimizeSupabaseImageUrl(src, width, height) {
+    try {
+        if (!src || !/\/storage\/v1\/object\/public\/products\//.test(String(src)) || /\/storage\/v1\/render\/image\//.test(String(src))) return src;
+        const url = new URL(src, location.origin);
+        url.pathname = url.pathname.replace("/storage/v1/object/public/", "/storage/v1/render/image/public/");
+        url.searchParams.set("width", String(width || 240));
+        url.searchParams.set("height", String(height || width || 240));
+        url.searchParams.set("resize", "cover");
+        url.searchParams.set("quality", "70");
+        return url.href;
+    } catch (e) {
+        return src;
+    }
+}
+
 export function createProductCard(prod) {
     window.createProductCard || (window.createProductCard = createProductCard);
     const card = document.createElement("div");
@@ -295,7 +310,7 @@ export function createProductCard(prod) {
         im.style.height = "230px";
         im.style.objectFit = "cover";
         im.style.backgroundColor = "#f0f0f0";
-        im.src = normalizeAssetUrl(firstImage || "");
+        im.src = optimizeSupabaseImageUrl(normalizeAssetUrl(firstImage || ""), 230, 230);
         im.onerror = function() {
             this.src = "assets/logo.png";
         };

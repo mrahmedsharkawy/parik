@@ -643,9 +643,24 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     return '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(empty);
   }
 
+  function optimizeSupabaseImageUrl(src, width, height) {
+    try {
+      if (!src || !/\/storage\/v1\/object\/public\/products\//.test(String(src)) || /\/storage\/v1\/render\/image\//.test(String(src))) return src;
+      const url = new URL(src, location.origin);
+      url.pathname = url.pathname.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/');
+      url.searchParams.set('width', String(width || 180));
+      url.searchParams.set('height', String(height || width || 180));
+      url.searchParams.set('resize', 'cover');
+      url.searchParams.set('quality', '70');
+      return url.href;
+    } catch(e) {
+      return src;
+    }
+  }
+
   function renderCard(p, idx) {
     const name = (p?.name?.ar || p?.name || 'منتج').toString();
-    const img  = (Array.isArray(p.img) ? p.img[0] : p.img) || 'assets/logo.png';
+    const img  = optimizeSupabaseImageUrl((Array.isArray(p.img) ? p.img[0] : p.img) || 'assets/logo.png', 180, 180);
     const langParam = (localStorage.getItem('lang') || document.documentElement.lang) === 'en' ? '&lang=en' : '';
     const link = p.id ? `product.html?id=${encodeURIComponent(p.id)}${langParam}` : 'product.html';
     const pr = parseFloat(p.price), old = parseFloat(p.oldPrice);
