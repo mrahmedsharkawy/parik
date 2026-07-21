@@ -243,7 +243,7 @@ export function createProductCard(prod) {
             hist = hist.filter(h => String(h.id) !== String(prod.id)), hist.unshift(entry), 
             hist.length > 20 && (hist = hist.slice(0, 20)), localStorage.setItem(HIST_KEY, JSON.stringify(hist));
         } catch (e) {}
-        window.location.href = `product.html?id=${prod.id}${(localStorage.getItem("lang") || document.documentElement.lang) === "en" ? "&lang=en" : ""}`;
+        window.location.href = `/product/${encodeURIComponent(prod.id)}${(localStorage.getItem("lang") || document.documentElement.lang) === "en" ? "?lang=en" : ""}`;
     });
     const lang = localStorage.getItem("lang") || document.documentElement.lang || document.documentElement.getAttribute("lang") || "ar";
     function getTranslated(val) {
@@ -1034,7 +1034,7 @@ document.addEventListener("DOMContentLoaded", async function() {
     document.head.appendChild(style);
 }), function() {
     if (!document.getElementById("mainImage")) return;
-    const params = new URLSearchParams(window.location.search), productId = Number(params.get("id"));
+    const params = new URLSearchParams(window.location.search), pathParts = window.location.pathname.split("/").filter(Boolean), productPathIndex = pathParts.findIndex(part => "product" === part.toLowerCase() || "product.html" === part.toLowerCase()), productId = Number(params.get("id") || (productPathIndex >= 0 ? pathParts[productPathIndex + 1] : ""));
     if (!productId) return;
     const lang = localStorage.getItem("lang") || document.documentElement.lang || document.documentElement.getAttribute("lang") || "ar";
     function getT(val) {
@@ -1227,7 +1227,7 @@ document.addEventListener("DOMContentLoaded", async function() {
             } catch (e) {}
         }
         document.querySelector(".product-page button.buy")?.addEventListener("click", () => {
-            addToCart(), window.location.href = "Cart.html";
+            addToCart(), window.location.href = "/Cart";
         });
         const cartBtn = document.querySelector(".product-page button.cart");
         cartBtn && cartBtn.addEventListener("click", () => {
@@ -1296,7 +1296,7 @@ document.addEventListener("DOMContentLoaded", async function() {
             } catch (err) {
                 console.warn("Supabase order save failed:", err);
             }
-            const productUrl = window.location.href;
+            const productUrl = `https://bariqgifts.com/product/${encodeURIComponent(p.id || productId)}`;
             let customerName = profile.name || "", customerPhone = profile.phone || "", customerEmail = profile.email || "", customerAddress = "";
             try {
                 const prof = JSON.parse(localStorage.getItem("x2_profile") || "{}");
@@ -1373,7 +1373,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                 sessionStorage.removeItem("x2_after_wa");
                 document.removeEventListener("visibilitychange", handleReturn);
                 clearTimeout(accountReturnTimer);
-                setTimeout(() => window.location.replace(`/account.html?from=whatsapp&t=${Date.now()}`), 150);
+                setTimeout(() => window.location.replace(`/account?from=whatsapp&t=${Date.now()}`), 150);
             };
             function handleReturn() {
                 if (!document.hidden) returnToAccount();
@@ -1460,10 +1460,16 @@ document.addEventListener("DOMContentLoaded", async function() {
                 }, 200);
                 const vid = document.createElement("video");
                 vid.muted = true;
+                vid.defaultMuted = true;
                 vid.loop = true;
                 vid.autoplay = true;
                 vid.playsInline = true;
+                vid.setAttribute("muted", "");
+                vid.setAttribute("autoplay", "");
+                vid.setAttribute("playsinline", "");
+                vid.setAttribute("webkit-playsinline", "");
                 vid.preload = "auto";
+                vid.src = fvSrc;
                 vid.style.cssText = "width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;";
                 const closeBtn = document.createElement("button");
                 closeBtn.innerHTML = "&times;";
@@ -1512,7 +1518,9 @@ document.addEventListener("DOMContentLoaded", async function() {
                 pip.appendChild(closeBtn);
                 document.body.appendChild(pip);
                 setTimeout(function() {
-                    vid.src = fvSrc;
+                    try {
+                        vid.load();
+                    } catch (e) {}
                     vid.play().catch(function() {});
                 }, 120);
                 let ox = 0, oy = 0, sx = 0, sy = 0, dragging = false, moved = false;
@@ -1553,10 +1561,10 @@ document.addEventListener("DOMContentLoaded", async function() {
                 document.addEventListener("mouseup", onEnd);
                 document.addEventListener("touchend", onEnd);
             };
-            (window.requestIdleCallback || function(cb) {
-                return setTimeout(cb, 650);
+            (window.requestIdleCallback && !/iPhone|iPad|iPod|Safari/i.test(navigator.userAgent) ? window.requestIdleCallback : function(cb) {
+                return setTimeout(cb, 80);
             })(function() {
-                setTimeout(startMiniVideo, 250);
+                setTimeout(startMiniVideo, /iPhone|iPad|iPod/i.test(navigator.userAgent) ? 80 : 250);
             }, {
                 timeout: 1200
             });

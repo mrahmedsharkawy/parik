@@ -1,5 +1,6 @@
-document.addEventListener('DOMContentLoaded', async () => {
-  if (!window.matchMedia('(max-width: 899px)').matches) return;
+async function initMobileNav() {
+  const isMobileViewport = window.matchMedia('(max-width: 899px)').matches || window.innerWidth <= 899 || document.documentElement.clientWidth <= 899;
+  if (!isMobileViewport) return;
   if (document.querySelector('.mobile-nav')) return;
 
   const scriptEl = document.currentScript || Array.from(document.scripts).find(s => s.src && /\/mobile-nav-bar\/main-navbar(?:\.min)?\.js(?:\?|$)/.test(s.src));
@@ -131,4 +132,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch (err) {
     console.warn('mobile-nav loader error:', err);
   }
-});
+}
+
+document.addEventListener('DOMContentLoaded', initMobileNav);
+window.addEventListener('resize', initMobileNav, { passive: true });
+window.addEventListener('orientationchange', initMobileNav, { passive: true });

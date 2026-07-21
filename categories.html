@@ -870,8 +870,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       // fallback: كارت بسيط بنفس CSS المتجر
       const name = (typeof p.name==='object'?(p.name.ar||p.name.en):(p.name||'منتج'));
       const img  = (Array.isArray(p.img)?p.img[0]:p.img)||'assets/logo.png';
-      const langParam = (localStorage.getItem('lang') || document.documentElement.lang) === 'en' ? '&lang=en' : '';
-      const link = p.id ? `product.html?id=${encodeURIComponent(p.id)}${langParam}` : '#';
+      const langParam = (localStorage.getItem('lang') || document.documentElement.lang) === 'en' ? '?lang=en' : '';
+      const link = p.id ? `/product/${encodeURIComponent(p.id)}${langParam}` : '#';
       const price = parseFloat(p.price)||0;
       const oldPrice = parseFloat(p.oldPrice)||0;
       const sym = {AED:'د.إ',USD:'$',SAR:'ر.س',EGP:'ج.م'}[localStorage.getItem('currency')||'AED']||'د.إ';

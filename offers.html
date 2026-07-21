@@ -588,8 +588,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const discount = oldPrice > price ? Math.round(((oldPrice - price) / oldPrice) * 100) : 0;
     const saved    = (oldPrice - price).toFixed(2);
     const img      = Array.isArray(p.img) ? p.img[0] : (p.img || 'assets/logo.png');
-    const langParam = (localStorage.getItem('lang') || document.documentElement.lang) === 'en' ? '&lang=en' : '';
-    const link     = p.id ? `product.html?id=${encodeURIComponent(p.id)}${langParam}` : 'product.html';
+    const langParam = (localStorage.getItem('lang') || document.documentElement.lang) === 'en' ? '?lang=en' : '';
+    const link     = p.id ? `/product/${encodeURIComponent(p.id)}${langParam}` : '/product';
     const sym      = getCurrSym();
 
     return `
