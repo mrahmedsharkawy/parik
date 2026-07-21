@@ -1,10 +1,16 @@
 alter table public.user_sync enable row level security;
 
-delete from public.user_sync a
-using public.user_sync b
-where a.ctid < b.ctid
-  and a.user_email = b.user_email
-  and a.data_type = b.data_type;
+delete from public.user_sync s
+using (
+  select id,
+    row_number() over (
+      partition by lower(trim(user_email)), data_type
+      order by updated_at desc nulls last, id desc
+    ) as rn
+  from public.user_sync
+) ranked
+where s.id = ranked.id
+  and ranked.rn > 1;
 
 create unique index if not exists user_sync_email_type_uidx
 on public.user_sync (user_email, data_type);
