@@ -3143,8 +3143,10 @@ async function renderVisitorsStats() {
   const renderRows = function(rows) {
     if (!Array.isArray(rows)) throw new Error('no data');
     rows = rows.filter(isUsefulVisitor);
+    rows.sort((a,b) => new Date(b.visited_at || b.created_at || b.date || 0) - new Date(a.visited_at || a.created_at || a.date || 0));
     const today = new Date().toDateString();
-    const todayVisits = rows.filter(v => new Date(v.visited_at).toDateString() === today);
+    const visitDate = v => v.visited_at || v.created_at || v.date || '';
+    const todayVisits = rows.filter(v => new Date(visitDate(v)).toDateString() === today);
     if (todayEl) todayEl.textContent = todayVisits.length;
     if (allEl)   allEl.textContent   = rows.length;
     if (locEl) {
@@ -3162,12 +3164,17 @@ async function renderVisitorsStats() {
     }
   };
   try {
-    let res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors?select=visited_at,page,city,country,user_agent&order=visited_at.desc&limit=500', { headers });
-    let rows = await res.json();
-    if (!res.ok || !Array.isArray(rows)) {
-      res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors?select=visited_at,page,city,country&order=visited_at.desc&limit=500', { headers });
-      rows = await res.json();
+    const urls = [
+      'https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors?select=visited_at,created_at,page,city,country,user_agent&limit=500',
+      'https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors?select=visited_at,created_at,page,city,country&limit=500'
+    ];
+    let rows = null;
+    for (const url of urls) {
+      const res = await fetch(url, { headers });
+      const data = await res.json().catch(() => null);
+      if (res.ok && Array.isArray(data)) { rows = data; break; }
     }
+    if (!Array.isArray(rows)) throw new Error('no data');
     renderRows(rows);
   } catch(e) {
     const cached = getVisitors().filter(isUsefulVisitor);
@@ -3280,7 +3287,7 @@ function emOrderMatchesWidget(o, filter){
 function emVisitorMatchesWidget(v, filter){
   const area = visitorArea(v);
   const platform = EM_PLATFORM_LABELS[emGuessPlatform(v)]||emGuessPlatform(v);
-  return emPeriodMatch(v.visited_at||v.date, filter.period) && (!filter.area || area === filter.area) && (!filter.platform || platform === filter.platform);
+  return emPeriodMatch(v.visited_at||v.created_at||v.date, filter.period) && (!filter.area || area === filter.area) && (!filter.platform || platform === filter.platform);
 }
 function emAdMatchesWidget(a, filter){
   const platform = EM_PLATFORM_LABELS[a.platform]||a.platform;
@@ -3292,13 +3299,15 @@ async function emFetchVisitors(){
   try {
     const adminToken = await getValidAdminToken() || ANON;
     const headers = { apikey: ANON, Authorization: 'Bearer ' + adminToken };
-    let res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors?select=visited_at,page,city,country,referrer,source,utm_source&order=visited_at.desc&limit=1000', { headers });
-    let rows = await res.json();
-    if(!Array.isArray(rows)) {
-      res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors?select=visited_at,page,city,country&order=visited_at.desc&limit=1000', { headers });
-      rows = await res.json();
+    const urls = [
+      'https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors?select=visited_at,created_at,page,city,country,referrer,source,utm_source&limit=1000',
+      'https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors?select=visited_at,created_at,page,city,country&limit=1000'
+    ];
+    for (const url of urls) {
+      const res = await fetch(url, { headers });
+      const rows = await res.json().catch(() => null);
+      if(res.ok && Array.isArray(rows)) return rows.sort((a,b) => new Date(b.visited_at || b.created_at || b.date || 0) - new Date(a.visited_at || a.created_at || a.date || 0));
     }
-    if(Array.isArray(rows)) return rows;
   } catch(e) {}
   return cached;
 }
