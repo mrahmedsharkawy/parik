@@ -1017,14 +1017,17 @@ document.addEventListener("DOMContentLoaded", async function() {
         }(p.currency || localStorage.getItem("currency") || ("en" === lang ? "USD" : "AED")), _arr = v => Array.isArray(v) ? v.filter(Boolean) : v ? [ v ] : [], _isVideo = s => /\.(mp4|webm|ogg|ogv|mov|m4v)(\?|#|$)/i.test(String(s || ""));
         let allSources = _arr(p.images);
         allSources.length || (allSources = _arr(p.img)), allSources.length || (allSources = _arr(p.image));
-        const explicitVideos = [ ..._arr(p.videos), ..._arr(p.video), ...allSources.filter(_isVideo) ], imgs = allSources.filter(s => !_isVideo(s)), media = imgs.map(src => ({
+        const explicitVideos = [ ..._arr(p.videos), ..._arr(p.video), ...allSources.filter(_isVideo) ], imgs = allSources.filter(s => !_isVideo(s)), media = [ ...explicitVideos.map(src => ({
+            type: "video",
+            src: src
+        })), ...imgs.map(src => ({
             type: "image",
             src: src
-        })), mainImg = document.getElementById("mainImage"), mainWrap = mainImg ? mainImg.parentElement : null;
+        })) ], mainImg = document.getElementById("mainImage"), mainWrap = mainImg ? mainImg.parentElement : null;
         let mainVid = null;
         function showMedia(item) {
             if (item) if ("video" === item.type) mainImg && (mainImg.style.display = "none"), 
-            mainVid && (mainVid.src = item.src, mainVid.style.display = "block"); else {
+            mainVid && (mainVid.src !== item.src && (mainVid.src = item.src), mainVid.style.display = "block", mainVid.play().catch(function() {})); else {
                 if (mainVid) {
                     try {
                         mainVid.pause();
@@ -1035,7 +1038,7 @@ document.addEventListener("DOMContentLoaded", async function() {
             }
         }
         mainWrap && (mainVid = document.createElement("video"), mainVid.id = "mainVideo", 
-        mainVid.controls = !0, mainVid.playsInline = !0, mainVid.style.width = "100%", mainVid.style.height = "100%", 
+        mainVid.controls = !0, mainVid.muted = !0, mainVid.autoplay = !0, mainVid.loop = !0, mainVid.preload = "auto", mainVid.playsInline = !0, mainVid.style.width = "100%", mainVid.style.height = "100%", 
         mainVid.style.objectFit = "cover", mainVid.style.display = "none", mainWrap.appendChild(mainVid)), 
         media[0] && showMedia(media[0]);
         const thumbs = document.getElementById("thumbs");
@@ -1066,7 +1069,8 @@ document.addEventListener("DOMContentLoaded", async function() {
                 if (slide.style.cssText = "flex:0 0 100%;scroll-snap-align:center;width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;", 
                 "video" === item.type) {
                     const vid = document.createElement("video");
-                    vid.src = item.src, vid.controls = !0, vid.playsInline = !0, vid.style.cssText = "width:100%;height:100%;object-fit:cover;", 
+                    vid.src = item.src, vid.controls = !0, vid.muted = !0, vid.autoplay = 0 === i, vid.loop = !0, vid.preload = "auto", vid.playsInline = !0, vid.style.cssText = "width:100%;height:100%;object-fit:cover;", 
+                    0 === i && setTimeout(() => vid.play().catch(function() {}), 120), 
                     slide.appendChild(vid);
                 } else {
                     const img = document.createElement("img");
@@ -1373,6 +1377,7 @@ document.addEventListener("DOMContentLoaded", async function() {
         }
         (function() {
             const fvSrc = explicitVideos[0] || media.find(m => m.type === "video")?.src;
+            if (media[0] && "video" === media[0].type) return;
             if (!fvSrc) return;
             const startMiniVideo = function() {
                 const wrap = mainWrap || document.querySelector("#mainImage")?.parentElement;
