@@ -2994,7 +2994,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     if (m) { m.style.display = 'none'; }
   };
   window.doLogout = function() {
-    const keysToRemove = ['x2_profile','x2_token','x2_users','x2_orders','x2_cart','x2_cashback','x2_orders_synced','x2_logged','x2_coupon_applied','x2_coupon_code','x2_order_counter'];
+    const keysToRemove = ['x2_profile','x2_token','x2_orders','x2_cart','x2_cashback','x2_orders_synced','x2_logged','x2_coupon_applied','x2_coupon_code','x2_order_counter'];
     keysToRemove.forEach(k => localStorage.removeItem(k));
     sessionStorage.clear();
     window.location.href = 'login.html?logout=1';
