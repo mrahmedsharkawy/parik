@@ -499,7 +499,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </div><!-- .page -->
 
 <script src="/java/supabase.min.js" defer></script>
-<script src="/java/main.min.js?v=121" defer></script>
+<script src="/java/main.min.js?v=122" defer></script>
 <script src="/translations/translation.min.js" defer></script>
 <script src="/mobile-nav-bar/main-navbar.min.js" defer></script>
 <script src="/java/push-welcome.js" defer></script>
@@ -512,6 +512,27 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   const CART_KEY     = 'x2_cart';
   let allDeals  = [];
   let sortKey   = 'discount';
+  const lang = (localStorage.getItem('lang') || document.documentElement.lang || 'ar') === 'en' ? 'en' : 'ar';
+  const tr = {
+    product: lang === 'en' ? 'Product' : 'منتج',
+    save: lang === 'en' ? 'Save' : 'وفّر',
+    addToCart: lang === 'en' ? '🛒 Add to Cart' : '🛒 أضف للسلة',
+    added: lang === 'en' ? '✅ Added' : '✅ تمت الإضافة',
+    noResults: lang === 'en' ? 'No results' : 'لا توجد نتائج',
+    noDeals: lang === 'en' ? 'No deals right now' : 'لا توجد عروض حالياً',
+    tryAnother: lang === 'en' ? 'Try another search term' : 'جرّب كلمة بحث أخرى',
+    soon: lang === 'en' ? 'New deals will be added soon' : 'سنضيف عروضاً قريباً'
+  };
+  function getName(product) {
+    const raw = product?.name;
+    return (raw && typeof raw === 'object' ? (raw[lang] || raw.ar || raw.en) : raw || tr.product).toString();
+  }
+  if (lang === 'en') {
+    const title = document.querySelector('.fsh-title');
+    if (title) title.innerHTML = '<span class="fire-big">🔥</span> Exclusive <span class="gold">Flash</span> Deals <span class="fire-big">🔥</span>';
+    const sectionTitle = document.querySelector('.offers-section-title h2');
+    if (sectionTitle) sectionTitle.textContent = '🔥 All discounted products';
+  }
 
   /* ---- helpers ---- */
   function getPriceValue(v) { const n = parseFloat(v); return isFinite(n) ? n : 0; }
@@ -554,7 +575,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     if (!product || !product.id) return;
     const cart = getCart();
     const img  = Array.isArray(product.img) ? product.img[0] : (product.img || 'assets/logo.png');
-    const name = (product?.name?.ar || product?.name || 'منتج').toString();
+    const name = getName(product);
     const idx  = cart.findIndex(i => String(i.id) === String(product.id));
     if (idx > -1) { cart[idx].qty = (Number(cart[idx].qty)||1) + 1; }
     else { cart.push({ id: product.id, title: name, price: getPriceValue(product.price), img, qty: 1 }); }
@@ -569,10 +590,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     addToCart(product);
     if (btn) {
       btn.classList.add('added');
-      btn.textContent = '✅ تمت الإضافة';
+      btn.textContent = tr.added;
       setTimeout(() => {
         btn.classList.remove('added');
-        btn.textContent = '🛒 أضف للسلة';
+        btn.textContent = tr.addToCart;
       }, 1400);
     }
   };
@@ -582,7 +603,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     /* حفظ المنتج في الخريطة عشان الزر يقدر يجيبه بالـ ID */
     offersMap[String(p.id)] = p;
 
-    const name     = (p?.name?.ar || p?.name || 'منتج').toString();
+    const name     = getName(p);
     const price    = getPriceValue(p.price);
     const oldPrice = getPriceValue(p.oldPrice);
     const discount = oldPrice > price ? Math.round(((oldPrice - price) / oldPrice) * 100) : 0;
@@ -604,7 +625,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             </div>
             <span class="product-old-price-striked">${oldPrice.toFixed(2)} ${sym}</span>
             <div class="product-timer-save-box" style="margin-top:4px;">
-              <span class="product-save-text">وفّر ${saved} ${sym}</span>
+              <span class="product-save-text">${tr.save} ${saved} ${sym}</span>
             </div>
           </div>
         </a>
@@ -612,7 +633,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           class="offer-add-cart-btn"
           data-offer-id="${p.id}"
           onclick="window.__addOfferById(this.dataset.offerId, this);"
-        >🛒 أضف للسلة</button>
+        >${tr.addToCart}</button>
       </div>`;
   }
 
@@ -650,7 +671,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     let deals = sortDeals(allDeals);
     if (searchQ) {
       deals = deals.filter(p => {
-        const name = (p?.name?.ar || p?.name || '').toString().toLowerCase();
+        const name = getName(p).toLowerCase();
         return name.includes(searchQ);
       });
     }
@@ -658,8 +679,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       grid.innerHTML = `
         <div class="offers-state">
           <div class="state-icon">🎁</div>
-          <h3>${searchQ ? 'لا توجد نتائج' : 'لا توجد عروض حالياً'}</h3>
-          <p>${searchQ ? 'جرّب كلمة بحث أخرى' : 'سنضيف عروضاً قريباً'}</p>
+          <h3>${searchQ ? tr.noResults : tr.noDeals}</h3>
+          <p>${searchQ ? tr.tryAnother : tr.soon}</p>
         </div>`;
       return;
     }
@@ -729,7 +750,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       document.getElementById('dealsCount').textContent = allDeals.length;
       if (allDeals.filter(p => p.oldPrice > p.price).length) {
         const maxDisc = Math.max(...allDeals.filter(p => p.oldPrice > p.price).map(p => Math.round(((p.oldPrice - p.price) / p.oldPrice) * 100)));
-        document.getElementById('maxDiscountPill').textContent = `حتى ${maxDisc}% خصم`;
+        document.getElementById('maxDiscountPill').textContent = lang === 'en' ? `Up to ${maxDisc}% OFF` : `حتى ${maxDisc}% خصم`;
       }
 
       renderGrid();
@@ -737,8 +758,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       grid.innerHTML = `
         <div class="offers-state">
           <div class="state-icon">⚠️</div>
-          <h3>تعذّر تحميل العروض</h3>
-          <p>تحقق من اتصالك وأعد المحاولة</p>
+          <h3>${lang === 'en' ? 'Could not load deals' : 'تعذّر تحميل العروض'}</h3>
+          <p>${lang === 'en' ? 'Check your connection and try again' : 'تحقق من اتصالك وأعد المحاولة'}</p>
         </div>`;
     }
   }

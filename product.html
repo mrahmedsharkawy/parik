@@ -441,12 +441,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <div class="rv-form">
     <h4 data-i18n="أضف تقييمك">أضف تقييمك</h4>
     <div class="row">
-      <span style="color:#152546;font-weight:600;font-size:.8rem">التقييم:</span>
+      <span style="color:#152546;font-weight:600;font-size:.8rem" data-i18n="التقييم:">التقييم:</span>
       <div class="rv-stars-pick" id="rvStars">
         <span data-v="5">★</span><span data-v="4">★</span><span data-v="3">★</span><span data-v="2">★</span><span data-v="1">★</span>
       </div>
     </div>
-    <textarea id="rvText" placeholder="اكتب تعليقك عن المنتج..."></textarea>
+    <textarea id="rvText" placeholder="اكتب تعليقك عن المنتج..." data-i18n-placeholder="اكتب تعليقك عن المنتج..."></textarea>
     <button class="submit" id="rvSubmit">إرسال التقييم</button>
   </div>
 </section>
@@ -467,6 +467,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
   let picked = 5;
   const SHOW = 3;
+  const lang = (localStorage.getItem('lang') || document.documentElement.lang || 'ar') === 'en' ? 'en' : 'ar';
+  const i18n = {
+    ar: { empty: 'لا توجد تعليقات بعد.', visitor: 'زائر', showAll: 'إظهار الكل', allReviews: 'كل التقييمات', writeFirst: 'اكتب تعليقك أولاً', sending: '...جارٍ الإرسال', sendError: 'خطأ في الإرسال، حاول مجدداً', submit: 'إرسال التقييم' },
+    en: { empty: 'No comments yet.', visitor: 'Guest', showAll: 'Show All', allReviews: 'All Reviews', writeFirst: 'Write your comment first', sending: 'Sending...', sendError: 'Could not submit, please try again', submit: 'Submit Review' }
+  };
+  const tr = key => (i18n[lang] && i18n[lang][key]) || i18n.ar[key] || key;
 
   const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
@@ -482,10 +488,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   function starsStr(n){ n=Math.round(n)||0; return '★'.repeat(n)+'☆'.repeat(5-n); }
 
   function rvItemHtml(r){
-    const dt = r.date ? new Date(r.date).toLocaleDateString('ar') : '';
+    const dt = r.date ? new Date(r.date).toLocaleDateString(lang === 'en' ? 'en' : 'ar') : '';
     return `<div class="rv-item">
       <div class="top">
-        <span class="meta"><span class="who">${esc(r.name)||'زائر'}</span><span class="dt">${dt}</span></span>
+        <span class="meta"><span class="who">${esc(r.name)||tr('visitor')}</span><span class="dt">${dt}</span></span>
         <span class="st">${starsStr(r.rating)}</span>
       </div>
       <div class="txt">${esc(r.text)}</div>
@@ -506,16 +512,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   function renderList(){
     const list = document.getElementById('rvList');
     const btn = document.getElementById('rvShowMore');
-    if(!allReviews.length){ list.innerHTML='<div class="rv-empty">لا توجد تعليقات بعد.</div>'; btn.style.display='none'; return; }
+    if(!allReviews.length){ list.innerHTML='<div class="rv-empty">'+tr('empty')+'</div>'; btn.style.display='none'; return; }
     list.innerHTML = allReviews.slice(0,SHOW).map(rvItemHtml).join('');
     btn.style.display = allReviews.length > SHOW ? 'block' : 'none';
-    btn.textContent = '⬇ إظهار الكل (' + allReviews.length + ')';
+    btn.textContent = '⬇ ' + tr('showAll') + ' (' + allReviews.length + ')';
   }
 
   document.getElementById('rvShowMore').addEventListener('click',function(){
     const bg = document.createElement('div'); bg.className='rv-modal-bg';
     bg.innerHTML = `<div class="rv-modal">
-      <div class="rv-modal-head"><h4>كل التقييمات (${allReviews.length})</h4><button class="rv-modal-close">✕</button></div>
+      <div class="rv-modal-head"><h4>${tr('allReviews')} (${allReviews.length})</h4><button class="rv-modal-close">✕</button></div>
       <div class="rv-modal-body">${allReviews.map(rvItemHtml).join('')}</div>
     </div>`;
     document.body.appendChild(bg);
@@ -551,10 +557,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   document.getElementById('rvSubmit').addEventListener('click', async ()=>{
     const text=document.getElementById('rvText').value.trim();
-    if(!text){ alert('اكتب تعليقك أولاً'); return; }
-    let name='زائر'; try{ const p=JSON.parse(localStorage.getItem('x2_profile')||'{}'); if(p.name) name=p.name; }catch(e){}
+    if(!text){ alert(tr('writeFirst')); return; }
+    let name=tr('visitor'); try{ const p=JSON.parse(localStorage.getItem('x2_profile')||'{}'); if(p.name) name=p.name; }catch(e){}
     const btn = document.getElementById('rvSubmit');
-    btn.disabled = true; btn.textContent = '...جارٍ الإرسال';
+    btn.disabled = true; btn.textContent = tr('sending');
     try{
       const res = await fetch(SB_URL+'/rest/v1/reviews', {
         method:'POST',
@@ -564,8 +570,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       if(!res.ok) throw new Error(await res.text());
       document.getElementById('rvText').value=''; picked=5; paint();
       await render();
-    } catch(e){ alert('خطأ في الإرسال، حاول مجدداً'); }
-    btn.disabled = false; btn.textContent = 'إرسال التقييم';
+    } catch(e){ alert(tr('sendError')); }
+    btn.disabled = false; btn.textContent = tr('submit');
   });
 
   render();
@@ -700,7 +706,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </footer>
 <script src="/java/supabase.min.js" defer></script>
-<script src="/java/main.min.js?v=121" defer></script>
+<script src="/java/main.min.js?v=122" defer></script>
 <script src="/translations/translation.min.js" defer></script>
 <script src="/java/footer-pages.min.js" defer></script>
 <script src="/mobile-nav-bar/main-navbar.min.js" defer></script>  

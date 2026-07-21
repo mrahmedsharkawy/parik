@@ -586,7 +586,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </footer>
 <script src="/java/supabase.min.js" defer></script>
-<script src="/java/main.min.js?v=121" defer></script>
+<script src="/java/main.min.js?v=122" defer></script>
 <script src="/translations/translation.min.js" defer></script>
 <script src="/java/footer-pages.min.js" defer></script>
 <script src="/mobile-nav-bar/main-navbar.min.js" defer></script>  
@@ -672,9 +672,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   }
 
   function renderCard(p, idx) {
-    const name = (p?.name?.ar || p?.name || 'منتج').toString();
+    const lang = (localStorage.getItem('lang') || document.documentElement.lang || 'ar') === 'en' ? 'en' : 'ar';
+    const rawName = p?.name;
+    const name = (rawName && typeof rawName === 'object' ? (rawName[lang] || rawName.ar || rawName.en) : rawName || (lang === 'en' ? 'Product' : 'منتج')).toString();
     const img  = optimizeSupabaseImageUrl((Array.isArray(p.img) ? p.img[0] : p.img) || 'assets/logo.png', 180, 180);
-    const langParam = (localStorage.getItem('lang') || document.documentElement.lang) === 'en' ? '?lang=en' : '';
+    const langParam = lang === 'en' ? '?lang=en' : '';
     const link = p.id ? `/product/${encodeURIComponent(p.id)}${langParam}` : '/product';
     const pr = parseFloat(p.price), old = parseFloat(p.oldPrice);
     const disc = (old > pr && pr > 0) ? Math.round(((old - pr) / old) * 100) : 0;

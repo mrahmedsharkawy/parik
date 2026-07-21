@@ -410,7 +410,7 @@ export function createProductCard(prod) {
     infoRow.className = "product-info-row", infoRow.style.display = "flex", infoRow.style.flexDirection = "column", 
     infoRow.style.alignItems = "flex-start", content.appendChild(infoRow), card.appendChild(content);
     const cartBtn = document.createElement("button");
-    cartBtn.className = "product-cart-btn", cartBtn.title = "إضافة للسلة", cartBtn.type = "button", 
+    cartBtn.className = "product-cart-btn", cartBtn.title = "en" === lang ? "Add to Cart" : "إضافة للسلة", cartBtn.type = "button",
     cartBtn.innerHTML = '\n    <span style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;">\n      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="cart-svg-icon">\n        <path fill-rule="evenodd" clip-rule="evenodd" d="M2 1C1.44772 1 1 1.44772 1 2C1 2.55228 1.44772 3 2 3H3.21922L6.78345 17.2569C5.73276 17.7236 5 18.7762 5 20C5 21.6569 6.34315 23 8 23C9.65685 23 11 21.6569 11 20C11 19.6494 10.9398 19.3128 10.8293 19H15.1707C15.0602 19.3128 15 19.6494 15 20C15 21.6569 16.3431 23 18 23C19.6569 23 21 21.6569 21 20C21 18.3431 19.6569 17 18 17H8.78078L8.28078 15H18C20.0642 15 21.3019 13.6959 21.9887 12.2559C22.6599 10.8487 22.8935 9.16692 22.975 7.94368C23.0884 6.24014 21.6803 5 20.1211 5H5.78078L5.15951 2.51493C4.93692 1.62459 4.13696 1 3.21922 1H2ZM18 13H7.78078L6.28078 7H20.1211C20.6742 7 21.0063 7.40675 20.9794 7.81078C20.9034 8.9522 20.6906 10.3318 20.1836 11.3949C19.6922 12.4251 19.0201 13 18 13ZM18 20.9938C17.4511 20.9938 17.0062 20.5489 17.0062 20C17.0062 19.4511 17.4511 19.0062 18 19.0062C18.5489 19.0062 18.9938 19.4511 18.9938 20C18.9938 20.5489 18.5489 20.9938 18 20.9938ZM7.00617 20C7.00617 20.5489 7.45112 20.9938 8 20.9938C8.54888 20.9938 8.99383 20.5489 8.99383 20C8.99383 19.4511 8.54888 19.0062 8 19.0062C7.45112 19.0062 7.00617 19.4511 7.00617 20Z" fill="currentColor"/>\n      </svg>\n    </span>\n  ', 
     cartBtn.addEventListener("click", function(ev) {
         ev.preventDefault(), ev.stopPropagation();
@@ -1131,10 +1131,10 @@ document.addEventListener("DOMContentLoaded", async function() {
         const _isMobileView = window.innerWidth <= 900 || "ontouchstart" in window;
         if (mainWrap && media.length > 1 && _isMobileView) {
             const carousel = document.createElement("div");
-            carousel.id = "prodCarousel", carousel.style.cssText = "display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;width:100%;height:100%;border-radius:inherit;";
-            let currentIdx = 0;
-            const slides = [];
-            media.forEach((item, i) => {
+            carousel.id = "prodCarousel", carousel.style.cssText = "display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;width:100%;height:100%;border-radius:inherit;direction:ltr;";
+            let currentIdx = 0, jumpTimer = 0;
+            const slides = [], loopMedia = [ ...media, ...media, ...media ], baseIndex = media.length, modIndex = i => (i % media.length + media.length) % media.length;
+            loopMedia.forEach((item, i) => {
                 const slide = document.createElement("div");
                 if (slide.style.cssText = "flex:0 0 100%;scroll-snap-align:center;width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;", 
                 "video" === item.type) {
@@ -1155,13 +1155,16 @@ document.addEventListener("DOMContentLoaded", async function() {
                 return d.style.cssText = `width:${0 === i ? "18px" : "7px"};height:7px;border-radius:999px;background:${0 === i ? "#D4AF37" : "rgba(255,255,255,0.6)"};transition:all 0.3s;cursor:pointer;`, 
                 d.addEventListener("click", () => {
                     carousel.scrollTo({
-                        left: i * carousel.offsetWidth,
+                        left: (baseIndex + i) * carousel.offsetWidth,
                         behavior: "smooth"
                     });
                 }), dots.appendChild(d), d;
             });
+            requestAnimationFrame(() => {
+                carousel.scrollLeft = baseIndex * carousel.offsetWidth;
+            });
             carousel.addEventListener("scroll", () => {
-                const idx = Math.round(carousel.scrollLeft / carousel.offsetWidth);
+                const rawIdx = Math.round(carousel.scrollLeft / carousel.offsetWidth), idx = modIndex(rawIdx);
                 if (idx !== currentIdx && (dotEls[currentIdx].style.cssText = "width:7px;height:7px;border-radius:999px;background:rgba(255,255,255,0.6);transition:all 0.3s;cursor:pointer;", 
                 currentIdx = idx, dotEls[idx].style.cssText = "width:18px;height:7px;border-radius:999px;background:#D4AF37;transition:all 0.3s;cursor:pointer;", 
                 thumbs)) {
@@ -1169,6 +1172,10 @@ document.addEventListener("DOMContentLoaded", async function() {
                     const thumbItems = thumbs.querySelectorAll("img, .thumb-video");
                     thumbItems[idx] && thumbItems[idx].classList.add("active");
                 }
+                clearTimeout(jumpTimer), jumpTimer = setTimeout(() => {
+                    const settledIdx = Math.round(carousel.scrollLeft / carousel.offsetWidth), normalizedIdx = modIndex(settledIdx);
+                    (settledIdx < baseIndex || settledIdx >= 2 * baseIndex) && (carousel.scrollLeft = (baseIndex + normalizedIdx) * carousel.offsetWidth);
+                }, 90);
             }, {
                 passive: !0
             }), mainWrap.style.position = "relative", mainImg && (mainImg.style.display = "none"), 
@@ -1448,7 +1455,7 @@ document.addEventListener("DOMContentLoaded", async function() {
             })[ch]);
             imgPreviewEl.style.display = "flex";
             imgPreviewEl.style.flexDirection = "column";
-            imgPreviewEl.innerHTML = `<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:100%;">${show.map(src => `<img class="rv-product-img" src="${src}" alt="" loading="lazy" decoding="async" style="width:100%;border-radius:10px;object-fit:cover;aspect-ratio:1.35/1;background:#f2f2f2;">`).join("")}</div>${productDesc ? `<div class="rv-product-desc" style="margin-top:12px;text-align:right;color:#39445c;line-height:1.8;background:#fafafa;border:1px solid #eee;border-radius:10px;padding:12px 14px;"><h3 style="margin:0 0 7px;color:#152546;font-size:1rem;font-weight:800;">وصف المنتج</h3><p id="rvProductDescText" style="margin:0;font-size:.9rem;white-space:pre-line;max-height:9em;overflow:hidden;">${productDescHtml}</p>${productDesc.length > 180 ? '<button id="rvProductDescMore" type="button" style="margin-top:8px;border:1px solid #d4af37;background:#fff;color:#152546;border-radius:999px;padding:5px 14px;font-family:inherit;font-weight:700;font-size:.8rem;cursor:pointer;">إظهار الكل</button>' : ""}</div>` : ""}`;
+            imgPreviewEl.innerHTML = `<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:100%;">${show.map(src => `<img class="rv-product-img" src="${src}" alt="" loading="lazy" decoding="async" style="width:100%;border-radius:10px;object-fit:cover;aspect-ratio:1.35/1;background:#f2f2f2;">`).join("")}</div>${productDesc ? `<div class="rv-product-desc" style="margin-top:12px;text-align:right;color:#39445c;line-height:1.8;background:#fafafa;border:1px solid #eee;border-radius:10px;padding:12px 14px;"><h3 style="margin:0 0 7px;color:#152546;font-size:1rem;font-weight:800;">${"en" === lang ? "Product Description" : "وصف المنتج"}</h3><p id="rvProductDescText" style="margin:0;font-size:.9rem;white-space:pre-line;max-height:9em;overflow:hidden;">${productDescHtml}</p>${productDesc.length > 180 ? `<button id="rvProductDescMore" type="button" style="margin-top:8px;border:1px solid #d4af37;background:#fff;color:#152546;border-radius:999px;padding:5px 14px;font-family:inherit;font-weight:700;font-size:.8rem;cursor:pointer;">${"en" === lang ? "Show All" : "إظهار الكل"}</button>` : ""}</div>` : ""}`;
             const descMoreBtn = document.getElementById("rvProductDescMore"), descTextEl = document.getElementById("rvProductDescText");
             descMoreBtn && descTextEl && (descMoreBtn.onclick = function() {
                 descTextEl.style.maxHeight = "none";

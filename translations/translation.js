@@ -17,12 +17,24 @@ function changeLang(lang) {
         const key = el.getAttribute('data-i18n-title');
         if (data[key]) el.title = data[key];
       });
+      applyAttributeTranslations(lang, data);
       applyCategoryNames(lang);
       applyTextNodeTranslations(lang, data);
+      if (lang === 'en' && data[document.title]) document.title = data[document.title];
       localStorage.setItem('lang', lang);
       document.documentElement.lang = lang;
       document.documentElement.dir  = lang === 'ar' ? 'rtl' : 'ltr';
     });
+}
+
+function applyAttributeTranslations(lang, data) {
+  if (lang !== 'en') return;
+  ['placeholder', 'title', 'aria-label'].forEach(attr => {
+    document.querySelectorAll('[' + attr + ']').forEach(el => {
+      const key = (el.getAttribute(attr) || '').replace(/\s+/g, ' ').trim();
+      if (key && data[key]) el.setAttribute(attr, data[key]);
+    });
+  });
 }
 
 function applyTextNodeTranslations(lang, data) {
@@ -48,6 +60,7 @@ function applyTextNodeTranslations(lang, data) {
   translate(document.body);
   let runs = 0;
   const timer = setInterval(() => {
+    applyAttributeTranslations(lang, data);
     translate(document.body);
     if (++runs > 8) clearInterval(timer);
   }, 350);

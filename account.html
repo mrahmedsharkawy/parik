@@ -1225,7 +1225,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <!-- اللغة والعملة -->
     <div style="padding:12px 14px;border-top:1px solid #f0f0f0;margin-top:4px">
-      <div style="font-size:.72rem;color:#aaa;margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">🌐 اللغة والعملة</div>
+      <div style="font-size:.72rem;color:#aaa;margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em" data-i18n="اللغة والعملة">🌐 اللغة والعملة</div>
       <div style="display:flex;gap:8px">
         <select id="sidebar-lang" onchange="changeSidebarLang(this.value)"
           style="flex:1;border:1.5px solid #eee;border-radius:8px;padding:7px 10px;font-size:.82rem;color:#152546;font-weight:600;outline:none;background:#fafbfe;cursor:pointer">
@@ -1234,11 +1234,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </select>
         <select id="sidebar-curr" onchange="changeSidebarCurr(this.value)"
           style="flex:1;border:1.5px solid #eee;border-radius:8px;padding:7px 10px;font-size:.82rem;color:#152546;font-weight:600;outline:none;background:#fafbfe;cursor:pointer">
-          <option value="AED">💱 درهم</option>
+          <option value="AED" data-i18n="💱 درهم">💱 درهم</option>
           <option value="USD">💱 Dollar</option>
           <option value="EUR">💱 Euro</option>
-          <option value="SAR">💱 ريال</option>
-          <option value="EGP">💱 جنيه</option>
+          <option value="SAR" data-i18n="💱 ريال">💱 ريال</option>
+          <option value="EGP" data-i18n="💱 جنيه">💱 جنيه</option>
         </select>
       </div>
     </div>
@@ -1256,19 +1256,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <div id="logoutModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99999;align-items:center;justify-content:center;padding:20px">
     <div style="background:#fff;border-radius:18px;padding:28px 24px;max-width:320px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.25);direction:rtl">
       <div style="font-size:2.4rem;margin-bottom:10px">🚪</div>
-      <h3 style="color:#152546;font-size:1.05rem;margin:0 0 8px;font-weight:700">تسجيل الخروج</h3>
-      <p style="color:#777;font-size:.84rem;margin:0 0 16px;line-height:1.7">هل أنت متأكد؟ سيتم مسح البيانات التالية من جهازك:</p>
+      <h3 style="color:#152546;font-size:1.05rem;margin:0 0 8px;font-weight:700" data-i18n="تسجيل الخروج">تسجيل الخروج</h3>
+      <p style="color:#777;font-size:.84rem;margin:0 0 16px;line-height:1.7" data-i18n="logout_confirm_text">هل أنت متأكد؟ سيتم مسح البيانات التالية من جهازك:</p>
       <div style="background:#fff8f8;border:1px solid #fde8e8;border-radius:10px;padding:12px 14px;margin-bottom:20px;text-align:right">
         <div style="font-size:.82rem;color:#555;display:flex;flex-direction:column;gap:7px">
-          <span>👤 بيانات الملف الشخصي</span>
-          <span>📦 سجل الطلبات المحلي</span>
-          <span>🛒 عناصر السلة</span>
-          <span>💰 رصيد كاش باك</span>
+          <span data-i18n="logout_profile_data">👤 بيانات الملف الشخصي</span>
+          <span data-i18n="logout_local_orders">📦 سجل الطلبات المحلي</span>
+          <span data-i18n="logout_cart_items">🛒 عناصر السلة</span>
+          <span data-i18n="logout_cashback_balance">💰 رصيد كاش باك</span>
         </div>
       </div>
       <div style="display:flex;gap:10px">
-        <button onclick="hideLogoutModal()" style="flex:1;padding:12px;border:1.5px solid #eee;border-radius:10px;background:#f5f5f5;color:#555;font-size:.88rem;font-weight:600;cursor:pointer">إلغاء</button>
-        <button onclick="doLogout()" style="flex:1;padding:12px;border:none;border-radius:10px;background:#e53935;color:#fff;font-size:.88rem;font-weight:700;cursor:pointer">تأكيد الخروج</button>
+        <button onclick="hideLogoutModal()" style="flex:1;padding:12px;border:1.5px solid #eee;border-radius:10px;background:#f5f5f5;color:#555;font-size:.88rem;font-weight:600;cursor:pointer" data-i18n="إلغاء">إلغاء</button>
+        <button onclick="doLogout()" style="flex:1;padding:12px;border:none;border-radius:10px;background:#e53935;color:#fff;font-size:.88rem;font-weight:700;cursor:pointer" data-i18n="تأكيد الخروج">تأكيد الخروج</button>
       </div>
     </div>
   </div>
@@ -1321,7 +1321,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div class="acc-guarantee">
         <span>🛡️</span>
         <div class="acc-guarantee-text">
-          ضمان الطلب | لقا · استرداد لعدم وجود تحديثات منذ 50 يوم · استرداد لعدم التوصيل منذ 70 يوم · عمليات إرجاع مجانية لمدة تصل إلى 90 يوماً · تعديل السعر 30 يوم · شحن مجاني
+          <span data-i18n="order_guarantee_text">ضمان الطلب | لقا · استرداد لعدم وجود تحديثات منذ 50 يوم · استرداد لعدم التوصيل منذ 70 يوم · عمليات إرجاع مجانية لمدة تصل إلى 90 يوماً · تعديل السعر 30 يوم · شحن مجاني</span>
         </div>
       </div>
 
@@ -1606,9 +1606,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   let currentPage   = 1;
   const PAGE_SIZE   = 3;
   let offersLoaded = false;
+  const ACC_EN = (localStorage.getItem('lang') || document.documentElement.lang || 'ar') === 'en';
+  const accText = (ar, en) => ACC_EN ? en : ar;
+  const accDate = value => new Date(value).toLocaleDateString(ACC_EN ? 'en-US' : 'ar-AE', { year:'numeric', month:'short', day:'numeric' });
 
   function getCurrSym() {
     const code = localStorage.getItem('currency') || 'AED';
+    if (ACC_EN) {
+      const enMap = { AED:'AED', USD:'$', EUR:'€', SAR:'SAR', EGP:'EGP', KWD:'KWD', JOD:'JOD', GBP:'£' };
+      return enMap[code] || code;
+    }
     const map = { AED:'د.إ', USD:'$', EUR:'€', SAR:'ر.س', EGP:'ج.م', KWD:'د.ك', JOD:'د.أ', GBP:'£' };
     return map[code] || code;
   }
@@ -1877,20 +1884,40 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   const WA_PHONE = '971554423151';
   let _prodsCache = null;
+  function waitForProductsApi() {
+    if (window.Supabase && window.Supabase.Products) return Promise.resolve(true);
+    return new Promise(resolve => {
+      let tries = 0;
+      const timer = setInterval(() => {
+        tries++;
+        if ((window.Supabase && window.Supabase.Products) || tries >= 20) {
+          clearInterval(timer);
+          resolve(!!(window.Supabase && window.Supabase.Products));
+        }
+      }, 100);
+    });
+  }
+  function addProductsToMap(arr, map) {
+    (arr || []).forEach(raw => {
+      const p = typeof normalizeProduct === 'function' ? normalizeProduct(raw) : raw;
+      if (p.id) map[String(p.id)] = p;
+      const names = typeof p.name === 'object' ? [p.name.ar, p.name.en] : [p.name];
+      names.filter(Boolean).forEach(nm => { map['__n__' + String(nm).trim().toLowerCase()] = p; });
+    });
+  }
   async function getProductsMap() {
     if (_prodsCache) return _prodsCache;
     try {
       const SS_KEY = 'x2_prods_ss';
       const cached = sessionStorage.getItem(SS_KEY);
-      if (cached) { const obj = JSON.parse(cached); if (Date.now()-obj.ts < 300000) { const arr=obj.data; _prodsCache={}; arr.forEach(p=>{if(p.id)_prodsCache[String(p.id)]=p;const nm=typeof p.name==='object'?(p.name.ar||p.name.en||''):(p.name||'');if(nm)_prodsCache['__n__'+nm.trim().toLowerCase()]=p;}); return _prodsCache; } }
-      const arr = await (await fetch('/java/Products.json')).json();
-      try { sessionStorage.setItem(SS_KEY, JSON.stringify({ts:Date.now(),data:arr})); } catch(e2) {}
       _prodsCache = {};
-      arr.forEach(p => {
-        if (p.id) _prodsCache[String(p.id)] = p;
-        const nm = typeof p.name==='object'?(p.name.ar||p.name.en||''):(p.name||'');
-        if (nm) _prodsCache['__n__'+nm.trim().toLowerCase()] = p;
-      });
+      if (cached) { const obj = JSON.parse(cached); if (Date.now()-obj.ts < 300000) { addProductsToMap(obj.data, _prodsCache); return _prodsCache; } }
+      let arr = [];
+      await waitForProductsApi();
+      if (window.Supabase && window.Supabase.Products) arr = await window.Supabase.Products.getAll() || [];
+      if (!arr.length) arr = await (await fetch('/java/Products.json')).json();
+      try { sessionStorage.setItem(SS_KEY, JSON.stringify({ts:Date.now(),data:arr})); } catch(e2) {}
+      addProductsToMap(arr, _prodsCache);
     } catch(e) { _prodsCache = {}; }
     return _prodsCache;
   }
@@ -1912,10 +1939,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       list.innerHTML = `
         <div class="acc-empty">
           <div class="acc-empty-icon">📦</div>
-          <div class="acc-empty-title">ليس لديك أي طلبات</div>
-          <div class="acc-empty-sub">لا يمكنك العثور على طلبك؟</div>
+          <div class="acc-empty-title">${accText('ليس لديك أي طلبات', 'You do not have any orders')}</div>
+          <div class="acc-empty-sub">${accText('لا يمكنك العثور على طلبك؟', 'Can not find your order?')}</div>
           <div class="acc-empty-actions">
-            <a href="/" class="acc-empty-btn"><span class="ico">🛍</span> <span data-i18n="تسوق الآن">تسوق الآن</span></a>
+            <a href="/" class="acc-empty-btn"><span class="ico">🛍</span> <span>${accText('تسوق الآن', 'Shop Now')}</span></a>
           </div>
         </div>`;
       if (pgEl) pgEl.style.display = 'none';
@@ -1931,7 +1958,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const status = assignStatus(order);
       const item = (order.items||[])[0] || {};
       const itemCount = (order.items||[]).length;
-      const date = new Date(order.date).toLocaleDateString('ar-AE', { year:'numeric', month:'short', day:'numeric' });
+      const date = accDate(order.date);
       const oid = order.id || '';
       const prod = pMap[String(item.id||'')] || pMap['__n__'+(item.title||'').trim().toLowerCase()];
       const imgSrc = (item.img && !item.img.startsWith('data:') ? item.img : '') ||
@@ -1939,19 +1966,23 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                      'assets/logo.png';
       const resolvedId = item.id || prod?.id || '';
       const prodLink = resolvedId ? `product.html?id=${encodeURIComponent(resolvedId)}` : '';
+      const prodName = prod && typeof prod.name === 'object'
+        ? (prod.name[ACC_EN ? 'en' : 'ar'] || prod.name.ar || prod.name.en || '')
+        : (prod && prod.name ? String(prod.name) : '');
+      const itemTitle = prodName || item.title || accText('منتج','Product');
       const displayTotal = parseFloat(order.total) > 0 ? fmt(order.total) : '—';
       const profile = (() => { try { return JSON.parse(localStorage.getItem('x2_profile')||'{}'); } catch(e) { return {}; } })();
       const nm = profile.name||'—'; const ph = profile.phone||'—';
-      const waT = encodeURIComponent(`📦 تتبع طلب\nرقم الطلب: ${oid}\nالحالة: ${getStatusLabel(status)}\nالاسم: ${nm}\nالهاتف: ${ph}\nأرجو التحديث على طلبي 🙏`);
-      const waR = encodeURIComponent(`↩️ طلب إرجاع\nرقم الطلب: ${oid}\nالمنتج: ${item.title||'—'}\nالاسم: ${nm}\nالهاتف: ${ph}\nأرجو مساعدتي في الإرجاع 🙏`);
+      const waT = encodeURIComponent(ACC_EN ? `📦 Track order\nOrder number: ${oid}\nStatus: ${getStatusLabel(status)}\nName: ${nm}\nPhone: ${ph}\nPlease update me on my order 🙏` : `📦 تتبع طلب\nرقم الطلب: ${oid}\nالحالة: ${getStatusLabel(status)}\nالاسم: ${nm}\nالهاتف: ${ph}\nأرجو التحديث على طلبي 🙏`);
+      const waR = encodeURIComponent(ACC_EN ? `↩️ Return request\nOrder number: ${oid}\nProduct: ${itemTitle||'—'}\nName: ${nm}\nPhone: ${ph}\nPlease help me with the return 🙏` : `↩️ طلب إرجاع\nرقم الطلب: ${oid}\nالمنتج: ${itemTitle||'—'}\nالاسم: ${nm}\nالهاتف: ${ph}\nأرجو مساعدتي في الإرجاع 🙏`);
       return `
         <div class="acc-order-card">
           ${prodLink
             ? `<a href="${prodLink}"><img src="${imgSrc}" alt="${item.title||''}" onerror="this.src='/assets/logo.png'" loading="lazy" style="cursor:pointer"></a>`
             : `<img src="${imgSrc}" alt="${item.title||''}" onerror="this.src='/assets/logo.png'" loading="lazy">`}
           <div class="acc-order-info">
-            <div class="acc-order-name">${prodLink?`<a href="${prodLink}" style="color:#111;text-decoration:none;font-weight:600">${item.title||'منتج'}</a>`:(item.title||'منتج')}${itemCount>1?` <span style="color:#aaa;font-size:0.75rem">+${itemCount-1} منتج آخر</span>`:''}</div>
-            <div class="acc-order-id">رقم الطلب: ${oid||'—'}</div>
+            <div class="acc-order-name">${prodLink?`<a href="${prodLink}" style="color:#111;text-decoration:none;font-weight:600">${itemTitle}</a>`:itemTitle}${itemCount>1?` <span style="color:#aaa;font-size:0.75rem">+${itemCount-1} ${accText('منتج آخر','more item')}</span>`:''}</div>
+            <div class="acc-order-id">${accText('رقم الطلب:', 'Order number:')} ${oid||'—'}</div>
             <div class="acc-order-meta">
               <span class="acc-order-status ${getStatusClass(status)}">${getStatusLabel(status)}</span>
               <span class="acc-order-price">${displayTotal}</span>
@@ -1959,8 +1990,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             </div>
           </div>
           <div class="acc-order-actions">
-            <a class="acc-order-btn" href="https://wa.me/${WA_PHONE}?text=${waT}" target="_blank" rel="noopener" style="text-decoration:none">📦 <span data-i18n="تتبع">تتبع</span></a>
-            <a class="acc-order-btn" href="https://wa.me/${WA_PHONE}?text=${waR}" target="_blank" rel="noopener" style="color:#e57373;text-decoration:none">↩️ <span data-i18n="إرجاع">إرجاع</span></a>
+            <a class="acc-order-btn" href="https://wa.me/${WA_PHONE}?text=${waT}" target="_blank" rel="noopener" style="text-decoration:none">📦 <span>${accText('تتبع','Track')}</span></a>
+            <a class="acc-order-btn" href="https://wa.me/${WA_PHONE}?text=${waR}" target="_blank" rel="noopener" style="color:#e57373;text-decoration:none">↩️ <span>${accText('إرجاع','Return')}</span></a>
           </div>
         </div>`;
     }).join('');
@@ -1974,7 +2005,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         let html = `<button style="${s}" onclick="goToOrderPage(${currentPage-1})" ${currentPage===1?'disabled':''}>›</button>`;
         for (let i=1;i<=totalPages;i++) html += `<button style="${s}${i===currentPage?';background:#152546;color:#D4AF37;border-color:#152546':''}" onclick="goToOrderPage(${i})">${i}</button>`;
         html += `<button style="${s}" onclick="goToOrderPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>‹</button>`;
-        html += `<span style="font-size:.74rem;color:#888;padding:0 4px">${(currentPage-1)*PAGE_SIZE+1}–${Math.min(currentPage*PAGE_SIZE,filtered.length)} من ${filtered.length}</span>`;
+        html += `<span style="font-size:.74rem;color:#888;padding:0 4px">${(currentPage-1)*PAGE_SIZE+1}–${Math.min(currentPage*PAGE_SIZE,filtered.length)} ${accText('من', 'of')} ${filtered.length}</span>`;
         pgEl.innerHTML = html;
       }
     }
@@ -3271,7 +3302,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </footer>
 <script src="/java/supabase.min.js" defer></script>
-<script src="/java/main.min.js?v=121" defer></script>
+<script src="/java/main.min.js?v=122" defer></script>
 <script src="/translations/translation.min.js" defer></script>
 <script src="/java/footer-pages.min.js" defer></script>
 <script src="/mobile-nav-bar/main-navbar.min.js" defer></script> 

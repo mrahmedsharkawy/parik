@@ -51,11 +51,17 @@ async function initMobileNav() {
           const key = el.getAttribute('data-i18n');
           el.textContent = tr[key] || fallback[key] || el.textContent;
         });
+        nav.setAttribute('aria-label', tr['التنقل أسفل الشاشة'] || 'Bottom navigation');
+        nav.querySelectorAll('[aria-label]').forEach(el => {
+          const key = el.getAttribute('aria-label');
+          if (tr[key]) el.setAttribute('aria-label', tr[key]);
+        });
       } catch(e) {
         nav.querySelectorAll('[data-i18n]').forEach(el => {
           const key = el.getAttribute('data-i18n');
           if (fallback[key]) el.textContent = fallback[key];
         });
+        nav.setAttribute('aria-label', 'Bottom navigation');
       }
     }
 

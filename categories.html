@@ -571,6 +571,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   let allProducts = [];
   let activeMainSlug = null;
   let activeSubSlug = null;
+  const lang = (localStorage.getItem('lang') || document.documentElement.lang || 'ar') === 'en' ? 'en' : 'ar';
+  const t = {
+    all: lang === 'en' ? 'All' : 'الكل',
+    allCategories: lang === 'en' ? 'All Categories' : 'جميع الفئات',
+    back: lang === 'en' ? '← Back to Categories' : '← العودة للفئات',
+    loadError: lang === 'en' ? 'Could not load categories' : 'تعذّر تحميل الفئات'
+  };
+  function catName(cat) {
+    return (cat && cat.name && (cat.name[lang] || cat.name.ar || cat.name.en)) || '';
+  }
 
   // تحميل البيانات
   function mapSbProduct(p) {
@@ -658,7 +668,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       new MutationObserver(removeOccasionsLegacyBlocks).observe(document.body, { childList: true, subtree: true });
     }
     initPage().catch(() => {
-      document.getElementById('catSubGrid').innerHTML = '<p style="color:#aaa;padding:20px">تعذّر تحميل الفئات</p>';
+      document.getElementById('catSubGrid').innerHTML = `<p style="color:#aaa;padding:20px">${t.loadError}</p>`;
     });
   });
 
@@ -686,7 +696,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   function makeItem(cat, isAll=false) {
     const a = document.createElement('div');
     a.className = 'cat-sidebar-item';
-    const name = cat.name.ar || cat.name.en;
+    const name = catName(cat);
     const subs = cat.subcategories ? cat.subcategories.length : '';
     a.innerHTML = isAll
       ? `<span style="font-size:1.2rem">💯</span><span>${name}</span>`
@@ -700,7 +710,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const allTab = document.createElement('div');
     allTab.className = 'cat-mobile-tab active';
     allTab.dataset.slug = 'all';
-    allTab.innerHTML = '💯 الكل';
+    allTab.innerHTML = `💯 ${t.all}`;
     allTab.addEventListener('click', () => selectMainCategory('all', true));
     wrap.appendChild(allTab);
 
@@ -708,7 +718,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const tab = document.createElement('div');
       tab.className = 'cat-mobile-tab';
       tab.dataset.slug = cat.categorySlug;
-      const name = cat.name.ar || cat.name.en;
+      const name = catName(cat);
       tab.innerHTML = `${cat.image?`<img src="${cat.image}" alt="">`:''}${name}`;
       tab.addEventListener('click', () => selectMainCategory(cat.categorySlug, true));
       wrap.appendChild(tab);
@@ -733,9 +743,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     } else {
       const cat = allCategories.find(c => c.categorySlug === slug);
       if (!cat) return;
-      const name = cat.name.ar || cat.name.en;
+      const name = catName(cat);
       document.getElementById('catMainTitle').textContent = name;
-      document.getElementById('catBreadcrumb').innerHTML = `<a onclick="selectMainCategory('all',true)">الكل</a> › <span>${name}</span>`;
+      document.getElementById('catBreadcrumb').innerHTML = `<a onclick="selectMainCategory('all',true)">${t.all}</a> › <span>${name}</span>`;
       document.getElementById('catBackBtn').style.display = 'flex';
       renderSubcategories(cat.subcategories || [], slug);
     }
@@ -755,8 +765,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const allTab = document.querySelector('.cat-mobile-tab[data-slug="all"]');
     if (allTab) allTab.classList.add('active');
 
-    document.getElementById('catMainTitle').textContent = '🛍 جميع الفئات';
-    document.getElementById('catBreadcrumb').innerHTML = '<span>الكل</span>';
+    document.getElementById('catMainTitle').textContent = `🛍 ${t.allCategories}`;
+    document.getElementById('catBreadcrumb').innerHTML = `<span>${t.all}</span>`;
     document.getElementById('catBackBtn').style.display = 'none';
     hideProducts();
 
@@ -773,7 +783,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     allCategories.forEach(cat => {
       const card = document.createElement('div');
       card.className = 'cat-sub-card';
-      const name = cat.name.ar || cat.name.en;
+      const name = catName(cat);
       card.innerHTML = `
         <img class="cat-sub-img" src="${cat.image||''}" alt="${name}" onerror="this.src='/assets/logo.png'">
         <div class="cat-sub-name">${name}</div>`;
@@ -810,7 +820,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const card = document.createElement('div');
       card.className = 'cat-sub-card';
       card.dataset.slug = sub.categorySlug;
-      const name = sub.name.ar || sub.name.en;
+      const name = catName(sub);
       card.innerHTML = `
         <img class="cat-sub-img" src="${sub.image||''}" alt="${name}" onerror="this.src='/assets/logo.png'">
         <div class="cat-sub-name">${name}</div>`;
@@ -854,11 +864,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const container = document.getElementById('category-products');
     sec.style.display = '';
     document.getElementById('catProductsTitle').textContent = '🛍 ' + title;
-    document.getElementById('catProductsCount').textContent = products.length + ' منتج';
+    document.getElementById('catProductsCount').textContent = lang === 'en' ? `${products.length} Products` : products.length + ' منتج';
     container.innerHTML = '';
 
     if (!products.length) {
-      container.innerHTML = '<p style="color:#aaa;padding:20px;text-align:center">لا توجد منتجات لهذه الفئة حالياً</p>';
+      container.innerHTML = `<p style="color:#aaa;padding:20px;text-align:center">${lang === 'en' ? 'No products in this category yet' : 'لا توجد منتجات لهذه الفئة حالياً'}</p>`;
       sec.scrollIntoView({behavior:'smooth', block:'start'});
       return;
     }
@@ -867,7 +877,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     function renderCard(p) {
       if (typeof window.createProductCard === 'function') return window.createProductCard(p);
       // fallback: كارت بسيط بنفس CSS المتجر
-      const name = (typeof p.name==='object'?(p.name.ar||p.name.en):(p.name||'منتج'));
+      const name = (typeof p.name==='object'?(p.name[lang]||p.name.ar||p.name.en):(p.name||(lang === 'en' ? 'Product' : 'منتج')));
       const img  = (Array.isArray(p.img)?p.img[0]:p.img)||'assets/logo.png';
       const langParam = (localStorage.getItem('lang') || document.documentElement.lang) === 'en' ? '?lang=en' : '';
       const link = p.id ? `/product/${encodeURIComponent(p.id)}${langParam}` : '#';
@@ -1051,7 +1061,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </footer>
 <script src="/java/supabase.min.js" defer></script>
-<script src="/java/main.min.js?v=121" defer></script>
+<script src="/java/main.min.js?v=122" defer></script>
 <script src="/translations/translation.min.js" defer></script>
 <script src="/java/footer-pages.min.js" defer></script>
 <script src="/mobile-nav-bar/main-navbar.min.js" defer></script> 
