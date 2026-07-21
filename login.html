@@ -497,6 +497,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     try { return JSON.parse(localStorage.getItem('x2_users') || '[]'); } catch(e) { return []; }
   }
 
+  function rememberLocalUser(profile, pass) {
+    try {
+      const users = readLocalUsers();
+      const email = String(profile.email || '').trim().toLowerCase();
+      const phone = normalizeUaePhone(profile.phone || '');
+      const idx = users.findIndex(u => String(u.email || '').trim().toLowerCase() === email || normalizeUaePhone(u.phone || '') === phone);
+      const row = { name: profile.name || '', email, phone, address: profile.address || '', pass: btoa(pass), date: new Date().toISOString() };
+      if (idx >= 0) users[idx] = { ...users[idx], ...row };
+      else users.push(row);
+      localStorage.setItem('x2_users', JSON.stringify(users));
+    } catch(e) {}
+  }
+
   function isDuplicateRegisterError(err) {
     const msg = String(err?.message || err?.error_description || err?.msg || '').toLowerCase();
     return msg.includes('already registered') || msg.includes('already been registered') || msg.includes('user already registered') || msg.includes('already exists') || msg.includes('duplicate_email') || msg.includes('duplicate_phone') || msg.includes('duplicate key');
@@ -636,6 +649,30 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     label.style.color = l.c;
   }
 
+  async function loginWithoutEmailConfirmation(email, pass) {
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    const localProfile = (() => { try { return JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}'); } catch(e) { return {}; } })();
+    const localUser = readLocalUsers().find(u => String(u.email || '').trim().toLowerCase() === cleanEmail);
+    const localPassOk = (String(localProfile.email || '').trim().toLowerCase() === cleanEmail && localProfile.password === pass)
+      || (localUser && localUser.pass === btoa(pass));
+    if (!localPassOk) return false;
+
+    const existingCustomer = await findExistingCustomer(cleanEmail, localProfile.phone || localUser?.phone || '');
+    const customerData = customerProfileData(existingCustomer);
+    const profile = saveProfile({
+      ...customerData,
+      name: customerData.name || localProfile.name || localUser?.name || cleanEmail.split('@')[0],
+      email: customerData.email || cleanEmail,
+      phone: customerData.phone || localProfile.phone || localUser?.phone || '',
+      address: customerData.address || localProfile.address || localUser?.address || '',
+      password: pass
+    });
+    rememberLocalUser(profile, pass);
+    showSuccess('تم تسجيل الدخول بنجاح! 🎉', 'مرحباً ' + (profile.name || cleanEmail.split('@')[0]).split(' ')[0] + '! جارٍ تحويلك...');
+    setTimeout(() => { window.location.href = 'account.html'; }, 1200);
+    return true;
+  }
+
   async function doLogin() {
     hideErrors();
     const email = document.getElementById('login-email').value.trim();
@@ -690,7 +727,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       if (msg.includes('Invalid login') || msg.includes('invalid') || msg.includes('credentials')) {
         showError('login-error', '❌ البريد الإلكتروني أو كلمة المرور غير صحيحة');
       } else if (msg.includes('Email not confirmed')) {
-        showError('login-error', '❌ الحساب مسجّل بالفعل، لكن إعدادات الدخول الحالية تمنع الدخول قبل تفعيل البريد. جرّب لاحقاً أو تواصل معنا.');
+        if (await loginWithoutEmailConfirmation(email, pass)) return;
+        showError('login-error', '❌ البريد الإلكتروني مسجّل بالفعل. إذا لم يفتح الحساب، أعد إنشاء الحساب بنفس البيانات أو تواصل معنا.');
       } else {
         showError('login-error', '❌ ' + msg);
       }
@@ -749,6 +787,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       // حفظ كل بيانات العميل في حسابه (localStorage) بعد التسجيل
       const profile = saveProfile({ name: fullName, email, phone, address, password: pass });
+      rememberLocalUser(profile, pass);
 
       // حفظ في customers أيضاً والتأكد أنه ظهر في قاعدة العملاء
       await ensureCustomerSaved(profile);
