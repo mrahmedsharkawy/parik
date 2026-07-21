@@ -3114,7 +3114,7 @@ const LS_VISITORS = 'x2_visitors';
 function getVisitors() { try { return JSON.parse(localStorage.getItem(LS_VISITORS)||'[]'); } catch(e) { return []; } }
 
 function visitorArea(v) {
-  const city = normalizeAdminArea(v.city || v.region || v.area || '');
+  const city = normalizeAdminArea(v.area || v.city || v.region || v.address || '');
   const country = normalizeAdminArea(v.country || '');
   return city || country || 'غير محدد';
 }
@@ -3331,8 +3331,8 @@ function emProductViews(visitors){
   const map = {};
   visitors.forEach(v => {
     const page = String(v.page||v.url||'');
-    if(!/product/i.test(page)) return;
-    const m = page.match(/[?&]id=([^&]+)/i) || page.match(/product[^0-9]*([0-9]+)/i);
+    const m = page.match(/[?&]id=([^&]+)/i) || page.match(/(?:^|\/)product(?:\.html)?(?:\/|[^0-9]*)([0-9]+)/i) || page.match(/^([0-9]+)(?:\?|$)/);
+    if(!/product/i.test(page) && !m) return;
     const id = m ? decodeURIComponent(m[1]) : '';
     const name = id || 'صفحة المنتج';
     if(!map[name]) map[name] = {visits:0, sales:0, orders:0, qty:0};
