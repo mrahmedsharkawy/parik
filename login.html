@@ -690,7 +690,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       if (msg.includes('Invalid login') || msg.includes('invalid') || msg.includes('credentials')) {
         showError('login-error', '❌ البريد الإلكتروني أو كلمة المرور غير صحيحة');
       } else if (msg.includes('Email not confirmed')) {
-        showError('login-error', '📧 يرجى تفعيل حسابك من البريد الإلكتروني أولاً');
+        showError('login-error', '❌ الحساب مسجّل بالفعل، لكن إعدادات الدخول الحالية تمنع الدخول قبل تفعيل البريد. جرّب لاحقاً أو تواصل معنا.');
       } else {
         showError('login-error', '❌ ' + msg);
       }
@@ -748,15 +748,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       }
 
       // حفظ كل بيانات العميل في حسابه (localStorage) بعد التسجيل
-    const profile = saveProfile({ name: fullName, email, phone, address, password: pass });
+      const profile = saveProfile({ name: fullName, email, phone, address, password: pass });
 
       // حفظ في customers أيضاً والتأكد أنه ظهر في قاعدة العملاء
       await ensureCustomerSaved(profile);
       const syncToken = await getProfileSyncToken(email, pass, signupData);
       syncProfileToUserSync(profile, syncToken).catch(()=>{});
 
-      showSuccess('تم إنشاء حسابك! 🎉', 'مرحباً ' + fname + '! تحقق من بريدك لتفعيل الحساب.');
-      setTimeout(() => { window.location.href = 'account.html'; }, 2000);
+      showSuccess('تم إنشاء حسابك! 🎉', 'مرحباً ' + fname + '! جارٍ تحويلك لحسابك...');
+      setTimeout(() => { window.location.href = 'account.html'; }, 1200);
 
     } catch(err) {
       if (isDuplicateRegisterError(err)) {

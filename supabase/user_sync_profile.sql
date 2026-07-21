@@ -9,19 +9,12 @@ where a.ctid < b.ctid
 create unique index if not exists user_sync_email_type_uidx
 on public.user_sync (user_email, data_type);
 
-insert into public.customers (full_name, email, phone, active)
-select
-  split_part(lower(trim(ps.user_email)), '@', 1) as full_name,
-  lower(trim(ps.user_email)) as email,
-  ps.user_phone as phone,
-  true as active
-from public.push_subscriptions ps
-where coalesce(trim(ps.user_email), '') <> ''
+delete from public.user_sync s
+where s.data_type = 'profile'
   and not exists (
     select 1
-    from public.customers c
-    where lower(trim(c.email)) = lower(trim(ps.user_email))
-       or (coalesce(trim(ps.user_phone), '') <> '' and c.phone = ps.user_phone)
+    from auth.users u
+    where lower(trim(u.email)) = lower(trim(s.user_email))
   );
 
 drop policy if exists "Users can read own sync rows" on public.user_sync;
@@ -60,6 +53,11 @@ select
   now() as updated_at
 from public.customers c
 where coalesce(trim(email), '') <> ''
+  and exists (
+    select 1
+    from auth.users u
+    where lower(trim(u.email)) = lower(trim(c.email))
+  )
   and not exists (
     select 1
     from public.user_sync s
@@ -75,6 +73,14 @@ set search_path = public
 as $$
 begin
   if coalesce(trim(new.email), '') = '' then
+    return new;
+  end if;
+
+  if not exists (
+    select 1
+    from auth.users u
+    where lower(trim(u.email)) = lower(trim(new.email))
+  ) then
     return new;
   end if;
 
@@ -142,43 +148,5 @@ on public.customers
 for each row
 execute function public.sync_customer_profile_to_user_sync();
 
-create or replace function public.ensure_customer_from_push_subscription()
-returns trigger
-language plpgsql
-security definer
-set search_path = public
-as $$
-begin
-  if coalesce(trim(new.user_email), '') = '' then
-    return new;
-  end if;
-
-  update public.customers
-  set
-    email = coalesce(nullif(lower(trim(new.user_email)), ''), email),
-    active = true
-  where coalesce(trim(new.user_phone), '') <> ''
-    and phone = new.user_phone;
-
-  if found then
-    return new;
-  end if;
-
-  insert into public.customers (full_name, email, phone, active)
-  values (
-    split_part(lower(trim(new.user_email)), '@', 1),
-    lower(trim(new.user_email)),
-    new.user_phone,
-    true
-  );
-
-  return new;
-end;
-$$;
-
 drop trigger if exists push_subscription_to_customer on public.push_subscriptions;
-create trigger push_subscription_to_customer
-after insert or update of user_email, user_phone
-on public.push_subscriptions
-for each row
-execute function public.ensure_customer_from_push_subscription();
+drop function if exists public.ensure_customer_from_push_subscription();
