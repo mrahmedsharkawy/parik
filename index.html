@@ -637,6 +637,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   grid.addEventListener('touchend', resetDrag, { passive: true });
   grid.addEventListener('touchcancel', resetDrag, { passive: true });
 
+  let lastDailyNavHref = '';
+  let lastDailyNavAt = 0;
+  grid.addEventListener('click', function(e) {
+    const link = e.target.closest && e.target.closest('a[href*="/product/"]');
+    if (!link || !grid.contains(link) || dragMode === 'x') return;
+    const href = link.href;
+    const now = Date.now();
+    e.preventDefault();
+    if (href === lastDailyNavHref && now - lastDailyNavAt < 1500) return;
+    lastDailyNavHref = href;
+    lastDailyNavAt = now;
+    window.location.assign(href);
+  });
+
   function renderStars(r) {
     r = parseFloat(r) || 0;
     const full = Math.floor(r), half = r % 1 >= 0.5 ? 1 : 0, empty = 5 - full - half;
