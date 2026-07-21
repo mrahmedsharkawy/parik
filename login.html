@@ -522,6 +522,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     return '❌ هذا البريد الإلكتروني أو رقم الهاتف مسجّل بالفعل. جرّب تسجيل الدخول.';
   }
 
+  function isEmailRateLimitError(err) {
+    const msg = String(err?.message || err?.error_description || err?.msg || err?.code || '').toLowerCase();
+    return msg.includes('email rate limit') || msg.includes('rate limit') || msg.includes('over_email_send_rate_limit');
+  }
+
   function buildProfile(data) {
     const prev = (() => { try { return JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}'); } catch(e) { return {}; } })();
     const email = String(data.email || prev.email || '').trim().toLowerCase();
@@ -798,6 +803,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       setTimeout(() => { window.location.href = 'account.html'; }, 1200);
 
     } catch(err) {
+      if (isEmailRateLimitError(err)) {
+        const profile = saveProfile({ name: fullName, email, phone, address, password: pass });
+        rememberLocalUser(profile, pass);
+        try {
+          await ensureCustomerSaved(profile);
+        } catch(saveErr) {
+          if (isDuplicateRegisterError(saveErr)) showError('register-error', duplicateRegisterMessage(saveErr));
+          else showError('register-error', '❌ تعذر حفظ العميل في قاعدة البيانات. حاول مرة أخرى بعد قليل.');
+          if (btn) { btn.disabled = false; btn.textContent = 'إنشاء حساب جديد'; }
+          return;
+        }
+        showSuccess('تم إنشاء حسابك! 🎉', 'مرحباً ' + fname + '! جارٍ تحويلك لحسابك...');
+        setTimeout(() => { window.location.href = 'account.html'; }, 1200);
+        return;
+      }
+
       if (isDuplicateRegisterError(err)) {
         showError('register-error', duplicateRegisterMessage(err));
         if (btn) { btn.disabled = false; btn.textContent = 'إنشاء حساب جديد'; }
