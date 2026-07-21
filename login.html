@@ -615,10 +615,39 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const customer = { name: profile.name || '', email, phone, city: profile.address || '', address: profile.address || '' };
     if (!email && !phone) throw new Error('بيانات العميل غير مكتملة');
 
-    if (window.Supabase?.Customers?.upsert) await window.Supabase.Customers.upsert(customer);
+    const fetchCustomer = async (query) => {
+      try {
+        const rows = await window.sbFetch(query);
+        return rows && rows[0] ? rows[0] : null;
+      } catch(e) { return null; }
+    };
+    const emailRow = email ? await fetchCustomer('customers?email=eq.' + encodeURIComponent(email) + '&limit=1') : null;
+    const phoneRow = phone ? await fetchCustomer('customers?phone=eq.' + encodeURIComponent(phone) + '&limit=1') : null;
+    const rowsToUpdate = [emailRow, phoneRow].filter(Boolean).filter((row, idx, arr) => arr.findIndex(r => r.id === row.id) === idx);
 
-    let saved = await findExistingCustomer(email, phone);
-    if (saved) return saved;
+    if (rowsToUpdate.length) {
+      let lastSaved = rowsToUpdate[0];
+      for (const row of rowsToUpdate) {
+        const payload = {
+          full_name: customer.name,
+          city: customer.city,
+          address: customer.address,
+          active: true
+        };
+        if (!row.email || String(row.email).trim().toLowerCase() === email) payload.email = email;
+        if (!row.phone || normalizeUaePhone(row.phone || '') === phone) payload.phone = phone;
+        const update = await fetch(_SB_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(row.id), {
+          method: 'PATCH',
+          headers: { apikey: _SB_ANON, Authorization: 'Bearer ' + _SB_ANON, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+          body: JSON.stringify(payload)
+        });
+        if (update.ok) {
+          const rows = await update.json().catch(() => []);
+          lastSaved = rows && rows[0] ? rows[0] : row;
+        }
+      }
+      return lastSaved;
+    }
 
     const body = JSON.stringify({ full_name: customer.name, email, phone, city: customer.city, address: customer.address, active: true });
     const res = await fetch(_SB_URL + '/rest/v1/customers', {
@@ -627,7 +656,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       body
     });
     if (!res.ok && res.status !== 409) throw new Error('تعذر حفظ العميل في قاعدة البيانات');
-    saved = await findExistingCustomer(email, phone);
+    const saved = await findExistingCustomer(email, phone);
     if (!saved) throw new Error('تم إنشاء الحساب لكن لم يتم تأكيد حفظ العميل في قاعدة البيانات');
     return saved;
   }
@@ -773,20 +802,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     try {
       await new Promise(r => { if (window.Supabase) r(); else { const t = setInterval(() => { if (window.Supabase) { clearInterval(t); r(); } }, 100); setTimeout(() => { clearInterval(t); r(); }, 4000); } });
-
-      const localDuplicate = readLocalUsers().find(u => String(u.email || '').toLowerCase() === email || normalizeUaePhone(u.phone || '') === phone);
-      const existingCustomer = localDuplicate || await findExistingCustomer(email, phone);
-      if (existingCustomer) {
-        const sameEmail = String(existingCustomer.email || '').trim().toLowerCase() === email;
-        const samePhone = normalizeUaePhone(existingCustomer.phone || '') === phone;
-        showError('register-error', sameEmail
-          ? '❌ هذا البريد الإلكتروني مسجّل بالفعل. جرّب تسجيل الدخول.'
-          : samePhone
-            ? '❌ رقم الهاتف مسجّل بالفعل. جرّب تسجيل الدخول.'
-            : '❌ هذا البريد الإلكتروني أو رقم الهاتف مسجّل بالفعل. جرّب تسجيل الدخول.');
-        if (btn) { btn.disabled = false; btn.textContent = 'إنشاء حساب جديد'; }
-        return;
-      }
 
       const signupData = await window.Supabase.Auth.signUp(email, pass, { full_name: fullName, phone, address });
       if (signupData?.access_token) localStorage.setItem('x2_token', signupData.access_token);
