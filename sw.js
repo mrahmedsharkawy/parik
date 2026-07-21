@@ -1,22 +1,15 @@
 ﻿/* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v130';
+const CACHE = 'bariq-v132';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
   '/index.html',
-  '/categories',
   '/categories.html',
-  '/product',
   '/product.html',
-  '/Cart',
   '/Cart.html',
-  '/account',
   '/account.html',
-  '/login',
   '/login.html',
-  '/offers',
   '/offers.html',
-  '/checkout',
   '/checkout.html',
   '/affiliate.html',
   '/policy.html',
@@ -145,10 +138,19 @@ self.addEventListener('fetch', function(e) {
   if (e.request.method !== 'GET') return;
 
   function refreshCache(cache, request, cacheKey) {
-    return fetch(new Request(request, { cache: 'reload' })).then(function(res) {
-      if (res.ok) cache.put(cacheKey || request, res.clone());
+    const fetchRequest = cacheKey ? new Request(cacheKey, { cache: 'reload' }) : new Request(request, { cache: 'reload' });
+    return fetch(fetchRequest).then(function(res) {
+      if (res.ok && !res.redirected && res.type !== 'opaqueredirect') cache.put(cacheKey || request, res.clone());
       return res;
     });
+  }
+
+  function htmlCachePath(path) {
+    if (path === '/' || path === '') return '/index.html';
+    if (path === '/Cart' || path === '/Cart.html') return '/Cart.html';
+    if (path === '/product' || path === '/product.html' || /^\/product\//.test(path)) return '/product.html';
+    if (/\.html$/.test(path)) return path;
+    return path + '.html';
   }
 
   const isHtml = e.request.destination === 'document'
@@ -157,8 +159,7 @@ self.addEventListener('fetch', function(e) {
     || new URL(url).pathname === '/';
   const isAsset = url.includes('/style/') || url.includes('/java/') || url.includes('/translations/') || url.includes('/mobile-nav-bar/');
   const path = new URL(url).pathname.replace(/\/index\.html$/, '/') || '/';
-  const isProductPath = /^\/product(?:\/|$)/.test(path) || path === '/product.html';
-  const htmlCacheKey = isProductPath ? '/product' : path;
+  const htmlCacheKey = htmlCachePath(path);
 
   // HTML: return cached app pages immediately, then refresh in the background.
   if (isHtml) {
