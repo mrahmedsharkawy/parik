@@ -1210,7 +1210,22 @@ document.addEventListener("DOMContentLoaded", async function() {
                 el.textContent = d <= 0 ? "00:00:00" : [ Math.floor(d / 36e5), Math.floor(d % 36e5 / 6e4), Math.floor(d % 6e4 / 1e3) ].map(n => String(n).padStart(2, "0")).join(":");
             }
             tick(), setInterval(tick, 1e3);
-        }(p.timerEnd, timerEl), set("desc", getT(p.desc));
+        }(p.timerEnd, timerEl), set("desc", "");
+        const galleryDescEl = document.getElementById("productGalleryDesc"), productDesc = getT(p.desc);
+        galleryDescEl && (galleryDescEl.textContent = productDesc, galleryDescEl.style.display = productDesc ? "block" : "none");
+        const inlineGallery = document.getElementById("productInlineGallery"), inlineImages = document.getElementById("productInlineImages"), inlineMore = document.getElementById("productGalleryMore");
+        if (inlineGallery && inlineImages) {
+            const inlineImgs = imgs.slice(0, 4);
+            inlineImages.innerHTML = inlineImgs.map((src, i) => `<img class="product-extra-img${i > 1 ? " is-hidden" : ""}" src="${src}" alt="${getT(p.name)}" loading="lazy" decoding="async">`).join("");
+            inlineGallery.style.display = inlineImgs.length ? "block" : "none";
+            if (inlineMore) {
+                inlineMore.style.display = inlineImgs.length > 2 ? "inline-flex" : "none";
+                inlineMore.onclick = function() {
+                    inlineImages.querySelectorAll(".is-hidden").forEach(img => img.classList.remove("is-hidden"));
+                    inlineMore.style.display = "none";
+                };
+            }
+        }
         const qty = document.getElementById("qty");
         document.getElementById("minus")?.addEventListener("click", () => {
             qty && parseInt(qty.value) > 1 && (qty.value = parseInt(qty.value) - 1);
@@ -1439,10 +1454,8 @@ document.addEventListener("DOMContentLoaded", async function() {
         }
         const imgPreviewEl = document.getElementById("rv-product-imgs");
         if (imgPreviewEl && imgs.length >= 1) {
-            const show = imgs.slice(0, 2);
-            imgPreviewEl.style.display = "flex";
-            imgPreviewEl.style.flexDirection = "column";
-            imgPreviewEl.innerHTML = show.map(src => `<img src="${src}" alt="" style="width:100%;border-radius:10px;object-fit:cover;aspect-ratio:1.6/1;max-height:260px;">`).join("");
+            imgPreviewEl.style.display = "none";
+            imgPreviewEl.innerHTML = "";
         }
         (function() {
             const fvSrc = explicitVideos[0] || media.find(m => m.type === "video")?.src;
