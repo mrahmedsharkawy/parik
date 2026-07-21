@@ -1449,8 +1449,8 @@ document.addEventListener("DOMContentLoaded", async function() {
             if (!fvSrc) return;
             function optimizeCloudinaryVideoUrl(src, transform) {
                 try {
-                    if (!/res\.cloudinary\.com\/[^/]+\/video\/upload\/v\d+\//.test(String(src || ""))) return src;
-                    return String(src).replace("/video/upload/", `/video/upload/${transform}/`);
+                    if (!/res\.cloudinary\.com\/[^/]+\/video\/upload\//.test(String(src || ""))) return src;
+                    return String(src).replace(/\/video\/upload\/(?:[^/]+\/)?(v\d+\/)/, `/video/upload/${transform}/$1`);
                 } catch (e) {
                     return src;
                 }

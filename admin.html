@@ -1553,6 +1553,14 @@ function compressImage(dataUrl, maxW, quality) {
 // ── Cloudinary للفيديوهات (unsigned) ─────────────────────────────────
 const CLOUDINARY_CLOUD = 'hqyyfj6g';
 const CLOUDINARY_PRESET = 'bariq_videos';
+function toSafariCloudinaryVideoUrl(src, width) {
+  try {
+    if (!/res\.cloudinary\.com\/[^/]+\/video\/upload\//.test(String(src || ''))) return src;
+    return String(src).replace(/\/video\/upload\/(?:[^/]+\/)?(v\d+\/)/, `/video/upload/f_mp4,vc_h264,ac_aac,q_auto,w_${width || 720},c_limit/$1`);
+  } catch(e) {
+    return src;
+  }
+}
 async function uploadVideoCloudinary(file) {
   const fd = new FormData();
   fd.append('file', file);
@@ -1562,7 +1570,7 @@ async function uploadVideoCloudinary(file) {
   });
   if (!res.ok) { const t = await res.text(); throw new Error(t); }
   const data = await res.json();
-  return data.secure_url;
+  return toSafariCloudinaryVideoUrl(data.secure_url, 720);
 }
 
 $('mediaDrop').addEventListener('click',()=> $('mediaInput').click());
@@ -1616,7 +1624,7 @@ $('mediaInput').addEventListener('change',e=>{
 function addMediaUrl(){
   const v = $('mediaUrl').value.trim();
   if(!v) return;
-  currentMedia.push({ type: isVideo(v)?'video':'image', src: v });
+  currentMedia.push({ type: isVideo(v)?'video':'image', src: isVideo(v) ? toSafariCloudinaryVideoUrl(v, 720) : v });
   $('mediaUrl').value='';
   renderMedia();
 }
