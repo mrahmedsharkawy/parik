@@ -499,7 +499,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   function isDuplicateRegisterError(err) {
     const msg = String(err?.message || err?.error_description || err?.msg || '').toLowerCase();
-    return msg.includes('already registered') || msg.includes('already been registered') || msg.includes('user already registered') || msg.includes('already exists');
+    return msg.includes('already registered') || msg.includes('already been registered') || msg.includes('user already registered') || msg.includes('already exists') || msg.includes('duplicate_email') || msg.includes('duplicate_phone') || msg.includes('duplicate key');
+  }
+
+  function duplicateRegisterMessage(err) {
+    const msg = String(err?.message || err?.error_description || err?.msg || '').toLowerCase();
+    if (msg.includes('duplicate_email') || msg.includes('email')) return '❌ هذا البريد الإلكتروني مسجّل بالفعل. جرّب تسجيل الدخول.';
+    if (msg.includes('duplicate_phone') || msg.includes('phone')) return '❌ رقم الهاتف مسجّل بالفعل. جرّب تسجيل الدخول.';
+    return '❌ هذا البريد الإلكتروني أو رقم الهاتف مسجّل بالفعل. جرّب تسجيل الدخول.';
   }
 
   function buildProfile(data) {
@@ -720,7 +727,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const localDuplicate = readLocalUsers().find(u => String(u.email || '').toLowerCase() === email || normalizeUaePhone(u.phone || '') === phone);
       const existingCustomer = localDuplicate || await findExistingCustomer(email, phone);
       if (existingCustomer) {
-        showError('register-error', '❌ هذا البريد الإلكتروني أو رقم الهاتف مسجّل بالفعل. جرّب تسجيل الدخول.');
+        const sameEmail = String(existingCustomer.email || '').trim().toLowerCase() === email;
+        const samePhone = normalizeUaePhone(existingCustomer.phone || '') === phone;
+        showError('register-error', sameEmail
+          ? '❌ هذا البريد الإلكتروني مسجّل بالفعل. جرّب تسجيل الدخول.'
+          : samePhone
+            ? '❌ رقم الهاتف مسجّل بالفعل. جرّب تسجيل الدخول.'
+            : '❌ هذا البريد الإلكتروني أو رقم الهاتف مسجّل بالفعل. جرّب تسجيل الدخول.');
         if (btn) { btn.disabled = false; btn.textContent = 'إنشاء حساب جديد'; }
         return;
       }
@@ -735,7 +748,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       }
 
       // حفظ كل بيانات العميل في حسابه (localStorage) بعد التسجيل
-  const profile = saveProfile({ name: fullName, email, phone, address, password: pass });
+    const profile = saveProfile({ name: fullName, email, phone, address, password: pass });
 
       // حفظ في customers أيضاً والتأكد أنه ظهر في قاعدة العملاء
       await ensureCustomerSaved(profile);
@@ -747,26 +760,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     } catch(err) {
       if (isDuplicateRegisterError(err)) {
-        showError('register-error', '❌ هذا البريد الإلكتروني أو رقم الهاتف مسجّل بالفعل. جرّب تسجيل الدخول.');
+        showError('register-error', duplicateRegisterMessage(err));
         if (btn) { btn.disabled = false; btn.textContent = 'إنشاء حساب جديد'; }
         return;
       }
 
-      // fallback محلي
-      try {
-        const users = readLocalUsers();
-        if (users.find(u => String(u.email || '').toLowerCase() === email || normalizeUaePhone(u.phone || '') === phone)) { showError('register-error', '❌ هذا البريد الإلكتروني أو رقم الهاتف مسجّل بالفعل'); if (btn) { btn.disabled = false; btn.textContent = 'إنشاء حساب جديد'; } return; }
-        users.push({ name: fullName, email, phone, address, pass: btoa(pass), date: new Date().toISOString() });
-        localStorage.setItem('x2_users', JSON.stringify(users));
-        saveProfile({ name: fullName, email, phone, address, password: pass });
-        showSuccess('تم إنشاء حسابك! 🎉', 'مرحباً ' + fname + '!');
-        setTimeout(() => { window.location.href = 'account.html'; }, 1500);
-        return;
-      } catch(e2) {}
-
       const msg = err.message || '';
       if (isDuplicateRegisterError(err)) {
-        showError('register-error', '❌ هذا البريد الإلكتروني أو رقم الهاتف مسجّل بالفعل. جرّب تسجيل الدخول.');
+        showError('register-error', duplicateRegisterMessage(err));
       } else {
         showError('register-error', '❌ ' + msg);
       }

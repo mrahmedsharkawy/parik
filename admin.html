@@ -1890,7 +1890,6 @@ function saveStoreSortMode(){
   localStorage.setItem('x2_store_product_sort', mode);
   localStorage.setItem('x2_products_updated', String(Date.now()));
   try { sessionStorage.removeItem('x2_prods_ss_v2'); localStorage.removeItem('x2_products_cache_v1'); } catch(e) {}
-  if (window.Supabase && window.Supabase.Settings) window.Supabase.Settings.save({ product_sort: mode }).catch(function(){});
   toast('✅ تم حفظ ترتيب عرض المتجر');
 }
 

@@ -99,6 +99,42 @@ begin
 end;
 $$;
 
+create or replace function public.prevent_duplicate_customer_identity()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if coalesce(trim(new.email), '') <> '' and exists (
+    select 1
+    from public.customers c
+    where lower(trim(c.email)) = lower(trim(new.email))
+      and c.id is distinct from new.id
+  ) then
+    raise exception 'duplicate_email';
+  end if;
+
+  if coalesce(trim(new.phone), '') <> '' and exists (
+    select 1
+    from public.customers c
+    where c.phone = new.phone
+      and c.id is distinct from new.id
+  ) then
+    raise exception 'duplicate_phone';
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists customers_prevent_duplicate_identity on public.customers;
+create trigger customers_prevent_duplicate_identity
+before insert or update of email, phone
+on public.customers
+for each row
+execute function public.prevent_duplicate_customer_identity();
+
 drop trigger if exists customers_profile_to_user_sync on public.customers;
 create trigger customers_profile_to_user_sync
 after insert or update of email, full_name, phone, address, city
@@ -117,16 +153,24 @@ begin
     return new;
   end if;
 
+  update public.customers
+  set
+    email = coalesce(nullif(lower(trim(new.user_email)), ''), email),
+    active = true
+  where coalesce(trim(new.user_phone), '') <> ''
+    and phone = new.user_phone;
+
+  if found then
+    return new;
+  end if;
+
   insert into public.customers (full_name, email, phone, active)
   values (
     split_part(lower(trim(new.user_email)), '@', 1),
     lower(trim(new.user_email)),
     new.user_phone,
     true
-  )
-  on conflict (phone) do update set
-    email = coalesce(excluded.email, public.customers.email),
-    active = true;
+  );
 
   return new;
 end;
