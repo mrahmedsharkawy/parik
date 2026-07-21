@@ -1473,6 +1473,35 @@ document.addEventListener("DOMContentLoaded", async function() {
                 vid.setAttribute("webkit-playsinline", "");
                 vid.preload = "auto";
                 vid.src = fvSrc;
+                let videoRetryDone = false;
+                vid.addEventListener("error", function() {
+                    if (videoRetryDone || !fvSrc) return;
+                    videoRetryDone = true;
+                    const separator = fvSrc.includes("?") ? "&" : "?";
+                    vid.src = fvSrc + separator + "retry=" + Date.now();
+                    try {
+                        vid.load();
+                    } catch (e) {}
+                    setTimeout(function() {
+                        vid.play().catch(function() {});
+                    }, 80);
+                });
+                const playMiniVideo = function() {
+                    vid.play().catch(function() {});
+                };
+                vid.addEventListener("loadeddata", playMiniVideo);
+                vid.addEventListener("canplay", playMiniVideo);
+                window.addEventListener("pageshow", playMiniVideo);
+                document.addEventListener("visibilitychange", function() {
+                    if (!document.hidden) playMiniVideo();
+                });
+                document.addEventListener("touchstart", playMiniVideo, {
+                    once: true,
+                    passive: true
+                });
+                document.addEventListener("click", playMiniVideo, {
+                    once: true
+                });
                 vid.style.cssText = "width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;";
                 const closeBtn = document.createElement("button");
                 closeBtn.innerHTML = "&times;";
