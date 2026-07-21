@@ -1,4 +1,27 @@
 alter table public.user_sync enable row level security;
+alter table public.customers enable row level security;
+
+drop policy if exists "Customers can be created from storefront" on public.customers;
+create policy "Customers can be created from storefront"
+on public.customers
+for insert
+to anon, authenticated
+with check (true);
+
+drop policy if exists "Customers can be read for login and account sync" on public.customers;
+create policy "Customers can be read for login and account sync"
+on public.customers
+for select
+to anon, authenticated
+using (true);
+
+drop policy if exists "Customers can update their storefront row" on public.customers;
+create policy "Customers can update their storefront row"
+on public.customers
+for update
+to anon, authenticated
+using (true)
+with check (true);
 
 delete from public.user_sync s
 using (

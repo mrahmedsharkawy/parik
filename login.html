@@ -614,6 +614,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const phone = normalizeUaePhone(profile.phone || '');
     const customer = { name: profile.name || '', email, phone, city: profile.address || '', address: profile.address || '' };
     if (!email && !phone) throw new Error('بيانات العميل غير مكتملة');
+    const authToken = localStorage.getItem('x2_token') || _SB_ANON;
+    const customerHeaders = { apikey: _SB_ANON, Authorization: 'Bearer ' + authToken, 'Content-Type': 'application/json', Prefer: 'return=representation' };
 
     const fetchCustomer = async (query) => {
       try {
@@ -638,7 +640,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         if (phone && (!row.phone || normalizeUaePhone(row.phone || '') === phone)) payload.phone = phone;
         const update = await fetch(_SB_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(row.id), {
           method: 'PATCH',
-          headers: { apikey: _SB_ANON, Authorization: 'Bearer ' + _SB_ANON, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+          headers: customerHeaders,
           body: JSON.stringify(payload)
         });
         if (update.ok) {
@@ -654,7 +656,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const body = JSON.stringify(insertPayload);
     const res = await fetch(_SB_URL + '/rest/v1/customers', {
       method: 'POST',
-      headers: { apikey: _SB_ANON, Authorization: 'Bearer ' + _SB_ANON, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+      headers: customerHeaders,
       body
     });
     if (!res.ok && res.status !== 409) throw new Error('تعذر حفظ العميل في قاعدة البيانات');
@@ -829,6 +831,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const signupData = await window.Supabase.Auth.signUp(email, pass, { full_name: fullName, phone, address });
       if (signupData?.access_token) localStorage.setItem('x2_token', signupData.access_token);
       const signupUser = signupData?.user || signupData;
+      if (!signupUser && !signupData?.access_token) throw new Error('تعذر إنشاء الحساب حالياً. حاول مرة أخرى بعد قليل.');
       if (signupUser && Array.isArray(signupUser.identities) && signupUser.identities.length === 0) {
         if (await loginExistingAccountAfterSignup(email, pass, { name: fullName, phone, address })) return;
         showError('register-error', '❌ هذا البريد الإلكتروني أو رقم الهاتف مسجّل بالفعل. جرّب تسجيل الدخول.');
@@ -850,18 +853,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     } catch(err) {
       if (isEmailRateLimitError(err)) {
-        const profile = saveProfile({ name: fullName, email, phone, address, password: pass });
-        rememberLocalUser(profile, pass);
-        try {
-          await ensureCustomerSaved(profile);
-        } catch(saveErr) {
-          if (isDuplicateRegisterError(saveErr)) showError('register-error', duplicateRegisterMessage(saveErr));
-          else showError('register-error', '❌ تعذر حفظ العميل في قاعدة البيانات. حاول مرة أخرى بعد قليل.');
-          if (btn) { btn.disabled = false; btn.textContent = 'إنشاء حساب جديد'; }
-          return;
-        }
-        showSuccess('تم إنشاء حسابك! 🎉', 'مرحباً ' + fname + '! جارٍ تحويلك لحسابك...');
-        setTimeout(() => { window.location.href = 'account.html'; }, 1200);
+        showError('register-error', '❌ تم الوصول للحد المؤقت لإرسال رسائل التسجيل. حاول مرة أخرى بعد دقيقة.');
+        if (btn) { btn.disabled = false; btn.textContent = 'إنشاء حساب جديد'; }
         return;
       }
 
