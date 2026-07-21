@@ -1211,21 +1211,6 @@ document.addEventListener("DOMContentLoaded", async function() {
             }
             tick(), setInterval(tick, 1e3);
         }(p.timerEnd, timerEl), set("desc", "");
-        const galleryDescEl = document.getElementById("productGalleryDesc"), productDesc = getT(p.desc);
-        galleryDescEl && (galleryDescEl.textContent = productDesc, galleryDescEl.style.display = productDesc ? "block" : "none");
-        const inlineGallery = document.getElementById("productInlineGallery"), inlineImages = document.getElementById("productInlineImages"), inlineMore = document.getElementById("productGalleryMore");
-        if (inlineGallery && inlineImages) {
-            const inlineImgs = imgs.slice(0, 4);
-            inlineImages.innerHTML = inlineImgs.map((src, i) => `<img class="product-extra-img${i > 1 ? " is-hidden" : ""}" src="${src}" alt="${getT(p.name)}" loading="lazy" decoding="async">`).join("");
-            inlineGallery.style.display = inlineImgs.length ? "block" : "none";
-            if (inlineMore) {
-                inlineMore.style.display = inlineImgs.length > 2 ? "inline-flex" : "none";
-                inlineMore.onclick = function() {
-                    inlineImages.querySelectorAll(".is-hidden").forEach(img => img.classList.remove("is-hidden"));
-                    inlineMore.style.display = "none";
-                };
-            }
-        }
         const qty = document.getElementById("qty");
         document.getElementById("minus")?.addEventListener("click", () => {
             qty && parseInt(qty.value) > 1 && (qty.value = parseInt(qty.value) - 1);
@@ -1454,8 +1439,22 @@ document.addEventListener("DOMContentLoaded", async function() {
         }
         const imgPreviewEl = document.getElementById("rv-product-imgs");
         if (imgPreviewEl && imgs.length >= 1) {
-            imgPreviewEl.style.display = "none";
-            imgPreviewEl.innerHTML = "";
+            const show = imgs.slice(0, 4);
+            const productDesc = getT(p.desc), productDescHtml = productDesc.replace(/[&<>"]/g, ch => ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;"
+            })[ch]);
+            imgPreviewEl.style.display = "flex";
+            imgPreviewEl.style.flexDirection = "column";
+            imgPreviewEl.innerHTML = `<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:100%;">${show.map(src => `<img class="rv-product-img" src="${src}" alt="" loading="lazy" decoding="async" style="width:100%;border-radius:10px;object-fit:cover;aspect-ratio:1.35/1;background:#f2f2f2;">`).join("")}</div>${productDesc ? `<div class="rv-product-desc" style="margin-top:12px;text-align:right;color:#39445c;line-height:1.8;background:#fafafa;border:1px solid #eee;border-radius:10px;padding:12px 14px;"><h3 style="margin:0 0 7px;color:#152546;font-size:1rem;font-weight:800;">وصف المنتج</h3><p id="rvProductDescText" style="margin:0;font-size:.9rem;white-space:pre-line;max-height:9em;overflow:hidden;">${productDescHtml}</p>${productDesc.length > 180 ? '<button id="rvProductDescMore" type="button" style="margin-top:8px;border:1px solid #d4af37;background:#fff;color:#152546;border-radius:999px;padding:5px 14px;font-family:inherit;font-weight:700;font-size:.8rem;cursor:pointer;">إظهار الكل</button>' : ""}</div>` : ""}`;
+            const descMoreBtn = document.getElementById("rvProductDescMore"), descTextEl = document.getElementById("rvProductDescText");
+            descMoreBtn && descTextEl && (descMoreBtn.onclick = function() {
+                descTextEl.style.maxHeight = "none";
+                descTextEl.style.overflow = "visible";
+                descMoreBtn.style.display = "none";
+            });
         }
         (function() {
             const fvSrc = explicitVideos[0] || media.find(m => m.type === "video")?.src;
