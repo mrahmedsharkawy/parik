@@ -1776,6 +1776,30 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     });
   }
 
+  async function saveCustomerProfileToSupabase(profile, oldProfile) {
+    const ready = await waitForSupabaseLib();
+    if (!ready || !window.sbFetch || !profile) return false;
+    const email = String(profile.email || oldProfile?.email || '').trim().toLowerCase();
+    const phone = normalizeUaePhone(profile.phone || oldProfile?.phone || '');
+    if (!email && !phone) return false;
+    const payload = {
+      full_name: profile.name || '',
+      email,
+      city: profile.address || '',
+      address: profile.address || '',
+      active: true
+    };
+    if (phone) payload.phone = phone;
+    try {
+      let existing = [];
+      if (email) existing = await window.sbFetch('customers?email=eq.' + encodeURIComponent(email) + '&select=id&limit=1');
+      if ((!existing || !existing[0]) && phone) existing = await window.sbFetch('customers?phone=eq.' + encodeURIComponent(phone) + '&select=id&limit=1');
+      if (existing && existing[0]) await window.sbFetch('customers?id=eq.' + encodeURIComponent(existing[0].id), { method: 'PATCH', body: JSON.stringify(payload) });
+      else await window.sbFetch('customers', { method: 'POST', body: JSON.stringify(payload) });
+      return true;
+    } catch(e) { return false; }
+  }
+
   async function syncOrdersFromSupabase() {
     try {
       const ready = await waitForSupabaseLib();
@@ -2694,9 +2718,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     document.getElementById('pf-email').value = accountEmail;
     document.getElementById('pf-phone').value = formatUaePhoneInput(phone);
     try { localStorage.setItem(PROFILE_KEY, JSON.stringify(p)); } catch(e) {}
-    if (window.Supabase?.Customers?.upsert && getStoredAuthToken()) {
-      window.Supabase.Customers.upsert({ name: p.name, email: p.email, phone: p.phone, city: p.address, address: p.address }).catch(()=>{});
-    }
+    saveCustomerProfileToSupabase(p, oldProfile).catch(()=>{});
     syncProfileToUserSync(p, oldProfile).catch(()=>{});
     syncOrdersFromSupabase().then(() => renderOrders());
     if (p.name) {
