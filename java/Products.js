@@ -58,6 +58,62 @@ export async function fetchCategories() {
 let _productsCache = null, _productsCacheTs = 0, _productsRefreshPromise = null;
 const PRODUCTS_SESSION_CACHE_KEY = "x2_prods_ss_v2", PRODUCTS_LOCAL_CACHE_KEY = "x2_products_cache_v1", PRODUCTS_LOCAL_CACHE_TTL = 18e5;
 
+function productNewestValue(product) {
+    const dateValue = product?.created_at || product?.createdAt || product?.updated_at || product?.updatedAt || product?.date || product?.timerEnd || "";
+    const time = dateValue ? new Date(dateValue).getTime() : 0;
+    if (!isNaN(time) && time > 0) return time;
+    const id = Number(product?.id || product?.productId || 0);
+    return Number.isFinite(id) ? id : 0;
+}
+
+function sortProductsNewestFirst(list) {
+    return (Array.isArray(list) ? list.slice() : []).sort((a, b) => productNewestValue(b) - productNewestValue(a));
+}
+
+function dailyRandomValue(product) {
+    const today = new Date(), dayKey = today.getFullYear() * 1e4 + (today.getMonth() + 1) * 100 + today.getDate();
+    const key = String(product?.id || product?.productId || product?.name?.ar || product?.name?.en || product?.name || "");
+    let hash = dayKey;
+    for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
+    return hash;
+}
+
+function getStoreProductSort() {
+    try { return localStorage.getItem("x2_store_product_sort") || "daily_random"; } catch (e) { return "daily_random"; }
+}
+
+let _storeSortLoaded = false;
+async function ensureStoreProductSortLoaded() {
+    if (_storeSortLoaded) return;
+    _storeSortLoaded = true;
+    try {
+        if (!window.Supabase || !window.Supabase.Settings) return;
+        const settings = await window.Supabase.Settings.get();
+        if (settings && settings.product_sort) localStorage.setItem("x2_store_product_sort", settings.product_sort);
+    } catch (e) {}
+}
+
+function sortProductsForStore(list, mode) {
+    const copy = Array.isArray(list) ? list.slice() : [], sortMode = mode || getStoreProductSort();
+    if (sortMode === "newest") return sortProductsNewestFirst(copy);
+    if (sortMode === "oldest") return copy.sort((a, b) => productNewestValue(a) - productNewestValue(b));
+    if (sortMode === "price_asc") return copy.sort((a, b) => (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0));
+    if (sortMode === "price_desc") return copy.sort((a, b) => (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0));
+    if (sortMode === "discount") return copy.sort((a, b) => {
+        const da = parseFloat(a.oldPrice) > 0 ? (parseFloat(a.oldPrice) - parseFloat(a.price)) / parseFloat(a.oldPrice) : 0;
+        const db = parseFloat(b.oldPrice) > 0 ? (parseFloat(b.oldPrice) - parseFloat(b.price)) / parseFloat(b.oldPrice) : 0;
+        return db - da;
+    });
+    if (sortMode === "rating") return copy.sort((a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0));
+    if (sortMode === "name_az") return copy.sort((a, b) => String(a.name?.ar || a.name?.en || a.name || "").localeCompare(String(b.name?.ar || b.name?.en || b.name || ""), "ar"));
+    return copy.sort((a, b) => dailyRandomValue(b) - dailyRandomValue(a));
+}
+
+if (typeof window !== "undefined") {
+    window.sortProductsNewestFirst = sortProductsNewestFirst;
+    window.sortProductsForStore = sortProductsForStore;
+}
+
 function mapSupabaseProducts(sbProds) {
     return sbProds.map(function(p) {
         const imgs = [];
@@ -78,6 +134,9 @@ function mapSupabaseProducts(sbProds) {
             rating: p.rating || void 0,
             ratingCount: p.ratingCount || void 0,
             timerEnd: p.timer_end || void 0,
+            date: p.created_at || p.updated_at || void 0,
+            created_at: p.created_at || void 0,
+            updated_at: p.updated_at || void 0,
             featured: p.featured || !1
         };
     });
@@ -128,22 +187,23 @@ function refreshProductsInBackground() {
 });
 
 export async function fetchProducts(forceFresh) {
+    await ensureStoreProductSortLoaded();
     let invalidateTs = 0;
     try {
         invalidateTs = parseInt(localStorage.getItem("x2_products_updated") || "0", 10);
     } catch (e) {}
-    if (!forceFresh && _productsCache && _productsCache.length > 0 && (!_productsCacheTs || _productsCacheTs > invalidateTs)) return _productsCache;
+    if (!forceFresh && _productsCache && _productsCache.length > 0 && (!_productsCacheTs || _productsCacheTs > invalidateTs)) return sortProductsForStore(_productsCache);
     let staleCache = null;
     if (!forceFresh) {
         try {
             const obj = readProductsCache(sessionStorage, PRODUCTS_SESSION_CACHE_KEY, invalidateTs, 6e5);
-            if (obj) return _productsCache = obj.data, _productsCacheTs = obj.ts, _productsCache;
+            if (obj) return _productsCache = sortProductsForStore(obj.data), _productsCacheTs = obj.ts, _productsCache;
             const cached = sessionStorage.getItem(PRODUCTS_SESSION_CACHE_KEY);
             cached && (staleCache = JSON.parse(cached).data);
         } catch (e) {}
         try {
             const obj = readProductsCache(localStorage, PRODUCTS_LOCAL_CACHE_KEY, invalidateTs, PRODUCTS_LOCAL_CACHE_TTL);
-            if (obj) return _productsCache = obj.data, _productsCacheTs = obj.ts, saveProductsCache(_productsCache, _productsCacheTs), 
+            if (obj) return _productsCache = sortProductsForStore(obj.data), _productsCacheTs = obj.ts, saveProductsCache(_productsCache, _productsCacheTs),
             refreshProductsInBackground(), _productsCache;
         } catch (e) {}
     } else try {
@@ -154,7 +214,7 @@ export async function fetchProducts(forceFresh) {
         if (window.Supabase && window.Supabase.Products) {
             const sbProds = await window.Supabase.Products.getAll(100);
             if (Array.isArray(sbProds)) {
-                if (_productsCache = mapSupabaseProducts(sbProds), _productsCache.length > 0) {
+                if (_productsCache = sortProductsForStore(mapSupabaseProducts(sbProds)), _productsCache.length > 0) {
                     _productsCacheTs = Date.now();
                     saveProductsCache(_productsCache, _productsCacheTs);
                 } else try {
@@ -164,15 +224,15 @@ export async function fetchProducts(forceFresh) {
             }
         }
     } catch (e) {
-        if (staleCache && staleCache.length > 0) return _productsCache = staleCache, _productsCache;
+        if (staleCache && staleCache.length > 0) return _productsCache = sortProductsForStore(staleCache), _productsCache;
     }
-    if (staleCache && staleCache.length > 0) return _productsCache = staleCache, _productsCache;
+    if (staleCache && staleCache.length > 0) return _productsCache = sortProductsForStore(staleCache), _productsCache;
     try {
         const adminProds = localStorage.getItem("admin_products");
         if (adminProds) {
             const parsed = JSON.parse(adminProds);
             if (Array.isArray(parsed) && parsed.length > 0) {
-                _productsCache = parsed;
+                _productsCache = sortProductsForStore(parsed);
                 try {
                     saveProductsCache(_productsCache, Date.now());
                 } catch (e) {}
@@ -482,7 +542,7 @@ document.addEventListener("DOMContentLoaded", async function() {
     }
     function renderProductsGrid(list, productsContainer, direction = null) {
         if (!productsContainer) return;
-        const sortedList = Array.isArray(list) ? list.slice() : [], tempContainer = document.createElement("div"), rowDiv = document.createElement("div");
+        const sortedList = direction === "preserve" ? (Array.isArray(list) ? list.slice() : []) : sortProductsForStore(list), tempContainer = document.createElement("div"), rowDiv = document.createElement("div");
         rowDiv.className = "products-row", tempContainer.appendChild(rowDiv);
         const loadingIndicator = document.createElement("div");
         loadingIndicator.id = "grid-loading-indicator", loadingIndicator.style.cssText = "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40px;height:40px;border:4px solid #f3f3f3;border-top:4px solid #3498db;border-radius:50%;animation:spin 1s linear infinite;", 
@@ -983,7 +1043,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                 }
             });
         }(filtered, filters.date));
-        renderProductsGrid(filtered, document.getElementById("category-products"));
+        renderProductsGrid(filtered, document.getElementById("category-products"), filters.newest && filters.newest.length > 0 ? "preserve" : null);
         const productCounter = document.getElementById("product-count");
         if (productCounter) {
             const countText = "en" === (document.documentElement.lang || document.documentElement.getAttribute("lang") || "ar") ? `${filtered.length} Products` : `${filtered.length} منتج`;

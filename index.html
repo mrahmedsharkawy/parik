@@ -693,8 +693,41 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   async function loadDailyPicks() {
     try {
+      try {
+        if (window.Supabase && window.Supabase.Settings) {
+          const settings = await window.Supabase.Settings.get();
+          if (settings && settings.product_sort) localStorage.setItem('x2_store_product_sort', settings.product_sort);
+        }
+      } catch(e) {}
       // جلب المنتجات: admin_products أولاً، ثم كاش Products.js، ثم Supabase
       let products = null;
+      const newestValue = p => {
+        const raw = p && (p.created_at || p.createdAt || p.updated_at || p.updatedAt || p.date || p.timerEnd || '');
+        const time = raw ? new Date(raw).getTime() : 0;
+        if (!isNaN(time) && time > 0) return time;
+        const id = Number(p && (p.id || p.productId || 0));
+        return Number.isFinite(id) ? id : 0;
+      };
+      const newestFirst = list => (Array.isArray(list) ? list.slice() : []).sort((a,b) => newestValue(b) - newestValue(a));
+      const dailyRandomValue = p => {
+        const today = new Date(), dayKey = today.getFullYear() * 1e4 + (today.getMonth()+1) * 100 + today.getDate();
+        const key = String(p && (p.id || p.productId || (p.name && (p.name.ar || p.name.en)) || p.name || ''));
+        let hash = dayKey;
+        for (let i=0; i<key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
+        return hash;
+      };
+      const storeSort = list => {
+        const copy = Array.isArray(list) ? list.slice() : [];
+        const mode = localStorage.getItem('x2_store_product_sort') || 'daily_random';
+        if (mode === 'newest') return newestFirst(copy);
+        if (mode === 'oldest') return copy.sort((a,b) => newestValue(a) - newestValue(b));
+        if (mode === 'price_asc') return copy.sort((a,b) => (parseFloat(a.price)||0) - (parseFloat(b.price)||0));
+        if (mode === 'price_desc') return copy.sort((a,b) => (parseFloat(b.price)||0) - (parseFloat(a.price)||0));
+        if (mode === 'discount') return copy.sort((a,b) => ((parseFloat(b.oldPrice)-parseFloat(b.price))/(parseFloat(b.oldPrice)||1)) - ((parseFloat(a.oldPrice)-parseFloat(a.price))/(parseFloat(a.oldPrice)||1)));
+        if (mode === 'rating') return copy.sort((a,b) => (parseFloat(b.rating)||0) - (parseFloat(a.rating)||0));
+        if (mode === 'name_az') return copy.sort((a,b) => String(a.name?.ar || a.name?.en || a.name || '').localeCompare(String(b.name?.ar || b.name?.en || b.name || ''), lang === 'en' ? 'en' : 'ar'));
+        return copy.sort((a,b) => dailyRandomValue(b) - dailyRandomValue(a));
+      };
       try {
         const ap = localStorage.getItem('admin_products');
         if (ap) { const p = JSON.parse(ap); if (Array.isArray(p) && p.length) products = p; }
@@ -733,11 +766,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
               const imgs = [];
               if (p.image) imgs.push(p.image);
               if (Array.isArray(p.gallery)) p.gallery.forEach(g => { if(g && g !== p.image) imgs.push(g); });
-              return { id: p.id, name: { ar: p.name_ar||'', en: p.name_en||'' }, img: imgs, price: p.price, oldPrice: p.old_price, rating: p.rating };
+              return { id: p.id, name: { ar: p.name_ar||'', en: p.name_en||'' }, img: imgs, price: p.price, oldPrice: p.old_price, rating: p.rating, date: p.created_at || p.updated_at || '', created_at: p.created_at || '', updated_at: p.updated_at || '' };
             });
           }
         } catch(e) {}
       }
+
+      products = storeSort(products || []);
 
       // اختيارات اليوم من الأدمن
       let dailyIds = new Set();
@@ -747,29 +782,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       if (dailyIds.size > 0) {
         // عرض المنتجات المحددة من الأدمن
-        chosen = products.filter(p => dailyIds.has(String(p.id)));
+        chosen = storeSort(products.filter(p => dailyIds.has(String(p.id))));
       } else {
-        // fallback: 12 منتج مخفّض عشوائي يومياً
+        // fallback: 12 منتج مخفّض حسب ترتيب المتجر
         const discounted = products.filter(p => {
           const pr = parseFloat(p.price), old = parseFloat(p.oldPrice);
           return old > pr && pr > 0;
-        }).sort((a, b) => {
-          const da = (parseFloat(a.oldPrice) - parseFloat(a.price)) / parseFloat(a.oldPrice);
-          const db = (parseFloat(b.oldPrice) - parseFloat(b.price)) / parseFloat(b.oldPrice);
-          return db - da;
         });
-        const pool = discounted.slice(0, Math.min(30, discounted.length));
-        const today = new Date();
-        const seed = today.getFullYear() * 10000 + (today.getMonth()+1) * 100 + today.getDate();
-        let s = seed;
-        const rand = () => { s = (s * 1664525 + 1013904223) & 0xffffffff; return (s >>> 0) / 0xffffffff; };
-        const used = new Set();
-        for (let i = 0; i < 12 && i < pool.length; i++) {
-          let idx;
-          do { idx = Math.floor(rand() * pool.length); } while (used.has(idx) && used.size < pool.length);
-          used.add(idx);
-          chosen.push(pool[idx]);
-        }
+        chosen = storeSort(discounted).slice(0, 12);
       }
 
       if (!chosen.length) { grid.closest('.daily-picks-section').style.display = 'none'; return; }

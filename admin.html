@@ -353,6 +353,16 @@
             <option value="instock">متاح فقط</option>
             <option value="discount">عليها خصم</option>
           </select>
+          <select id="storeSortMode" onchange="saveStoreSortMode()" style="width:auto" title="ترتيب عرض منتجات المتجر للعملاء">
+            <option value="daily_random">عرض المتجر: عشوائي يومي</option>
+            <option value="newest">عرض المتجر: الأحدث أولاً</option>
+            <option value="oldest">عرض المتجر: الأقدم أولاً</option>
+            <option value="price_asc">عرض المتجر: السعر من الأقل</option>
+            <option value="price_desc">عرض المتجر: السعر من الأعلى</option>
+            <option value="discount">عرض المتجر: الخصم الأعلى</option>
+            <option value="rating">عرض المتجر: التقييم الأعلى</option>
+            <option value="name_az">عرض المتجر: الاسم أ → ي</option>
+          </select>
         </div>
         <div class="plist" id="prodList" style="flex:1;max-height:65vh;overflow-y:auto"><div class="empty">لا توجد منتجات</div></div>
         <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
@@ -1875,6 +1885,21 @@ function filterByCat(slug){
   renderProducts();
 }
 
+function saveStoreSortMode(){
+  const mode = $('storeSortMode')?.value || 'daily_random';
+  localStorage.setItem('x2_store_product_sort', mode);
+  localStorage.setItem('x2_products_updated', String(Date.now()));
+  try { sessionStorage.removeItem('x2_prods_ss_v2'); localStorage.removeItem('x2_products_cache_v1'); } catch(e) {}
+  if (window.Supabase && window.Supabase.Settings) window.Supabase.Settings.save({ product_sort: mode }).catch(function(){});
+  toast('✅ تم حفظ ترتيب عرض المتجر');
+}
+
+function initStoreSortMode(){
+  const el = $('storeSortMode');
+  if (!el) return;
+  el.value = localStorage.getItem('x2_store_product_sort') || 'daily_random';
+}
+
 function firstMedia(p){
   let arr=[]; const push=v=>{ if(Array.isArray(v))v.forEach(push); else if(v)arr.push(v); };
   push(p.images);push(p.img);push(p.image);push(p.videos);push(p.video);
@@ -2088,6 +2113,8 @@ function normalizeAdminArea(value) {
   if (!raw) return '';
   const first = raw.split('،')[0].split(',')[0].trim();
   const low = first.toLowerCase();
+  if (/^(غير\s*محدد|unknown|undefined|null|موقع\s*العميل|لم\s*يسمح)/i.test(low)) return '';
+  if (/^(united\s*arab\s*emirates|uae|الإمارات|الامارات|الإمارات\s*العربية\s*المتحدة|الامارات\s*العربية\s*المتحدة)$/i.test(low)) return 'الإمارات';
   if (/ras\s*al\s*khaimah|rak|راس\s*الخيمه|رأس\s*الخيمة/.test(low)) return 'رأس الخيمة';
   if (/dubai|دبي/.test(low)) return 'دبي';
   if (/abu\s*dhabi|ابوظبي|أبوظبي/.test(low)) return 'أبوظبي';
@@ -3088,7 +3115,17 @@ const LS_VISITORS = 'x2_visitors';
 function getVisitors() { try { return JSON.parse(localStorage.getItem(LS_VISITORS)||'[]'); } catch(e) { return []; } }
 
 function visitorArea(v) {
-  return normalizeAdminArea([v.city, v.country].filter(Boolean).join('، ')) || 'غير محدد';
+  const city = normalizeAdminArea(v.city || v.region || v.area || '');
+  const country = normalizeAdminArea(v.country || '');
+  return city || country || 'غير محدد';
+}
+
+function isUsefulVisitor(v) {
+  const page = String(v.page || v.url || '').toLowerCase();
+  const ua = String(v.user_agent || v.userAgent || '').toLowerCase();
+  if (/admin\.html|\/admin(?:\?|$|\/)/.test(page)) return false;
+  if (/bot|crawler|spider|preview|facebookexternalhit|whatsapp|telegrambot|curl|python|vercel|uptime/i.test(ua)) return false;
+  return true;
 }
 
 async function renderVisitorsStats() {
@@ -3100,13 +3137,14 @@ async function renderVisitorsStats() {
   // استخدم JWT الأدمن مع تجديد تلقائي عند الانتهاء
   const adminToken = await getValidAdminToken() || ANON;
 
-  fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors?select=visited_at,page,city,country&order=visited_at.desc&limit=500', {
+  fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors?select=visited_at,page,city,country,user_agent&order=visited_at.desc&limit=500', {
     headers: {
       'apikey': ANON,
       'Authorization': 'Bearer ' + adminToken
     }
   }).then(r => r.json()).then(function(rows) {
     if (!Array.isArray(rows)) throw new Error('no data');
+    rows = rows.filter(isUsefulVisitor);
     const today = new Date().toDateString();
     const todayVisits = rows.filter(v => new Date(v.visited_at).toDateString() === today);
     if (todayEl) todayEl.textContent = todayVisits.length;
@@ -3117,6 +3155,7 @@ async function renderVisitorsStats() {
         const loc = visitorArea(v);
         locMap[loc] = (locMap[loc]||0) + 1;
       });
+      delete locMap['غير محدد'];
       const sorted = Object.entries(locMap).sort((a,b) => b[1]-a[1]).slice(0, 10);
       locEl.innerHTML = sorted.length ? sorted.map(([loc, count]) =>
         `<div style="display:flex;justify-content:space-between;font-size:.82rem;padding:3px 6px;background:#f7f8fc;border-radius:6px">
@@ -3877,6 +3916,10 @@ function loadSettings() {
       var cached=getSettings();
       Object.keys(map).forEach(function(id){if(r[map[id]]!==undefined&&r[map[id]]!==null)cached[id]=r[map[id]];});
       localStorage.setItem(LS_SETTINGS,JSON.stringify(cached));
+      if (r.product_sort) {
+        localStorage.setItem('x2_store_product_sort', r.product_sort);
+        initStoreSortMode();
+      }
     }).catch(function(){});
   }
 }
@@ -4207,6 +4250,7 @@ async function loadSettingsFromSupabase() {
       if (remote.whatsapp)  s.wa   = remote.whatsapp;
       if (remote.site_name) s.name = remote.site_name;
       if (remote.logo)      s.logo = remote.logo;
+      if (remote.product_sort) localStorage.setItem('x2_store_product_sort', remote.product_sort);
       localStorage.setItem(LS_SETTINGS, JSON.stringify(s));
     }
   } catch(e) {}
@@ -5275,6 +5319,7 @@ async function loadCampaignsFromSupabase() {
 
 /* ================= بدء لوحة التحكم ================= */
 (async function init(){
+  initStoreSortMode();
   
   // عرض المنتجات المحلية فوراً (بدون انتظار Supabase)
   const _cached = localStorage.getItem('admin_products_cache');

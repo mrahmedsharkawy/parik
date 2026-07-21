@@ -2764,14 +2764,43 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       price:    getPriceValue(p.price),
       oldPrice: getPriceValue(p.old_price || p.oldPrice),
       img:      p.image || p.img || 'assets/logo.png',
+      date:     p.created_at || p.createdAt || p.updated_at || p.updatedAt || p.date || '',
       rating:   p.rating || 5
     };
   }
 
+  function newestProductValue(p) {
+    const raw = p && (p.created_at || p.createdAt || p.updated_at || p.updatedAt || p.date || '');
+    const time = raw ? new Date(raw).getTime() : 0;
+    if (!isNaN(time) && time > 0) return time;
+    const id = Number(p && (p.id || p.productId || 0));
+    return Number.isFinite(id) ? id : 0;
+  }
+
+  function dailyProductValue(p) {
+    const today = new Date(), dayKey = today.getFullYear() * 1e4 + (today.getMonth()+1) * 100 + today.getDate();
+    const key = String(p && (p.id || p.productId || (p.name && (p.name.ar || p.name.en)) || p.name || ''));
+    let hash = dayKey;
+    for (let i=0; i<key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
+    return hash;
+  }
+
+  function sortAccountProducts(products) {
+    const copy = (products || []).slice();
+    const mode = localStorage.getItem('x2_store_product_sort') || 'daily_random';
+    if (mode === 'newest') return copy.sort((a,b) => newestProductValue(b) - newestProductValue(a));
+    if (mode === 'oldest') return copy.sort((a,b) => newestProductValue(a) - newestProductValue(b));
+    if (mode === 'price_asc') return copy.sort((a,b) => (a.price||0) - (b.price||0));
+    if (mode === 'price_desc') return copy.sort((a,b) => (b.price||0) - (a.price||0));
+    if (mode === 'discount') return copy.sort((a,b) => ((b.oldPrice-b.price)/(b.oldPrice||1)) - ((a.oldPrice-a.price)/(a.oldPrice||1)));
+    if (mode === 'rating') return copy.sort((a,b) => (parseFloat(b.rating)||0) - (parseFloat(a.rating)||0));
+    return copy.sort((a,b) => dailyProductValue(b) - dailyProductValue(a));
+  }
+
   function getDiscountedProducts(products) {
-    return (products || [])
+    return sortAccountProducts((products || [])
       .map(normalizeProduct)
-      .filter(p => p.oldPrice > p.price && p.price > 0);
+      .filter(p => p.oldPrice > p.price && p.price > 0));
   }
 
   function renderOfferCard(product) {
@@ -2811,6 +2840,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </div>`;
 
     try {
+      try {
+        if (window.Supabase && window.Supabase.Settings) {
+          const settings = await window.Supabase.Settings.get();
+          if (settings && settings.product_sort) localStorage.setItem('x2_store_product_sort', settings.product_sort);
+        }
+      } catch(e) {}
       let products = [];
 
       // جلب من Supabase أولاً (المصدر الحقيقي للمنتجات)

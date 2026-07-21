@@ -645,6 +645,43 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     renderGrid();
   };
 
+  function newestValue(p) {
+    const raw = p && (p.created_at || p.createdAt || p.updated_at || p.updatedAt || p.date || p.timerEnd || '');
+    const time = raw ? new Date(raw).getTime() : 0;
+    if (!isNaN(time) && time > 0) return time;
+    const id = Number(p && (p.id || p.productId || 0));
+    return Number.isFinite(id) ? id : 0;
+  }
+
+  function sortNewestFirst(arr) {
+    return [...arr].sort((a,b) => newestValue(b) - newestValue(a));
+  }
+
+  function dailyRandomValue(p) {
+    const today = new Date(), dayKey = today.getFullYear() * 1e4 + (today.getMonth()+1) * 100 + today.getDate();
+    const key = String(p && (p.id || p.productId || (p.name && (p.name.ar || p.name.en)) || p.name || ''));
+    let hash = dayKey;
+    for (let i=0; i<key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
+    return hash;
+  }
+
+  function sortByStoreMode(arr) {
+    const copy = [...arr];
+    const mode = localStorage.getItem('x2_store_product_sort') || 'daily_random';
+    if (mode === 'newest') return sortNewestFirst(copy);
+    if (mode === 'oldest') return copy.sort((a,b) => newestValue(a) - newestValue(b));
+    if (mode === 'price_asc') return copy.sort((a,b) => a.price - b.price);
+    if (mode === 'price_desc') return copy.sort((a,b) => b.price - a.price);
+    if (mode === 'discount') return copy.sort((a,b) => {
+      const da = a.oldPrice > a.price ? (a.oldPrice - a.price) / a.oldPrice : 0;
+      const db = b.oldPrice > b.price ? (b.oldPrice - b.price) / b.oldPrice : 0;
+      return db - da;
+    });
+    if (mode === 'rating') return copy.sort((a,b) => (parseFloat(b.rating)||0) - (parseFloat(a.rating)||0));
+    if (mode === 'name_az') return copy.sort((a,b) => getName(a).localeCompare(getName(b), lang === 'en' ? 'en' : 'ar'));
+    return copy.sort((a,b) => dailyRandomValue(b) - dailyRandomValue(a));
+  }
+
   function sortDeals(arr) {
     const copy = [...arr];
     if (sortKey === 'discount') {
@@ -656,6 +693,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     } else if (sortKey === 'price_asc')  { copy.sort((a,b) => a.price - b.price); }
     else if (sortKey === 'price_desc') { copy.sort((a,b) => b.price - a.price); }
     else if (sortKey === 'saving')     { copy.sort((a,b) => (b.oldPrice-b.price) - (a.oldPrice-a.price)); }
+    else { return sortByStoreMode(copy); }
     return copy;
   }
 
@@ -691,6 +729,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   async function loadDeals() {
     const grid = document.getElementById('offersGrid');
     try {
+      try {
+        if (window.Supabase && window.Supabase.Settings) {
+          const settings = await window.Supabase.Settings.get();
+          if (settings && settings.product_sort) localStorage.setItem('x2_store_product_sort', settings.product_sort);
+        }
+      } catch(e) {}
       // قراءة المنتجات: admin_products أولاً، ثم Supabase، ثم JSON
       let products = null;
 
@@ -716,6 +760,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 price: p.price,
                 oldPrice: p.old_price,
                 category: Array.isArray(p.categories) ? p.categories : [],
+                date: p.created_at || p.updated_at || '',
+                created_at: p.created_at || '',
+                updated_at: p.updated_at || '',
                 rating: p.rating
               };
             });

@@ -566,6 +566,40 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     } catch(e) { return false; }
   }
 
+  async function getProfileSyncToken(email, pass, authData) {
+    const existingToken = authData?.access_token || localStorage.getItem('x2_token') || '';
+    if (existingToken) return existingToken;
+    if (!email || !pass || !window.Supabase || !window.Supabase.Auth) return '';
+    try {
+      const loginData = await window.Supabase.Auth.signIn(email, pass);
+      if (loginData?.access_token) localStorage.setItem('x2_token', loginData.access_token);
+      return loginData?.access_token || '';
+    } catch(e) { return ''; }
+  }
+
+  async function ensureCustomerSaved(profile) {
+    const email = String(profile.email || '').trim().toLowerCase();
+    const phone = normalizeUaePhone(profile.phone || '');
+    const customer = { name: profile.name || '', email, phone, city: profile.address || '', address: profile.address || '' };
+    if (!email && !phone) throw new Error('بيانات العميل غير مكتملة');
+
+    if (window.Supabase?.Customers?.upsert) await window.Supabase.Customers.upsert(customer);
+
+    let saved = await findExistingCustomer(email, phone);
+    if (saved) return saved;
+
+    const body = JSON.stringify({ full_name: customer.name, email, phone, city: customer.city, address: customer.address, active: true });
+    const res = await fetch(_SB_URL + '/rest/v1/customers', {
+      method: 'POST',
+      headers: { apikey: _SB_ANON, Authorization: 'Bearer ' + _SB_ANON, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+      body
+    });
+    if (!res.ok && res.status !== 409) throw new Error('تعذر حفظ العميل في قاعدة البيانات');
+    saved = await findExistingCustomer(email, phone);
+    if (!saved) throw new Error('تم إنشاء الحساب لكن لم يتم تأكيد حفظ العميل في قاعدة البيانات');
+    return saved;
+  }
+
   function hideErrors() {
     ['login-error','register-error'].forEach(id => {
       const el = document.getElementById(id);
@@ -703,9 +737,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       // حفظ كل بيانات العميل في حسابه (localStorage) بعد التسجيل
   const profile = saveProfile({ name: fullName, email, phone, address, password: pass });
 
-      // حفظ في customers أيضاً
-      try { await window.Supabase.Customers.upsert({ name: fullName, email, phone, city: address, address }); } catch(e) {}
-  syncProfileToUserSync(profile, signupData?.access_token).catch(()=>{});
+      // حفظ في customers أيضاً والتأكد أنه ظهر في قاعدة العملاء
+      await ensureCustomerSaved(profile);
+      const syncToken = await getProfileSyncToken(email, pass, signupData);
+      syncProfileToUserSync(profile, syncToken).catch(()=>{});
 
       showSuccess('تم إنشاء حسابك! 🎉', 'مرحباً ' + fname + '! تحقق من بريدك لتفعيل الحساب.');
       setTimeout(() => { window.location.href = 'account.html'; }, 2000);

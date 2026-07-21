@@ -49,6 +49,8 @@ CREATE TABLE IF NOT EXISTS settings (
   value TEXT
 );
 
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS product_sort TEXT DEFAULT 'daily_random';
+
 -- Row Level Security (اختياري - للحماية)
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
