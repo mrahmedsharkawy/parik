@@ -1455,7 +1455,15 @@ document.addEventListener("DOMContentLoaded", async function() {
                     return src;
                 }
             }
-            const miniVideoSources = [ optimizeCloudinaryVideoUrl(fvSrc, "f_mp4,vc_h264,ac_aac,q_auto:eco,w_360,c_limit"), optimizeCloudinaryVideoUrl(fvSrc, "f_mp4,vc_h264,ac_aac,q_auto,w_360,c_limit"), optimizeCloudinaryVideoUrl(fvSrc, "f_mp4,vc_h264,q_auto:eco,w_360,c_limit"), optimizeCloudinaryVideoUrl(fvSrc, "q_auto,w_360,c_limit"), fvSrc ].filter((src, i, arr) => src && arr.indexOf(src) === i), fullVideoSrc = optimizeCloudinaryVideoUrl(fvSrc, "f_mp4,vc_h264,ac_aac,q_auto,w_720,c_limit"), posterSrc = normalizeAssetUrl(imgs[0] || "") || "/assets/logo.png";
+            function optimizeCloudinaryHlsUrl(src) {
+                try {
+                    if (!/res\.cloudinary\.com\/[^/]+\/video\/upload\//.test(String(src || ""))) return "";
+                    return String(src).replace(/\/video\/upload\/(?:[^/]+\/)?(v\d+\/)/, "/video/upload/sp_auto/$1").replace(/\.(mp4|webm|ogg|ogv|mov|m4v)(\?.*)?$/i, ".m3u8$2");
+                } catch (e) {
+                    return "";
+                }
+            }
+            const isIOSVideo = /iPhone|iPad|iPod/i.test(navigator.userAgent) || navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1, hlsVideoSrc = optimizeCloudinaryHlsUrl(fvSrc), miniMp4Src = optimizeCloudinaryVideoUrl(fvSrc, "f_mp4,vc_h264,ac_aac,q_auto:eco,w_360,c_limit"), miniVideoSources = [ ...(isIOSVideo && hlsVideoSrc ? [ hlsVideoSrc ] : []), miniMp4Src, optimizeCloudinaryVideoUrl(fvSrc, "f_mp4,vc_h264,ac_aac,q_auto,w_360,c_limit"), optimizeCloudinaryVideoUrl(fvSrc, "f_mp4,vc_h264,q_auto:eco,w_360,c_limit"), optimizeCloudinaryVideoUrl(fvSrc, "q_auto,w_360,c_limit"), fvSrc ].filter((src, i, arr) => src && arr.indexOf(src) === i), fullVideoSrc = isIOSVideo && hlsVideoSrc || optimizeCloudinaryVideoUrl(fvSrc, "f_mp4,vc_h264,ac_aac,q_auto,w_720,c_limit"), posterSrc = normalizeAssetUrl(imgs[0] || "") || "/assets/logo.png";
             const startMiniVideo = function() {
                 const wrap = mainWrap || document.querySelector("#mainImage")?.parentElement;
                 const pip = document.createElement("div");
@@ -1485,7 +1493,9 @@ document.addEventListener("DOMContentLoaded", async function() {
                 vid.setAttribute("autoplay", "");
                 vid.setAttribute("playsinline", "");
                 vid.setAttribute("webkit-playsinline", "");
+                vid.setAttribute("x-webkit-airplay", "allow");
                 vid.preload = "auto";
+                vid.poster = posterSrc;
                 let videoRetryDone = false, videoSourceIndex = 0;
                 function setMiniVideoSource(cacheBust) {
                     const src = miniVideoSources[videoSourceIndex] || fvSrc;
