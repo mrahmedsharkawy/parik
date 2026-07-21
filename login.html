@@ -794,8 +794,24 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         if (await loginWithoutEmailConfirmation(email, pass)) return;
         showError('login-error', '❌ البريد الإلكتروني أو كلمة المرور غير صحيحة');
       } else if (msg.includes('Email not confirmed')) {
+        const existingCustomer = await findExistingCustomer(email, '');
+        if (existingCustomer) {
+          const customerData = customerProfileData(existingCustomer);
+          const profile = saveProfile({
+            ...customerData,
+            name: customerData.name || email.split('@')[0],
+            email: customerData.email || email,
+            phone: customerData.phone || '',
+            address: customerData.address || '',
+            password: pass
+          });
+          rememberLocalUser(profile, pass);
+          showSuccess('تم تسجيل الدخول بنجاح! 🎉', 'مرحباً ' + (profile.name || email.split('@')[0]).split(' ')[0] + '! جارٍ تحويلك...');
+          setTimeout(() => { window.location.href = 'account.html'; }, 1200);
+          return;
+        }
         if (await loginWithoutEmailConfirmation(email, pass)) return;
-        showError('login-error', '❌ البريد الإلكتروني مسجّل بالفعل. إذا لم يفتح الحساب، أعد إنشاء الحساب بنفس البيانات أو تواصل معنا.');
+        showError('login-error', '❌ البريد الإلكتروني مسجّل بالفعل. جرّب تسجيل الدخول أو تواصل معنا لاستعادة الحساب.');
       } else {
         showError('login-error', '❌ ' + msg);
       }
