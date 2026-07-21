@@ -333,7 +333,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <button class="auth-btn" onclick="doLogin()">تسجيل الدخول</button>
 
         <div class="auth-social" style="margin-top:12px">
-          <button type="button" class="auth-social-btn google-btn" onclick="socialLogin('google')">
+          <button type="button" class="auth-social-btn google-btn" onclick="socialLogin('google', 'login')">
             <span class="google-mark" aria-hidden="true">G</span>
             <span>الدخول بحساب Google</span>
           </button>
@@ -398,7 +398,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <button class="auth-btn" onclick="doRegister()">إنشاء حساب جديد</button>
 
         <div class="auth-social" style="margin-top:12px">
-          <button type="button" class="auth-social-btn google-btn" onclick="socialLogin('google')">
+          <button type="button" class="auth-social-btn google-btn" onclick="socialLogin('google', 'signup')">
             <span class="google-mark" aria-hidden="true">G</span>
             <span>التسجيل بحساب Google</span>
           </button>
@@ -466,8 +466,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     input.value = phone ? phone.replace('+971', '+971 ') : '+971 ';
   }
 
+  async function waitForSbFetch() {
+    if (window.sbFetch) return true;
+    return await new Promise(resolve => {
+      const started = Date.now();
+      const timer = setInterval(() => {
+        if (window.sbFetch) { clearInterval(timer); resolve(true); }
+        else if (Date.now() - started > 4000) { clearInterval(timer); resolve(false); }
+      }, 100);
+    });
+  }
+
   async function findExistingCustomer(email, phone) {
-    if (!window.sbFetch) return null;
+    const ready = await waitForSbFetch();
+    if (!ready) return null;
     const cleanEmail = String(email || '').trim().toLowerCase();
     const cleanPhone = normalizeUaePhone(phone);
     const queries = [];
@@ -943,10 +955,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     alert('📧 تم إرسال رابط إعادة تعيين كلمة المرور إلى: ' + email + '\n(ميزة قيد التطوير)');
   }
 
-  function socialLogin(provider) {
-    const redirectTo = 'https://bariqgifts.com/login.html';
+  function socialLogin(provider, mode) {
+    const oauthMode = mode === 'signup' ? 'signup' : 'login';
+    try {
+      localStorage.setItem('x2_oauth_mode', oauthMode);
+      if (oauthMode === 'signup') {
+        localStorage.removeItem('x2_logged');
+        localStorage.removeItem('x2_token');
+        localStorage.removeItem(PROFILE_KEY);
+      }
+    } catch(e) {}
+    const redirectTo = 'https://bariqgifts.com/login.html?oauth_mode=' + encodeURIComponent(oauthMode);
     const oauthUrl = _SB_URL + '/auth/v1/authorize?provider=' + provider
-      + '&redirect_to=' + encodeURIComponent(redirectTo);
+      + '&redirect_to=' + encodeURIComponent(redirectTo)
+      + (provider === 'google' ? '&prompt=select_account' : '');
     // فتح في متصفح خارجي لتجنب حجب Google للـ WebView
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
     if (isStandalone) {
@@ -964,6 +986,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const params = new URLSearchParams(hash.substring(1));
     const accessToken = params.get('access_token');
     if (!accessToken) return;
+    const query = new URLSearchParams(window.location.search);
+    const oauthMode = query.get('oauth_mode') || localStorage.getItem('x2_oauth_mode') || 'login';
+    localStorage.removeItem('x2_oauth_mode');
 
     // إزالة الهاش من URL
     history.replaceState(null, '', window.location.pathname + window.location.search);
@@ -980,6 +1005,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const nameParts = fullName.trim().split(' ');
       const existingCustomer = await findExistingCustomer(user.email || '', '');
       const customerData = customerProfileData(existingCustomer);
+      if (oauthMode === 'signup' && existingCustomer) {
+        localStorage.removeItem('x2_token');
+        localStorage.removeItem('x2_logged');
+        localStorage.removeItem(PROFILE_KEY);
+        switchTab('register');
+        showError('register-error', '❌ هذا البريد الإلكتروني مسجّل بالفعل. جرّب تسجيل الدخول بحساب Google.');
+        return;
+      }
       const profile = {
         ...customerData,
         fname: nameParts[0] || '',
@@ -1007,6 +1040,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   }
 
   // معالجة رجوع OAuth أولاً
+  const _hasOAuthCallback = window.location.hash && window.location.hash.includes('access_token');
   handleOAuthCallback();
 
   const regPhoneInput = document.getElementById('reg-phone');
@@ -1017,8 +1051,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   }
 
   // التحقق إذا كان مسجل دخول (تجاهل الفحص لو قادم من تسجيل الخروج)
-  const _fromLogout = new URLSearchParams(window.location.search).get('logout') === '1';
-  if (!_fromLogout && localStorage.getItem('x2_logged') === '1') {
+  const _query = new URLSearchParams(window.location.search);
+  const _fromLogout = _query.get('logout') === '1';
+  const urlTab = _query.get('tab');
+  if (!_fromLogout && !_hasOAuthCallback && urlTab !== 'register' && localStorage.getItem('x2_logged') === '1') {
     const p = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}');
     if (confirm('مرحباً ' + (p.name || '') + '! أنت مسجّل الدخول بالفعل.\nهل تريد الذهاب لحسابك؟')) {
       window.location.href = 'account.html';
@@ -1026,7 +1062,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   }
 
   // فتح التبويب المطلوب من URL
-  const urlTab = new URLSearchParams(window.location.search).get('tab');
   if (urlTab === 'register') switchTab('register');
   </script>
 
