@@ -1,17 +1,25 @@
 ﻿/* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v133';
+const CACHE = 'bariq-v134';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
-  '/index.html',
+  '/categories',
   '/categories.html',
+  '/product',
   '/product.html',
+  '/Cart',
   '/Cart.html',
+  '/account',
   '/account.html',
+  '/login',
   '/login.html',
+  '/offers',
   '/offers.html',
+  '/checkout',
   '/checkout.html',
+  '/affiliate',
   '/affiliate.html',
+  '/policy',
   '/policy.html',
   '/assets/logo.png',
   '/assets/icon.png',
@@ -117,7 +125,11 @@ async function clearPushInbox() {
 self.addEventListener('install', function(e) {
   e.waitUntil(
     caches.open(CACHE).then(function(c) {
-      return Promise.allSettled(STATIC_URLS.map(url => c.add(url).catch(() => {})));
+      return Promise.allSettled(STATIC_URLS.map(function(url) {
+        return fetch(new Request(url, { cache: 'reload' })).then(function(res) {
+          if (res.ok && !res.redirected && res.type !== 'opaqueredirect') return c.put(url, res.clone());
+        }).catch(() => {});
+      }));
     })
   );
   self.skipWaiting();
@@ -140,17 +152,31 @@ self.addEventListener('fetch', function(e) {
   function refreshCache(cache, request, cacheKey) {
     const fetchRequest = cacheKey ? new Request(cacheKey, { cache: 'reload' }) : new Request(request, { cache: 'reload' });
     return fetch(fetchRequest).then(function(res) {
-      if (res.ok && !res.redirected && res.type !== 'opaqueredirect') cache.put(cacheKey || request, res.clone());
+      if (res.ok && !res.redirected && res.type !== 'opaqueredirect') {
+        cache.put(cacheKey || request, res.clone());
+        return res;
+      }
+      if (cacheKey && !/\.html$/.test(cacheKey)) {
+        const htmlKey = cacheKey === '/' ? '/index.html' : (cacheKey === '/Cart' ? '/Cart.html' : cacheKey + '.html');
+        return fetch(new Request(htmlKey, { cache: 'reload' })).then(function(htmlRes) {
+          if (htmlRes.ok && !htmlRes.redirected && htmlRes.type !== 'opaqueredirect') {
+            cache.put(cacheKey, htmlRes.clone());
+            return htmlRes;
+          }
+          throw new Error('redirected or missing response skipped');
+        });
+      }
+      throw new Error('redirected or missing response skipped');
       return res;
     });
   }
 
   function htmlCachePath(path) {
-    if (path === '/' || path === '') return '/index.html';
-    if (path === '/Cart' || path === '/Cart.html') return '/Cart.html';
-    if (path === '/product' || path === '/product.html' || /^\/product\//.test(path)) return '/product.html';
-    if (/\.html$/.test(path)) return path;
-    return path + '.html';
+    if (path === '/' || path === '' || path === '/index.html') return '/';
+    if (path === '/Cart' || path === '/Cart.html') return '/Cart';
+    if (path === '/product' || path === '/product.html' || /^\/product\//.test(path)) return '/product';
+    if (/\.html$/.test(path)) return path.replace(/\.html$/, '');
+    return path;
   }
 
   const isHtml = e.request.destination === 'document'
