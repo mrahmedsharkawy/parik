@@ -203,11 +203,11 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     .auth-social-btn img { width: 18px; height: 18px; }
     .auth-social-btn.google-btn {
       border-color: #dadce0;
-      background: linear-gradient(90deg, #4285F4 0 25%, #34A853 25% 50%, #FBBC05 50% 75%, #EA4335 75% 100%);
+      background: linear-gradient(135deg, #4285F4 0%, #6a5cff 48%, #EA4335 100%);
       color: #fff;
       box-shadow: 0 8px 18px rgba(66,133,244,.18);
     }
-    .auth-social-btn.google-btn:hover { border-color: #c9ccd1; filter: brightness(.98); background: linear-gradient(90deg, #4285F4 0 25%, #34A853 25% 50%, #FBBC05 50% 75%, #EA4335 75% 100%); }
+    .auth-social-btn.google-btn:hover { border-color: #c9ccd1; filter: brightness(.98); background: linear-gradient(135deg, #4285F4 0%, #6a5cff 48%, #EA4335 100%); }
     .google-mark { width:22px;height:22px;border-radius:50%;background:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;letter-spacing:0;color:#4285F4;box-shadow:0 1px 4px rgba(0,0,0,.16);font-family:Arial,sans-serif; }
 
     /* قوة كلمة المرور */
@@ -971,23 +971,29 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const meta = user.user_metadata || {};
       const fullName = meta.full_name || meta.name || user.email || '';
       const nameParts = fullName.trim().split(' ');
+      const existingCustomer = await findExistingCustomer(user.email || '', '');
+      const customerData = customerProfileData(existingCustomer);
       const profile = {
+        ...customerData,
         fname: nameParts[0] || '',
         lname: nameParts.slice(1).join(' ') || '',
-        name: fullName,
-        email: user.email || '',
-        phone: meta.phone || '',
-        avatar: meta.avatar_url || meta.picture || ''
+        name: customerData.name || fullName,
+        email: customerData.email || user.email || '',
+        phone: customerData.phone || meta.phone || '',
+        address: customerData.address || '',
+        avatar: meta.avatar_url || meta.picture || '',
+        auth_provider: 'google'
       };
 
       localStorage.setItem('x2_token', accessToken);
       localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
       localStorage.setItem('x2_logged', '1');
-      localStorage.setItem('x2_goto_section', 'profile');
+      const needsProfileCompletion = !existingCustomer;
+      if (needsProfileCompletion) localStorage.setItem('x2_goto_section', 'profile');
       try { await ensureCustomerSaved(profile); } catch(e) {}
       syncProfileToUserSync(profile, accessToken).catch(()=>{});
-      showSuccess('مرحباً ' + (profile.fname || '') + '!', 'أكمل رقم الهاتف والعنوان لحفظ حسابك.');
-      setTimeout(() => { window.location.href = 'account.html?section=profile&complete=1'; }, 1000);
+      showSuccess('مرحباً ' + (profile.fname || profile.name || '') + '!', needsProfileCompletion ? 'أكمل رقم الهاتف والعنوان لحفظ حسابك.' : 'تم تسجيل الدخول بنجاح.');
+      setTimeout(() => { window.location.href = needsProfileCompletion ? 'account.html?section=profile&complete=1' : 'account.html'; }, 1000);
     } catch (e) {
       showError('login-error', '❌ فشل تسجيل الدخول الاجتماعي. حاول مرة أخرى.');
     }
