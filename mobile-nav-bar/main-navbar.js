@@ -143,3 +143,48 @@ async function initMobileNav() {
 document.addEventListener('DOMContentLoaded', initMobileNav);
 window.addEventListener('resize', initMobileNav, { passive: true });
 window.addEventListener('orientationchange', initMobileNav, { passive: true });
+
+(function initFastInternalNavigation() {
+  const seen = new Set();
+  const corePages = ['/', '/index.html', '/categories', '/categories.html', '/offers', '/offers.html', '/Cart', '/Cart.html', '/account', '/account.html'];
+
+  function canPrefetch() {
+    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    return !conn || (!conn.saveData && !/2g/i.test(conn.effectiveType || ''));
+  }
+
+  function normalizeUrl(href) {
+    try {
+      const url = new URL(href, location.href);
+      if (url.origin !== location.origin) return '';
+      if (url.hash && url.pathname === location.pathname && url.search === location.search) return '';
+      if (/\.(webp|png|jpe?g|gif|svg|pdf|zip|cdr)$/i.test(url.pathname)) return '';
+      return url.pathname + url.search;
+    } catch(e) {
+      return '';
+    }
+  }
+
+  function prefetch(href) {
+    if (!canPrefetch()) return;
+    const url = normalizeUrl(href);
+    if (!url || seen.has(url)) return;
+    seen.add(url);
+    try {
+      fetch(url, { method: 'GET', credentials: 'same-origin', cache: 'force-cache', priority: 'low' }).catch(() => {});
+    } catch(e) {}
+  }
+
+  function prefetchLink(event) {
+    const link = event.target && event.target.closest ? event.target.closest('a[href]') : null;
+    if (link) prefetch(link.href);
+  }
+
+  document.addEventListener('pointerover', prefetchLink, { passive: true });
+  document.addEventListener('touchstart', prefetchLink, { passive: true });
+  window.addEventListener('load', function() {
+    const run = () => corePages.forEach(prefetch);
+    if ('requestIdleCallback' in window) requestIdleCallback(run, { timeout: 2500 });
+    else setTimeout(run, 1200);
+  }, { once: true });
+})();

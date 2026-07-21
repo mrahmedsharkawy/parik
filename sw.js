@@ -1,10 +1,13 @@
 ﻿/* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v128';
+const CACHE = 'bariq-v130';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
+  '/index.html',
   '/categories',
+  '/categories.html',
   '/product',
+  '/product.html',
   '/Cart',
   '/Cart.html',
   '/account',
@@ -12,7 +15,11 @@ const STATIC_URLS = [
   '/login',
   '/login.html',
   '/offers',
+  '/offers.html',
   '/checkout',
+  '/checkout.html',
+  '/affiliate.html',
+  '/policy.html',
   '/assets/logo.png',
   '/assets/icon.png',
   '/assets/icon-96.png',
@@ -137,9 +144,9 @@ self.addEventListener('fetch', function(e) {
   if (url.includes('supabase.co') || url.includes('/rest/') || url.includes('/auth/') || url.includes('/storage/')) return;
   if (e.request.method !== 'GET') return;
 
-  function refreshCache(cache, request) {
+  function refreshCache(cache, request, cacheKey) {
     return fetch(new Request(request, { cache: 'reload' })).then(function(res) {
-      if (res.ok) cache.put(request, res.clone());
+      if (res.ok) cache.put(cacheKey || request, res.clone());
       return res;
     });
   }
@@ -153,14 +160,15 @@ self.addEventListener('fetch', function(e) {
   const isProductPath = /^\/product(?:\/|$)/.test(path) || path === '/product.html';
   const htmlCacheKey = isProductPath ? '/product' : path;
 
-  // HTML: network-first so page changes appear immediately after deployment.
+  // HTML: return cached app pages immediately, then refresh in the background.
   if (isHtml) {
     e.respondWith(
       caches.open(CACHE).then(function(cache) {
-        return refreshCache(cache, e.request).catch(function() {
-          return cache.match(htmlCacheKey)
-            || caches.match('/index.html')
-            || new Response('Offline', {status: 503});
+        return cache.match(htmlCacheKey).then(function(cached) {
+          const fresh = refreshCache(cache, e.request, htmlCacheKey).catch(function() {
+            return cached || caches.match('/index.html') || new Response('Offline', {status: 503});
+          });
+          return cached || fresh;
         });
       })
     );
