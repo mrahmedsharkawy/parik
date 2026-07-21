@@ -323,6 +323,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </div>
 
         <button class="auth-btn" onclick="doLogin()">تسجيل الدخول</button>
+
+        <div class="auth-social" style="margin-top:12px">
+          <button type="button" class="auth-social-btn" onclick="socialLogin('google')">
+            <img src="/assets/social/google.webp" alt="Google" onerror="this.style.display='none'">
+            <span>الدخول بحساب Google</span>
+          </button>
+        </div>
       </div>
 
       <!-- ===== نموذج إنشاء الحساب ===== -->
@@ -965,10 +972,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         avatar: meta.avatar_url || meta.picture || ''
       };
 
+      localStorage.setItem('x2_token', accessToken);
       localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
       localStorage.setItem('x2_logged', '1');
-      showSuccess('مرحباً ' + (profile.fname || '') + '!', 'تم تسجيل الدخول بنجاح عبر ' + (meta.iss || 'OAuth'));
-      setTimeout(() => { window.location.href = 'account.html'; }, 1500);
+      localStorage.setItem('x2_goto_section', 'profile');
+      try { await ensureCustomerSaved(profile); } catch(e) {}
+      syncProfileToUserSync(profile, accessToken).catch(()=>{});
+      showSuccess('مرحباً ' + (profile.fname || '') + '!', 'أكمل رقم الهاتف والعنوان لحفظ حسابك.');
+      setTimeout(() => { window.location.href = 'account.html?section=profile&complete=1'; }, 1000);
     } catch (e) {
       showError('login-error', '❌ فشل تسجيل الدخول الاجتماعي. حاول مرة أخرى.');
     }

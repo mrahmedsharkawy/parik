@@ -1355,6 +1355,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="acc-profile-avatar" id="avatar-letter">م</div>
         <div class="acc-profile-name" id="profile-name">مستخدم</div>
         <div class="acc-profile-email" id="profile-email">لم يتم تسجيل الدخول</div>
+        <div id="profile-complete-note" style="display:none;background:#fff8e1;border:1px solid #f1d27a;color:#6b5200;border-radius:8px;padding:10px 12px;margin:0 0 12px;font-size:.84rem;font-weight:700;line-height:1.6">أكمل رقم الهاتف والعنوان ثم اضغط حفظ التغييرات.</div>
         <div class="acc-form-group"><label data-i18n="الاسم الكامل">الاسم الكامل</label><input type="text" id="pf-name" placeholder="أدخل اسمك" data-i18n-placeholder="أدخل اسمك"></div>
         <div class="acc-form-group"><label data-i18n="البريد الإلكتروني">البريد الإلكتروني</label><input type="email" id="pf-email" placeholder="example@email.com"></div>
         <div class="acc-form-group"><label data-i18n="عنواني">العنوان</label><input type="text" id="pf-address" placeholder="أدخل عنوانك"></div>
@@ -3302,7 +3303,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const goto = localStorage.getItem('x2_goto_section') || new URLSearchParams(location.search).get('section');
     if (goto) {
       localStorage.removeItem('x2_goto_section');
-      setTimeout(() => { if (typeof showSection === 'function') showSection(goto); }, 100);
+      setTimeout(() => {
+        if (typeof showSection === 'function') showSection(goto);
+        if (goto === 'profile' && new URLSearchParams(location.search).get('complete') === '1') {
+          const note = document.getElementById('profile-complete-note');
+          if (note) note.style.display = 'block';
+          const phone = document.getElementById('pf-phone');
+          if (phone) phone.focus();
+        }
+      }, 100);
     }
   })();
 
