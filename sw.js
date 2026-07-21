@@ -1,5 +1,5 @@
 ﻿/* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v134';
+const CACHE = 'bariq-v135';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -186,6 +186,22 @@ self.addEventListener('fetch', function(e) {
   const isAsset = url.includes('/style/') || url.includes('/java/') || url.includes('/translations/') || url.includes('/mobile-nav-bar/');
   const path = new URL(url).pathname.replace(/\/index\.html$/, '/') || '/';
   const htmlCacheKey = htmlCachePath(path);
+
+  const isAuthPage = path === '/login' || path === '/login.html' || path === '/account' || path === '/account.html';
+
+  // Auth pages must be fresh so signup/login fixes cannot be stuck behind old HTML.
+  if (isHtml && isAuthPage) {
+    e.respondWith(
+      caches.open(CACHE).then(function(cache) {
+        return refreshCache(cache, e.request, htmlCacheKey).catch(function() {
+          return cache.match(htmlCacheKey).then(function(cached) {
+            return cached || caches.match('/index.html') || new Response('Offline', {status: 503});
+          });
+        });
+      })
+    );
+    return;
+  }
 
   // HTML: return cached app pages immediately, then refresh in the background.
   if (isHtml) {
