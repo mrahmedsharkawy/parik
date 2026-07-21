@@ -2541,7 +2541,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     markCurrentOrdersSeen();
     try {
       localStorage.setItem('x2_notifications', '[]');
-      localStorage.setItem('x2_notif_clear_until', String(Date.now() + 10 * 60 * 1000));
+      localStorage.removeItem('x2_notif_clear_until');
     } catch(e) {}
     await clearPushInboxStore();
     renderNotifications();
@@ -2562,6 +2562,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
     window.dispatchEvent(new Event('x2:notif-updated'));
   };
+
+  try { localStorage.removeItem('x2_notif_clear_until'); } catch(e) {}
 
   // تحديث badge الزر السريع عند التحميل
   function mergeNotificationItem(item) {
