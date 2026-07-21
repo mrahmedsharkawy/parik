@@ -260,8 +260,16 @@
           </div>
         </div>
 
-        <label>الوصف</label>
-        <textarea id="p-desc" placeholder="وصف المنتج..."></textarea>
+        <div class="row">
+          <div>
+            <label>الوصف (عربي)</label>
+            <textarea id="p-desc" placeholder="وصف المنتج..."></textarea>
+          </div>
+          <div>
+            <label>الوصف (إنجليزي)</label>
+            <textarea id="p-desc-en" placeholder="Product description..."></textarea>
+          </div>
+        </div>
 
         <div class="row">
           <div>
@@ -1229,6 +1237,7 @@ const $ = id => document.getElementById(id);
 const isVideo = s => /\.(mp4|webm|ogg|ogv|mov|m4v)(\?|#|$)/i.test(String(s||'')) || String(s||'').startsWith('data:video');
 function toast(msg){ const t=$('toast'); if(!t) return; t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
 function getT(v){ if(!v) return ''; if(typeof v==='object') return v.ar||v.en||''; return String(v); }
+function getLangVal(v, lang){ if(!v) return ''; if(typeof v==='object') return v[lang]||''; return lang==='ar' ? String(v) : ''; }
 
 function getAdminCreds() {
   try {
@@ -1383,7 +1392,7 @@ async function loadProducts(){
           return {
             id: p.id, supabaseId: p.id,
             name: { ar: p.name_ar||'', en: p.name_en||p.name_ar||'' },
-            desc: p.description_ar||'',
+            desc: { ar: p.description_ar||'', en: p.description_en||'' },
             img: imgs,
             category: Array.isArray(p.categories)?p.categories:(p.categories?[p.categories]:[]),
             price: p.price, oldPrice: p.old_price, stock: p.stock,
@@ -1419,7 +1428,7 @@ async function syncFromSupabase(){
       return {
         id: p.id, supabaseId: p.id,
         name: { ar: p.name_ar||'', en: p.name_en||p.name_ar||'' },
-        desc: p.description_ar||'',
+        desc: { ar: p.description_ar||'', en: p.description_en||'' },
         img: imgs,
         category: Array.isArray(p.categories)?p.categories:(p.categories?[p.categories]:[]),
         price: p.price, oldPrice: p.old_price, stock: p.stock,
@@ -1651,6 +1660,8 @@ async function saveProduct(){
 
   const nameAr = $('p-name-ar').value.trim();
   const nameEn = $('p-name-en').value.trim();
+  const descAr = $('p-desc').value.trim();
+  const descEn = $('p-desc-en').value.trim();
   if(!nameAr && !nameEn){ toast('اكتب اسم المنتج'); return; }
   const cats = getSelectedCats(); // اختياري - لم يعد إجباري
 
@@ -1664,7 +1675,7 @@ async function saveProduct(){
   const prod = {
     id,
     name: { ar: nameAr, en: nameEn || nameAr },
-    desc: $('p-desc').value.trim(),
+    desc: { ar: descAr, en: descEn },
     img: imgArr,
     category: cats,
     price: numOrUndef($('p-price').value),
@@ -1703,7 +1714,7 @@ async function saveProduct(){
     const publicImgs = imgArr.filter(function(s){ return s && !s.startsWith('data:'); });
     const sbProd = {
       name:      { ar: nameAr, en: nameEn || nameAr },
-      desc:      { ar: prod.desc || '', en: '' },
+      desc:      { ar: prod.desc?.ar || '', en: prod.desc?.en || '' },
       category:  cats,
       price:     prod.price    || 0,
       oldPrice:  prod.oldPrice || 0,
@@ -1718,6 +1729,7 @@ async function saveProduct(){
     const sbUpdate = {
       name_ar: nameAr, name_en: nameEn || nameAr,
       description_ar: sbProd.desc.ar,
+      description_en: sbProd.desc.en,
       price: sbProd.price, old_price: sbProd.oldPrice,
       stock: sbProd.stock, image: publicImgs[0]||'', gallery: publicImgs,
       categories: cats,
@@ -1776,7 +1788,8 @@ function editProduct(id){
   $('p-id').value = p.id;
   $('p-name-ar').value = p.name?.ar || (typeof p.name==='string'?p.name:'') || '';
   $('p-name-en').value = p.name?.en || '';
-  $('p-desc').value = p.desc || '';
+  $('p-desc').value = getLangVal(p.desc, 'ar');
+  $('p-desc-en').value = getLangVal(p.desc, 'en');
   $('p-price').value = p.price ?? '';
   $('p-oldprice').value = p.oldPrice ?? '';
   $('p-stock').value = p.stock ?? '';
@@ -1812,7 +1825,7 @@ function deleteProduct(id){
 
 function resetForm(){
   $('formTitle').textContent='➕ إضافة منتج';
-  ['p-id','p-name-ar','p-name-en','p-desc','p-price','p-oldprice','p-stock','p-rating','p-ratingcount','p-timerend']
+  ['p-id','p-name-ar','p-name-en','p-desc','p-desc-en','p-price','p-oldprice','p-stock','p-rating','p-ratingcount','p-timerend']
     .forEach(id=>$(id).value='');
   setSelectedCats([]);
   currentMedia=[]; renderMedia();
@@ -2682,13 +2695,14 @@ async function pushAllProductsToSupabase() {
       var nameAr = (p.name && typeof p.name === 'object') ? (p.name.ar||'') : (p.name||'');
       var nameEn = (p.name && typeof p.name === 'object') ? (p.name.en||nameAr) : nameAr;
       var descAr = (p.desc && typeof p.desc === 'object') ? (p.desc.ar||'') : (p.desc||'');
+      var descEn = (p.desc && typeof p.desc === 'object') ? (p.desc.en||'') : '';
 
       // حدد supabaseId: المحفوظ محلياً، أو بالمطابقة بالاسم، أو جديد
       var targetId = p.supabaseId || existingByName[nameAr.trim()] || null;
 
       if (targetId) {
         await window.Supabase.Products.update(targetId, {
-          name_ar:nameAr, name_en:nameEn, description_ar:descAr,
+          name_ar:nameAr, name_en:nameEn, description_ar:descAr, description_en:descEn,
           price:parseFloat(p.price)||0, old_price:parseFloat(p.oldPrice)||0,
           stock:parseInt(p.stock)||0, image:imgs[0]||'', gallery:imgs,
           categories:cats, rating:parseFloat(p.rating)||5,
@@ -2698,7 +2712,7 @@ async function pushAllProductsToSupabase() {
         products[i].supabaseId = targetId;
       } else {
         const res = await window.Supabase.Products.insert({
-          name:{ar:nameAr,en:nameEn}, desc:{ar:descAr,en:''},
+          name:{ar:nameAr,en:nameEn}, desc:{ar:descAr,en:descEn},
           category:cats, img:imgs,
           price:parseFloat(p.price)||0, oldPrice:parseFloat(p.oldPrice)||0,
           stock:parseInt(p.stock)||0, rating:parseFloat(p.rating)||5,
@@ -4852,11 +4866,12 @@ async function exportCustomers() {
 /* ================= تصدير المنتجات ================= */
 function exportProductsCSV() {
   if (!products || !products.length) { toast('❌ لا توجد منتجات'); return; }
-  var header = '\uFEFFالاسم عربي,الاسم انجليزي,السعر,السعر القديم,القسم,الكمية,التقييم,عدد التقييمات,عداد العرض,مميز,الوصف,صور,الرابط\n';
+  var header = '\uFEFFالاسم عربي,الاسم انجليزي,السعر,السعر القديم,القسم,الكمية,التقييم,عدد التقييمات,عداد العرض,مميز,الوصف عربي,الوصف انجليزي,صور,الرابط\n';
   var rows = products.map(function(p) {
     var nameAr = p.nameAr || (p.name && typeof p.name === 'object' ? p.name.ar : p.name) || '';
     var nameEn = p.nameEn || (p.name && typeof p.name === 'object' ? p.name.en : '') || '';
     var descAr = p.descAr || (p.desc && typeof p.desc === 'object' ? p.desc.ar : p.desc) || '';
+    var descEn = p.descEn || (p.desc && typeof p.desc === 'object' ? p.desc.en : '') || '';
     var cats   = Array.isArray(p.category) ? p.category.join('،') : (p.category || '');
     var imgs   = Array.isArray(p.img) ? p.img.filter(function(s){return s&&!String(s).startsWith('data:');}) : (p.img&&!String(p.img).startsWith('data:')?[p.img]:[]);
     return [
@@ -4871,6 +4886,7 @@ function exportProductsCSV() {
       p.timerEnd != null ? p.timerEnd : '',
       p.featured ? 1 : 0,
       String(descAr).replace(/[\r\n,]/g, ' '),
+      String(descEn).replace(/[\r\n,]/g, ' '),
       imgs.join('|'),
       p.link || ''
     ].join(',');
@@ -4972,7 +4988,8 @@ async function importProductsExcel(input) {
     const ratingCntIdx= find('عدد التقييمات','ratingcount','rating_count');
     const timerIdx    = find('عداد','timer','timer_end');
     const featuredIdx = find('مميز','featured');
-    const descIdx     = find('وصف','desc');
+    const descIdx     = find('وصف عربي','وصف','desc_ar','description_ar','desc');
+    const descEnIdx   = find('وصف انجليزي','وصف إنجليزي','desc_en','description_en');
     const imgIdx      = find('صور','image','img','photo');
     const linkIdx     = find('رابط','link','url');
 
@@ -4990,6 +5007,7 @@ async function importProductsExcel(input) {
       const nameEn = nameEnIdx >= 0 ? String(r[nameEnIdx]||'').trim() : '';
       const price  = priceIdx  >= 0 ? parseFloat(r[priceIdx]) || 0 : 0;
       const descVal = descIdx >= 0 ? String(r[descIdx]||'').trim() : '';
+      const descEnVal = descEnIdx >= 0 ? String(r[descEnIdx]||'').trim() : '';
       const imgRaw  = imgIdx  >= 0 ? String(r[imgIdx] ||'').trim() : '';
       const imgList = imgRaw ? imgRaw.split('|').map(s=>s.trim()).filter(Boolean) : [];
       // لو الاسم فارغ أو [object Object] → استخدم الوصف
@@ -5001,7 +5019,7 @@ async function importProductsExcel(input) {
       imported.push({
         id: maxId + i,
         name: { ar: nameAr, en: nameEn || nameAr },
-        desc: descVal,
+        desc: { ar: descVal, en: descEnVal },
         price,
         oldPrice:    oldPriceIdx >= 0 ? (r[oldPriceIdx] !== '' && r[oldPriceIdx] != null ? parseFloat(r[oldPriceIdx]) : '') : '',
         category:    cats,
@@ -5026,7 +5044,7 @@ async function importProductsExcel(input) {
         try {
           const res = await window.Supabase.Products.insert({
             name: p.name,
-            desc: { ar: p.desc || '', en: '' },
+            desc: { ar: getLangVal(p.desc, 'ar'), en: getLangVal(p.desc, 'en') },
             category: cats,
             img: p.img || [],
             price: parseFloat(p.price) || 0,

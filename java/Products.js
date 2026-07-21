@@ -69,7 +69,7 @@ function mapSupabaseProducts(sbProds) {
                 ar: p.name_ar || "",
                 en: p.name_en || p.name_ar || ""
             },
-            desc: p.description_ar || "",
+            desc: { ar: p.description_ar || "", en: p.description_en || "" },
             img: imgs.length ? imgs : void 0,
             category: Array.isArray(p.categories) ? p.categories : p.categories ? [ p.categories ] : [],
             price: p.price,
