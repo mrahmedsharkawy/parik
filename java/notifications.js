@@ -46,22 +46,33 @@ async function saveSubscriptionToSupabase(e) {
                 return {};
             }
         })(), a = e.getKey("p256dh"), i = e.getKey("auth"), l = String(t.email || t.authEmail || "").trim().toLowerCase();
-        return (await fetch("https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/push_subscriptions", {
+        const s = {
+            endpoint: e.endpoint,
+            p256dh: a ? btoa(String.fromCharCode(...new Uint8Array(a))) : "",
+            auth: i ? btoa(String.fromCharCode(...new Uint8Array(i))) : "",
+            user_phone: normalizeUaePhone(t.phone || ""),
+            user_email: l,
+            created_at: (new Date).toISOString()
+        }, o = {
+            apikey: r,
+            Authorization: "Bearer " + r,
+            "Content-Type": "application/json"
+        }, n = await fetch("https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/push_subscriptions", {
             method: "POST",
             headers: {
-                apikey: r,
-                Authorization: "Bearer " + r,
-                "Content-Type": "application/json",
+                ...o,
                 Prefer: "resolution=merge-duplicates,return=minimal"
             },
-            body: JSON.stringify({
-                endpoint: e.endpoint,
-                p256dh: a ? btoa(String.fromCharCode(...new Uint8Array(a))) : "",
-                auth: i ? btoa(String.fromCharCode(...new Uint8Array(i))) : "",
-                user_phone: normalizeUaePhone(t.phone || ""),
-                user_email: l,
-                created_at: (new Date).toISOString()
-            })
+            body: JSON.stringify(s)
+        });
+        if (n.ok) return !0;
+        return (await fetch("https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/push_subscriptions?endpoint=eq." + encodeURIComponent(e.endpoint), {
+            method: "PATCH",
+            headers: {
+                ...o,
+                Prefer: "return=minimal"
+            },
+            body: JSON.stringify(s)
         })).ok;
     } catch (e) {
         return console.warn("Failed to save subscription:", e), !1;

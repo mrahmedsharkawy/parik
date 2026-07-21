@@ -19,7 +19,10 @@
       var profile={};
       try{profile=JSON.parse(localStorage.getItem('x2_profile')||'{}');}catch(e){}
       var p256dh=sub.getKey('p256dh'),auth=sub.getKey('auth');
-      await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/push_subscriptions',{method:'POST',headers:{apikey:anon,Authorization:'Bearer '+anon,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({endpoint:sub.endpoint,p256dh:p256dh?btoa(String.fromCharCode.apply(null,new Uint8Array(p256dh))):'',auth:auth?btoa(String.fromCharCode.apply(null,new Uint8Array(auth))):'',user_phone:normalizeUaePhone(profile.phone||''),user_email:String(profile.email||'').trim().toLowerCase(),created_at:(new Date).toISOString()})});
+      var payload={endpoint:sub.endpoint,p256dh:p256dh?btoa(String.fromCharCode.apply(null,new Uint8Array(p256dh))):'',auth:auth?btoa(String.fromCharCode.apply(null,new Uint8Array(auth))):'',user_phone:normalizeUaePhone(profile.phone||''),user_email:String(profile.email||'').trim().toLowerCase(),created_at:(new Date).toISOString()};
+      var headers={apikey:anon,Authorization:'Bearer '+anon,'Content-Type':'application/json'};
+      var res=await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/push_subscriptions',{method:'POST',headers:Object.assign({},headers,{Prefer:'resolution=merge-duplicates,return=minimal'}),body:JSON.stringify(payload)});
+      if(!res.ok)await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/push_subscriptions?endpoint=eq.'+encodeURIComponent(sub.endpoint),{method:'PATCH',headers:Object.assign({},headers,{Prefer:'return=minimal'}),body:JSON.stringify(payload)});
     }catch(e){}
   }
   async function activatePushFromWelcome(btn){

@@ -558,12 +558,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         user_email: String(profile.email || '').trim().toLowerCase(),
         created_at: new Date().toISOString()
       };
+      const headers = { apikey: _SB_ANON, Authorization: 'Bearer ' + _SB_ANON, 'Content-Type': 'application/json' };
       const res = await fetch(_SB_URL + '/rest/v1/push_subscriptions', {
         method: 'POST',
-        headers: { apikey: _SB_ANON, Authorization: 'Bearer ' + _SB_ANON, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' },
+        headers: { ...headers, Prefer: 'resolution=merge-duplicates,return=minimal' },
         body: JSON.stringify(payload)
       });
-      return res.ok;
+      if (res.ok) return true;
+      const patch = await fetch(_SB_URL + '/rest/v1/push_subscriptions?endpoint=eq.' + encodeURIComponent(sub.endpoint), {
+        method: 'PATCH',
+        headers: { ...headers, Prefer: 'return=minimal' },
+        body: JSON.stringify(payload)
+      });
+      return patch.ok;
     } catch(e) { return false; }
   }
 

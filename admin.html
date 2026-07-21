@@ -2413,8 +2413,17 @@ async function changeOrderStatus(id, status){
       const notif = statusLabels[status];
       const customerPhone = o.phone || o.customerPhone || o.customer_phone || '';
       const customerEmail = o.email || o.customerEmail || o.customer_email || '';
+      const normalizedCustomerPhone = (() => {
+        let digits = String(customerPhone || '').replace(/\D/g, '');
+        if (digits.startsWith('00971')) digits = digits.slice(2);
+        if (digits.startsWith('971')) digits = digits.slice(3);
+        if (digits.startsWith('0')) digits = digits.slice(1);
+        digits = digits.slice(0, 9);
+        return digits ? '+971' + digits : '';
+      })();
+      const normalizedCustomerEmail = String(customerEmail || '').trim().toLowerCase();
       // أرسل الإشعار عن طريق الهاتف أو الإيميل — أيهما متوفر
-      if (notif && (customerPhone || customerEmail)) {
+      if (notif && (normalizedCustomerPhone || normalizedCustomerEmail)) {
         try {
           // ANON key كـ fallback إذا كان توكن الأدمن مفقود/منتهي (نفس نمط بقية الدوال في هذا الملف)
           const ANON_PUSH = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
@@ -2432,8 +2441,8 @@ async function changeOrderStatus(id, status){
             iconText:         notif.icon,
             emoji:            notif.icon
           };
-          if (customerPhone) pushPayload.user_phone = customerPhone;
-          else pushPayload.user_email = customerEmail;
+          if (normalizedCustomerPhone) pushPayload.user_phone = normalizedCustomerPhone;
+          if (normalizedCustomerEmail) pushPayload.user_email = normalizedCustomerEmail;
           const pushResp = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/functions/v1/hyper-api', {
             method: 'POST',
             headers: {
