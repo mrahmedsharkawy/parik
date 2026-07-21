@@ -47,7 +47,8 @@
         return false;
       }
       var reg=await navigator.serviceWorker.getRegistration('/');
-      if(!reg)reg=await navigator.serviceWorker.register('/sw.js');
+      if(!reg)reg=await navigator.serviceWorker.register('/sw.js',{updateViaCache:'none'});
+      if(reg&&reg.update)reg.update().catch(function(){});
       await navigator.serviceWorker.ready;
       var sub=await reg.pushManager.getSubscription();
       if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)});
