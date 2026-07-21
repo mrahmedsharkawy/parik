@@ -127,23 +127,28 @@ function refreshProductsInBackground() {
     }
 });
 
-export async function fetchProducts() {
+export async function fetchProducts(forceFresh) {
     let invalidateTs = 0;
     try {
         invalidateTs = parseInt(localStorage.getItem("x2_products_updated") || "0", 10);
     } catch (e) {}
-    if (_productsCache && _productsCache.length > 0 && (!_productsCacheTs || _productsCacheTs > invalidateTs)) return _productsCache;
+    if (!forceFresh && _productsCache && _productsCache.length > 0 && (!_productsCacheTs || _productsCacheTs > invalidateTs)) return _productsCache;
     let staleCache = null;
-    try {
-        const obj = readProductsCache(sessionStorage, PRODUCTS_SESSION_CACHE_KEY, invalidateTs, 6e5);
-        if (obj) return _productsCache = obj.data, _productsCacheTs = obj.ts, _productsCache;
-        const cached = sessionStorage.getItem(PRODUCTS_SESSION_CACHE_KEY);
+    if (!forceFresh) {
+        try {
+            const obj = readProductsCache(sessionStorage, PRODUCTS_SESSION_CACHE_KEY, invalidateTs, 6e5);
+            if (obj) return _productsCache = obj.data, _productsCacheTs = obj.ts, _productsCache;
+            const cached = sessionStorage.getItem(PRODUCTS_SESSION_CACHE_KEY);
+            cached && (staleCache = JSON.parse(cached).data);
+        } catch (e) {}
+        try {
+            const obj = readProductsCache(localStorage, PRODUCTS_LOCAL_CACHE_KEY, invalidateTs, PRODUCTS_LOCAL_CACHE_TTL);
+            if (obj) return _productsCache = obj.data, _productsCacheTs = obj.ts, saveProductsCache(_productsCache, _productsCacheTs), 
+            refreshProductsInBackground(), _productsCache;
+        } catch (e) {}
+    } else try {
+        const cached = sessionStorage.getItem(PRODUCTS_SESSION_CACHE_KEY) || localStorage.getItem(PRODUCTS_LOCAL_CACHE_KEY);
         cached && (staleCache = JSON.parse(cached).data);
-    } catch (e) {}
-    try {
-        const obj = readProductsCache(localStorage, PRODUCTS_LOCAL_CACHE_KEY, invalidateTs, PRODUCTS_LOCAL_CACHE_TTL);
-        if (obj) return _productsCache = obj.data, _productsCacheTs = obj.ts, saveProductsCache(_productsCache, _productsCacheTs), 
-        refreshProductsInBackground(), _productsCache;
     } catch (e) {}
     try {
         if (window.Supabase && window.Supabase.Products) {
@@ -1040,7 +1045,7 @@ document.addEventListener("DOMContentLoaded", async function() {
     function getT(val) {
         return val ? "object" == typeof val ? val[lang] || val.ar || val.en || "" : String(val) : "";
     }
-    fetchProducts().then(all => {
+    fetchProducts(!0).then(all => {
         const p = all.find(x => String(x.id) === String(productId));
         if (!p) {
             const pp = document.querySelector(".product-page");
