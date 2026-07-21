@@ -3079,7 +3079,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   window.changeSidebarLang = function(val) {
     const main = document.getElementById('language');
     if (main) { main.value = val; main.dispatchEvent(new Event('change')); }
-    else { localStorage.setItem('lang', val); location.reload(); }
+    else {
+      localStorage.setItem('lang', val);
+      const url = new URL(location.href);
+      if (val === 'en') url.searchParams.set('lang', 'en');
+      else url.searchParams.delete('lang');
+      location.href = url.pathname + url.search + url.hash;
+    }
   };
   window.changeSidebarCurr = function(val) {
     const main = document.getElementById('currency');
