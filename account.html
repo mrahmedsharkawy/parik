@@ -983,6 +983,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 .my-rv-date{font-size:.72rem;color:#aaa}
 .my-rv-del{background:none;border:none;color:#e57373;font-size:.74rem;cursor:pointer;padding:2px 6px;border-radius:6px;transition:background .15s}
 .my-rv-del:hover{background:#fce4ec}
+.my-rv-form-card{background:#fff;border:1px solid #eef0f6;border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;flex-direction:column;gap:10px}
+.my-rv-form-head{display:flex;gap:10px;align-items:center;color:#152546;text-decoration:none}
+.my-rv-form-head img{width:50px;height:50px;border-radius:9px;object-fit:cover;border:1px solid #eee;flex-shrink:0}
+.my-rv-form-title{font-size:.9rem;font-weight:800;line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical}
+.my-rv-form-sub{font-size:.72rem;color:#9aa3b2;margin-top:2px}
+.my-rv-rate{display:flex;gap:4px;font-size:1.35rem;color:#d6dbe8;line-height:1;cursor:pointer;user-select:none}
+.my-rv-rate span.on{color:#D4AF37}
+.my-rv-comment{width:100%;min-height:78px;border:1.5px solid #eef0f6;border-radius:10px;padding:10px 12px;font-family:inherit;font-size:.84rem;resize:vertical;outline:none;background:#fafbfe;color:#152546}
+.my-rv-comment:focus{border-color:#D4AF37;background:#fff}
+.my-rv-form-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.my-rv-photo{font-size:.78rem;color:#6b7280;background:#fafbfe;border:1px dashed #d9deea;border-radius:9px;padding:8px 10px;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.my-rv-photo input{display:none}
+.my-rv-submit{border:none;background:#152546;color:#fff;border-radius:9px;padding:9px 14px;font-size:.82rem;font-weight:800;cursor:pointer}
+.my-rv-submit:disabled{opacity:.55;cursor:not-allowed}
+.my-rv-review-img{max-width:96px;border-radius:10px;border:1px solid #eee;margin-top:4px}
+.my-rv-section-label{font-size:.82rem;font-weight:800;color:#152546;margin:2px 0 8px}
 
 /* شبكة المشاهدات */
 .history-grid {
@@ -1339,23 +1355,23 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="acc-profile-avatar" id="avatar-letter">م</div>
         <div class="acc-profile-name" id="profile-name">مستخدم</div>
         <div class="acc-profile-email" id="profile-email">لم يتم تسجيل الدخول</div>
-        <div class="acc-form-group"><label data-i18n="الاسم الكامل">الاسم الكامل</label><input type="text" id="pf-name" placeholder="أدخل اسمك"></div>
+        <div class="acc-form-group"><label data-i18n="الاسم الكامل">الاسم الكامل</label><input type="text" id="pf-name" placeholder="أدخل اسمك" data-i18n-placeholder="أدخل اسمك"></div>
         <div class="acc-form-group"><label data-i18n="البريد الإلكتروني">البريد الإلكتروني</label><input type="email" id="pf-email" placeholder="example@email.com"></div>
         <div class="acc-form-group"><label data-i18n="عنواني">العنوان</label><input type="text" id="pf-address" placeholder="أدخل عنوانك"></div>
         <div class="acc-form-group"><label data-i18n="رقم الهاتف">رقم الهاتف</label><input type="tel" id="pf-phone" value="+971 " placeholder="+971 XX XXX XXXX" inputmode="tel" dir="ltr" autocomplete="tel"></div>
         <div class="acc-form-group">
           <label data-i18n="كلمة السر">كلمة السر</label>
           <div class="acc-password-field">
-            <input type="password" id="pf-password" placeholder="أدخل كلمة السر">
+            <input type="password" id="pf-password" placeholder="أدخل كلمة السر" data-i18n-placeholder="أدخل كلمة السر">
             <button type="button" class="acc-password-toggle" onclick="togglePasswordField('pf-password', this)">إظهار</button>
           </div>
         </div>
         <button class="acc-save-btn" onclick="saveProfile()">💾 <span data-i18n="حفظ التغييرات">حفظ التغييرات</span></button>
         <div style="height:16px"></div>
-        <div style="font-size:0.78rem;font-weight:700;color:#7a8296;margin-bottom:4px">قسم الأمان</div>
-        <div style="font-size:0.92rem;font-weight:800;color:#152546;margin-bottom:10px">تغيير كلمة السر</div>
-        <div class="acc-form-group"><label data-i18n="كلمة السر الجديدة">كلمة السر الجديدة</label><input type="password" id="pf-new-password" placeholder="أدخل كلمة السر الجديدة"></div>
-        <div class="acc-form-group"><label data-i18n="تأكيد كلمة السر الجديدة">تأكيد كلمة السر الجديدة</label><input type="password" id="pf-confirm-password" placeholder="أعد كتابة كلمة السر الجديدة"></div>
+        <div style="font-size:0.78rem;font-weight:700;color:#7a8296;margin-bottom:4px" data-i18n="قسم الأمان">قسم الأمان</div>
+        <div style="font-size:0.92rem;font-weight:800;color:#152546;margin-bottom:10px" data-i18n="تغيير كلمة السر">تغيير كلمة السر</div>
+        <div class="acc-form-group"><label data-i18n="كلمة السر الجديدة">كلمة السر الجديدة</label><input type="password" id="pf-new-password" placeholder="أدخل كلمة السر الجديدة" data-i18n-placeholder="أدخل كلمة السر الجديدة"></div>
+        <div class="acc-form-group"><label data-i18n="تأكيد كلمة السر الجديدة">تأكيد كلمة السر الجديدة</label><input type="password" id="pf-confirm-password" placeholder="أعد كتابة كلمة السر الجديدة" data-i18n-placeholder="أعد كتابة كلمة السر الجديدة"></div>
         <button class="acc-save-btn" onclick="changePassword()">🔒 <span data-i18n="تغيير كلمة السر">تغيير كلمة السر</span></button>
       </div>
     </div>
@@ -1367,10 +1383,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="sc-header">
           <div class="sc-agent-avatar">🤖</div>
           <div class="sc-agent-info">
-            <div class="sc-agent-name">X2 مساعد</div>
-            <div class="sc-agent-status"><span class="sc-dot"></span> متاح</div>
+            <div class="sc-agent-name">X2 Assistant</div>
+            <div class="sc-agent-status"><span class="sc-dot"></span> <span data-i18n="متاح">متاح</span></div>
           </div>
-          <button class="sc-clear-btn" onclick="clearSupportChat()">🗑 مسح</button>
+          <button class="sc-clear-btn" onclick="clearSupportChat()">🗑 <span data-i18n="مسح">مسح</span></button>
         </div>
 
         <!-- منطقة الرسائل -->
@@ -1378,17 +1394,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
         <!-- أسئلة جاهزة -->
         <div class="sc-quick-btns" id="scQuickBtns">
-          <button onclick="askSupport('تتبع طلبي')"> 📦 تتبع طلبي</button>
-          <button onclick="askSupport('كيف أرجع منتجج؟')"> ↩️ ارجاع منتج</button>
-          <button onclick="askSupport('طرق الدفع')"> 💳 طرق الدفع</button>
-          <button onclick="askSupport('موعد التوصيل')"> 🚚 موعد التوصيل</button>
-          <button onclick="askSupport('هل يوجد خصومات؟')"> 🎁 خصومات</button>
-          <button onclick="askSupport('تحدث مع موظف')"> 💬 موظف حقيقي</button>
+          <button onclick="askSupport('تتبع طلبي')"> 📦 <span data-i18n="تتبع طلبي">تتبع طلبي</span></button>
+          <button onclick="askSupport('كيف أرجع منتجج؟')"> ↩️ <span data-i18n="ارجاع منتج">ارجاع منتج</span></button>
+          <button onclick="askSupport('طرق الدفع')"> 💳 <span data-i18n="طرق الدفع">طرق الدفع</span></button>
+          <button onclick="askSupport('موعد التوصيل')"> 🚚 <span data-i18n="موعد التوصيل">موعد التوصيل</span></button>
+          <button onclick="askSupport('هل يوجد خصومات؟')"> 🎁 <span data-i18n="خصومات">خصومات</span></button>
+          <button onclick="askSupport('تحدث مع موظف')"> 💬 <span data-i18n="موظف حقيقي">موظف حقيقي</span></button>
         </div>
 
         <!-- حقل الكتابة -->
         <div class="sc-input-row">
-          <input type="text" id="scInput" class="sc-input" placeholder="اكتب سؤالك هنا..." onkeydown="if(event.key==='Enter')sendSupportMsg()">
+          <input type="text" id="scInput" class="sc-input" placeholder="اكتب سؤالك هنا..." data-i18n-placeholder="اكتب سؤالك هنا..." onkeydown="if(event.key==='Enter')sendSupportMsg()">
           <button class="sc-send-btn" onclick="sendSupportMsg()">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           </button>
@@ -1401,31 +1417,31 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div class="acc-profile-card">
         <!-- بطاقة الرصيد -->
         <div style="background:linear-gradient(135deg,#152546,#1e3360);border-radius:14px;padding:20px 18px;margin-bottom:16px;color:#fff;">
-          <div style="font-size:.78rem;color:rgba(255,255,255,.7);margin-bottom:4px">رصيد كاش باك</div>
+          <div style="font-size:.78rem;color:rgba(255,255,255,.7);margin-bottom:4px" data-i18n="رصيد كاش باك">رصيد كاش باك</div>
           <div style="font-size:2rem;font-weight:900;color:#D4AF37;" id="cbBalance">0.00 د.إ</div>
-          <div style="font-size:.72rem;color:rgba(255,255,255,.6);margin-top:6px">🎁 تحصل على <strong style="color:#D4AF37">5 د.إ</strong> مع كل طلب</div>
+          <div style="font-size:.72rem;color:rgba(255,255,255,.6);margin-top:6px">🎁 <span data-i18n="تحصل على">تحصل على</span> <strong style="color:#D4AF37">5 <span data-i18n="د.إ">د.إ</span></strong> <span data-i18n="مع كل طلب">مع كل طلب</span></div>
         </div>
         <!-- تاريخ الكاش باك -->
-        <div style="font-size:.84rem;font-weight:700;color:#152546;margin-bottom:10px">📜 سجل الطلبات</div>
+        <div style="font-size:.84rem;font-weight:700;color:#152546;margin-bottom:10px">📜 <span data-i18n="سجل الطلبات">سجل الطلبات</span></div>
         <div id="cbHistory"></div>
 
         <!-- كوبون الخصم — يظهر لما الرصيد يوصل 5 -->
         <div id="cbCouponSection" style="display:none;margin-top:16px">
           <div style="background:linear-gradient(135deg,#1a6b3c,#228b4e);border-radius:14px;padding:16px;color:#fff;text-align:center;position:relative;overflow:hidden">
-            <div style="font-size:1rem;font-weight:900;margin-bottom:3px">🎉 كوبون خصم جاهز!</div>
-            <div style="font-size:.75rem;color:rgba(255,255,255,.75);margin-bottom:12px" id="cbCouponSubText">استخدم الكود في السلة</div>
+            <div style="font-size:1rem;font-weight:900;margin-bottom:3px">🎉 <span data-i18n="كوبون خصم جاهز!">كوبون خصم جاهز!</span></div>
+            <div style="font-size:.75rem;color:rgba(255,255,255,.75);margin-bottom:12px" id="cbCouponSubText" data-i18n="استخدم الكود في السلة">استخدم الكود في السلة</div>
             <div style="display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(255,255,255,.12);border-radius:10px;padding:10px 14px;border:1.5px dashed rgba(255,255,255,.45);margin-bottom:8px">
               <span style="font-size:1.3rem;font-weight:900;letter-spacing:.14em;font-family:monospace;user-select:all" id="cbCouponCode">CB-XXXXXX</span>
-              <button onclick="copyCouponCode()" class="coupon-copy-btn" style="background:rgba(255,255,255,.22);border:none;color:#fff;border-radius:7px;padding:5px 12px;font-size:.78rem;font-weight:700;cursor:pointer">📋 نسخ</button>
+              <button onclick="copyCouponCode()" class="coupon-copy-btn" style="background:rgba(255,255,255,.22);border:none;color:#fff;border-radius:7px;padding:5px 12px;font-size:.78rem;font-weight:700;cursor:pointer">📋 <span data-i18n="نسخ">نسخ</span></button>
             </div>
-            <div style="font-size:.72rem;color:rgba(255,255,255,.6)">⚠️ يُستخدم مرة واحدة فقط · الخصم يُطبَّق في السلة</div>
+            <div style="font-size:.72rem;color:rgba(255,255,255,.6)">⚠️ <span data-i18n="يُستخدم مرة واحدة فقط · الخصم يُطبَّق في السلة">يُستخدم مرة واحدة فقط · الخصم يُطبَّق في السلة</span></div>
           </div>
         </div>
 
         <!-- شريط التقدم نحو الكوبون -->
         <div id="cbProgressSection" style="margin-top:14px">
           <div style="background:linear-gradient(135deg,#152546,#1e3360);border-radius:14px;padding:14px 16px;color:#fff">
-            <div style="font-size:.78rem;color:rgba(255,255,255,.8);margin-bottom:8px">🎯 اجمع 5 د.إ كاش باك واحصل على كوبون خصم</div>
+            <div style="font-size:.78rem;color:rgba(255,255,255,.8);margin-bottom:8px">🎯 <span data-i18n="اجمع 5 د.إ كاش باك واحصل على كوبون خصم">اجمع 5 د.إ كاش باك واحصل على كوبون خصم</span></div>
             <div style="height:7px;background:rgba(255,255,255,.15);border-radius:999px;overflow:hidden">
               <div id="cbProgressFill" style="height:100%;background:#D4AF37;border-radius:999px;transition:width .5s;width:0%"></div>
             </div>
@@ -1439,11 +1455,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div id="section-notifications" style="display:none">
       <div class="acc-profile-card" style="padding:16px 14px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-          <div style="font-size:1rem;font-weight:800;color:#152546">🔔 الإشعارات</div>
+          <div style="font-size:1rem;font-weight:800;color:#152546">🔔 <span data-i18n="الإشعارات">الإشعارات</span></div>
           <div style="display:flex;align-items:center;gap:8px">
             <span id="notifUnreadCount" style="display:none;background:#D4AF37;color:#fff;font-size:.76rem;padding:2px 9px;border-radius:999px;font-weight:700"></span>
-            <button onclick="markAllNotifsRead()" id="notifMarkAllBtn" style="display:none;border:none;background:none;color:#aaa;font-size:.74rem;cursor:pointer">✓ تحديد كمقروء</button>
-            <button onclick="clearAllNotifs()" style="border:none;background:none;color:#e57373;font-size:.74rem;cursor:pointer">🗑 مسح</button>
+            <button onclick="markAllNotifsRead()" id="notifMarkAllBtn" style="display:none;border:none;background:none;color:#aaa;font-size:.74rem;cursor:pointer">✓ <span data-i18n="تحديد كمقروء">تحديد كمقروء</span></button>
+            <button onclick="clearAllNotifs()" style="border:none;background:none;color:#e57373;font-size:.74rem;cursor:pointer">🗑 <span data-i18n="مسح">مسح</span></button>
           </div>
         </div>
         <div id="notifList"></div>
@@ -1454,18 +1470,18 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- قسم عنواني -->
     <div id="section-settings" style="display:none">
       <div class="acc-profile-card">
-        <h3 style="font-size:1rem;font-weight:800;color:#152546;margin-bottom:16px">📍 عنوان الشحن</h3>
+        <h3 style="font-size:1rem;font-weight:800;color:#152546;margin-bottom:16px">📍 <span data-i18n="عنوان الشحن">عنوان الشحن</span></h3>
         <div class="acc-form-group">
           <label data-i18n="الدولة">الدولة</label>
           <select id="addr-country" style="width:100%;border:1px solid #ddd;border-radius:8px;padding:9px 12px;font-size:0.84rem;outline:none;box-sizing:border-box;">
-            <option value="ae">الإمارات العربية المتحدة</option>
-            <option value="sa">المملكة العربية السعودية</option>
-            <option value="kw">الكويت</option>
-            <option value="eg">مصر</option>
-            <option value="jo">الأردن</option>
-            <option value="bh">البحرين</option>
-            <option value="qa">قطر</option>
-            <option value="om">عُمان</option>
+            <option value="ae" data-en="United Arab Emirates">الإمارات العربية المتحدة</option>
+            <option value="sa" data-en="Saudi Arabia">المملكة العربية السعودية</option>
+            <option value="kw" data-en="Kuwait">الكويت</option>
+            <option value="eg" data-en="Egypt">مصر</option>
+            <option value="jo" data-en="Jordan">الأردن</option>
+            <option value="bh" data-en="Bahrain">البحرين</option>
+            <option value="qa" data-en="Qatar">قطر</option>
+            <option value="om" data-en="Oman">عُمان</option>
           </select>
         </div>
         <div class="acc-form-group"><label data-i18n="المدينة">المدينة / الإمارة</label><input type="text" id="addr-city" placeholder="دبي"></div>
@@ -1480,16 +1496,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <div id="section-payment" style="display:none">
       <div class="acc-profile-card">
-        <h3 style="font-size:1rem;font-weight:800;color:#152546;margin-bottom:16px">💳 طرق الدفع</h3>
+        <h3 style="font-size:1rem;font-weight:800;color:#152546;margin-bottom:16px">💳 <span data-i18n="طرق الدفع">طرق الدفع</span></h3>
 
         <!-- كروت اتمان -->
         <div class="pm-item">
           <div class="pm-icons"><img src="/assets/pay/visa.webp" alt="Visa"><img src="/assets/pay/mastercard.webp" alt="Mastercard"><img src="/assets/pay/amex.webp" alt="Amex"></div>
           <div class="pm-info">
-            <div class="pm-title">بطاقة ائتمان / مدى</div>
-            <div class="pm-sub">Visa ، Mastercard ، AMEX ، مدى</div>
+            <div class="pm-title" data-i18n="بطاقة ائتمان / مدى">بطاقة ائتمان / مدى</div>
+            <div class="pm-sub" data-i18n="Visa ، Mastercard ، AMEX ، مدى">Visa ، Mastercard ، AMEX ، مدى</div>
           </div>
-          <span class="pm-badge active">متاح</span>
+          <span class="pm-badge active" data-i18n="متاح">متاح</span>
         </div>
 
         <!-- ابل باي -->
@@ -1497,47 +1513,47 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <div class="pm-icons"><img src="/assets/pay/applepay.webp" alt="Apple Pay"><img src="/assets/pay/googlepay.webp" alt="Google Pay"></div>
           <div class="pm-info">
             <div class="pm-title">Apple Pay / Google Pay</div>
-            <div class="pm-sub">دفع سريع وآمن من هاتفك</div>
+            <div class="pm-sub" data-i18n="دفع سريع وآمن من هاتفك">دفع سريع وآمن من هاتفك</div>
           </div>
-          <span class="pm-badge active">متاح</span>
+          <span class="pm-badge active" data-i18n="متاح">متاح</span>
         </div>
 
         <!-- تحويل بنكي -->
         <div class="pm-item">
           <div class="pm-icons" style="font-size:1.8rem">🏦</div>
           <div class="pm-info">
-            <div class="pm-title">تحويل بنكي</div>
-            <div class="pm-sub">البنك: بنك الإمارات</div>
+            <div class="pm-title" data-i18n="تحويل بنكي">تحويل بنكي</div>
+            <div class="pm-sub" data-i18n="البنك: بنك الإمارات">البنك: بنك الإمارات</div>
             <div style="margin-top:6px;background:#f8f9fc;border-radius:8px;padding:8px 10px;font-size:0.75rem;color:#333;">
-              📌 رقم الحساب: <strong>AE07 0331 2345 6789 0123 456</strong><br>
-              🏦 اسم البنك: بنك الإمارات، الإمارات<br>
-              <span style="color:#9aa3b2;font-size:0.68rem">بعد التحويل أرسل إيصال الدفع عبر واتساب</span>
+              📌 <span data-i18n="رقم الحساب:">رقم الحساب:</span> <strong>AE07 0331 2345 6789 0123 456</strong><br>
+              🏦 <span data-i18n="اسم البنك: بنك الإمارات، الإمارات">اسم البنك: بنك الإمارات، الإمارات</span><br>
+              <span style="color:#9aa3b2;font-size:0.68rem" data-i18n="بعد التحويل أرسل إيصال الدفع عبر واتساب">بعد التحويل أرسل إيصال الدفع عبر واتساب</span>
             </div>
           </div>
-          <span class="pm-badge active">متاح</span>
+          <span class="pm-badge active" data-i18n="متاح">متاح</span>
         </div>
 
         <!-- دفع عند الاستلام -->
         <div class="pm-item">
           <div class="pm-icons" style="font-size:1.8rem">💵</div>
           <div class="pm-info">
-            <div class="pm-title">الدفع عند الاستلام (COD)</div>
-            <div class="pm-sub">نقدًا لدى استلام طلبك — متاح في مناطق محددة</div>
+            <div class="pm-title" data-i18n="الدفع عند الاستلام (COD)">الدفع عند الاستلام (COD)</div>
+            <div class="pm-sub" data-i18n="نقدًا لدى استلام طلبك — متاح في مناطق محددة">نقدًا لدى استلام طلبك — متاح في مناطق محددة</div>
           </div>
-          <span class="pm-badge active">متاح</span>
+          <span class="pm-badge active" data-i18n="متاح">متاح</span>
         </div>
 
         <!-- تقسيط تابي / تمارا -->
         <div class="pm-item">
           <div class="pm-icons"><img src="/assets/pay/tabby.webp" alt="Tabby"><img src="/assets/pay/tamara.webp" alt="Tamara"></div>
           <div class="pm-info">
-            <div class="pm-title">تابي / تمارا</div>
-            <div class="pm-sub">قسّم دفعاتك على 3-4 أشهر بدون فوائد</div>
+            <div class="pm-title" data-i18n="تابي / تمارا">تابي / تمارا</div>
+            <div class="pm-sub" data-i18n="قسّم دفعاتك على 3-4 أشهر بدون فوائد">قسّم دفعاتك على 3-4 أشهر بدون فوائد</div>
           </div>
-          <span class="pm-badge active">متاح</span>
+          <span class="pm-badge active" data-i18n="متاح">متاح</span>
         </div>
 
-        <p style="font-size:0.72rem;color:#9aa3b2;margin-top:14px;text-align:center">🔒 جميع المعاملات مشفّرة وآمنة 100%</p>
+        <p style="font-size:0.72rem;color:#9aa3b2;margin-top:14px;text-align:center">🔒 <span data-i18n="جميع المعاملات مشفّرة وآمنة 100%">جميع المعاملات مشفّرة وآمنة 100%</span></p>
       </div>
     </div>
 
@@ -1556,9 +1572,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div class="acc-empty">
         <div class="acc-empty-icon">🔧</div>
         <div class="acc-empty-title" id="generic-title">قريباً</div>
-        <div class="acc-empty-sub">هذه الميزة قيد التطوير</div>
+        <div class="acc-empty-sub" data-i18n="هذه الميزة قيد التطوير">هذه الميزة قيد التطوير</div>
         <div class="acc-empty-actions">
-          <a href="/" class="acc-empty-btn"><span class="ico">🏠</span> الصفحة الرئيسية</a>
+          <a href="/" class="acc-empty-btn"><span class="ico">🏠</span> <span data-i18n="الصفحة الرئيسية">الصفحة الرئيسية</span></a>
         </div>
       </div>
     </div>
@@ -1567,7 +1583,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div id="section-reviews" style="display:none">
       <div class="acc-profile-card" style="padding:16px 14px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-          <div style="font-size:1rem;font-weight:800;color:#152546">⭐ تقييماتي</div>
+          <div style="font-size:1rem;font-weight:800;color:#152546" data-i18n="⭐ تقييماتي">⭐ تقييماتي</div>
           <span id="myReviewsCount" style="font-size:.78rem;color:#888;background:#f0f0f0;padding:3px 10px;border-radius:999px;font-weight:600"></span>
         </div>
         <div id="myReviewsList"></div>
@@ -1578,16 +1594,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div class="acc-profile-card offers-card">
         <div class="offers-head">
           <div>
-            <div class="offers-title">العروض والخصومات</div>
-            <div class="offers-subtitle">كل المنتجات التي عليها خصم في مكان واحد</div>
+            <div class="offers-title" data-i18n="العروض والخصومات">العروض والخصومات</div>
+            <div class="offers-subtitle" data-i18n="كل المنتجات التي عليها خصم في مكان واحد">كل المنتجات التي عليها خصم في مكان واحد</div>
           </div>
           <div class="offers-count" id="offers-count">0 عرض</div>
         </div>
         <div class="offers-grid" id="offers-list">
           <div class="acc-empty" style="padding:24px 12px; margin:0;">
             <div class="acc-empty-icon" style="font-size:2rem;">⏳</div>
-            <div class="acc-empty-title">جارٍ تحميل العروض</div>
-            <div class="acc-empty-sub">سيتم عرض جميع المنتجات المخفضة هنا</div>
+            <div class="acc-empty-title" data-i18n="جارٍ تحميل العروض">جارٍ تحميل العروض</div>
+            <div class="acc-empty-sub" data-i18n="سيتم عرض جميع المنتجات المخفضة هنا">سيتم عرض جميع المنتجات المخفضة هنا</div>
           </div>
         </div>
       </div>
@@ -1609,6 +1625,29 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   const ACC_EN = (localStorage.getItem('lang') || document.documentElement.lang || 'ar') === 'en';
   const accText = (ar, en) => ACC_EN ? en : ar;
   const accDate = value => new Date(value).toLocaleDateString(ACC_EN ? 'en-US' : 'ar-AE', { year:'numeric', month:'short', day:'numeric' });
+  function applyAccountPlaceholders() {
+    const placeholders = {
+      'pf-name': ['أدخل اسمك', 'Enter your name'],
+      'pf-address': ['أدخل عنوانك', 'Enter your address'],
+      'pf-password': ['أدخل كلمة السر', 'Enter your password'],
+      'pf-new-password': ['أدخل كلمة السر الجديدة', 'Enter your new password'],
+      'pf-confirm-password': ['أعد كتابة كلمة السر الجديدة', 'Re-enter your new password'],
+      'scInput': ['اكتب سؤالك هنا...', 'Type your question here...'],
+      'addr-city': ['دبي', 'Dubai'],
+      'addr-area': ['الخليج التجاري', 'Business Bay'],
+      'addr-street': ['شارع الشيخ زايد', 'Sheikh Zayed Road'],
+      'addr-building': ['برج المارينا، شقة 504', 'Marina Tower, Apartment 504'],
+      'addr-notes': ['بالقرب من سبينيس...', 'Near Spinneys...']
+    };
+    Object.entries(placeholders).forEach(([id, pair]) => {
+      const el = document.getElementById(id);
+      if (el) el.placeholder = accText(pair[0], pair[1]);
+    });
+    document.querySelectorAll('#addr-country option[data-en]').forEach(option => {
+      if (!option.dataset.ar) option.dataset.ar = option.textContent;
+      option.textContent = ACC_EN ? option.dataset.en : option.dataset.ar;
+    });
+  }
 
   function getCurrSym() {
     const code = localStorage.getItem('currency') || 'AED';
@@ -2057,15 +2096,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const qmap = { orders:'aqn-orders', profile:'aqn-profile', coupons:'aqn-coupons', notifications:'aqn-notif' };
     if (qmap[section]) { const qel = document.getElementById(qmap[section]); if (qel) qel.classList.add('active'); }
 
+    if (section === 'address') section = 'settings';
     const sections = ['orders','profile','notifications','offers','support','payment','settings','history','credit','reviews'];
     if (sections.includes(section)) {
       document.getElementById('section-' + section).style.display = '';
     } else {
       document.getElementById('section-generic').style.display = '';
       document.getElementById('generic-title').textContent =
-        { coupons:'العروض والخصومات', credit:'كاش باك',
-          history:'منتجات في اهتمامك', settings:'عنواني',
-          payment:'طرق الدفع', security:'أمن الحساب' }[section] || 'قريباً';
+        { coupons: accText('العروض والخصومات', 'Offers & Discounts'), credit: accText('كاش باك', 'Cashback'),
+          history: accText('منتجات في اهتمامك', 'Products You Like'), settings: accText('عنواني', 'My Address'),
+          payment: accText('طرق الدفع', 'Payment Methods'), security: accText('أمن الحساب', 'Account Security') }[section] || accText('قريباً', 'Coming Soon');
     }
 
     if (section === 'reviews') renderReviews();
@@ -2144,7 +2184,23 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   function renderCashback() {
     const balEl = document.getElementById('cbBalance');
     const hist  = document.getElementById('cbHistory');
-    const sym   = 'د.إ';
+    const sym   = accText('د.إ', 'AED');
+    const creditText = {
+      'رصيد كاش باك': 'Cashback Balance',
+      'د.إ': 'AED',
+      'تحصل على': 'You get',
+      'مع كل طلب': 'with every order',
+      'سجل الطلبات': 'Order History',
+      'كوبون خصم جاهز!': 'Discount Coupon Ready!',
+      'استخدم الكود في السلة': 'Use the code in cart',
+      'نسخ': 'Copy',
+      'يُستخدم مرة واحدة فقط · الخصم يُطبَّق في السلة': 'One-time use only · Discount applies in cart',
+      'اجمع 5 د.إ كاش باك واحصل على كوبون خصم': 'Collect 5 AED cashback and get a discount coupon'
+    };
+    document.querySelectorAll('#section-credit [data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n') || '';
+      if (creditText[key]) el.textContent = accText(key, creditText[key]);
+    });
 
     const orders = (() => { try { return JSON.parse(localStorage.getItem('x2_orders')||'[]'); } catch(e) { return []; } })();
 
@@ -2198,10 +2254,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     if (hist) {
       const allCb = orders.filter(o => getCbAmount(o) > 0 || getEffectiveStatus(o) === 'earned');
       if (!allCb.length) {
-        hist.innerHTML = '<p style="color:#aaa;text-align:center;font-size:.8rem">لم تضع أي طلب بعد</p>';
+        hist.innerHTML = `<p style="color:#aaa;text-align:center;font-size:.8rem">${accText('لم تضع أي طلب بعد', 'You have not placed any orders yet')}</p>`;
       } else {
         hist.innerHTML = allCb.slice(0,10).map(o => {
-          const d = new Date(o.date).toLocaleDateString('ar-AE',{year:'numeric',month:'short',day:'numeric'});
+          const d = new Date(o.date).toLocaleDateString(ACC_EN ? 'en-US' : 'ar-AE',{year:'numeric',month:'short',day:'numeric'});
           const cbStatus = getEffectiveStatus(o);
           const exp = o.cashbackExpiresAt
             ? new Date(o.cashbackExpiresAt).getTime()
@@ -2211,19 +2267,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
           let statusBadge, amtColor, bgColor, opacity = 1;
           if (cbStatus === 'claimed') {
-            statusBadge = '<span style="font-size:.68rem;color:#fff;background:#888;padding:1px 7px;border-radius:999px">تم الاستحقاق ✓</span>';
+            statusBadge = `<span style="font-size:.68rem;color:#fff;background:#888;padding:1px 7px;border-radius:999px">${accText('تم الاستحقاق ✓', 'Claimed ✓')}</span>`;
             amtColor = '#bbb'; bgColor = '#f5f5f5'; opacity = 0.6;
           } else if (cbStatus === 'pending') {
-            statusBadge = '<span style="font-size:.68rem;color:#e65100;background:#fff3e0;padding:1px 7px;border-radius:999px">⏳ استحقاق بعد التسليم</span>';
+            statusBadge = `<span style="font-size:.68rem;color:#e65100;background:#fff3e0;padding:1px 7px;border-radius:999px">⏳ ${accText('استحقاق بعد التسليم', 'Earns after delivery')}</span>`;
             amtColor = '#e65100'; bgColor = '#fffbf5';
           } else if (isExpired) {
-            statusBadge = '<span style="font-size:.68rem;color:#c62828;background:#fce4ec;padding:1px 7px;border-radius:999px">منتهي الصلاحية</span>';
+            statusBadge = `<span style="font-size:.68rem;color:#c62828;background:#fce4ec;padding:1px 7px;border-radius:999px">${accText('منتهي الصلاحية', 'Expired')}</span>`;
             amtColor = '#bbb'; bgColor = '#fafafa'; opacity = 0.55;
           } else if (daysLeft <= 7) {
-            statusBadge = `<span style="font-size:.68rem;color:#e65100;background:#fff3e0;padding:1px 7px;border-radius:999px">ينتهي خلال ${daysLeft} يوم</span>`;
+            statusBadge = `<span style="font-size:.68rem;color:#e65100;background:#fff3e0;padding:1px 7px;border-radius:999px">${ACC_EN ? `Expires in ${daysLeft} days` : `ينتهي خلال ${daysLeft} يوم`}</span>`;
             amtColor = '#2e7d32'; bgColor = '#f8f9fc';
           } else {
-            statusBadge = `<span style="font-size:.68rem;color:#9aa3b2">ينتهي ${new Date(exp).toLocaleDateString('ar-AE',{month:'short',day:'numeric'})}</span>`;
+            statusBadge = `<span style="font-size:.68rem;color:#9aa3b2">${accText('ينتهي', 'Expires')} ${new Date(exp).toLocaleDateString(ACC_EN ? 'en-US' : 'ar-AE',{month:'short',day:'numeric'})}</span>`;
             amtColor = '#2e7d32'; bgColor = '#f8f9fc';
           }
 
@@ -2231,7 +2287,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           const prefix = cbStatus === 'earned' && !isExpired ? '+' : '';
           return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:${bgColor};border-radius:8px;margin-bottom:7px;font-size:.8rem;opacity:${opacity}">
             <div>
-              <div style="font-weight:700;color:#111">طلب ${o.id||''}</div>
+              <div style="font-weight:700;color:#111">${accText('طلب', 'Order')} ${o.id||''}</div>
               <div style="color:#9aa3b2;font-size:.7rem;margin-top:2px">${d} · ${statusBadge}</div>
             </div>
             <span style="font-size:.84rem;font-weight:800;color:${amtColor};background:${bgColor === '#f8f9fc' ? '#e8f5e9' : bgColor};padding:3px 10px;border-radius:999px">${prefix}${cbAmt.toFixed(2)} ${sym}</span>
@@ -2265,7 +2321,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       if (couponSection)   couponSection.style.display   = 'block';
       if (progressSection) progressSection.style.display  = 'none';
       if (couponCodeEl)    couponCodeEl.textContent = storedCoupon.code;
-      if (couponSubEl)     couponSubEl.textContent  = `رصيدك ${displayBalance.toFixed(2)} ${sym} — استخدم الكود في السلة`;
+      if (couponSubEl)     couponSubEl.textContent  = ACC_EN ? `Your balance is ${displayBalance.toFixed(2)} ${sym} - use the code in cart` : `رصيدك ${displayBalance.toFixed(2)} ${sym} — استخدم الكود في السلة`;
     } else {
       if (couponSection)   couponSection.style.display   = 'none';
       if (progressSection) progressSection.style.display  = 'block';
@@ -2280,7 +2336,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const c = JSON.parse(localStorage.getItem('x2_coupon_code')||'null');
       if (!c || !c.code) return;
       const btn = document.querySelector('.coupon-copy-btn');
-      const done = () => { if (btn) { btn.textContent = '✅ تم النسخ'; setTimeout(() => btn.textContent = '📋 نسخ', 2200); } };
+      const done = () => { if (btn) { btn.textContent = accText('✅ تم النسخ', '✅ Copied'); setTimeout(() => btn.textContent = accText('📋 نسخ', '📋 Copy'), 2200); } };
       if (navigator.clipboard) navigator.clipboard.writeText(c.code).then(done).catch(() => { const t=document.createElement('textarea');t.value=c.code;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);done(); });
       else { const t=document.createElement('textarea');t.value=c.code;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);done(); }
     } catch(e) {}
@@ -2335,7 +2391,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
     const amountMatch = rawText.match(/(\d+(?:\.\d+)?)/);
     const amount = parseFloat(n.amount || n.cashback || getLocalOrderCashback(orderId) || (amountMatch && amountMatch[1]) || 5) || 5;
-    const orderText = orderId ? ` من طلبك رقم ${orderId}` : '';
+    const orderText = orderId ? (ACC_EN ? ` from order #${String(orderId).replace(/^#/, '')}` : ` من طلبك رقم ${orderId}`) : '';
     const isEarned = n.cashbackStatus === 'earned' || n.status === 'earned' || /^n-cb-earned-/.test(String(n.id || '')) || /تم\s+إضافة|تم\s+اضافة|في حسابك/.test(rawText);
     if (isEarned) {
       return {
@@ -2343,8 +2399,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         type: 'cashback',
         cashbackStatus: 'earned',
         icon: '🤑',
-        title: '🤑 تم إضافة كاش باك',
-        msg: `تم إضافة ${amount.toFixed(amount % 1 ? 2 : 0)} د.إ كاش باك في حسابك${orderText}.`,
+        title: ACC_EN ? '🤑 Cashback Added' : '🤑 تم إضافة كاش باك',
+        msg: ACC_EN ? `${amount.toFixed(amount % 1 ? 2 : 0)} AED cashback was added to your account${orderText}.` : `تم إضافة ${amount.toFixed(amount % 1 ? 2 : 0)} د.إ كاش باك في حسابك${orderText}.`,
         orderId
       };
     }
@@ -2352,8 +2408,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       ...n,
       type: 'cashback',
       icon: '🤑',
-      title: '🤑 كاش باك بانتظارك',
-      msg: `حصلت على ${amount.toFixed(amount % 1 ? 2 : 0)} د.إ كاش باك${orderText}. سيتم تفعيله بعد اعتماد الطلب.`,
+      title: ACC_EN ? '🤑 Cashback Pending' : '🤑 كاش باك بانتظارك',
+      msg: ACC_EN ? `You earned ${amount.toFixed(amount % 1 ? 2 : 0)} AED cashback${orderText}. It will activate after the order is approved.` : `حصلت على ${amount.toFixed(amount % 1 ? 2 : 0)} د.إ كاش باك${orderText}. سيتم تفعيله بعد اعتماد الطلب.`,
       orderId
     };
   }
@@ -2382,17 +2438,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const status = n.status || n.orderStatus || inferredStatus || localStatus || ((n.type === 'order_status' || n.type === 'order_new' || (orderId && isBrokenOrderText)) ? 'processing' : '');
     const isOrder = n.type === 'order_status' || n.type === 'order_new' || orderId || status;
     if (!isOrder) return n;
-    const orderText = orderId ? ` رقم ${orderId}` : '';
+    const orderText = orderId ? (ACC_EN ? ` #${String(orderId).replace(/^#/, '')}` : ` رقم ${orderId}`) : '';
     const map = {
-      pending:       { icon: '⏳', title: 'طلبك قيد المراجعة',     msg: `طلبك${orderText} يُراجَع الآن` },
-      processing:    { icon: '🔄', title: 'طلبك قيد المعالجة',     msg: `جارٍ تجهيز طلبك${orderText}` },
-      confirmed:     { icon: '✅', title: 'تم تأكيد طلبك',          msg: `طلبك${orderText} تم تأكيده وسيُجهَّز قريباً 🎉` },
-      manufacturing: { icon: '🔨', title: 'طلبك في مرحلة التصنيع', msg: `طلبك${orderText} يُصنَّع الآن بعناية ✨` },
-      ready:         { icon: '🎁', title: 'طلبك جاهز للاستلام',    msg: `طلبك${orderText} جاهز وبانتظارك 🎉` },
-      shipped:       { icon: '🚚', title: 'تم شحن طلبك',           msg: `طلبك${orderText} في الطريق إليك` },
-      delivered:     { icon: '✅', title: 'تم توصيل طلبك',         msg: `طلبك${orderText} وصل بنجاح 🎉` },
-      cancelled:     { icon: '❌', title: 'تم إلغاء طلبك',         msg: `طلبك${orderText} تم إلغاؤه` },
-      returned:      { icon: '↩️', title: 'تمت عملية الإرجاع',      msg: `تمت معالجة إرجاع طلبك${orderText}` }
+      pending:       { icon: '⏳', title: accText('طلبك قيد المراجعة', 'Order Under Review'),       msg: ACC_EN ? `Your order${orderText} is being reviewed` : `طلبك${orderText} يُراجَع الآن` },
+      processing:    { icon: '🔄', title: accText('طلبك قيد المعالجة', 'Order Processing'),         msg: ACC_EN ? `Your order${orderText} is being prepared` : `جارٍ تجهيز طلبك${orderText}` },
+      confirmed:     { icon: '✅', title: accText('تم تأكيد طلبك', 'Order Confirmed'),              msg: ACC_EN ? `Your order${orderText} has been confirmed and will be prepared soon 🎉` : `طلبك${orderText} تم تأكيده وسيُجهَّز قريباً 🎉` },
+      manufacturing: { icon: '🔨', title: accText('طلبك في مرحلة التصنيع', 'Order in Production'), msg: ACC_EN ? `Your order${orderText} is being carefully made ✨` : `طلبك${orderText} يُصنَّع الآن بعناية ✨` },
+      ready:         { icon: '🎁', title: accText('طلبك جاهز للاستلام', 'Order Ready for Pickup'),  msg: ACC_EN ? `Your order${orderText} is ready and waiting for you 🎉` : `طلبك${orderText} جاهز وبانتظارك 🎉` },
+      shipped:       { icon: '🚚', title: accText('تم شحن طلبك', 'Order Shipped'),                 msg: ACC_EN ? `Your order${orderText} is on the way` : `طلبك${orderText} في الطريق إليك` },
+      delivered:     { icon: '✅', title: accText('تم توصيل طلبك', 'Order Delivered'),             msg: ACC_EN ? `Your order${orderText} was delivered successfully 🎉` : `طلبك${orderText} وصل بنجاح 🎉` },
+      cancelled:     { icon: '❌', title: accText('تم إلغاء طلبك', 'Order Cancelled'),             msg: ACC_EN ? `Your order${orderText} was cancelled` : `طلبك${orderText} تم إلغاؤه` },
+      returned:      { icon: '↩️', title: accText('تمت عملية الإرجاع', 'Return Processed'),        msg: ACC_EN ? `Your order${orderText} return has been processed` : `تمت معالجة إرجاع طلبك${orderText}` }
     };
     const ar = map[status] || null;
     if (!ar) return { ...n, icon: n.icon || '🔔' };
@@ -2410,7 +2466,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const notifs = (window.x2Notifications ? window.x2Notifications.getAll() : []).map(normalizeOrderNotification);
     const unread = notifs.filter(n => !n.read).length;
 
-    if (countEl) { countEl.textContent = unread > 0 ? unread + ' جديد' : ''; countEl.style.display = unread > 0 ? 'inline' : 'none'; }
+    if (countEl) { countEl.textContent = unread > 0 ? (ACC_EN ? `${unread} New` : `${unread} جديد`) : ''; countEl.style.display = unread > 0 ? 'inline' : 'none'; }
     if (markBtn) markBtn.style.display = unread > 0 ? 'inline' : 'none';
 
     // تحديث badge الزر السريع
@@ -2420,12 +2476,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     if (window.x2Notifications) window.x2Notifications.markAllRead();
 
     if (!notifs.length) {
-      listEl.innerHTML = '<div class="notif-empty">🔔<br>لا توجد إشعارات حتى الآن<br><small style="color:#ccc">ستظهر هنا تحديثات طلباتك والعروض</small></div>';
+      listEl.innerHTML = `<div class="notif-empty">🔔<br>${accText('لا توجد إشعارات حتى الآن', 'No notifications yet')}<br><small style="color:#ccc">${accText('ستظهر هنا تحديثات طلباتك والعروض', 'Your order updates and offers will appear here')}</small></div>`;
       return;
     }
 
     listEl.innerHTML = notifs.map((n, idx) => {
-      const date = n.date ? new Date(n.date).toLocaleDateString('ar-AE',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+      const date = n.date ? new Date(n.date).toLocaleDateString(ACC_EN ? 'en-US' : 'ar-AE',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
       const onClick = n.orderId ? `showSection('orders')` : '';
       return `<div class="notif-item${n.read?'':' unread'}" ${onClick?`onclick="${onClick}"`:''}  >
         <span class="notif-icon">${n.icon||'🔔'}</span>
@@ -2719,7 +2775,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   }
 
   function renderOfferCard(product) {
-    const name = (product?.name?.ar || product?.name || 'منتج').toString();
+    const name = (product?.name?.[ACC_EN ? 'en' : 'ar'] || product?.name?.ar || product?.name?.en || product?.name || accText('منتج', 'Product')).toString();
     const price = getPriceValue(product.price);
     const oldPrice = getPriceValue(product.oldPrice);
     const discount = oldPrice > price ? Math.round(((oldPrice - price) / oldPrice) * 100) : 0;
@@ -2733,11 +2789,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="product-content" style="padding:6px 8px 8px;">
           <div class="product-name">${name}</div>
           <div class="product-price-row">
-            <span class="product-price product-price-discount">${price.toFixed(2)} د.إ</span>
+            <span class="product-price product-price-discount">${price.toFixed(2)} ${accText('د.إ', 'AED')}</span>
           </div>
-          <span class="product-old-price-striked">${oldPrice.toFixed(2)} د.إ</span>
+          <span class="product-old-price-striked">${oldPrice.toFixed(2)} ${accText('د.إ', 'AED')}</span>
           <div class="product-timer-save-box" style="margin-top:4px;">
-            <span class="product-save-text">وفّر ${savedAmt} د.إ</span>
+            <span class="product-save-text">${accText('وفّر', 'Save')} ${savedAmt} ${accText('د.إ', 'AED')}</span>
           </div>
         </div>
       </a>`;
@@ -2751,7 +2807,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     list.innerHTML = `
       <div class="acc-empty" style="padding:24px 12px; margin:0;">
         <div class="acc-empty-icon" style="font-size:2rem;">⏳</div>
-        <div class="acc-empty-title">جارٍ تحميل العروض</div>
+        <div class="acc-empty-title">${accText('جارٍ تحميل العروض', 'Loading offers')}</div>
       </div>`;
 
     try {
@@ -2770,25 +2826,25 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       const discounted = getDiscountedProducts(products);
       offersLoaded = true;
-      count.textContent = `${discounted.length} عرض`;
+      count.textContent = ACC_EN ? `${discounted.length} Offers` : `${discounted.length} عرض`;
 
       if (!discounted.length) {
         list.innerHTML = `
           <div class="acc-empty" style="padding:24px 12px; margin:0;">
             <div class="acc-empty-icon" style="font-size:2rem;">🎁</div>
-            <div class="acc-empty-title">لا توجد عروض حالياً</div>
-            <div class="acc-empty-sub">سنضيف هنا كل المنتجات التي عليها خصم فور توفرها</div>
+            <div class="acc-empty-title">${accText('لا توجد عروض حالياً', 'No offers right now')}</div>
+            <div class="acc-empty-sub">${accText('سنضيف هنا كل المنتجات التي عليها خصم فور توفرها', 'Discounted products will appear here when available')}</div>
           </div>`;
         return;
       }
       list.innerHTML = discounted.map(renderOfferCard).join('');
     } catch (error) {
-      count.textContent = '0 عرض';
+      count.textContent = ACC_EN ? '0 Offers' : '0 عرض';
       list.innerHTML = `
         <div class="acc-empty" style="padding:24px 12px; margin:0;">
           <div class="acc-empty-icon" style="font-size:2rem;">⚠️</div>
-          <div class="acc-empty-title">تعذر تحميل العروض</div>
-          <div class="acc-empty-sub">أعد المحاولة لاحقاً</div>
+          <div class="acc-empty-title">${accText('تعذر تحميل العروض', 'Could not load offers')}</div>
+          <div class="acc-empty-sub">${accText('أعد المحاولة لاحقاً', 'Please try again later')}</div>
         </div>`;
     }
   }
@@ -2803,8 +2859,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     'تحدث مع موظف': 'سأوصلك بفريق الدعم الآن! 👋\n\nوقت العمل: **السبت - الخميس 9ص - 10م**\n\nاضغط على الزر أدناه للتواصل المباشر:'
   };
 
-  const SC_FALLBACK = 'شكراً لسؤالك! للإجابة الدقيقة على استفسارك، اضغط على **"تحدث مع موظف"** أو تواصل معنا عبر واتساب وسيرد عليك فريقنا خلال دقائق. 😊';
-  const SC_WELCOME = 'مرحباً بك! 👋 أنا X2 مساعد، كيف يمكنني مساعدتك اليوم؟\n\nاختر من الأسئلة الشائعة أدناه أو اكتب سؤالك مباشرة.';
+  const SC_FALLBACK = accText('شكراً لسؤالك! للإجابة الدقيقة على استفسارك، اضغط على **"تحدث مع موظف"** أو تواصل معنا عبر واتساب وسيرد عليك فريقنا خلال دقائق. 😊', 'Thanks for your question. For the most accurate help, choose **"Real Agent"** or contact us on WhatsApp and our team will reply within minutes. 😊');
+  const SC_WELCOME = accText('مرحباً بك! 👋 أنا X2 مساعد، كيف يمكنني مساعدتك اليوم؟\n\nاختر من الأسئلة الشائعة أدناه أو اكتب سؤالك مباشرة.', 'Welcome! 👋 I am X2 Assistant. How can I help you today?\n\nChoose one of the common questions below or type your question directly.');
 
   function initSupportChat() {
     const msgs = document.getElementById('scMessages');
@@ -2835,7 +2891,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   }
 
   function renderBotBubble(text, msgs) {
-    const now = new Date().toLocaleTimeString('ar', {hour:'2-digit', minute:'2-digit'});
+    const now = new Date().toLocaleTimeString(ACC_EN ? 'en-US' : 'ar', {hour:'2-digit', minute:'2-digit'});
     const div = document.createElement('div');
     div.className = 'sc-msg bot';
     // تحويل **bold** وأسطر جديدة
@@ -2857,7 +2913,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   function addUserMessage(text) {
     const msgs = document.getElementById('scMessages');
     if (!msgs) return;
-    const now = new Date().toLocaleTimeString('ar', {hour:'2-digit', minute:'2-digit'});
+    const now = new Date().toLocaleTimeString(ACC_EN ? 'en-US' : 'ar', {hour:'2-digit', minute:'2-digit'});
     const div = document.createElement('div');
     div.className = 'sc-msg user';
     div.innerHTML = `<div><div class="sc-bubble">${text}</div><div class="sc-time" style="text-align:left">${now}</div></div><div class="sc-avatar">👤</div>`;
@@ -2954,63 +3010,207 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   }
 
   // ===== تقييماتي =====
+  function escapeHtml(value) {
+    return String(value || '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  }
+
+  function readReviewPhoto(input) {
+    return new Promise(resolve => {
+      const file = input && input.files && input.files[0];
+      if (!file) return resolve('');
+      if (!file.type || !file.type.startsWith('image/') || file.size > 900 * 1024) {
+        alert(accText('اختر صورة أقل من 900 كيلوبايت', 'Choose an image smaller than 900 KB'));
+        return resolve('');
+      }
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ''));
+      reader.onerror = () => resolve('');
+      reader.readAsDataURL(file);
+    });
+  }
+
   async function renderReviews() {
     const listEl  = document.getElementById('myReviewsList');
     const countEl = document.getElementById('myReviewsCount');
     if (!listEl) return;
 
-    let allReviews = [];
+    let localReviews = [];
+    let publishedReviews = [];
     try {
       const stored = JSON.parse(localStorage.getItem('admin_reviews') || '{}');
       Object.entries(stored).forEach(([pid, rvs]) => {
-        (rvs||[]).forEach(rv => allReviews.push({ ...rv, pid }));
+        (rvs||[]).forEach(rv => localReviews.push({ ...rv, pid, source: 'local' }));
       });
     } catch(e) {}
-    allReviews.sort((a,b) => new Date(b.date||0) - new Date(a.date||0));
-    if (countEl) countEl.textContent = allReviews.length + ' تقييم';
-
-    if (!allReviews.length) {
-      listEl.innerHTML = `<div class="acc-empty" style="padding:40px 12px">
-        <div class="acc-empty-icon">⭐</div>
-        <div class="acc-empty-title">لم تكتب أي تقييم بعد</div>
-        <div class="acc-empty-sub">تسوق وشارك تجربتك مع المنتجات</div>
-        <div class="acc-empty-actions"><a href="/" class="acc-empty-btn"><span class="ico">🛍</span> <span data-i18n="تسوق الآن">تسوق الآن</span></a></div>
-      </div>`;
-      return;
-    }
 
     // جلب أسماء المنتجات من cache أو Products.json
     let pMap = {};
     try {
-      const SS_KEY = 'x2_prods_ss';
-      const c = sessionStorage.getItem(SS_KEY);
-      const arr = c ? JSON.parse(c).data : await (await fetch('/java/Products.json')).json();
-      (arr||[]).forEach(p => { if (p.id) pMap[String(p.id)] = p; });
+      pMap = await getProductsMap();
     } catch(e) {}
+
+    const productName = (item, prod) => {
+      if (prod && typeof prod.name === 'object') return prod.name[ACC_EN ? 'en' : 'ar'] || prod.name.ar || prod.name.en || item.title || accText('منتج','Product');
+      if (prod && prod.name) return String(prod.name);
+      return item.title || accText('منتج','Product');
+    };
+    const productImage = (item, prod) => {
+      const prodImg = prod && prod.img ? (Array.isArray(prod.img) ? prod.img[0] : prod.img) : '';
+      return (item.img && !String(item.img).startsWith('data:') ? item.img : '') || prodImg || 'assets/logo.png';
+    };
+
+    try {
+      const profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}');
+      const reviewName = String(profile.name || '').trim();
+      if (reviewName && window.sbFetch) {
+        const rows = await window.sbFetch('reviews?name=eq.' + encodeURIComponent(reviewName) + '&order=date.desc&limit=200');
+        publishedReviews = (Array.isArray(rows) ? rows : []).map(row => ({
+          id: row.id,
+          pid: String(row.product_id || ''),
+          name: row.name || reviewName,
+          rating: row.rating,
+          text: row.text || '',
+          date: row.date || row.created_at || '',
+          source: 'published'
+        }));
+      }
+    } catch(e) { publishedReviews = []; }
+
+    const localKeys = new Set(localReviews.map(rv => [String(rv.pid||''), String(rv.text||''), String(rv.date||'').slice(0, 19)].join('|')));
+    publishedReviews = publishedReviews.filter(rv => !localKeys.has([String(rv.pid||''), String(rv.text||''), String(rv.date||'').slice(0, 19)].join('|')));
+    localReviews.sort((a,b) => new Date(b.date||0) - new Date(a.date||0));
+    publishedReviews.sort((a,b) => new Date(b.date||0) - new Date(a.date||0));
+    const allReviews = localReviews.concat(publishedReviews).sort((a,b) => new Date(b.date||0) - new Date(a.date||0));
+    if (countEl) countEl.textContent = allReviews.length + ' ' + accText('تقييم', 'Reviews');
+
+    const reviewedPairs = new Set(allReviews.map(review => String(review.pid || review.product_id || '') + '|' + String(review.orderId || '')));
+    const deliveredItems = [];
+    getOrders().filter(order => assignStatus(order) === 'delivered').forEach(order => {
+      (order.items || []).forEach((item, itemIndex) => {
+        const prod = pMap[String(item.id || item.productId || item.product_id || '')] || pMap['__n__' + String(item.title || '').trim().toLowerCase()];
+        const pid = String(item.id || item.productId || item.product_id || prod?.id || 'order-' + (order.id || '') + '-' + itemIndex);
+        if (reviewedPairs.has(pid + '|' + String(order.id || ''))) return;
+        deliveredItems.push({ orderId: order.id || '', pid, item, prod });
+      });
+    });
 
     const stars = n => '★'.repeat(Math.max(0,Math.min(5,n||5))) + '☆'.repeat(5-Math.max(0,Math.min(5,n||5)));
 
-    listEl.innerHTML = allReviews.map((rv, idx) => {
+    const pendingHtml = deliveredItems.length ? `
+      <div class="my-rv-section-label">${accText('منتجات تم تسليمها - قيّم مشترياتك', 'Delivered products - review your purchases')}</div>
+      ${deliveredItems.map((entry, idx) => {
+        const pname = productName(entry.item, entry.prod);
+        const pimg = productImage(entry.item, entry.prod);
+        const link = entry.prod?.id || entry.item.id ? `product.html?id=${encodeURIComponent(entry.prod?.id || entry.item.id)}` : '#';
+        return `<div class="my-rv-form-card" data-rv-pid="${escapeHtml(entry.pid)}">
+          <a href="${link}" class="my-rv-form-head">
+            <img src="${escapeHtml(pimg)}" alt="" loading="lazy" onerror="this.src='/assets/logo.png'">
+            <span><span class="my-rv-form-title">${escapeHtml(pname)}</span><span class="my-rv-form-sub">${accText('طلب رقم', 'Order')} ${escapeHtml(entry.orderId || '—')}</span></span>
+          </a>
+          <div class="my-rv-rate" data-review-stars="${idx}">${[1,2,3,4,5].map(n => `<span class="on" data-v="${n}">★</span>`).join('')}</div>
+          <textarea class="my-rv-comment" id="rvComment-${idx}" placeholder="${accText('اكتب تعليقك عن المنتج...', 'Write your comment about the product...')}"></textarea>
+          <div class="my-rv-form-actions">
+            <label class="my-rv-photo">📷 ${accText('إضافة صورة', 'Add Photo')}<input type="file" id="rvPhoto-${idx}" accept="image/*"></label>
+            <button class="my-rv-submit" onclick="submitPurchaseReview(${idx})">${accText('إرسال التقييم', 'Submit Review')}</button>
+          </div>
+        </div>`;
+      }).join('')}` : '';
+
+    window.__pendingPurchaseReviews = deliveredItems;
+
+    const publishedHtml = publishedReviews.length ? `<div class="my-rv-section-label">${accText('تعليقاتك المنشورة', 'Your published comments')}</div>` + publishedReviews.map(rv => {
       const prod  = pMap[String(rv.pid)];
-      const pname = prod ? (prod.title||prod.name?.ar||prod.name||`منتج #${rv.pid}`) : `منتج #${rv.pid}`;
+      const pname = prod ? (prod.title||prod.name?.[ACC_EN ? 'en' : 'ar']||prod.name?.ar||prod.name?.en||prod.name||`${accText('منتج','Product')} #${rv.pid}`) : `${accText('منتج','Product')} #${rv.pid}`;
       const pimg  = prod && prod.img && !String(Array.isArray(prod.img)?prod.img[0]:prod.img).startsWith('data:')
         ? (Array.isArray(prod.img)?prod.img[0]:prod.img) : '';
-      const date  = rv.date ? new Date(rv.date).toLocaleDateString('ar-AE',{year:'numeric',month:'short',day:'numeric'}) : '';
+      const date  = rv.date ? new Date(rv.date).toLocaleDateString(ACC_EN ? 'en-US' : 'ar-AE',{year:'numeric',month:'short',day:'numeric'}) : '';
       const link  = rv.pid ? `product.html?id=${encodeURIComponent(rv.pid)}` : '#';
       return `<div class="my-rv-card">
         <a href="${link}" class="my-rv-product">
-          ${pimg ? `<img src="${pimg}" alt="" loading="lazy" onerror="this.style.display='none'">` : '<span style="font-size:1.8rem;flex-shrink:0">📦</span>'}
-          <span class="my-rv-pname">${pname}</span>
+          ${pimg ? `<img src="${escapeHtml(pimg)}" alt="" loading="lazy" onerror="this.style.display='none'">` : '<span style="font-size:1.8rem;flex-shrink:0">📦</span>'}
+          <span class="my-rv-pname">${escapeHtml(pname)}</span>
         </a>
         <div class="my-rv-stars">${stars(rv.rating)}</div>
-        <div class="my-rv-text">${(rv.text||'').replace(/[<>]/g,'')}</div>
+        <div class="my-rv-text">${escapeHtml(rv.text||'')}</div>
         <div class="my-rv-footer">
           <span class="my-rv-date">${date}</span>
-          <button class="my-rv-del" onclick="deleteMyReview('${rv.pid}',${idx})">🗑 حذف</button>
+          <span class="my-rv-date">${accText('منشور', 'Published')}</span>
         </div>
       </div>`;
-    }).join('');
+    }).join('') : '';
+
+    const reviewsHtml = localReviews.length ? `<div class="my-rv-section-label">${accText('تقييماتك المحفوظة', 'Your saved reviews')}</div>` + localReviews.map((rv, idx) => {
+      const prod  = pMap[String(rv.pid)];
+      const pname = prod ? (prod.title||prod.name?.[ACC_EN ? 'en' : 'ar']||prod.name?.ar||prod.name?.en||prod.name||`${accText('منتج','Product')} #${rv.pid}`) : `${accText('منتج','Product')} #${rv.pid}`;
+      const pimg  = prod && prod.img && !String(Array.isArray(prod.img)?prod.img[0]:prod.img).startsWith('data:')
+        ? (Array.isArray(prod.img)?prod.img[0]:prod.img) : '';
+      const date  = rv.date ? new Date(rv.date).toLocaleDateString(ACC_EN ? 'en-US' : 'ar-AE',{year:'numeric',month:'short',day:'numeric'}) : '';
+      const link  = rv.pid ? `product.html?id=${encodeURIComponent(rv.pid)}` : '#';
+      return `<div class="my-rv-card">
+        <a href="${link}" class="my-rv-product">
+          ${pimg ? `<img src="${escapeHtml(pimg)}" alt="" loading="lazy" onerror="this.style.display='none'">` : '<span style="font-size:1.8rem;flex-shrink:0">📦</span>'}
+          <span class="my-rv-pname">${escapeHtml(pname)}</span>
+        </a>
+        <div class="my-rv-stars">${stars(rv.rating)}</div>
+        <div class="my-rv-text">${escapeHtml(rv.text||'')}</div>
+        ${rv.image ? `<img class="my-rv-review-img" src="${escapeHtml(rv.image)}" alt="">` : ''}
+        <div class="my-rv-footer">
+          <span class="my-rv-date">${date}</span>
+          <button class="my-rv-del" onclick="deleteMyReview('${escapeHtml(rv.pid)}',${idx})">🗑 ${accText('حذف', 'Delete')}</button>
+        </div>
+      </div>`;
+    }).join('') : '';
+
+    if (!pendingHtml && !publishedHtml && !reviewsHtml) {
+      listEl.innerHTML = `<div class="acc-empty" style="padding:40px 12px">
+        <div class="acc-empty-icon">⭐</div>
+        <div class="acc-empty-title">${accText('لم تكتب أي تقييم بعد', 'You have not written any reviews yet')}</div>
+        <div class="acc-empty-sub">${accText('ستظهر هنا المنتجات التي تم تسليمها لتقييم مشترياتك', 'Delivered products will appear here so you can review your purchases')}</div>
+        <div class="acc-empty-actions"><a href="/" class="acc-empty-btn"><span class="ico">🛍</span> <span>${accText('تسوق الآن', 'Shop Now')}</span></a></div>
+      </div>`;
+      return;
+    }
+
+    listEl.innerHTML = pendingHtml + publishedHtml + reviewsHtml;
+    listEl.querySelectorAll('[data-review-stars]').forEach(starsBox => {
+      let selected = 5;
+      starsBox.addEventListener('click', event => {
+        const star = event.target.closest('[data-v]');
+        if (!star) return;
+        selected = Number(star.dataset.v) || 5;
+        starsBox.dataset.rating = String(selected);
+        starsBox.querySelectorAll('[data-v]').forEach(el => el.classList.toggle('on', Number(el.dataset.v) <= selected));
+      });
+      starsBox.dataset.rating = String(selected);
+    });
   }
+
+  window.submitPurchaseReview = async function(idx) {
+    const entry = (window.__pendingPurchaseReviews || [])[idx];
+    if (!entry) return;
+    const textEl = document.getElementById('rvComment-' + idx);
+    const photoEl = document.getElementById('rvPhoto-' + idx);
+    const starsBox = document.querySelector(`[data-review-stars="${idx}"]`);
+    const text = (textEl?.value || '').trim();
+    if (!text) { alert(accText('اكتب تعليقك أولاً', 'Write your comment first')); return; }
+    const rating = Number(starsBox?.dataset.rating || 5) || 5;
+    const image = await readReviewPhoto(photoEl);
+    const profile = (() => { try { return JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}'); } catch(e) { return {}; } })();
+    const review = { name: profile.name || accText('زائر', 'Guest'), rating, text, image, date: new Date().toISOString(), orderId: entry.orderId || '' };
+    try {
+      const stored = JSON.parse(localStorage.getItem('admin_reviews') || '{}');
+      const key = String(entry.pid);
+      stored[key] = stored[key] || [];
+      stored[key].unshift(review);
+      localStorage.setItem('admin_reviews', JSON.stringify(stored));
+    } catch(e) { alert(accText('تعذر حفظ التقييم على هذا الجهاز', 'Could not save the review on this device')); return; }
+    try {
+      if (window.sbFetch && /^\d+$/.test(String(entry.pid))) {
+        await window.sbFetch('reviews', { method:'POST', prefer:'return=minimal', body: JSON.stringify({ product_id:String(entry.pid), name:review.name, rating, text }) });
+      }
+    } catch(e) {}
+    renderReviews();
+  };
 
   window.deleteMyReview = function(pid, idx) {
     if (!confirm('هل تريد حذف هذا التقييم؟')) return;
@@ -3033,6 +3233,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     navigator.serviceWorker.getRegistration('/sw.js').then(reg => { if (reg) reg.update(); }).catch(()=>{});
   }
   document.documentElement.classList.remove('account-auth-pending');
+  applyAccountPlaceholders();
   renderOrders();
   loadProfile();
   const profilePhoneInput = document.getElementById('pf-phone');

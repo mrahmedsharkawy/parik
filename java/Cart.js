@@ -26,7 +26,27 @@ function x2VisitorAreaFallback() {
             return String(s).replace(/"/g, '\\"');
         }
     }
+    function isEnglish() {
+        return (localStorage.getItem("lang") || document.documentElement.lang || "ar") === "en";
+    }
+    function cartEn(ar, en) {
+        return isEnglish() ? en : ar;
+    }
+    window.__cartIsEnglish = isEnglish;
+    window.__cartEn = cartEn;
     function currencySymbolFor(code) {
+        if (isEnglish()) {
+            return {
+                AED: "AED",
+                USD: "$",
+                EUR: "€",
+                SAR: "SAR",
+                EGP: "EGP",
+                KWD: "KWD",
+                JOD: "JOD",
+                GBP: "£"
+            }[code] || code;
+        }
         return {
             AED: "د.إ",
             USD: "$",
@@ -51,7 +71,7 @@ function x2VisitorAreaFallback() {
     function formatCurrency(value) {
         const symbol = currencySymbolFor(getSelectedCurrency()), n = Number(value) || 0;
         try {
-            return new Intl.NumberFormat("en-US", {
+            return new Intl.NumberFormat(isEnglish() ? "en-US" : "ar-AE", {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
             }).format(n) + " " + symbol;
@@ -102,7 +122,7 @@ function x2VisitorAreaFallback() {
         return clean;
     }
     function renderList(items) {
-        listRoot.querySelectorAll(".product-card-cart, .product-card").forEach(n => n.remove()), 
+        listRoot.querySelectorAll(".product-card-cart, .product-card").forEach(n => n.remove()),
         items.forEach(addCard), toggleEmptyState(), updateSummary();
     }
     function persistFromDOM() {
@@ -141,14 +161,14 @@ function x2VisitorAreaFallback() {
             if (cb && !cb.checked) return;
             const cur = Number(window.parseCurrency(card.dataset.priceCurrent ?? card.querySelector(".price-current, .current-price")?.textContent ?? "0")) || 0, oldCandidate = Number(window.parseCurrency(card.dataset.priceOld ?? card.querySelector(".old-price")?.textContent ?? "0")) || 0, originalPrice = Math.max(cur, oldCandidate), inpt = card.querySelector('.qty-dropdown input[type="number"], input[type="number"]'), valEl = card.querySelector(".qty-dropdown .qty-value, .qty-value");
             let qty = 1;
-            qty = inpt ? Math.max(1, Number(inpt.value || 1)) : valEl ? Math.max(1, Number(String(valEl.textContent).replace(/[^\d]/g, "") || card.dataset.qty || 1)) : Math.max(1, Number(card.dataset.qty || 1)), 
+            qty = inpt ? Math.max(1, Number(inpt.value || 1)) : valEl ? Math.max(1, Number(String(valEl.textContent).replace(/[^\d]/g, "") || card.dataset.qty || 1)) : Math.max(1, Number(card.dataset.qty || 1)),
             actualTotal += cur * qty, oldTotal += originalPrice * qty, totalQty += qty, card.dataset.lineTotal = (cur * qty).toFixed(2);
         });
         const discount = Math.max(0, oldTotal - actualTotal), subtotalEl = document.querySelector(".order-summary .subtotal, .subtotal"), discountEl = document.querySelector(".order-summary .discount, .discount"), shippingEl = document.querySelector(".order-summary .shipping, .shipping"), totalEl = document.querySelector(".order-summary .summary-total, .summary-total");
-        if (subtotalEl && (subtotalEl.dataset.amount = oldTotal.toFixed(2), subtotalEl.textContent = window.formatCurrency(oldTotal)), 
-        discountEl && (discountEl.dataset.amount = discount.toFixed(2), discount > 0 ? (discountEl.style.display = "", 
-        discountEl.textContent = "-" + window.formatCurrency(discount)) : discountEl.style.display = "none"), 
-        shippingEl && (shippingEl.dataset.amount = (0).toFixed(2), shippingEl.textContent = "ar" === document.documentElement.lang ? "يتم تحديده لاحقاً" : "TBD"), 
+        if (subtotalEl && (subtotalEl.dataset.amount = oldTotal.toFixed(2), subtotalEl.textContent = window.formatCurrency(oldTotal)),
+        discountEl && (discountEl.dataset.amount = discount.toFixed(2), discount > 0 ? (discountEl.style.display = "",
+        discountEl.textContent = "-" + window.formatCurrency(discount)) : discountEl.style.display = "none"),
+        shippingEl && (shippingEl.dataset.amount = (0).toFixed(2), shippingEl.textContent = "ar" === document.documentElement.lang ? "يتم تحديده لاحقاً" : "TBD"),
         totalEl) {
             let couponDiscount = 0;
             const couponDiscountLine = document.getElementById("couponDiscountLine"), couponDiscountAmtEl = document.getElementById("couponDiscountAmount");
@@ -156,8 +176,8 @@ function x2VisitorAreaFallback() {
                 const applied = JSON.parse(sessionStorage.getItem("x2_coupon_applied") || "null");
                 if (applied && applied.code && applied.amount) {
                     const stored = JSON.parse(localStorage.getItem("x2_coupon_code") || "null");
-                    stored && stored.code === applied.code && !stored.used ? (couponDiscount = Math.min(parseFloat(applied.amount) || 0, actualTotal), 
-                    couponDiscountLine && (couponDiscountLine.style.display = ""), couponDiscountAmtEl && (couponDiscountAmtEl.textContent = "-" + window.formatCurrency(couponDiscount))) : (sessionStorage.removeItem("x2_coupon_applied"), 
+                    stored && stored.code === applied.code && !stored.used ? (couponDiscount = Math.min(parseFloat(applied.amount) || 0, actualTotal),
+                    couponDiscountLine && (couponDiscountLine.style.display = ""), couponDiscountAmtEl && (couponDiscountAmtEl.textContent = "-" + window.formatCurrency(couponDiscount))) : (sessionStorage.removeItem("x2_coupon_applied"),
                     couponDiscountLine && (couponDiscountLine.style.display = "none"));
                 } else couponDiscountLine && (couponDiscountLine.style.display = "none");
             } catch (e) {
@@ -179,7 +199,7 @@ function x2VisitorAreaFallback() {
             }));
         } catch (e) {}
     }
-    window.currencySymbolFor = currencySymbolFor, window.getSelectedCurrency = getSelectedCurrency, 
+    window.currencySymbolFor = currencySymbolFor, window.getSelectedCurrency = getSelectedCurrency,
     window.parseCurrency = parseCurrency, window.formatCurrency = formatCurrency;
     try {
         window.updateSummary = updateSummary;
@@ -207,14 +227,14 @@ function x2VisitorAreaFallback() {
             return;
         }
         const card = document.createElement("div");
-        if (card.className = "product-card product-card-cart", card.dataset.key = key, p.id && (card.dataset.itemId = String(p.id)), 
-        card.dataset.priceCurrent = cur.toFixed(2), card.dataset.priceOld = old.toFixed(2), 
+        if (card.className = "product-card product-card-cart", card.dataset.key = key, p.id && (card.dataset.itemId = String(p.id)),
+        card.dataset.priceCurrent = cur.toFixed(2), card.dataset.priceOld = old.toFixed(2),
         !document.getElementById("cart-item-styles")) {
             const style = document.createElement("style");
-            style.id = "cart-item-styles", style.textContent = "\n      .description {\n        font-size: 11px;\n        color: #555;\n        margin: 5px 0;\n        line-height: 1.4;\n        margin-bottom: -1px;\n      }\n      .urgency-text {\n        font-size: 10px;\n        color: #d32f2f;\n        margin-top: 5px;\n        margin-bottom: -5px;\n      }\n      .hurry-text {\n        font-size: 11px;\n        color: #d32f2f;\n        font-weight: bold;\n        margin-bottom: -5px;\n      }\n    ", 
+            style.id = "cart-item-styles", style.textContent = "\n      .description {\n        font-size: 11px;\n        color: #555;\n        margin: 5px 0;\n        line-height: 1.4;\n        margin-bottom: -1px;\n      }\n      .urgency-text {\n        font-size: 10px;\n        color: #d32f2f;\n        margin-top: 5px;\n        margin-bottom: -5px;\n      }\n      .hurry-text {\n        font-size: 11px;\n        color: #d32f2f;\n        font-weight: bold;\n        margin-bottom: -5px;\n      }\n    ",
             document.head.appendChild(style);
         }
-        card.innerHTML = `\n    <button type="button" class="remove-btn" aria-label="إزالة المنتج">🗑️</button>\n    <div class="card-checkbox">\n      <input type="checkbox" checked>\n    </div>\n    <div class="qty-container">\n      <div class="qty-dropdown">\n        <span>الكمية</span>\n        <span class="qty-value">${Number(p.qty || 1)}</span>\n        <span class="dropdown-icon">▼</span>\n      </div>\n    </div>\n    <div class="image">\n      ${p.id ? `<a href="/product?id=${encodeURIComponent(p.id)}" style="display:block;width:100%;height:100%">` : ""}\n      <img src="${p.img || "assets/logo.png"}" alt="${(p.title || "").replace(/"/g, "&quot;")}" onerror="this.src='assets/logo.png'" loading="lazy">\n      ${p.id ? "</a>" : ""}\n    </div>\n    <div class="details">\n      <div class="title">${p.title || ""}</div>\n      <div class="description">${p.description || ""}</div>\n      <div class="meta">${p.meta || ""}</div>\n      <div class="urgency-text">⏱️ ينتهي العرض قريبا</div>\n      <div class="hurry-text">سارع بالشراء قبل نفاد الكمية!</div>\n      <div class="discount-info">\n        <span>عروض كبيرة</span>\n        <span class="dot">•</span>\n        <span class="since">انخفض ${discountPercent}% منذ إضافته</span>\n      </div>\n      <div class="price-container">\n        <span class="current-price">${formatCurrency(cur)}</span>\n        <span class="old-price">${formatCurrency(old)}</span>\n        <span class="discount-badge">-${discountPercent}%</span>\n      </div>\n    </div>\n  `, 
+        card.innerHTML = `\n    <button type="button" class="remove-btn" aria-label="${cartEn('إزالة المنتج', 'Remove product')}">🗑️</button>\n    <div class="card-checkbox">\n      <input type="checkbox" checked>\n    </div>\n    <div class="qty-container">\n      <div class="qty-dropdown">\n        <span>${cartEn('الكمية', 'Quantity')}</span>\n        <span class="qty-value">${Number(p.qty || 1)}</span>\n        <span class="dropdown-icon">▼</span>\n      </div>\n    </div>\n    <div class="image">\n      ${p.id ? `<a href="/product?id=${encodeURIComponent(p.id)}" style="display:block;width:100%;height:100%">` : ""}\n      <img src="${p.img || "assets/logo.png"}" alt="${(p.title || "").replace(/"/g, "&quot;")}" onerror="this.src='assets/logo.png'" loading="lazy">\n      ${p.id ? "</a>" : ""}\n    </div>\n    <div class="details">\n      <div class="title">${p.title || ""}</div>\n      <div class="description">${p.description || ""}</div>\n      <div class="meta">${p.meta || ""}</div>\n      <div class="urgency-text">⏱️ ${cartEn('ينتهي العرض قريبا', 'Offer ends soon')}</div>\n      <div class="hurry-text">${cartEn('سارع بالشراء قبل نفاد الكمية!', 'Buy now before stock runs out!')}</div>\n      <div class="discount-info">\n        <span>${cartEn('عروض كبيرة', 'Big deals')}</span>\n        <span class="dot">•</span>\n        <span class="since">${isEnglish() ? `Dropped ${discountPercent}% since added` : `انخفض ${discountPercent}% منذ إضافته`}</span>\n      </div>\n      <div class="price-container">\n        <span class="current-price">${formatCurrency(cur)}</span>\n        <span class="old-price">${formatCurrency(old)}</span>\n        <span class="discount-badge">-${discountPercent}%</span>\n      </div>\n    </div>\n  `,
         card.querySelector(".card-checkbox input")?.addEventListener("change", e => {
             card.classList.toggle("selected", e.target.checked), function() {
                 const selectedItems = document.querySelectorAll(".product-card-cart .card-checkbox input:checked").length, totalItems = document.querySelectorAll(".product-card-cart").length, countDisplay = document.querySelector(".selection-count");
@@ -230,7 +250,7 @@ function x2VisitorAreaFallback() {
             e.stopPropagation(), function(card, target) {
                 if (!document.getElementById("qty-dropdown-arrow-style")) {
                     const s = document.createElement("style");
-                    s.id = "qty-dropdown-arrow-style", s.textContent = "\n      .qty-dropdown .dropdown-icon { display:inline-block; transition: transform .18s ease; transform-origin: center; }\n      .qty-options { box-sizing: border-box; max-height: 240px; overflow:auto; background:white; border:1px solid rgba(0,0,0,.08); border-radius:4px; }\n    ", 
+                    s.id = "qty-dropdown-arrow-style", s.textContent = "\n      .qty-dropdown .dropdown-icon { display:inline-block; transition: transform .18s ease; transform-origin: center; }\n      .qty-options { box-sizing: border-box; max-height: 240px; overflow:auto; background:white; border:1px solid rgba(0,0,0,.08); border-radius:4px; }\n    ",
                     document.head.appendChild(s);
                 }
                 const ownerKey = card.dataset.key || card.dataset.itemId || String(Math.random()), existing = document.querySelector(`.qty-options[data-owner="${ownerKey}"]`);
@@ -241,18 +261,18 @@ function x2VisitorAreaFallback() {
                 }
                 closeQtyDropdowns();
                 const curValEl = card.querySelector(".qty-value"), cur = Math.max(1, parseInt(curValEl ? curValEl.textContent : card.dataset.qty) || 1), dropdown = document.createElement("div");
-                dropdown.className = "qty-options", dropdown.dataset.owner = ownerKey, dropdown.setAttribute("role", "listbox"), 
-                dropdown.style.position = "fixed", dropdown.style.zIndex = 99999, dropdown.style.visibility = "hidden", 
+                dropdown.className = "qty-options", dropdown.dataset.owner = ownerKey, dropdown.setAttribute("role", "listbox"),
+                dropdown.style.position = "fixed", dropdown.style.zIndex = 99999, dropdown.style.visibility = "hidden",
                 dropdown.style.maxHeight = "240px", dropdown.style.overflow = "auto", dropdown.style.background = "white";
                 for (let i = 1; i <= 10; i++) {
                     const opt = document.createElement("div");
-                    opt.className = "qty-option" + (i === cur ? " selected" : ""), opt.dataset.value = String(i), 
-                    opt.innerHTML = `<span class="label">${i}</span><span class="check">${i === cur ? "✓" : ""}</span>`, 
+                    opt.className = "qty-option" + (i === cur ? " selected" : ""), opt.dataset.value = String(i),
+                    opt.innerHTML = `<span class="label">${i}</span><span class="check">${i === cur ? "✓" : ""}</span>`,
                     dropdown.appendChild(opt);
                 }
                 document.body.appendChild(dropdown);
                 const tgtRect = target.getBoundingClientRect(), ddRect = dropdown.getBoundingClientRect(), margin = 8, leftRaw = "rtl" === document.dir || "rtl" === getComputedStyle(card).direction ? tgtRect.right - Math.max(ddRect.width, tgtRect.width) : tgtRect.left, left = Math.max(margin, Math.min(leftRaw, window.innerWidth - Math.max(ddRect.width, tgtRect.width) - margin)), top = Math.min(window.innerHeight - 8, tgtRect.bottom + 6);
-                dropdown.style.left = Math.round(left) + "px", dropdown.style.top = Math.round(top) + "px", 
+                dropdown.style.left = Math.round(left) + "px", dropdown.style.top = Math.round(top) + "px",
                 dropdown.style.minWidth = Math.max(80, tgtRect.width) + "px", dropdown.style.visibility = "visible";
                 const icon = target.querySelector(".dropdown-icon");
                 icon && (icon.style.transition = "transform .18s ease", icon.style.transform = "rotate(180deg)");
@@ -267,7 +287,7 @@ function x2VisitorAreaFallback() {
                     }), updateCardQuantity(card, v), closeQtyDropdowns();
                 });
                 const onDocClick = ev => {
-                    dropdown.contains(ev.target) || target.contains(ev.target) || (closeQtyDropdowns(), 
+                    dropdown.contains(ev.target) || target.contains(ev.target) || (closeQtyDropdowns(),
                     document.removeEventListener("click", onDocClick));
                 };
                 setTimeout(() => document.addEventListener("click", onDocClick), 0);
@@ -303,7 +323,7 @@ function x2VisitorAreaFallback() {
         const input = document.getElementById("couponCodeInput"), msgEl = document.getElementById("couponMsg");
         if (!input || !msgEl) return;
         const code = (input.value || "").trim().toUpperCase(), show = (txt, ok) => {
-            msgEl.textContent = txt, msgEl.style.display = "block", msgEl.style.background = ok ? "#e8f5e9" : "#fce4ec", 
+            msgEl.textContent = txt, msgEl.style.display = "block", msgEl.style.background = ok ? "#e8f5e9" : "#fce4ec",
             msgEl.style.color = ok ? "#2e7d32" : "#c62828";
         };
         if (code) try {
@@ -372,7 +392,7 @@ function x2VisitorAreaFallback() {
         }), curSel._boundCart = !0);
         const checkoutBtn = document.getElementById("checkoutBtn");
         checkoutBtn && !checkoutBtn._bound && (checkoutBtn.addEventListener("click", e => {
-            parseCurrency(document.querySelector(".summary-total")?.dataset.amount || "0") <= 0 && (e.preventDefault(), 
+            parseCurrency(document.querySelector(".summary-total")?.dataset.amount || "0") <= 0 && (e.preventDefault(),
             checkoutBtn.classList.add("shake"), setTimeout(() => checkoutBtn.classList.remove("shake"), 600));
         }), checkoutBtn._bound = !0);
     });
@@ -571,7 +591,7 @@ function x2VisitorAreaFallback() {
             const summaryTotal = function() {
                 const totalEl = document.querySelector(".order-summary .summary-total, .summary-total"), subtotalEl = document.querySelector(".order-summary .subtotal, .subtotal");
                 let v = 0;
-                return totalEl ? v = totalEl.dataset?.amount ? parseNumber(totalEl.dataset.amount) : parseNumber(totalEl.textContent) : subtotalEl && (v = subtotalEl.dataset?.amount ? parseNumber(subtotalEl.dataset.amount) : parseNumber(subtotalEl.textContent)), 
+                return totalEl ? v = totalEl.dataset?.amount ? parseNumber(totalEl.dataset.amount) : parseNumber(totalEl.textContent) : subtotalEl && (v = subtotalEl.dataset?.amount ? parseNumber(subtotalEl.dataset.amount) : parseNumber(subtotalEl.textContent)),
                 v || 0;
             }(), calcTotal = items.reduce((s, i) => s + (i.unit || parseFloat(i.price || i.priceCurrent || 0)) * (Number(i.qty) || 1), 0), totalAmt = (summaryTotal > 0 ? summaryTotal : calcTotal).toFixed(2), expiresAt = new Date(Date.now() + 2592e6).toISOString();
             let orderId;
@@ -612,7 +632,7 @@ function x2VisitorAreaFallback() {
                 total: totalAmt,
                 status: "processing"
             };
-            if (orders.unshift(newOrder), localStorage.setItem("x2_orders", JSON.stringify(orders)), 
+            if (orders.unshift(newOrder), localStorage.setItem("x2_orders", JSON.stringify(orders)),
             window.Supabase && window.Supabase.Orders) {
                 const profile = (() => {
                     try {
@@ -657,7 +677,7 @@ function x2VisitorAreaFallback() {
                         o.cashback = 0;
                     }), localStorage.setItem("x2_orders", JSON.stringify(ords));
                 } catch (e2) {}
-                sessionStorage.removeItem("x2_coupon_applied"), localStorage.removeItem("x2_coupon_applied"), 
+                sessionStorage.removeItem("x2_coupon_applied"), localStorage.removeItem("x2_coupon_applied"),
                 setTimeout(() => {
                     try {
                         "function" == typeof updateSummary && updateSummary();
@@ -666,7 +686,7 @@ function x2VisitorAreaFallback() {
             }
         } catch (e) {}
         try {
-            localStorage.setItem("x2_cart", "[]"), document.querySelectorAll(".cart-badge").forEach(el => el.setAttribute("data-count", "")), 
+            localStorage.setItem("x2_cart", "[]"), document.querySelectorAll(".cart-badge").forEach(el => el.setAttribute("data-count", "")),
             window.__cartCount = 0;
             try {
                 window.dispatchEvent(new CustomEvent("cart:updated", {
@@ -676,11 +696,11 @@ function x2VisitorAreaFallback() {
                 }));
             } catch (e) {}
             setTimeout(() => {
-                "function" == typeof renderList && renderList([]), "function" == typeof toggleEmptyState && toggleEmptyState(), 
+                "function" == typeof renderList && renderList([]), "function" == typeof toggleEmptyState && toggleEmptyState(),
                 "function" == typeof updateSummary && updateSummary();
                 const banner = document.createElement("div");
-                banner.style.cssText = "position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#152546;color:#D4AF37;padding:14px 24px;border-radius:12px;font-size:0.9rem;font-weight:700;z-index:99999;box-shadow:0 6px 24px rgba(0,0,0,0.25);text-align:center;direction:rtl;max-width:90vw", 
-                banner.innerHTML = '✅ تم إرسال طلبك عبر واتساب!<br><span style="font-size:0.78rem;opacity:0.85">الطلب محفوظ في حسابك — قسم طلباتي</span>', 
+                banner.style.cssText = "position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#152546;color:#D4AF37;padding:14px 24px;border-radius:12px;font-size:0.9rem;font-weight:700;z-index:99999;box-shadow:0 6px 24px rgba(0,0,0,0.25);text-align:center;direction:rtl;max-width:90vw",
+                banner.innerHTML = '✅ تم إرسال طلبك عبر واتساب!<br><span style="font-size:0.78rem;opacity:0.85">الطلب محفوظ في حسابك — قسم طلباتي</span>',
                 document.body.appendChild(banner), setTimeout(() => banner.remove(), 4e3), accountReturnTimer = setTimeout(returnToAccount, 2e3);
             }, 200);
         } catch (e) {}
@@ -688,11 +708,11 @@ function x2VisitorAreaFallback() {
     function evaluateCheckout() {
         !function(enabled) {
             const mainBtn = document.getElementById("checkoutBtn") || document.querySelector(".checkout-btn"), paypalBtn = document.getElementById("paypalBtn") || document.querySelector(".paypal-btn"), qty = getSelectedQuantity();
-            mainBtn && (enabled ? (mainBtn.textContent = qty > 0 ? `تأكيد الطلب عبر واتساب (${qty} قطعة)` : "تأكيد الطلب عبر واتساب", 
-            mainBtn.classList.remove("disabled"), mainBtn.removeAttribute("aria-disabled"), 
+            mainBtn && (enabled ? (mainBtn.textContent = qty > 0 ? (window.__cartIsEnglish() ? `Confirm order via WhatsApp (${qty} item${qty === 1 ? "" : "s"})` : `تأكيد الطلب عبر واتساب (${qty} قطعة)`) : window.__cartEn("تأكيد الطلب عبر واتساب", "Confirm order via WhatsApp"),
+            mainBtn.classList.remove("disabled"), mainBtn.removeAttribute("aria-disabled"),
             mainBtn.disabled = !1, mainBtn.dataset.enabled = "1", mainBtn.onclick = e => {
                 e.preventDefault(), openWhatsAppOrder();
-            }) : (mainBtn.textContent = "السلة فارغة", mainBtn.classList.add("disabled"), mainBtn.setAttribute("aria-disabled", "true"), 
+            }) : (mainBtn.textContent = window.__cartEn("السلة فارغة", "Cart is empty"), mainBtn.classList.add("disabled"), mainBtn.setAttribute("aria-disabled", "true"),
             mainBtn.disabled = !0, mainBtn.dataset.enabled = "0", mainBtn.onclick = e => {
                 e.preventDefault(), (document.querySelector(".cart-left") || document.querySelector("#main"))?.scrollIntoView({
                     behavior: "smooth",
@@ -734,7 +754,7 @@ function x2VisitorAreaFallback() {
     const listRoot = document.querySelector(".cart-items-list") || document.querySelector(".cart-right .cart-items-list");
     if (listRoot) {
         document.addEventListener("change", function(e) {
-            if (e.target.matches("#selectAllCheckbox") || e.target.matches('.select-all-checkbox input[type="checkbox"]')) return checked = !!e.target.checked, 
+            if (e.target.matches("#selectAllCheckbox") || e.target.matches('.select-all-checkbox input[type="checkbox"]')) return checked = !!e.target.checked,
             Array.from(listRoot.querySelectorAll('.card-checkbox input[type="checkbox"]')).forEach(cb => {
                 cb.checked = checked;
                 const card = cb.closest(".product-card-cart, .product-card");
@@ -743,13 +763,13 @@ function x2VisitorAreaFallback() {
             var checked;
             if (e.target.matches('.card-checkbox input[type="checkbox"]')) {
                 const card = e.target.closest(".product-card-cart, .product-card");
-                return card && card.classList.toggle("selected", e.target.checked), safeUpdateSelectedCount(), 
+                return card && card.classList.toggle("selected", e.target.checked), safeUpdateSelectedCount(),
                 safeUpdateSummary(), void safePersist();
             }
-            return e.target.matches('.qty-dropdown input[type="number"], .qty-dropdown .qty-value') ? (safeUpdateSummary(), 
+            return e.target.matches('.qty-dropdown input[type="number"], .qty-dropdown .qty-value') ? (safeUpdateSummary(),
             void safePersist()) : void 0;
         }, !1), document.addEventListener("click", function(e) {
-            if (e.target.closest && e.target.closest("#deleteSelectedBtn")) return e.preventDefault(), 
+            if (e.target.closest && e.target.closest("#deleteSelectedBtn")) return e.preventDefault(),
             void function() {
                 const boxes = Array.from(listRoot.querySelectorAll(".product-card-cart, .product-card .card-checkbox input:checked"));
                 if (!boxes.length) return;
@@ -812,17 +832,17 @@ function x2VisitorAreaFallback() {
             if (cb && !cb.checked) return;
             const cur = Number(window.parseCurrency(card.dataset.priceCurrent ?? card.querySelector(".price-current, .current-price")?.textContent ?? "0")) || 0, oldCandidate = Number(window.parseCurrency(card.dataset.priceOld ?? card.querySelector(".old-price")?.textContent ?? "0")) || 0, originalPrice = Math.max(cur, oldCandidate), inpt = card.querySelector('.qty-dropdown input[type="number"], input[type="number"]'), valEl = card.querySelector(".qty-dropdown .qty-value, .qty-value");
             let qty = 1;
-            qty = inpt ? Math.max(1, Number(inpt.value || 1)) : valEl ? Math.max(1, Number(String(valEl.textContent).replace(/[^\d]/g, "") || card.dataset.qty || 1)) : Math.max(1, Number(card.dataset.qty || 1)), 
+            qty = inpt ? Math.max(1, Number(inpt.value || 1)) : valEl ? Math.max(1, Number(String(valEl.textContent).replace(/[^\d]/g, "") || card.dataset.qty || 1)) : Math.max(1, Number(card.dataset.qty || 1)),
             actualTotal += cur * qty, oldTotal += originalPrice * qty, totalQty += qty, card.dataset.lineTotal = (cur * qty).toFixed(2);
             const hasDiscount = oldCandidate > cur, oldEl = card.querySelector(".old-price"), badge = card.querySelector(".discount-badge");
-            oldEl && (hasDiscount ? (oldEl.style.display = "", oldEl.textContent = window.formatCurrency(oldCandidate)) : oldEl.style.display = "none"), 
+            oldEl && (hasDiscount ? (oldEl.style.display = "", oldEl.textContent = window.formatCurrency(oldCandidate)) : oldEl.style.display = "none"),
             badge && (badge.style.display = hasDiscount ? "" : "none");
         });
         const discount = Math.max(0, oldTotal - actualTotal), subtotalEl = document.querySelector(".order-summary .subtotal, .subtotal"), discountEl = document.querySelector(".order-summary .discount, .discount"), shippingEl = document.querySelector(".order-summary .shipping, .shipping"), totalEl = document.querySelector(".order-summary .summary-total, .summary-total");
-        if (subtotalEl && (subtotalEl.dataset.amount = oldTotal.toFixed(2), subtotalEl.textContent = window.formatCurrency(oldTotal)), 
-        discountEl && (discountEl.dataset.amount = discount.toFixed(2), discount > 0 ? (discountEl.style.display = "", 
-        discountEl.textContent = "-" + window.formatCurrency(discount)) : discountEl.style.display = "none"), 
-        shippingEl && (shippingEl.dataset.amount = (0).toFixed(2), shippingEl.textContent = "ar" === document.documentElement.lang ? "يتم تحديده لاحقاً" : "TBD"), 
+        if (subtotalEl && (subtotalEl.dataset.amount = oldTotal.toFixed(2), subtotalEl.textContent = window.formatCurrency(oldTotal)),
+        discountEl && (discountEl.dataset.amount = discount.toFixed(2), discount > 0 ? (discountEl.style.display = "",
+        discountEl.textContent = "-" + window.formatCurrency(discount)) : discountEl.style.display = "none"),
+        shippingEl && (shippingEl.dataset.amount = (0).toFixed(2), shippingEl.textContent = "ar" === document.documentElement.lang ? "يتم تحديده لاحقاً" : "TBD"),
         totalEl) {
             const grandTotal = actualTotal + 0;
             totalEl.dataset.amount = grandTotal.toFixed(2), totalEl.textContent = window.formatCurrency(grandTotal);
@@ -888,7 +908,7 @@ function x2VisitorAreaFallback() {
             } catch (e) {}
         }), document.querySelectorAll(".select-all, .select-all-checkbox").forEach(w => {
             if (!w.querySelector || !w.querySelector('input[type="checkbox"]')) try {
-                selected > 0 && selected === total && total > 0 ? (w.classList.add("checked"), w.setAttribute("aria-checked", "true")) : (w.classList.remove("checked"), 
+                selected > 0 && selected === total && total > 0 ? (w.classList.add("checked"), w.setAttribute("aria-checked", "true")) : (w.classList.remove("checked"),
                 w.setAttribute("aria-checked", "false"));
             } catch (e) {}
         });
@@ -919,7 +939,7 @@ function x2VisitorAreaFallback() {
                 matched = saved.find(it => (it.title || "") === title && Number(it.priceCurrent || 0) === price);
             }
             const cb = card.querySelector('.card-checkbox input[type="checkbox"]');
-            if (cb && (cb.checked = !(matched && !matched.selected), card.classList.toggle("selected", cb.checked)), 
+            if (cb && (cb.checked = !(matched && !matched.selected), card.classList.toggle("selected", cb.checked)),
             matched && matched.img) {
                 const imgEl = card.querySelector(".image img");
                 !imgEl || imgEl.src && "" !== imgEl.src.trim() || (imgEl.src = matched.img, imgEl.getAttribute("data-src") || imgEl.setAttribute("data-src", matched.img));

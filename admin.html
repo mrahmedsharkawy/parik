@@ -1093,6 +1093,7 @@
           <button class="btn-ghost btn-sm" onclick="deselectAllCustomers()">✗ إلغاء</button>
           <button class="btn-danger btn-sm" onclick="blockSelectedCustomers()">🚫 حظر المحددين</button>
           <button class="btn-danger btn-sm" onclick="deleteSelectedCustomers()">🗑 حذف المحددين</button>
+          <button class="btn-ghost btn-sm" onclick="restoreDeletedCustomers()">♻️ استعادة المحذوفين</button>
           <button class="btn-ghost btn-sm" onclick="exportCustomers()">⬇ تصدير</button>
           <label class="btn-ghost btn-sm" style="cursor:pointer;margin:0">
             📥 استيراد Excel
@@ -4063,12 +4064,55 @@ async function syncCustomersFromSupabase() {
 
 /* قائمة سوداء للعملاء المحذوفين نهائياً */
 function getDeletedCustomerKeys() {
-  try { return new Set(JSON.parse(localStorage.getItem('x2_deleted_customers') || '[]')); } catch(e) { return new Set(); }
+  try {
+    const raw = JSON.parse(localStorage.getItem('x2_deleted_customers') || '[]');
+    const map = new Map();
+    if (Array.isArray(raw)) {
+      raw.forEach(item => {
+        if (typeof item === 'string') map.set(item, 0);
+        else if (item && item.key) map.set(item.key, Number(item.deletedAt || 0));
+      });
+    }
+    return map;
+  } catch(e) { return new Map(); }
 }
 function addDeletedCustomerKeys(keys) {
   const existing = getDeletedCustomerKeys();
-  keys.forEach(k => existing.add(k));
-  localStorage.setItem('x2_deleted_customers', JSON.stringify([...existing]));
+  const ts = Date.now();
+  keys.forEach(k => { if (k) existing.set(k, ts); });
+  localStorage.setItem('x2_deleted_customers', JSON.stringify([...existing].map(([key, deletedAt]) => ({ key, deletedAt }))));
+}
+function restoreDeletedCustomers() {
+  localStorage.removeItem('x2_deleted_customers');
+  selectedCustomers.clear();
+  renderCustomers();
+  syncOrderCustomersFromSupabase().then(renderCustomers).catch(()=>{});
+  syncCustomersFromSupabase();
+  toast('✅ تم إلغاء إخفاء العملاء المحذوفين');
+}
+function getOrderTimeMs(o) {
+  const raw = o?.date || o?.created_at || o?.createdAt || o?.updated_at || o?.updatedAt || '';
+  const time = raw ? new Date(raw).getTime() : 0;
+  return isNaN(time) ? 0 : time;
+}
+function customerHasOrderAfterDeletion(customer, deletedKeys) {
+  const keys = [customer?.phone, customer?.email].filter(Boolean);
+  const deletionTimes = keys.map(k => deletedKeys.get(k)).filter(v => v !== undefined);
+  if (!deletionTimes.length) return false;
+  const deletedAt = Math.max(...deletionTimes);
+  return (customer.orders || []).some(order => getOrderTimeMs(order) > deletedAt);
+}
+function mergeUniqueOrders(orderGroups) {
+  const seen = new Set();
+  const merged = [];
+  (orderGroups || []).flat().forEach(order => {
+    if (!order) return;
+    const key = String(order.id || order.orderNumber || order.order_number || JSON.stringify([order.date || order.created_at || order.createdAt, order.total, order.customerName || order.customer_name || order.customer || order.phone || order.customerPhone || order.customer_phone]));
+    if (seen.has(key)) return;
+    seen.add(key);
+    merged.push(order);
+  });
+  return merged;
 }
 
 /* تعديل getCustomers لتدمج Supabase مع المحلي */
@@ -4076,10 +4120,12 @@ const _origGetCustomers = window.getCustomers;
 function getCustomers() {
   const _deletedKeys = getDeletedCustomerKeys();
   const isDeleted = (phone, email) => (phone && _deletedKeys.has(phone)) || (email && _deletedKeys.has(email));
+  const shouldHideDeletedCustomer = customer => isDeleted(customer.phone, customer.email) && !customerHasOrderAfterDeletion(customer, _deletedKeys);
   // جمع الطلبات من كلا المصدرين
-  const storeOrders  = ordersLoaded ? [] : JSON.parse(localStorage.getItem('x2_orders')   || '[]');
-  const adminOrders  = orderCustomersLoaded ? [] : getOrders(); // admin_orders
-  const allOrders    = [...storeOrders, ...adminOrders];
+  let storeOrders = [];
+  try { storeOrders = JSON.parse(localStorage.getItem('x2_orders') || '[]'); } catch(e) {}
+  const adminOrders  = orderCustomersLoaded ? [] : getOrders(); // admin_orders / Supabase cache
+  const allOrders    = mergeUniqueOrders([storeOrders, adminOrders]);
   const profile = (() => { try { return JSON.parse(localStorage.getItem('x2_profile')||'{}'); }catch(e){return{};} })();
 
   const map = {};
@@ -4100,12 +4146,12 @@ function getCustomers() {
     map[key].orders.push(o);
     map[key].statuses.add(o.status||'processing');
   });
-  const localCusts = Object.values(map).filter(c => !isDeleted(c.phone, c.email));
+  const localCusts = Object.values(map).filter(c => !shouldHideDeletedCustomer(c));
 
   // دمج عملاء Supabase - يحدّث الموجودين ويضيف الجدد
   const merged = [...localCusts];
   orderCustomers.forEach(oc => {
-    if (isDeleted(oc.phone, oc.email)) return;
+    if (shouldHideDeletedCustomer(oc)) return;
     const ocPhone = adminPhoneDigits(oc.phone);
     const ocEmail = String(oc.email || '').trim().toLowerCase();
     const existing = merged.find(c => (ocPhone && adminPhoneDigits(c.phone) === ocPhone) || (ocEmail && String(c.email || '').trim().toLowerCase() === ocEmail));

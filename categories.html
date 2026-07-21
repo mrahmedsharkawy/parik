@@ -832,7 +832,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   // اختيار فئة فرعية وعرض منتجاتها
   function selectSubcategory(subSlug, subName, parentSlug) {
     activeSubSlug = subSlug;
-    if (!subName) subName = subSlug;
+    const subMeta = findSubcategoryMeta(subSlug, subName, parentSlug);
+    if (!subName) subName = subMeta ? catName(subMeta) : subSlug;
 
     document.querySelectorAll('.cat-sub-card').forEach(c=>c.classList.remove('active'));
     const card = document.querySelector(`.cat-sub-card[data-slug="${subSlug}"]`);
@@ -844,16 +845,35 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   }
 
   // تصفية المنتجات
+  function findSubcategoryMeta(slug, name, parentSlug) {
+    const norm = v => String(v||'').toLowerCase().trim();
+    const ids = [slug, name].map(norm).filter(Boolean);
+    const cats = parentSlug ? allCategories.filter(c => c.categorySlug === parentSlug) : allCategories;
+    for (const cat of cats) {
+      const found = (cat.subcategories || []).find(sub => {
+        const vals = [sub.categorySlug, sub.name && sub.name.ar, sub.name && sub.name.en].map(norm);
+        return vals.some(v => ids.includes(v));
+      });
+      if (found) return found;
+    }
+    return null;
+  }
+
   function filterProducts(slug, name) {
     const norm = v => String(v||'').toLowerCase().trim();
-    const sl = norm(slug), nm = norm(name);
+    const subMeta = findSubcategoryMeta(slug, name, activeMainSlug);
+    const targets = [slug, name, subMeta && subMeta.categorySlug, subMeta && subMeta.name && subMeta.name.ar, subMeta && subMeta.name && subMeta.name.en]
+      .map(norm)
+      .filter(Boolean);
     return allProducts.filter(p => {
       const fields = [p.category, p.subCategory, p.subcategory, p.categorySlug, p.subcategorySlug];
       return fields.some(f => {
         if (!f) return false;
-        if (Array.isArray(f)) return f.some(v => norm(v)===sl||norm(v)===nm||(typeof v==='object'&&(norm(v.ar)===sl||norm(v.en)===sl||norm(v.ar)===nm||norm(v.en)===nm)));
-        if (typeof f==='object') return norm(f.ar)===sl||norm(f.en)===sl||norm(f.ar)===nm||norm(f.en)===nm;
-        return norm(f)===sl||norm(f)===nm;
+        if (Array.isArray(f)) return f.some(v => typeof v === 'object'
+          ? targets.includes(norm(v.ar)) || targets.includes(norm(v.en))
+          : targets.includes(norm(v)));
+        if (typeof f==='object') return targets.includes(norm(f.ar)) || targets.includes(norm(f.en));
+        return targets.includes(norm(f));
       });
     });
   }
