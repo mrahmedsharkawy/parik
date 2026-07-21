@@ -1447,20 +1447,20 @@ document.addEventListener("DOMContentLoaded", async function() {
         (function() {
             const fvSrc = explicitVideos[0] || media.find(m => m.type === "video")?.src;
             if (!fvSrc) return;
-            function optimizeCloudinaryVideoUrl(src, width) {
+            function optimizeCloudinaryVideoUrl(src, transform) {
                 try {
                     if (!/res\.cloudinary\.com\/[^/]+\/video\/upload\/v\d+\//.test(String(src || ""))) return src;
-                    return String(src).replace("/video/upload/", `/video/upload/q_auto,w_${width || 360},c_limit/`);
+                    return String(src).replace("/video/upload/", `/video/upload/${transform}/`);
                 } catch (e) {
                     return src;
                 }
             }
-            const miniVideoSrc = optimizeCloudinaryVideoUrl(fvSrc, 360), fullVideoSrc = optimizeCloudinaryVideoUrl(fvSrc, 720);
+            const miniVideoSources = [ optimizeCloudinaryVideoUrl(fvSrc, "f_mp4,vc_h264,q_auto:eco,w_360,c_limit"), optimizeCloudinaryVideoUrl(fvSrc, "f_mp4,vc_h264,q_auto,w_360,c_limit"), optimizeCloudinaryVideoUrl(fvSrc, "q_auto,w_360,c_limit"), fvSrc ].filter((src, i, arr) => src && arr.indexOf(src) === i), fullVideoSrc = optimizeCloudinaryVideoUrl(fvSrc, "f_mp4,vc_h264,q_auto,w_720,c_limit"), posterSrc = normalizeAssetUrl(imgs[0] || "") || "/assets/logo.png";
             const startMiniVideo = function() {
                 const wrap = mainWrap || document.querySelector("#mainImage")?.parentElement;
                 const pip = document.createElement("div");
                 pip.id = "pip-video-widget";
-                pip.style.cssText = "position:fixed;width:90px;height:145px;border-radius:12px;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.6);z-index:99999;cursor:grab;touch-action:none;background:#000;";
+                pip.style.cssText = `position:fixed;width:90px;height:145px;border-radius:12px;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.6);z-index:99999;cursor:grab;touch-action:none;background:#000 url("${posterSrc.replace(/"/g, "%22")}") center/cover no-repeat;`;
                 setTimeout(function() {
                     const pipHeight = 145, topGap = 12, bottomGap = window.innerWidth <= 899 ? 84 : 12;
                     let desiredTop;
@@ -1486,24 +1486,35 @@ document.addEventListener("DOMContentLoaded", async function() {
                 vid.setAttribute("playsinline", "");
                 vid.setAttribute("webkit-playsinline", "");
                 vid.preload = "auto";
-                let videoRetryDone = false;
-                vid.addEventListener("error", function() {
-                    if (videoRetryDone || !miniVideoSrc) return;
-                    videoRetryDone = true;
-                    const separator = miniVideoSrc.includes("?") ? "&" : "?";
-                    vid.src = miniVideoSrc + separator + "retry=" + Date.now();
+                let videoRetryDone = false, videoSourceIndex = 0;
+                function setMiniVideoSource(cacheBust) {
+                    const src = miniVideoSources[videoSourceIndex] || fvSrc;
+                    const separator = src.includes("?") ? "&" : "?";
+                    vid.src = cacheBust ? src + separator + "retry=" + Date.now() : src;
                     try {
                         vid.load();
                     } catch (e) {}
+                }
+                vid.addEventListener("error", function() {
+                    vid.style.opacity = "0";
+                    if (videoSourceIndex < miniVideoSources.length - 1) videoSourceIndex += 1, videoRetryDone = false; else {
+                        if (videoRetryDone) return;
+                        videoRetryDone = true;
+                    }
+                    setMiniVideoSource(true);
                     setTimeout(function() {
                         vid.play().catch(function() {});
-                    }, 80);
+                    }, 120);
                 });
                 const playMiniVideo = function() {
                     vid.play().catch(function() {});
                 };
-                vid.addEventListener("loadeddata", playMiniVideo);
-                vid.addEventListener("canplay", playMiniVideo);
+                const showMiniVideo = function() {
+                    vid.style.opacity = "1";
+                    playMiniVideo();
+                };
+                vid.addEventListener("loadeddata", showMiniVideo);
+                vid.addEventListener("canplay", showMiniVideo);
                 window.addEventListener("pageshow", playMiniVideo);
                 document.addEventListener("visibilitychange", function() {
                     if (!document.hidden) playMiniVideo();
@@ -1515,8 +1526,8 @@ document.addEventListener("DOMContentLoaded", async function() {
                 document.addEventListener("click", playMiniVideo, {
                     once: true
                 });
-                vid.src = miniVideoSrc;
-                vid.style.cssText = "width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;";
+                vid.style.cssText = "width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;opacity:0;transition:opacity .2s ease;";
+                setMiniVideoSource(false);
                 const closeBtn = document.createElement("button");
                 closeBtn.innerHTML = "&times;";
                 closeBtn.style.cssText = "position:absolute;top:4px;right:5px;background:rgba(0,0,0,.65);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:14px;cursor:pointer;z-index:3;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;";
