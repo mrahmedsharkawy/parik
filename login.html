@@ -265,6 +265,27 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     .auth-success h3 { font-size: 1.1rem; font-weight: 700; color: #111; margin-bottom: 8px; }
     .auth-success p { font-size: 0.85rem; color: #888; margin-bottom: 20px; }
 
+    .profile-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(13,28,56,.58);
+    }
+    .profile-modal.active { display: flex; }
+    .profile-modal-card {
+      width: min(420px, 100%);
+      background: #fff;
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.22);
+    }
+    .profile-modal-card h3 { margin: 0 0 8px; color: #111; font-size: 1.12rem; }
+    .profile-modal-card p { margin: 0 0 18px; color: #666; font-size: .86rem; line-height: 1.7; }
+
     /* موبايل */
     @media (max-width: 480px) {
       .auth-card { border-radius: 16px; }
@@ -423,6 +444,29 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div><!-- end auth-card -->
 
   </main>
+
+  <div class="profile-modal" id="google-profile-modal" role="dialog" aria-modal="true" aria-labelledby="google-profile-title">
+    <div class="profile-modal-card">
+      <h3 id="google-profile-title">استكمال بيانات الحساب</h3>
+      <p>أضف رقم الهاتف والعنوان لتأكيد حسابك الجديد في Bariq.</p>
+      <div class="auth-error" id="google-profile-error"></div>
+      <div class="auth-input-group">
+        <label>رقم الهاتف</label>
+        <div class="auth-input-wrap">
+          <input type="tel" id="google-profile-phone" value="+971 " placeholder="+971 XX XXX XXXX" inputmode="tel" dir="ltr" autocomplete="tel">
+          <span class="input-ico">📱</span>
+        </div>
+      </div>
+      <div class="auth-input-group">
+        <label>العنوان</label>
+        <div class="auth-input-wrap">
+          <input type="text" id="google-profile-address" placeholder="أدخل عنوانك" autocomplete="street-address">
+          <span class="input-ico">📍</span>
+        </div>
+      </div>
+      <button type="button" class="auth-btn" id="google-profile-save" onclick="completeGoogleProfile()">حفظ ومتابعة</button>
+    </div>
+  </div>
 
   <script src="/java/main.js" defer></script>
   <script src="/translations/translation.js" defer></script>
@@ -950,6 +994,47 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     document.getElementById('success-msg').textContent = msg;
   }
 
+  function showGoogleProfileModal(profile) {
+    const modal = document.getElementById('google-profile-modal');
+    const phoneInput = document.getElementById('google-profile-phone');
+    const addressInput = document.getElementById('google-profile-address');
+    const error = document.getElementById('google-profile-error');
+    if (error) { error.textContent = ''; error.style.display = 'none'; }
+    if (phoneInput) phoneInput.value = profile.phone ? formatUaePhoneInput(profile.phone) : '+971 ';
+    if (addressInput) addressInput.value = profile.address || '';
+    if (modal) modal.classList.add('active');
+    setTimeout(() => { if (phoneInput) phoneInput.focus(); }, 80);
+  }
+
+  function formatUaePhoneInput(phone) {
+    const normalized = normalizeUaePhone(phone);
+    return normalized ? normalized.replace('+971', '+971 ') : '+971 ';
+  }
+
+  async function completeGoogleProfile() {
+    const btn = document.getElementById('google-profile-save');
+    const error = document.getElementById('google-profile-error');
+    const phone = normalizeUaePhone(document.getElementById('google-profile-phone')?.value || '');
+    const address = String(document.getElementById('google-profile-address')?.value || '').trim();
+    if (error) { error.textContent = ''; error.style.display = 'none'; }
+    if (!phone) { if (error) showError('google-profile-error', '⚠️ من فضلك أدخل رقم الهاتف'); return; }
+    if (!address) { if (error) showError('google-profile-error', '⚠️ من فضلك أدخل العنوان'); return; }
+    let profile = {};
+    try { profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}'); } catch(e) { profile = {}; }
+    profile = buildProfile({ ...profile, phone, address, auth_provider: 'google' });
+    if (btn) { btn.disabled = true; btn.textContent = 'جارٍ الحفظ...'; }
+    try {
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+      localStorage.setItem('x2_logged', '1');
+      await ensureCustomerSaved(profile);
+      syncProfileToUserSync(profile).catch(()=>{});
+      window.location.href = 'index.html';
+    } catch(e) {
+      if (error) showError('google-profile-error', '❌ تعذر حفظ البيانات. حاول مرة أخرى.');
+      if (btn) { btn.disabled = false; btn.textContent = 'حفظ ومتابعة'; }
+    }
+  }
+
   function showForgot() {
     const email = document.getElementById('login-email').value.trim();
     if (!email) { showError('login-error', '⚠️ أدخل بريدك الإلكتروني أولاً ثم اضغط نسيت كلمة المرور'); return; }
@@ -1030,11 +1115,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
       localStorage.setItem('x2_logged', '1');
       const needsProfileCompletion = !existingCustomer;
-      if (needsProfileCompletion) localStorage.setItem('x2_goto_section', 'profile');
+      if (needsProfileCompletion) {
+        localStorage.removeItem('x2_goto_section');
+        showGoogleProfileModal(profile);
+        return;
+      }
       try { await ensureCustomerSaved(profile); } catch(e) {}
       syncProfileToUserSync(profile, accessToken).catch(()=>{});
-      showSuccess('مرحباً ' + (profile.fname || profile.name || '') + '!', needsProfileCompletion ? 'أكمل رقم الهاتف والعنوان لحفظ حسابك.' : 'تم تسجيل الدخول بنجاح.');
-      setTimeout(() => { window.location.href = needsProfileCompletion ? 'account.html?section=profile&complete=1' : 'account.html'; }, 1000);
+      showSuccess('مرحباً ' + (profile.fname || profile.name || '') + '!', 'تم تسجيل الدخول بنجاح.');
+      setTimeout(() => { window.location.href = 'index.html'; }, 700);
     } catch (e) {
       showError('login-error', '❌ فشل تسجيل الدخول الاجتماعي. حاول مرة أخرى.');
     }
