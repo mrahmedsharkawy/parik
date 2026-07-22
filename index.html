@@ -31,7 +31,6 @@
   <link rel="preload" href="/assets/cairo-arabic.woff2" as="font" type="font/woff2" crossorigin>
   <!-- Preload LCP image -->
   <link rel="preload" href="/assets/home/1.webp" as="image" fetchpriority="high" type="image/webp" imagesizes="70vw">
-  <link rel="preload" href="/assets/home/صور الغلاف/1.webp" as="image" fetchpriority="high" type="image/webp" imagesizes="(max-width: 899px) 100vw">
   <!-- Critical above-fold CSS (prevents FOUC while style.css loads) -->
   <style>
     *{box-sizing:border-box;margin:0}
@@ -50,12 +49,10 @@
     .animated-promo-banner .banner-inner{position:relative;width:100%;height:100%}
     .animated-promo-banner .banner-bg-animated{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:1}
     .mobile-promo-banner{display:none}
-    .animated-promo-banner .banner-slide{opacity:0;transform:scale(1.018);transition:opacity .55s ease,transform 1.8s ease}
-    .animated-promo-banner .banner-slide.is-active{opacity:1;transform:scale(1)}
     .flash-deal-banner{width:100%;height:38px;position:relative;overflow:hidden;border-radius:10px}
     img,video{max-width:100%;height:auto;border-radius:3px}
     .dp-img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:7px;background:#f0f0f0}
-    @media(max-width:899px){.main-header .dropdown,.main-header .cart,.main-header .logo{display:none!important}.header-content{width:100%;justify-content:center;flex-wrap:nowrap}.search-container{flex:0 1 calc(100% - 24px);margin:0 auto}.search-container input{text-align:center;min-width:0}.home-immersive-header .main-header{background:transparent;box-shadow:none;transition:background-color .22s ease,box-shadow .22s ease}.home-immersive-header .main-header.header-solid{background-color:#152546;box-shadow:0 2px 4px rgba(0,0,0,.1)}.home-immersive-header .main-header:not(.header-solid) .search-container{background-color:rgba(255,255,255,.24);border:1px solid rgba(255,255,255,.34);backdrop-filter:blur(8px)}.home-immersive-header .main-header:not(.header-solid) .search-container input{color:#fff}.home-immersive-header .main-header:not(.header-solid) .search-container input::placeholder{color:rgba(255,255,255,.86)}.home-immersive-header main.main{width:100%!important;max-width:none!important;margin:0 0 50px!important}.home-immersive-header main.main>:not(.mobile-promo-banner){width:calc(100% - 24px);margin-left:auto;margin-right:auto}.home-immersive-header .desktop-promo-banner{display:none}.home-immersive-header .mobile-promo-banner{display:block;width:100%!important;height:min(31svh,230px)!important;min-height:165px;margin:0 0 12px!important;border-radius:0;box-shadow:none}.home-immersive-header .mobile-promo-banner img{border-radius:0}
+    @media(max-width:899px){.main-header .dropdown,.main-header .cart,.main-header .logo{display:none!important}.header-content{width:100%;justify-content:center;flex-wrap:nowrap}.search-container{flex:0 1 calc(100% - 24px);margin:0 auto}.search-container input{text-align:center;min-width:0}.desktop-promo-banner{display:none!important}.mobile-promo-banner{display:block!important;height:auto!important;margin:0 0 12px!important;border-radius:0!important;box-shadow:none!important;background:linear-gradient(135deg,#0a1628 0%,#152546 45%,#1a1a2e 100%);position:relative;overflow:hidden}.mobile-promo-banner::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 20% 50%,rgba(212,175,55,.12) 0%,transparent 50%),radial-gradient(circle at 80% 20%,rgba(212,175,55,.08) 0%,transparent 40%),radial-gradient(circle at 60% 80%,rgba(255,120,0,.07) 0%,transparent 35%);pointer-events:none}.mobile-promo-banner .banner-inner{position:relative;z-index:1;width:100%;height:100%}.mobile-promo-banner .fsh-inner{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:18px 12px 16px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}.mobile-promo-banner .fsh-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(212,175,55,.18);border:1px solid rgba(212,175,55,.45);border-radius:999px;padding:4px 14px;font-size:.62rem;font-weight:800;color:#D4AF37;letter-spacing:.08em;text-transform:uppercase}.mobile-promo-banner .fsh-badge-fire{font-size:.9rem;animation:badgeFire 1.2s ease-in-out infinite}.mobile-promo-banner .fsh-title{font-size:1.18rem;font-weight:900;color:#fff;line-height:1.15;margin:0}.mobile-promo-banner .fsh-title span.gold{color:#D4AF37}.mobile-promo-banner .fsh-title .fire-big{display:inline-block;animation:bigFire 1.4s ease-in-out infinite alternate}.mobile-promo-banner .fsh-discount-row{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}.mobile-promo-banner .fsh-discount-pill{background:linear-gradient(90deg,#D4AF37,#f0c94a);color:#0a1628;font-weight:900;font-size:.98rem;padding:5px 18px;border-radius:999px;box-shadow:0 4px 20px rgba(212,175,55,.45)}.mobile-promo-banner .fsh-discount-label{color:rgba(255,255,255,.82);font-size:.72rem;font-weight:600}.mobile-promo-banner .fsh-countdown-wrap{display:flex;flex-direction:column;align-items:center;gap:5px}.mobile-promo-banner .fsh-countdown-label{color:rgba(255,255,255,.7);font-size:.68rem;font-weight:600;letter-spacing:.05em}.mobile-promo-banner .fsh-countdown{display:flex;gap:7px;align-items:center}.mobile-promo-banner .fsh-unit{display:flex;flex-direction:column;align-items:center;gap:2px}.mobile-promo-banner .fsh-unit-num{background:rgba(255,255,255,.1);border:1px solid rgba(212,175,55,.35);border-radius:8px;color:#D4AF37;font-size:1.05rem;font-weight:900;width:42px;height:42px;display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums;backdrop-filter:blur(6px)}.mobile-promo-banner .fsh-unit-lbl{color:rgba(255,255,255,.55);font-size:.55rem;font-weight:700;letter-spacing:.06em}.mobile-promo-banner .fsh-sep{color:rgba(212,175,55,.7);font-size:1.2rem;font-weight:900;margin-top:-8px;animation:sepPulse 1s steps(1) infinite}.mobile-promo-banner .fsh-products-count{font-size:.68rem;color:rgba(255,255,255,.7)}.mobile-promo-banner .fsh-products-count strong{color:#D4AF37;font-size:.86rem}
     /* navbar height reservation - prevents CLS */
     body{padding-bottom:calc(65px + env(safe-area-inset-bottom))}}
     .daily-picks-section{min-height:230px}
@@ -392,11 +389,25 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </section>
 
 <section class="animated-promo-banner mobile-promo-banner" aria-label="بنر بريق للهاتف">
-  <a href="#">
-    <div class="banner-inner">
-      <img src="/assets/home/صور الغلاف/1.webp" class="banner-bg-animated banner-slide is-active" alt="بنر بريق 1" data-theme-color="#021132" fetchpriority="high" loading="eager" width="1000" height="200" decoding="sync">
-      <img src="/assets/home/صور الغلاف/2.webp" class="banner-bg-animated banner-slide" alt="بنر بريق 2" data-theme-color="#02153a" loading="lazy" width="1000" height="200" decoding="async">
-      <img src="/assets/home/صور الغلاف/3.webp" class="banner-bg-animated banner-slide" alt="بنر بريق 3" data-theme-color="#04308e" loading="lazy" width="1000" height="200" decoding="async">
+  <a href="/offers" style="display:block;width:100%;height:100%;text-decoration:none">
+    <div class="banner-inner fsh-inner">
+      <div class="fsh-badge">
+        <span class="fsh-badge-fire">🔥</span>
+        <span class="home-brand-rotator" aria-label="بريق للهدايا والابداع" data-i18n-title="بريق للهدايا والابداع">
+          <span data-i18n="بريـــق">بريـــق</span>
+          <span data-i18n="هديتك تبدأ من هنا">هديتك تبدأ من هنا</span>
+        </span>
+        <span class="fsh-badge-fire">🔥</span>
+      </div>
+      <h1 class="fsh-title">
+        <span class="fire-big">🔥</span>
+        <span data-i18n="هدايا">هدايا</span> <span class="gold" data-i18n="تُعبّر">تُعبّر</span> <span data-i18n="عن شعورك">عن شعورك</span>
+        <span class="fire-big">🔥</span>
+      </h1>
+      <div class="fsh-discount-row">
+        <div class="fsh-discount-pill" data-i18n="اصنع لحظة لا تُنسى">اصنع لحظة لا تُنسى</div>
+        <span class="fsh-discount-label" data-i18n="مع بريــــــــــــق ✨">مع بريــــــــــــق ✨</span>
+      </div>
     </div>
   </a>
 </section>
@@ -617,17 +628,32 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   body.home-immersive-header .search-container{min-width:260px!important;margin:0 10px!important}
 }
 body.home-immersive-header .daily-picks-section{min-height:0!important;padding-bottom:0!important}
+body.home-immersive-header .daily-picks-grid{touch-action:auto!important;scroll-behavior:auto!important}
 body.home-immersive-header .daily-picks-grid:not(:empty){min-height:0!important;padding-bottom:0!important}
 body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:8px!important}
 @media(max-width:899px){
-  body.home-immersive-header main.main{width:100%!important;max-width:none!important;margin:0 0 50px!important}
-  body.home-immersive-header main.main>:not(.mobile-promo-banner){width:calc(100% - 24px);margin-left:auto;margin-right:auto}
+  html,body{height:auto!important;min-height:100%!important;overflow-x:hidden!important}
+  html{overflow-y:auto!important}
+  body{overflow-y:visible!important}
+  body.home-immersive-header main.main{width:97%!important;max-width:97%!important;margin:64px auto 50px!important}
   body.home-immersive-header .desktop-promo-banner{display:none!important}
-  body.home-immersive-header .mobile-promo-banner{display:block!important;width:100%!important;height:min(31svh,230px)!important;min-height:165px!important;margin:0 0 12px!important;border-radius:0!important;box-shadow:none!important}
-  body.home-immersive-header .main-header:not(.header-solid) .search-container{background-color:rgba(255,255,255,.24)!important;border:1px solid rgba(255,255,255,.34)!important;backdrop-filter:blur(8px)}
-  body.home-immersive-header .main-header.header-solid{background-color:#152546!important;box-shadow:0 2px 4px rgba(0,0,0,.1)!important}
-  body.home-immersive-header .main-header.header-solid .search-container{background-color:#fff!important;border-color:transparent!important;backdrop-filter:none!important}
-  body.home-immersive-header .main-header.header-solid .search-container input{color:#111!important}
+  body.home-immersive-header .mobile-promo-banner{display:block!important;width:calc(100vw + 16px)!important;height:auto!important;margin:0 0 12px!important;border-radius:0!important;box-shadow:none!important;background:linear-gradient(135deg,#152546 0%,#152546 42%,#1a1a2e 100%)!important;position:relative;right:50%;transform:translateX(50%);overflow:hidden}
+  body.home-immersive-header .mobile-promo-banner::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 20% 50%,rgba(212,175,55,.12) 0%,transparent 50%),radial-gradient(circle at 80% 20%,rgba(212,175,55,.08) 0%,transparent 40%),radial-gradient(circle at 60% 80%,rgba(255,120,0,.07) 0%,transparent 35%);pointer-events:none}
+  body.home-immersive-header .mobile-promo-banner .fsh-inner{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:20px 12px 18px;display:flex;flex-direction:column;align-items:center;gap:11px;text-align:center}
+  body.home-immersive-header .mobile-promo-banner .fsh-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(212,175,55,.18);border:1px solid rgba(212,175,55,.45);border-radius:999px;padding:5px 15px;font-size:.78rem;font-weight:800;color:#D4AF37;letter-spacing:.02em;text-transform:none;line-height:1.55}
+  body.home-immersive-header .mobile-promo-banner .fsh-badge-fire{font-size:1rem;animation:badgeFire 1.2s ease-in-out infinite}
+  @keyframes badgeFire{0%,100%{transform:scale(1)}50%{transform:scale(1.3) rotate(5deg)}}
+  body.home-immersive-header .mobile-promo-banner .home-brand-rotator{position:relative;display:inline-grid;place-items:center;min-width:132px;height:1.65em;overflow:hidden;vertical-align:middle;line-height:1.65}
+  body.home-immersive-header .mobile-promo-banner .home-brand-rotator span{grid-area:1/1;white-space:nowrap;line-height:1.65;animation:homeBrandSwap 4s ease-in-out infinite}
+  body.home-immersive-header .mobile-promo-banner .home-brand-rotator span:nth-child(2){animation-delay:2s;opacity:0;transform:translateY(100%)}
+  @keyframes homeBrandSwap{0%,40%{opacity:1;transform:translateY(0)}50%,90%{opacity:0;transform:translateY(-100%)}100%{opacity:1;transform:translateY(0)}}
+  body.home-immersive-header .mobile-promo-banner .fsh-title{font-size:clamp(1.1rem,4.8vw,1.45rem);font-weight:900;color:#fff;line-height:1.35;margin:0}
+  body.home-immersive-header .mobile-promo-banner .fsh-title span.gold{color:#D4AF37}
+  body.home-immersive-header .mobile-promo-banner .fsh-title .fire-big{display:inline-block;animation:bigFire 1.4s ease-in-out infinite alternate}
+  @keyframes bigFire{from{transform:scale(1) rotate(-4deg);filter:drop-shadow(0 0 8px rgba(255,160,0,.8))}to{transform:scale(1.2) rotate(4deg);filter:drop-shadow(0 0 18px rgba(255,80,0,1))}}
+  body.home-immersive-header .mobile-promo-banner .fsh-discount-row{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
+  body.home-immersive-header .mobile-promo-banner .fsh-discount-pill{background:linear-gradient(90deg,#D4AF37,#f0c94a);color:#0a1628;font-weight:900;font-size:.92rem;padding:4px 16px;border-radius:999px;box-shadow:0 4px 20px rgba(212,175,55,.45)}
+  body.home-immersive-header .mobile-promo-banner .fsh-discount-label{color:rgba(255,255,255,.82);font-size:.78rem;font-weight:600}
 }
 </style>
 
@@ -636,105 +662,8 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:8px!import
   const siteThemeColor = '#152546';
   const themeMeta = document.querySelector('meta[name="theme-color"]');
   const appleStatusMeta = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
-  const slides = Array.from(document.querySelectorAll('.mobile-promo-banner .banner-slide'));
-  const slideColors = new Map();
-  let activeSlide = 0;
-
-  function isMobileView() {
-    return Math.min(window.innerWidth || 9999, document.documentElement.clientWidth || 9999) <= 899;
-  }
-
-  function rgbToHex(r, g, b) {
-    return '#' + [r, g, b].map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
-  }
-
-  function readSlideColor(img) {
-    if (!img) return siteThemeColor;
-    const explicitColor = img.getAttribute('data-theme-color');
-    if (explicitColor) return explicitColor;
-    const key = img.currentSrc || img.src || img.getAttribute('src') || '';
-    if (slideColors.has(key)) return slideColors.get(key);
-    try {
-      const canvas = document.createElement('canvas');
-      canvas.width = 5;
-      canvas.height = 3;
-      const ctx = canvas.getContext('2d', { willReadFrequently: true });
-      const sourceWidth = img.naturalWidth || 1;
-      const sourceHeight = img.naturalHeight || 1;
-      const sampleWidth = Math.max(1, Math.floor(sourceWidth * .08));
-      const sampleHeight = Math.max(1, Math.floor(sourceHeight * .08));
-      const x = Math.max(0, Math.floor((sourceWidth - sampleWidth) / 2));
-      ctx.drawImage(img, x, 0, sampleWidth, sampleHeight, 0, 0, 5, 3);
-      const data = ctx.getImageData(0, 0, 5, 3).data;
-      let r = 0, g = 0, b = 0;
-      for (let i = 0; i < data.length; i += 4) {
-        r += data[i];
-        g += data[i + 1];
-        b += data[i + 2];
-      }
-      const pixels = data.length / 4;
-      const color = rgbToHex(r / pixels, g / pixels, b / pixels);
-      slideColors.set(key, color);
-      return color;
-    } catch(e) {
-      return siteThemeColor;
-    }
-  }
-
-  function setStatusTheme(color) {
-    if (themeMeta) themeMeta.setAttribute('content', color);
-  }
-
-  function updateStatusTheme() {
-    if (!isMobileView()) {
-      setStatusTheme(siteThemeColor);
-      return;
-    }
-    if (window.scrollY > 8) {
-      setStatusTheme(siteThemeColor);
-      if (appleStatusMeta) appleStatusMeta.setAttribute('content', 'default');
-      return;
-    }
-    const activeImg = slides[activeSlide] || slides.find(slide => slide.classList.contains('is-active'));
-    setStatusTheme(readSlideColor(activeImg));
-    if (appleStatusMeta) appleStatusMeta.setAttribute('content', 'black-translucent');
-  }
-
-  if (slides.length > 1) {
-    slides.forEach(img => {
-      if (!img.complete) img.addEventListener('load', updateStatusTheme, { once: true });
-    });
-    setInterval(function(){
-      slides[activeSlide].classList.remove('is-active');
-      activeSlide = (activeSlide + 1) % slides.length;
-      slides[activeSlide].classList.add('is-active');
-      updateStatusTheme();
-    }, 3600);
-  }
-
-  const header = document.getElementById('mainHeader');
-  if (!header) return;
-  let ticking = false;
-  function updateHeader() {
-    if (!isMobileView()) {
-      header.classList.remove('header-solid');
-      updateStatusTheme();
-      ticking = false;
-      return;
-    }
-    header.classList.toggle('header-solid', window.scrollY > 8);
-    updateStatusTheme();
-    ticking = false;
-  }
-  function scheduleHeaderUpdate() {
-    if (ticking) return;
-    ticking = true;
-    requestAnimationFrame(updateHeader);
-  }
-  window.addEventListener('scroll', scheduleHeaderUpdate, { passive: true });
-  window.addEventListener('resize', scheduleHeaderUpdate, { passive: true });
-  window.addEventListener('pageshow', scheduleHeaderUpdate, { passive: true });
-  updateHeader();
+  if (themeMeta) themeMeta.setAttribute('content', siteThemeColor);
+  if (appleStatusMeta) appleStatusMeta.setAttribute('content', 'default');
 })();
 </script>
 
@@ -745,8 +674,8 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:8px!import
 
   let dragStartX = 0;
   let dragStartY = 0;
-  let dragStartScroll = 0;
   let dragMode = null;
+  let suppressClickUntil = 0;
 
   function resetDrag() {
     dragMode = null;
@@ -757,7 +686,6 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:8px!import
     if (!e.touches || e.touches.length !== 1) return;
     dragStartX = e.touches[0].clientX;
     dragStartY = e.touches[0].clientY;
-    dragStartScroll = grid.scrollLeft;
     dragMode = null;
   }, { passive: true });
 
@@ -772,10 +700,9 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:8px!import
     }
 
     if (dragMode === 'x') {
-      e.preventDefault();
-      grid.scrollLeft = dragStartScroll - dx;
+      suppressClickUntil = Date.now() + 500;
     }
-  }, { passive: false });
+  }, { passive: true });
 
   grid.addEventListener('touchend', resetDrag, { passive: true });
   grid.addEventListener('touchcancel', resetDrag, { passive: true });
@@ -784,7 +711,11 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:8px!import
   let lastDailyNavAt = 0;
   grid.addEventListener('click', function(e) {
     const link = e.target.closest && e.target.closest('a[href*="/product/"]');
-    if (!link || !grid.contains(link) || dragMode === 'x') return;
+    if (!link || !grid.contains(link)) return;
+    if (Date.now() < suppressClickUntil) {
+      e.preventDefault();
+      return;
+    }
     const href = link.href;
     const now = Date.now();
     e.preventDefault();
@@ -950,8 +881,9 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:8px!import
       const dpCache = localStorage.getItem('x2_dp_cache');
       if (dpCache) {
         const { chosen, ts } = JSON.parse(dpCache);
-        if (Date.now() - ts < 10 * 60 * 1000)
+        if (Date.now() - ts < 10 * 60 * 1000) {
           grid.innerHTML = chosen.map(renderCard).join('');
+        }
       }
     } catch(e) {}
   })();
