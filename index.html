@@ -617,6 +617,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   body.home-immersive-header .header-content>.logo{flex:0 0 auto!important}
   body.home-immersive-header .search-container{min-width:260px!important;margin:0 10px!important}
 }
+body.home-immersive-header .daily-picks-section{min-height:0!important;padding-bottom:0!important}
+body.home-immersive-header .daily-picks-grid:not(:empty){min-height:0!important;padding-bottom:0!important}
+body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:8px!important}
 @media(max-width:899px){
   body.home-immersive-header main.main{width:100%!important;max-width:none!important;margin:0 0 50px!important}
   body.home-immersive-header main.main>:not(.mobile-promo-banner){width:calc(100% - 24px);margin-left:auto;margin-right:auto}
@@ -631,21 +634,84 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <script>
 (function(){
-  const slides = Array.from(document.querySelectorAll('.animated-promo-banner .banner-slide'));
+  const siteThemeColor = '#152546';
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
+  const appleStatusMeta = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+  const slides = Array.from(document.querySelectorAll('.mobile-promo-banner .banner-slide'));
+  const slideColors = new Map();
+  let activeSlide = 0;
+
+  function isMobileView() {
+    return Math.min(window.innerWidth || 9999, document.documentElement.clientWidth || 9999) <= 899;
+  }
+
+  function rgbToHex(r, g, b) {
+    return '#' + [r, g, b].map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
+  }
+
+  function readSlideColor(img) {
+    if (!img) return siteThemeColor;
+    const key = img.currentSrc || img.src || img.getAttribute('src') || '';
+    if (slideColors.has(key)) return slideColors.get(key);
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 12;
+      canvas.height = 1;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      const y = Math.max(0, Math.floor((img.naturalHeight || 1) * .08));
+      ctx.drawImage(img, 0, y, img.naturalWidth || 1, Math.max(1, Math.floor((img.naturalHeight || 1) * .12)), 0, 0, 12, 1);
+      const data = ctx.getImageData(0, 0, 12, 1).data;
+      let r = 0, g = 0, b = 0;
+      for (let i = 0; i < data.length; i += 4) {
+        r += data[i];
+        g += data[i + 1];
+        b += data[i + 2];
+      }
+      const color = rgbToHex(r / 12, g / 12, b / 12);
+      slideColors.set(key, color);
+      return color;
+    } catch(e) {
+      return siteThemeColor;
+    }
+  }
+
+  function setStatusTheme(color) {
+    if (themeMeta) themeMeta.setAttribute('content', color);
+  }
+
+  function updateStatusTheme() {
+    if (!isMobileView()) {
+      setStatusTheme(siteThemeColor);
+      return;
+    }
+    if (window.scrollY > 8) {
+      setStatusTheme(siteThemeColor);
+      if (appleStatusMeta) appleStatusMeta.setAttribute('content', 'default');
+      return;
+    }
+    const activeImg = slides[activeSlide] || slides.find(slide => slide.classList.contains('is-active'));
+    setStatusTheme(readSlideColor(activeImg));
+    if (appleStatusMeta) appleStatusMeta.setAttribute('content', 'black-translucent');
+  }
+
   if (slides.length > 1) {
-    let activeSlide = 0;
+    slides.forEach(img => {
+      if (!img.complete) img.addEventListener('load', updateStatusTheme, { once: true });
+    });
     setInterval(function(){
       slides[activeSlide].classList.remove('is-active');
       activeSlide = (activeSlide + 1) % slides.length;
       slides[activeSlide].classList.add('is-active');
+      updateStatusTheme();
     }, 3600);
   }
 
   const header = document.getElementById('mainHeader');
-  if (!header || !window.matchMedia('(max-width: 899px)').matches) return;
+  if (!header || !isMobileView()) return;
   let ticking = false;
   function updateHeader() {
     header.classList.toggle('header-solid', window.scrollY > 8);
+    updateStatusTheme();
     ticking = false;
   }
   window.addEventListener('scroll', function() {
@@ -748,8 +814,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     return `
       <a class="dp-card" href="${link}">
         <img class="dp-img" src="${img}" alt="${name}" width="150" height="150" loading="${imgLoad}" decoding="async" onerror="this.src='/assets/logo.png'">
-        <div class="dp-name">${name}</div>
-        ${p.rating ? `<div class="dp-stars">${renderStars(p.rating)}</div>` : ''}
         ${disc > 0 ? `<span class="dp-badge">-${disc}%</span>` : ''}
       </a>`;
   }
