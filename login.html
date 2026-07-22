@@ -182,14 +182,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     }
 
     /* تسجيل بالشبكات الاجتماعية */
-    .auth-social { display: flex; gap: 10px; margin-bottom: 4px; }
+    .auth-social { display: flex; justify-content: center; gap: 10px; margin-bottom: 4px; }
     .auth-social-btn {
-      flex: 1;
+      flex: 0 1 250px;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      padding: 10px;
+      padding: 9px 14px;
       border: 1.5px solid #e0e0e0;
       border-radius: 10px;
       font-size: 0.82rem;
@@ -268,7 +268,8 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     /* موبايل */
     @media (max-width: 480px) {
       .auth-card { border-radius: 16px; }
-      .auth-social { flex-direction: column; }
+      .auth-social { flex-direction: column; align-items: center; }
+      .auth-social-btn { width: min(250px, 100%); flex-basis: auto; }
     }
   </style>
 </head>
