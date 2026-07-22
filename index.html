@@ -31,7 +31,7 @@
   <link rel="preload" href="/assets/cairo-arabic.woff2" as="font" type="font/woff2" crossorigin>
   <!-- Preload LCP image -->
   <link rel="preload" href="/assets/home/1.webp" as="image" fetchpriority="high" type="image/webp" imagesizes="70vw">
-  <link rel="preload" href="/assets/home/صور الغلاف/10.webp" as="image" fetchpriority="high" type="image/webp" imagesizes="(max-width: 899px) 100vw">
+  <link rel="preload" href="/assets/home/صور الغلاف/1.webp" as="image" fetchpriority="high" type="image/webp" imagesizes="(max-width: 899px) 100vw">
   <!-- Critical above-fold CSS (prevents FOUC while style.css loads) -->
   <style>
     *{box-sizing:border-box;margin:0}
@@ -394,10 +394,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <section class="animated-promo-banner mobile-promo-banner" aria-label="بنر بريق للهاتف">
   <a href="#">
     <div class="banner-inner">
-      <img src="/assets/home/صور الغلاف/10.webp" class="banner-bg-animated banner-slide is-active" alt="بنر بريق 1" fetchpriority="high" loading="eager" width="1000" height="200" decoding="sync">
-      <img src="/assets/home/صور الغلاف/11.webp" class="banner-bg-animated banner-slide" alt="بنر بريق 2" loading="lazy" width="1000" height="200" decoding="async">
-      <img src="/assets/home/صور الغلاف/12.webp" class="banner-bg-animated banner-slide" alt="بنر بريق 3" loading="lazy" width="1000" height="200" decoding="async">
-      <img src="/assets/home/صور الغلاف/13.webp" class="banner-bg-animated banner-slide" alt="بنر بريق 4" loading="lazy" width="1000" height="200" decoding="async">
+      <img src="/assets/home/صور الغلاف/1.webp" class="banner-bg-animated banner-slide is-active" alt="بنر بريق 1" data-theme-color="#021132" fetchpriority="high" loading="eager" width="1000" height="200" decoding="sync">
+      <img src="/assets/home/صور الغلاف/2.webp" class="banner-bg-animated banner-slide" alt="بنر بريق 2" data-theme-color="#02153a" loading="lazy" width="1000" height="200" decoding="async">
+      <img src="/assets/home/صور الغلاف/3.webp" class="banner-bg-animated banner-slide" alt="بنر بريق 3" data-theme-color="#04308e" loading="lazy" width="1000" height="200" decoding="async">
     </div>
   </a>
 </section>
@@ -651,23 +650,30 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:8px!import
 
   function readSlideColor(img) {
     if (!img) return siteThemeColor;
+    const explicitColor = img.getAttribute('data-theme-color');
+    if (explicitColor) return explicitColor;
     const key = img.currentSrc || img.src || img.getAttribute('src') || '';
     if (slideColors.has(key)) return slideColors.get(key);
     try {
       const canvas = document.createElement('canvas');
-      canvas.width = 12;
-      canvas.height = 1;
+      canvas.width = 5;
+      canvas.height = 3;
       const ctx = canvas.getContext('2d', { willReadFrequently: true });
-      const y = Math.max(0, Math.floor((img.naturalHeight || 1) * .08));
-      ctx.drawImage(img, 0, y, img.naturalWidth || 1, Math.max(1, Math.floor((img.naturalHeight || 1) * .12)), 0, 0, 12, 1);
-      const data = ctx.getImageData(0, 0, 12, 1).data;
+      const sourceWidth = img.naturalWidth || 1;
+      const sourceHeight = img.naturalHeight || 1;
+      const sampleWidth = Math.max(1, Math.floor(sourceWidth * .08));
+      const sampleHeight = Math.max(1, Math.floor(sourceHeight * .08));
+      const x = Math.max(0, Math.floor((sourceWidth - sampleWidth) / 2));
+      ctx.drawImage(img, x, 0, sampleWidth, sampleHeight, 0, 0, 5, 3);
+      const data = ctx.getImageData(0, 0, 5, 3).data;
       let r = 0, g = 0, b = 0;
       for (let i = 0; i < data.length; i += 4) {
         r += data[i];
         g += data[i + 1];
         b += data[i + 2];
       }
-      const color = rgbToHex(r / 12, g / 12, b / 12);
+      const pixels = data.length / 4;
+      const color = rgbToHex(r / pixels, g / pixels, b / pixels);
       slideColors.set(key, color);
       return color;
     } catch(e) {
@@ -707,18 +713,27 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:8px!import
   }
 
   const header = document.getElementById('mainHeader');
-  if (!header || !isMobileView()) return;
+  if (!header) return;
   let ticking = false;
   function updateHeader() {
+    if (!isMobileView()) {
+      header.classList.remove('header-solid');
+      updateStatusTheme();
+      ticking = false;
+      return;
+    }
     header.classList.toggle('header-solid', window.scrollY > 8);
     updateStatusTheme();
     ticking = false;
   }
-  window.addEventListener('scroll', function() {
+  function scheduleHeaderUpdate() {
     if (ticking) return;
     ticking = true;
     requestAnimationFrame(updateHeader);
-  }, { passive: true });
+  }
+  window.addEventListener('scroll', scheduleHeaderUpdate, { passive: true });
+  window.addEventListener('resize', scheduleHeaderUpdate, { passive: true });
+  window.addEventListener('pageshow', scheduleHeaderUpdate, { passive: true });
   updateHeader();
 })();
 </script>
