@@ -1356,24 +1356,28 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="acc-profile-name" id="profile-name">مستخدم</div>
         <div class="acc-profile-email" id="profile-email">لم يتم تسجيل الدخول</div>
         <div id="profile-complete-note" style="display:none;background:#fff8e1;border:1px solid #f1d27a;color:#6b5200;border-radius:8px;padding:10px 12px;margin:0 0 12px;font-size:.84rem;font-weight:700;line-height:1.6">أكمل رقم الهاتف والعنوان ثم اضغط حفظ التغييرات.</div>
-        <div class="acc-form-group"><label data-i18n="الاسم الكامل">الاسم الكامل</label><input type="text" id="pf-name" placeholder="أدخل اسمك" data-i18n-placeholder="أدخل اسمك"></div>
-        <div class="acc-form-group"><label data-i18n="البريد الإلكتروني">البريد الإلكتروني</label><input type="email" id="pf-email" placeholder="example@email.com"></div>
-        <div class="acc-form-group"><label data-i18n="عنواني">العنوان</label><input type="text" id="pf-address" placeholder="أدخل عنوانك"></div>
-        <div class="acc-form-group"><label data-i18n="رقم الهاتف">رقم الهاتف</label><input type="tel" id="pf-phone" value="+971 " placeholder="+971 XX XXX XXXX" inputmode="tel" dir="ltr" autocomplete="tel"></div>
-        <div class="acc-form-group">
-          <label data-i18n="كلمة السر">كلمة السر</label>
-          <div class="acc-password-field">
-            <input type="password" id="pf-password" placeholder="أدخل كلمة السر" data-i18n-placeholder="أدخل كلمة السر">
-            <button type="button" class="acc-password-toggle" onclick="togglePasswordField('pf-password', this)">إظهار</button>
+        <form id="profile-form" autocomplete="on" onsubmit="event.preventDefault(); saveProfile();">
+          <div class="acc-form-group"><label data-i18n="الاسم الكامل">الاسم الكامل</label><input type="text" id="pf-name" placeholder="أدخل اسمك" data-i18n-placeholder="أدخل اسمك"></div>
+          <div class="acc-form-group"><label data-i18n="البريد الإلكتروني">البريد الإلكتروني</label><input type="email" id="pf-email" placeholder="example@email.com"></div>
+          <div class="acc-form-group"><label data-i18n="عنواني">العنوان</label><input type="text" id="pf-address" placeholder="أدخل عنوانك"></div>
+          <div class="acc-form-group"><label data-i18n="رقم الهاتف">رقم الهاتف</label><input type="tel" id="pf-phone" value="+971 " placeholder="+971 XX XXX XXXX" inputmode="tel" dir="ltr" autocomplete="tel"></div>
+          <div class="acc-form-group">
+            <label data-i18n="كلمة السر">كلمة السر</label>
+            <div class="acc-password-field">
+              <input type="password" id="pf-password" placeholder="أدخل كلمة السر" data-i18n-placeholder="أدخل كلمة السر">
+              <button type="button" class="acc-password-toggle" onclick="togglePasswordField('pf-password', this)">إظهار</button>
+            </div>
           </div>
-        </div>
-        <button class="acc-save-btn" onclick="saveProfile()">💾 <span data-i18n="حفظ التغييرات">حفظ التغييرات</span></button>
+          <button type="submit" class="acc-save-btn">💾 <span data-i18n="حفظ التغييرات">حفظ التغييرات</span></button>
+        </form>
         <div style="height:16px"></div>
         <div style="font-size:0.78rem;font-weight:700;color:#7a8296;margin-bottom:4px" data-i18n="قسم الأمان">قسم الأمان</div>
         <div style="font-size:0.92rem;font-weight:800;color:#152546;margin-bottom:10px" data-i18n="تغيير كلمة السر">تغيير كلمة السر</div>
-        <div class="acc-form-group"><label data-i18n="كلمة السر الجديدة">كلمة السر الجديدة</label><input type="password" id="pf-new-password" placeholder="أدخل كلمة السر الجديدة" data-i18n-placeholder="أدخل كلمة السر الجديدة"></div>
-        <div class="acc-form-group"><label data-i18n="تأكيد كلمة السر الجديدة">تأكيد كلمة السر الجديدة</label><input type="password" id="pf-confirm-password" placeholder="أعد كتابة كلمة السر الجديدة" data-i18n-placeholder="أعد كتابة كلمة السر الجديدة"></div>
-        <button class="acc-save-btn" onclick="changePassword()">🔒 <span data-i18n="تغيير كلمة السر">تغيير كلمة السر</span></button>
+        <form id="password-form" autocomplete="on" onsubmit="event.preventDefault(); changePassword();">
+          <div class="acc-form-group"><label data-i18n="كلمة السر الجديدة">كلمة السر الجديدة</label><input type="password" id="pf-new-password" placeholder="أدخل كلمة السر الجديدة" data-i18n-placeholder="أدخل كلمة السر الجديدة"></div>
+          <div class="acc-form-group"><label data-i18n="تأكيد كلمة السر الجديدة">تأكيد كلمة السر الجديدة</label><input type="password" id="pf-confirm-password" placeholder="أعد كتابة كلمة السر الجديدة" data-i18n-placeholder="أعد كتابة كلمة السر الجديدة"></div>
+          <button type="submit" class="acc-save-btn">🔒 <span data-i18n="تغيير كلمة السر">تغيير كلمة السر</span></button>
+        </form>
       </div>
     </div>
 
