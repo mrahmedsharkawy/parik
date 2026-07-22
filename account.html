@@ -15,7 +15,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
   <link rel="icon" type="image/png" href="/assets/logo.png">
   <link rel="apple-touch-icon" href="/assets/icon.png">
-  <meta name="apple-mobile-web-app-title" content="بريق">
+  <meta name="apple-mobile-web-app-title" content="بريق للهدايا">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#152546">
   <meta name="mobile-web-app-capable" content="yes">
@@ -1621,7 +1621,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   let currentStatus = 'all';
   let currentSearch = '';
   let currentPage   = 1;
-  const PAGE_SIZE   = 3;
+  const PAGE_SIZE   = 10;
+  let isRenderingOrders = false;
   let offersLoaded = false;
   const ACC_EN = (localStorage.getItem('lang') || document.documentElement.lang || 'ar') === 'en';
   const accText = (ar, en) => ACC_EN ? en : ar;
@@ -1986,11 +1987,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     return _prodsCache;
   }
 
-  async function renderOrders() {
-    const list = document.getElementById('orders-list');
-    const pgEl = document.getElementById('orders-pagination');
+  function getFilteredOrders() {
     const orders = getOrders();
-    const filtered = orders.filter(o => {
+    return orders.filter(o => {
       const status = assignStatus(o);
       const matchStatus = currentStatus === 'all' || status === currentStatus;
       const q = currentSearch.toLowerCase();
@@ -1998,6 +1997,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         (o.items||[]).some(i => (i.title||'').toLowerCase().includes(q));
       return matchStatus && matchSearch;
     });
+  }
+
+  async function renderOrders() {
+    if (isRenderingOrders) return;
+    isRenderingOrders = true;
+    const list = document.getElementById('orders-list');
+    const pgEl = document.getElementById('orders-pagination');
+    const filtered = getFilteredOrders();
 
     if (!filtered.length) {
       list.innerHTML = `
@@ -2010,13 +2017,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           </div>
         </div>`;
       if (pgEl) pgEl.style.display = 'none';
+      isRenderingOrders = false;
       return;
     }
 
     const pMap = await getProductsMap();
-    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-    if (currentPage > totalPages) currentPage = 1;
-    const pageItems = filtered.slice((currentPage-1)*PAGE_SIZE, currentPage*PAGE_SIZE);
+    const visibleCount = Math.min(currentPage * PAGE_SIZE, filtered.length);
+    const pageItems = filtered.slice(0, visibleCount);
 
     list.innerHTML = pageItems.map(order => {
       const status = assignStatus(order);
@@ -2060,27 +2067,36 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </div>`;
     }).join('');
 
-    // Pagination
+    // Infinite scroll status
     if (pgEl) {
-      if (totalPages <= 1) { pgEl.style.display = 'none'; }
+      if (visibleCount >= filtered.length) { pgEl.style.display = 'none'; pgEl.innerHTML = ''; }
       else {
-        pgEl.style.display = 'flex';
-        const s = 'min-width:32px;height:32px;border-radius:8px;border:1.5px solid #eee;background:#fff;color:#333;font-size:.8rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0 8px;margin:2px;';
-        let html = `<button style="${s}" onclick="goToOrderPage(${currentPage-1})" ${currentPage===1?'disabled':''}>›</button>`;
-        for (let i=1;i<=totalPages;i++) html += `<button style="${s}${i===currentPage?';background:#152546;color:#D4AF37;border-color:#152546':''}" onclick="goToOrderPage(${i})">${i}</button>`;
-        html += `<button style="${s}" onclick="goToOrderPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>‹</button>`;
-        html += `<span style="font-size:.74rem;color:#888;padding:0 4px">${(currentPage-1)*PAGE_SIZE+1}–${Math.min(currentPage*PAGE_SIZE,filtered.length)} ${accText('من', 'of')} ${filtered.length}</span>`;
-        pgEl.innerHTML = html;
+        pgEl.style.display = 'block';
+        pgEl.innerHTML = `<div style="text-align:center;color:#9aa3b2;font-size:.76rem;padding:8px 0">${ACC_EN ? `Showing ${visibleCount} of ${filtered.length} - scroll for more` : `يتم عرض ${visibleCount} من ${filtered.length} - مرّر لعرض المزيد`}</div>`;
       }
     }
+    isRenderingOrders = false;
   }
 
   window.goToOrderPage = function(page) {
-    const tot = Math.ceil(getOrders().filter(o=>currentStatus==='all'||assignStatus(o)===currentStatus).length/PAGE_SIZE);
-    currentPage = Math.max(1, Math.min(page, tot||1));
+    const totalPages = Math.ceil(getFilteredOrders().length / PAGE_SIZE);
+    currentPage = Math.max(1, Math.min(page, totalPages || 1));
     renderOrders();
     document.getElementById('orders-list')?.scrollIntoView({behavior:'smooth',block:'start'});
   };
+
+  function maybeLoadMoreOrders() {
+    const section = document.getElementById('section-orders');
+    if (!section || section.style.display === 'none' || isRenderingOrders) return;
+    const filtered = getFilteredOrders();
+    if (currentPage * PAGE_SIZE >= filtered.length) return;
+    const bottomGap = document.documentElement.scrollHeight - (window.scrollY + window.innerHeight);
+    if (bottomGap < 260) {
+      currentPage += 1;
+      renderOrders();
+    }
+  }
+  window.addEventListener('scroll', maybeLoadMoreOrders, { passive: true });
 
   // tab filter
   window.filterByStatus = function(status, el) {
@@ -2521,12 +2537,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   }
 
   window.markAllNotifsRead = function() {
+    markCurrentOrdersSeen();
     if (window.x2Notifications) window.x2Notifications.markAllRead();
     renderNotifications();
     const b = document.getElementById('aqnNotifBadge');
     if (b) { b.textContent = ''; b.style.display = 'none'; }
     if (typeof clearBadge === 'function') clearBadge();
     else if ('clearAppBadge' in navigator) navigator.clearAppBadge().catch(()=>{});
+    closeDisplayedPushNotifications().catch(()=>{});
   };
 
   async function clearPushInboxStore() {
@@ -2547,6 +2565,21 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     } catch(e) {}
   }
 
+  async function closeDisplayedPushNotifications() {
+    if (!('serviceWorker' in navigator)) return;
+    try {
+      const reg = await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise(resolve => setTimeout(() => resolve(null), 1200))
+      ]);
+      if (!reg) return;
+      if (reg.getNotifications) {
+        const notifications = await reg.getNotifications();
+        notifications.forEach(notification => notification.close());
+      }
+    } catch(e) {}
+  }
+
   function markCurrentOrdersSeen() {
     try {
       const seen = JSON.parse(localStorage.getItem('x2_notif_seen') || '{}');
@@ -2557,8 +2590,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const status = order.status || 'processing';
         seen['ord-' + oid] = status;
         if (order.cashback) seen['cb-' + oid] = 1;
+        order.seen = true;
+        order.notif_seen = true;
+        order.read = true;
       });
       localStorage.setItem('x2_notif_seen', JSON.stringify(seen));
+      localStorage.setItem('x2_orders', JSON.stringify(orders));
     } catch(e) {}
   }
 
@@ -2569,6 +2606,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       localStorage.removeItem('x2_notif_clear_until');
     } catch(e) {}
     await clearPushInboxStore();
+    closeDisplayedPushNotifications().catch(()=>{});
     renderNotifications();
     const b = document.getElementById('aqnNotifBadge');
     if (b) { b.textContent = ''; b.style.display = 'none'; }

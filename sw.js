@@ -1,5 +1,5 @@
 ﻿/* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v135';
+const CACHE = 'bariq-v140';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -119,6 +119,13 @@ async function clearPushInbox() {
       tx.onerror = function() { reject(tx.error); };
     });
     db.close();
+  } catch(e) {}
+}
+
+async function closeVisibleNotifications() {
+  try {
+    const notifications = await self.registration.getNotifications();
+    notifications.forEach(notification => notification.close());
   } catch(e) {}
 }
 
@@ -389,8 +396,9 @@ self.addEventListener('message', function(e) {
     if ('clearAppBadge' in self.registration) {
       self.registration.clearAppBadge().catch(() => {});
     }
+    e.waitUntil(closeVisibleNotifications());
   }
   if (e.data && e.data.type === 'CLEAR_PUSH_INBOX') {
-    e.waitUntil(clearPushInbox());
+    e.waitUntil(Promise.all([clearPushInbox(), closeVisibleNotifications()]));
   }
 });

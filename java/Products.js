@@ -1185,11 +1185,61 @@ document.addEventListener("DOMContentLoaded", async function() {
             } else thumb = document.createElement("img"), thumb.src = item.src, thumb.alt = "";
             0 === i && thumb.classList.add("active"), thumb.addEventListener("click", () => {
                 showMedia(item), thumbs.querySelectorAll(".active").forEach(t => t.classList.remove("active")), 
-                thumb.classList.add("active");
+                thumb.classList.add("active"), "image" === item.type && openProductMediaViewer(i);
             }), thumbs.appendChild(thumb);
         }));
-        const _isMobileView = window.innerWidth <= 900 || "ontouchstart" in window;
-        if (mainWrap && media.length > 1 && _isMobileView) {
+        function openProductMediaViewer(startIndex) {
+            const images = media.filter(item => "image" === item.type);
+            if (!images.length) return;
+            let idx = Math.max(0, Math.min(startIndex || 0, images.length - 1));
+            const overlay = document.createElement("div");
+            overlay.className = "product-media-viewer";
+            overlay.innerHTML = `
+              <button class="pmv-close" type="button" aria-label="Close">✕</button>
+              <button class="pmv-nav pmv-prev" type="button" aria-label="Previous">‹</button>
+              <img class="pmv-img" alt="${getT(p.name).replace(/"/g, "&quot;")}">
+              <button class="pmv-nav pmv-next" type="button" aria-label="Next">›</button>
+              <div class="pmv-count"></div>`;
+            const img = overlay.querySelector(".pmv-img"), count = overlay.querySelector(".pmv-count");
+            function paint() {
+                img.src = images[idx].src;
+                count.textContent = `${idx + 1} / ${images.length}`;
+            }
+            function move(step) {
+                idx = (idx + step + images.length) % images.length;
+                paint();
+            }
+            overlay.querySelector(".pmv-close").onclick = () => {
+                overlay.remove();
+                document.body.style.overflow = "";
+            };
+            overlay.querySelector(".pmv-prev").onclick = e => {
+                e.stopPropagation();
+                move(-1);
+            };
+            overlay.querySelector(".pmv-next").onclick = e => {
+                e.stopPropagation();
+                move(1);
+            };
+            overlay.addEventListener("click", e => {
+                if (e.target === overlay) overlay.querySelector(".pmv-close").click();
+            });
+            let sx = 0;
+            overlay.addEventListener("touchstart", e => {
+                sx = e.touches[0].clientX;
+            }, {
+                passive: !0
+            });
+            overlay.addEventListener("touchend", e => {
+                const dx = e.changedTouches[0].clientX - sx;
+                if (Math.abs(dx) > 45) move(dx > 0 ? -1 : 1);
+            });
+            document.body.appendChild(overlay);
+            document.body.style.overflow = "hidden";
+            paint();
+        }
+        if (mainImg) mainImg.addEventListener("click", () => openProductMediaViewer(0));
+        if (mainWrap && media.length > 1) {
             const carousel = document.createElement("div");
             carousel.id = "prodCarousel", carousel.style.cssText = "display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;width:100%;height:100%;border-radius:inherit;direction:ltr;";
             let currentIdx = 0, jumpTimer = 0;
@@ -1204,7 +1254,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                 } else {
                     const img = document.createElement("img");
                     img.src = item.src, img.alt = getT(p.name), img.style.cssText = "width:100%;height:100%;object-fit:cover;", 
-                    slide.appendChild(img);
+                    slide.appendChild(img), slide.style.cursor = "zoom-in", slide.addEventListener("click", () => openProductMediaViewer(modIndex(i)));
                 }
                 carousel.appendChild(slide), slides.push(slide);
             });
@@ -1240,7 +1290,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                 passive: !0
             }), mainWrap.style.position = "relative", mainImg && (mainImg.style.display = "none"), 
             mainVid && (mainVid.style.display = "none"), mainWrap.appendChild(carousel), mainWrap.appendChild(dots), 
-            thumbs && (thumbs.style.display = "none");
+            thumbs && (thumbs.style.display = window.innerWidth <= 900 ? "none" : "flex");
         }
         const set = (id, val) => {
             const el = document.getElementById(id);
@@ -1515,7 +1565,10 @@ document.addEventListener("DOMContentLoaded", async function() {
             })[ch]);
             imgPreviewEl.style.display = "flex";
             imgPreviewEl.style.flexDirection = "column";
-            imgPreviewEl.innerHTML = `<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:100%;">${show.map(src => `<img class="rv-product-img" src="${src}" alt="" loading="lazy" decoding="async" style="width:100%;border-radius:10px;object-fit:cover;aspect-ratio:1.35/1;background:#f2f2f2;">`).join("")}</div>${productDesc ? `<div class="rv-product-desc" style="margin-top:12px;text-align:right;color:#39445c;line-height:1.8;background:#fafafa;border:1px solid #eee;border-radius:10px;padding:12px 14px;"><h3 style="margin:0 0 7px;color:#152546;font-size:1rem;font-weight:800;">${"en" === lang ? "Product Description" : "وصف المنتج"}</h3><p id="rvProductDescText" style="margin:0;font-size:.9rem;white-space:pre-line;max-height:9em;overflow:hidden;">${productDescHtml}</p>${productDesc.length > 180 ? `<button id="rvProductDescMore" type="button" style="margin-top:8px;border:1px solid #d4af37;background:#fff;color:#152546;border-radius:999px;padding:5px 14px;font-family:inherit;font-weight:700;font-size:.8rem;cursor:pointer;">${"en" === lang ? "Show All" : "إظهار الكل"}</button>` : ""}</div>` : ""}`;
+            imgPreviewEl.innerHTML = `<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:100%;">${show.map(src => `<img class="rv-product-img" src="${src}" alt="" loading="lazy" decoding="async" style="width:100%;border-radius:10px;object-fit:cover;aspect-ratio:1.35/1;background:#f2f2f2;cursor:zoom-in;">`).join("")}</div>${productDesc ? `<div class="rv-product-desc" style="margin-top:12px;text-align:right;color:#39445c;line-height:1.8;background:#fafafa;border:1px solid #eee;border-radius:10px;padding:12px 14px;"><h3 style="margin:0 0 7px;color:#152546;font-size:1rem;font-weight:800;">${"en" === lang ? "Product Description" : "وصف المنتج"}</h3><p id="rvProductDescText" style="margin:0;font-size:.9rem;white-space:pre-line;max-height:9em;overflow:hidden;">${productDescHtml}</p>${productDesc.length > 180 ? `<button id="rvProductDescMore" type="button" style="margin-top:8px;border:1px solid #d4af37;background:#fff;color:#152546;border-radius:999px;padding:5px 14px;font-family:inherit;font-weight:700;font-size:.8rem;cursor:pointer;">${"en" === lang ? "Show All" : "إظهار الكل"}</button>` : ""}</div>` : ""}`;
+            imgPreviewEl.querySelectorAll(".rv-product-img").forEach((img, i) => {
+                img.addEventListener("click", () => openProductMediaViewer(i));
+            });
             const descMoreBtn = document.getElementById("rvProductDescMore"), descTextEl = document.getElementById("rvProductDescText");
             descMoreBtn && descTextEl && (descMoreBtn.onclick = function() {
                 descTextEl.style.maxHeight = "none";

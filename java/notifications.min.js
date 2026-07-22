@@ -93,6 +93,9 @@ function updateBadge(e) {
 
 function clearBadge() {
     updateBadge(0);
+    "serviceWorker" in navigator && navigator.serviceWorker.controller && navigator.serviceWorker.controller.postMessage({
+        type: "CLEAR_BADGE"
+    });
 }
 
 async function getPushStatus() {
@@ -136,7 +139,9 @@ async function initPushButton() {
         type: "CLEAR_BADGE"
     });
     try {
-        const e = JSON.parse(localStorage.getItem("x2_orders") || "[]").filter(e => !e.seen).length;
-        e > 0 && updateBadge(e);
-    } catch (e) {}
+        const e = JSON.parse(localStorage.getItem("x2_notifications") || "[]").filter(e => !e.read).length;
+        e > 0 ? updateBadge(e) : clearBadge();
+    } catch (e) {
+        clearBadge();
+    }
 })();

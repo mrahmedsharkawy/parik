@@ -428,6 +428,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   .rv-modal-body .rv-item .dt{font-size:.64rem}
   .rv-modal-body .rv-item .st{font-size:.72rem}
   .rv-modal-body .rv-item .txt{font-size:.74rem;margin:2px 0 0}
+  .product-media-viewer{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:999999;display:flex;align-items:center;justify-content:center;padding:18px;direction:ltr}
+  .pmv-img{max-width:100%;max-height:88vh;object-fit:contain;border-radius:10px;background:#111}
+  .pmv-close{position:absolute;top:14px;right:14px;width:38px;height:38px;border:none;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;font-size:1.2rem;cursor:pointer}
+  .pmv-nav{position:absolute;top:50%;transform:translateY(-50%);width:42px;height:56px;border:none;border-radius:999px;background:rgba(255,255,255,.14);color:#fff;font-size:2rem;cursor:pointer}
+  .pmv-prev{left:16px}.pmv-next{right:16px}
+  .pmv-count{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);color:#fff;background:rgba(0,0,0,.45);border-radius:999px;padding:5px 12px;font-size:.82rem}
+  #prodCarousel{cursor:grab}.main-image img{cursor:zoom-in}
+  @media(max-width:600px){.pmv-nav{width:36px;height:48px;font-size:1.7rem}.pmv-prev{left:8px}.pmv-next{right:8px}.product-media-viewer{padding:8px}.pmv-img{max-height:84vh}}
 </style>
 
 <section class="reviews-section" id="reviewsSection">
@@ -712,7 +720,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="/mobile-nav-bar/main-navbar.min.js" defer></script>  
 <script src="/java/push-welcome.js" defer></script>
 <script src="/java/notifications.min.js" defer></script>
-<script type="module" src="/java/Products.min.js"></script> <!-- ده يفضل يفضل في الآخر -->
+<script type="module" src="/java/Products.js?v=gallery-click-20260722"></script> <!-- ده يفضل يفضل في الآخر -->
 </body>
 </html>
 
