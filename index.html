@@ -30,7 +30,19 @@
   <!-- Preload Cairo Arabic font for faster text rendering -->
   <link rel="preload" href="/assets/cairo-arabic.woff2" as="font" type="font/woff2" crossorigin>
   <!-- Preload LCP image -->
-  <link rel="preload" href="/assets/home/1.webp" as="image" fetchpriority="high" type="image/webp" imagesizes="70vw">
+  <script>
+  (function(){
+    if (!matchMedia('(min-width: 900px)').matches) return;
+    var l = document.createElement('link');
+    l.rel = 'preload';
+    l.href = '/assets/home/1.webp';
+    l.as = 'image';
+    l.type = 'image/webp';
+    l.fetchPriority = 'high';
+    l.imageSizes = '70vw';
+    document.head.appendChild(l);
+  })();
+  </script>
   <!-- Critical above-fold CSS (prevents FOUC while style.css loads) -->
   <style>
     *{box-sizing:border-box;margin:0}
@@ -377,13 +389,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <section class="animated-promo-banner desktop-promo-banner" aria-label="بنر بريق">
   <a href="#">
     <div class="banner-inner">
-      <img src="/assets/home/1.webp"
+       <picture>
+         <source media="(min-width: 900px)" srcset="/assets/home/1.webp" type="image/webp">
+         <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
            class="banner-bg-animated"
            alt="Parik Banner"
-           fetchpriority="high"
-           loading="eager"
+           fetchpriority="low"
+           loading="lazy"
            width="1000" height="200"
-           decoding="sync">
+           decoding="async">
+       </picture>
     </div>
   </a>
 </section>
@@ -543,8 +558,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <li data-i18n="تنبيهات توفر المنتج بكميات">تنبيهات توفر المنتج بكميات</li>
         </ul>
         <div class="footer-app-buttons">
-          <a href="#"><img src="/assets/app/Google Play.png" alt="Google Play" loading="lazy" width="120" height="40"></a>
-          <a href="#"><img src="/assets/app/App Store.png" alt="App Store" loading="lazy" width="120" height="40"></a>
+          <a href="#"><img src="/assets/app/google-play-120.png" alt="Google Play" loading="lazy" width="120" height="40"></a>
+          <a href="#"><img src="/assets/app/app-store-120.png" alt="App Store" loading="lazy" width="120" height="40"></a>
         </div>
       </div>
     </div>
@@ -602,7 +617,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <img src="/assets/secure/protectbuy.webp" alt="ProtectBuy" width="43" height="33" loading="lazy">
           <img src="/assets/secure/safekey.webp" alt="SafeKey" width="43" height="33" loading="lazy">
           <img src="/assets/secure/idcheck.webp" alt="ID Check" width="43" height="33" loading="lazy">
-          <img src="/assets/secure/pci.webp" alt="PCI DSS" width="43" height="33" loading="lazy">
+          <img src="/assets/secure/pci-sm.webp" alt="PCI DSS" width="43" height="33" loading="lazy">
         </div>
       </div>
     </div>
@@ -629,15 +644,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 }
 body.home-immersive-header .daily-picks-section{min-height:0!important;padding-bottom:0!important}
 body.home-immersive-header .daily-picks-grid{touch-action:auto!important;scroll-behavior:auto!important}
+body.home-immersive-header .daily-picks-grid.is-dragging .dp-card{pointer-events:auto!important}
 body.home-immersive-header .daily-picks-grid:not(:empty){min-height:0!important;padding-bottom:0!important}
 body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:8px!important}
 @media(max-width:899px){
   html,body{height:auto!important;min-height:100%!important;overflow-x:hidden!important}
   html{overflow-y:auto!important}
   body{overflow-y:visible!important}
-  body.home-immersive-header main.main{width:97%!important;max-width:97%!important;margin:64px auto 50px!important}
+  body.home-immersive-header main.main{width:97%!important;max-width:97%!important;margin:64px auto 50px!important;background:#fff!important}
   body.home-immersive-header .desktop-promo-banner{display:none!important}
-  body.home-immersive-header .mobile-promo-banner{display:block!important;width:calc(100vw + 16px)!important;height:auto!important;margin:0 0 12px!important;border-radius:0!important;box-shadow:none!important;background:linear-gradient(135deg,#152546 0%,#152546 42%,#1a1a2e 100%)!important;position:relative;right:50%;transform:translateX(50%);overflow:hidden}
+  body.home-immersive-header .mobile-promo-banner{display:block!important;width:calc(100vw + 16px)!important;height:auto!important;margin:-1px 0 12px!important;border-radius:0!important;box-shadow:none!important;background:linear-gradient(135deg,#152546 0%,#152546 42%,#1a1a2e 100%)!important;position:relative;right:50%;transform:translateX(50%);overflow:hidden}
+  html[dir="ltr"] body.home-immersive-header .mobile-promo-banner{right:auto;left:50%;transform:translateX(-50%)}
   body.home-immersive-header .mobile-promo-banner::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 20% 50%,rgba(212,175,55,.12) 0%,transparent 50%),radial-gradient(circle at 80% 20%,rgba(212,175,55,.08) 0%,transparent 40%),radial-gradient(circle at 60% 80%,rgba(255,120,0,.07) 0%,transparent 35%);pointer-events:none}
   body.home-immersive-header .mobile-promo-banner .fsh-inner{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:20px 12px 18px;display:flex;flex-direction:column;align-items:center;gap:11px;text-align:center}
   body.home-immersive-header .mobile-promo-banner .fsh-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(212,175,55,.18);border:1px solid rgba(212,175,55,.45);border-radius:999px;padding:5px 15px;font-size:.78rem;font-weight:800;color:#D4AF37;letter-spacing:.02em;text-transform:none;line-height:1.55}
@@ -656,6 +673,37 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:8px!import
   body.home-immersive-header .mobile-promo-banner .fsh-discount-label{color:rgba(255,255,255,.82);font-size:.78rem;font-weight:600}
 }
 </style>
+
+<script>
+(function(){
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let suppressCardClickUntil = 0;
+  const cardSelector = '.product-card, .dp-card';
+
+  document.addEventListener('touchstart', function(e) {
+    if (!e.touches || e.touches.length !== 1) return;
+    if (!e.target.closest || !e.target.closest(cardSelector)) return;
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true, capture: true });
+
+  document.addEventListener('touchmove', function(e) {
+    if (!e.touches || e.touches.length !== 1) return;
+    if (!e.target.closest || !e.target.closest(cardSelector)) return;
+    const dx = e.touches[0].clientX - touchStartX;
+    const dy = e.touches[0].clientY - touchStartY;
+    if (Math.hypot(dx, dy) > 8) suppressCardClickUntil = Date.now() + 600;
+  }, { passive: true, capture: true });
+
+  document.addEventListener('click', function(e) {
+    if (Date.now() >= suppressCardClickUntil) return;
+    if (!e.target.closest || !e.target.closest(cardSelector)) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+  }, true);
+})();
+</script>
 
 <script>
 (function(){
