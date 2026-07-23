@@ -294,7 +294,22 @@ function optimizeSupabaseImageUrl(src, width, height) {
 export function createProductCard(prod) {
     window.createProductCard || (window.createProductCard = createProductCard);
     const card = document.createElement("div");
+    const productUrl = `/product/${encodeURIComponent(prod.id)}${(localStorage.getItem("lang") || document.documentElement.lang) === "en" ? "?lang=en" : ""}`;
+    function prefetchProductPage() {
+        if (card.dataset.prefetched) return;
+        card.dataset.prefetched = "1";
+        const link = document.createElement("link");
+        link.rel = "prefetch", link.href = productUrl, link.as = "document";
+        document.head.appendChild(link);
+    }
     card.className = "product-card", card.style.position = "relative", card.style.cursor = "pointer", 
+    card.addEventListener("pointerover", prefetchProductPage, {
+        once: true,
+        passive: true
+    }), card.addEventListener("touchstart", prefetchProductPage, {
+        once: true,
+        passive: true
+    }),
     card.addEventListener("click", () => {
         try {
             const HIST_KEY = "x2_history", img = Array.isArray(prod.img) ? prod.img[0] : prod.img || "", name = "object" == typeof prod.name ? prod.name.ar || prod.name.en : prod.name || "", entry = {
@@ -308,7 +323,7 @@ export function createProductCard(prod) {
             hist = hist.filter(h => String(h.id) !== String(prod.id)), hist.unshift(entry), 
             hist.length > 20 && (hist = hist.slice(0, 20)), localStorage.setItem(HIST_KEY, JSON.stringify(hist));
         } catch (e) {}
-        window.location.href = `/product/${encodeURIComponent(prod.id)}${(localStorage.getItem("lang") || document.documentElement.lang) === "en" ? "?lang=en" : ""}`;
+        window.location.href = productUrl;
     });
     const lang = localStorage.getItem("lang") || document.documentElement.lang || document.documentElement.getAttribute("lang") || "ar";
     function getTranslated(val) {
@@ -363,7 +378,7 @@ export function createProductCard(prod) {
     const _toArr = v => Array.isArray(v) ? v.filter(Boolean) : v ? [ v ] : [], _isVideoSrc = s => /\.(mp4|webm|ogg|ogv|mov|m4v)(\?|#|$)/i.test(String(s || "")), _allMedia = [ ..._toArr(prod.images), ..._toArr(prod.img), ..._toArr(prod.image) ], prodVideos = [ ..._toArr(prod.videos), ..._toArr(prod.video), ..._allMedia.filter(_isVideoSrc) ], firstImage = _allMedia.filter(s => !_isVideoSrc(s))[0] || "", firstVideo = prodVideos[0] || "";
     {
         const im = document.createElement("img");
-        const isPriority = _priorityProductImages < 2;
+        const isPriority = _priorityProductImages < 6;
         _priorityProductImages++;
         im.className = "product-img";
         im.alt = getTranslated(prod.name);
@@ -545,10 +560,14 @@ document.addEventListener("DOMContentLoaded", async function() {
         const sortedList = direction === "preserve" ? (Array.isArray(list) ? list.slice() : []) : sortProductsForStore(list), tempContainer = document.createElement("div"), rowDiv = document.createElement("div");
         rowDiv.className = "products-row", tempContainer.appendChild(rowDiv);
         const loadingIndicator = document.createElement("div");
-        loadingIndicator.id = "grid-loading-indicator", loadingIndicator.style.cssText = "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40px;height:40px;border:4px solid #f3f3f3;border-top:4px solid #3498db;border-radius:50%;animation:spin 1s linear infinite;", 
-        productsContainer.classList.add("changing"), productsContainer.style.minHeight = "200px", 
-        productsContainer.style.position = "relative", productsContainer.appendChild(loadingIndicator);
+        loadingIndicator.id = "grid-loading-indicator", loadingIndicator.style.cssText = "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40px;height:40px;border:4px solid #f3f3f3;border-top:4px solid #3498db;border-radius:50%;animation:spin 1s linear infinite;";
         const FIRST_CHUNK = Math.min(20, sortedList.length);
+        _priorityProductImages = 0;
+        const columns = window.matchMedia("(max-width: 899px)").matches ? 2 : window.matchMedia("(max-width: 1300px)").matches ? 3 : 4;
+        const estimatedRows = Math.max(1, Math.ceil(FIRST_CHUNK / columns));
+        const estimatedCardHeight = window.matchMedia("(max-width: 899px)").matches ? 390 : 360;
+        productsContainer.classList.add("changing"), productsContainer.style.minHeight = Math.max(200, estimatedRows * estimatedCardHeight) + "px",
+        productsContainer.style.position = "relative", productsContainer.appendChild(loadingIndicator);
         let i = 0;
         !function appendChunk() {
             const fragment = document.createDocumentFragment(), chunkSize = 0 === i ? FIRST_CHUNK : 20;
