@@ -295,9 +295,28 @@ export function createProductCard(prod) {
     window.createProductCard || (window.createProductCard = createProductCard);
     const card = document.createElement("div");
     const productUrl = `/product/${encodeURIComponent(prod.id)}${(localStorage.getItem("lang") || document.documentElement.lang) === "en" ? "?lang=en" : ""}`;
+    function rememberQuickProduct() {
+        try {
+            const imgEl = card.querySelector("img.product-img"), firstImg = imgEl && (imgEl.currentSrc || imgEl.src) || (Array.isArray(prod.img) ? prod.img[0] : prod.img || prod.image || "");
+            sessionStorage.setItem("x2_quick_product", JSON.stringify({
+                id: prod.id,
+                name: prod.name,
+                category: prod.category,
+                img: firstImg,
+                price: prod.price,
+                oldPrice: prod.oldPrice,
+                rating: prod.rating,
+                ratingCount: prod.ratingCount,
+                stock: prod.stock,
+                timerEnd: prod.timerEnd,
+                currency: prod.currency
+            }));
+        } catch (e) {}
+    }
     function prefetchProductPage() {
         if (card.dataset.prefetched) return;
         card.dataset.prefetched = "1";
+        rememberQuickProduct();
         const link = document.createElement("link");
         link.rel = "prefetch", link.href = productUrl, link.as = "document";
         document.head.appendChild(link);
@@ -311,6 +330,7 @@ export function createProductCard(prod) {
         passive: true
     }),
     card.addEventListener("click", () => {
+        rememberQuickProduct();
         try {
             const HIST_KEY = "x2_history", img = Array.isArray(prod.img) ? prod.img[0] : prod.img || "", name = "object" == typeof prod.name ? prod.name.ar || prod.name.en : prod.name || "", entry = {
                 id: prod.id,
@@ -572,8 +592,12 @@ document.addEventListener("DOMContentLoaded", async function() {
         !function appendChunk() {
             const fragment = document.createDocumentFragment(), chunkSize = 0 === i ? FIRST_CHUNK : 20;
             for (let k = 0; k < chunkSize && i < sortedList.length; k++, i++) {
-                const card = createProductCard(sortedList[i]);
-                fragment.appendChild(card);
+                try {
+                    const card = createProductCard(sortedList[i]);
+                    fragment.appendChild(card);
+                } catch (err) {
+                    console.warn("Skipping product card render:", err, sortedList[i]);
+                }
             }
             if (rowDiv.appendChild(fragment), i < sortedList.length) requestAnimationFrame(appendChunk); else {
                 productsContainer.innerHTML = "", productsContainer.appendChild(rowDiv), productsContainer.classList.remove("changing");
