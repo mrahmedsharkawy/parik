@@ -297,12 +297,16 @@ export function createProductCard(prod) {
     const productUrl = `/product/${encodeURIComponent(prod.id)}${(localStorage.getItem("lang") || document.documentElement.lang) === "en" ? "?lang=en" : ""}`;
     function rememberQuickProduct() {
         try {
-            const imgEl = card.querySelector("img.product-img"), firstImg = imgEl && (imgEl.currentSrc || imgEl.src) || (Array.isArray(prod.img) ? prod.img[0] : prod.img || prod.image || "");
+            const toArr = v => Array.isArray(v) ? v.filter(Boolean) : v ? [ v ] : [], isVideo = s => /\.(mp4|webm|ogg|ogv|mov|m4v)(\?|#|$)/i.test(String(s || ""));
+            const firstRawImg = [ ...toArr(prod.images), ...toArr(prod.img), ...toArr(prod.image) ].filter(s => !isVideo(s))[0] || "";
+            const detailImg = optimizeSupabaseImageUrl(normalizeAssetUrl(firstRawImg), 700, 700);
+            const imgEl = card.querySelector("img.product-img"), firstImg = detailImg || imgEl && (imgEl.currentSrc || imgEl.src) || firstRawImg;
             sessionStorage.setItem("x2_quick_product", JSON.stringify({
                 id: prod.id,
                 name: prod.name,
                 category: prod.category,
                 img: firstImg,
+                rawImg: firstRawImg,
                 price: prod.price,
                 oldPrice: prod.oldPrice,
                 rating: prod.rating,
@@ -1195,7 +1199,8 @@ document.addEventListener("DOMContentLoaded", async function() {
         allSources.length || (allSources = _arr(p.img)), allSources.length || (allSources = _arr(p.image));
         const explicitVideos = [ ..._arr(p.videos), ..._arr(p.video), ...allSources.filter(_isVideo) ], imgs = allSources.filter(s => !_isVideo(s)), media = imgs.map(src => ({
             type: "image",
-            src: src
+            src: optimizeSupabaseImageUrl(normalizeAssetUrl(src), 700, 700),
+            rawSrc: src
         })), mainImg = document.getElementById("mainImage"), mainWrap = mainImg ? mainImg.parentElement : null;
         let mainVid = null;
         function showMedia(item) {
@@ -1207,7 +1212,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                     } catch (e) {}
                     mainVid.style.display = "none";
                 }
-                mainImg && (mainImg.src = item.src, mainImg.style.display = "block", mainImg.alt = getT(p.name));
+                mainImg && (mainImg.src !== item.src && mainImg.setAttribute("src", item.src), mainImg.loading = "eager", mainImg.setAttribute("fetchpriority", "high"), mainImg.style.display = "block", mainImg.alt = getT(p.name));
             }
         }
         mainWrap && (mainVid = document.createElement("video"), mainVid.id = "mainVideo", 
@@ -1284,7 +1289,7 @@ document.addEventListener("DOMContentLoaded", async function() {
         if (mainImg) mainImg.addEventListener("click", () => openProductMediaViewer(0));
         if (mainWrap && media.length > 1) {
             const carousel = document.createElement("div");
-            carousel.id = "prodCarousel", carousel.style.cssText = "display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;width:100%;height:100%;border-radius:inherit;direction:ltr;";
+            carousel.id = "prodCarousel", carousel.style.cssText = "display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;width:100%;height:100%;border-radius:inherit;direction:ltr;visibility:hidden;";
             let currentIdx = 0, jumpTimer = 0;
             const slides = [], loopMedia = [ ...media, ...media, ...media ], baseIndex = media.length, modIndex = i => (i % media.length + media.length) % media.length;
             loopMedia.forEach((item, i) => {
@@ -1297,6 +1302,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                 } else {
                     const img = document.createElement("img");
                     img.src = item.src, img.alt = getT(p.name), img.style.cssText = "width:100%;height:100%;object-fit:cover;", 
+                    img.loading = i === baseIndex ? "eager" : "lazy", i === baseIndex && img.setAttribute("fetchpriority", "high"),
                     slide.appendChild(img), slide.style.cursor = "zoom-in", slide.addEventListener("click", () => openProductMediaViewer(modIndex(i)));
                 }
                 carousel.appendChild(slide), slides.push(slide);
@@ -1315,6 +1321,7 @@ document.addEventListener("DOMContentLoaded", async function() {
             });
             requestAnimationFrame(() => {
                 carousel.scrollLeft = baseIndex * carousel.offsetWidth;
+                carousel.style.visibility = "visible", mainImg && (mainImg.style.display = "none"), mainVid && (mainVid.style.display = "none");
             });
             carousel.addEventListener("scroll", () => {
                 const rawIdx = Math.round(carousel.scrollLeft / carousel.offsetWidth), idx = modIndex(rawIdx);
@@ -1331,8 +1338,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                 }, 90);
             }, {
                 passive: !0
-            }), mainWrap.style.position = "relative", mainImg && (mainImg.style.display = "none"), 
-            mainVid && (mainVid.style.display = "none"), mainWrap.appendChild(carousel), mainWrap.appendChild(dots), 
+            }), mainWrap.style.position = "relative", mainWrap.appendChild(carousel), mainWrap.appendChild(dots),
             thumbs && (thumbs.style.display = window.innerWidth <= 900 ? "none" : "flex");
         }
         const set = (id, val) => {

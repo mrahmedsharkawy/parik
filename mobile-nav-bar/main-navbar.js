@@ -146,7 +146,7 @@ window.addEventListener('orientationchange', initMobileNav, { passive: true });
 
 (function initFastInternalNavigation() {
   const seen = new Set();
-  const corePages = ['/', '/index.html', '/categories', '/categories.html', '/offers', '/offers.html', '/Cart', '/Cart.html', '/account', '/account.html'];
+  const corePages = ['/', '/index.html', '/categories', '/categories.html', '/offers', '/offers.html', '/Cart', '/Cart.html', '/account', '/account.html', '/login', '/login.html', '/checkout', '/checkout.html', '/affiliate', '/affiliate.html', '/policy', '/policy?page=contact', '/policy?page=returns', '/policy?page=shipping-info', '/policy?page=work-with-Bariq'];
 
   function canPrefetch() {
     const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
@@ -184,7 +184,7 @@ window.addEventListener('orientationchange', initMobileNav, { passive: true });
   document.addEventListener('touchstart', prefetchLink, { passive: true });
   window.addEventListener('load', function() {
     const run = () => corePages.forEach(prefetch);
-    if ('requestIdleCallback' in window) requestIdleCallback(run, { timeout: 2500 });
-    else setTimeout(run, 1200);
+    if ('requestIdleCallback' in window) requestIdleCallback(run, { timeout: 1200 });
+    else setTimeout(run, 700);
   }, { once: true });
 })();

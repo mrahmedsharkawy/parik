@@ -7,7 +7,10 @@
     { "source": "/assets/categories/sticker/:file", "destination": "/assets/categories/Sticker/:file" },
     { "source": "/assets/categories/ramadan/:file", "destination": "/assets/categories/Ramadan/:file" },
     { "source": "/assets/categories/forex/:file", "destination": "/assets/categories/Forex/:file" },
+    { "source": "/affiliate-program", "destination": "/affiliate" },
+    { "source": "/affiliate-program.html", "destination": "/affiliate" },
     { "source": "/categories/:path*", "destination": "/categories.html" },
+    { "source": "/policy/:slug", "destination": "/policy" },
     { "source": "/product/:id/:slug", "destination": "/product" },
     { "source": "/product/:id",       "destination": "/product" }
   ],
