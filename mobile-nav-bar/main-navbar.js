@@ -359,7 +359,7 @@
 
     window.dispatchEvent(new CustomEvent('mobile-nav:ready'));
 
-    // ── عداد الحساب ─────────────────────────────────────────────────
+    // ── عداد الحساب ─────────────────────────────────────────────
     const accountEl = nav.querySelector('.account-badge');
     if (accountEl) {
       const initCount = window.__accountCount != null ? String(window.__accountCount) : '0';
