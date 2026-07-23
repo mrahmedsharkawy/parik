@@ -402,7 +402,7 @@ export function createProductCard(prod) {
     const _toArr = v => Array.isArray(v) ? v.filter(Boolean) : v ? [ v ] : [], _isVideoSrc = s => /\.(mp4|webm|ogg|ogv|mov|m4v)(\?|#|$)/i.test(String(s || "")), _allMedia = [ ..._toArr(prod.images), ..._toArr(prod.img), ..._toArr(prod.image) ], prodVideos = [ ..._toArr(prod.videos), ..._toArr(prod.video), ..._allMedia.filter(_isVideoSrc) ], firstImage = _allMedia.filter(s => !_isVideoSrc(s))[0] || "", firstVideo = prodVideos[0] || "";
     {
         const im = document.createElement("img");
-        const isPriority = _priorityProductImages < 16;
+        const isPriority = _priorityProductImages < 6;
         _priorityProductImages++;
         im.className = "product-img";
         im.alt = getTranslated(prod.name);
