@@ -8,7 +8,7 @@
   const base = scriptBase.endsWith('/') ? scriptBase : scriptBase + '/';
 
   // تحميل CSS
-  const cssHref = base + 'styles.css?v=apple-liquid-20260724e';
+  const cssHref = base + 'styles.css?v=apple-liquid-20260724r';
   if (!Array.from(document.styleSheets).some(s => s.href && s.href.includes('/mobile-nav-bar/styles.css'))) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
@@ -157,6 +157,194 @@
       if (hPage === curPage) a.classList.add('active');
     });
 
+    // ── فقاعة مائية قابلة للسحب فوق الأيقونة النشطة ────────────────
+    const navList = nav.querySelector('ul');
+    const navLinks = Array.from(nav.querySelectorAll('a[data-key]'));
+    if (navList && navLinks.length) {
+      const liquidPill = document.createElement('div');
+      liquidPill.className = 'nav-liquid-pill';
+      liquidPill.setAttribute('aria-hidden', 'true');
+      navList.insertBefore(liquidPill, navList.firstChild);
+
+      let activeLink = nav.querySelector('a.active') || navLinks[0];
+      let dragState = null;
+      let suppressPillClick = false;
+
+      const getClientX = (event) => {
+        if (event.touches && event.touches[0]) return event.touches[0].clientX;
+        if (event.changedTouches && event.changedTouches[0]) return event.changedTouches[0].clientX;
+        return event.clientX;
+      };
+
+      const setActiveLink = (nextLink) => {
+        if (!nextLink) return;
+        activeLink = nextLink;
+        navLinks.forEach((link) => link.classList.toggle('active', link === activeLink));
+      };
+
+      const isSamePageLink = (link) => {
+        const targetUrl = new URL(link.href, location.href);
+        return targetUrl.origin === location.origin && targetUrl.pathname === location.pathname && targetUrl.search === location.search;
+      };
+
+      const getMetrics = (link) => {
+        const pillWidth = liquidPill.offsetWidth || parseFloat(getComputedStyle(liquidPill).width) || 0;
+        const item = link.closest('li') || link;
+        return {
+          centerX: item.offsetLeft + item.offsetWidth / 2,
+          width: pillWidth
+        };
+      };
+
+      const movePillToLink = (link, animate = true) => {
+        const metrics = getMetrics(link);
+        liquidPill.style.transition = animate ? 'transform .42s cubic-bezier(.18,1.34,.34,1), border-radius .34s ease, opacity .26s ease, box-shadow .26s ease' : 'none';
+        liquidPill.style.left = '0px';
+        liquidPill.style.transform = `translate3d(${metrics.centerX - metrics.width / 2}px, -50%, 0)`;
+      };
+
+      nav.__updateLiquidPillPosition = (animate = false) => {
+        if (dragState) return;
+        movePillToLink(activeLink, animate);
+      };
+
+      const findNearestLink = (clientX) => {
+        let nearest = activeLink;
+        let minDist = Infinity;
+        navLinks.forEach((link) => {
+          const rect = link.getBoundingClientRect();
+          const center = rect.left + rect.width / 2;
+          const dist = Math.abs(clientX - center);
+          if (dist < minDist) {
+            minDist = dist;
+            nearest = link;
+          }
+        });
+        return nearest;
+      };
+
+      const clampPillX = (x) => {
+        const max = Math.max(0, navList.clientWidth - liquidPill.offsetWidth);
+        return Math.min(Math.max(0, x), max);
+      };
+
+      const onPointerMove = (event) => {
+        if (!dragState) return;
+        const clientX = getClientX(event);
+        const clientY = event.touches && event.touches[0] ? event.touches[0].clientY : event.clientY;
+        const dx = clientX - dragState.startX;
+        const dy = clientY != null ? clientY - dragState.startY : 0;
+
+        if (!dragState.locked) {
+          if (Math.abs(dy) > 8 && Math.abs(dy) > Math.abs(dx)) {
+            endDrag(event, true);
+            return;
+          }
+          if (Math.abs(dx) < 4) return;
+          dragState.locked = true;
+        }
+
+        const nextX = clampPillX(dragState.startTranslateX + dx);
+  dragState.lastX = clientX;
+        liquidPill.style.transition = 'none';
+        const pull = Math.min(Math.abs(dx) / 220, 0.12);
+        const squeezeX = dx > 0 ? 1 - pull : 1 + pull;
+        const squeezeY = 1 + pull * 0.7;
+        liquidPill.style.transform = `translate3d(${nextX}px, -50%, 0) scale(${squeezeX}, ${squeezeY})`;
+        dragState.moved = dragState.moved || Math.abs(dx) > 6;
+        if (dragState.moved && event.cancelable) event.preventDefault();
+      };
+
+      const endDrag = (event, cancelled = false) => {
+        if (!dragState) return;
+        const dropX = dragState.lastX || getClientX(event) || dragState.startX;
+        const nearest = cancelled ? activeLink : findNearestLink(dropX);
+        liquidPill.classList.remove('is-dragging');
+        setActiveLink(nearest);
+        movePillToLink(nearest, true);
+        const didMove = !!dragState.moved;
+        dragState = null;
+        if (didMove) {
+          suppressPillClick = true;
+          window.setTimeout(() => { suppressPillClick = false; }, 180);
+        }
+        document.removeEventListener('pointermove', onPointerMove);
+        document.removeEventListener('pointerup', endDrag);
+        document.removeEventListener('pointercancel', endDrag);
+        document.removeEventListener('mousemove', onPointerMove);
+        document.removeEventListener('mouseup', endDrag);
+        document.removeEventListener('touchmove', onPointerMove);
+        document.removeEventListener('touchend', endDrag);
+        document.removeEventListener('touchcancel', endDrag);
+        if (didMove && !cancelled) {
+          // نفس الضغط على الأيقونة نفسها بعد السحب
+          window.setTimeout(() => nearest.click(), 90);
+        }
+      };
+
+      const startDrag = (event) => {
+        const clientX = getClientX(event);
+        const clientY = event.touches && event.touches[0] ? event.touches[0].clientY : event.clientY;
+        const transform = liquidPill.style.transform || '';
+        const match = transform.match(/translate3d\(([-\d.]+)px/);
+        dragState = {
+          startX: clientX,
+          startY: clientY || 0,
+          lastX: clientX,
+          startTranslateX: match ? Number(match[1]) : 0,
+          locked: false,
+          moved: false
+        };
+        liquidPill.classList.add('is-dragging');
+        document.addEventListener('pointermove', onPointerMove, { passive: false });
+        document.addEventListener('pointerup', endDrag, { passive: true });
+        document.addEventListener('pointercancel', endDrag, { passive: true });
+        document.addEventListener('mousemove', onPointerMove, { passive: false });
+        document.addEventListener('mouseup', endDrag, { passive: true });
+        document.addEventListener('touchmove', onPointerMove, { passive: false });
+        document.addEventListener('touchend', endDrag, { passive: true });
+        document.addEventListener('touchcancel', endDrag, { passive: true });
+        if (event.cancelable) event.preventDefault();
+      };
+
+      liquidPill.addEventListener('pointerdown', startDrag);
+      liquidPill.addEventListener('touchstart', startDrag, { passive: false });
+      liquidPill.addEventListener('mousedown', startDrag);
+      liquidPill.addEventListener('click', (event) => {
+        if (suppressPillClick) return;
+        event.preventDefault();
+        if (activeLink && isSamePageLink(activeLink)) location.reload();
+        else activeLink?.click();
+      });
+
+      navLinks.forEach((link) => {
+        link.addEventListener('pointerdown', (event) => {
+          if (link !== activeLink) return;
+          startDrag(event);
+        });
+        link.addEventListener('touchstart', (event) => {
+          if (link !== activeLink) return;
+          startDrag(event);
+        }, { passive: false });
+        link.addEventListener('mousedown', (event) => {
+          if (link !== activeLink) return;
+          startDrag(event);
+        });
+        link.addEventListener('click', (event) => {
+          if (link === activeLink && isSamePageLink(link)) {
+            event.preventDefault();
+            location.reload();
+            return;
+          }
+          setActiveLink(link);
+          movePillToLink(link, true);
+        });
+      });
+
+      movePillToLink(activeLink, false);
+      window.addEventListener('resize', () => movePillToLink(activeLink, false), { passive: true });
+    }
+
     // ── عداد السلة ──────────────────────────────────────────────────
     const cartEl = nav.querySelector('.cart-badge');
     if (cartEl) {
@@ -201,10 +389,10 @@ window.addEventListener('orientationchange', initMobileNav, { passive: true });
     const isSmall = window.innerWidth <= 420;
     const normal = isSmall
       ? { left: '12px', right: '12px', bottom: '12px', height: '53px', radius: '30px', ulPadding: '3px 7px', ulGap: '5px', itemMin: '44px', icon: '23px' }
-      : { left: '16px', right: '16px', bottom: '14px', height: '56px', radius: '34px', ulPadding: '3px 9px', ulGap: '7px', itemMin: '44px', icon: '25px' };
+      : { left: '16px', right: '16px', bottom: '12px', height: '56px', radius: '34px', ulPadding: '3px 9px', ulGap: '7px', itemMin: '44px', icon: '25px' };
     const mini = isSmall
-      ? { left: '24px', right: '24px', bottom: '9px', height: '44px', radius: '26px', ulPadding: '1px 7px', ulGap: '5px', itemMin: '35px', icon: '21px' }
-      : { left: '38px', right: '38px', bottom: '11px', height: '44px', radius: '26px', ulPadding: '1px 7px', ulGap: '5px', itemMin: '35px', icon: '21px' };
+      ? { left: '58px', right: '58px', bottom: '10px', height: '44px', radius: '26px', ulPadding: '1px 7px', ulGap: '4px', itemMin: '31px', icon: '21px' }
+      : { left: '64px', right: '64px', bottom: '10px', height: '44px', radius: '26px', ulPadding: '1px 7px', ulGap: '4px', itemMin: '31px', icon: '21px' };
     const activeSet = isCompact ? mini : normal;
 
     nav.style.left = activeSet.left;
@@ -213,7 +401,7 @@ window.addEventListener('orientationchange', initMobileNav, { passive: true });
     nav.style.height = activeSet.height;
     nav.style.borderRadius = activeSet.radius;
     nav.style.transformOrigin = 'center bottom';
-    nav.style.transform = isCompact ? 'translateY(-2px) scale(0.84)' : 'translateY(0) scale(1)';
+    nav.style.transform = 'translateY(0)';
 
     const list = nav.querySelector('ul');
     if (list) {
@@ -253,6 +441,13 @@ window.addEventListener('orientationchange', initMobileNav, { passive: true });
     }
 
     applyCompactStyles(nav, compact);
+    if (typeof nav.__updateLiquidPillPosition === 'function') {
+      nav.__updateLiquidPillPosition(false);
+      window.requestAnimationFrame(() => nav.__updateLiquidPillPosition(false));
+      window.setTimeout(() => nav.__updateLiquidPillPosition(false), 60);
+      window.setTimeout(() => nav.__updateLiquidPillPosition(false), 140);
+      window.setTimeout(() => nav.__updateLiquidPillPosition(false), 240);
+    }
 
     lastY = y;
   }
