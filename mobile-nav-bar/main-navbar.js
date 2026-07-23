@@ -1,4 +1,4 @@
-async function initMobileNav() {
+﻿async function initMobileNav() {
   const isMobileViewport = window.matchMedia('(max-width: 899px)').matches || window.innerWidth <= 899 || document.documentElement.clientWidth <= 899;
   if (!isMobileViewport) return;
   if (document.querySelector('.mobile-nav')) return;
@@ -8,7 +8,7 @@ async function initMobileNav() {
   const base = scriptBase.endsWith('/') ? scriptBase : scriptBase + '/';
 
   // تحميل CSS
-  const cssHref = base + 'styles.css';
+  const cssHref = base + 'styles.css?v=apple-liquid-20260724e';
   if (!Array.from(document.styleSheets).some(s => s.href && s.href.includes('/mobile-nav-bar/styles.css'))) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
@@ -19,7 +19,7 @@ async function initMobileNav() {
 
   try {
     // Cache navbar HTML في sessionStorage لتجنب fetch في كل صفحة (يُقلّل الوميض)
-    const CACHE_KEY = 'mnav_v4';
+    const CACHE_KEY = 'mnav_v6';
     let text = sessionStorage.getItem(CACHE_KEY);
     if (!text) {
       const res = await fetch(base + 'navbar.html');
@@ -101,6 +101,52 @@ async function initMobileNav() {
 
     document.body.appendChild(nav);
 
+    // ── تصغير الشريط عند السحب لأعلى وإرجاعه عند السحب لأسفل ─────
+    let lastY = window.scrollY || window.pageYOffset || 0;
+    let compact = false;
+    const DELTA = 7;
+    const TOP_RESET = 18;
+
+    const setCompact = (next) => {
+      if (compact === next) return;
+      compact = next;
+      if (compact) nav.classList.add('is-compact');
+      else nav.classList.remove('is-compact');
+    };
+
+    const onScroll = () => {
+      const y = window.scrollY || window.pageYOffset || 0;
+      if (y <= TOP_RESET) {
+        setCompact(false);
+        lastY = y;
+        return;
+      }
+
+      const diff = y - lastY;
+      if (Math.abs(diff) < DELTA) return;
+
+      if (diff > 0) setCompact(true);   // scrolling down: compact
+      else setCompact(false);           // scrolling up: restore
+
+      lastY = y;
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('touchmove', onScroll, { passive: true });
+
+    let rafId = 0;
+    const watchScroll = () => {
+      onScroll();
+      rafId = window.requestAnimationFrame(watchScroll);
+    };
+    rafId = window.requestAnimationFrame(watchScroll);
+
+    window.addEventListener('pagehide', () => {
+      if (rafId) window.cancelAnimationFrame(rafId);
+    }, { once: true });
+
+    onScroll();
+
     // ── تفعيل الرابط النشط ──────────────────────────────────────────
     // يدعم Vercel clean URLs (/offers) وكذلك روابط عادية (/offers.html)
     const rawSeg = location.pathname.split('/').pop() || 'index';
@@ -143,6 +189,90 @@ async function initMobileNav() {
 document.addEventListener('DOMContentLoaded', initMobileNav);
 window.addEventListener('resize', initMobileNav, { passive: true });
 window.addEventListener('orientationchange', initMobileNav, { passive: true });
+
+(function initMobileNavCompactWatcher() {
+  let intervalId = 0;
+  let lastY = window.scrollY || window.pageYOffset || 0;
+  let compact = false;
+  const DELTA = 7;
+  const TOP_RESET = 18;
+
+  function applyCompactStyles(nav, isCompact) {
+    const isSmall = window.innerWidth <= 420;
+    const normal = isSmall
+      ? { left: '12px', right: '12px', bottom: '12px', height: '53px', radius: '30px', ulPadding: '3px 7px', ulGap: '5px', itemMin: '44px', icon: '23px' }
+      : { left: '16px', right: '16px', bottom: '14px', height: '56px', radius: '34px', ulPadding: '3px 9px', ulGap: '7px', itemMin: '44px', icon: '25px' };
+    const mini = isSmall
+      ? { left: '24px', right: '24px', bottom: '9px', height: '44px', radius: '26px', ulPadding: '1px 7px', ulGap: '5px', itemMin: '35px', icon: '21px' }
+      : { left: '38px', right: '38px', bottom: '11px', height: '44px', radius: '26px', ulPadding: '1px 7px', ulGap: '5px', itemMin: '35px', icon: '21px' };
+    const activeSet = isCompact ? mini : normal;
+
+    nav.style.left = activeSet.left;
+    nav.style.right = activeSet.right;
+    nav.style.bottom = activeSet.bottom;
+    nav.style.height = activeSet.height;
+    nav.style.borderRadius = activeSet.radius;
+    nav.style.transformOrigin = 'center bottom';
+    nav.style.transform = isCompact ? 'translateY(-2px) scale(0.84)' : 'translateY(0) scale(1)';
+
+    const list = nav.querySelector('ul');
+    if (list) {
+      list.style.padding = activeSet.ulPadding;
+      list.style.gap = activeSet.ulGap;
+    }
+
+    nav.querySelectorAll('a, button').forEach((item) => {
+      item.style.minHeight = activeSet.itemMin;
+      item.style.borderRadius = isCompact ? '20px' : '26px';
+    });
+
+    nav.querySelectorAll('svg.icon, img.icon, img.nav-icon').forEach((icon) => {
+      icon.style.width = activeSet.icon;
+      icon.style.height = activeSet.icon;
+    });
+  }
+
+  function updateCompact() {
+    const nav = document.querySelector('.mobile-nav');
+    if (!nav) return;
+
+    const y = window.scrollY || window.pageYOffset || 0;
+    let nextCompact = compact;
+
+    if (y <= TOP_RESET) {
+      nextCompact = false;
+    } else {
+      const diff = y - lastY;
+      if (Math.abs(diff) >= DELTA) nextCompact = diff > 0;
+    }
+
+    if (nextCompact !== compact) {
+      compact = nextCompact;
+      if (compact) nav.classList.add('is-compact');
+      else nav.classList.remove('is-compact');
+    }
+
+    applyCompactStyles(nav, compact);
+
+    lastY = y;
+  }
+
+  function start() {
+    if (intervalId) return;
+    lastY = window.scrollY || window.pageYOffset || 0;
+    intervalId = window.setInterval(updateCompact, 120);
+    updateCompact();
+  }
+
+  document.addEventListener('DOMContentLoaded', start, { once: true });
+  window.addEventListener('load', start, { once: true });
+  window.addEventListener('mobile-nav:ready', start);
+  window.addEventListener('pagehide', () => {
+    if (!intervalId) return;
+    window.clearInterval(intervalId);
+    intervalId = 0;
+  }, { once: true });
+})();
 
 (function initFastInternalNavigation() {
   const seen = new Set();

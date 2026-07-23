@@ -1,7 +1,7 @@
 ﻿/* Mobile bottom nav - complete, single-file stylesheet */
 :root{
-  --nav-h:9%;
-  --nav-bg: #ffffff;
+  --nav-h:56px;
+  --nav-bg: rgba(10, 12, 16, 0.42);
   --nav-fg: #222;
   --nav-accent: #D4AF37;
   --nav-shadow: 0 -6px 18px rgba(0, 0, 0, 0);
@@ -23,20 +23,48 @@ body{
 /* container */
 .mobile-nav{
   position:fixed;
-  left:0;
-  right:0;
-  bottom:0;
+  left:16px;
+  right:16px;
+  bottom:14px;
   height:var(--nav-h);
-  background:#152546;
+  background:var(--nav-bg);
+  background-image:
+    radial-gradient(140% 180% at 12% 0%, rgba(255,255,255,0.2), rgba(255,255,255,0) 44%),
+    linear-gradient(180deg, rgba(255,255,255,0.14), rgba(0, 0, 0, 0.05));
   box-shadow:var(--nav-shadow);
   z-index:100000;
   display:flex;
   align-items:center;
   justify-content:center;
-  padding-bottom:env(safe-area-inset-bottom);
+  padding:0 8px env(safe-area-inset-bottom);
   -webkit-tap-highlight-color: transparent;
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.041);
-  height: auto;
+  box-shadow:
+    0 14px 28px rgba(0,0,0,0.28),
+    inset 0 1px 0 rgba(255,255,255,0.3),
+    inset 0 -1px 0 rgba(255,255,255,0.08);
+  backdrop-filter: blur(22px) saturate(165%);
+  -webkit-backdrop-filter: blur(22px) saturate(165%);
+  border: 1px solid rgba(255,255,255,0.24);
+  border-radius: 34px;
+  overflow: hidden;
+  transition: height .26s ease, padding .26s ease, border-radius .26s ease, bottom .26s ease, left .26s ease, right .26s ease, transform .28s ease;
+  transform-origin: center bottom;
+}
+
+.mobile-nav::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(50% 62% at 18% 22%, rgba(255,255,255,0.22), rgba(255,255,255,0) 72%),
+    radial-gradient(45% 55% at 82% 100%, rgba(255,255,255,0.1), rgba(255,255,255,0) 74%);
+  mix-blend-mode: screen;
+}
+
+@keyframes activeDockFloat {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
 }
 
 /* hide on large screens */
@@ -47,16 +75,19 @@ body{
 /* list layout */
 .mobile-nav ul{
   width:100%;
-  max-width:800px;
+  max-width:620px;
   margin:0;
-  padding:6px 8px 14px;
+  padding:3px 9px;
   display:flex;
-  gap:0px;
+  gap:7px;
   list-style:none;
   box-sizing:border-box;
+  transition: padding .26s ease, gap .26s ease;
 }
 
 .mobile-nav li{ flex:1; text-align:center; }
+
+.mobile-nav li{ position:relative; }
 
 /* link appearance */
 .mobile-nav a,
@@ -65,24 +96,27 @@ body{
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  gap:0px;
+  gap:0;
   text-decoration:none;
-  color:#fff;
+  color:#f9fbff;
   font-size:var(--font-size);
-  padding:1px 1px;
+  padding:0;
   background:transparent;
   border:0;
   width:100%;
-  height:100%;
+  min-height:44px;
   cursor:pointer;
+  border-radius:26px;
+  position:relative;
+  transition: color .28s ease, transform .28s ease, background-color .28s ease, min-height .26s ease, border-radius .26s ease;
 }
 
 /* icons */
 .mobile-nav svg.icon,
 .mobile-nav img.icon,
 .mobile-nav img.nav-icon{
-  width:24px;
-  height:24px;
+  width:25px;
+  height:25px;
   display:block;
   object-fit:contain;
   flex-shrink:0;
@@ -94,30 +128,89 @@ body{
 .mobile-nav img.icon,
 .mobile-nav img.nav-icon{
   filter: brightness(0) saturate(100%) invert(100%) !important;
+  transition: transform .3s cubic-bezier(.2,.9,.2,1), filter .3s ease;
+}
+
+/* عند السحب لأعلى: الشريط يصغر (compact mode) */
+.mobile-nav.is-compact {
+  height: 44px !important;
+  bottom: 11px !important;
+  left: 38px !important;
+  right: 38px !important;
+  border-radius: 26px !important;
+  padding: 0 8px env(safe-area-inset-bottom) !important;
+}
+
+.mobile-nav.is-compact ul {
+  padding: 1px 7px !important;
+  gap: 5px !important;
+  max-width: 500px !important;
+}
+
+.mobile-nav.is-compact a,
+.mobile-nav.is-compact button {
+  min-height: 35px !important;
+  border-radius: 20px !important;
+}
+
+.mobile-nav.is-compact svg.icon,
+.mobile-nav.is-compact img.icon,
+.mobile-nav.is-compact img.nav-icon {
+  width: 21px !important;
+  height: 21px !important;
 }
 
 /* active state */
 .mobile-nav a.active,
 .mobile-nav button.active{
-  color:#D4AF37;
-  background:#152546;
-  border-radius:12px;
-  box-shadow:0 6px 16px rgba(21,37,70,0.22);
+  color:#fff;
+  background: linear-gradient(180deg, rgba(255,255,255,0.24), rgba(255,255,255,0.08));
+  border-radius:30px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.42),
+    0 6px 14px rgba(0,0,0,0.26);
+  transform: translateY(0);
+  animation: activeDockFloat 1.9s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-nav a,
+  .mobile-nav button,
+  .mobile-nav a.active,
+  .mobile-nav button.active,
+  .fire-nav-icon {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 
 /* تنسيق الأيقونات النشطة - تعديل لحل مشكلة عدم تغير اللون */
 .mobile-nav a.active svg.icon {
-  color: #D4AF37 !important;
-  fill: #D4AF37 !important;
-  stroke: #D4AF37 !important;
+  color: #ffffff !important;
+  fill: #ffffff !important;
+  stroke: #ffffff !important;
 }
 
 .mobile-nav a.active img.icon {
-  filter: brightness(0) saturate(100%) invert(76%) sepia(47%) saturate(1052%) hue-rotate(356deg) brightness(94%) contrast(91%) !important;
+  filter: brightness(0) saturate(100%) invert(100%) !important;
 }
 
 .mobile-nav a.active img.nav-icon {
-  filter: brightness(0) saturate(100%) invert(76%) sepia(47%) saturate(1052%) hue-rotate(356deg) brightness(94%) contrast(91%) !important;
+  filter: brightness(0) saturate(100%) invert(100%) !important;
+}
+
+/* keep labels for accessibility but hide them visually for the icon-only Apple style */
+.mobile-nav a > span:not(.icon-wrap):not(.fire-nav-icon),
+.mobile-nav button > span:not(.icon-wrap):not(.fire-nav-icon){
+  position:absolute;
+  width:1px;
+  height:1px;
+  padding:0;
+  margin:-1px;
+  overflow:hidden;
+  clip:rect(0,0,0,0);
+  border:0;
+  white-space:nowrap;
 }
 
 /* إزالة تأثير التحويم حتى لا يتعارض مع تنسيق الأيقونات النشطة */
@@ -145,11 +238,11 @@ body{
 }
 
 .fire-nav-icon {
-  font-size: 24px;
+  font-size: 28px;
   display: block;
   line-height: 1;
-  filter: drop-shadow(0 0 6px rgba(255,180,0,0.85));
-  animation: fireFlicker 1.4s ease-in-out infinite;
+  filter: drop-shadow(0 0 4px rgba(255,120,0,0.45));
+  animation: fireFlicker 2s ease-in-out infinite;
   transform-origin: bottom center;
 }
 
@@ -178,18 +271,18 @@ body{
 .cart-badge::after{
   content: attr(data-count);
   display:inline-block !important;
-  min-width:18px;
-  height:18px;
-  line-height:18px;
-  font-size:11px;
+  min-width:16px;
+  height:16px;
+  line-height:16px;
+  font-size:10px;
   text-align:center;
   padding:0 6px;
   border-radius:999px;
-  background:var(--badge-bg);
+  background:#ff2d55;
   color:var(--badge-fg);
   position:absolute;
-  top:-6px;
-  right:-10px;
+  top:-4px;
+  right:-7px;
   box-shadow:0 1px 3px rgba(0,0,0,0.12);
   box-sizing:border-box;
   transform-origin:center;
@@ -206,18 +299,18 @@ body{
 .account-badge::after{
   content: attr(data-count);
   display:inline-block !important;
-  min-width:18px;
-  height:18px;
-  line-height:18px;
-  font-size:11px;
+  min-width:16px;
+  height:16px;
+  line-height:16px;
+  font-size:10px;
   text-align:center;
   padding:0 6px;
   border-radius:999px;
-  background:var(--badge-bg);
+  background:#ff2d55;
   color:var(--badge-fg);
   position:absolute;
-  top:-6px;
-  right:-10px;
+  top:-4px;
+  right:-7px;
   box-shadow:0 1px 3px rgba(0,0,0,0.12);
   box-sizing:border-box;
   transform-origin:center;
@@ -236,9 +329,11 @@ body{
 
 /* small screens tweak */
 @media (max-width: 420px){
-  :root{ --nav-h:60px; --font-size:12px; }
-  .mobile-nav ul{ padding-bottom:16px; }
-  .mobile-nav svg.icon, .mobile-nav img.icon{ width:20px; height:20px; }
+  :root{ --nav-h:53px; --font-size:12px; }
+  .mobile-nav{ left:12px; right:12px; bottom:12px; border-radius:30px; }
+  .mobile-nav.is-compact{ left:24px !important; right:24px !important; bottom:9px !important; }
+  .mobile-nav ul{ padding:3px 7px; gap:5px; }
+  .mobile-nav svg.icon, .mobile-nav img.icon{ width:23px; height:23px; }
 }
 @media (min-width: 421px) and (max-width: 900px){
   :root{ --font-size:13px; }
