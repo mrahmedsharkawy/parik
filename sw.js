@@ -1,5 +1,5 @@
 ﻿/* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v146';
+const CACHE = 'bariq-v147';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -210,15 +210,14 @@ self.addEventListener('fetch', function(e) {
     return;
   }
 
-  // HTML: return cached app pages immediately, then refresh in the background.
+  // HTML: network-first so mobile browsers do not stay on stale cached pages.
   if (isHtml) {
     e.respondWith(
       caches.open(CACHE).then(function(cache) {
-        return cache.match(htmlCacheKey).then(function(cached) {
-          const fresh = refreshCache(cache, e.request, htmlCacheKey).catch(function() {
+        return refreshCache(cache, e.request, htmlCacheKey).catch(function() {
+          return cache.match(htmlCacheKey).then(function(cached) {
             return cached || caches.match('/index.html') || new Response('Offline', {status: 503});
           });
-          return cached || fresh;
         });
       })
     );
@@ -385,6 +384,9 @@ self.addEventListener('notificationclick', function(e) {
 
 /* Badge count sync from the page */
 self.addEventListener('message', function(e) {
+  if (e.data && e.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
   if (e.data && e.data.type === 'SET_BADGE') {
     _badgeCount = e.data.count || 0;
     if ('setAppBadge' in self.registration) {

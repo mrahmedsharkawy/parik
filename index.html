@@ -952,6 +952,23 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:8px!import
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
       navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).then(function(reg) {
+        var refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', function() {
+          if (refreshing || sessionStorage.getItem('sw-v147-refresh') === '1') return;
+          refreshing = true;
+          sessionStorage.setItem('sw-v147-refresh', '1');
+          location.reload();
+        });
+        if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+        reg.addEventListener('updatefound', function() {
+          var worker = reg.installing;
+          if (!worker) return;
+          worker.addEventListener('statechange', function() {
+            if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+              worker.postMessage({ type: 'SKIP_WAITING' });
+            }
+          });
+        });
         reg.update().catch(function(){});
       }).catch(function(){});
     });
