@@ -2421,11 +2421,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       try {
         const bytes = new Uint8Array(text.length);
         for (let j = 0; j < text.length; j++) bytes[j] = text.charCodeAt(j) & 255;
-        const fixed = new TextDecoder('utf-8').decode(bytes);
+        let fixed = '';
+        if (typeof TextDecoder !== 'undefined') {
+          fixed = new TextDecoder('utf-8').decode(bytes);
+        } else {
+          fixed = decodeURIComponent(escape(text));
+        }
         if (!fixed || fixed === text) break;
         text = fixed;
       } catch(e) {
-        break;
+        try {
+          const fixed2 = decodeURIComponent(escape(text));
+          if (!fixed2 || fixed2 === text) break;
+          text = fixed2;
+        } catch(e2) {
+          break;
+        }
       }
     }
     return text;
@@ -3666,6 +3677,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </footer>
 <script src="/java/supabase.min.js" defer></script>
 <script src="/java/main.min.js?v=122" defer></script>
+<script src="/java/sw-refresh.js?v=sw-refresh-20260724a" defer></script>
 <script src="/java/instant-nav.js?v=instant-nav-20260724a" defer></script>
 <script src="/translations/translation.min.js" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>

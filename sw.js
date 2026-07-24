@@ -1,5 +1,5 @@
 ﻿/* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v158';
+const CACHE = 'bariq-v160';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -29,6 +29,7 @@ const STATIC_URLS = [
   '/style/style.css',
   '/java/auth-reset.js',
   '/java/main.min.js',
+  '/java/sw-refresh.js',
   '/java/instant-nav.js',
   '/java/Products.min.js',
   '/java/Cart.min.js',
@@ -301,10 +302,22 @@ function repairMojibakeText(value) {
     try {
       const bytes = new Uint8Array(s.length);
       for (let j = 0; j < s.length; j++) bytes[j] = s.charCodeAt(j) & 255;
-      const fixed = new TextDecoder('utf-8').decode(bytes);
+      let fixed = '';
+      if (typeof TextDecoder !== 'undefined') {
+        fixed = new TextDecoder('utf-8').decode(bytes);
+      } else {
+        fixed = decodeURIComponent(escape(s));
+      }
       if (!fixed || fixed === s) break;
       s = fixed;
     } catch(e) {
+      try {
+        const fixed2 = decodeURIComponent(escape(s));
+        if (!fixed2 || fixed2 === s) break;
+        s = fixed2;
+      } catch(e2) {
+        break;
+      }
       break;
     }
   }
@@ -379,6 +392,32 @@ function normalizePushNotificationData(data) {
       title: `${item.icon} ${item.title}`,
       body: item.body,
       orderId
+    });
+  }
+
+  // بعض الأجهزة قد تستلم payload مشوّه بدون رقم طلب واضح.
+  // في هذه الحالة نعرض رسالة عربية سليمة حسب الحالة بدل النص المشوّه.
+  if (isBroken && (data.type === 'order_status' || inferredStatus)) {
+    const status = inferredStatus || 'processing';
+    const mapNoId = {
+      pending:       { icon: '⏳', title: 'طلبك قيد المراجعة',     body: 'طلبك يُراجَع الآن' },
+      processing:    { icon: '🔄', title: 'طلبك قيد المعالجة',     body: 'جارٍ تجهيز طلبك' },
+      confirmed:     { icon: '✅', title: 'تم تأكيد طلبك',          body: 'تم تأكيد طلبك وسيُجهَّز قريباً 🎉' },
+      manufacturing: { icon: '🔨', title: 'طلبك في مرحلة التصنيع', body: 'طلبك يُصنَّع الآن بعناية ✨' },
+      ready:         { icon: '🎁', title: 'طلبك جاهز للاستلام',    body: 'طلبك جاهز وبانتظارك 🎉' },
+      shipped:       { icon: '🚚', title: 'تم شحن طلبك',           body: 'طلبك في الطريق إليك' },
+      delivered:     { icon: '✅', title: 'تم توصيل طلبك',         body: 'طلبك وصل بنجاح 🎉' },
+      cancelled:     { icon: '❌', title: 'تم إلغاء طلبك',         body: 'تم إلغاء طلبك' },
+      returned:      { icon: '↩️', title: 'تمت عملية الإرجاع',      body: 'تمت معالجة إرجاع طلبك' }
+    };
+    const item = mapNoId[status] || mapNoId.processing;
+    return Object.assign({}, data, {
+      type: 'order_status',
+      status,
+      iconText: item.icon,
+      emoji: item.icon,
+      title: `${item.icon} ${item.title}`,
+      body: item.body
     });
   }
 
