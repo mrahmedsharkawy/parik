@@ -218,7 +218,9 @@ self.addEventListener('fetch', function(e) {
           const fresh = refreshCache(cache, e.request, htmlCacheKey).catch(function() {
             return cached || caches.match('/index.html') || new Response('Offline', {status: 503});
           });
-          return cached || fresh;
+          return refreshCache(cache, e.request, htmlCacheKey).catch(function () {
+  return cache.match(htmlCacheKey);
+});
         });
       })
     );
