@@ -1,5 +1,5 @@
 ﻿/* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v147';
+const CACHE = 'bariq-v152';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -146,9 +146,16 @@ self.addEventListener('activate', function(e) {
   e.waitUntil(
     caches.keys().then(function(keys) {
       return Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)));
+    }).then(function() {
+      return self.clients.claim();
+    }).then(function() {
+      return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(pages) {
+        pages.forEach(function(client) {
+          try { client.navigate(client.url); } catch(e) {}
+        });
+      });
     })
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', function(e) {
@@ -194,7 +201,7 @@ self.addEventListener('fetch', function(e) {
   const path = new URL(url).pathname.replace(/\/index\.html$/, '/') || '/';
   const htmlCacheKey = htmlCachePath(path);
 
-  const isAuthPage = path === '/login' || path === '/login.html' || path === '/account' || path === '/account.html';
+  const isAuthPage = path === '/login' || path === '/login.html';
 
   // Auth pages must be fresh so signup/login fixes cannot be stuck behind old HTML.
   if (isHtml && isAuthPage) {
@@ -210,14 +217,15 @@ self.addEventListener('fetch', function(e) {
     return;
   }
 
-  // HTML: network-first so mobile browsers do not stay on stale cached pages.
+  // HTML: cache-first for instant navigation, then refresh in the background.
   if (isHtml) {
     e.respondWith(
       caches.open(CACHE).then(function(cache) {
-        return refreshCache(cache, e.request, htmlCacheKey).catch(function() {
-          return cache.match(htmlCacheKey).then(function(cached) {
+        return cache.match(htmlCacheKey).then(function(cached) {
+          const fresh = refreshCache(cache, e.request, htmlCacheKey).catch(function() {
             return cached || caches.match('/index.html') || new Response('Offline', {status: 503});
           });
+          return cached || fresh;
         });
       })
     );

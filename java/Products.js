@@ -1396,6 +1396,10 @@ document.addEventListener("DOMContentLoaded", async function() {
                 const CART_KEY = "x2_cart", cart = JSON.parse(localStorage.getItem(CART_KEY) || "[]"), idx = cart.findIndex(i => String(i.id) === String(item.id));
                 idx >= 0 ? cart[idx].qty += item.qty : cart.unshift(item), localStorage.setItem(CART_KEY, JSON.stringify(cart));
             } catch (e) {}
+            try {
+                window.__cartCount = JSON.parse(localStorage.getItem("x2_cart") || "[]").reduce((s, it) => s + (Number(it.qty) || 1), 0);
+                window.dispatchEvent(new CustomEvent("cart:updated", { detail: { product: item } }));
+            } catch (e) {}
         }
         document.querySelector(".product-page button.buy")?.addEventListener("click", () => {
             addToCart(), window.location.href = "/Cart";

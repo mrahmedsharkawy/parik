@@ -48,7 +48,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <meta property="og:type" content="website">
   <style>*{box-sizing:border-box;margin:0}html,body{height:100%}body{background:#152546;font-family:'Cairo',Arial,sans-serif;padding-top:env(safe-area-inset-top)}.page{min-height:100dvh;display:flex;flex-direction:column}main{width:70%;margin:70px auto 50px;display:flex;flex-direction:column;justify-content:center}header,.main-header{background-color:#152546;padding-top:env(safe-area-inset-top)}.main-header{position:fixed;inset:0 0 auto 0;z-index:1000;width:100%;padding:7px 0;box-shadow:0 2px 4px rgba(0,0,0,.1)}.header-content{width:70%;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;min-height:50px}.logo img{height:36px}.search-container{flex:1;display:flex;align-items:center;background:#fff;border-radius:20px;margin:0 15px;max-width:1100px;height:38px;padding:0 10px}.search-container input{border:none;flex:1;outline:none;padding:6px 10px;font-size:16px;background:transparent}img,video{max-width:100%;height:auto;border-radius:3px}.dp-img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:7px;background:#f0f0f0}@media(max-width:899px){.main-header .dropdown,.main-header .cart{display:none!important}body{padding-bottom:calc(65px + env(safe-area-inset-bottom))}}</style>
   <link rel="stylesheet" href="/style/style.css?v=123">
-  <link rel="stylesheet" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260724w" media="(max-width: 899px)">
+  <link rel="stylesheet" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260724z" media="(max-width: 899px)">
   <style>html,body,.page{background:#fff!important}</style>
 
   <noscript>
@@ -104,6 +104,7 @@ main#main {
 
 .order-summary {
   padding: 20px;
+  color: #152546 !important;
 }
 
 /* تخصيص شريط التمرير (اختياري) */
@@ -135,6 +136,7 @@ div.free-shipping-bar  {
   display: flex;
   align-items: center;
   background-color: #f1ffea;
+  color: #1f5f20;
   padding: 0px 2px;
   border-radius: 20px;
   margin-bottom: 20px;
@@ -142,10 +144,12 @@ div.free-shipping-bar  {
   font-size: 30px;
   font-weight: 700;
 }
+div.free-shipping-bar,
+div.free-shipping-bar * { color: #1f5f20 !important; }
 
 /* 6. تنسيقات نصوص وأزرار الملخص (مطابقة للصورة) */
-.summary-title { font-size: 18px; font-weight: 700; margin-bottom: 15px; }
-.summary-line { display: flex; justify-content: space-between; padding: 8px 0; font-size: 15px; border-bottom: 1px solid #f0f0f0; }
+.summary-title { font-size: 18px; font-weight: 700; margin-bottom: 15px; color: #152546 !important; }
+.summary-line { display: flex; justify-content: space-between; padding: 8px 0; font-size: 15px; border-bottom: 1px solid #f0f0f0; color: #152546 !important; }
 .summary-line.total-line { font-size: 16px; border-bottom: none; padding-top: 12px; }
 .summary-line strong { font-weight: 700; }
 .summary-note { font-size: 13px; color: #666; margin: 5px 0 20px; }
@@ -591,12 +595,13 @@ h3 {
 @media (max-width: 992px) {
   main#main { padding: 0 10px; }
   .cart-layout-container { flex-direction: column-reverse; }
-  .cart-left { width: 100%; position: relative; top: 160px; height: auto; overflow-y: visible; margin-bottom: 100px; }
+  .cart-left { width: 100%; position: relative; top: 0; height: auto; overflow-y: visible; margin-top: 0; margin-bottom: 100px; }
 /* 5. شريط الشحن المجاني */
 div.free-shipping-bar  {
   display: flex;
   align-items: center;
   background-color: #f1ffea;
+  color: #1f5f20;
   padding: 0px 0px;
   border-radius: 0px;
   margin-top: -30px;
@@ -605,6 +610,14 @@ div.free-shipping-bar  {
   font-size: 11px;
   font-weight: 300;
 }
+  div.free-shipping-bar,
+  div.free-shipping-bar * { color: #1f5f20 !important; }
+  .cart-left { top: 0 !important; margin-top: 0 !important; }
+  .order-summary,
+  .summary-title,
+  .summary-line,
+  .summary-line span,
+  .summary-line strong { color: #152546 !important; }
 /* شريط التحديد أعلى منتجات السلة */
 .cart-selection-bar {
   display: flex;
@@ -1345,7 +1358,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script type="module" src="./java/Cart.min.js?v=123"></script>
 <script src="/translations/translation.min.js" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
-<script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260724w" defer></script>
+<script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260724z" defer></script>
 <script src="/java/push-welcome.js" defer></script>
 <script src="/java/notifications.min.js" defer></script>
 <script>

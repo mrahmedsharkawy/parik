@@ -16,7 +16,7 @@
   const base = scriptBase.endsWith('/') ? scriptBase : scriptBase + '/';
 
   // تحميل CSS
-  const cssHref = base + 'styles.css?v=apple-liquid-20260724w';
+  const cssHref = base + 'styles.css?v=apple-liquid-20260724z';
   if (!Array.from(document.styleSheets).some(s => s.href && s.href.includes('/mobile-nav-bar/styles.css'))) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
@@ -322,7 +322,6 @@
         document.addEventListener('touchmove', onPointerMove, { passive: false });
         document.addEventListener('touchend', endDrag, { passive: true });
         document.addEventListener('touchcancel', endDrag, { passive: true });
-        if (event.cancelable) event.preventDefault();
       };
 
       liquidPill.addEventListener('pointerdown', startDrag);
@@ -366,13 +365,22 @@
     // ── عداد السلة ──────────────────────────────────────────────────
     const cartEl = nav.querySelector('.cart-badge');
     if (cartEl) {
-      const count = window.__cartCount != null ? window.__cartCount : (() => {
+      const readCartCount = () => {
         try {
           const raw = localStorage.getItem('x2_cart');
           return raw ? JSON.parse(raw).reduce((s,it) => s + (Number(it.qty)||1), 0) : 0;
         } catch(e) { return 0; }
-      })();
-      cartEl.setAttribute('data-count', count > 0 ? String(count) : '');
+      };
+      const updateCartBadge = () => {
+        const count = window.__cartCount != null ? window.__cartCount : readCartCount();
+        cartEl.setAttribute('data-count', count > 0 ? String(count) : '');
+      };
+      updateCartBadge();
+      window.addEventListener('cart:updated', updateCartBadge);
+      window.addEventListener('cart:persisted', updateCartBadge);
+      window.addEventListener('storage', (event) => {
+        if (event.key === 'x2_cart') updateCartBadge();
+      });
     }
 
     window.dispatchEvent(new CustomEvent('mobile-nav:ready'));
