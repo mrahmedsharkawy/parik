@@ -3162,10 +3162,13 @@ async function renderVisitorsStats() {
       const hasArea = v => visitorArea(v) !== 'غير محدد';
       const localRows = getVisitors().filter(isUsefulVisitor);
       const localTodayRows = localRows.filter(v => new Date(visitDate(v)).toDateString() === today);
-      const locRows = todayVisits.filter(hasArea).length ? todayVisits.filter(hasArea)
-        : localTodayRows.filter(hasArea).length ? localTodayRows.filter(hasArea)
-        : rows.filter(hasArea).length ? rows.filter(hasArea)
-        : localRows.filter(hasArea);
+      const remoteTodayAreas = todayVisits.filter(hasArea);
+      const localTodayAreas = localTodayRows.filter(hasArea);
+      const remoteAllAreas = rows.filter(hasArea);
+      const localAllAreas = localRows.filter(hasArea);
+      const locRows = todayVisits.length
+        ? (remoteTodayAreas.length ? remoteTodayAreas : localTodayAreas)
+        : (remoteAllAreas.length ? remoteAllAreas : localAllAreas);
       const locMap = {};
       locRows.forEach(v => {
         const loc = visitorArea(v);
