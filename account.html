@@ -2408,6 +2408,29 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     return brokenCount >= 3 && brokenCount > letterCount;
   }
 
+  function hasMojibakeText(value) {
+    const text = String(value || '');
+    return /(?:Ø|Ù|Ð|Ñ|Ã|Â|ðŸ|â|œ|™)/.test(text);
+  }
+
+  function repairMojibakeText(value) {
+    let text = String(value || '');
+    if (!text) return text;
+    for (let i = 0; i < 2; i++) {
+      if (!hasMojibakeText(text)) break;
+      try {
+        const bytes = new Uint8Array(text.length);
+        for (let j = 0; j < text.length; j++) bytes[j] = text.charCodeAt(j) & 255;
+        const fixed = new TextDecoder('utf-8').decode(bytes);
+        if (!fixed || fixed === text) break;
+        text = fixed;
+      } catch(e) {
+        break;
+      }
+    }
+    return text;
+  }
+
   function getLocalOrderStatus(orderId) {
     if (!orderId) return '';
     try {
@@ -2428,6 +2451,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   function normalizeCashbackNotification(n) {
     n = n || {};
+    n.title = repairMojibakeText(n.title || '');
+    n.msg = repairMojibakeText(n.msg || n.body || '');
+    n.icon = repairMojibakeText(n.icon || '');
     const rawText = `${n.title || ''} ${n.msg || n.body || ''}`;
     let orderId = n.orderId || n.order_id || '';
     if (!orderId) {
@@ -2461,6 +2487,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   function normalizeOrderNotification(n) {
     n = n || {};
+    n.title = repairMojibakeText(n.title || '');
+    n.msg = repairMojibakeText(n.msg || n.body || '');
+    n.icon = repairMojibakeText(n.icon || '');
     if (n.type === 'cashback') return normalizeCashbackNotification(n);
     const rawText = `${n.title || ''} ${n.msg || n.body || ''}`.toLowerCase();
     const inferredStatus =
@@ -2634,6 +2663,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   // تحديث badge الزر السريع عند التحميل
   function mergeNotificationItem(item) {
+    if (item && item.notification && typeof item.notification === 'object') {
+      item = { ...item.notification, ...item };
+    }
+    if (item && item.payload && typeof item.payload === 'object') {
+      item = { ...item.payload, ...item };
+    }
+    if (item && item.data && typeof item.data === 'object') {
+      item = { ...item.data, ...item };
+    }
     if (!item || (!item.title && !item.msg)) return false;
     item = normalizeOrderNotification(item);
     const notifs = window.x2Notifications ? window.x2Notifications.getAll() : (() => { try { return JSON.parse(localStorage.getItem('x2_notifications') || '[]'); } catch(e) { return []; } })();
@@ -3628,9 +3666,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </footer>
 <script src="/java/supabase.min.js" defer></script>
 <script src="/java/main.min.js?v=122" defer></script>
+<script src="/java/instant-nav.js?v=instant-nav-20260724a" defer></script>
 <script src="/translations/translation.min.js" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
-<script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260724aa" defer></script>
+<script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260724ab" defer></script>
 <script src="/java/push-welcome.js" defer></script>
 <script src="/java/notifications.min.js" defer></script>
 <script type="module" src="./java/Products.min.js"></script>
@@ -3685,4 +3724,5 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 </body>
 </html>
+
 

@@ -301,6 +301,8 @@
       };
 
       const startDrag = (event) => {
+        if (event && event.cancelable) event.preventDefault();
+        event && event.stopPropagation && event.stopPropagation();
         const clientX = getClientX(event);
         const clientY = event.touches && event.touches[0] ? event.touches[0].clientY : event.clientY;
         const transform = liquidPill.style.transform || '';
@@ -324,7 +326,7 @@
         document.addEventListener('touchcancel', endDrag, { passive: true });
       };
 
-      liquidPill.addEventListener('pointerdown', startDrag);
+      liquidPill.addEventListener('pointerdown', startDrag, { passive: false });
       liquidPill.addEventListener('touchstart', startDrag, { passive: false });
       liquidPill.addEventListener('mousedown', startDrag);
       liquidPill.addEventListener('click', (event) => {
@@ -338,7 +340,7 @@
         link.addEventListener('pointerdown', (event) => {
           if (link !== activeLink) return;
           startDrag(event);
-        });
+        }, { passive: false });
         link.addEventListener('touchstart', (event) => {
           if (link !== activeLink) return;
           startDrag(event);

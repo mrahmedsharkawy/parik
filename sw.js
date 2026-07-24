@@ -1,5 +1,5 @@
 ﻿/* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v154';
+const CACHE = 'bariq-v158';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -29,6 +29,7 @@ const STATIC_URLS = [
   '/style/style.css',
   '/java/auth-reset.js',
   '/java/main.min.js',
+  '/java/instant-nav.js',
   '/java/Products.min.js',
   '/java/Cart.min.js',
   '/java/supabase.min.js',
@@ -287,14 +288,61 @@ function extractOrderIdFromNotification(text, tag) {
   return match ? match[1] : '';
 }
 
+function hasMojibakeText(value) {
+  const s = String(value || '');
+  return /(?:Ø|Ù|Ð|Ñ|Ã|Â|ðŸ|â|œ|™)/.test(s);
+}
+
+function repairMojibakeText(value) {
+  let s = String(value || '');
+  if (!s) return s;
+  for (let i = 0; i < 2; i++) {
+    if (!hasMojibakeText(s)) break;
+    try {
+      const bytes = new Uint8Array(s.length);
+      for (let j = 0; j < s.length; j++) bytes[j] = s.charCodeAt(j) & 255;
+      const fixed = new TextDecoder('utf-8').decode(bytes);
+      if (!fixed || fixed === s) break;
+      s = fixed;
+    } catch(e) {
+      break;
+    }
+  }
+  return s;
+}
+
 function normalizePushNotificationData(data) {
   data = data || {};
+  if (data.notification && typeof data.notification === 'object') {
+    data = Object.assign({}, data.notification, data);
+  }
+  if (data.payload && typeof data.payload === 'object') {
+    data = Object.assign({}, data.payload, data);
+  }
+  if (data.data && typeof data.data === 'object') {
+    data = Object.assign({}, data.data, data);
+  }
+  data.title = repairMojibakeText(data.title || data.notification_title || '');
+  data.body = repairMojibakeText(data.body || data.msg || data.message || '');
+  data.iconText = repairMojibakeText(data.iconText || '');
+  data.emoji = repairMojibakeText(data.emoji || '');
   const raw = `${data.title || ''} ${data.body || ''}`;
+  const rawLower = raw.toLowerCase();
   const tag = data.tag || data.id || '';
   const orderId = data.orderId || data.order_id || extractOrderIdFromNotification(raw, tag);
+  const inferredStatus = data.status || data.orderStatus || data.order_status ||
+    (/delivered|تم التوصيل|وصل بنجاح/.test(rawLower) ? 'delivered' :
+    /shipped|تم شحن|في الطريق/.test(rawLower) ? 'shipped' :
+    /ready|جاهز/.test(rawLower) ? 'ready' :
+    /manufactur|تصنيع|يصن/.test(rawLower) ? 'manufacturing' :
+    /confirm|تأكيد|مؤكد/.test(rawLower) ? 'confirmed' :
+    /cancel|إلغاء|الغاء|ملغ/.test(rawLower) ? 'cancelled' :
+    /return|إرجاع|ارجاع|مرتجع/.test(rawLower) ? 'returned' :
+    /pending|مراجعة|انتظار/.test(rawLower) ? 'pending' :
+    /processing|معالجة|تجهيز/.test(rawLower) ? 'processing' : '');
   const isCashback = data.type === 'cashback' || /cashback|cash\s*back|كاش|cb-|n-cb/i.test(raw + ' ' + tag) || /\?\.\?/.test(raw);
-  const isBroken = isMostlyBrokenNotificationText(raw) || hasBrokenNotificationText(data.title) || hasBrokenNotificationText(data.body);
-  if (!isBroken && !isCashback) return data;
+  const isBroken = isMostlyBrokenNotificationText(raw) || hasBrokenNotificationText(data.title) || hasBrokenNotificationText(data.body) || hasMojibakeText(raw);
+  if (!isBroken && !isCashback && !(orderId && (data.type === 'order_status' || inferredStatus))) return data;
 
   if (isCashback) {
     const amountMatch = raw.match(/(\d+(?:\.\d+)?)/);
@@ -310,12 +358,26 @@ function normalizePushNotificationData(data) {
   }
 
   if (orderId) {
+    const status = inferredStatus || 'processing';
+    const map = {
+      pending:       { icon: '⏳', title: 'طلبك قيد المراجعة',     body: `طلبك رقم ${orderId} يُراجَع الآن` },
+      processing:    { icon: '🔄', title: 'طلبك قيد المعالجة',     body: `جارٍ تجهيز طلبك رقم ${orderId}` },
+      confirmed:     { icon: '✅', title: 'تم تأكيد طلبك',          body: `طلبك رقم ${orderId} تم تأكيده وسيُجهَّز قريباً 🎉` },
+      manufacturing: { icon: '🔨', title: 'طلبك في مرحلة التصنيع', body: `طلبك رقم ${orderId} يُصنَّع الآن بعناية ✨` },
+      ready:         { icon: '🎁', title: 'طلبك جاهز للاستلام',    body: `طلبك رقم ${orderId} جاهز وبانتظارك 🎉` },
+      shipped:       { icon: '🚚', title: 'تم شحن طلبك',           body: `طلبك رقم ${orderId} في الطريق إليك` },
+      delivered:     { icon: '✅', title: 'تم توصيل طلبك',         body: `طلبك رقم ${orderId} وصل بنجاح 🎉` },
+      cancelled:     { icon: '❌', title: 'تم إلغاء طلبك',         body: `طلبك رقم ${orderId} تم إلغاؤه` },
+      returned:      { icon: '↩️', title: 'تمت عملية الإرجاع',      body: `تمت معالجة إرجاع طلبك رقم ${orderId}` }
+    };
+    const item = map[status] || map.processing;
     return Object.assign({}, data, {
       type: 'order_status',
-      iconText: '🔄',
-      emoji: '🔄',
-      title: '🔄 طلبك قيد المعالجة',
-      body: `جارٍ تجهيز طلبك رقم ${orderId}`,
+      status,
+      iconText: item.icon,
+      emoji: item.icon,
+      title: `${item.icon} ${item.title}`,
+      body: item.body,
       orderId
     });
   }
@@ -324,27 +386,35 @@ function normalizePushNotificationData(data) {
 }
 
 self.addEventListener('push', function(e) {
-  let data = {};
-  try { data = e.data ? e.data.json() : {}; } catch(err) {
-    data = { title: '\u0628\u0631\u064a\u0642', body: e.data ? e.data.text() : '' };
-  }
-  data = normalizePushNotificationData(data);
-  const title   = data.title || '\u0628\u0631\u064a\u0642';
-  const options = {
-    body:    data.body   || '',
-    icon:    data.icon   || '/assets/icon.png',
-    badge:   '/assets/icon.png',
-    image:   data.image  || undefined,
-    data:    { url: data.url || '/' },
-    dir:     'rtl',
-    lang:    'ar',
-    vibrate: [200, 100, 200],
-    tag:     data.tag    || 'bariq-notif',
-    renotify: true,
-    actions: data.actions || []
-  };
   e.waitUntil(
     (async () => {
+      let data = {};
+      try {
+        data = e.data ? e.data.json() : {};
+      } catch(err) {
+        let txt = '';
+        try { txt = e.data ? await e.data.text() : ''; } catch(e2) {}
+        try {
+          data = txt ? JSON.parse(txt) : {};
+        } catch(e3) {
+          data = { title: '\u0628\u0631\u064a\u0642', body: txt || '' };
+        }
+      }
+      data = normalizePushNotificationData(data);
+      const title   = data.title || '\u0628\u0631\u064a\u0642';
+      const options = {
+        body:    repairMojibakeText(data.body || ''),
+        icon:    data.icon   || '/assets/icon.png',
+        badge:   '/assets/icon.png',
+        image:   data.image  || undefined,
+        data:    { url: data.url || '/' },
+        dir:     'rtl',
+        lang:    'ar',
+        vibrate: [200, 100, 200],
+        tag:     data.tag    || 'bariq-notif',
+        renotify: true,
+        actions: data.actions || []
+      };
       // نضمن ظهور الإشعار بالعنوان/الإيموجي الصحيح دائماً حتى لو فشلت
       // خطوات إضافية (حفظ IndexedDB أو تحديث الشارة) — أي خطأ هناك كان
       // يمنع الوصول لـ showNotification فيظهر إشعار المتصفح الافتراضي
