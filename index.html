@@ -953,7 +953,7 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:8px!import
   // تسجيل Service Worker لدعم PWA (تثبيت الموقع كتطبيق)
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
-      navigator.serviceWorker.register('/sw.js?v=165', { updateViaCache: 'none' }).then(function(reg) {
+      navigator.serviceWorker.register('/sw.js?v=166', { updateViaCache: 'none' }).then(function(reg) {
         var refreshing = false;
         navigator.serviceWorker.addEventListener('controllerchange', function() {
           if (refreshing || sessionStorage.getItem('sw-v165-refresh') === '1') return;

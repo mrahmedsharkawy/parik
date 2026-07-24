@@ -65,8 +65,8 @@ function x2VisitorAreaFallback() {
     function parseCurrency(text) {
         if (!text && 0 !== text) return 0;
         if ("number" == typeof text) return Number(text) || 0;
-        const ds = String(text).trim().match(/-?\d{1,3}(?:[.,]\d{3})*(?:[.,]\d+)?|-?\d+(?:[.,]\d+)?/);
-        return ds && Number(ds[0].replace(/,/g, "").replace(/,/g, ".").replace(/[^\d.\-]/g, "")) || 0;
+        const ds = String(text).trim().match(/-?\d[\d,]*\.?\d*/);
+        return ds && Number(ds[0].replace(/,/g, "")) || 0;
     }
     function formatCurrency(value) {
         const symbol = currencySymbolFor(getSelectedCurrency()), n = Number(value) || 0;
@@ -498,7 +498,7 @@ function x2VisitorAreaFallback() {
         }(), subtotal = parseNumber(document.querySelector(".subtotal")?.dataset.amount || document.querySelector(".subtotal")?.textContent || "0"), discount = parseNumber(document.querySelector(".discount")?.dataset.amount || document.querySelector(".discount")?.textContent || "0"), total = parseNumber(document.querySelector(".summary-total")?.dataset.amount || document.querySelector(".summary-total")?.textContent || "0"), curr = "function" == typeof window.getSelectedCurrency ? window.getSelectedCurrency() : localStorage.getItem("currency") || "AED", sym = "function" == typeof window.currencySymbolFor ? window.currencySymbolFor(curr) : curr, slicedItems = items.slice(0, maxItems), itemsText = slicedItems.length ? slicedItems.map((it, idx) => [ `${idx + 1}) ${it.title}`, `   الكمية: ${it.qty}`, `   سعر الوحدة: ${it.unit.toFixed(2)} ${sym}`, `   الإجمالي: ${it.line.toFixed(2)} ${sym}`, includeProductLinks && it.productUrl ? `   رابط المنتج: ${it.productUrl}` : "", includeImages && it.image ? `   صورة المنتج: ${it.image}` : "" ].filter(Boolean).join("\n")).join("\n\n") : "لا توجد منتجات في السلة";
         return [ "طلب جديد من الموقع", "", `رقم الطلب: ${orderId}`, `التاريخ: ${(new Date).toLocaleString("ar")}`, "", "بيانات العميل:", `الاسم: ${customer.name || "غير متوفر"}`, `الهاتف: ${customer.phone || "غير متوفر"}`, `البريد: ${customer.email || "غير متوفر"}`, `العنوان: ${customer.address || "موقع العميل"}`, "", "محتويات السلة:", itemsText, items.length > slicedItems.length ? `\n... وتم اختصار ${items.length - slicedItems.length} منتج بسبب طول الرسالة` : "", "", `الإجمالي قبل الخصم: ${subtotal.toFixed(2)} ${sym}`, `الخصم: ${discount.toFixed(2)} ${sym}`, (() => {
             try {
-                const applied = JSON.parse(localStorage.getItem("x2_coupon_applied") || "null"), stored = JSON.parse(localStorage.getItem("x2_coupon_code") || "null");
+                const applied = JSON.parse(sessionStorage.getItem("x2_coupon_applied") || localStorage.getItem("x2_coupon_applied") || "null"), stored = JSON.parse(localStorage.getItem("x2_coupon_code") || "null");
                 if (applied && applied.code && stored && stored.code === applied.code && !stored.used) return `خصم الكوبون (${applied.code}): -${parseFloat(applied.amount).toFixed(2)} ${sym}`;
             } catch (e) {}
             return "";
@@ -614,6 +614,25 @@ function x2VisitorAreaFallback() {
         document.addEventListener("visibilitychange", handleVisibilityReturn);
         window.open(url, "_self");
         try {
+            const applied = JSON.parse(sessionStorage.getItem("x2_coupon_applied") || localStorage.getItem("x2_coupon_applied") || "null");
+            if (applied && applied.code) {
+                let storedCoupon = JSON.parse(localStorage.getItem("x2_coupon_code") || "null");
+                storedCoupon && storedCoupon.code === applied.code && (storedCoupon.used = !0, localStorage.setItem("x2_coupon_code", JSON.stringify(storedCoupon)));
+                try {
+                    const ords = JSON.parse(localStorage.getItem("x2_orders") || "[]");
+                    ords.forEach(o => {
+                        ("earned" === o.cashbackStatus || !o.cashbackStatus && "delivered" === o.status) && (o.cashbackStatus = "claimed");
+                    }), localStorage.setItem("x2_orders", JSON.stringify(ords));
+                } catch (e2) {}
+                sessionStorage.removeItem("x2_coupon_applied"), localStorage.removeItem("x2_coupon_applied"),
+                setTimeout(() => {
+                    try {
+                        "function" == typeof updateSummary && updateSummary();
+                    } catch (e) {}
+                }, 300);
+            }
+        } catch (e) {}
+        try {
             const summaryTotal = function() {
                 const totalEl = document.querySelector(".order-summary .summary-total, .summary-total"), subtotalEl = document.querySelector(".order-summary .subtotal, .subtotal");
                 let v = 0;
@@ -690,27 +709,6 @@ function x2VisitorAreaFallback() {
         } catch (e) {
             console.error("خطأ في إنشاء الطلب:", e);
         }
-        try {
-            const applied = JSON.parse(sessionStorage.getItem("x2_coupon_applied") || localStorage.getItem("x2_coupon_applied") || "null");
-            if (applied && applied.code) {
-                let storedCoupon = JSON.parse(localStorage.getItem("x2_coupon_code") || "null");
-                storedCoupon && storedCoupon.code === applied.code && (storedCoupon.used = !0, localStorage.setItem("x2_coupon_code", JSON.stringify(storedCoupon)));
-                let cbReset = JSON.parse(localStorage.getItem("x2_cashback") || '{"balance":0,"history":[]}');
-                cbReset.balance = 0, cbReset.history = [], localStorage.setItem("x2_cashback", JSON.stringify(cbReset));
-                try {
-                    const ords = JSON.parse(localStorage.getItem("x2_orders") || "[]");
-                    ords.forEach(o => {
-                        o.cashback = 0;
-                    }), localStorage.setItem("x2_orders", JSON.stringify(ords));
-                } catch (e2) {}
-                sessionStorage.removeItem("x2_coupon_applied"), localStorage.removeItem("x2_coupon_applied"),
-                setTimeout(() => {
-                    try {
-                        "function" == typeof updateSummary && updateSummary();
-                    } catch (e) {}
-                }, 300);
-            }
-        } catch (e) {}
         try {
             localStorage.setItem("x2_cart", "[]"), document.querySelectorAll(".cart-badge").forEach(el => el.setAttribute("data-count", "")),
             window.__cartCount = 0;

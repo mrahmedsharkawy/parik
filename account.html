@@ -1892,7 +1892,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           changed = true;
         }
         // إضافة الكاش باك للرصيد مرة واحدة فقط عند اعتماده من الأدمن
-        if (r.cashback_status === 'earned' && (lo.cashbackStatus !== 'earned' || !hasCashbackCredit(lo.id))) {
+        // لو الطلب اتحوّل لـ claimed محلياً (تم استخدامه في كوبون) لا تُعده earned تاني حتى لو السيرفر لسه بيقول earned
+        if (lo.cashbackStatus !== 'claimed' && r.cashback_status === 'earned' && (lo.cashbackStatus !== 'earned' || !hasCashbackCredit(lo.id))) {
           lo.cashbackStatus = 'earned';
           if (!hasCashbackCredit(lo.id)) cashbackToAdd.push({ orderId: lo.id, amount: parseFloat(lo.cashback || r.cashback || 5) });
           changed = true;
