@@ -512,7 +512,24 @@ function x2VisitorAreaFallback() {
             return String(phone || "").replace(/\D/g, "");
         }("+971554423151");
         if (!phone) return;
-        const orderId = "ORD-" + Date.now();
+        async function reserveOrderId() {
+            let nextId = "";
+            try {
+                if (window.Supabase && window.Supabase.Orders) {
+                    const existing = await Promise.race([ window.Supabase.Orders.getAll(), new Promise(resolve => setTimeout(() => resolve(null), 1800)) ]);
+                    if (existing && existing.length > 0) {
+                        nextId = "#" + (existing.reduce((max, o) => {
+                            const n = parseInt((o.order_number || o.id || "").replace("#", "")) || 0;
+                            return n > max ? n : max;
+                        }, 999) + 1);
+                    }
+                }
+            } catch (e) {}
+            if (!nextId) nextId = "#" + (parseInt(localStorage.getItem("x2_order_counter") || "999", 10) + 1);
+            localStorage.setItem("x2_order_counter", nextId.replace("#", ""));
+            return nextId;
+        }
+        const orderId = await reserveOrderId();
         let customerAddressFallback = "";
         try {
             const prof = readJson("x2_profile", {});
@@ -639,20 +656,6 @@ function x2VisitorAreaFallback() {
                 return totalEl ? v = totalEl.dataset?.amount ? parseNumber(totalEl.dataset.amount) : parseNumber(totalEl.textContent) : subtotalEl && (v = subtotalEl.dataset?.amount ? parseNumber(subtotalEl.dataset.amount) : parseNumber(subtotalEl.textContent)),
                 v || 0;
             }(), calcTotal = items.reduce((s, i) => s + (i.unit || parseFloat(i.price || i.priceCurrent || 0)) * (Number(i.qty) || 1), 0), totalAmt = (summaryTotal > 0 ? summaryTotal : calcTotal).toFixed(2), expiresAt = new Date(Date.now() + 2592e6).toISOString();
-            let orderId;
-            try {
-                const existing = await window.Supabase.Orders.getAll();
-                if (existing && existing.length > 0) {
-                    orderId = "#" + (existing.reduce((max, o) => {
-                        const n = parseInt((o.order_number || "").replace("#", "")) || 0;
-                        return n > max ? n : max;
-                    }, 999) + 1);
-                }
-            } catch (e) {}
-            if (!orderId) {
-                orderId = "#" + (parseInt(localStorage.getItem("x2_order_counter") || "999", 10) + 1);
-            }
-            localStorage.setItem("x2_order_counter", orderId.replace("#", ""));
             const orders = JSON.parse(localStorage.getItem("x2_orders") || "[]"), newOrder = {
                 id: orderId,
                 date: (new Date).toISOString(),
