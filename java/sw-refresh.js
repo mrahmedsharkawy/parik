@@ -1,8 +1,17 @@
 (function () {
   if (!('serviceWorker' in navigator)) return;
 
-  var REFRESH_KEY = 'sw-v160-global-refresh';
+  var REFRESH_KEY = 'sw-v165-global-refresh';
   var refreshed = false;
+
+  function clearOldCaches() {
+    if (!('caches' in window)) return;
+    caches.keys().then(function (keys) {
+      keys.forEach(function (key) {
+        if (key !== 'bariq-v165') caches.delete(key).catch(function () {});
+      });
+    }).catch(function () {});
+  }
 
   function markRefreshed() {
     try {
@@ -41,7 +50,8 @@
     location.reload();
   });
 
-  navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).then(function (reg) {
+  navigator.serviceWorker.register('/sw.js?v=165', { updateViaCache: 'none' }).then(function (reg) {
+    clearOldCaches();
     requestActivation(reg);
     reg.update().catch(function () {});
   }).catch(function () {});

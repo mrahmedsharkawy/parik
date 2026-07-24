@@ -33,6 +33,9 @@
       if (/^\/admin(\/|$)/i.test(path)) return "";
       if (path === "/index.html") path = "/";
       if (path.length > 1) path = path.replace(/\/+$/, "");
+      var safeTopLevel = /^\/(|categories|offers|Cart|account|checkout|affiliate|policy|product|login)$/i.test(path);
+      var safeProductDetail = /^\/product\/\d+(?:\/)?$/i.test(path);
+      if (!safeTopLevel && !safeProductDetail) return "";
       return path + (url.search || "");
     } catch (e) {
       return "";

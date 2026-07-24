@@ -1,5 +1,5 @@
 ﻿/* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v160';
+const CACHE = 'bariq-v165';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -162,6 +162,24 @@ self.addEventListener('activate', function(e) {
 
 self.addEventListener('fetch', function(e) {
   const url = e.request.url;
+  if (url.includes('ipapi.co')) {
+    e.respondWith(Promise.resolve(new Response(JSON.stringify({
+      ip: '',
+      city: '',
+      region: '',
+      country_name: '',
+      country: '',
+      source: 'local-fallback'
+    }), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Access-Control-Allow-Origin': '*',
+        'Cache-Control': 'no-store'
+      }
+    })));
+    return;
+  }
   if (url.includes('supabase.co') || url.includes('/rest/') || url.includes('/auth/') || url.includes('/storage/')) return;
   if (e.request.method !== 'GET') return;
 
@@ -200,6 +218,8 @@ self.addEventListener('fetch', function(e) {
     || /\/(categories|product|Cart|account|login|offers|checkout|affiliate|policy|admin)$/.test(new URL(url).pathname)
     || new URL(url).pathname === '/';
   const isAsset = url.includes('/style/') || url.includes('/java/') || url.includes('/translations/') || url.includes('/mobile-nav-bar/');
+  const isMutableRuntime = /\/java\/(instant-nav\.js|sw-refresh\.js|main\.min\.js|push-welcome\.js)(\?|$)/.test(url)
+    || /\/mobile-nav-bar\/main-navbar\.min\.js(\?|$)/.test(url);
   const path = new URL(url).pathname.replace(/\/index\.html$/, '/') || '/';
   const htmlCacheKey = htmlCachePath(path);
   const offlineFallback = function() {
@@ -225,16 +245,15 @@ self.addEventListener('fetch', function(e) {
     return;
   }
 
-  // HTML: cache-first for instant navigation, then refresh in the background.
+  // HTML: network-first to avoid stale pages after deployments on mobile devices.
   if (isHtml) {
     e.respondWith(
       caches.open(CACHE).then(function(cache) {
-        return cache.match(htmlCacheKey).then(function(cached) {
-          const fresh = refreshCache(cache, e.request, htmlCacheKey).catch(function() {
+        return refreshCache(cache, e.request, htmlCacheKey).catch(function() {
+          return cache.match(htmlCacheKey).then(function(cached) {
             if (cached) return cached;
             return offlineFallback();
           });
-          return cached || fresh;
         });
       })
     );
@@ -243,6 +262,18 @@ self.addEventListener('fetch', function(e) {
 
   // CSS/JS/translations: cache-first for fast mobile rendering, refresh in background.
   if (isAsset) {
+    if (isMutableRuntime) {
+      e.respondWith(
+        caches.open(CACHE).then(function(cache) {
+          return refreshCache(cache, e.request).catch(function() {
+            return cache.match(e.request).then(function(cached) {
+              return cached || new Response('', {status: 503});
+            });
+          });
+        })
+      );
+      return;
+    }
     e.respondWith(
       caches.open(CACHE).then(function(cache) {
         return cache.match(e.request).then(function(cached) {
@@ -267,6 +298,8 @@ self.addEventListener('fetch', function(e) {
       }).catch(function() {
         return offlineFallback();
       });
+    }).catch(function() {
+      return offlineFallback();
     })
   );
 });

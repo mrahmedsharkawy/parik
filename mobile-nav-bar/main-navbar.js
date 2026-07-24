@@ -277,6 +277,7 @@
         if (!dragState) return;
         const dropX = dragState.lastX || getClientX(event) || dragState.startX;
         const nearest = cancelled ? activeLink : findNearestLink(dropX);
+        const isTouchLike = !!dragState.isTouchLike;
         liquidPill.classList.remove('is-dragging');
         setActiveLink(nearest);
         movePillToLink(nearest, true);
@@ -294,8 +295,13 @@
         document.removeEventListener('touchmove', onPointerMove);
         document.removeEventListener('touchend', endDrag);
         document.removeEventListener('touchcancel', endDrag);
-        if (didMove && !cancelled) {
-          // ??? ????? ??? ???????? ????? ??? ?????
+        // نطلق النقر يدوياً دائماً عند اللمس (سواء كانت ضغطة بسيطة أو سحبة)
+        // لأن preventDefault() في startDrag يمنع المتصفح من توليد حدث click
+        // الطبيعي بعد touchend، فبدون هذا لن تعمل الضغطة البسيطة على الزر
+        // البارز إطلاقاً. بالنسبة للماوس، preventDefault على mousedown لا
+        // يمنع click الطبيعي فنكتفي بإطلاقه فقط عند حدوث سحب فعلي لتفادي
+        // ازدواج التنقل.
+        if (!cancelled && (didMove || isTouchLike)) {
           window.setTimeout(() => nearest.click(), 90);
         }
       };
@@ -307,13 +313,15 @@
         const clientY = event.touches && event.touches[0] ? event.touches[0].clientY : event.clientY;
         const transform = liquidPill.style.transform || '';
         const match = transform.match(/translate3d\(([-\d.]+)px/);
+        const isTouchLike = !!(event && (event.touches || (event.pointerType && event.pointerType !== 'mouse')));
         dragState = {
           startX: clientX,
           startY: clientY || 0,
           lastX: clientX,
           startTranslateX: match ? Number(match[1]) : 0,
           locked: false,
-          moved: false
+          moved: false,
+          isTouchLike
         };
         liquidPill.classList.add('is-dragging');
         document.addEventListener('pointermove', onPointerMove, { passive: false });
