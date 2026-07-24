@@ -15,8 +15,8 @@
   const scriptBase = scriptEl ? scriptEl.src.replace(/\/[^\/]*$/, '/') : '/mobile-nav-bar/';
   const base = scriptBase.endsWith('/') ? scriptBase : scriptBase + '/';
 
-  // تحميل CSS
-  const cssHref = base + 'styles.css?v=apple-liquid-20260724z';
+  // ????? CSS
+  const cssHref = base + 'styles.css?v=apple-liquid-20260724aa';
   if (!Array.from(document.styleSheets).some(s => s.href && s.href.includes('/mobile-nav-bar/styles.css'))) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
@@ -26,7 +26,7 @@
   }
 
   try {
-    // Cache navbar HTML في sessionStorage لتجنب fetch في كل صفحة (يُقلّل الوميض)
+    // Cache navbar HTML ?? sessionStorage ????? fetch ?? ?? ???? (?????? ??????)
     const CACHE_KEY = 'mnav_v6';
     let text = sessionStorage.getItem(CACHE_KEY);
     if (!text) {
@@ -51,7 +51,7 @@
     });
 
     if (currentLang === 'en') {
-      const fallback = { 'الرئيسية':'Home', 'المناسبات':'Occasions', 'عروض':'Deals', 'حسابي':'My Account', 'السلة':'Cart' };
+      const fallback = { '????????':'Home', '?????????':'Occasions', '????':'Deals', '?????':'My Account', '?????':'Cart' };
       try {
         const trRes = await fetch('/translations/en.json');
         const tr = trRes.ok ? await trRes.json() : fallback;
@@ -59,7 +59,7 @@
           const key = el.getAttribute('data-i18n');
           el.textContent = tr[key] || fallback[key] || el.textContent;
         });
-        nav.setAttribute('aria-label', tr['التنقل أسفل الشاشة'] || 'Bottom navigation');
+        nav.setAttribute('aria-label', tr['?????? ???? ??????'] || 'Bottom navigation');
         nav.querySelectorAll('[aria-label]').forEach(el => {
           const key = el.getAttribute('aria-label');
           if (tr[key]) el.setAttribute('aria-label', tr[key]);
@@ -73,7 +73,7 @@
       }
     }
 
-    // إصلاح المسارات النسبية (src / data-src)
+    // ????? ???????? ??????? (src / data-src)
     nav.querySelectorAll('[src],[data-src]').forEach(el => {
       ['src','data-src'].forEach(attr => {
         if (!el.hasAttribute(attr)) return;
@@ -84,7 +84,7 @@
       });
     });
 
-    // إصلاح مسارات background url()
+    // ????? ?????? background url()
     nav.querySelectorAll('[style*="url("]').forEach(el => {
       const style = el.getAttribute('style') || '';
       const fixed = style.replace(/url\(['"]?([^'")]+)['"]?\)/g, (m, url) => {
@@ -95,7 +95,7 @@
       if (fixed !== style) el.setAttribute('style', fixed);
     });
 
-    // إصلاح SVG use href
+    // ????? SVG use href
     nav.querySelectorAll('use').forEach(el => {
       Array.from(el.attributes).forEach(attr => {
         if (!attr.name.endsWith('href')) return;
@@ -109,7 +109,7 @@
 
     document.body.appendChild(nav);
 
-    // ── تصغير الشريط عند السحب لأعلى وإرجاعه عند السحب لأسفل ─────
+    // -- ????? ?????? ??? ????? ????? ??????? ??? ????? ????? -----
     let lastY = window.scrollY || window.pageYOffset || 0;
     let compact = false;
     const DELTA = 7;
@@ -155,8 +155,8 @@
 
     onScroll();
 
-    // ── تفعيل الرابط النشط ──────────────────────────────────────────
-    // يدعم Vercel clean URLs (/offers) وكذلك روابط عادية (/offers.html)
+    // -- ????? ?????? ????? ------------------------------------------
+    // ???? Vercel clean URLs (/offers) ????? ????? ????? (/offers.html)
     const rawSeg = location.pathname.split('/').pop() || 'index';
     const curPage = rawSeg.replace(/\.html$/,'') || 'index';
     nav.querySelectorAll('a').forEach(a => {
@@ -165,7 +165,7 @@
       if (hPage === curPage) a.classList.add('active');
     });
 
-    // ── فقاعة مائية قابلة للسحب فوق الأيقونة النشطة ────────────────
+    // -- ????? ????? ????? ????? ??? ???????? ?????? ----------------
     const navList = nav.querySelector('ul');
     const navLinks = Array.from(nav.querySelectorAll('a[data-key]'));
     if (navList && navLinks.length) {
@@ -295,7 +295,7 @@
         document.removeEventListener('touchend', endDrag);
         document.removeEventListener('touchcancel', endDrag);
         if (didMove && !cancelled) {
-          // نفس الضغط على الأيقونة نفسها بعد السحب
+          // ??? ????? ??? ???????? ????? ??? ?????
           window.setTimeout(() => nearest.click(), 90);
         }
       };
@@ -362,7 +362,7 @@
       window.addEventListener('resize', () => movePillToLink(activeLink, false), { passive: true });
     }
 
-    // ── عداد السلة ──────────────────────────────────────────────────
+    // -- ???? ????? --------------------------------------------------
     const cartEl = nav.querySelector('.cart-badge');
     if (cartEl) {
       const readCartCount = () => {
@@ -385,7 +385,7 @@
 
     window.dispatchEvent(new CustomEvent('mobile-nav:ready'));
 
-    // ── عداد الحساب ─────────────────────────────────────────────
+    // -- ???? ?????? ---------------------------------------------
     const accountEl = nav.querySelector('.account-badge');
     if (accountEl) {
       const initCount = window.__accountCount != null ? String(window.__accountCount) : '0';

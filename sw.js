@@ -1,5 +1,5 @@
 ﻿/* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v152';
+const CACHE = 'bariq-v154';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -200,6 +200,11 @@ self.addEventListener('fetch', function(e) {
   const isAsset = url.includes('/style/') || url.includes('/java/') || url.includes('/translations/') || url.includes('/mobile-nav-bar/');
   const path = new URL(url).pathname.replace(/\/index\.html$/, '/') || '/';
   const htmlCacheKey = htmlCachePath(path);
+  const offlineFallback = function() {
+    return caches.match('/index.html').then(function(indexCached) {
+      return indexCached || new Response('Offline', {status: 503});
+    });
+  };
 
   const isAuthPage = path === '/login' || path === '/login.html';
 
@@ -209,7 +214,8 @@ self.addEventListener('fetch', function(e) {
       caches.open(CACHE).then(function(cache) {
         return refreshCache(cache, e.request, htmlCacheKey).catch(function() {
           return cache.match(htmlCacheKey).then(function(cached) {
-            return cached || caches.match('/index.html') || new Response('Offline', {status: 503});
+            if (cached) return cached;
+            return offlineFallback();
           });
         });
       })
@@ -223,7 +229,8 @@ self.addEventListener('fetch', function(e) {
       caches.open(CACHE).then(function(cache) {
         return cache.match(htmlCacheKey).then(function(cached) {
           const fresh = refreshCache(cache, e.request, htmlCacheKey).catch(function() {
-            return cached || caches.match('/index.html') || new Response('Offline', {status: 503});
+            if (cached) return cached;
+            return offlineFallback();
           });
           return cached || fresh;
         });
@@ -256,7 +263,7 @@ self.addEventListener('fetch', function(e) {
         caches.open(CACHE).then(c => c.put(e.request, clone).catch(() => {})).catch(() => {});
         return res;
       }).catch(function() {
-        return caches.match('/index.html') || new Response('Offline', {status: 503});
+        return offlineFallback();
       });
     })
   );

@@ -335,7 +335,7 @@ body{
   text-align:center;
   padding:0 6px;
   border-radius:999px;
-  background:#ff2d55;
+  background:var(--badge-bg);
   color:var(--badge-fg);
   position:absolute;
   top:-4px;
@@ -363,7 +363,7 @@ body{
   text-align:center;
   padding:0 6px;
   border-radius:999px;
-  background:#ff2d55;
+  background:var(--badge-bg);
   color:var(--badge-fg);
   position:absolute;
   top:-4px;

@@ -83,6 +83,16 @@ function x2VisitorAreaFallback() {
         if (p?.id) return String(p.id);
         return `${(p?.title || "").trim().toLowerCase()}|${(p?.meta || "").trim().toLowerCase()}|${Number(p?.priceCurrent || 0).toFixed(2)}|${p?.img || ""}`;
     }
+    function normalizeCartImageSrc(raw) {
+        let src = "";
+        if (Array.isArray(raw)) src = String(raw[0] || "").trim(); else src = String(raw || "").trim();
+        if (!src) return "/assets/logo.png";
+        if (/^https?:\/\//i.test(src) || src.startsWith("data:") || src.startsWith("blob:")) return src;
+        if (src.startsWith("//")) return location.protocol + src;
+        if (src.startsWith("/")) return src;
+        if (src.startsWith("assets/")) return "/" + src;
+        return "/" + src.replace(/^\.\//, "");
+    }
     function dedupe(items) {
         const map = new Map;
         for (const it of items || []) {
@@ -226,6 +236,7 @@ function x2VisitorAreaFallback() {
             }
             return;
         }
+        const imgSrc = normalizeCartImageSrc(p.img || p.image || p.photo || p.thumbnail || p.cover || "");
         const card = document.createElement("div");
         if (card.className = "product-card product-card-cart", card.dataset.key = key, p.id && (card.dataset.itemId = String(p.id)),
         card.dataset.priceCurrent = cur.toFixed(2), card.dataset.priceOld = old.toFixed(2),
@@ -234,7 +245,22 @@ function x2VisitorAreaFallback() {
             style.id = "cart-item-styles", style.textContent = "\n      .description {\n        font-size: 11px;\n        color: #555;\n        margin: 5px 0;\n        line-height: 1.4;\n        margin-bottom: -1px;\n      }\n      .urgency-text {\n        font-size: 10px;\n        color: #d32f2f;\n        margin-top: 5px;\n        margin-bottom: -5px;\n      }\n      .hurry-text {\n        font-size: 11px;\n        color: #d32f2f;\n        font-weight: bold;\n        margin-bottom: -5px;\n      }\n    ",
             document.head.appendChild(style);
         }
-        card.innerHTML = `\n    <button type="button" class="remove-btn" aria-label="${cartEn('إزالة المنتج', 'Remove product')}">🗑️</button>\n    <div class="card-checkbox">\n      <input type="checkbox" checked>\n    </div>\n    <div class="qty-container">\n      <div class="qty-dropdown">\n        <span>${cartEn('الكمية', 'Quantity')}</span>\n        <span class="qty-value">${Number(p.qty || 1)}</span>\n        <span class="dropdown-icon">▼</span>\n      </div>\n    </div>\n    <div class="image">\n      ${p.id ? `<a href="/product?id=${encodeURIComponent(p.id)}" style="display:block;width:100%;height:100%">` : ""}\n      <img src="${p.img || "assets/logo.png"}" alt="${(p.title || "").replace(/"/g, "&quot;")}" onerror="this.src='assets/logo.png'" loading="lazy">\n      ${p.id ? "</a>" : ""}\n    </div>\n    <div class="details">\n      <div class="title">${p.title || ""}</div>\n      <div class="description">${p.description || ""}</div>\n      <div class="meta">${p.meta || ""}</div>\n      <div class="urgency-text">⏱️ ${cartEn('ينتهي العرض قريبا', 'Offer ends soon')}</div>\n      <div class="hurry-text">${cartEn('سارع بالشراء قبل نفاد الكمية!', 'Buy now before stock runs out!')}</div>\n      <div class="discount-info">\n        <span>${cartEn('عروض كبيرة', 'Big deals')}</span>\n        <span class="dot">•</span>\n        <span class="since">${isEnglish() ? `Dropped ${discountPercent}% since added` : `انخفض ${discountPercent}% منذ إضافته`}</span>\n      </div>\n      <div class="price-container">\n        <span class="current-price">${formatCurrency(cur)}</span>\n        <span class="old-price">${formatCurrency(old)}</span>\n        <span class="discount-badge">-${discountPercent}%</span>\n      </div>\n    </div>\n  `,
+                card.innerHTML = `\n    <button type="button" class="remove-btn" aria-label="${cartEn('إزالة المنتج', 'Remove product')}">🗑️</button>\n    <div class="card-checkbox">\n      <input type="checkbox" checked>\n    </div>\n    <div class="qty-container">\n      <div class="qty-dropdown">\n        <span>${cartEn('الكمية', 'Quantity')}</span>\n        <span class="qty-value">${Number(p.qty || 1)}</span>\n        <span class="dropdown-icon">▼</span>\n      </div>\n    </div>\n    <div class="image">\n      ${p.id ? `<a href="/product?id=${encodeURIComponent(p.id)}" style="display:block;width:100%;height:100%">` : ""}\n      <img src="${imgSrc}" alt="${(p.title || "").replace(/"/g, "&quot;")}" loading="eager" decoding="async">\n      ${p.id ? "</a>" : ""}\n    </div>\n    <div class="details">\n      <div class="title">${p.title || ""}</div>\n      <div class="description">${p.description || ""}</div>\n      <div class="meta">${p.meta || ""}</div>\n      <div class="urgency-text">⏱️ ${cartEn('ينتهي العرض قريبا', 'Offer ends soon')}</div>\n      <div class="hurry-text">${cartEn('سارع بالشراء قبل نفاد الكمية!', 'Buy now before stock runs out!')}</div>\n      <div class="discount-info">\n        <span>${cartEn('عروض كبيرة', 'Big deals')}</span>\n        <span class="dot">•</span>\n        <span class="since">${isEnglish() ? `Dropped ${discountPercent}% since added` : `انخفض ${discountPercent}% منذ إضافته`}</span>\n      </div>\n      <div class="price-container">\n        <span class="current-price">${formatCurrency(cur)}</span>\n        <span class="old-price">${formatCurrency(old)}</span>\n        <span class="discount-badge">-${discountPercent}%</span>\n      </div>\n    </div>\n  `;
+        const cardImgEl = card.querySelector(".image img");
+        cardImgEl && cardImgEl.addEventListener("error", function onCardImageError() {
+            if (this.dataset.fallbackApplied === "1") return;
+            this.dataset.fallbackApplied = "1";
+            this.src = "/assets/logo.png";
+        }, {
+            once: !0
+        }), cardImgEl && setTimeout(() => {
+            if (!cardImgEl.complete || !(cardImgEl.naturalWidth > 0)) {
+                if (cardImgEl.dataset.fallbackApplied !== "1") {
+                    cardImgEl.dataset.fallbackApplied = "1";
+                    cardImgEl.src = "/assets/logo.png";
+                }
+            }
+        }, 1800);
         card.querySelector(".card-checkbox input")?.addEventListener("change", e => {
             card.classList.toggle("selected", e.target.checked), function() {
                 const selectedItems = document.querySelectorAll(".product-card-cart .card-checkbox input:checked").length, totalItems = document.querySelectorAll(".product-card-cart").length, countDisplay = document.querySelector(".selection-count");
@@ -306,7 +332,7 @@ function x2VisitorAreaFallback() {
     }
     function toggleEmptyState() {
         const hasItems = null != listRoot.querySelector(".product-card"), emptyWrap = document.querySelector(".empty-cart-wrap");
-        emptyWrap && (emptyWrap.style.display = hasItems ? "none" : "");
+        emptyWrap && (emptyWrap.style.display = hasItems ? "none" : ""), document.body.classList.toggle("cart-is-empty", !hasItems);
     }
     function persistFromDOM() {
         writeCart(Array.from(listRoot.querySelectorAll(".product-card")).map(card => ({
@@ -399,7 +425,7 @@ function x2VisitorAreaFallback() {
 }(), function() {
     function moveOrderSummary() {
         const container = document.querySelector(".cart-layout-container"), cartLeft = document.querySelector(".cart-left"), cartRight = document.querySelector(".cart-right"), cartItems = document.querySelector(".cart-items-list");
-        container && cartLeft && cartRight && cartItems && (window.innerWidth <= 992 ? (cartLeft.parentElement !== cartRight || cartItems.nextElementSibling !== cartLeft) && cartRight.insertBefore(cartLeft, cartItems.nextSibling) : cartLeft.parentElement !== container && container.insertBefore(cartLeft, cartRight));
+        container && cartLeft && cartRight && cartItems && (window.innerWidth <= 1200 ? (cartLeft.parentElement !== cartRight || cartItems.nextElementSibling !== cartLeft) && cartRight.insertBefore(cartLeft, cartItems.nextSibling) : cartLeft.parentElement !== container && container.insertBefore(cartLeft, cartRight));
     }
     let rTimer;
     window.addEventListener("load", moveOrderSummary), window.addEventListener("resize", function() {
