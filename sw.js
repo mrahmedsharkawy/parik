@@ -1,5 +1,5 @@
 ﻿/* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v166';
+const CACHE = 'bariq-v167';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -132,15 +132,6 @@ async function closeVisibleNotifications() {
 }
 
 self.addEventListener('install', function(e) {
-  e.waitUntil(
-    caches.open(CACHE).then(function(c) {
-      return Promise.allSettled(STATIC_URLS.map(function(url) {
-        return fetch(new Request(url, { cache: 'reload' })).then(function(res) {
-          if (res.ok && !res.redirected && res.type !== 'opaqueredirect') return c.put(url, res.clone());
-        }).catch(() => {});
-      }));
-    })
-  );
   self.skipWaiting();
 });
 

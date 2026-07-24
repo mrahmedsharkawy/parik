@@ -14,7 +14,7 @@ function normalizeUaePhone(e) {
 async function registerSW() {
     if (!("serviceWorker" in navigator)) return null;
     try {
-        const e = await navigator.serviceWorker.register("/sw.js?v=166", { updateViaCache: "none" });
+        const e = await navigator.serviceWorker.register("/sw.js?v=167", { updateViaCache: "none" });
         e.update().catch(() => {});
         return e;
     } catch (e) {

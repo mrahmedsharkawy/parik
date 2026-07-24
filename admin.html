@@ -3159,8 +3159,9 @@ async function renderVisitorsStats() {
     if (todayEl) todayEl.textContent = todayVisits.length;
     if (allEl)   allEl.textContent   = rows.length;
     if (locEl) {
+      const locRows = todayVisits.length ? todayVisits : rows;
       const locMap = {};
-      rows.forEach(v => {
+      locRows.forEach(v => {
         const loc = visitorArea(v);
         locMap[loc] = (locMap[loc]||0) + 1;
       });

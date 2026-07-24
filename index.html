@@ -32,14 +32,13 @@
   <!-- Preload LCP image -->
   <script>
   (function(){
-    if (!matchMedia('(min-width: 900px)').matches) return;
     var l = document.createElement('link');
     l.rel = 'preload';
-    l.href = '/assets/home/1.webp';
+    l.href = matchMedia('(min-width: 900px)').matches ? '/assets/home/1.webp' : '/assets/home/2.webp';
     l.as = 'image';
     l.type = 'image/webp';
     l.fetchPriority = 'high';
-    l.imageSizes = '70vw';
+    l.imageSizes = matchMedia('(min-width: 900px)').matches ? '70vw' : '100vw';
     document.head.appendChild(l);
   })();
   </script>
@@ -434,7 +433,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <a href="/offers" class="promo-link">
     <div class="promo-inner">
       <!-- صورة الخلفية -->
-      <img src="/assets/home/2.webp" class="banner-bg" alt="" aria-hidden="true" loading="lazy">
+      <img src="/assets/home/2.webp" class="banner-bg" alt="" aria-hidden="true" loading="eager" fetchpriority="high" decoding="async">
 
       <!-- النص المتحرك في خط واحد -->
       <div class="scrolling-text-container">
@@ -627,7 +626,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </footer>
 <script src="/java/supabase.min.js" defer></script>
 <script src="/java/main.min.js?v=125" defer></script>
-<script src="/java/sw-refresh.js?v=sw-refresh-20260724c" defer></script>
+<script src="/java/sw-refresh.js?v=sw-refresh-20260725a" defer></script>
 <script src="/java/instant-nav.js?v=instant-nav-20260724b" defer></script>
 <script src="/translations/translation.min.js" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
@@ -953,12 +952,12 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:8px!import
   // تسجيل Service Worker لدعم PWA (تثبيت الموقع كتطبيق)
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
-      navigator.serviceWorker.register('/sw.js?v=166', { updateViaCache: 'none' }).then(function(reg) {
+      navigator.serviceWorker.register('/sw.js?v=167', { updateViaCache: 'none' }).then(function(reg) {
         var refreshing = false;
         navigator.serviceWorker.addEventListener('controllerchange', function() {
-          if (refreshing || sessionStorage.getItem('sw-v165-refresh') === '1') return;
+          if (refreshing || sessionStorage.getItem('sw-v167-refresh') === '1') return;
           refreshing = true;
-          sessionStorage.setItem('sw-v165-refresh', '1');
+          sessionStorage.setItem('sw-v167-refresh', '1');
           location.reload();
         });
         if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
