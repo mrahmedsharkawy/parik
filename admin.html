@@ -3136,6 +3136,18 @@ function isUsefulVisitor(v) {
   return true;
 }
 
+async function getCurrentVisitorAreaFallback() {
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 2500);
+    const res = await fetch('https://ipwho.is/', { signal: ctrl.signal, cache: 'no-store' });
+    clearTimeout(timer);
+    if (!res.ok) return '';
+    const data = await res.json();
+    return normalizeAdminArea(data.city || data.region || data.country || '');
+  } catch(e) { return ''; }
+}
+
 async function renderVisitorsStats() {
   const todayEl = $('visitorsTodayCount');
   const allEl   = $('visitorsAllCount');
@@ -3149,7 +3161,7 @@ async function renderVisitorsStats() {
     'apikey': ANON,
     'Authorization': 'Bearer ' + adminToken
   };
-  const renderRows = function(rows) {
+  const renderRows = async function(rows) {
     if (!Array.isArray(rows)) throw new Error('no data');
     rows = rows.filter(isUsefulVisitor);
     rows.sort((a,b) => new Date(b.visited_at || b.created_at || b.date || 0) - new Date(a.visited_at || a.created_at || a.date || 0));
@@ -3175,6 +3187,10 @@ async function renderVisitorsStats() {
         locMap[loc] = (locMap[loc]||0) + 1;
       });
       delete locMap['غير محدد'];
+      if (!Object.keys(locMap).length && todayVisits.length) {
+        const fallbackArea = await getCurrentVisitorAreaFallback();
+        if (fallbackArea) locMap[fallbackArea] = todayVisits.length;
+      }
       const sorted = Object.entries(locMap).sort((a,b) => b[1]-a[1]).slice(0, 10);
       locEl.innerHTML = sorted.length ? sorted.map(([loc, count]) =>
         `<div style="display:flex;justify-content:space-between;font-size:.82rem;padding:3px 6px;background:#f7f8fc;border-radius:6px">
