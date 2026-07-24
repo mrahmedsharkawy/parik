@@ -3,12 +3,20 @@
   if (!isMobileViewport) return;
   if (document.querySelector('.mobile-nav')) return;
 
+  try {
+    const currentUrl = new URL(location.href);
+    if (currentUrl.searchParams.has('__nav_reload')) {
+      currentUrl.searchParams.delete('__nav_reload');
+      history.replaceState(history.state, '', currentUrl.pathname + currentUrl.search + currentUrl.hash);
+    }
+  } catch(e) {}
+
   const scriptEl = document.currentScript || Array.from(document.scripts).find(s => s.src && /\/mobile-nav-bar\/main-navbar(?:\.min)?\.js(?:\?|$)/.test(s.src));
   const scriptBase = scriptEl ? scriptEl.src.replace(/\/[^\/]*$/, '/') : '/mobile-nav-bar/';
   const base = scriptBase.endsWith('/') ? scriptBase : scriptBase + '/';
 
   // تحميل CSS
-  const cssHref = base + 'styles.css?v=apple-liquid-20260724r';
+  const cssHref = base + 'styles.css?v=apple-liquid-20260724w';
   if (!Array.from(document.styleSheets).some(s => s.href && s.href.includes('/mobile-nav-bar/styles.css'))) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
@@ -184,7 +192,17 @@
 
       const isSamePageLink = (link) => {
         const targetUrl = new URL(link.href, location.href);
-        return targetUrl.origin === location.origin && targetUrl.pathname === location.pathname && targetUrl.search === location.search;
+        const normalizePath = (path) => {
+          const normalized = path.replace(/\/index\.html$/i, '/').replace(/\.html$/i, '').replace(/\/$/, '') || '/';
+          return normalized.toLowerCase();
+        };
+        return targetUrl.origin === location.origin && normalizePath(targetUrl.pathname) === normalizePath(location.pathname);
+      };
+
+      const reloadSamePage = () => {
+        const url = new URL(location.href);
+        url.searchParams.set('__nav_reload', String(Date.now()));
+        location.assign(url.href);
       };
 
       const getMetrics = (link) => {
@@ -313,7 +331,7 @@
       liquidPill.addEventListener('click', (event) => {
         if (suppressPillClick) return;
         event.preventDefault();
-        if (activeLink && isSamePageLink(activeLink)) location.reload();
+        if (activeLink && isSamePageLink(activeLink)) reloadSamePage();
         else activeLink?.click();
       });
 
@@ -331,9 +349,9 @@
           startDrag(event);
         });
         link.addEventListener('click', (event) => {
-          if (link === activeLink && isSamePageLink(link)) {
+          if (isSamePageLink(link)) {
             event.preventDefault();
-            location.reload();
+            reloadSamePage();
             return;
           }
           setActiveLink(link);
@@ -378,6 +396,24 @@ document.addEventListener('DOMContentLoaded', initMobileNav);
 window.addEventListener('resize', initMobileNav, { passive: true });
 window.addEventListener('orientationchange', initMobileNav, { passive: true });
 
+(function initMobileNavViewportOffset() {
+  function updateOffset() {
+    const vv = window.visualViewport;
+    const offset = vv ? Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)) : 0;
+    document.documentElement.style.setProperty('--nav-browser-bottom', offset + 'px');
+  }
+
+  updateOffset();
+  window.addEventListener('resize', updateOffset, { passive: true });
+  window.addEventListener('orientationchange', updateOffset, { passive: true });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', updateOffset, { passive: true });
+    window.visualViewport.addEventListener('scroll', updateOffset, { passive: true });
+  }
+  document.addEventListener('DOMContentLoaded', updateOffset, { once: true });
+  window.addEventListener('load', updateOffset, { once: true });
+})();
+
 (function initMobileNavCompactWatcher() {
   let intervalId = 0;
   let lastY = window.scrollY || window.pageYOffset || 0;
@@ -385,14 +421,20 @@ window.addEventListener('orientationchange', initMobileNav, { passive: true });
   const DELTA = 7;
   const TOP_RESET = 18;
 
+  function cssVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
   function applyCompactStyles(nav, isCompact) {
     const isSmall = window.innerWidth <= 420;
+    const normalBottom = cssVar('--nav-bottom-normal') || '8px';
+    const compactBottom = cssVar('--nav-bottom-compact') || '6px';
     const normal = isSmall
-      ? { left: '12px', right: '12px', bottom: '12px', height: '53px', radius: '30px', ulPadding: '3px 7px', ulGap: '5px', itemMin: '44px', icon: '23px' }
-      : { left: '16px', right: '16px', bottom: '12px', height: '56px', radius: '34px', ulPadding: '3px 9px', ulGap: '7px', itemMin: '44px', icon: '25px' };
+      ? { left: '12px', right: '12px', bottom: normalBottom, height: '55px', radius: '31px', ulPadding: '3px 7px', ulGap: '5px', itemMin: '46px', icon: '23px' }
+      : { left: '16px', right: '16px', bottom: normalBottom, height: '58px', radius: '35px', ulPadding: '3px 9px', ulGap: '7px', itemMin: '46px', icon: '25px' };
     const mini = isSmall
-      ? { left: '58px', right: '58px', bottom: '10px', height: '44px', radius: '26px', ulPadding: '1px 7px', ulGap: '4px', itemMin: '31px', icon: '21px' }
-      : { left: '64px', right: '64px', bottom: '10px', height: '44px', radius: '26px', ulPadding: '1px 7px', ulGap: '4px', itemMin: '31px', icon: '21px' };
+      ? { left: '58px', right: '58px', bottom: compactBottom, height: '44px', radius: '26px', ulPadding: '1px 7px', ulGap: '4px', itemMin: '31px', icon: '21px' }
+      : { left: '64px', right: '64px', bottom: compactBottom, height: '44px', radius: '26px', ulPadding: '1px 7px', ulGap: '4px', itemMin: '31px', icon: '21px' };
     const activeSet = isCompact ? mini : normal;
 
     nav.style.left = activeSet.left;

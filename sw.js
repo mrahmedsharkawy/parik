@@ -1,5 +1,5 @@
 ﻿/* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v141';
+const CACHE = 'bariq-v146';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -160,14 +160,14 @@ self.addEventListener('fetch', function(e) {
     const fetchRequest = cacheKey ? new Request(cacheKey, { cache: 'reload' }) : new Request(request, { cache: 'reload' });
     return fetch(fetchRequest).then(function(res) {
       if (res.ok && !res.redirected && res.type !== 'opaqueredirect') {
-        cache.put(cacheKey || request, res.clone());
+        cache.put(cacheKey || request, res.clone()).catch(() => {});
         return res;
       }
       if (cacheKey && !/\.html$/.test(cacheKey)) {
         const htmlKey = cacheKey === '/' ? '/index.html' : (cacheKey === '/Cart' ? '/Cart.html' : cacheKey + '.html');
         return fetch(new Request(htmlKey, { cache: 'reload' })).then(function(htmlRes) {
           if (htmlRes.ok && !htmlRes.redirected && htmlRes.type !== 'opaqueredirect') {
-            cache.put(cacheKey, htmlRes.clone());
+            cache.put(cacheKey, htmlRes.clone()).catch(() => {});
             return htmlRes;
           }
           throw new Error('redirected or missing response skipped');
@@ -218,9 +218,7 @@ self.addEventListener('fetch', function(e) {
           const fresh = refreshCache(cache, e.request, htmlCacheKey).catch(function() {
             return cached || caches.match('/index.html') || new Response('Offline', {status: 503});
           });
-          return refreshCache(cache, e.request, htmlCacheKey).catch(function () {
-  return cache.match(htmlCacheKey);
-});
+          return cached || fresh;
         });
       })
     );
@@ -248,7 +246,7 @@ self.addEventListener('fetch', function(e) {
       if (cached) return cached;
       return fetch(e.request).then(function(res) {
         const clone = res.clone();
-        caches.open(CACHE).then(c => c.put(e.request, clone));
+        caches.open(CACHE).then(c => c.put(e.request, clone).catch(() => {})).catch(() => {});
         return res;
       }).catch(function() {
         return caches.match('/index.html') || new Response('Offline', {status: 503});
