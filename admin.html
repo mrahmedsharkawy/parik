@@ -544,6 +544,8 @@
           <textarea id="camp-desc" placeholder="خصم حتى 50% على جميع المنتجات"></textarea>
           <label>صورة البنر</label>
           <input type="text" id="camp-banner" placeholder="assets/campaigns/summer.png">
+          <label>كود الخصم</label>
+          <input type="text" id="camp-code" placeholder="SUMMER25" style="text-transform:uppercase">
         </div>
         <div>
           <label>تاريخ البدء</label>
@@ -1595,7 +1597,11 @@ async function uploadVideoCloudinary(file) {
 
 async function uploadProductImageToStorage(dataUrl) {
   if (window.Supabase && window.Supabase.Storage && typeof window.Supabase.Storage.uploadDataUrl === 'function') {
-    return window.Supabase.Storage.uploadDataUrl(dataUrl, 'images');
+    try {
+      return await window.Supabase.Storage.uploadDataUrl(dataUrl, 'images');
+    } catch(e) {
+      console.warn('Supabase storage helper failed, trying direct upload:', e);
+    }
   }
   const match = String(dataUrl || '').match(/^data:([^;]+);base64,(.+)$/);
   if (!match) throw new Error('صيغة الصورة غير صالحة');
@@ -1652,9 +1658,15 @@ $('mediaInput').addEventListener('change',e=>{
         renderMedia();
         try {
           const uploadSrc = await compressImage(reader.result);
-          const publicUrl = await uploadProductImageToStorage(uploadSrc);
+          let publicUrl = uploadSrc;
+          try {
+            publicUrl = await uploadProductImageToStorage(uploadSrc);
+            toast('✅ تم رفع الصورة بنجاح');
+          } catch(err) {
+            console.warn('Product image upload failed; using compressed inline image:', err);
+            toast('⚠️ تعذّر رفع الصورة للسحابة، سيتم حفظها مضغوطة داخل المنتج');
+          }
           currentMedia[tempIdx] = { type: 'image', src: publicUrl, uploading: false };
-          toast('✅ تم رفع الصورة بنجاح');
         } catch(err) {
           toast('⚠️ فشل رفع الصورة: ' + err.message);
           currentMedia[tempIdx].uploading = false;
@@ -1706,7 +1718,7 @@ async function saveProduct(){
   const id = editing ? Number(idField) : (products.reduce((m,p)=>Math.max(m, Number(p.id)||0),0)+1);
 
   // فقط الروابط الدائمة (لا base64 ولا blob مؤقت)
-  const imgArr = currentMedia.map(m=>m.src).filter(s => s && !s.startsWith('data:') && !s.startsWith('blob:'));
+  const imgArr = currentMedia.map(m=>m.src).filter(s => s && !s.startsWith('blob:'));
 
   const prod = {
     id,
@@ -3199,21 +3211,16 @@ async function renderVisitorsStats() {
       const hasArea = v => visitorArea(v) !== 'غير محدد';
       const localRows = getVisitors().filter(isUsefulVisitor);
       const localTodayRows = localRows.filter(v => new Date(visitDate(v)).toDateString() === today);
-      const remoteTodayAreas = todayVisits.filter(hasArea);
-      const localTodayAreas = localTodayRows.filter(hasArea);
       const remoteAllAreas = rows.filter(hasArea);
       const localAllAreas = localRows.filter(hasArea);
-      const locRows = todayVisits.length
-        ? (remoteTodayAreas.length ? remoteTodayAreas : localTodayAreas)
-        : (remoteAllAreas.length ? remoteAllAreas : localAllAreas);
+      const locRows = todayVisits.length ? todayVisits : (remoteAllAreas.length ? remoteAllAreas : localAllAreas);
       const locMap = {};
+      const fallbackArea = locRows.some(v => !hasArea(v)) ? await getCurrentVisitorAreaFallback() : '';
       locRows.forEach(v => {
-        const loc = visitorArea(v);
+        const loc = hasArea(v) ? visitorArea(v) : (fallbackArea || 'غير محدد');
         locMap[loc] = (locMap[loc]||0) + 1;
       });
-      delete locMap['غير محدد'];
       if (!Object.keys(locMap).length && todayVisits.length) {
-        const fallbackArea = await getCurrentVisitorAreaFallback();
         if (fallbackArea) locMap[fallbackArea] = todayVisits.length;
       }
       const sorted = Object.entries(locMap).sort((a,b) => b[1]-a[1]).slice(0, 10);
@@ -4463,22 +4470,41 @@ async function loadCampaignsFromSupabase() {
 
 function getCampaigns() { return campaignsCache; }
 
+function campaignCouponCode(c) {
+  const txt = String(c?.coupon_code || c?.couponCode || c?.code || c?.description || c?.desc || '');
+  const m = txt.match(/\[COUPON:([^\]]+)\]/i);
+  return (m ? m[1] : c?.coupon_code || c?.couponCode || '').toString().trim().toUpperCase();
+}
+
+function campaignCleanDescription(v) {
+  return String(v || '').replace(/\s*\[COUPON:[^\]]+\]\s*/ig, '').trim();
+}
+
 async function saveCampaign() {
   const name = ($('camp-name').value||'').trim();
   if (!name) { toast('أدخل اسم الحملة'); return; }
+  const code = ($('camp-code').value || '').trim().toUpperCase();
+  const desc = campaignCleanDescription($('camp-desc').value || '');
+  const discount = parseFloat($('camp-discount').value) || 0;
   
   const campaign = {
     name: name,
-    desc: $('camp-desc').value || '',
+    desc: desc + (code ? `\n[COUPON:${code}]` : ''),
     banner: $('camp-banner').value || '',
     start: $('camp-start').value || null,
     end: $('camp-end').value || null,
-    discount: parseFloat($('camp-discount').value) || 0
+    discount: discount
   };
 
   toast('⏳ جارٍ الحفظ...');
   
   try {
+    if (code && window.Supabase && window.Supabase.Coupons) {
+      const coupon = { code, type: 'percent', value: discount || 0, minOrder: 0, expiry: campaign.end, maxUse: 0, active: true };
+      const existing = await window.Supabase.Coupons.getByCode(code).catch(() => null);
+      if (existing) await window.Supabase.Coupons.update(existing.id, { type: coupon.type, value: coupon.value, min_order: coupon.minOrder, expiry: coupon.expiry, max_use: coupon.maxUse, active: true });
+      else await window.Supabase.Coupons.insert(coupon);
+    }
     await window.Supabase.Campaigns.insert(campaign);
     await loadCampaignsFromSupabase();
     renderCampaigns();
@@ -4503,7 +4529,8 @@ function renderCampaigns() {
       <div class="info">
         <b>${esc(c.name)}</b> <span class="status-badge ${statusClass}">${status}</span>
         <small>
-          ${c.discount ? c.discount + '% خصم' : ''} 
+          ${c.discount ? c.discount + '% خصم' : ''}
+          ${campaignCouponCode(c) ? '• كود: ' + esc(campaignCouponCode(c)) : ''}
           ${c.start_date ? '• من ' + new Date(c.start_date).toLocaleDateString('ar') : ''}
           ${c.end_date ? '• إلى ' + new Date(c.end_date).toLocaleDateString('ar') : ''}
         </small>
@@ -4526,7 +4553,7 @@ async function deleteCampaign(id) {
 }
 
 function clearCampaignForm() {
-  ['camp-name','camp-desc','camp-banner','camp-start','camp-end','camp-discount'].forEach(id => { if($(id)) $(id).value = ''; });
+  ['camp-name','camp-desc','camp-banner','camp-code','camp-start','camp-end','camp-discount'].forEach(id => { if($(id)) $(id).value = ''; });
 }
 
 /* ================= المنتجات المقترحة ================= */
@@ -5408,10 +5435,13 @@ async function loadCampaignsFromSupabase() {
     campaignsCache = (data || []).map(c => ({
       id: c.id,
       name: c.name,
-      description: c.description,
+      description: campaignCleanDescription(c.description),
+      couponCode: campaignCouponCode(c),
       banner: c.banner,
       startDate: c.start_date,
       endDate: c.end_date,
+      start_date: c.start_date,
+      end_date: c.end_date,
       discount: c.discount,
       active: c.active !== false
     }));

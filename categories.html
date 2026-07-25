@@ -13,6 +13,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   (function(){
     try {
       if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+      if (sessionStorage.getItem('x2_return_to_scroll_url') !== location.href) return;
       var productPositions = JSON.parse(sessionStorage.getItem('x2_product_return_positions') || '{}');
       var positions = productPositions[location.href] ? productPositions : JSON.parse(sessionStorage.getItem('x2_scroll_positions') || '{}');
       var y = Number(positions[location.href] || 0);
@@ -22,7 +23,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       document.head.appendChild(style);
       document.documentElement.classList.add('x2-restoring-scroll');
       function restore(){ window.scrollTo(0, y); }
-      function reveal(){ restore(); requestAnimationFrame(function(){ restore(); document.documentElement.classList.remove('x2-restoring-scroll'); }); }
+      function reveal(){ restore(); requestAnimationFrame(function(){ restore(); document.documentElement.classList.remove('x2-restoring-scroll'); setTimeout(function(){ sessionStorage.removeItem('x2_return_to_scroll_url'); }, 1200); }); }
       restore();
       document.addEventListener('DOMContentLoaded', reveal, { once: true });
       window.addEventListener('pageshow', reveal, { once: true });
@@ -1131,13 +1132,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </footer>
 <script src="/java/supabase.min.js" defer></script>
 <script src="/java/main.min.js?v=125" defer></script>
-<script src="/java/sw-refresh.js?v=sw-refresh-20260725a" defer></script>
+<script src="/java/sw-refresh.js?v=sw-refresh-20260725b" defer></script>
 <script src="/java/instant-nav.js?v=instant-nav-20260724b" defer></script>
 <script src="/translations/translation.min.js" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
 <script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260725d" defer></script>
-<script src="/java/push-welcome.js?v=push-welcome-20260724a" defer></script>
-<script type="module" src="./java/Products.min.js?v=products-20260725d"></script> <!-- ده يفضل يفضل في الآخر -->
+<script src="/java/push-welcome.js?v=push-welcome-20260725b" defer></script>
+<script type="module" src="./java/Products.min.js?v=products-20260725e"></script> <!-- ده يفضل يفضل في الآخر -->
 </body>
 </html>
 

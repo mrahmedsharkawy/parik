@@ -24,6 +24,7 @@
   (function(){
     try {
       if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+      if (sessionStorage.getItem('x2_return_to_scroll_url') !== location.href) return;
       var productPositions = JSON.parse(sessionStorage.getItem('x2_product_return_positions') || '{}');
       var positions = productPositions[location.href] ? productPositions : JSON.parse(sessionStorage.getItem('x2_scroll_positions') || '{}');
       var y = Number(positions[location.href] || 0);
@@ -33,7 +34,7 @@
       document.head.appendChild(style);
       document.documentElement.classList.add('x2-restoring-scroll');
       function restore(){ window.scrollTo(0, y); }
-      function reveal(){ restore(); requestAnimationFrame(function(){ restore(); document.documentElement.classList.remove('x2-restoring-scroll'); }); }
+      function reveal(){ restore(); requestAnimationFrame(function(){ restore(); document.documentElement.classList.remove('x2-restoring-scroll'); setTimeout(function(){ sessionStorage.removeItem('x2_return_to_scroll_url'); }, 1200); }); }
       restore();
       document.addEventListener('DOMContentLoaded', reveal, { once: true });
       window.addEventListener('pageshow', reveal, { once: true });
@@ -647,17 +648,18 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </footer>
 <script src="/java/supabase.min.js" defer></script>
 <script src="/java/main.min.js?v=125" defer></script>
-<script src="/java/sw-refresh.js?v=sw-refresh-20260725a" defer></script>
+<script src="/java/sw-refresh.js?v=sw-refresh-20260725b" defer></script>
 <script src="/java/instant-nav.js?v=instant-nav-20260724b" defer></script>
 <script src="/translations/translation.min.js" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
 <script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260725d" defer></script>
-<script src="/java/push-welcome.js?v=push-welcome-20260724a" defer></script>
-<script src="/java/notifications.min.js" defer></script>
-<script type="module" src="/java/Products.min.js?v=products-20260725d" defer></script>
+<script src="/java/push-welcome.js?v=push-welcome-20260725b" defer></script>
+<script src="/java/notifications.min.js?v=notifications-20260725b" defer></script>
+<script type="module" src="/java/Products.min.js?v=products-20260725e" defer></script>
 
 <style>
 .campaign-popup-backdrop{position:fixed;inset:0;z-index:100200;background:rgba(7,16,32,.52);display:flex;align-items:center;justify-content:center;padding:18px;opacity:0;pointer-events:none;transition:opacity .22s ease}.campaign-popup-backdrop.show{opacity:1;pointer-events:auto}.campaign-popup{width:min(92vw,460px);overflow:hidden;border-radius:18px;background:#fff;box-shadow:0 28px 70px rgba(10,22,40,.32);transform:translateY(18px) scale(.96);transition:transform .28s cubic-bezier(.18,1.16,.36,1)}.campaign-popup-backdrop.show .campaign-popup{transform:translateY(0) scale(1)}.campaign-popup-media{position:relative;min-height:170px;background:linear-gradient(135deg,#152546,#2d405f)}.campaign-popup-media img{width:100%;height:230px;object-fit:cover;display:block;border-radius:0}.campaign-popup-media.no-image{display:flex;align-items:center;justify-content:center;color:#fff}.campaign-popup-badge{position:absolute;top:14px;inset-inline-start:14px;background:#D4AF37;color:#152546;border-radius:999px;padding:6px 12px;font-weight:900;font-size:.82rem}.campaign-popup-close{position:absolute;top:12px;inset-inline-end:12px;width:34px;height:34px;border:0;border-radius:50%;background:rgba(255,255,255,.92);color:#152546;font-size:20px;line-height:1;cursor:pointer}.campaign-popup-body{padding:20px;text-align:start}.campaign-popup-title{margin:0 0 8px;color:#152546;font-size:1.35rem;font-weight:900}.campaign-popup-desc{margin:0;color:#516078;line-height:1.7;font-size:.96rem}.campaign-popup-actions{display:flex;gap:10px;margin-top:18px}.campaign-popup-primary{flex:1;text-align:center;text-decoration:none;border-radius:999px;background:#152546;color:#fff;padding:12px 16px;font-weight:800}.campaign-popup-secondary{border:1px solid #d9e0ec;background:#fff;color:#152546;border-radius:999px;padding:12px 16px;font-weight:800;cursor:pointer}@media(max-width:520px){.campaign-popup{border-radius:16px}.campaign-popup-media img{height:190px}.campaign-popup-actions{flex-direction:column}.campaign-popup-title{font-size:1.18rem}}
+.campaign-popup-code{margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px dashed #D4AF37;background:#fff9e2;color:#152546;border-radius:14px;padding:12px 14px;font-weight:900;letter-spacing:.08em;direction:ltr}.campaign-popup-code span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.campaign-popup-use{width:100%;margin-top:12px;border:0;border-radius:999px;background:#152546;color:#fff;padding:12px 16px;font-weight:900;cursor:pointer}.campaign-popup-use.done{background:#1f8f56}
 </style>
 
 <script>
@@ -665,23 +667,47 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   function currentLang(){ return (localStorage.getItem('lang') || document.documentElement.lang || 'ar') === 'en' ? 'en' : 'ar'; }
   function tr(ar, en){ return currentLang() === 'en' ? en : ar; }
   function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function cleanDesc(s){ return String(s || '').replace(/\s*\[COUPON:[^\]]+\]\s*/ig, '').trim(); }
+  function campaignCode(c){
+    const txt = String(c.coupon_code || c.couponCode || c.description || c.desc || '');
+    const match = txt.match(/\[COUPON:([^\]]+)\]/i);
+    return (match ? match[1] : c.coupon_code || c.couponCode || '').toString().trim().toUpperCase();
+  }
+  function campaignSeenKey(c){
+    let customer = '';
+    try {
+      const profile = JSON.parse(localStorage.getItem('x2_profile') || '{}');
+      customer = profile.email || profile.phone || '';
+    } catch(e) {}
+    if (!customer) {
+      customer = localStorage.getItem('x2_campaign_client_id') || '';
+      if (!customer) {
+        customer = 'guest-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+        localStorage.setItem('x2_campaign_client_id', customer);
+      }
+    }
+    return 'x2_campaign_popup_seen_' + encodeURIComponent(customer) + '_' + (c.id || c.created_at || c.name || 'active');
+  }
   function activeCampaign(c){
-    const now = Date.now();
+    const day = function(v){ const d = new Date(v); return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(); };
+    const today = day(Date.now());
     const start = c.start_date || c.start;
     const end = c.end_date || c.end;
     if (c.active === false) return false;
-    if (start && new Date(start).getTime() > now) return false;
-    if (end && new Date(end).getTime() < now) return false;
+    if (start && day(start) > today) return false;
+    if (end && day(end) < today) return false;
     return true;
   }
   function showCampaignPopup(c){
-    const key = 'x2_campaign_popup_seen_' + (c.id || c.name || 'active');
-    if (sessionStorage.getItem(key) === '1') return;
-    sessionStorage.setItem(key, '1');
+    const code = campaignCode(c);
+    if (!code) return;
+    const seenKey = campaignSeenKey(c);
+    if (localStorage.getItem(seenKey) === '1') return;
+    localStorage.setItem(seenKey, '1');
     const banner = c.banner || c.image || '';
     const discount = parseFloat(c.discount) || 0;
     const title = c.name || tr('عرض خاص', 'Special offer');
-    const desc = c.description || c.desc || (discount ? tr('خصم لفترة محدودة على منتجات مختارة.', 'Limited-time discount on selected products.') : '');
+    const desc = cleanDesc(c.description || c.desc) || (discount ? tr('خصم لفترة محدودة على منتجات مختارة.', 'Limited-time discount on selected products.') : '');
     const backdrop = document.createElement('div');
     backdrop.className = 'campaign-popup-backdrop';
     backdrop.innerHTML = `<div class="campaign-popup" role="dialog" aria-modal="true" aria-label="${esc(title)}">
@@ -693,16 +719,21 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div class="campaign-popup-body">
         <h3 class="campaign-popup-title">${esc(title)}</h3>
         ${desc ? `<p class="campaign-popup-desc">${esc(desc)}</p>` : ''}
-        <div class="campaign-popup-actions">
-          <a class="campaign-popup-primary" href="/offers${currentLang() === 'en' ? '?lang=en' : ''}">${esc(tr('تسوق العروض', 'Shop deals'))}</a>
-          <button class="campaign-popup-secondary" type="button">${esc(tr('لاحقاً', 'Later'))}</button>
-        </div>
+        <div class="campaign-popup-code"><span>${esc(code)}</span></div>
+        <button class="campaign-popup-use" type="button">${esc(tr('استخدم كود الخصم', 'Use discount code'))}</button>
       </div>
     </div>`;
     const close = function(){ backdrop.classList.remove('show'); setTimeout(function(){ backdrop.remove(); }, 240); };
     backdrop.addEventListener('click', function(e){ if (e.target === backdrop) close(); });
     backdrop.querySelector('.campaign-popup-close').addEventListener('click', close);
-    backdrop.querySelector('.campaign-popup-secondary').addEventListener('click', close);
+    backdrop.querySelector('.campaign-popup-use').addEventListener('click', async function(){
+      const btn = this;
+      try { localStorage.setItem('x2_coupon_code', JSON.stringify({ code: code, type: 'percent', value: discount, minOrder: 0, expiry: c.end_date || c.end || null, active: true })); } catch(e) {}
+      try { await navigator.clipboard.writeText(code); } catch(e) {}
+      btn.classList.add('done');
+      btn.textContent = tr('تم حفظ الكود للسلة', 'Code saved for cart');
+      setTimeout(close, 650);
+    });
     document.body.appendChild(backdrop);
     requestAnimationFrame(function(){ backdrop.classList.add('show'); });
   }
@@ -713,7 +744,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
     try {
       if (!window.Supabase || !window.Supabase.Campaigns) return;
-      const campaigns = await (window.Supabase.Campaigns.getActive ? window.Supabase.Campaigns.getActive() : window.Supabase.Campaigns.getAll());
+      const campaigns = await window.Supabase.Campaigns.getAll();
       const campaign = (Array.isArray(campaigns) ? campaigns : []).filter(activeCampaign)[0];
       if (campaign) showCampaignPopup(campaign);
     } catch(e) {}
@@ -1049,12 +1080,12 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:8px!import
   // تسجيل Service Worker لدعم PWA (تثبيت الموقع كتطبيق)
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
-      navigator.serviceWorker.register('/sw.js?v=171', { updateViaCache: 'none' }).then(function(reg) {
+      navigator.serviceWorker.register('/sw.js?v=173', { updateViaCache: 'none' }).then(function(reg) {
         var refreshing = false;
         navigator.serviceWorker.addEventListener('controllerchange', function() {
-          if (refreshing || sessionStorage.getItem('sw-v171-refresh') === '1') return;
+          if (refreshing || sessionStorage.getItem('sw-v173-refresh') === '1') return;
           refreshing = true;
-          sessionStorage.setItem('sw-v171-refresh', '1');
+          sessionStorage.setItem('sw-v173-refresh', '1');
           location.reload();
         });
         if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });

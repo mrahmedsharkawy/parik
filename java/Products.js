@@ -308,11 +308,15 @@ function saveProductReturnScrollPosition() {
 
 function restoreProductReturnScrollPosition() {
     try {
+        if (sessionStorage.getItem("x2_return_to_scroll_url") !== location.href) return;
         const productReturnPositions = JSON.parse(sessionStorage.getItem("x2_product_return_positions") || "{}");
         const positions = productReturnPositions[location.href] ? productReturnPositions : JSON.parse(sessionStorage.getItem("x2_scroll_positions") || "{}");
         const y = Number(positions[location.href] || 0);
         if (!(y > 0)) return;
         [0, 120, 420, 900, 1500].forEach(delay => setTimeout(() => window.scrollTo({ top: y, behavior: "auto" }), delay));
+        setTimeout(() => {
+            try { sessionStorage.removeItem("x2_return_to_scroll_url"); } catch (e) {}
+        }, 1700);
     } catch (e) {}
 }
 
@@ -389,7 +393,7 @@ export function createProductCard(prod) {
             hist = hist.filter(h => String(h.id) !== String(prod.id)), hist.unshift(entry), 
             hist.length > 20 && (hist = hist.slice(0, 20)), localStorage.setItem(HIST_KEY, JSON.stringify(hist));
         } catch (e) {}
-        window.location.href = productUrl;
+        setTimeout(() => window.location.assign(productUrl), 80);
     });
     const lang = localStorage.getItem("lang") || document.documentElement.lang || document.documentElement.getAttribute("lang") || "ar";
     function getTranslated(val) {
