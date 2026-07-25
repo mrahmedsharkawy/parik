@@ -914,7 +914,8 @@ document.addEventListener("DOMContentLoaded", async function() {
         });
     }
     function loadProductsForCategory(categorySlug, categoriesData) {
-        fetchProducts().then(data => {
+        const forceFreshProducts = /^(\/|\/index\.html)$/i.test(location.pathname);
+        fetchProducts(forceFreshProducts).then(data => {
             let filteredProducts;
             if (products = data, categorySlug && "all" !== categorySlug.toLowerCase() && "الكل" !== categorySlug && "جميع الفئات" !== categorySlug) {
                 const categoryObj = categories.find(c => c.categorySlug === categorySlug || c.name && c.name.ar === categorySlug || c.name && c.name.en === categorySlug);
