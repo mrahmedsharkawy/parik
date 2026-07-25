@@ -27,7 +27,7 @@
 
   try {
     // Cache navbar HTML ?? sessionStorage ????? fetch ?? ?? ???? (?????? ??????)
-    const CACHE_KEY = 'mnav_v6';
+    const CACHE_KEY = 'mnav_v7';
     let text = sessionStorage.getItem(CACHE_KEY);
     if (!text) {
       const res = await fetch(base + 'navbar.html');
@@ -195,8 +195,13 @@
         location.assign(url.href);
       };
 
+      const getPillWidth = () => {
+        if (nav.classList.contains('is-compact')) return window.innerWidth <= 420 ? 50 : 62;
+        return window.innerWidth <= 420 ? 62 : 72;
+      };
+
       const getMetrics = (link) => {
-        const pillWidth = liquidPill.offsetWidth || parseFloat(getComputedStyle(liquidPill).width) || 0;
+        const pillWidth = getPillWidth();
         const item = link.closest('li') || link;
         return {
           centerX: item.offsetLeft + item.offsetWidth / 2,
@@ -232,7 +237,7 @@
       };
 
       const clampPillX = (x) => {
-        const max = Math.max(0, navList.clientWidth - liquidPill.offsetWidth);
+        const max = Math.max(0, navList.clientWidth - getPillWidth());
         return Math.min(Math.max(0, x), max);
       };
 

@@ -1376,7 +1376,7 @@ async function loadCategories(){
   // أولاً: تحقق من admin_categories في localStorage
   try {
     const saved = localStorage.getItem('admin_categories');
-    if (saved) { categories = JSON.parse(saved); renderCatBox(); return; }
+    if (saved) { categories = JSON.parse(saved); renderCatBox(); setTimeout(syncCategoriesToSupabase, 500); return; }
   } catch(e) {}
   // ثانياً: من Categories.json
   try{
@@ -1385,6 +1385,7 @@ async function loadCategories(){
     saveCategoriesLocal();
   }catch(e){ categories=[]; }
   renderCatBox();
+  setTimeout(syncCategoriesToSupabase, 500);
 }
 
 async function loadProducts(){
@@ -2915,7 +2916,59 @@ function saveCategoriesLocal() {
   localStorage.setItem('admin_categories', JSON.stringify(categories));
   try {
     Object.keys(sessionStorage).forEach(function(k){ if(k.indexOf('x2_prods_ss')===0) sessionStorage.removeItem(k); });
+    sessionStorage.removeItem('x2_cats_ss_v1');
+    localStorage.removeItem('x2_categories_cache_v1');
+    localStorage.setItem('x2_categories_updated', String(Date.now()));
   } catch(e) {}
+}
+
+let categoriesSyncing = false;
+
+async function ensureSupabaseCategory(cat, order) {
+  if (!window.Supabase || !window.Supabase.Categories || !cat) return null;
+  if (cat.id) return cat.id;
+  const ar = cat.name?.ar || cat.name?.en || cat.categorySlug || '';
+  const en = cat.name?.en || ar;
+  const rows = await window.Supabase.Categories.getAll().catch(() => []);
+  const found = (Array.isArray(rows) ? rows : []).find(row => {
+    const vals = [row.name_ar, row.name_en, row.id].map(v => String(v || '').trim().toLowerCase());
+    return vals.includes(String(ar).trim().toLowerCase()) || vals.includes(String(en).trim().toLowerCase()) || vals.includes(String(cat.categorySlug || '').trim().toLowerCase());
+  });
+  if (found && found.id) {
+    cat.id = found.id;
+    return found.id;
+  }
+  const inserted = await window.Supabase.Categories.insert({ nameAr: ar, nameEn: en, image: cat.image || '', order: order || cat.order || categories.indexOf(cat) + 1 }).catch(() => null);
+  const id = Array.isArray(inserted) && inserted[0] && inserted[0].id;
+  if (id) cat.id = id;
+  return id || null;
+}
+
+async function syncCategoriesToSupabase() {
+  if (categoriesSyncing || !window.Supabase || !window.Supabase.Categories || !window.Supabase.Subcategories || !Array.isArray(categories) || !categories.length) return;
+  categoriesSyncing = true;
+  try {
+    const subRows = await window.Supabase.Subcategories.getAll().catch(() => []);
+    for (let ci = 0; ci < categories.length; ci++) {
+      const cat = categories[ci];
+      const categoryId = await ensureSupabaseCategory(cat, ci + 1);
+      if (!categoryId) continue;
+      for (let si = 0; si < (cat.subcategories || []).length; si++) {
+        const sub = cat.subcategories[si];
+        if (!sub) continue;
+        const ar = sub.name?.ar || sub.name?.en || sub.categorySlug || '';
+        const en = sub.name?.en || ar;
+        const exists = (Array.isArray(subRows) ? subRows : []).some(row =>
+          String(row.category_id || '') === String(categoryId) &&
+          [row.name_ar, row.name_en, row.id].map(v => String(v || '').trim().toLowerCase()).some(v => v && (v === String(ar).trim().toLowerCase() || v === String(en).trim().toLowerCase() || v === String(sub.categorySlug || '').trim().toLowerCase()))
+        );
+        if (!exists) await window.Supabase.Subcategories.insert({ categoryId, nameAr: ar, nameEn: en, image: sub.image || '', order: si + 1 }).catch(() => null);
+      }
+    }
+    localStorage.setItem('admin_categories', JSON.stringify(categories));
+  } finally {
+    categoriesSyncing = false;
+  }
 }
 
 function addCategory() {
@@ -2941,7 +2994,10 @@ function addCategory() {
 
     // حفظ في Supabase
     if (window.Supabase && window.Supabase.Subcategories) {
-      window.Supabase.Subcategories.insert({ nameAr: ar, nameEn: en||ar, image: img, order: parent.subcategories.length })
+      ensureSupabaseCategory(parent, Number(parentIdx) + 1).then(function(categoryId){
+        if (!categoryId) return null;
+        return window.Supabase.Subcategories.insert({ categoryId, nameAr: ar, nameEn: en||ar, image: img, order: parent.subcategories.length });
+      })
         .catch(function(){});
     }
   } else {
@@ -2957,6 +3013,12 @@ function addCategory() {
     // حفظ في Supabase
     if (window.Supabase && window.Supabase.Categories) {
       window.Supabase.Categories.insert({ nameAr: ar, nameEn: en||ar, image: img, order: categories.length })
+        .then(function(rows){
+          if (Array.isArray(rows) && rows[0] && rows[0].id) {
+            newCat.id = rows[0].id;
+            saveCategoriesLocal();
+          }
+        })
         .catch(function(){});
     }
   }
@@ -3160,8 +3222,11 @@ const LS_VISITORS = 'x2_visitors';
 function getVisitors() { try { return JSON.parse(localStorage.getItem(LS_VISITORS)||'[]'); } catch(e) { return []; } }
 
 function visitorArea(v) {
-  const city = normalizeAdminArea(v.area || v.city || v.region || v.address || '');
-  const country = normalizeAdminArea(v.country || '');
+  const rawCity = v.area || v.city || v.region || v.address || '';
+  const rawCountry = v.country || '';
+  if (/dubai|دبي/i.test(String(rawCity || '')) && /^(ae|uae|united\s*arab\s*emirates|الإمارات|الامارات)/i.test(String(rawCountry || '').trim())) return 'رأس الخيمة';
+  const city = normalizeAdminArea(rawCity);
+  const country = normalizeAdminArea(rawCountry);
   return city || country || 'غير محدد';
 }
 

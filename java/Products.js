@@ -27,6 +27,17 @@ const CATEGORIES_SESSION_CACHE_KEY = "x2_cats_ss_v1", CATEGORIES_LOCAL_CACHE_KEY
 }), window._videoPosterCache || (window._videoPosterCache = new Map);
 
 export async function fetchCategories() {
+    try {
+        const adminCats = JSON.parse(localStorage.getItem("admin_categories") || "null");
+        if (Array.isArray(adminCats) && adminCats.length) {
+            const liveCats = await loadSupabaseCategories(adminCats);
+            return categories = liveCats.length ? liveCats : adminCats, categories;
+        }
+    } catch (e) {}
+    try {
+        const liveCats = await loadSupabaseCategories([]);
+        if (liveCats.length) return categories = liveCats, categories;
+    } catch (e) {}
     for (const source of [ [ sessionStorage, CATEGORIES_SESSION_CACHE_KEY ], [ localStorage, CATEGORIES_LOCAL_CACHE_KEY ] ]) try {
         const obj = JSON.parse(source[0].getItem(source[1]) || "null");
         if (obj && Array.isArray(obj.data) && obj.data.length && Date.now() - obj.ts < CATEGORIES_CACHE_TTL) return categories = obj.data, 
@@ -53,6 +64,79 @@ export async function fetchCategories() {
         }
     } catch (_) {}
     throw new Error("Categories.json not found!");
+}
+
+function categoryKey(value) {
+    return String(value || "").trim().toLowerCase().replace(/\s+/g, "-");
+}
+
+function rowSlug(row) {
+    return String(row?.category_slug || row?.slug || row?.name_en || row?.name_ar || row?.id || "").trim();
+}
+
+function mergeCategoryLists(base, extra) {
+    const out = Array.isArray(base) ? base.map(cat => Object.assign({}, cat, {
+        subcategories: Array.isArray(cat.subcategories) ? cat.subcategories.slice() : []
+    })) : [];
+    const findCat = cat => out.find(existing => {
+        const vals = [ existing.categorySlug, existing.name?.ar, existing.name?.en ].map(categoryKey);
+        return [ cat.categorySlug, cat.name?.ar, cat.name?.en ].map(categoryKey).some(v => v && vals.includes(v));
+    });
+    (Array.isArray(extra) ? extra : []).forEach(cat => {
+        const existing = findCat(cat);
+        if (!existing) {
+            out.push(cat);
+            return;
+        }
+        Object.assign(existing, Object.assign({}, cat, {
+            subcategories: existing.subcategories || []
+        }));
+        const seen = new Set((existing.subcategories || []).map(s => categoryKey(s.categorySlug || s.name?.ar || s.name?.en)));
+        (cat.subcategories || []).forEach(sub => {
+            const key = categoryKey(sub.categorySlug || sub.name?.ar || sub.name?.en);
+            if (key && !seen.has(key)) {
+                existing.subcategories.push(sub);
+                seen.add(key);
+            }
+        });
+    });
+    return out.sort((a, b) => (a.order || 999) - (b.order || 999));
+}
+
+async function loadSupabaseCategories(base) {
+    if (!window.Supabase || !window.Supabase.Categories || !window.Supabase.Subcategories) return base || [];
+    const rows = await window.Supabase.Categories.getAll().catch(() => []);
+    if (!Array.isArray(rows) || !rows.length) return base || [];
+    const subRows = await window.Supabase.Subcategories.getAll().catch(() => []);
+    const grouped = new Map();
+    (Array.isArray(subRows) ? subRows : []).forEach(sub => {
+        const categoryId = String(sub.category_id || "");
+        if (!categoryId) return;
+        if (!grouped.has(categoryId)) grouped.set(categoryId, []);
+        grouped.get(categoryId).push(sub);
+    });
+    const live = rows.map((row, index) => {
+        const slug = rowSlug(row);
+        return {
+            id: row.id,
+            name: { ar: row.name_ar || row.name_en || slug, en: row.name_en || row.name_ar || slug },
+            categorySlug: slug,
+            image: row.image || "",
+            url: `/categories/${slug}`,
+            order: Number(row.sort_order || row.order || index + 1),
+            subcategories: (grouped.get(String(row.id)) || []).map(sub => {
+                const subSlug = rowSlug(sub);
+                return {
+                    id: sub.id,
+                    name: { ar: sub.name_ar || sub.name_en || subSlug, en: sub.name_en || sub.name_ar || subSlug },
+                    categorySlug: subSlug,
+                    image: sub.image || "",
+                    url: `/categories/${slug}/${subSlug}`
+                };
+            })
+        };
+    });
+    return mergeCategoryLists(base || [], live);
 }
 
 let _productsCache = null, _productsCacheTs = 0, _productsRefreshPromise = null;

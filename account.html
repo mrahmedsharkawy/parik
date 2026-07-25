@@ -313,7 +313,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   padding: 64px 0 0 !important;
   background: #f4f5f7 !important;
   min-height: 100vh !important;
-  overflow-x: hidden !important;
+  overflow-x: clip !important;
+  overflow-y: visible !important;
 }
 
 /* منع mobile-nav-bar/styles.css من تضييق main */
@@ -754,10 +755,18 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   .aqn-btn.active span { color: #D4AF37; }
 }
 @media (max-width: 768px) {
+  html, body {
+    height: auto !important;
+    min-height: 100% !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
   /* main */
   #main.main {
     padding: 58px 0 0 !important;
-    overflow-x: hidden !important;
+    overflow-x: clip !important;
+    overflow-y: visible !important;
   }
 
   /* الـ layout: عمود واحد بالإجبار */
@@ -3678,15 +3687,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </footer>
 <script src="/java/supabase.min.js?v=supabase-20260725a" defer></script>
-<script src="/java/main.min.js?v=131" defer></script>
+<script src="/java/main.min.js?v=132" defer></script>
 <script src="/java/sw-refresh.js?v=sw-refresh-20260725j" defer></script>
 <script src="/java/instant-nav.js?v=instant-nav-20260725a" defer></script>
 <script src="/translations/translation.min.js" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
-<script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260725f" defer></script>
+<script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260725g" defer></script>
 <script src="/java/push-welcome.js?v=push-welcome-20260725j" defer></script>
 <script src="/java/notifications.min.js?v=notifications-20260725j" defer></script>
-<script type="module" src="./java/Products.min.js?v=products-20260725i"></script>
+<script type="module" src="./java/Products.min.js?v=products-20260725j"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   function buildSocialBar(s) {

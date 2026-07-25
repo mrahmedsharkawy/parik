@@ -604,6 +604,64 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     return (cat && cat.name && (cat.name[lang] || cat.name.ar || cat.name.en)) || '';
   }
 
+  function categoryKey(value) {
+    return String(value || '').trim().toLowerCase().replace(/\s+/g, '-');
+  }
+
+  function rowSlug(row) {
+    return String(row && (row.category_slug || row.slug || row.name_en || row.name_ar || row.id) || '').trim();
+  }
+
+  function mergeCategoryLists(base, extra) {
+    const out = Array.isArray(base) ? base.map(cat => ({ ...cat, subcategories: Array.isArray(cat.subcategories) ? cat.subcategories.slice() : [] })) : [];
+    const findCat = cat => out.find(existing => {
+      const vals = [existing.categorySlug, existing.name && existing.name.ar, existing.name && existing.name.en].map(categoryKey);
+      return [cat.categorySlug, cat.name && cat.name.ar, cat.name && cat.name.en].map(categoryKey).some(v => v && vals.includes(v));
+    });
+    (Array.isArray(extra) ? extra : []).forEach(cat => {
+      const existing = findCat(cat);
+      if (!existing) { out.push(cat); return; }
+      const subs = existing.subcategories || [];
+      Object.assign(existing, { ...cat, subcategories: subs });
+      const seen = new Set(subs.map(s => categoryKey(s.categorySlug || (s.name && (s.name.ar || s.name.en)))));
+      (cat.subcategories || []).forEach(sub => {
+        const key = categoryKey(sub.categorySlug || (sub.name && (sub.name.ar || sub.name.en)));
+        if (key && !seen.has(key)) { subs.push(sub); seen.add(key); }
+      });
+    });
+    return out.sort((a,b) => (a.order || 999) - (b.order || 999));
+  }
+
+  async function loadSupabaseCategories(base) {
+    if (!window.Supabase || !window.Supabase.Categories || !window.Supabase.Subcategories) return base || [];
+    const rows = await window.Supabase.Categories.getAll().catch(() => []);
+    if (!Array.isArray(rows) || !rows.length) return base || [];
+    const subRows = await window.Supabase.Subcategories.getAll().catch(() => []);
+    const grouped = new Map();
+    (Array.isArray(subRows) ? subRows : []).forEach(sub => {
+      const categoryId = String(sub.category_id || '');
+      if (!categoryId) return;
+      if (!grouped.has(categoryId)) grouped.set(categoryId, []);
+      grouped.get(categoryId).push(sub);
+    });
+    const live = rows.map((row, index) => {
+      const slug = rowSlug(row);
+      return {
+        id: row.id,
+        name: { ar: row.name_ar || row.name_en || slug, en: row.name_en || row.name_ar || slug },
+        categorySlug: slug,
+        image: row.image || '',
+        url: `/categories/${slug}`,
+        order: Number(row.sort_order || row.order || index + 1),
+        subcategories: (grouped.get(String(row.id)) || []).map(sub => {
+          const subSlug = rowSlug(sub);
+          return { id: sub.id, name: { ar: sub.name_ar || sub.name_en || subSlug, en: sub.name_en || sub.name_ar || subSlug }, categorySlug: subSlug, image: sub.image || '', url: `/categories/${slug}/${subSlug}` };
+        })
+      };
+    });
+    return mergeCategoryLists(base || [], live);
+  }
+
   // تحميل البيانات
   function mapSbProduct(p) {
     const imgs = [];
@@ -628,7 +686,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   async function initPage() {
     let cats = [], prods = [];
+    let adminCats = [];
+    try {
+      const saved = JSON.parse(localStorage.getItem('admin_categories') || 'null');
+      if (Array.isArray(saved) && saved.length) adminCats = saved;
+    } catch(e) {}
     try { cats = await fetch('java/Categories.json', {cache:'no-store'}).then(r=>r.json()); } catch(e) {}
+    cats = mergeCategoryLists(cats, adminCats);
+    cats = await loadSupabaseCategories(cats);
 
     // جلب المنتجات من Supabase أولاً
     if (window.Supabase && window.Supabase.Products) {
@@ -1131,14 +1196,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </footer>
 <script src="/java/supabase.min.js?v=supabase-20260725a" defer></script>
-<script src="/java/main.min.js?v=131" defer></script>
+<script src="/java/main.min.js?v=132" defer></script>
 <script src="/java/sw-refresh.js?v=sw-refresh-20260725j" defer></script>
 <script src="/java/instant-nav.js?v=instant-nav-20260725a" defer></script>
 <script src="/translations/translation.min.js" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
-<script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260725f" defer></script>
+<script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260725g" defer></script>
 <script src="/java/push-welcome.js?v=push-welcome-20260725j" defer></script>
-<script type="module" src="./java/Products.min.js?v=products-20260725i"></script> <!-- ده يفضل يفضل في الآخر -->
+<script type="module" src="./java/Products.min.js?v=products-20260725j"></script> <!-- ده يفضل يفضل في الآخر -->
 </body>
 </html>
 
