@@ -731,12 +731,16 @@ main,
   }
 
   /* each card stays intact in a column, fills column width, equal bottom gap */
-  .product-card {
+  .products-row > .product-card:not(.product-card-cart) {
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
     margin: 0 0 8px !important;       /* equal vertical spacing */
     height: auto !important;
+    min-height: 0 !important;
+    display: inline-block !important;
+    vertical-align: top !important;
+    align-self: flex-start !important;
     box-sizing: border-box;
 
     break-inside: avoid;
@@ -745,11 +749,16 @@ main,
   }
 
   /* images adapt naturally to content height */
-  .product-img {
+  .products-row > .product-card:not(.product-card-cart) > .product-img {
     width: 100% !important;
-    height: auto !important;          /* override any fixed heights */
-    object-fit: cover;
+    height: auto !important;          /* uses the 750x750 intrinsic ratio */
+    aspect-ratio: 1 / 1 !important;
+    object-fit: cover !important;
     display: block;
+  }
+  .products-row > .product-card:not(.product-card-cart) .product-content {
+    height: auto !important;
+    min-height: 0 !important;
   }
   /* اسم المنتج */
 .product-name {

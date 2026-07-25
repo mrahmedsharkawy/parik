@@ -253,6 +253,28 @@ function readProductsCache(storage, key, invalidateTs, maxAge) {
     return null;
 }
 
+function readImmediateProductsCache(invalidateTs) {
+    if (_productsCache && _productsCache.length > 0 && (!_productsCacheTs || _productsCacheTs > invalidateTs)) return {
+        ts: _productsCacheTs || Date.now(),
+        data: _productsCache
+    };
+    for (const source of [ [ sessionStorage, PRODUCTS_SESSION_CACHE_KEY ], [ localStorage, PRODUCTS_LOCAL_CACHE_KEY ] ]) try {
+        const obj = readProductsCache(source[0], source[1], invalidateTs || 0, PRODUCTS_LOCAL_CACHE_TTL);
+        if (obj) return obj;
+    } catch (e) {}
+    try {
+        const adminProds = localStorage.getItem("admin_products");
+        if (adminProds) {
+            const parsed = JSON.parse(adminProds);
+            if (Array.isArray(parsed) && parsed.length) return {
+                ts: Date.now(),
+                data: parsed
+            };
+        }
+    } catch (e) {}
+    return null;
+}
+
 function refreshProductsInBackground() {
     if (_productsRefreshPromise || !(window.Supabase && window.Supabase.Products)) return;
     _productsRefreshPromise = window.Supabase.Products.getAll(100).then(function(sbProds) {
@@ -274,12 +296,14 @@ function refreshProductsInBackground() {
 });
 
 export async function fetchProducts(forceFresh) {
-    await ensureStoreProductSortLoaded();
     let invalidateTs = 0;
     try {
         invalidateTs = parseInt(localStorage.getItem("x2_products_updated") || "0", 10);
     } catch (e) {}
-    if (!forceFresh && _productsCache && _productsCache.length > 0 && (!_productsCacheTs || _productsCacheTs > invalidateTs)) return sortProductsForStore(_productsCache);
+    if (!forceFresh) {
+        const instant = readImmediateProductsCache(invalidateTs);
+        if (instant && Array.isArray(instant.data) && instant.data.length) return _productsCache = sortProductsForStore(instant.data), _productsCacheTs = instant.ts, refreshProductsInBackground(), _productsCache;
+    }
     let staleCache = null;
     if (!forceFresh) {
         try {
@@ -297,6 +321,7 @@ export async function fetchProducts(forceFresh) {
         const cached = sessionStorage.getItem(PRODUCTS_SESSION_CACHE_KEY) || localStorage.getItem(PRODUCTS_LOCAL_CACHE_KEY);
         cached && (staleCache = JSON.parse(cached).data);
     } catch (e) {}
+    await ensureStoreProductSortLoaded();
     try {
         if (window.Supabase && window.Supabase.Products) {
             const sbProds = await window.Supabase.Products.getAll(100);
@@ -564,7 +589,7 @@ export function createProductCard(prod) {
     {
         const im = document.createElement("img");
         const isHomePage = /^(\/|\/index\.html)$/i.test(location.pathname);
-        const imgSize = isHomePage && window.innerWidth <= 700 ? 180 : 230;
+        const imgSize = 750;
         const isPriority = _priorityProductImages < (isHomePage ? 2 : 6);
         _priorityProductImages++;
         im.className = "product-img";
@@ -574,7 +599,9 @@ export function createProductCard(prod) {
         im.decoding = "async";
         im.width = imgSize;
         im.height = imgSize;
-        im.style.height = imgSize + "px";
+        im.style.width = "100%";
+        im.style.height = "auto";
+        im.style.aspectRatio = "1 / 1";
         im.style.objectFit = "cover";
         im.style.backgroundColor = "#f0f0f0";
         im.src = optimizeSupabaseImageUrl(normalizeAssetUrl(firstImage || ""), imgSize, imgSize);
@@ -754,32 +781,7 @@ document.addEventListener("DOMContentLoaded", async function() {
         const sortedList = direction === "preserve" ? (Array.isArray(list) ? list.slice() : []) : sortProductsForStore(list), tempContainer = document.createElement("div"), rowDiv = document.createElement("div");
         rowDiv.className = "products-row", tempContainer.appendChild(rowDiv);
         const isHomePage = /^(\/|\/index\.html)$/i.test(location.pathname);
-        if (isHomePage && !window.__x2HomeProductsUnlocked && !sessionStorage.getItem("x2_return_to_scroll_url")) {
-            _priorityProductImages = 0;
-            const firstVisible = sortedList.slice(0, 6);
-            const fragment = document.createDocumentFragment();
-            firstVisible.forEach(product => {
-                try {
-                    fragment.appendChild(createProductCard(product));
-                } catch (err) {
-                    console.warn("Skipping product card render:", err, product);
-                }
-            });
-            rowDiv.appendChild(fragment);
-            productsContainer.innerHTML = "";
-            productsContainer.appendChild(rowDiv);
-            productsContainer.classList.remove("changing");
-            productsContainer.style.minHeight = "";
-            const unlock = () => {
-                if (window.__x2HomeProductsUnlocked) return;
-                window.__x2HomeProductsUnlocked = true;
-                [ "pointerdown", "touchstart", "keydown", "scroll" ].forEach(type => window.removeEventListener(type, unlock));
-                renderProductsGrid(sortedList, productsContainer, direction);
-            };
-            [ "pointerdown", "touchstart", "keydown", "scroll" ].forEach(type => window.addEventListener(type, unlock, { once: true, passive: true }));
-            return;
-        }
-        const FIRST_CHUNK = Math.min(20, sortedList.length);
+        const FIRST_CHUNK = isHomePage ? Math.min(40, sortedList.length) : Math.min(20, sortedList.length);
         const deferHomeRest = false;
         _priorityProductImages = 0;
         const columns = window.matchMedia("(max-width: 899px)").matches ? 2 : window.matchMedia("(max-width: 1300px)").matches ? 3 : 4;
@@ -968,6 +970,15 @@ document.addEventListener("DOMContentLoaded", async function() {
         }
     });
     try {
+        const isHomePage = /^(\/|\/index\.html)$/i.test(location.pathname);
+        if (isHomePage && productsContainer && !productsContainer.querySelector(".product-card")) {
+            const instantProducts = readImmediateProductsCache(0);
+            if (instantProducts && Array.isArray(instantProducts.data) && instantProducts.data.length) {
+                products = sortProductsForStore(instantProducts.data);
+                renderProductsGrid(products, productsContainer, "preserve");
+                refreshProductsInBackground();
+            }
+        }
         const categoriesData = await fetchCategories();
         window.categoriesData = categoriesData, function(categoriesData) {
             if (!sideMenu) return;

@@ -106,7 +106,7 @@
     }
   });
   function initPushWelcome(){
-    window.maybeShowPushWelcome();
+    // Keep customer navigation quiet; call window.maybeShowPushWelcome() explicitly from a user action if needed.
   }
   if(document.body)initPushWelcome();
   else document.addEventListener('DOMContentLoaded',initPushWelcome,{once:true});
