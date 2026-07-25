@@ -95,6 +95,34 @@ function x2VisitorAreaFallback() {
         if (coupon.used) return cartEn("❌ هذا الكود تم استخدامه مسبقاً", "❌ This coupon was already used");
         return "";
     }
+    function normalizeCouponPhone(v) {
+        return String(v || "").replace(/\D/g, "");
+    }
+    function orderCouponCode(order) {
+        return String(order?.coupon_code || order?.couponCode || order?.coupon || "").toUpperCase();
+    }
+    function orderCustomerPhone(order) {
+        return normalizeCouponPhone(order?.customer_phone || order?.customerPhone || order?.phone || order?.shipping?.phone || "");
+    }
+    async function customerUsedCouponBefore(code) {
+        const couponCode = String(code || "").toUpperCase();
+        if (!couponCode) return !1;
+        let profile = {};
+        try { profile = JSON.parse(localStorage.getItem("x2_profile") || "{}"); } catch (e) {}
+        const customerPhone = normalizeCouponPhone(profile.phone || ""), customerEmail = String(profile.email || "").trim().toLowerCase();
+        let localOrders = [];
+        try { localOrders = JSON.parse(localStorage.getItem("x2_orders") || "[]"); } catch (e) {}
+        const matchesCustomer = order => {
+            const phone = orderCustomerPhone(order), email = String(order?.customer_email || order?.customerEmail || order?.email || order?.shipping?.email || "").trim().toLowerCase();
+            return customerPhone && phone && phone === customerPhone || customerEmail && email && email === customerEmail || !customerPhone && !customerEmail;
+        };
+        if (Array.isArray(localOrders) && localOrders.some(order => orderCouponCode(order) === couponCode && matchesCustomer(order))) return !0;
+        if (customerPhone && window.Supabase && window.Supabase.Orders && typeof window.Supabase.Orders.getByPhone === "function") try {
+            const remoteOrders = await window.Supabase.Orders.getByPhone(customerPhone);
+            if (Array.isArray(remoteOrders) && remoteOrders.some(order => orderCouponCode(order) === couponCode)) return !0;
+        } catch (e) {}
+        return !1;
+    }
     function makeKey(p) {
         if (p?.id) return String(p.id);
         return `${(p?.title || "").trim().toLowerCase()}|${(p?.meta || "").trim().toLowerCase()}|${Number(p?.priceCurrent || 0).toFixed(2)}|${p?.img || ""}`;
@@ -381,11 +409,14 @@ function x2VisitorAreaFallback() {
                 return sum + cur * qty;
             }, 0);
             let stored = null;
-            if (window.Supabase && window.Supabase.Coupons && typeof window.Supabase.Coupons.getByCode === "function") stored = await window.Supabase.Coupons.getByCode(code);
+            if (window.Supabase && window.Supabase.Coupons && typeof window.Supabase.Coupons.getByCode === "function") try {
+                stored = await window.Supabase.Coupons.getByCode(code);
+            } catch (e) {}
             if (!stored) stored = JSON.parse(localStorage.getItem("x2_coupon_code") || "null");
             if (stored && stored.code && String(stored.code).toUpperCase() !== code) stored = null;
             const problem = isCouponUsable(stored, actualTotal);
             if (problem) return void show(problem, !1);
+            if (await customerUsedCouponBefore(code)) return void show(cartEn("❌ تم استخدام هذا الكوبون من قبل لهذا العميل", "❌ This customer has already used this coupon"), !1);
             const amount = couponDiscountAmount(stored, actualTotal);
             if (!(amount > 0)) return void show(cartEn("❌ لا يوجد خصم متاح لهذا الكوبون", "❌ No discount is available for this coupon"), !1);
             sessionStorage.setItem("x2_coupon_applied", JSON.stringify({
@@ -667,8 +698,10 @@ function x2VisitorAreaFallback() {
         sessionStorage.setItem("x2_after_wa", "1");
         document.addEventListener("visibilitychange", handleVisibilityReturn);
         window.open(url, "_self");
+        let appliedCouponForOrder = null;
         try {
             const applied = JSON.parse(sessionStorage.getItem("x2_coupon_applied") || localStorage.getItem("x2_coupon_applied") || "null");
+            appliedCouponForOrder = applied && applied.code ? String(applied.code).toUpperCase() : null;
             if (applied && applied.code) {
                 let storedCoupon = JSON.parse(localStorage.getItem("x2_coupon_code") || "null");
                 storedCoupon && storedCoupon.code === applied.code && (storedCoupon.used = !0, localStorage.setItem("x2_coupon_code", JSON.stringify(storedCoupon)));
@@ -699,6 +732,7 @@ function x2VisitorAreaFallback() {
                 cashback: 5,
                 cashbackStatus: "pending",
                 cashbackExpiresAt: expiresAt,
+                couponCode: appliedCouponForOrder,
                 items: items.map(i => {
                     const rawImg = i.image || i.img || "";
                     return {
@@ -741,7 +775,16 @@ function x2VisitorAreaFallback() {
                     customerName: profile.name || "",
                     customerPhone: profile.phone || "",
                     customerEmail: profile.email || "",
+                    couponCode: appliedCouponForOrder,
                     address: profile.address_full || null
+                }).then(() => {
+                    if (!appliedCouponForOrder) return;
+                    const anon = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E";
+                    return fetch("https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/orders?order_number=eq." + encodeURIComponent(orderId), {
+                        method: "PATCH",
+                        headers: { apikey: anon, Authorization: "Bearer " + anon, "Content-Type": "application/json", Prefer: "return=minimal" },
+                        body: JSON.stringify({ coupon_code: appliedCouponForOrder })
+                    }).catch(() => {});
                 }).catch(err => {
                     console.error("فشل رفع الطلب:", err.message);
                 });

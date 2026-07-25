@@ -1,5 +1,5 @@
 ﻿/* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v174';
+const CACHE = 'bariq-v178';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -153,24 +153,6 @@ self.addEventListener('activate', function(e) {
 
 self.addEventListener('fetch', function(e) {
   const url = e.request.url;
-  if (url.includes('ipapi.co')) {
-    e.respondWith(Promise.resolve(new Response(JSON.stringify({
-      ip: '',
-      city: '',
-      region: '',
-      country_name: '',
-      country: '',
-      source: 'local-fallback'
-    }), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json; charset=utf-8',
-        'Access-Control-Allow-Origin': '*',
-        'Cache-Control': 'no-store'
-      }
-    })));
-    return;
-  }
   if (url.includes('supabase.co') || url.includes('/rest/') || url.includes('/auth/') || url.includes('/storage/')) return;
   if (e.request.method !== 'GET') return;
 

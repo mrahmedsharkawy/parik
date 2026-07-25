@@ -647,14 +647,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </footer>
 <script src="/java/supabase.min.js" defer></script>
-<script src="/java/main.min.js?v=125" defer></script>
-<script src="/java/sw-refresh.js?v=sw-refresh-20260725c" defer></script>
+<script src="/java/main.min.js?v=127" defer></script>
+<script src="/java/sw-refresh.js?v=sw-refresh-20260725g" defer></script>
 <script src="/java/instant-nav.js?v=instant-nav-20260724b" defer></script>
 <script src="/translations/translation.min.js" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
 <script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260725d" defer></script>
-<script src="/java/push-welcome.js?v=push-welcome-20260725c" defer></script>
-<script src="/java/notifications.min.js?v=notifications-20260725c" defer></script>
+<script src="/java/push-welcome.js?v=push-welcome-20260725g" defer></script>
+<script src="/java/notifications.min.js?v=notifications-20260725g" defer></script>
 <script type="module" src="/java/Products.min.js?v=products-20260725f" defer></script>
 
 <style>
@@ -806,6 +806,15 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:8px!import
   let suppressCardClickUntil = 0;
   const cardSelector = '.product-card, .dp-card';
 
+  document.addEventListener('wheel', function(e) {
+    if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+    const before = window.scrollY || window.pageYOffset || 0;
+    requestAnimationFrame(function() {
+      const after = window.scrollY || window.pageYOffset || 0;
+      if (Math.abs(after - before) < 1) window.scrollBy({ top: e.deltaY, left: 0, behavior: 'auto' });
+    });
+  }, { passive: true, capture: true });
+
   document.addEventListener('touchstart', function(e) {
     if (!e.touches || e.touches.length !== 1) return;
     if (!e.target.closest || !e.target.closest(cardSelector)) return;
@@ -876,6 +885,12 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:8px!import
       suppressClickUntil = Date.now() + 500;
     }
   }, { passive: true });
+
+  grid.addEventListener('wheel', function(e) {
+    if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+    e.preventDefault();
+    window.scrollBy({ top: e.deltaY, left: 0, behavior: 'auto' });
+  }, { passive: false });
 
   grid.addEventListener('touchend', resetDrag, { passive: true });
   grid.addEventListener('touchcancel', resetDrag, { passive: true });
@@ -1079,12 +1094,12 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:8px!import
   // تسجيل Service Worker لدعم PWA (تثبيت الموقع كتطبيق)
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
-      navigator.serviceWorker.register('/sw.js?v=174', { updateViaCache: 'none' }).then(function(reg) {
+      navigator.serviceWorker.register('/sw.js?v=178', { updateViaCache: 'none' }).then(function(reg) {
         var refreshing = false;
         navigator.serviceWorker.addEventListener('controllerchange', function() {
-          if (refreshing || sessionStorage.getItem('sw-v174-refresh') === '1') return;
+          if (refreshing || sessionStorage.getItem('sw-v178-refresh') === '1') return;
           refreshing = true;
-          sessionStorage.setItem('sw-v174-refresh', '1');
+          sessionStorage.setItem('sw-v178-refresh', '1');
           location.reload();
         });
         if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });

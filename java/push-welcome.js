@@ -47,7 +47,7 @@
         return false;
       }
       var reg=await navigator.serviceWorker.getRegistration('/');
-      if(!reg)reg=await navigator.serviceWorker.register('/sw.js?v=174',{updateViaCache:'none'});
+      if(!reg)reg=await navigator.serviceWorker.register('/sw.js?v=178',{updateViaCache:'none'});
       if(reg&&reg.update)reg.update().catch(function(){});
       await navigator.serviceWorker.ready;
       var sub=await reg.pushManager.getSubscription();
