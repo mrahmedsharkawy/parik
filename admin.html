@@ -3465,8 +3465,11 @@ function addManualCustomer() {
 
 /* ================= إحصائيات الزوار ================= */
 const LS_VISITORS = 'x2_visitors';
+const LS_VISITOR_AREAS = 'x2_visitor_area_counts_v1';
 
 function getVisitors() { try { return JSON.parse(localStorage.getItem(LS_VISITORS)||'[]'); } catch(e) { return []; } }
+function getSavedVisitorAreas() { try { return JSON.parse(localStorage.getItem(LS_VISITOR_AREAS)||'[]'); } catch(e) { return []; } }
+function saveVisitorAreas(items) { try { localStorage.setItem(LS_VISITOR_AREAS, JSON.stringify(items||[])); } catch(e) {} }
 
 function visitorArea(v) {
   const rawCity = v.area || v.city || v.region || v.address || '';
@@ -3522,19 +3525,18 @@ async function renderVisitorsStats() {
     if (locEl) {
       const hasArea = v => visitorArea(v) !== 'غير محدد';
       const localRows = getVisitors().filter(isUsefulVisitor);
-      const localTodayRows = localRows.filter(v => new Date(visitDate(v)).toDateString() === today);
-      const todayAreaRows = todayVisits.filter(hasArea);
-      const localTodayAreaRows = localTodayRows.filter(hasArea);
       const remoteAllAreas = rows.filter(hasArea);
       const localAllAreas = localRows.filter(hasArea);
-      const locRows = todayAreaRows.length ? todayAreaRows : (localTodayAreaRows.length ? localTodayAreaRows : (remoteAllAreas.length ? remoteAllAreas : localAllAreas));
+      const locRows = remoteAllAreas.length ? remoteAllAreas : localAllAreas;
       const locMap = {};
       locRows.forEach(v => {
         const loc = hasArea(v) ? visitorArea(v) : 'غير محدد';
         locMap[loc] = (locMap[loc]||0) + 1;
       });
       const sorted = Object.entries(locMap).sort((a,b) => b[1]-a[1]).slice(0, 10);
-      locEl.innerHTML = sorted.length ? sorted.map(([loc, count]) =>
+      if (sorted.length) saveVisitorAreas(sorted);
+      const displayRows = sorted.length ? sorted : getSavedVisitorAreas();
+      locEl.innerHTML = displayRows.length ? displayRows.map(([loc, count]) =>
         `<div style="display:flex;justify-content:space-between;font-size:.82rem;padding:3px 6px;background:#f7f8fc;border-radius:6px">
           <span>🌍 ${esc(loc)}</span><b style="color:var(--navy)">${count}</b>
         </div>`).join('') : '<span style="color:#aaa;font-size:.8rem">لا توجد زيارات بعد</span>';
@@ -3559,7 +3561,13 @@ async function renderVisitorsStats() {
     else {
       if (todayEl) todayEl.textContent = '0';
       if (allEl)   allEl.textContent   = '0';
-      if (locEl)   locEl.innerHTML = '<span style="color:#aaa;font-size:.8rem">لا توجد زيارات بعد</span>';
+      if (locEl) {
+        const savedAreas = getSavedVisitorAreas();
+        locEl.innerHTML = savedAreas.length ? savedAreas.map(([loc, count]) =>
+          `<div style="display:flex;justify-content:space-between;font-size:.82rem;padding:3px 6px;background:#f7f8fc;border-radius:6px">
+            <span>🌍 ${esc(loc)}</span><b style="color:var(--navy)">${count}</b>
+          </div>`).join('') : '<span style="color:#aaa;font-size:.8rem">لا توجد زيارات بعد</span>';
+      }
     }
   }
 }
@@ -3838,6 +3846,7 @@ function exportExternalMarketingCSV(){
 async function clearVisitors() {
   if (!confirm('مسح سجل الزيارات؟')) return;
   localStorage.removeItem(LS_VISITORS);
+  localStorage.removeItem(LS_VISITOR_AREAS);
   const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
   try {
     const adminToken = await getValidAdminToken() || ANON;
