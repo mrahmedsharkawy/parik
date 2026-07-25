@@ -755,8 +755,21 @@ document.addEventListener("DOMContentLoaded", async function() {
         rowDiv.className = "products-row", tempContainer.appendChild(rowDiv);
         const isHomePage = /^(\/|\/index\.html)$/i.test(location.pathname);
         if (isHomePage && !window.__x2HomeProductsUnlocked && !sessionStorage.getItem("x2_return_to_scroll_url")) {
+            _priorityProductImages = 0;
+            const firstVisible = sortedList.slice(0, 6);
+            const fragment = document.createDocumentFragment();
+            firstVisible.forEach(product => {
+                try {
+                    fragment.appendChild(createProductCard(product));
+                } catch (err) {
+                    console.warn("Skipping product card render:", err, product);
+                }
+            });
+            rowDiv.appendChild(fragment);
+            productsContainer.innerHTML = "";
+            productsContainer.appendChild(rowDiv);
             productsContainer.classList.remove("changing");
-            productsContainer.style.minHeight = window.matchMedia("(max-width: 899px)").matches ? "620px" : "520px";
+            productsContainer.style.minHeight = "";
             const unlock = () => {
                 if (window.__x2HomeProductsUnlocked) return;
                 window.__x2HomeProductsUnlocked = true;
@@ -766,8 +779,6 @@ document.addEventListener("DOMContentLoaded", async function() {
             [ "pointerdown", "touchstart", "keydown", "scroll" ].forEach(type => window.addEventListener(type, unlock, { once: true, passive: true }));
             return;
         }
-        const loadingIndicator = document.createElement("div");
-        loadingIndicator.id = "grid-loading-indicator", loadingIndicator.style.cssText = "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40px;height:40px;border:4px solid #f3f3f3;border-top:4px solid #3498db;border-radius:50%;animation:spin 1s linear infinite;";
         const FIRST_CHUNK = Math.min(20, sortedList.length);
         const deferHomeRest = false;
         _priorityProductImages = 0;
@@ -775,7 +786,7 @@ document.addEventListener("DOMContentLoaded", async function() {
         const estimatedRows = Math.max(1, Math.ceil((deferHomeRest ? FIRST_CHUNK : sortedList.length) / columns));
         const estimatedCardHeight = window.matchMedia("(max-width: 899px)").matches ? 328 : 360;
         productsContainer.classList.add("changing"), productsContainer.style.minHeight = Math.max(200, estimatedRows * estimatedCardHeight) + "px",
-        productsContainer.style.position = "relative", productsContainer.appendChild(loadingIndicator);
+        productsContainer.style.position = "relative";
         let i = 0;
         let homeRestDeferred = false;
         !function appendChunk() {
