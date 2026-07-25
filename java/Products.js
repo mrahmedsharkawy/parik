@@ -327,7 +327,7 @@ export async function fetchProducts(forceFresh) {
             }
         }
     } catch (e) {}
-    throw new Error("Products source not available!");
+    return [];
 }
 
 function getCategoryFromUrl() {
@@ -393,17 +393,48 @@ function saveProductReturnScrollPosition(markReturn) {
     } catch (e) {}
 }
 
+function saveProductReturnTarget(card) {
+    try {
+        if (!card || !card.dataset || !card.dataset.productId) return;
+        const rect = card.getBoundingClientRect();
+        sessionStorage.setItem("x2_product_return_target", JSON.stringify({
+            url: location.href,
+            productId: card.dataset.productId,
+            offset: Math.max(8, Math.round(rect.top))
+        }));
+    } catch (e) {}
+}
+
+function restoreProductReturnTarget() {
+    try {
+        const target = JSON.parse(sessionStorage.getItem("x2_product_return_target") || "null");
+        if (!target || target.url !== location.href || !target.productId) return false;
+        const selector = `.product-card[data-product-id="${CSS.escape(String(target.productId))}"]`;
+        const card = document.querySelector(selector);
+        if (!card) return false;
+        const y = Math.max(0, Math.round((window.scrollY || window.pageYOffset || 0) + card.getBoundingClientRect().top - (Number(target.offset) || 8)));
+        window.scrollTo({ top: y, behavior: "auto" });
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
 function restoreProductReturnScrollPosition() {
     try {
         if (sessionStorage.getItem("x2_return_to_scroll_url") !== location.href) return;
         const productReturnPositions = JSON.parse(sessionStorage.getItem("x2_product_return_positions") || "{}");
         const positions = productReturnPositions[location.href] ? productReturnPositions : JSON.parse(sessionStorage.getItem("x2_scroll_positions") || "{}");
         const y = Number(positions[location.href] || 0);
-        if (!(y > 0)) return;
-        [0, 120, 420, 900, 1500].forEach(delay => setTimeout(() => window.scrollTo({ top: y, behavior: "auto" }), delay));
+        const hasTarget = !!sessionStorage.getItem("x2_product_return_target");
+        if (!(y > 0) && !hasTarget) return;
+        [0, 120, 420, 900, 1500, 2500, 4000, 6000].forEach(delay => setTimeout(() => {
+            if (restoreProductReturnTarget()) return;
+            if (y > 0) window.scrollTo({ top: y, behavior: "auto" });
+        }, delay));
         setTimeout(() => {
             try { sessionStorage.removeItem("x2_return_to_scroll_url"); } catch (e) {}
-        }, 1700);
+        }, 6600);
     } catch (e) {}
 }
 
@@ -426,6 +457,7 @@ if (typeof window !== "undefined") {
 export function createProductCard(prod) {
     window.createProductCard || (window.createProductCard = createProductCard);
     const card = document.createElement("div");
+    card.dataset.productId = String(prod.id || prod.productId || "");
     const productUrl = `/product/${encodeURIComponent(prod.id)}${(localStorage.getItem("lang") || document.documentElement.lang) === "en" ? "?lang=en" : ""}`;
     function rememberQuickProduct() {
         try {
@@ -467,6 +499,7 @@ export function createProductCard(prod) {
     }),
     card.addEventListener("click", () => {
         saveProductReturnScrollPosition(true);
+        saveProductReturnTarget(card);
         rememberQuickProduct();
         try {
             const HIST_KEY = "x2_history", img = Array.isArray(prod.img) ? prod.img[0] : prod.img || "", name = "object" == typeof prod.name ? prod.name.ar || prod.name.en : prod.name || "", entry = {
@@ -749,6 +782,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                 productsContainer.innerHTML = "", productsContainer.appendChild(rowDiv), productsContainer.classList.remove("changing");
                 const loader = document.getElementById("temp-popstate-loader") || document.getElementById("grid-loading-indicator");
                 loader && loader.remove();
+                setTimeout(restoreProductReturnScrollPosition, 0);
             }
         }();
     }
