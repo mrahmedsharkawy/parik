@@ -1704,6 +1704,39 @@ function renderMedia(){
 }
 function removeMedia(i){ currentMedia.splice(i,1); renderMedia(); }
 
+function hasProductDiscount(p){
+  const price = parseFloat(p && p.price);
+  const oldPrice = parseFloat(p && p.oldPrice);
+  return isFinite(price) && isFinite(oldPrice) && price > 0 && oldPrice > price;
+}
+
+async function sendDiscountProductPush(product){
+  if(!hasProductDiscount(product)) return;
+  const ANON_PUSH = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+  const name = getT(product.name) || 'منتج جديد';
+  const price = parseFloat(product.price) || 0;
+  const oldPrice = parseFloat(product.oldPrice) || 0;
+  const pct = Math.max(1, Math.round(((oldPrice - price) / oldPrice) * 100));
+  const imgs = Array.isArray(product.img) ? product.img : (product.img ? [product.img] : []);
+  const pushPayload = {
+    title: 'عرض جديد في بريق',
+    body: `${name} عليه خصم ${pct}% لفترة محدودة`,
+    url: `/product/${encodeURIComponent(product.supabaseId || product.id)}`,
+    image: imgs.find(s => s && !String(s).startsWith('data:')) || undefined,
+    type: 'discount_product',
+    iconText: '🔥',
+    emoji: '🔥'
+  };
+  const adminToken = (await getValidAdminToken()) || ANON_PUSH;
+  const resp = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/functions/v1/hyper-api', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'apikey': ANON_PUSH, 'Authorization': 'Bearer ' + adminToken },
+    body: JSON.stringify(pushPayload)
+  });
+  if(!resp.ok) throw new Error(await resp.text());
+  return resp.json().catch(() => null);
+}
+
 /* ================= حفظ / تعديل منتج ================= */
 async function saveProduct(){
   // ── منع الحفظ إذا في ملفات لسه بترفع ──
@@ -1723,6 +1756,7 @@ async function saveProduct(){
   const idField = $('p-id').value;
   const editing = idField !== '';
   const id = editing ? Number(idField) : (products.reduce((m,p)=>Math.max(m, Number(p.id)||0),0)+1);
+  const previousProduct = editing ? products.find(p=>Number(p.id)===id) : null;
 
   // فقط الروابط الدائمة (لا base64 ولا blob مؤقت)
   const imgArr = currentMedia.map(m=>m.src).filter(s => s && !s.startsWith('blob:'));
@@ -1740,6 +1774,7 @@ async function saveProduct(){
     ratingCount: numOrUndef($('p-ratingcount').value),
     timerEnd: $('p-timerend').value ? new Date($('p-timerend').value).toISOString() : undefined
   };
+  const shouldSendDiscountPush = hasProductDiscount(prod) && (!editing || !hasProductDiscount(previousProduct));
   // إزالة الحقول الفارغة
   Object.keys(prod).forEach(k=>{ if(prod[k]===undefined) delete prod[k]; });
 
@@ -1812,16 +1847,19 @@ async function saveProduct(){
             toast('✅ تم تحديث المنتج في Supabase');
             if (idx>=0) { products[idx].supabaseId = targetId; products[idx].id = targetId; saveLocal(); renderProducts(); }
             try { localStorage.setItem('x2_products_updated', String(Date.now())); } catch(e) {}
+            if (shouldSendDiscountPush) sendDiscountProductPush(products[idx] || { ...prod, supabaseId: targetId }).then(function(result){ toast(result && result.sent ? '📲 تم إرسال إشعار الخصم للعملاء' : '⚠️ لا يوجد مشتركون للإشعارات'); }).catch(function(e){ console.warn('Discount push failed:', e); toast('⚠️ فشل إرسال إشعار الخصم'); });
           })
           .catch(function(e){ toast('⚠️ خطأ Supabase: ' + e.message); });
       } else {
         window.Supabase.Products.insert(sbProd)
           .then(function(res){
+            let savedProduct = prod;
             if (Array.isArray(res) && res[0] && res[0].id && idx>=0) {
               const sbId = res[0].id;
               // حدّث الـ ID المحلي ليطابق Supabase ID - مهم لصحة الروابط
               products[idx].supabaseId = sbId;
               products[idx].id = sbId;
+              savedProduct = products[idx];
               saveLocal();
               renderProducts(); // أعد الرسم بالـ ID الصحيح
               toast('✅ تم حفظ المنتج في Supabase');
@@ -1829,6 +1867,7 @@ async function saveProduct(){
               toast('✅ تم حفظ المنتج في Supabase');
             }
             try { localStorage.setItem('x2_products_updated', String(Date.now())); } catch(e) {}
+            if (shouldSendDiscountPush) sendDiscountProductPush(savedProduct).then(function(result){ toast(result && result.sent ? '📲 تم إرسال إشعار الخصم للعملاء' : '⚠️ لا يوجد مشتركون للإشعارات'); }).catch(function(e){ console.warn('Discount push failed:', e); toast('⚠️ فشل إرسال إشعار الخصم'); });
           })
           .catch(function(e){ toast('⚠️ خطأ Supabase: ' + e.message); });
       }

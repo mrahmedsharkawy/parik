@@ -260,6 +260,19 @@ function readImmediateProductsCache(invalidateTs) {
     };
     for (const source of [ [ sessionStorage, PRODUCTS_SESSION_CACHE_KEY ], [ localStorage, PRODUCTS_LOCAL_CACHE_KEY ] ]) try {
         const obj = readProductsCache(source[0], source[1], invalidateTs || 0, PRODUCTS_LOCAL_CACHE_TTL);
+
+async function fetchProductsSnapshot() {
+    try {
+        const res = await fetch("/java/Products.json", {
+            cache: "force-cache"
+        });
+        if (!res.ok) return [];
+        const data = await res.json();
+        return Array.isArray(data) && data.length ? sortProductsForStore(data) : [];
+    } catch (e) {
+        return [];
+    }
+}
         if (obj) return obj;
     } catch (e) {}
     try {
@@ -321,6 +334,10 @@ export async function fetchProducts(forceFresh) {
         const cached = sessionStorage.getItem(PRODUCTS_SESSION_CACHE_KEY) || localStorage.getItem(PRODUCTS_LOCAL_CACHE_KEY);
         cached && (staleCache = JSON.parse(cached).data);
     } catch (e) {}
+    if (!forceFresh) {
+        const snapshot = await fetchProductsSnapshot();
+        if (snapshot.length) return _productsCache = snapshot, _productsCacheTs = Date.now(), saveProductsCache(_productsCache, _productsCacheTs), refreshProductsInBackground(), _productsCache;
+    }
     await ensureStoreProductSortLoaded();
     try {
         if (window.Supabase && window.Supabase.Products) {
@@ -764,17 +781,17 @@ document.addEventListener("DOMContentLoaded", async function() {
     sideMenu = document.querySelector(".dropdown-content.categories-menu"), subDisplay = document.getElementById("subcategories-display");
     const categoriesContainer = document.querySelector(".categories"), filtersScroll = document.querySelector(".filters-scroll-container");
     let isNavigating = !1;
-    function getCategoryIcon(slug) {
-        return {
-            Occasions: "🎉",
-            Acrylic: "💎",
-            paper: "📄",
-            Forex: "🖼️",
-            wood: "🪵",
-            leather: "👜",
-            Sticker: "🏷️",
-            Ramadan: "🌙"
-        }[slug] || "🔸";
+    function getCategoryIcon(slug, category) {
+        const tokens = [ slug, category && category.categorySlug, category && category.url, category && category.name && category.name.ar, category && category.name && category.name.en ].map(v => String(v || "").toLowerCase().trim()).filter(Boolean).join(" ");
+        if (tokens.includes("occasion") || tokens.includes("مناسب")) return "🎉";
+        if (tokens.includes("acrylic") || tokens.includes("اكريلك")) return "💎";
+        if (tokens.includes("paper") || tokens.includes("ورق")) return "📄";
+        if (tokens.includes("forex") || tokens.includes("فوركس")) return "🖼️";
+        if (tokens.includes("wood") || tokens.includes("خشب")) return "🪵";
+        if (tokens.includes("leather") || tokens.includes("جلد")) return "👜";
+        if (tokens.includes("sticker") || tokens.includes("استيكر")) return "🏷️";
+        if (tokens.includes("ramadan") || tokens.includes("رمضان")) return "🌙";
+        return "🔸";
     }
     function renderProductsGrid(list, productsContainer, direction = null) {
         if (!productsContainer) return;
@@ -991,7 +1008,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                 categoryItem.className = "category-item";
                 const catName = "rtl" === document.documentElement.dir ? category.name.ar || category.name.en : category.name.en || category.name.ar;
                 var subcategories, parentSlug;
-                categoryItem.innerHTML = `\n        <a href="${category.url || `/categories/${category.categorySlug}`}">\n          ${getCategoryIcon(category.categorySlug)} \n          <span data-i18n-ar="${category.name.ar || category.name.en}" data-i18n-en="${category.name.en || category.name.ar}">${catName}</span>\n          <span class="arrow">›</span>\n        </a>\n        ${category.subcategories && category.subcategories.length > 0 ? `\n        <div class="flyout category-flyout">\n          <ul class="subcategories">\n            ${subcategories = category.subcategories, 
+                categoryItem.innerHTML = `\n        <a href="${category.url || `/categories/${category.categorySlug}`}">\n          ${getCategoryIcon(category.categorySlug, category)} \n          <span data-i18n-ar="${category.name.ar || category.name.en}" data-i18n-en="${category.name.en || category.name.ar}">${catName}</span>\n          <span class="arrow">›</span>\n        </a>\n        ${category.subcategories && category.subcategories.length > 0 ? `\n        <div class="flyout category-flyout">\n          <ul class="subcategories">\n            ${subcategories = category.subcategories,
                 parentSlug = category.categorySlug, subcategories && 0 !== subcategories.length ? subcategories.map(sub => {
                     if (!sub.name) return "";
                     const subName = "rtl" === document.documentElement.dir ? sub.name.ar || sub.name.en : sub.name.en || sub.name.ar;
@@ -1004,7 +1021,7 @@ document.addEventListener("DOMContentLoaded", async function() {
             categoriesData.sort((a, b) => (a.order || 999) - (b.order || 999)).forEach(category => {
                 if (!category.name) return;
                 const categoryDiv = document.createElement("div"), catName = "rtl" === document.documentElement.dir ? category.name.ar || category.name.en : category.name.en || category.name.ar;
-                categoryDiv.innerHTML = `\n        <a href="${category.url || `/categories/${category.categorySlug}`}" data-category-slug="${category.categorySlug}">\n          ${getCategoryIcon(category.categorySlug)} \n          <span data-i18n-ar="${category.name.ar || category.name.en}" data-i18n-en="${category.name.en || category.name.ar}">${catName}</span>\n        </a>\n      `, 
+                categoryDiv.innerHTML = `\n        <a href="${category.url || `/categories/${category.categorySlug}`}" data-category-slug="${category.categorySlug}">\n          ${getCategoryIcon(category.categorySlug, category)} \n          <span data-i18n-ar="${category.name.ar || category.name.en}" data-i18n-en="${category.name.en || category.name.ar}">${catName}</span>\n        </a>\n      `,
                 categoriesContainer.appendChild(categoryDiv);
             });
             const allBtn = categoriesContainer.querySelector('a[data-category-slug="all"]');
