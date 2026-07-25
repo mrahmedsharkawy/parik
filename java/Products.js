@@ -88,9 +88,11 @@ async function ensureStoreProductSortLoaded() {
     _storeSortLoaded = true;
     try {
         if (!window.Supabase || !window.Supabase.Settings) return;
-        window.Supabase.Settings.get().then(settings => {
-            if (settings && settings.product_sort) localStorage.setItem("x2_store_product_sort", settings.product_sort);
-        }).catch(() => {});
+        setTimeout(() => {
+            window.Supabase.Settings.get().then(settings => {
+                if (settings && settings.product_sort) localStorage.setItem("x2_store_product_sort", settings.product_sort);
+            }).catch(() => {});
+        }, 3500);
     } catch (e) {}
 }
 
