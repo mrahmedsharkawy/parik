@@ -607,12 +607,15 @@ export function createProductCard(prod) {
         const im = document.createElement("img");
         const isHomePage = /^(\/|\/index\.html)$/i.test(location.pathname);
         const imgSize = 750;
-        const isPriority = _priorityProductImages < (isHomePage ? 2 : 6);
+        const imageIndex = _priorityProductImages;
+        const eagerLimit = isHomePage ? 40 : 6;
+        const highPriorityLimit = isHomePage ? 24 : 6;
+        const isPriority = imageIndex < eagerLimit;
         _priorityProductImages++;
         im.className = "product-img";
         im.alt = getTranslated(prod.name);
         im.loading = isPriority ? "eager" : "lazy";
-        isPriority && im.setAttribute("fetchpriority", "high");
+        imageIndex < highPriorityLimit && im.setAttribute("fetchpriority", "high");
         im.decoding = "async";
         im.width = imgSize;
         im.height = imgSize;
@@ -1143,7 +1146,8 @@ document.addEventListener("DOMContentLoaded", async function() {
                 });
             }));
         });
-        loadProductsForCategory(getCategoryFromUrl(), categoriesData);
+        const hasHomeEarlyProducts = isHomePage && productsContainer && productsContainer.querySelector(".product-card");
+        if (!hasHomeEarlyProducts) loadProductsForCategory(getCategoryFromUrl(), categoriesData);
     } catch (error) {
         console.error("خطأ في تحميل البيانات:", error);
         const categoryFromUrl = getCategoryFromUrl();
