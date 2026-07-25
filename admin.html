@@ -907,10 +907,13 @@
         <input type="text" id="nc-slug" placeholder="accessories">
         <label>الصورة</label>
         <input type="text" id="nc-img" placeholder="ارفع صورة أو اترك رابط موجود" readonly>
+        <div id="catImgPreview" style="display:none;margin-top:8px;text-align:center">
+          <img alt="معاينة صورة الفئة" style="width:70px;height:70px;border-radius:12px;object-fit:cover;border:1px solid var(--line)">
+        </div>
         <input type="file" id="nc-img-file" accept="image/*" style="display:none" onchange="uploadCategoryImage(this)">
-        <button class="btn-ghost btn-sm" style="margin-top:8px;width:100%" onclick="$('nc-img-file').click()">🖼️ رفع صورة من الجهاز</button>
         <button class="btn-gold" id="catSaveBtn" style="margin-top:14px;width:100%" onclick="addCategory()">➕ إضافة</button>
         <button class="btn-ghost btn-sm" id="catCancelBtn" style="margin-top:8px;width:100%;display:none" onclick="cancelCategoryEdit()">✕ إلغاء التعديل</button>
+        <button class="btn-ghost btn-sm" style="margin-top:8px;width:100%" onclick="$('nc-img-file').click()">🖼️ رفع/تغيير صورة من الجهاز</button>
         <button class="btn-ghost btn-sm" style="margin-top:8px;width:100%" onclick="exportCatsJSON()">⬇ تنزيل Categories.json</button>
       </div>
     </div>
@@ -2982,6 +2985,7 @@ function editCategory(ci) {
   $('nc-en').value = cat.name?.en || cat.name?.ar || '';
   $('nc-slug').value = cat.categorySlug || '';
   $('nc-img').value = cat.image || '';
+  updateCategoryImagePreview();
   $('catFormTitle').textContent = '✏️ تعديل فئة';
   $('catSaveBtn').textContent = '💾 حفظ التعديل';
   $('catCancelBtn').style.display = 'block';
@@ -2998,6 +3002,7 @@ function editSubcategory(ci, si) {
   $('nc-en').value = sub.name?.en || sub.name?.ar || '';
   $('nc-slug').value = sub.categorySlug || '';
   $('nc-img').value = sub.image || '';
+  updateCategoryImagePreview();
   $('catFormTitle').textContent = '✏️ تعديل فئة فرعية';
   $('catSaveBtn').textContent = '💾 حفظ التعديل';
   $('catCancelBtn').style.display = 'block';
@@ -3011,7 +3016,22 @@ function cancelCategoryEdit(silent) {
   if ($('catFormTitle')) $('catFormTitle').textContent = '➕ إضافة فئة';
   if ($('catSaveBtn')) $('catSaveBtn').textContent = '➕ إضافة';
   if ($('catCancelBtn')) $('catCancelBtn').style.display = 'none';
+  updateCategoryImagePreview();
   if (!silent) toast('تم إلغاء التعديل');
+}
+
+function updateCategoryImagePreview() {
+  const box = $('catImgPreview');
+  if (!box) return;
+  const img = box.querySelector('img');
+  const src = $('nc-img')?.value || '';
+  if (!src) {
+    box.style.display = 'none';
+    if (img) img.removeAttribute('src');
+    return;
+  }
+  if (img) img.src = src;
+  box.style.display = 'block';
 }
 
 async function uploadCategoryImage(input) {
@@ -3028,6 +3048,7 @@ async function uploadCategoryImage(input) {
     const compressed = await compressImage(dataUrl, 900, 0.82);
     const url = await uploadProductImageToStorage(compressed);
     $('nc-img').value = url;
+    updateCategoryImagePreview();
     toast('تم رفع الصورة');
   } catch(e) {
     console.warn(e);

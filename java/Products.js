@@ -535,19 +535,21 @@ export function createProductCard(prod) {
     const _toArr = v => Array.isArray(v) ? v.filter(Boolean) : v ? [ v ] : [], _isVideoSrc = s => /\.(mp4|webm|ogg|ogv|mov|m4v)(\?|#|$)/i.test(String(s || "")), _allMedia = [ ..._toArr(prod.images), ..._toArr(prod.img), ..._toArr(prod.image) ], prodVideos = [ ..._toArr(prod.videos), ..._toArr(prod.video), ..._allMedia.filter(_isVideoSrc) ], firstImage = _allMedia.filter(s => !_isVideoSrc(s))[0] || "", firstVideo = prodVideos[0] || "";
     {
         const im = document.createElement("img");
-        const isPriority = _priorityProductImages < 6;
+        const isHomePage = /^(\/|\/index\.html)$/i.test(location.pathname);
+        const imgSize = isHomePage && window.innerWidth <= 700 ? 180 : 230;
+        const isPriority = !isHomePage && _priorityProductImages < 6;
         _priorityProductImages++;
         im.className = "product-img";
         im.alt = getTranslated(prod.name);
         im.loading = isPriority ? "eager" : "lazy";
         isPriority && im.setAttribute("fetchpriority", "high");
         im.decoding = "async";
-        im.width = 230;
-        im.height = 230;
-        im.style.height = "230px";
+        im.width = imgSize;
+        im.height = imgSize;
+        im.style.height = imgSize + "px";
         im.style.objectFit = "cover";
         im.style.backgroundColor = "#f0f0f0";
-        im.src = optimizeSupabaseImageUrl(normalizeAssetUrl(firstImage || ""), 230, 230);
+        im.src = optimizeSupabaseImageUrl(normalizeAssetUrl(firstImage || ""), imgSize, imgSize);
         im.onerror = function() {
             this.src = "assets/logo.png";
         };
