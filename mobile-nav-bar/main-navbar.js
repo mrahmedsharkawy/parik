@@ -497,11 +497,7 @@ window.addEventListener('orientationchange', initMobileNav, { passive: true });
 
     applyCompactStyles(nav, compact);
     if (typeof nav.__updateLiquidPillPosition === 'function') {
-      nav.__updateLiquidPillPosition(false);
       window.requestAnimationFrame(() => nav.__updateLiquidPillPosition(false));
-      window.setTimeout(() => nav.__updateLiquidPillPosition(false), 60);
-      window.setTimeout(() => nav.__updateLiquidPillPosition(false), 140);
-      window.setTimeout(() => nav.__updateLiquidPillPosition(false), 240);
     }
 
     lastY = y;

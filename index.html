@@ -50,9 +50,6 @@
   <link rel="preload" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260725d" as="style" fetchpriority="low" media="(max-width: 899px)" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="/style/style.css?v=123"><link rel="stylesheet" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260725d" media="(max-width: 899px)"></noscript>
   <style>html,body,.page{background:#fff!important}</style>
-  <!-- Preload Cairo Arabic font for faster text rendering -->
-  <link rel="preload" href="/assets/cairo-arabic.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/assets/cairo-latin.woff2" as="font" type="font/woff2" crossorigin>
   <!-- Preload LCP image -->
   <script>
   (function(){
@@ -68,11 +65,9 @@
   </script>
   <!-- Critical above-fold CSS (prevents FOUC while style.css loads) -->
   <style>
-    @font-face{font-family:'Cairo';font-style:normal;font-weight:400 700;font-display:optional;src:url('/assets/cairo-arabic.woff2') format('woff2');unicode-range:U+0600-06FF,U+0750-077F,U+FB50-FDFF,U+FE70-FEFC}
-    @font-face{font-family:'Cairo';font-style:normal;font-weight:400 700;font-display:optional;src:url('/assets/cairo-latin.woff2') format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+FEFF,U+FFFD}
     *{box-sizing:border-box;margin:0}
     html,body{height:100%}
-    body{background:#152546;font-family:'Cairo',Arial,sans-serif;padding-top:env(safe-area-inset-top)}
+    body{background:#152546;font-family:Arial,Tahoma,sans-serif;padding-top:env(safe-area-inset-top)}
     .page{min-height:100dvh;display:flex;flex-direction:column}
     main{width:70%;margin:70px auto 50px;display:flex;flex-direction:column;justify-content:center}
     header,.main-header{background-color:#152546;padding-top:env(safe-area-inset-top)}
@@ -101,8 +96,9 @@
     #dailyPicksGrid:empty{min-height:184px}
     #subcategories-display:empty{min-height:0}
     /* Reserve space while products load → prevents footer from entering viewport → CLS fix */
-    #category-products:empty{min-height:2600px;background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:12px}
-    @media(max-width:899px){#category-products:empty{min-height:3900px}}
+    #category-products{min-height:520px}
+    #category-products:empty{background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:12px}
+    @media(max-width:899px){#category-products{min-height:620px}}
     #searchResults:empty{display:none}
   </style>
   <!-- Preconnect to external resources -->
@@ -669,15 +665,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </footer>
 <script src="/java/supabase.min.js?v=supabase-20260725a" defer></script>
-<script src="/java/main.min.js?v=132" defer></script>
+<script src="/java/main.min.js?v=133" defer></script>
 <script src="/java/sw-refresh.js?v=sw-refresh-20260725j" defer></script>
 <script src="/java/instant-nav.js?v=instant-nav-20260725a" defer></script>
 <script src="/translations/translation.min.js" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
-<script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260725g" defer></script>
+<script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260725h" defer></script>
 <script src="/java/push-welcome.js?v=push-welcome-20260725j" defer></script>
 <script src="/java/notifications.min.js?v=notifications-20260725j" defer></script>
-<script type="module" src="/java/Products.min.js?v=products-20260725n" defer></script>
+<script type="module" src="/java/Products.min.js?v=products-20260725p" defer></script>
 
 <style>
 .campaign-popup-backdrop{position:fixed;inset:0;z-index:100200;background:rgba(7,16,32,.52);display:flex;align-items:center;justify-content:center;padding:18px;opacity:0;pointer-events:none;transition:opacity .22s ease}.campaign-popup-backdrop.show{opacity:1;pointer-events:auto}.campaign-popup{width:min(92vw,460px);overflow:hidden;border-radius:18px;background:#fff;box-shadow:0 28px 70px rgba(10,22,40,.32);transform:translateY(18px) scale(.96);transition:transform .28s cubic-bezier(.18,1.16,.36,1)}.campaign-popup-backdrop.show .campaign-popup{transform:translateY(0) scale(1)}.campaign-popup-media{position:relative;min-height:170px;background:linear-gradient(135deg,#152546,#2d405f)}.campaign-popup-media img{width:100%;height:230px;object-fit:cover;display:block;border-radius:0}.campaign-popup-media.no-image{display:flex;align-items:center;justify-content:center;color:#fff}.campaign-popup-badge{position:absolute;top:14px;inset-inline-start:14px;background:#D4AF37;color:#152546;border-radius:999px;padding:6px 12px;font-weight:900;font-size:.82rem}.campaign-popup-close{position:absolute;top:12px;inset-inline-end:12px;width:34px;height:34px;border:0;border-radius:50%;background:rgba(255,255,255,.92);color:#152546;font-size:20px;line-height:1;cursor:pointer}.campaign-popup-body{padding:20px;text-align:start}.campaign-popup-title{margin:0 0 8px;color:#152546;font-size:1.35rem;font-weight:900}.campaign-popup-desc{margin:0;color:#516078;line-height:1.7;font-size:.96rem}.campaign-popup-actions{display:flex;gap:10px;margin-top:18px}.campaign-popup-primary{flex:1;text-align:center;text-decoration:none;border-radius:999px;background:#152546;color:#fff;padding:12px 16px;font-weight:800}.campaign-popup-secondary{border:1px solid #d9e0ec;background:#fff;color:#152546;border-radius:999px;padding:12px 16px;font-weight:800;cursor:pointer}@media(max-width:520px){.campaign-popup{border-radius:16px}.campaign-popup-media img{height:190px}.campaign-popup-actions{flex-direction:column}.campaign-popup-title{font-size:1.18rem}}
@@ -826,6 +822,8 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:8px!import
   body.home-immersive-header .mobile-promo-banner .fsh-discount-row{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
   body.home-immersive-header .mobile-promo-banner .fsh-discount-pill{background:linear-gradient(90deg,#D4AF37,#f0c94a);color:#0a1628;font-weight:900;font-size:.92rem;padding:4px 16px;border-radius:999px;box-shadow:0 4px 20px rgba(212,175,55,.45)}
   body.home-immersive-header .mobile-promo-banner .fsh-discount-label{color:rgba(255,255,255,.82);font-size:.78rem;font-weight:600}
+  body.home-immersive-header,
+  body.home-immersive-header *{font-family:Arial,Tahoma,"Segoe UI Emoji","Segoe UI Symbol",sans-serif!important}
   body.home-immersive-header .product-card{contain:none!important;content-visibility:visible!important;transform:translateZ(0)}
   body.home-immersive-header .product-content,
   body.home-immersive-header .product-name,
