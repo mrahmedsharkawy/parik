@@ -260,19 +260,6 @@ function readImmediateProductsCache(invalidateTs) {
     };
     for (const source of [ [ sessionStorage, PRODUCTS_SESSION_CACHE_KEY ], [ localStorage, PRODUCTS_LOCAL_CACHE_KEY ] ]) try {
         const obj = readProductsCache(source[0], source[1], invalidateTs || 0, PRODUCTS_LOCAL_CACHE_TTL);
-
-async function fetchProductsSnapshot() {
-    try {
-        const res = await fetch("/java/Products.json", {
-            cache: "force-cache"
-        });
-        if (!res.ok) return [];
-        const data = await res.json();
-        return Array.isArray(data) && data.length ? sortProductsForStore(data) : [];
-    } catch (e) {
-        return [];
-    }
-}
         if (obj) return obj;
     } catch (e) {}
     try {
@@ -286,6 +273,19 @@ async function fetchProductsSnapshot() {
         }
     } catch (e) {}
     return null;
+}
+
+async function fetchProductsSnapshot() {
+    try {
+        const res = await fetch("/java/Products.json", {
+            cache: "force-cache"
+        });
+        if (!res.ok) return [];
+        const data = await res.json();
+        return Array.isArray(data) && data.length ? sortProductsForStore(data) : [];
+    } catch (e) {
+        return [];
+    }
 }
 
 function refreshProductsInBackground() {
@@ -824,6 +824,7 @@ document.addEventListener("DOMContentLoaded", async function() {
             if (rowDiv.appendChild(fragment), deferHomeRest && !homeRestDeferred && i >= FIRST_CHUNK && i < sortedList.length) {
                 homeRestDeferred = true;
                 productsContainer.innerHTML = "", productsContainer.appendChild(rowDiv), productsContainer.classList.remove("changing");
+                productsContainer.style.minHeight = "";
                 const loader = document.getElementById("temp-popstate-loader") || document.getElementById("grid-loading-indicator");
                 loader && loader.remove();
                 const loadMore = () => {
@@ -837,6 +838,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                 setTimeout(restoreProductReturnScrollPosition, 0);
             } else if (i < sortedList.length) requestAnimationFrame(appendChunk); else {
                 productsContainer.innerHTML = "", productsContainer.appendChild(rowDiv), productsContainer.classList.remove("changing");
+                productsContainer.style.minHeight = "";
                 const loader = document.getElementById("temp-popstate-loader") || document.getElementById("grid-loading-indicator");
                 loader && loader.remove();
                 setTimeout(restoreProductReturnScrollPosition, 0);
@@ -1146,8 +1148,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                 });
             }));
         });
-        const hasHomeEarlyProducts = isHomePage && productsContainer && productsContainer.querySelector(".product-card");
-        if (!hasHomeEarlyProducts) loadProductsForCategory(getCategoryFromUrl(), categoriesData);
+        loadProductsForCategory(getCategoryFromUrl(), categoriesData);
     } catch (error) {
         console.error("خطأ في تحميل البيانات:", error);
         const categoryFromUrl = getCategoryFromUrl();
