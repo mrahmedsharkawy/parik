@@ -1,5 +1,5 @@
 /* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v180';
+const CACHE = 'bariq-v181';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -141,12 +141,6 @@ self.addEventListener('activate', function(e) {
       return Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)));
     }).then(function() {
       return self.clients.claim();
-    }).then(function() {
-      return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(pages) {
-        pages.forEach(function(client) {
-          try { client.navigate(client.url); } catch(e) {}
-        });
-      });
     })
   );
 });

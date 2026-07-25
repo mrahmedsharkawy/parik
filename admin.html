@@ -3211,9 +3211,11 @@ async function renderVisitorsStats() {
       const hasArea = v => visitorArea(v) !== 'غير محدد';
       const localRows = getVisitors().filter(isUsefulVisitor);
       const localTodayRows = localRows.filter(v => new Date(visitDate(v)).toDateString() === today);
+      const todayAreaRows = todayVisits.filter(hasArea);
+      const localTodayAreaRows = localTodayRows.filter(hasArea);
       const remoteAllAreas = rows.filter(hasArea);
       const localAllAreas = localRows.filter(hasArea);
-      const locRows = todayVisits.length ? todayVisits : (remoteAllAreas.length ? remoteAllAreas : localAllAreas);
+      const locRows = todayAreaRows.length ? todayAreaRows : (localTodayAreaRows.length ? localTodayAreaRows : (remoteAllAreas.length ? remoteAllAreas : localAllAreas));
       const locMap = {};
       locRows.forEach(v => {
         const loc = hasArea(v) ? visitorArea(v) : 'غير محدد';
@@ -3232,10 +3234,13 @@ async function renderVisitorsStats() {
     });
     const data = await res.json().catch(() => null);
     let rows = res.ok && Array.isArray(data) ? data : null;
+    const cached = getVisitors().filter(isUsefulVisitor);
+    const usingCachedRows = Array.isArray(rows) && rows.length === 0 && cached.length > 0;
+    if (usingCachedRows) rows = cached;
     if (!Array.isArray(rows)) throw new Error('no data');
     await renderRows(rows);
     const totalCount = (res.headers.get('content-range') || '').split('/')[1];
-    if (allEl && totalCount && totalCount !== '*') allEl.textContent = totalCount;
+    if (!usingCachedRows && allEl && totalCount && totalCount !== '*') allEl.textContent = totalCount;
   } catch(e) {
     const cached = getVisitors().filter(isUsefulVisitor);
     if (cached.length) await renderRows(cached);
