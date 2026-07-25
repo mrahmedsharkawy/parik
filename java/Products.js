@@ -1633,16 +1633,6 @@ document.addEventListener("DOMContentLoaded", async function() {
                     }
                 } catch (e) {}
                 try {
-                    const anonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E";
-                    const res = await fetch("https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/settings?key=eq.suggested_products&select=value&limit=1", {
-                        headers: { apikey: anonKey, Authorization: "Bearer " + anonKey }
-                    });
-                    const rows = res.ok ? await res.json() : [];
-                    const remoteValue = rows && rows[0] && rows[0].value;
-                    const parsed = typeof remoteValue === "string" ? JSON.parse(remoteValue) : remoteValue;
-                    if (Array.isArray(parsed) && parsed.length) return new Set(parsed.map(String));
-                } catch (e) {}
-                try {
                     const local = JSON.parse(localStorage.getItem("x2_suggested") || "[]");
                     if (Array.isArray(local) && local.length) return new Set(local.map(String));
                 } catch (e) {}

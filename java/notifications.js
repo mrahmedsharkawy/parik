@@ -1,4 +1,4 @@
-﻿const VAPID_PUBLIC_KEY = "BPojY-23BXbIfa1IRkkQD3vAELjTn3nltgFBrlEIjZ3aEbphXAQvFY2E5B2R_mfikZLhGPo0lBeCedB8qoP5-SE";
+const VAPID_PUBLIC_KEY = "BPojY-23BXbIfa1IRkkQD3vAELjTn3nltgFBrlEIjZ3aEbphXAQvFY2E5B2R_mfikZLhGPo0lBeCedB8qoP5-SE";
 
 function urlBase64ToUint8Array(e) {
     const r = (e + "=".repeat((4 - e.length % 4) % 4)).replace(/-/g, "+").replace(/_/g, "/"), t = window.atob(r);
@@ -14,7 +14,7 @@ function normalizeUaePhone(e) {
 async function registerSW() {
     if (!("serviceWorker" in navigator)) return null;
     try {
-        const e = await navigator.serviceWorker.register("/sw.js?v=178", { updateViaCache: "none" });
+        const e = await navigator.serviceWorker.register("/sw.js?v=179", { updateViaCache: "none" });
         e.update().catch(() => {});
         return e;
     } catch (e) {
