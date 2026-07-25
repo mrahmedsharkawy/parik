@@ -1593,6 +1593,35 @@ async function uploadVideoCloudinary(file) {
   return toSafariCloudinaryVideoUrl(data.secure_url, 720);
 }
 
+async function uploadProductImageToStorage(dataUrl) {
+  if (window.Supabase && window.Supabase.Storage && typeof window.Supabase.Storage.uploadDataUrl === 'function') {
+    return window.Supabase.Storage.uploadDataUrl(dataUrl, 'images');
+  }
+  const match = String(dataUrl || '').match(/^data:([^;]+);base64,(.+)$/);
+  if (!match) throw new Error('صيغة الصورة غير صالحة');
+  const token = await getValidAdminToken();
+  const anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+  const authToken = token || anonKey;
+  const mime = match[1] || 'image/jpeg';
+  const ext = (mime.split('/')[1] || 'jpg').replace('jpeg', 'jpg').replace(/[^a-z0-9]/gi, '') || 'jpg';
+  const bin = atob(match[2]);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  const fileName = 'images/' + Date.now() + '-' + Math.random().toString(36).slice(2) + '.' + ext;
+  const res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/storage/v1/object/products/' + fileName, {
+    method: 'POST',
+    headers: {
+      apikey: anonKey,
+      Authorization: 'Bearer ' + authToken,
+      'Content-Type': mime,
+      'x-upsert': 'true'
+    },
+    body: bytes
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return 'https://knleehjjejfeobcmpwnw.supabase.co/storage/v1/object/public/products/' + fileName;
+}
+
 $('mediaDrop').addEventListener('click',()=> $('mediaInput').click());
 $('mediaInput').addEventListener('change',e=>{
   const files = Array.from(e.target.files||[]);
@@ -1623,13 +1652,9 @@ $('mediaInput').addEventListener('change',e=>{
         renderMedia();
         try {
           const uploadSrc = await compressImage(reader.result);
-          if (window.Supabase && window.Supabase.Storage) {
-            const publicUrl = await window.Supabase.Storage.uploadDataUrl(uploadSrc, 'images');
-            currentMedia[tempIdx] = { type: 'image', src: publicUrl, uploading: false };
-            toast('✅ تم رفع الصورة بنجاح');
-          } else {
-            currentMedia[tempIdx] = { type: 'image', src: uploadSrc, uploading: false };
-          }
+          const publicUrl = await uploadProductImageToStorage(uploadSrc);
+          currentMedia[tempIdx] = { type: 'image', src: publicUrl, uploading: false };
+          toast('✅ تم رفع الصورة بنجاح');
         } catch(err) {
           toast('⚠️ فشل رفع الصورة: ' + err.message);
           currentMedia[tempIdx].uploading = false;
@@ -3199,21 +3224,18 @@ async function renderVisitorsStats() {
     }
   };
   try {
-    const urls = [
-      'https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors?select=visited_at,created_at,page,city,country,user_agent&limit=500',
-      'https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors?select=visited_at,created_at,page,city,country&limit=500'
-    ];
-    let rows = null;
-    for (const url of urls) {
-      const res = await fetch(url, { headers });
-      const data = await res.json().catch(() => null);
-      if (res.ok && Array.isArray(data)) { rows = data; break; }
-    }
+    const res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors?select=id,visited_at,page,city,country,ip&order=visited_at.desc&limit=10000', {
+      headers: Object.assign({}, headers, { Prefer: 'count=exact' })
+    });
+    const data = await res.json().catch(() => null);
+    let rows = res.ok && Array.isArray(data) ? data : null;
     if (!Array.isArray(rows)) throw new Error('no data');
-    renderRows(rows);
+    await renderRows(rows);
+    const totalCount = (res.headers.get('content-range') || '').split('/')[1];
+    if (allEl && totalCount && totalCount !== '*') allEl.textContent = totalCount;
   } catch(e) {
     const cached = getVisitors().filter(isUsefulVisitor);
-    if (cached.length) renderRows(cached);
+    if (cached.length) await renderRows(cached);
     else {
       if (todayEl) todayEl.textContent = '0';
       if (allEl)   allEl.textContent   = '0';
@@ -4528,7 +4550,34 @@ function renderSuggestedPicker() {
 }
 
 function toggleSuggested(id, checked) { if(checked) suggestedIds.add(String(id)); else suggestedIds.delete(String(id)); }
-function saveSuggested() { localStorage.setItem(LS_SUGGESTED, JSON.stringify([...suggestedIds])); toast('✅ تم حفظ المنتجات المقترحة'); }
+async function saveSuggested() {
+  const ids = [...suggestedIds];
+  localStorage.setItem(LS_SUGGESTED, JSON.stringify(ids));
+  const anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+  try {
+    if (window.Supabase && window.Supabase.Settings) {
+      await window.Supabase.Settings.save({ suggested_products: ids });
+      toast('✅ تم حفظ المنتجات المقترحة في المتجر');
+      return;
+    }
+  } catch(e) {
+    console.warn('Suggested products remote save failed:', e);
+  }
+  try {
+    const adminToken = (await getValidAdminToken()) || anonKey;
+    const res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/settings?on_conflict=key', {
+      method: 'POST',
+      headers: { apikey: anonKey, Authorization: 'Bearer ' + adminToken, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' },
+      body: JSON.stringify({ key: 'suggested_products', value: JSON.stringify(ids) })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    toast('✅ تم حفظ المنتجات المقترحة في المتجر');
+    return;
+  } catch(e) {
+    console.warn('Suggested products key/value save failed:', e);
+  }
+  toast('✅ تم حفظ المنتجات المقترحة محلياً');
+}
 
 /* ================= SEO (متزامن مع Supabase Settings) ================= */
 async function saveSEO() {

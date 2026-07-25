@@ -17,10 +17,17 @@
 html,body{height:100%}
 body{
   margin:0;
-  padding-bottom:calc(var(--nav-h) + 64px + env(safe-area-inset-bottom));
+  padding-bottom:calc(var(--nav-h) + 8px + env(safe-area-inset-bottom));
   color:var(--nav-fg);
-  background: #fff;
+  background:#152546;
   -webkit-font-smoothing:antialiased;
+}
+
+@media (max-width: 899px){
+  .site-footer{
+    margin-bottom:calc(-1 * (var(--nav-h) + 8px + env(safe-area-inset-bottom))) !important;
+    padding-bottom:calc(18px + var(--nav-h) + 8px + env(safe-area-inset-bottom)) !important;
+  }
 }
 
 /* container */

@@ -79,9 +79,29 @@ function x2VisitorAreaFallback() {
             return n.toFixed(2) + " " + symbol;
         }
     }
+    function couponDiscountAmount(coupon, total) {
+        if (!coupon) return 0;
+        const type = coupon.type || "fixed";
+        const value = parseFloat(coupon.value ?? coupon.amount) || 0;
+        const raw = "percent" === type ? total * value / 100 : value;
+        return Math.max(0, Math.min(raw, total));
+    }
+    function isCouponUsable(coupon, total) {
+        if (!coupon) return cartEn("❌ الكود غير صحيح", "❌ Invalid coupon code");
+        if (!1 === coupon.active) return cartEn("❌ هذا الكوبون غير نشط", "❌ This coupon is inactive");
+        if (coupon.expiry && new Date(coupon.expiry) < new Date) return cartEn("❌ انتهت صلاحية الكوبون", "❌ This coupon has expired");
+        if ((parseFloat(coupon.min_order) || 0) > total) return cartEn("❌ إجمالي السلة أقل من الحد الأدنى للكوبون", "❌ Cart total is below this coupon minimum");
+        if ((parseInt(coupon.max_use) || 0) > 0 && (parseInt(coupon.used_count) || 0) >= parseInt(coupon.max_use)) return cartEn("❌ تم استهلاك عدد استخدامات الكوبون", "❌ This coupon has reached its usage limit");
+        if (coupon.used) return cartEn("❌ هذا الكود تم استخدامه مسبقاً", "❌ This coupon was already used");
+        return "";
+    }
     function makeKey(p) {
         if (p?.id) return String(p.id);
         return `${(p?.title || "").trim().toLowerCase()}|${(p?.meta || "").trim().toLowerCase()}|${Number(p?.priceCurrent || 0).toFixed(2)}|${p?.img || ""}`;
+    }
+    function productNameForLang(name) {
+        const lang = isEnglish() ? "en" : "ar";
+        return name && "object" == typeof name ? name[lang] || name.ar || name.en || "" : name || "";
     }
     function normalizeCartImageSrc(raw) {
         let src = "";
@@ -184,10 +204,9 @@ function x2VisitorAreaFallback() {
             const couponDiscountLine = document.getElementById("couponDiscountLine"), couponDiscountAmtEl = document.getElementById("couponDiscountAmount");
             try {
                 const applied = JSON.parse(sessionStorage.getItem("x2_coupon_applied") || "null");
-                if (applied && applied.code && applied.amount) {
-                    const stored = JSON.parse(localStorage.getItem("x2_coupon_code") || "null");
-                    stored && stored.code === applied.code && !stored.used ? (couponDiscount = Math.min(parseFloat(applied.amount) || 0, actualTotal),
-                    couponDiscountLine && (couponDiscountLine.style.display = ""), couponDiscountAmtEl && (couponDiscountAmtEl.textContent = "-" + window.formatCurrency(couponDiscount))) : (sessionStorage.removeItem("x2_coupon_applied"),
+                if (applied && applied.code) {
+                    couponDiscount = couponDiscountAmount(applied, actualTotal),
+                    couponDiscount > 0 ? (couponDiscountLine && (couponDiscountLine.style.display = ""), couponDiscountAmtEl && (couponDiscountAmtEl.textContent = "-" + window.formatCurrency(couponDiscount))) : (sessionStorage.removeItem("x2_coupon_applied"),
                     couponDiscountLine && (couponDiscountLine.style.display = "none"));
                 } else couponDiscountLine && (couponDiscountLine.style.display = "none");
             } catch (e) {
@@ -219,22 +238,23 @@ function x2VisitorAreaFallback() {
     } catch (e) {}
     function addCard(p) {
         const cur = Number(p.priceCurrent || p.price || p.priceSale || 0), old = Number(p.priceOld ?? p.priceOriginal ?? p.priceCurrent ?? p.price ?? 0), key = makeKey(p), discountPercent = old > cur ? Math.round((old - cur) / old * 100) : 0, exists = listRoot.querySelector(`.product-card[data-key="${cssEsc(key)}"]`) || (p.id ? listRoot.querySelector(`.product-card[data-item-id="${cssEsc(p.id)}"]`) : null);
-        if (exists) {
-            const input = exists.querySelector('input[type="number"]');
-            if (input) input.value = Math.max(1, Number(input.value || 1) + Number(p.qty || 1)); else {
-                const valEl = exists.querySelector(".qty-value");
-                valEl && (valEl.textContent = Math.max(1, Number(valEl.textContent || 1) + Number(p.qty || 1)));
-            }
-            if (p.description) {
-                let descEl = exists.querySelector(".description");
-                if (!descEl) {
-                    descEl = document.createElement("div"), descEl.className = "description";
-                    const titleEl = exists.querySelector(".title");
-                    titleEl && titleEl.parentNode && titleEl.parentNode.insertBefore(descEl, titleEl.nextSibling);
-                }
-                descEl && (descEl.textContent = p.description);
-            }
-            return;
+            if (exists) { 
+                const input = exists.querySelector('input[type="number"]'); 
+                if (input) input.value = Math.max(1, Number(input.value || 1) + Number(p.qty || 1)); 
+                else { 
+                    const valEl = exists.querySelector(".qty-value"); 
+                    valEl && (valEl.textContent = Math.max(1, Number(valEl.textContent || 1) + Number(p.qty || 1))); 
+                } 
+                if (p.description) { 
+                    let descEl = exists.querySelector(".description"); 
+                    if (!descEl) { 
+                        descEl = document.createElement("div"), descEl.className = "description"; 
+                        const titleEl = exists.querySelector(".title"); 
+                        titleEl && titleEl.parentNode && titleEl.parentNode.insertBefore(descEl, titleEl.nextSibling); 
+                    } 
+                    descEl && (descEl.textContent = p.description); 
+                } 
+                return; 
         }
         const imgSrc = normalizeCartImageSrc(p.img || p.image || p.photo || p.thumbnail || p.cover || "");
         const card = document.createElement("div");
@@ -245,7 +265,7 @@ function x2VisitorAreaFallback() {
             style.id = "cart-item-styles", style.textContent = "\n      .description {\n        font-size: 11px;\n        color: #555;\n        margin: 5px 0;\n        line-height: 1.4;\n        margin-bottom: -1px;\n      }\n      .urgency-text {\n        font-size: 10px;\n        color: #d32f2f;\n        margin-top: 5px;\n        margin-bottom: -5px;\n      }\n      .hurry-text {\n        font-size: 11px;\n        color: #d32f2f;\n        font-weight: bold;\n        margin-bottom: -5px;\n      }\n    ",
             document.head.appendChild(style);
         }
-                card.innerHTML = `\n    <button type="button" class="remove-btn" aria-label="${cartEn('إزالة المنتج', 'Remove product')}">🗑️</button>\n    <div class="card-checkbox">\n      <input type="checkbox" checked>\n    </div>\n    <div class="qty-container">\n      <div class="qty-dropdown">\n        <span>${cartEn('الكمية', 'Quantity')}</span>\n        <span class="qty-value">${Number(p.qty || 1)}</span>\n        <span class="dropdown-icon">▼</span>\n      </div>\n    </div>\n    <div class="image">\n      ${p.id ? `<a href="/product?id=${encodeURIComponent(p.id)}" style="display:block;width:100%;height:100%">` : ""}\n      <img src="${imgSrc}" alt="${(p.title || "").replace(/"/g, "&quot;")}" loading="eager" decoding="async">\n      ${p.id ? "</a>" : ""}\n    </div>\n    <div class="details">\n      <div class="title">${p.title || ""}</div>\n      <div class="description">${p.description || ""}</div>\n      <div class="meta">${p.meta || ""}</div>\n      <div class="urgency-text">⏱️ ${cartEn('ينتهي العرض قريبا', 'Offer ends soon')}</div>\n      <div class="hurry-text">${cartEn('سارع بالشراء قبل نفاد الكمية!', 'Buy now before stock runs out!')}</div>\n      <div class="discount-info">\n        <span>${cartEn('عروض كبيرة', 'Big deals')}</span>\n        <span class="dot">•</span>\n        <span class="since">${isEnglish() ? `Dropped ${discountPercent}% since added` : `انخفض ${discountPercent}% منذ إضافته`}</span>\n      </div>\n      <div class="price-container">\n        <span class="current-price">${formatCurrency(cur)}</span>\n        <span class="old-price">${formatCurrency(old)}</span>\n        <span class="discount-badge">-${discountPercent}%</span>\n      </div>\n    </div>\n  `;
+                card.innerHTML = `\n    <button type="button" class="remove-btn" aria-label="${cartEn('إزالة المنتج', 'Remove product')}">🗑️</button>\n    <div class="card-checkbox">\n      <input type="checkbox" checked>\n    </div>\n    <div class="qty-container">\n      <div class="qty-dropdown">\n        <span>${cartEn('الكمية', 'Quantity')}</span>\n        <span class="qty-value">${Number(p.qty || 1)}</span>\n        <span class="dropdown-icon">▼</span>\n      </div>\n    </div>\n    <div class="image">\n      ${p.id ? `<a href="/product?id=${encodeURIComponent(p.id)}" style="display:block;width:100%;height:100%">` : ""}\n      <img src="${imgSrc}" alt="${(productNameForLang(p.name) || p.title || "").replace(/"/g, "&quot;")}" loading="eager" decoding="async">\n      ${p.id ? "</a>" : ""}\n    </div>\n    <div class="details">\n      <div class="title">${productNameForLang(p.name) || p.title || ""}</div>\n      <div class="description">${p.description || ""}</div>\n      <div class="meta">${p.meta || ""}</div>\n      <div class="urgency-text">⏱️ ${cartEn('ينتهي العرض قريبا', 'Offer ends soon')}</div>\n      <div class="hurry-text">${cartEn('سارع بالشراء قبل نفاد الكمية!', 'Buy now before stock runs out!')}</div>\n      <div class="discount-info">\n        <span>${cartEn('عروض كبيرة', 'Big deals')}</span>\n        <span class="dot">•</span>\n        <span class="since">${isEnglish() ? `Dropped ${discountPercent}% since added` : `انخفض ${discountPercent}% منذ إضافته`}</span>\n      </div>\n      <div class="price-container">\n        <span class="current-price">${formatCurrency(cur)}</span>\n        <span class="old-price">${formatCurrency(old)}</span>\n        <span class="discount-badge">-${discountPercent}%</span>\n      </div>\n    </div>\n  `;
         const cardImgEl = card.querySelector(".image img");
         cardImgEl && cardImgEl.addEventListener("error", function onCardImageError() {
             if (this.dataset.fallbackApplied === "1") return;
@@ -345,7 +365,7 @@ function x2VisitorAreaFallback() {
             qty: Number(card.querySelector('input[type="number"]')?.value || 1)
         })));
     }
-    window.applyCoupon = function() {
+    window.applyCoupon = async function() {
         const input = document.getElementById("couponCodeInput"), msgEl = document.getElementById("couponMsg");
         if (!input || !msgEl) return;
         const code = (input.value || "").trim().toUpperCase(), show = (txt, ok) => {
@@ -353,21 +373,34 @@ function x2VisitorAreaFallback() {
             msgEl.style.color = ok ? "#2e7d32" : "#c62828";
         };
         if (code) try {
-            const stored = JSON.parse(localStorage.getItem("x2_coupon_code") || "null");
-            if (!stored) return void show("❌ الكود غير صحيح", !1);
-            if (stored.used) return void show("❌ هذا الكود تم استخدامه مسبقاً", !1);
-            if (stored.code !== code) return void show("❌ الكود غير صحيح", !1);
+            const actualTotal = Array.from(listRoot.querySelectorAll(".product-card-cart, .product-card")).reduce((sum, card) => {
+                const cb = card.querySelector('.card-checkbox input[type="checkbox"]');
+                if (cb && !cb.checked) return sum;
+                const cur = Number(window.parseCurrency(card.dataset.priceCurrent ?? card.querySelector(".price-current, .current-price")?.textContent ?? "0")) || 0;
+                const qty = Math.max(1, Number(card.querySelector('.qty-dropdown input[type="number"], input[type="number"]')?.value || card.querySelector(".qty-value")?.textContent || card.dataset.qty || 1));
+                return sum + cur * qty;
+            }, 0);
+            let stored = null;
+            if (window.Supabase && window.Supabase.Coupons && typeof window.Supabase.Coupons.getByCode === "function") stored = await window.Supabase.Coupons.getByCode(code);
+            if (!stored) stored = JSON.parse(localStorage.getItem("x2_coupon_code") || "null");
+            if (stored && stored.code && String(stored.code).toUpperCase() !== code) stored = null;
+            const problem = isCouponUsable(stored, actualTotal);
+            if (problem) return void show(problem, !1);
+            const amount = couponDiscountAmount(stored, actualTotal);
+            if (!(amount > 0)) return void show(cartEn("❌ لا يوجد خصم متاح لهذا الكوبون", "❌ No discount is available for this coupon"), !1);
             sessionStorage.setItem("x2_coupon_applied", JSON.stringify({
-                code: stored.code,
-                amount: stored.amount
+                code: String(stored.code || code).toUpperCase(),
+                type: stored.type || "fixed",
+                value: parseFloat(stored.value ?? stored.amount) || 0,
+                amount: amount
             }));
             const sym = "function" == typeof window.currencySymbolFor ? window.currencySymbolFor(window.getSelectedCurrency()) : "د.إ";
-            show(`✅ تم تطبيق خصم ${parseFloat(stored.amount).toFixed(2)} ${sym}!`, !0), input.disabled = !0;
+            show(`${cartEn("✅ تم تطبيق خصم", "✅ Discount applied")} ${amount.toFixed(2)} ${sym}!`, !0), input.disabled = !0;
             const btn = input.nextElementSibling;
-            btn && (btn.disabled = !0, btn.textContent = "✔ مطبّق"), updateSummary();
+            btn && (btn.disabled = !0, btn.textContent = cartEn("✔ مطبّق", "✔ Applied")), updateSummary();
         } catch (e) {
-            show("❌ حدث خطأ، حاول مرة أخرى", !1);
-        } else show("❌ أدخل كود الخصم أولاً", !1);
+            show(cartEn("❌ حدث خطأ، حاول مرة أخرى", "❌ Something went wrong, try again"), !1);
+        } else show(cartEn("❌ أدخل كود الخصم أولاً", "❌ Enter a coupon code first"), !1);
     }, window.addProduct || (window.addProduct = function(product) {
         const current = readCart(), key = makeKey(product), ix = current.findIndex(it => makeKey(it) === key);
         ix >= 0 ? current[ix].qty += Number(product.qty || 1) : current.unshift({
@@ -391,15 +424,19 @@ function x2VisitorAreaFallback() {
             try {
                 const res = await fetch("/java/Products.json");
                 if (!res.ok) return;
-                const products = await res.json(), imgMap = {};
+                const products = await res.json(), imgMap = {}, nameMap = {};
                 if ((Array.isArray(products) ? products : []).forEach(p => {
                     if (!p.id) return;
                     const rawImg = Array.isArray(p.img) ? p.img[0] : p.img;
                     rawImg && "string" == typeof rawImg && (imgMap[String(p.id)] = rawImg);
+                    const translatedName = productNameForLang(p.name);
+                    translatedName && (nameMap[String(p.id)] = translatedName);
                 }), !Object.keys(imgMap).length) return;
                 listRoot.querySelectorAll(".product-card").forEach(card => {
                     const itemId = card.dataset.itemId || card.dataset.key?.split("|")[0] || "";
                     if (!itemId) return;
+                    const titleEl = card.querySelector(".title");
+                    if (titleEl && nameMap[String(itemId)]) titleEl.textContent = nameMap[String(itemId)];
                     const imgEl = card.querySelector(".image img");
                     if (!imgEl) return;
                     const currentSrc = imgEl.getAttribute("src") || "";

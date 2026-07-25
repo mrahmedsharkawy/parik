@@ -20,12 +20,33 @@
 </script>
 <!-- End Google Tag Manager -->
   <meta charset="UTF-8" />
+  <script>
+  (function(){
+    try {
+      if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+      var productPositions = JSON.parse(sessionStorage.getItem('x2_product_return_positions') || '{}');
+      var positions = productPositions[location.href] ? productPositions : JSON.parse(sessionStorage.getItem('x2_scroll_positions') || '{}');
+      var y = Number(positions[location.href] || 0);
+      if (!(y > 0)) return;
+      var style = document.createElement('style');
+      style.textContent = 'html.x2-restoring-scroll,html.x2-restoring-scroll body{scroll-behavior:auto!important}html.x2-restoring-scroll body{opacity:0!important}';
+      document.head.appendChild(style);
+      document.documentElement.classList.add('x2-restoring-scroll');
+      function restore(){ window.scrollTo(0, y); }
+      function reveal(){ restore(); requestAnimationFrame(function(){ restore(); document.documentElement.classList.remove('x2-restoring-scroll'); }); }
+      restore();
+      document.addEventListener('DOMContentLoaded', reveal, { once: true });
+      window.addEventListener('pageshow', reveal, { once: true });
+      setTimeout(reveal, 700);
+    } catch(e) {}
+  })();
+  </script>
   <script src="/java/auth-reset.js" defer></script>
   <title data-i18n="الصفحة الرئيسية - بريق">الصفحة الرئيسية - بريق</title>
   <!-- Full CSS loads asynchronously; critical above-fold CSS is inlined below. -->
   <link rel="preload" href="/style/style.css?v=122" as="style" fetchpriority="low" onload="this.onload=null;this.rel='stylesheet'">
-  <link rel="preload" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260724aa" as="style" fetchpriority="low" media="(max-width: 899px)" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="/style/style.css?v=122"><link rel="stylesheet" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260724aa" media="(max-width: 899px)"></noscript>
+  <link rel="preload" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260725d" as="style" fetchpriority="low" media="(max-width: 899px)" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="/style/style.css?v=122"><link rel="stylesheet" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260725d" media="(max-width: 899px)"></noscript>
   <style>html,body,.page{background:#fff!important}</style>
   <!-- Preload Cairo Arabic font for faster text rendering -->
   <link rel="preload" href="/assets/cairo-arabic.woff2" as="font" type="font/woff2" crossorigin>
@@ -630,10 +651,76 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="/java/instant-nav.js?v=instant-nav-20260724b" defer></script>
 <script src="/translations/translation.min.js" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
-<script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260724ac" defer></script>
+<script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260725d" defer></script>
 <script src="/java/push-welcome.js?v=push-welcome-20260724a" defer></script>
 <script src="/java/notifications.min.js" defer></script>
-<script type="module" src="/java/Products.min.js" defer></script>
+<script type="module" src="/java/Products.min.js?v=products-20260725d" defer></script>
+
+<style>
+.campaign-popup-backdrop{position:fixed;inset:0;z-index:100200;background:rgba(7,16,32,.52);display:flex;align-items:center;justify-content:center;padding:18px;opacity:0;pointer-events:none;transition:opacity .22s ease}.campaign-popup-backdrop.show{opacity:1;pointer-events:auto}.campaign-popup{width:min(92vw,460px);overflow:hidden;border-radius:18px;background:#fff;box-shadow:0 28px 70px rgba(10,22,40,.32);transform:translateY(18px) scale(.96);transition:transform .28s cubic-bezier(.18,1.16,.36,1)}.campaign-popup-backdrop.show .campaign-popup{transform:translateY(0) scale(1)}.campaign-popup-media{position:relative;min-height:170px;background:linear-gradient(135deg,#152546,#2d405f)}.campaign-popup-media img{width:100%;height:230px;object-fit:cover;display:block;border-radius:0}.campaign-popup-media.no-image{display:flex;align-items:center;justify-content:center;color:#fff}.campaign-popup-badge{position:absolute;top:14px;inset-inline-start:14px;background:#D4AF37;color:#152546;border-radius:999px;padding:6px 12px;font-weight:900;font-size:.82rem}.campaign-popup-close{position:absolute;top:12px;inset-inline-end:12px;width:34px;height:34px;border:0;border-radius:50%;background:rgba(255,255,255,.92);color:#152546;font-size:20px;line-height:1;cursor:pointer}.campaign-popup-body{padding:20px;text-align:start}.campaign-popup-title{margin:0 0 8px;color:#152546;font-size:1.35rem;font-weight:900}.campaign-popup-desc{margin:0;color:#516078;line-height:1.7;font-size:.96rem}.campaign-popup-actions{display:flex;gap:10px;margin-top:18px}.campaign-popup-primary{flex:1;text-align:center;text-decoration:none;border-radius:999px;background:#152546;color:#fff;padding:12px 16px;font-weight:800}.campaign-popup-secondary{border:1px solid #d9e0ec;background:#fff;color:#152546;border-radius:999px;padding:12px 16px;font-weight:800;cursor:pointer}@media(max-width:520px){.campaign-popup{border-radius:16px}.campaign-popup-media img{height:190px}.campaign-popup-actions{flex-direction:column}.campaign-popup-title{font-size:1.18rem}}
+</style>
+
+<script>
+(function(){
+  function currentLang(){ return (localStorage.getItem('lang') || document.documentElement.lang || 'ar') === 'en' ? 'en' : 'ar'; }
+  function tr(ar, en){ return currentLang() === 'en' ? en : ar; }
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function activeCampaign(c){
+    const now = Date.now();
+    const start = c.start_date || c.start;
+    const end = c.end_date || c.end;
+    if (c.active === false) return false;
+    if (start && new Date(start).getTime() > now) return false;
+    if (end && new Date(end).getTime() < now) return false;
+    return true;
+  }
+  function showCampaignPopup(c){
+    const key = 'x2_campaign_popup_seen_' + (c.id || c.name || 'active');
+    if (sessionStorage.getItem(key) === '1') return;
+    sessionStorage.setItem(key, '1');
+    const banner = c.banner || c.image || '';
+    const discount = parseFloat(c.discount) || 0;
+    const title = c.name || tr('عرض خاص', 'Special offer');
+    const desc = c.description || c.desc || (discount ? tr('خصم لفترة محدودة على منتجات مختارة.', 'Limited-time discount on selected products.') : '');
+    const backdrop = document.createElement('div');
+    backdrop.className = 'campaign-popup-backdrop';
+    backdrop.innerHTML = `<div class="campaign-popup" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+      <div class="campaign-popup-media${banner ? '' : ' no-image'}">
+        ${banner ? `<img src="${esc(banner)}" alt="${esc(title)}" onerror="this.parentNode.classList.add('no-image');this.remove()">` : `<strong>${esc(title)}</strong>`}
+        ${discount ? `<span class="campaign-popup-badge">${discount}% ${esc(tr('خصم', 'OFF'))}</span>` : ''}
+        <button class="campaign-popup-close" type="button" aria-label="${esc(tr('إغلاق', 'Close'))}">×</button>
+      </div>
+      <div class="campaign-popup-body">
+        <h3 class="campaign-popup-title">${esc(title)}</h3>
+        ${desc ? `<p class="campaign-popup-desc">${esc(desc)}</p>` : ''}
+        <div class="campaign-popup-actions">
+          <a class="campaign-popup-primary" href="/offers${currentLang() === 'en' ? '?lang=en' : ''}">${esc(tr('تسوق العروض', 'Shop deals'))}</a>
+          <button class="campaign-popup-secondary" type="button">${esc(tr('لاحقاً', 'Later'))}</button>
+        </div>
+      </div>
+    </div>`;
+    const close = function(){ backdrop.classList.remove('show'); setTimeout(function(){ backdrop.remove(); }, 240); };
+    backdrop.addEventListener('click', function(e){ if (e.target === backdrop) close(); });
+    backdrop.querySelector('.campaign-popup-close').addEventListener('click', close);
+    backdrop.querySelector('.campaign-popup-secondary').addEventListener('click', close);
+    document.body.appendChild(backdrop);
+    requestAnimationFrame(function(){ backdrop.classList.add('show'); });
+  }
+  async function loadCampaignPopup(){
+    for (let i = 0; i < 30; i++) {
+      if (window.Supabase && window.Supabase.Campaigns) break;
+      await new Promise(function(resolve){ setTimeout(resolve, 150); });
+    }
+    try {
+      if (!window.Supabase || !window.Supabase.Campaigns) return;
+      const campaigns = await (window.Supabase.Campaigns.getActive ? window.Supabase.Campaigns.getActive() : window.Supabase.Campaigns.getAll());
+      const campaign = (Array.isArray(campaigns) ? campaigns : []).filter(activeCampaign)[0];
+      if (campaign) showCampaignPopup(campaign);
+    } catch(e) {}
+  }
+  window.addEventListener('load', function(){ setTimeout(loadCampaignPopup, 700); }, { once:true });
+})();
+</script>
 
 <style>
 @media(min-width:900px){
@@ -778,6 +865,16 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:8px!import
     if (href === lastDailyNavHref && now - lastDailyNavAt < 1500) return;
     lastDailyNavHref = href;
     lastDailyNavAt = now;
+    try {
+      const y = window.scrollY || window.pageYOffset || 0;
+      const positions = JSON.parse(sessionStorage.getItem('x2_scroll_positions') || '{}');
+      positions[location.href] = y;
+      sessionStorage.setItem('x2_scroll_positions', JSON.stringify(positions));
+      const productReturnPositions = JSON.parse(sessionStorage.getItem('x2_product_return_positions') || '{}');
+      productReturnPositions[location.href] = y;
+      sessionStorage.setItem('x2_product_return_positions', JSON.stringify(productReturnPositions));
+      sessionStorage.setItem('x2_return_to_scroll_url', location.href);
+    } catch(e) {}
     window.location.assign(href);
   });
 
@@ -952,12 +1049,12 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:8px!import
   // تسجيل Service Worker لدعم PWA (تثبيت الموقع كتطبيق)
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
-      navigator.serviceWorker.register('/sw.js?v=167', { updateViaCache: 'none' }).then(function(reg) {
+      navigator.serviceWorker.register('/sw.js?v=171', { updateViaCache: 'none' }).then(function(reg) {
         var refreshing = false;
         navigator.serviceWorker.addEventListener('controllerchange', function() {
-          if (refreshing || sessionStorage.getItem('sw-v167-refresh') === '1') return;
+          if (refreshing || sessionStorage.getItem('sw-v171-refresh') === '1') return;
           refreshing = true;
-          sessionStorage.setItem('sw-v167-refresh', '1');
+          sessionStorage.setItem('sw-v171-refresh', '1');
           location.reload();
         });
         if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });

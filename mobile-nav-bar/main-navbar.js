@@ -16,7 +16,7 @@
   const base = scriptBase.endsWith('/') ? scriptBase : scriptBase + '/';
 
   // ????? CSS
-  const cssHref = base + 'styles.css?v=apple-liquid-20260724aa';
+  const cssHref = base + 'styles.css?v=apple-liquid-20260725d';
   if (!Array.from(document.styleSheets).some(s => s.href && s.href.includes('/mobile-nav-bar/styles.css'))) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
@@ -160,7 +160,8 @@
     const rawSeg = location.pathname.split('/').pop() || 'index';
     const curPage = rawSeg.replace(/\.html$/,'') || 'index';
     nav.querySelectorAll('a').forEach(a => {
-      const h = (a.getAttribute('href') || '').replace(/\.html$/,'');
+      const hrefUrl = new URL(a.getAttribute('href') || '/', location.href);
+      const h = hrefUrl.pathname.replace(/\.html$/,'');
       const hPage = h.split('/').pop() || 'index';
       if (hPage === curPage) a.classList.add('active');
     });

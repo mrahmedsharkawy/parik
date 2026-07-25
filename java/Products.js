@@ -291,6 +291,47 @@ function optimizeSupabaseImageUrl(src, width, height) {
     }
 }
 
+function saveProductReturnScrollPosition() {
+    try {
+        const rawY = window.scrollY || window.pageYOffset || 0;
+        const productReturnPositions = JSON.parse(sessionStorage.getItem("x2_product_return_positions") || "{}");
+        const previousY = Number(productReturnPositions[location.href] || 0);
+        const y = rawY > 20 ? rawY : previousY || rawY;
+        const positions = JSON.parse(sessionStorage.getItem("x2_scroll_positions") || "{}");
+        positions[location.href] = y;
+        sessionStorage.setItem("x2_scroll_positions", JSON.stringify(positions));
+        productReturnPositions[location.href] = y;
+        sessionStorage.setItem("x2_product_return_positions", JSON.stringify(productReturnPositions));
+        sessionStorage.setItem("x2_return_to_scroll_url", location.href);
+    } catch (e) {}
+}
+
+function restoreProductReturnScrollPosition() {
+    try {
+        const productReturnPositions = JSON.parse(sessionStorage.getItem("x2_product_return_positions") || "{}");
+        const positions = productReturnPositions[location.href] ? productReturnPositions : JSON.parse(sessionStorage.getItem("x2_scroll_positions") || "{}");
+        const y = Number(positions[location.href] || 0);
+        if (!(y > 0)) return;
+        [0, 120, 420, 900, 1500].forEach(delay => setTimeout(() => window.scrollTo({ top: y, behavior: "auto" }), delay));
+    } catch (e) {}
+}
+
+if (typeof window !== "undefined") {
+    let productReturnScrollTimer;
+    window.addEventListener("scroll", () => {
+        clearTimeout(productReturnScrollTimer);
+        productReturnScrollTimer = setTimeout(() => {
+            if ((window.scrollY || window.pageYOffset || 0) > 20) saveProductReturnScrollPosition();
+        }, 120);
+    }, { passive: true });
+    document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", restoreProductReturnScrollPosition, { once: true }) : restoreProductReturnScrollPosition();
+    window.addEventListener("pageshow", restoreProductReturnScrollPosition);
+    document.addEventListener("click", e => {
+        const link = e.target && e.target.closest && e.target.closest('a[href*="/product/"]');
+        if (link && !/\/product(?:\/|\.html|$)/.test(location.pathname)) saveProductReturnScrollPosition();
+    }, true);
+}
+
 export function createProductCard(prod) {
     window.createProductCard || (window.createProductCard = createProductCard);
     const card = document.createElement("div");
@@ -334,6 +375,7 @@ export function createProductCard(prod) {
         passive: true
     }),
     card.addEventListener("click", () => {
+        saveProductReturnScrollPosition();
         rememberQuickProduct();
         try {
             const HIST_KEY = "x2_history", img = Array.isArray(prod.img) ? prod.img[0] : prod.img || "", name = "object" == typeof prod.name ? prod.name.ar || prod.name.en : prod.name || "", entry = {
@@ -1578,6 +1620,30 @@ document.addEventListener("DOMContentLoaded", async function() {
         }));
         const relEl = document.getElementById("relatedProducts");
         if (relEl && "function" == typeof createProductCard) {
+            async function getSuggestedProductIds() {
+                try {
+                    if (window.Supabase && window.Supabase.Settings) {
+                        const settings = await window.Supabase.Settings.get();
+                        const remote = settings && settings.suggested_products;
+                        if (Array.isArray(remote) && remote.length) return new Set(remote.map(String));
+                    }
+                } catch (e) {}
+                try {
+                    const anonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E";
+                    const res = await fetch("https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/settings?key=eq.suggested_products&select=value&limit=1", {
+                        headers: { apikey: anonKey, Authorization: "Bearer " + anonKey }
+                    });
+                    const rows = res.ok ? await res.json() : [];
+                    const remoteValue = rows && rows[0] && rows[0].value;
+                    const parsed = typeof remoteValue === "string" ? JSON.parse(remoteValue) : remoteValue;
+                    if (Array.isArray(parsed) && parsed.length) return new Set(parsed.map(String));
+                } catch (e) {}
+                try {
+                    const local = JSON.parse(localStorage.getItem("x2_suggested") || "[]");
+                    if (Array.isArray(local) && local.length) return new Set(local.map(String));
+                } catch (e) {}
+                return new Set;
+            }
             function getPCats(prod) {
                 const src = prod.category || prod.categories || [];
                 return (Array.isArray(src) ? src : [ src ]).map(c => typeof c === "object" ? c.ar || c.en || "" : String(c || "")).map(s => s.toLowerCase().trim()).filter(Boolean);
@@ -1603,27 +1669,30 @@ document.addEventListener("DOMContentLoaded", async function() {
                 };
             }).filter(r => r.score > .1).sort((a, b) => b.score - a.score).map(r => r.x);
             const fallback = rel.length ? rel : all.filter(x => String(x.id) !== String(productId) && getPCats(x).some(c => pCats.includes(c)));
-            const finalRel = fallback.length ? fallback : all.filter(x => String(x.id) !== String(productId));
-            const row = document.createElement("div");
-            row.className = "products-row";
-            relEl.appendChild(row);
-            let shown = 0;
-            const CHUNK = 8;
-            function loadMore() {
-                const frag = document.createDocumentFragment();
-                finalRel.slice(shown, shown + CHUNK).forEach(x => frag.appendChild(createProductCard(x)));
-                row.appendChild(frag);
-                shown += CHUNK;
-            }
-            loadMore();
-            const sentinel = document.createElement("div");
-            sentinel.style.height = "1px";
-            relEl.appendChild(sentinel);
-            new IntersectionObserver(entries => {
-                if (entries[0].isIntersecting && shown < finalRel.length) loadMore();
-            }, {
-                rootMargin: "200px"
-            }).observe(sentinel);
+            getSuggestedProductIds().then(suggestedIds => {
+                const suggested = suggestedIds.size ? all.filter(x => String(x.id) !== String(productId) && suggestedIds.has(String(x.id))) : [];
+                const finalRel = suggested.length ? suggested : fallback.length ? fallback : all.filter(x => String(x.id) !== String(productId));
+                const row = document.createElement("div");
+                row.className = "products-row";
+                relEl.appendChild(row);
+                let shown = 0;
+                const CHUNK = 8;
+                function loadMore() {
+                    const frag = document.createDocumentFragment();
+                    finalRel.slice(shown, shown + CHUNK).forEach(x => frag.appendChild(createProductCard(x)));
+                    row.appendChild(frag);
+                    shown += CHUNK;
+                }
+                loadMore();
+                const sentinel = document.createElement("div");
+                sentinel.style.height = "1px";
+                relEl.appendChild(sentinel);
+                new IntersectionObserver(entries => {
+                    if (entries[0].isIntersecting && shown < finalRel.length) loadMore();
+                }, {
+                    rootMargin: "200px"
+                }).observe(sentinel);
+            });
         }
         const imgPreviewEl = document.getElementById("rv-product-imgs");
         if (imgPreviewEl && imgs.length >= 1) {
