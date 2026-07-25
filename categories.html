@@ -14,6 +14,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     try {
       if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
       if (sessionStorage.getItem('x2_return_to_scroll_url') !== location.href) return;
+      if (sessionStorage.getItem('x2_product_return_target')) return;
       var productPositions = JSON.parse(sessionStorage.getItem('x2_product_return_positions') || '{}');
       var positions = productPositions[location.href] ? productPositions : JSON.parse(sessionStorage.getItem('x2_scroll_positions') || '{}');
       var y = Number(positions[location.href] || 0);
@@ -1203,7 +1204,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
 <script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260725g" defer></script>
 <script src="/java/push-welcome.js?v=push-welcome-20260725j" defer></script>
-<script type="module" src="./java/Products.min.js?v=products-20260725l"></script> <!-- ده يفضل يفضل في الآخر -->
+<script type="module" src="./java/Products.min.js?v=products-20260725n"></script> <!-- ده يفضل يفضل في الآخر -->
 </body>
 </html>
 

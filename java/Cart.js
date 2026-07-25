@@ -104,9 +104,45 @@ function x2VisitorAreaFallback() {
     function orderCustomerPhone(order) {
         return normalizeCouponPhone(order?.customer_phone || order?.customerPhone || order?.phone || order?.shipping?.phone || "");
     }
+    function couponCustomerKey(profile) {
+        const p = profile || {};
+        const phone = normalizeCouponPhone(p.phone || p.customer_phone || ""), email = String(p.email || p.customer_email || "").trim().toLowerCase();
+        if (phone) return "phone:" + phone;
+        if (email) return "email:" + email;
+        let guest = localStorage.getItem("x2_coupon_client_id") || "";
+        if (!guest) {
+            guest = "guest-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
+            localStorage.setItem("x2_coupon_client_id", guest);
+        }
+        return "guest:" + guest;
+    }
+    function couponUsedByCurrentCustomer(code) {
+        try {
+            const couponCode = String(code || "").toUpperCase();
+            if (!couponCode) return false;
+            const profile = JSON.parse(localStorage.getItem("x2_profile") || "{}"), key = couponCustomerKey(profile);
+            const usage = JSON.parse(localStorage.getItem("x2_coupon_usage_by_customer") || "{}");
+            return Array.isArray(usage[couponCode]) && usage[couponCode].includes(key);
+        } catch (e) {
+            return false;
+        }
+    }
+    function markCouponUsedForCurrentCustomer(code) {
+        try {
+            const couponCode = String(code || "").toUpperCase();
+            if (!couponCode) return;
+            const profile = JSON.parse(localStorage.getItem("x2_profile") || "{}"), key = couponCustomerKey(profile);
+            const usage = JSON.parse(localStorage.getItem("x2_coupon_usage_by_customer") || "{}");
+            const list = Array.isArray(usage[couponCode]) ? usage[couponCode] : [];
+            if (!list.includes(key)) list.push(key);
+            usage[couponCode] = list;
+            localStorage.setItem("x2_coupon_usage_by_customer", JSON.stringify(usage));
+        } catch (e) {}
+    }
     async function customerUsedCouponBefore(code) {
         const couponCode = String(code || "").toUpperCase();
         if (!couponCode) return !1;
+        if (couponUsedByCurrentCustomer(couponCode)) return !0;
         let profile = {};
         try { profile = JSON.parse(localStorage.getItem("x2_profile") || "{}"); } catch (e) {}
         const customerPhone = normalizeCouponPhone(profile.phone || ""), customerEmail = String(profile.email || "").trim().toLowerCase();
@@ -703,6 +739,7 @@ function x2VisitorAreaFallback() {
             const applied = JSON.parse(sessionStorage.getItem("x2_coupon_applied") || localStorage.getItem("x2_coupon_applied") || "null");
             appliedCouponForOrder = applied && applied.code ? String(applied.code).toUpperCase() : null;
             if (applied && applied.code) {
+                markCouponUsedForCurrentCustomer(applied.code);
                 let storedCoupon = JSON.parse(localStorage.getItem("x2_coupon_code") || "null");
                 storedCoupon && storedCoupon.code === applied.code && (storedCoupon.used = !0, localStorage.setItem("x2_coupon_code", JSON.stringify(storedCoupon)));
                 try {

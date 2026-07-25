@@ -25,6 +25,7 @@
     try {
       if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
       if (sessionStorage.getItem('x2_return_to_scroll_url') !== location.href) return;
+      if (sessionStorage.getItem('x2_product_return_target')) return;
       var productPositions = JSON.parse(sessionStorage.getItem('x2_product_return_positions') || '{}');
       var positions = productPositions[location.href] ? productPositions : JSON.parse(sessionStorage.getItem('x2_scroll_positions') || '{}');
       var y = Number(positions[location.href] || 0);
@@ -100,7 +101,8 @@
     #dailyPicksGrid:empty{min-height:184px}
     #subcategories-display:empty{min-height:0}
     /* Reserve space while products load → prevents footer from entering viewport → CLS fix */
-    #category-products:empty{min-height:600px;background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:12px}
+    #category-products:empty{min-height:2600px;background:linear-gradient(90deg,#f0f0f0 25%,#e8e8e8 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:12px}
+    @media(max-width:899px){#category-products:empty{min-height:3900px}}
     #searchResults:empty{display:none}
   </style>
   <!-- Preconnect to external resources -->
@@ -675,7 +677,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260725g" defer></script>
 <script src="/java/push-welcome.js?v=push-welcome-20260725j" defer></script>
 <script src="/java/notifications.min.js?v=notifications-20260725j" defer></script>
-<script type="module" src="/java/Products.min.js?v=products-20260725l" defer></script>
+<script type="module" src="/java/Products.min.js?v=products-20260725n" defer></script>
 
 <style>
 .campaign-popup-backdrop{position:fixed;inset:0;z-index:100200;background:rgba(7,16,32,.52);display:flex;align-items:center;justify-content:center;padding:18px;opacity:0;pointer-events:none;transition:opacity .22s ease}.campaign-popup-backdrop.show{opacity:1;pointer-events:auto}.campaign-popup{width:min(92vw,460px);overflow:hidden;border-radius:18px;background:#fff;box-shadow:0 28px 70px rgba(10,22,40,.32);transform:translateY(18px) scale(.96);transition:transform .28s cubic-bezier(.18,1.16,.36,1)}.campaign-popup-backdrop.show .campaign-popup{transform:translateY(0) scale(1)}.campaign-popup-media{position:relative;min-height:170px;background:linear-gradient(135deg,#152546,#2d405f)}.campaign-popup-media img{width:100%;height:230px;object-fit:cover;display:block;border-radius:0}.campaign-popup-media.no-image{display:flex;align-items:center;justify-content:center;color:#fff}.campaign-popup-badge{position:absolute;top:14px;inset-inline-start:14px;background:#D4AF37;color:#152546;border-radius:999px;padding:6px 12px;font-weight:900;font-size:.82rem}.campaign-popup-close{position:absolute;top:12px;inset-inline-end:12px;width:34px;height:34px;border:0;border-radius:50%;background:rgba(255,255,255,.92);color:#152546;font-size:20px;line-height:1;cursor:pointer}.campaign-popup-body{padding:20px;text-align:start}.campaign-popup-title{margin:0 0 8px;color:#152546;font-size:1.35rem;font-weight:900}.campaign-popup-desc{margin:0;color:#516078;line-height:1.7;font-size:.96rem}.campaign-popup-actions{display:flex;gap:10px;margin-top:18px}.campaign-popup-primary{flex:1;text-align:center;text-decoration:none;border-radius:999px;background:#152546;color:#fff;padding:12px 16px;font-weight:800}.campaign-popup-secondary{border:1px solid #d9e0ec;background:#fff;color:#152546;border-radius:999px;padding:12px 16px;font-weight:800;cursor:pointer}@media(max-width:520px){.campaign-popup{border-radius:16px}.campaign-popup-media img{height:190px}.campaign-popup-actions{flex-direction:column}.campaign-popup-title{font-size:1.18rem}}

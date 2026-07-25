@@ -407,6 +407,7 @@ function saveProductReturnTarget(card) {
 
 function restoreProductReturnTarget() {
     try {
+        if (window.__x2ProductReturnRestored) return true;
         const target = JSON.parse(sessionStorage.getItem("x2_product_return_target") || "null");
         if (!target || target.url !== location.href || !target.productId) return false;
         const selector = `.product-card[data-product-id="${CSS.escape(String(target.productId))}"]`;
@@ -414,6 +415,9 @@ function restoreProductReturnTarget() {
         if (!card) return false;
         const y = Math.max(0, Math.round((window.scrollY || window.pageYOffset || 0) + card.getBoundingClientRect().top - (Number(target.offset) || 8)));
         window.scrollTo({ top: y, behavior: "auto" });
+        window.__x2ProductReturnRestored = true;
+        sessionStorage.removeItem("x2_return_to_scroll_url");
+        sessionStorage.removeItem("x2_product_return_target");
         return true;
     } catch (e) {
         return false;
@@ -423,29 +427,20 @@ function restoreProductReturnTarget() {
 function restoreProductReturnScrollPosition() {
     try {
         if (sessionStorage.getItem("x2_return_to_scroll_url") !== location.href) return;
-        const productReturnPositions = JSON.parse(sessionStorage.getItem("x2_product_return_positions") || "{}");
-        const positions = productReturnPositions[location.href] ? productReturnPositions : JSON.parse(sessionStorage.getItem("x2_scroll_positions") || "{}");
-        const y = Number(positions[location.href] || 0);
-        const hasTarget = !!sessionStorage.getItem("x2_product_return_target");
-        if (!(y > 0) && !hasTarget) return;
-        [0, 120, 420, 900, 1500, 2500, 4000, 6000].forEach(delay => setTimeout(() => {
-            if (restoreProductReturnTarget()) return;
-            if (y > 0) window.scrollTo({ top: y, behavior: "auto" });
-        }, delay));
+        if (restoreProductReturnTarget()) return;
+        const container = document.getElementById("category-products") || document.body;
+        const observer = new MutationObserver(() => {
+            if (restoreProductReturnTarget()) observer.disconnect();
+        });
+        observer.observe(container, { childList: true, subtree: true });
         setTimeout(() => {
-            try { sessionStorage.removeItem("x2_return_to_scroll_url"); } catch (e) {}
-        }, 6600);
+            observer.disconnect();
+            if (!window.__x2ProductReturnRestored) sessionStorage.removeItem("x2_return_to_scroll_url");
+        }, 6000);
     } catch (e) {}
 }
 
 if (typeof window !== "undefined") {
-    let productReturnScrollTimer;
-    window.addEventListener("scroll", () => {
-        clearTimeout(productReturnScrollTimer);
-        productReturnScrollTimer = setTimeout(() => {
-            if ((window.scrollY || window.pageYOffset || 0) > 20) saveProductReturnScrollPosition(false);
-        }, 120);
-    }, { passive: true });
     document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", restoreProductReturnScrollPosition, { once: true }) : restoreProductReturnScrollPosition();
     window.addEventListener("pageshow", restoreProductReturnScrollPosition);
     document.addEventListener("click", e => {
@@ -570,7 +565,7 @@ export function createProductCard(prod) {
         const im = document.createElement("img");
         const isHomePage = /^(\/|\/index\.html)$/i.test(location.pathname);
         const imgSize = isHomePage && window.innerWidth <= 700 ? 180 : 230;
-        const isPriority = !isHomePage && _priorityProductImages < 6;
+        const isPriority = _priorityProductImages < (isHomePage ? 2 : 6);
         _priorityProductImages++;
         im.className = "product-img";
         im.alt = getTranslated(prod.name);
@@ -761,13 +756,16 @@ document.addEventListener("DOMContentLoaded", async function() {
         const loadingIndicator = document.createElement("div");
         loadingIndicator.id = "grid-loading-indicator", loadingIndicator.style.cssText = "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40px;height:40px;border:4px solid #f3f3f3;border-top:4px solid #3498db;border-radius:50%;animation:spin 1s linear infinite;";
         const FIRST_CHUNK = Math.min(20, sortedList.length);
+        const isHomePage = /^(\/|\/index\.html)$/i.test(location.pathname);
+        const deferHomeRest = false;
         _priorityProductImages = 0;
         const columns = window.matchMedia("(max-width: 899px)").matches ? 2 : window.matchMedia("(max-width: 1300px)").matches ? 3 : 4;
-        const estimatedRows = Math.max(1, Math.ceil(FIRST_CHUNK / columns));
-        const estimatedCardHeight = window.matchMedia("(max-width: 899px)").matches ? 390 : 360;
+        const estimatedRows = Math.max(1, Math.ceil((deferHomeRest ? FIRST_CHUNK : sortedList.length) / columns));
+        const estimatedCardHeight = window.matchMedia("(max-width: 899px)").matches ? 224 : 360;
         productsContainer.classList.add("changing"), productsContainer.style.minHeight = Math.max(200, estimatedRows * estimatedCardHeight) + "px",
         productsContainer.style.position = "relative", productsContainer.appendChild(loadingIndicator);
         let i = 0;
+        let homeRestDeferred = false;
         !function appendChunk() {
             const fragment = document.createDocumentFragment(), chunkSize = 0 === i ? FIRST_CHUNK : 20;
             for (let k = 0; k < chunkSize && i < sortedList.length; k++, i++) {
@@ -778,7 +776,21 @@ document.addEventListener("DOMContentLoaded", async function() {
                     console.warn("Skipping product card render:", err, sortedList[i]);
                 }
             }
-            if (rowDiv.appendChild(fragment), i < sortedList.length) requestAnimationFrame(appendChunk); else {
+            if (rowDiv.appendChild(fragment), deferHomeRest && !homeRestDeferred && i >= FIRST_CHUNK && i < sortedList.length) {
+                homeRestDeferred = true;
+                productsContainer.innerHTML = "", productsContainer.appendChild(rowDiv), productsContainer.classList.remove("changing");
+                const loader = document.getElementById("temp-popstate-loader") || document.getElementById("grid-loading-indicator");
+                loader && loader.remove();
+                const loadMore = () => {
+                    if (i >= sortedList.length) return;
+                    const rect = productsContainer.getBoundingClientRect();
+                    if (rect.bottom > window.innerHeight + 900) return;
+                    requestAnimationFrame(appendChunk);
+                    if (i >= sortedList.length) window.removeEventListener("scroll", loadMore);
+                };
+                window.addEventListener("scroll", loadMore, { passive: true });
+                setTimeout(restoreProductReturnScrollPosition, 0);
+            } else if (i < sortedList.length) requestAnimationFrame(appendChunk); else {
                 productsContainer.innerHTML = "", productsContainer.appendChild(rowDiv), productsContainer.classList.remove("changing");
                 const loader = document.getElementById("temp-popstate-loader") || document.getElementById("grid-loading-indicator");
                 loader && loader.remove();
