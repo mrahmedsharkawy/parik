@@ -112,9 +112,9 @@
   document.addEventListener("touchstart", onIntent, { passive: true, capture: true });
   document.addEventListener("focusin", onIntent, { passive: true, capture: true });
 
-  if ("requestIdleCallback" in window) {
-    requestIdleCallback(function () { bootWarmup(); }, { timeout: 2000 });
-  } else {
-    setTimeout(bootWarmup, 900);
-  }
+  window.addEventListener("load", function () {
+    var run = function () { setTimeout(bootWarmup, 4500); };
+    if ("requestIdleCallback" in window) requestIdleCallback(run, { timeout: 6000 });
+    else setTimeout(bootWarmup, 6500);
+  }, { once: true });
 })();

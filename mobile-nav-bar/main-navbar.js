@@ -142,17 +142,6 @@
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('touchmove', onScroll, { passive: true });
 
-    let rafId = 0;
-    const watchScroll = () => {
-      onScroll();
-      rafId = window.requestAnimationFrame(watchScroll);
-    };
-    rafId = window.requestAnimationFrame(watchScroll);
-
-    window.addEventListener('pagehide', () => {
-      if (rafId) window.cancelAnimationFrame(rafId);
-    }, { once: true });
-
     onScroll();
 
     // -- ????? ?????? ????? ------------------------------------------
@@ -569,8 +558,8 @@ window.addEventListener('orientationchange', initMobileNav, { passive: true });
   document.addEventListener('pointerover', prefetchLink, { passive: true });
   document.addEventListener('touchstart', prefetchLink, { passive: true });
   window.addEventListener('load', function() {
-    const run = () => corePages.forEach(prefetch);
-    if ('requestIdleCallback' in window) requestIdleCallback(run, { timeout: 2500 });
-    else setTimeout(run, 1200);
+    const run = () => setTimeout(() => corePages.forEach(prefetch), 4500);
+    if ('requestIdleCallback' in window) requestIdleCallback(run, { timeout: 6000 });
+    else setTimeout(() => corePages.forEach(prefetch), 6500);
   }, { once: true });
 })();
