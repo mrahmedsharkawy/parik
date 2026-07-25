@@ -3215,14 +3215,10 @@ async function renderVisitorsStats() {
       const localAllAreas = localRows.filter(hasArea);
       const locRows = todayVisits.length ? todayVisits : (remoteAllAreas.length ? remoteAllAreas : localAllAreas);
       const locMap = {};
-      const fallbackArea = locRows.some(v => !hasArea(v)) ? await getCurrentVisitorAreaFallback() : '';
       locRows.forEach(v => {
-        const loc = hasArea(v) ? visitorArea(v) : (fallbackArea || 'غير محدد');
+        const loc = hasArea(v) ? visitorArea(v) : 'غير محدد';
         locMap[loc] = (locMap[loc]||0) + 1;
       });
-      if (!Object.keys(locMap).length && todayVisits.length) {
-        if (fallbackArea) locMap[fallbackArea] = todayVisits.length;
-      }
       const sorted = Object.entries(locMap).sort((a,b) => b[1]-a[1]).slice(0, 10);
       locEl.innerHTML = sorted.length ? sorted.map(([loc, count]) =>
         `<div style="display:flex;justify-content:space-between;font-size:.82rem;padding:3px 6px;background:#f7f8fc;border-radius:6px">

@@ -291,7 +291,7 @@ function optimizeSupabaseImageUrl(src, width, height) {
     }
 }
 
-function saveProductReturnScrollPosition() {
+function saveProductReturnScrollPosition(markReturn) {
     try {
         const rawY = window.scrollY || window.pageYOffset || 0;
         const productReturnPositions = JSON.parse(sessionStorage.getItem("x2_product_return_positions") || "{}");
@@ -302,7 +302,7 @@ function saveProductReturnScrollPosition() {
         sessionStorage.setItem("x2_scroll_positions", JSON.stringify(positions));
         productReturnPositions[location.href] = y;
         sessionStorage.setItem("x2_product_return_positions", JSON.stringify(productReturnPositions));
-        sessionStorage.setItem("x2_return_to_scroll_url", location.href);
+        if (markReturn) sessionStorage.setItem("x2_return_to_scroll_url", location.href);
     } catch (e) {}
 }
 
@@ -325,14 +325,14 @@ if (typeof window !== "undefined") {
     window.addEventListener("scroll", () => {
         clearTimeout(productReturnScrollTimer);
         productReturnScrollTimer = setTimeout(() => {
-            if ((window.scrollY || window.pageYOffset || 0) > 20) saveProductReturnScrollPosition();
+            if ((window.scrollY || window.pageYOffset || 0) > 20) saveProductReturnScrollPosition(false);
         }, 120);
     }, { passive: true });
     document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", restoreProductReturnScrollPosition, { once: true }) : restoreProductReturnScrollPosition();
     window.addEventListener("pageshow", restoreProductReturnScrollPosition);
     document.addEventListener("click", e => {
         const link = e.target && e.target.closest && e.target.closest('a[href*="/product/"]');
-        if (link && !/\/product(?:\/|\.html|$)/.test(location.pathname)) saveProductReturnScrollPosition();
+        if (link && !/\/product(?:\/|\.html|$)/.test(location.pathname)) saveProductReturnScrollPosition(true);
     }, true);
 }
 
@@ -379,7 +379,7 @@ export function createProductCard(prod) {
         passive: true
     }),
     card.addEventListener("click", () => {
-        saveProductReturnScrollPosition();
+        saveProductReturnScrollPosition(true);
         rememberQuickProduct();
         try {
             const HIST_KEY = "x2_history", img = Array.isArray(prod.img) ? prod.img[0] : prod.img || "", name = "object" == typeof prod.name ? prod.name.ar || prod.name.en : prod.name || "", entry = {
