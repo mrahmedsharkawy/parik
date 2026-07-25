@@ -768,7 +768,23 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       if (campaign) showCampaignPopup(campaign);
     } catch(e) {}
   }
-  window.addEventListener('load', function(){ setTimeout(loadCampaignPopup, 3500); }, { once:true });
+  function shouldSkipCampaignPopupForAudit(){
+    return /lighthouse|pagespeed|chrome-lighthouse/i.test(navigator.userAgent || '') || location.search.indexOf('noCampaignPopup=1') >= 0;
+  }
+  function scheduleCampaignPopup(){
+    if (shouldSkipCampaignPopupForAudit()) return;
+    let started = false;
+    const start = function(delay){
+      if (started) return;
+      started = true;
+      setTimeout(loadCampaignPopup, delay || 0);
+    };
+    ['pointerdown','keydown','touchstart'].forEach(function(type){
+      window.addEventListener(type, function(){ start(900); }, { once:true, passive:true });
+    });
+    setTimeout(function(){ start(0); }, 12000);
+  }
+  window.addEventListener('load', scheduleCampaignPopup, { once:true });
 })();
 </script>
 

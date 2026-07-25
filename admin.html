@@ -893,7 +893,7 @@
         <div class="plist" id="catList"><div class="empty">جارٍ التحميل...</div></div>
       </div>
       <div class="card">
-        <h2>➕ إضافة فئة</h2>
+        <h2 id="catFormTitle">➕ إضافة فئة</h2>
         <div class="hint">اختر فئة رئيسية لإضافة فئة فرعية، أو اتركها فارغة لإضافة فئة رئيسية جديدة.</div>
         <label>الفئة الرئيسية (اختياري)</label>
         <select id="nc-parent">
@@ -905,9 +905,12 @@
         <input type="text" id="nc-en" placeholder="e.g. Accessories">
         <label>الرابط (slug)</label>
         <input type="text" id="nc-slug" placeholder="accessories">
-        <label>رابط الصورة</label>
-        <input type="text" id="nc-img" placeholder="assets/categories/...">
-        <button class="btn-gold" style="margin-top:14px;width:100%" onclick="addCategory()">➕ إضافة</button>
+        <label>الصورة</label>
+        <input type="text" id="nc-img" placeholder="ارفع صورة أو اترك رابط موجود" readonly>
+        <input type="file" id="nc-img-file" accept="image/*" style="display:none" onchange="uploadCategoryImage(this)">
+        <button class="btn-ghost btn-sm" style="margin-top:8px;width:100%" onclick="$('nc-img-file').click()">🖼️ رفع صورة من الجهاز</button>
+        <button class="btn-gold" id="catSaveBtn" style="margin-top:14px;width:100%" onclick="addCategory()">➕ إضافة</button>
+        <button class="btn-ghost btn-sm" id="catCancelBtn" style="margin-top:8px;width:100%;display:none" onclick="cancelCategoryEdit()">✕ إلغاء التعديل</button>
         <button class="btn-ghost btn-sm" style="margin-top:8px;width:100%" onclick="exportCatsJSON()">⬇ تنزيل Categories.json</button>
       </div>
     </div>
@@ -2870,7 +2873,10 @@ function renderAdminCategories() {
       const sn = getT(s.name)||s.categorySlug;
       return `<div class="cat-item sub" style="justify-content:space-between">
         <span>↳ ${esc(sn)}</span>
-        <button class="btn-danger btn-sm" onclick="deleteSubcategory(${ci},${si})">✕</button>
+        <span style="display:flex;gap:6px">
+          <button class="btn-ghost btn-sm" onclick="editSubcategory(${ci},${si})">تعديل</button>
+          <button class="btn-danger btn-sm" onclick="deleteSubcategory(${ci},${si})">✕</button>
+        </span>
       </div>`;
     }).join('');
     return `<div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px">
@@ -2880,6 +2886,7 @@ function renderAdminCategories() {
           <b style="color:var(--navy)">${esc(name)}</b>
           <small style="color:#9aa2b4;margin-right:8px">${(cat.subcategories||[]).length} فئة فرعية • <code style="font-size:.7rem">${esc(cat.categorySlug||'')}</code></small>
         </div>
+        <button class="btn-ghost btn-sm" onclick="editCategory(${ci})">تعديل</button>
         <button class="btn-danger btn-sm" onclick="deleteCategory(${ci})">حذف</button>
       </div>
       ${subs ? `<div style="margin-top:8px;border-top:1px dashed var(--line);padding-top:6px">${subs}</div>` : ''}
@@ -2894,22 +2901,140 @@ function renderAdminCategories() {
   }
 }
 
-function deleteCategory(ci) {
-  if (!confirm('حذف هذه الفئة؟')) return;
-  categories.splice(ci, 1);
-  saveCategoriesLocal();
-  renderAdminCategories();
-  renderCatBox();
-  toast('تم الحذف');
+let categoryEditState = null;
+
+function categorySlugOf(row) {
+  return String(row?.category_slug || row?.slug || row?.name_en || row?.name_ar || row?.id || '').trim();
 }
 
-function deleteSubcategory(ci, si) {
-  if (!confirm('حذف هذه الفئة الفرعية؟')) return;
-  categories[ci].subcategories.splice(si, 1);
+function sameCategoryRecord(row, cat) {
+  const vals = [row?.name_ar, row?.name_en, row?.id, categorySlugOf(row)].map(v => String(v || '').trim().toLowerCase());
+  const ar = String(cat?.name?.ar || '').trim().toLowerCase();
+  const en = String(cat?.name?.en || '').trim().toLowerCase();
+  const slug = String(cat?.categorySlug || '').trim().toLowerCase();
+  return (ar && vals.includes(ar)) || (en && vals.includes(en)) || (slug && vals.includes(slug));
+}
+
+async function findSupabaseCategoryId(cat) {
+  if (!window.Supabase || !window.Supabase.Categories || !cat) return cat?.id || null;
+  if (cat.id) return cat.id;
+  const rows = await window.Supabase.Categories.getAll().catch(() => []);
+  const found = (Array.isArray(rows) ? rows : []).find(row => sameCategoryRecord(row, cat));
+  if (found && found.id) cat.id = found.id;
+  return cat.id || null;
+}
+
+async function findSupabaseSubcategoryId(parent, sub) {
+  if (!window.Supabase || !window.Supabase.Subcategories || !sub) return sub?.id || null;
+  if (sub.id) return sub.id;
+  const categoryId = await findSupabaseCategoryId(parent);
+  const rows = await window.Supabase.Subcategories.getAll().catch(() => []);
+  const ar = String(sub?.name?.ar || '').trim().toLowerCase();
+  const en = String(sub?.name?.en || '').trim().toLowerCase();
+  const slug = String(sub?.categorySlug || '').trim().toLowerCase();
+  const found = (Array.isArray(rows) ? rows : []).find(row => {
+    const sameParent = !categoryId || String(row.category_id || '') === String(categoryId);
+    const vals = [row.name_ar, row.name_en, row.id, categorySlugOf(row)].map(v => String(v || '').trim().toLowerCase());
+    return sameParent && ((ar && vals.includes(ar)) || (en && vals.includes(en)) || (slug && vals.includes(slug)));
+  });
+  if (found && found.id) sub.id = found.id;
+  return sub.id || null;
+}
+
+async function patchSupabaseSubcategory(id, data) {
+  if (!id || !window.sbFetch) return null;
+  return window.sbFetch('subcategories?id=eq.' + encodeURIComponent(id), { method:'PATCH', body:JSON.stringify(data) });
+}
+
+async function deleteCategory(ci) {
+  if (!confirm('حذف هذه الفئة؟')) return;
+  const cat = categories[ci];
+  const id = await findSupabaseCategoryId(cat);
+  if (id && window.Supabase?.Categories) await window.Supabase.Categories.remove(id).catch(() => null);
+  categories.splice(ci, 1);
+  cancelCategoryEdit(true);
   saveCategoriesLocal();
   renderAdminCategories();
   renderCatBox();
-  toast('تم الحذف');
+  toast('تم الحذف من الموقع');
+}
+
+async function deleteSubcategory(ci, si) {
+  if (!confirm('حذف هذه الفئة الفرعية؟')) return;
+  const parent = categories[ci];
+  const sub = parent?.subcategories?.[si];
+  const id = await findSupabaseSubcategoryId(parent, sub);
+  if (id) await patchSupabaseSubcategory(id, { active:false }).catch(() => null);
+  parent.subcategories.splice(si, 1);
+  cancelCategoryEdit(true);
+  saveCategoriesLocal();
+  renderAdminCategories();
+  renderCatBox();
+  toast('تم الحذف من الموقع');
+}
+
+function editCategory(ci) {
+  const cat = categories[ci];
+  if (!cat) return;
+  categoryEditState = { type:'category', ci };
+  $('nc-parent').value = '';
+  $('nc-ar').value = cat.name?.ar || '';
+  $('nc-en').value = cat.name?.en || cat.name?.ar || '';
+  $('nc-slug').value = cat.categorySlug || '';
+  $('nc-img').value = cat.image || '';
+  $('catFormTitle').textContent = '✏️ تعديل فئة';
+  $('catSaveBtn').textContent = '💾 حفظ التعديل';
+  $('catCancelBtn').style.display = 'block';
+  $('nc-ar').focus();
+}
+
+function editSubcategory(ci, si) {
+  const parent = categories[ci];
+  const sub = parent?.subcategories?.[si];
+  if (!sub) return;
+  categoryEditState = { type:'subcategory', ci, si };
+  $('nc-parent').value = String(ci);
+  $('nc-ar').value = sub.name?.ar || '';
+  $('nc-en').value = sub.name?.en || sub.name?.ar || '';
+  $('nc-slug').value = sub.categorySlug || '';
+  $('nc-img').value = sub.image || '';
+  $('catFormTitle').textContent = '✏️ تعديل فئة فرعية';
+  $('catSaveBtn').textContent = '💾 حفظ التعديل';
+  $('catCancelBtn').style.display = 'block';
+  $('nc-ar').focus();
+}
+
+function cancelCategoryEdit(silent) {
+  categoryEditState = null;
+  ['nc-ar','nc-en','nc-slug','nc-img'].forEach(id => { if ($(id)) $(id).value=''; });
+  if ($('nc-parent')) $('nc-parent').value = '';
+  if ($('catFormTitle')) $('catFormTitle').textContent = '➕ إضافة فئة';
+  if ($('catSaveBtn')) $('catSaveBtn').textContent = '➕ إضافة';
+  if ($('catCancelBtn')) $('catCancelBtn').style.display = 'none';
+  if (!silent) toast('تم إلغاء التعديل');
+}
+
+async function uploadCategoryImage(input) {
+  const file = input && input.files && input.files[0];
+  if (!file) return;
+  try {
+    toast('جارٍ رفع الصورة...');
+    const reader = new FileReader();
+    const dataUrl = await new Promise((resolve, reject) => {
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+    const compressed = await compressImage(dataUrl, 900, 0.82);
+    const url = await uploadProductImageToStorage(compressed);
+    $('nc-img').value = url;
+    toast('تم رفع الصورة');
+  } catch(e) {
+    console.warn(e);
+    toast('تعذّر رفع الصورة');
+  } finally {
+    input.value = '';
+  }
 }
 
 function saveCategoriesLocal() {
@@ -2971,7 +3096,7 @@ async function syncCategoriesToSupabase() {
   }
 }
 
-function addCategory() {
+async function addCategory() {
   const ar = $('nc-ar').value.trim();
   const en = $('nc-en').value.trim();
   const slug = $('nc-slug').value.trim();
@@ -2979,6 +3104,53 @@ function addCategory() {
   const parentIdx = $('nc-parent').value;
 
   if (!ar) { toast('أدخل الاسم العربي'); return; }
+
+  if (categoryEditState) {
+    if (categoryEditState.type === 'category') {
+      const cat = categories[categoryEditState.ci];
+      if (!cat) { cancelCategoryEdit(true); return; }
+      if (!slug) { toast('أدخل الـ slug'); return; }
+      cat.name = { ar, en: en || ar };
+      cat.categorySlug = slug;
+      cat.image = img;
+      cat.url = `/categories/${slug}`;
+      const id = await ensureSupabaseCategory(cat, categoryEditState.ci + 1);
+      if (id && window.Supabase?.Categories) {
+        await window.Supabase.Categories.update(id, { name_ar: ar, name_en: en || ar, image: img, sort_order: categoryEditState.ci + 1, active: true }).catch(() => null);
+      }
+      saveCategoriesLocal();
+      renderAdminCategories();
+      renderCatBox();
+      cancelCategoryEdit(true);
+      toast('تم تعديل الفئة');
+      return;
+    }
+
+    if (categoryEditState.type === 'subcategory') {
+      const parent = categories[categoryEditState.ci];
+      const sub = parent?.subcategories?.[categoryEditState.si];
+      if (!parent || !sub) { cancelCategoryEdit(true); return; }
+      const finalSlug = slug || ar;
+      sub.name = { ar, en: en || ar };
+      sub.categorySlug = finalSlug;
+      sub.image = img;
+      sub.url = `/categories/${parent.categorySlug}/${finalSlug}`;
+      const categoryId = await ensureSupabaseCategory(parent, categoryEditState.ci + 1);
+      const subId = await findSupabaseSubcategoryId(parent, sub);
+      if (subId) {
+        await patchSupabaseSubcategory(subId, { category_id: categoryId, name_ar: ar, name_en: en || ar, image: img, sort_order: categoryEditState.si + 1, active: true }).catch(() => null);
+      } else if (categoryId && window.Supabase?.Subcategories) {
+        const rows = await window.Supabase.Subcategories.insert({ categoryId, nameAr: ar, nameEn: en || ar, image: img, order: categoryEditState.si + 1 }).catch(() => null);
+        if (Array.isArray(rows) && rows[0] && rows[0].id) sub.id = rows[0].id;
+      }
+      saveCategoriesLocal();
+      renderAdminCategories();
+      renderCatBox();
+      cancelCategoryEdit(true);
+      toast('تم تعديل الفئة الفرعية');
+      return;
+    }
+  }
 
   if (parentIdx !== '') {
     // إضافة فئة فرعية
@@ -2998,6 +3170,12 @@ function addCategory() {
         if (!categoryId) return null;
         return window.Supabase.Subcategories.insert({ categoryId, nameAr: ar, nameEn: en||ar, image: img, order: parent.subcategories.length });
       })
+        .then(function(rows){
+          if (Array.isArray(rows) && rows[0] && rows[0].id) {
+            sub.id = rows[0].id;
+            saveCategoriesLocal();
+          }
+        })
         .catch(function(){});
     }
   } else {
@@ -3023,10 +3201,19 @@ function addCategory() {
     }
   }
 
-  // مسح الحقول
-  ['nc-ar','nc-en','nc-slug','nc-img'].forEach(id => $(id).value='');
-  $('nc-parent').value = '';
+  cancelCategoryEdit(true);
 }
+
+Object.assign(window, {
+  addCategory,
+  renderAdminCategories,
+  editCategory,
+  editSubcategory,
+  deleteCategory,
+  deleteSubcategory,
+  cancelCategoryEdit,
+  uploadCategoryImage
+});
 
 function exportCatsJSON() {
   download('Categories.json', JSON.stringify(categories, null, 2));
