@@ -82,9 +82,13 @@
     var standalone=(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||window.navigator.standalone===true||document.referrer.indexOf('android-app://')===0;
     return mobile&&standalone;
   }
+  function canPromptForPush(){
+    var ua=navigator.userAgent||'';
+    return isInstalledMobileApp()||/Android/i.test(ua);
+  }
   function canShowPushWelcome(){
     try{
-      return localStorage.getItem('x2_logged')==='1'&&isInstalledMobileApp()&&'Notification'in window&&Notification.permission!=='granted'&&sessionStorage.getItem('x2_push_welcome_dismissed')!=='1';
+      return canPromptForPush()&&'Notification'in window&&Notification.permission!=='granted'&&sessionStorage.getItem('x2_push_welcome_dismissed')!=='1';
     }catch(e){return false;}
   }
   function ensurePushWelcomeModal(){
@@ -117,7 +121,8 @@
     }
   });
   function initPushWelcome(){
-    // Keep customer navigation quiet; call window.maybeShowPushWelcome() explicitly from a user action if needed.
+    setTimeout(window.maybeShowPushWelcome, 900);
+    window.addEventListener('pageshow', function(){ setTimeout(window.maybeShowPushWelcome, 900); });
   }
   if(document.body)initPushWelcome();
   else document.addEventListener('DOMContentLoaded',initPushWelcome,{once:true});
