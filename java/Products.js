@@ -929,11 +929,14 @@ document.addEventListener("DOMContentLoaded", async function() {
                 const loadMore = () => {
                     if (i >= sortedList.length) return;
                     const rect = productsContainer.getBoundingClientRect();
-                    if (rect.bottom > window.innerHeight + 900) return;
+                    const nearRenderedBottom = rect.bottom <= window.innerHeight + 1200;
+                    const nearPageBottom = window.innerHeight + (window.scrollY || window.pageYOffset || 0) >= document.documentElement.scrollHeight - 1200;
+                    if (!nearRenderedBottom && !nearPageBottom) return;
                     requestAnimationFrame(appendChunk);
                     if (i >= sortedList.length) window.removeEventListener("scroll", loadMore);
                 };
                 window.addEventListener("scroll", loadMore, { passive: true });
+                setTimeout(loadMore, 120);
                 setTimeout(restoreProductReturnScrollPosition, 0);
             } else if (i < sortedList.length) requestAnimationFrame(appendChunk); else {
                 productsContainer.dataset.renderKey = renderKey, productsContainer.replaceChildren(rowDiv), productsContainer.classList.remove("changing");
