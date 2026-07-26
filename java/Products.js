@@ -485,6 +485,7 @@ function restoreProductReturnScrollPosition() {
         if (sessionStorage.getItem("x2_return_to_scroll_url") !== location.href) return;
         if (restoreProductReturnTarget()) return;
         const container = document.getElementById("category-products") || document.body;
+        if (!container || !container.nodeType) return;
         const observer = new MutationObserver(() => {
             if (restoreProductReturnTarget()) observer.disconnect();
         });
@@ -890,7 +891,15 @@ document.addEventListener("DOMContentLoaded", async function() {
         }
         const isHomePage = /^(\/|\/index\.html)$/i.test(location.pathname);
         const isMobileGrid = window.matchMedia("(max-width: 899px)").matches;
-        const FIRST_CHUNK = isHomePage ? Math.min(isMobileGrid ? 8 : 20, sortedList.length) : Math.min(20, sortedList.length);
+        let restoreTargetIndex = -1;
+        try {
+            const target = JSON.parse(sessionStorage.getItem("x2_product_return_target") || "null");
+            if (target && target.url === location.href && target.productId) {
+                restoreTargetIndex = sortedList.findIndex(product => String(product.id || product.productId || "") === String(target.productId));
+            }
+        } catch (e) {}
+        const baseFirstChunk = isHomePage ? isMobileGrid ? 8 : 20 : 20;
+        const FIRST_CHUNK = Math.min(Math.max(baseFirstChunk, restoreTargetIndex >= 0 ? restoreTargetIndex + 1 : 0), sortedList.length);
         const deferHomeRest = isHomePage && sortedList.length > FIRST_CHUNK;
         _priorityProductImages = 0;
         const columns = isMobileGrid ? 2 : window.matchMedia("(max-width: 1300px)").matches ? 3 : 4;
