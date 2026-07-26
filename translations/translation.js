@@ -24,7 +24,10 @@ function changeLang(lang) {
       localStorage.setItem('lang', lang);
       document.documentElement.lang = lang;
       document.documentElement.dir  = lang === 'ar' ? 'rtl' : 'ltr';
+      document.documentElement.classList.remove('x2-i18n-pending');
       window.dispatchEvent(new CustomEvent('bariq:languagechange', { detail: { lang } }));
+    }).catch(() => {
+      document.documentElement.classList.remove('x2-i18n-pending');
     });
 }
 
@@ -83,10 +86,10 @@ window.applyCategoryNames = applyCategoryNames;
 window.addEventListener('DOMContentLoaded', () => {
   const urlLang = new URLSearchParams(location.search).get('lang');
   const storedLang = localStorage.getItem('lang');
-  const savedLang = storedLang === 'ar' && urlLang === 'en'
-    ? 'ar'
-    : ((urlLang === 'en' || urlLang === 'ar') ? urlLang : (storedLang || 'ar'));
+  const savedLang = (urlLang === 'en' || urlLang === 'ar') ? urlLang : (storedLang || 'ar');
   localStorage.setItem('lang', savedLang);
+  document.documentElement.lang = savedLang;
+  document.documentElement.dir = savedLang === 'ar' ? 'rtl' : 'ltr';
   changeLang(savedLang);
   const sel = document.querySelector('select');
   if (sel) sel.value = savedLang;
