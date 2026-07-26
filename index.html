@@ -47,8 +47,8 @@
   <title data-i18n="الصفحة الرئيسية - بريق">الصفحة الرئيسية - بريق</title>
   <!-- Full CSS loads asynchronously; critical above-fold CSS is inlined below. -->
   <link rel="preload" href="/style/style.css?v=126" as="style" fetchpriority="low" onload="this.onload=null;this.rel='stylesheet'">
-  <link rel="preload" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260726b" as="style" fetchpriority="low" media="(max-width: 899px)" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="/style/style.css?v=126"><link rel="stylesheet" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260726b" media="(max-width: 899px)"></noscript>
+  <link rel="preload" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260726d" as="style" fetchpriority="low" media="(max-width: 899px)" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="/style/style.css?v=126"><link rel="stylesheet" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260726d" media="(max-width: 899px)"></noscript>
   <style>html,body,.page{background:#fff!important}.categories a{font-family:"Segoe UI Emoji","Segoe UI Symbol","Apple Color Emoji","Noto Color Emoji",Arial,Tahoma,sans-serif!important}</style>
   <!-- Preload LCP image -->
   <script>
@@ -815,22 +815,24 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   body.home-immersive-header #category-products .product-content{flex:1 1 auto!important}
 }
 body.home-immersive-header .daily-picks-section{height:165px!important;min-height:165px!important;padding-bottom:0!important;overflow:hidden!important}
-body.home-immersive-header .daily-picks-grid{height:132px!important;min-height:132px!important;touch-action:auto!important;scroll-behavior:auto!important}
+  body.home-immersive-header .daily-picks-grid{height:132px!important;min-height:132px!important;overflow-x:auto!important;overflow-y:hidden!important;-webkit-overflow-scrolling:touch!important;touch-action:pan-x pan-y pinch-zoom!important;scroll-behavior:auto!important}
 body.home-immersive-header .daily-picks-grid.is-dragging .dp-card{pointer-events:auto!important}
 body.home-immersive-header .daily-picks-grid:not(:empty){height:132px!important;min-height:132px!important;padding-bottom:0!important}
-body.home-immersive-header .dp-card{position:relative!important;height:132px!important;min-height:132px!important;padding:4px 4px 20px!important;box-sizing:border-box!important;overflow:visible!important}
+  body.home-immersive-header .dp-card{position:relative!important;height:132px!important;min-height:132px!important;padding:4px 4px 20px!important;box-sizing:border-box!important;overflow:visible!important;touch-action:pan-x pan-y pinch-zoom!important}
 body.home-immersive-header .dp-card .dp-img{width:100%!important;height:104px!important;aspect-ratio:auto!important;object-fit:cover!important;display:block!important}
 body.home-immersive-header .dp-card .dp-badge{position:absolute!important;left:50%!important;bottom:3px!important;transform:translateX(-50%)!important;z-index:3!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;white-space:nowrap!important}
 body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:0!important}
 @media(min-width:900px){
   body.home-immersive-header .daily-picks-section{height:172px!important;min-height:172px!important}
-  body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:8px!important}
+  body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:14px!important}
 }
 @media(max-width:899px){
-  html,body{height:auto!important;min-height:100%!important;max-width:100%!important;overflow-x:hidden!important}
+  html,body{height:auto!important;min-height:100%!important;max-width:100%!important;overflow-x:clip!important}
   html{overflow-y:auto!important}
   body{overflow-y:visible!important}
-  body.home-immersive-header .page{max-width:100%!important;overflow-x:hidden!important}
+  body.home-immersive-header,
+  body.home-immersive-header .page{touch-action:pan-y pinch-zoom!important}
+  body.home-immersive-header .page{max-width:100%!important;overflow-x:clip!important;overflow-y:visible!important}
   body.home-immersive-header main.main{width:97%!important;max-width:97%!important;margin:64px auto 50px!important;background:#fff!important}
   body.home-immersive-header .desktop-promo-banner{display:none!important}
   body.home-immersive-header .mobile-promo-banner{display:block!important;width:100%!important;height:151px!important;min-height:151px!important;margin:-1px 0 12px!important;border-radius:0!important;box-shadow:none!important;background:linear-gradient(135deg,#152546 0%,#152546 42%,#1a1a2e 100%)!important;position:relative;right:auto!important;left:auto!important;transform:none!important;overflow:hidden}
@@ -853,22 +855,27 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:0!importan
   body.home-immersive-header .mobile-promo-banner .fsh-discount-label{color:rgba(255,255,255,.82);font-size:.78rem;font-weight:600}
   body.home-immersive-header,
   body.home-immersive-header *{font-family:Arial,Tahoma,"Segoe UI Emoji","Segoe UI Symbol",sans-serif!important}
+  body.home-immersive-header main.main{touch-action:pan-y pinch-zoom!important}
   body.home-immersive-header .categories a{font-family:"Segoe UI Emoji","Segoe UI Symbol","Apple Color Emoji","Noto Color Emoji",Arial,Tahoma,sans-serif!important}
-  body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:8px!important}
-  body.home-immersive-header .product-card{contain:none!important;content-visibility:visible!important;transform:translateZ(0);padding-bottom:0!important;box-sizing:border-box!important;overflow:visible!important}
+  body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:14px!important}
+  body.home-immersive-header .product-card{contain:none!important;content-visibility:visible!important;transform:none!important;will-change:auto!important;padding-bottom:4px!important;box-sizing:border-box!important;overflow:visible!important;touch-action:pan-y pinch-zoom!important}
+  body.home-immersive-header .product-card *{touch-action:pan-y pinch-zoom!important}
+  body.home-immersive-header .product-card:active,
+  body.home-immersive-header .product-card:active *{content-visibility:visible!important;opacity:1!important;visibility:visible!important;transform:none!important}
   body.home-immersive-header .product-content,
   body.home-immersive-header .product-name,
   body.home-immersive-header .product-rating-container,
   body.home-immersive-header .product-price-row,
   body.home-immersive-header .product-price{content-visibility:visible!important;opacity:1!important;visibility:visible!important;transform:none!important}
-  body.home-immersive-header .product-content{padding-bottom:4px!important;box-sizing:border-box!important}
+  body.home-immersive-header .product-content{padding-bottom:3px!important;box-sizing:border-box!important}
   body.home-immersive-header .product-name{margin-bottom:4px!important}
   body.home-immersive-header .product-rating-container{margin-top:0!important}
-  body.home-immersive-header .product-img{height:180px!important;min-height:180px!important;content-visibility:visible!important;opacity:1!important;visibility:visible!important;transform:translateZ(0)}
+  body.home-immersive-header .product-cart-btn{bottom:10px!important}
+  body.home-immersive-header .product-img{height:180px!important;min-height:180px!important;content-visibility:visible!important;opacity:1!important;visibility:visible!important;transform:none!important;will-change:auto!important}
   body.home-immersive-header .flash-deal-banner{height:38px!important;min-height:38px!important;overflow:hidden!important}
   body.home-immersive-header .trust-bar{height:36px!important;min-height:36px!important;overflow:hidden!important}
-  body.home-immersive-header .categories{height:54px!important;min-height:54px!important;overflow-x:auto!important;overflow-y:visible!important;white-space:nowrap!important;padding-bottom:7px!important}
-  body.home-immersive-header .categories a{height:38px!important;min-height:38px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;line-height:1.25!important}
+  body.home-immersive-header .categories{height:54px!important;min-height:54px!important;overflow-x:auto!important;overflow-y:hidden!important;-webkit-overflow-scrolling:touch!important;touch-action:pan-x pan-y pinch-zoom!important;white-space:nowrap!important;padding-bottom:7px!important}
+  body.home-immersive-header .categories a{height:38px!important;min-height:38px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;line-height:1.25!important;touch-action:pan-x pan-y pinch-zoom!important}
 }
 </style>
 
@@ -881,9 +888,9 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:0!importan
 
   document.addEventListener('touchstart', function(e) {
     if (!e.touches || e.touches.length !== 1) return;
-    if (!e.target.closest || !e.target.closest(cardSelector)) return;
     touchStartX = e.touches[0].clientX;
     touchStartY = e.touches[0].clientY;
+    if (!e.target.closest || !e.target.closest(cardSelector)) return;
   }, { passive: true, capture: true });
 
   document.addEventListener('touchmove', function(e) {
@@ -891,7 +898,7 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:0!importan
     if (!e.target.closest || !e.target.closest(cardSelector)) return;
     const dx = e.touches[0].clientX - touchStartX;
     const dy = e.touches[0].clientY - touchStartY;
-    if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.4) suppressCardClickUntil = Date.now() + 450;
+    if (Math.abs(dx) > 8 || Math.abs(dy) > 8) suppressCardClickUntil = Date.now() + 450;
   }, { passive: true, capture: true });
 
   document.addEventListener('click', function(e) {
@@ -944,6 +951,8 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:0!importan
       dragMode = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
       if (dragMode === 'x') grid.classList.add('is-dragging');
     }
+
+    if (dragMode === 'y') return;
 
     if (dragMode === 'x') {
       suppressClickUntil = Date.now() + 500;
