@@ -771,7 +771,7 @@ main,
 
 
 .product-name {
-  margin-bottom: 10px !important;
+  margin-bottom: 4px !important;
 }
   /* ✅ حالة نفاذ المخزون */
 .product-stock {
@@ -993,7 +993,7 @@ main,
   width: 18px;
   height: 18px;
 }
-.daily-picks-section+.trust-bar{margin-top:-6px!important}
+.daily-picks-section+.trust-bar{margin-top:8px!important}
 
 }
 

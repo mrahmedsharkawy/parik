@@ -163,7 +163,7 @@ function dailyRandomValue(product) {
 }
 
 function getStoreProductSort() {
-    try { return localStorage.getItem("x2_store_product_sort") || "daily_random"; } catch (e) { return "daily_random"; }
+    try { return localStorage.getItem("x2_store_product_sort") || "newest"; } catch (e) { return "newest"; }
 }
 
 let _storeSortLoaded = false;
@@ -225,6 +225,22 @@ function mapSupabaseProducts(sbProds) {
             featured: p.featured || !1
         };
     });
+}
+
+function mergeProductLists(baseList, overlayList) {
+    const merged = [], seen = new Set();
+    function keyOf(product) {
+        return String(product && (product.id || product.productId || product.supabaseId || product.name?.ar || product.name?.en || product.name) || "");
+    }
+    [ overlayList, baseList ].forEach(function(list) {
+        (Array.isArray(list) ? list : []).forEach(function(product) {
+            const key = keyOf(product);
+            if (!key || seen.has(key)) return;
+            seen.add(key);
+            merged.push(product);
+        });
+    });
+    return merged;
 }
 
 function saveProductsCache(data, ts) {
@@ -334,12 +350,12 @@ export async function fetchProducts(forceFresh) {
     } catch (e) {}
     await ensureStoreProductSortLoaded();
     const snapshot = await fetchProductsSnapshot();
-    if (snapshot.length) return _productsCache = snapshot, _productsCacheTs = Date.now(), saveProductsCache(_productsCache, _productsCacheTs), refreshProductsInBackground(), _productsCache;
     try {
         if (window.Supabase && window.Supabase.Products) {
             const sbProds = await window.Supabase.Products.getAll(100);
             if (Array.isArray(sbProds)) {
-                if (_productsCache = sortProductsForStore(mapSupabaseProducts(sbProds)), _productsCache.length > 0) {
+                const mergedProducts = mergeProductLists(snapshot, mapSupabaseProducts(sbProds));
+                if (_productsCache = sortProductsForStore(mergedProducts), _productsCache.length > 0) {
                     _productsCacheTs = Date.now();
                     saveProductsCache(_productsCache, _productsCacheTs);
                 } else try {
@@ -349,8 +365,10 @@ export async function fetchProducts(forceFresh) {
             }
         }
     } catch (e) {
+        if (snapshot.length) return _productsCache = snapshot, _productsCacheTs = Date.now(), saveProductsCache(_productsCache, _productsCacheTs), refreshProductsInBackground(), _productsCache;
         if (staleCache && staleCache.length > 0) return _productsCache = sortProductsForStore(staleCache), _productsCache;
     }
+    if (snapshot.length) return _productsCache = snapshot, _productsCacheTs = Date.now(), saveProductsCache(_productsCache, _productsCacheTs), refreshProductsInBackground(), _productsCache;
     if (staleCache && staleCache.length > 0) return _productsCache = sortProductsForStore(staleCache), _productsCache;
     try {
         const adminProds = localStorage.getItem("admin_products");
