@@ -15,17 +15,39 @@ function getCurrentPushLanguage() {
     return (localStorage.getItem("lang") || document.documentElement.lang || "ar") === "en" ? "en" : "ar";
 }
 
+function sendPushLanguageToServiceWorker() {
+    try {
+        const e = getCurrentPushLanguage();
+        navigator.serviceWorker && navigator.serviceWorker.ready.then(r => {
+            r.active && r.active.postMessage({
+                type: "SET_PUSH_LANG",
+                lang: e
+            });
+        }).catch(() => {}), navigator.serviceWorker.controller && navigator.serviceWorker.controller.postMessage({
+            type: "SET_PUSH_LANG",
+            lang: e
+        });
+    } catch (e) {}
+}
+
 async function registerSW() {
     if (!("serviceWorker" in navigator)) return null;
     try {
-        const e = await navigator.serviceWorker.register("/sw.js?v=183", { updateViaCache: "none" });
+        const e = await navigator.serviceWorker.register("/sw.js?v=186", { updateViaCache: "none" });
         e.update().catch(() => {});
+        sendPushLanguageToServiceWorker();
         refreshCurrentPushSubscriptionLanguage();
         return e;
     } catch (e) {
         return null;
     }
 }
+
+window.addEventListener("storage", e => {
+    e.key === "lang" && sendPushLanguageToServiceWorker();
+});
+
+window.addEventListener("bariq:languagechange", sendPushLanguageToServiceWorker);
 
 async function refreshCurrentPushSubscriptionLanguage() {
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;

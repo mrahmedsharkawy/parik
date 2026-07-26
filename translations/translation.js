@@ -24,6 +24,7 @@ function changeLang(lang) {
       localStorage.setItem('lang', lang);
       document.documentElement.lang = lang;
       document.documentElement.dir  = lang === 'ar' ? 'rtl' : 'ltr';
+      window.dispatchEvent(new CustomEvent('bariq:languagechange', { detail: { lang } }));
     });
 }
 

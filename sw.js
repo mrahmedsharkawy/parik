@@ -1,5 +1,5 @@
 /* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v195';
+const CACHE = 'bariq-v198';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -88,12 +88,27 @@ const PUSH_STORE = 'notifications';
 
 function openPushDb() {
   return new Promise(function(resolve, reject) {
-    const req = indexedDB.open(PUSH_DB, 1);
+    const req = indexedDB.open(PUSH_DB, 2);
     req.onupgradeneeded = function() {
       const db = req.result;
       if (!db.objectStoreNames.contains(PUSH_STORE)) db.createObjectStore(PUSH_STORE, { keyPath: 'id' });
     };
-    req.onsuccess = function() { resolve(req.result); };
+    req.onsuccess = function() {
+      const db = req.result;
+      if (db.objectStoreNames.contains(PUSH_STORE)) {
+        resolve(db);
+        return;
+      }
+      const nextVersion = db.version + 1;
+      db.close();
+      const retry = indexedDB.open(PUSH_DB, nextVersion);
+      retry.onupgradeneeded = function() {
+        const retryDb = retry.result;
+        if (!retryDb.objectStoreNames.contains(PUSH_STORE)) retryDb.createObjectStore(PUSH_STORE, { keyPath: 'id' });
+      };
+      retry.onsuccess = function() { resolve(retry.result); };
+      retry.onerror = function() { reject(retry.error); };
+    };
     req.onerror = function() { reject(req.error); };
   });
 }
@@ -122,6 +137,36 @@ async function clearPushInbox() {
     });
     db.close();
   } catch(e) {}
+}
+
+async function setStoredPushLanguage(lang) {
+  try {
+    const cleanLang = String(lang || '').toLowerCase().startsWith('en') ? 'en' : 'ar';
+    const db = await openPushDb();
+    await new Promise(function(resolve, reject) {
+      const tx = db.transaction(PUSH_STORE, 'readwrite');
+      tx.objectStore(PUSH_STORE).put({ id: '__push_lang__', lang: cleanLang, date: new Date().toISOString() });
+      tx.oncomplete = resolve;
+      tx.onerror = function() { reject(tx.error); };
+    });
+    db.close();
+  } catch(e) {}
+}
+
+async function getStoredPushLanguage() {
+  try {
+    const db = await openPushDb();
+    const item = await new Promise(function(resolve, reject) {
+      const tx = db.transaction(PUSH_STORE, 'readonly');
+      const req = tx.objectStore(PUSH_STORE).get('__push_lang__');
+      req.onsuccess = function() { resolve(req.result || null); };
+      req.onerror = function() { reject(req.error); };
+    });
+    db.close();
+    return item && item.lang === 'en' ? 'en' : 'ar';
+  } catch(e) {
+    return 'ar';
+  }
 }
 
 async function closeVisibleNotifications() {
@@ -478,6 +523,7 @@ self.addEventListener('push', function(e) {
           data = { title: '\u0628\u0631\u064a\u0642', body: txt || '' };
         }
       }
+      if (!data.lang && !data.user_lang) data.lang = await getStoredPushLanguage();
       data = normalizePushNotificationData(data);
       const title   = data.title || '\u0628\u0631\u064a\u0642';
       const options = {
@@ -555,6 +601,9 @@ self.addEventListener('message', function(e) {
     if ('setAppBadge' in self.registration) {
       self.registration.setAppBadge(_badgeCount).catch(() => {});
     }
+  }
+  if (e.data && e.data.type === 'SET_PUSH_LANG') {
+    e.waitUntil(setStoredPushLanguage(e.data.lang));
   }
   if (e.data && e.data.type === 'CLEAR_BADGE') {
     _badgeCount = 0;

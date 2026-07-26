@@ -16,6 +16,13 @@
   function getCurrentPushLanguage(){
     return (localStorage.getItem('lang')||document.documentElement.lang||'ar')==='en'?'en':'ar';
   }
+  function sendPushLanguageToServiceWorker(){
+    try{
+      var lang=getCurrentPushLanguage();
+      if(navigator.serviceWorker&&navigator.serviceWorker.controller)navigator.serviceWorker.controller.postMessage({type:'SET_PUSH_LANG',lang:lang});
+      if(navigator.serviceWorker&&navigator.serviceWorker.ready)navigator.serviceWorker.ready.then(function(reg){if(reg.active)reg.active.postMessage({type:'SET_PUSH_LANG',lang:lang});}).catch(function(){});
+    }catch(e){}
+  }
   async function saveSubscriptionToSupabase(sub){
     var anon='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
     try{
@@ -50,9 +57,10 @@
         return false;
       }
       var reg=await navigator.serviceWorker.getRegistration('/');
-      if(!reg)reg=await navigator.serviceWorker.register('/sw.js?v=183',{updateViaCache:'none'});
+      if(!reg)reg=await navigator.serviceWorker.register('/sw.js?v=186',{updateViaCache:'none'});
       if(reg&&reg.update)reg.update().catch(function(){});
       await navigator.serviceWorker.ready;
+      sendPushLanguageToServiceWorker();
       var sub=await reg.pushManager.getSubscription();
       if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)});
       saveSubscriptionToSupabase(sub);
