@@ -846,6 +846,14 @@ document.addEventListener("DOMContentLoaded", async function() {
         const renderKey = getProductRenderKey(sortedList);
         if (renderKey && productsContainer.dataset.renderKey === renderKey && productsContainer.querySelector(".product-card")) return void productsContainer.classList.remove("changing");
         rowDiv.className = "products-row", tempContainer.appendChild(rowDiv);
+        const useMobileMasonry = window.matchMedia("(max-width: 494px)").matches;
+        const mobileColumns = useMobileMasonry ? [ document.createElement("div"), document.createElement("div") ] : null;
+        if (useMobileMasonry) {
+            rowDiv.classList.add("products-masonry");
+            mobileColumns.forEach(col => {
+                col.className = "products-column", rowDiv.appendChild(col);
+            });
+        }
         const isHomePage = /^(\/|\/index\.html)$/i.test(location.pathname);
         const FIRST_CHUNK = isHomePage ? Math.min(40, sortedList.length) : Math.min(20, sortedList.length);
         const deferHomeRest = false;
@@ -858,16 +866,17 @@ document.addEventListener("DOMContentLoaded", async function() {
         let i = 0;
         let homeRestDeferred = false;
         !function appendChunk() {
-            const fragment = document.createDocumentFragment(), chunkSize = 0 === i ? FIRST_CHUNK : 20;
+            const fragment = document.createDocumentFragment(), columnFragments = useMobileMasonry ? [ document.createDocumentFragment(), document.createDocumentFragment() ] : null, chunkSize = 0 === i ? FIRST_CHUNK : 20;
             for (let k = 0; k < chunkSize && i < sortedList.length; k++, i++) {
                 try {
                     const card = createProductCard(sortedList[i]);
-                    fragment.appendChild(card);
+                    useMobileMasonry ? columnFragments[i % 2].appendChild(card) : fragment.appendChild(card);
                 } catch (err) {
                     console.warn("Skipping product card render:", err, sortedList[i]);
                 }
             }
-            if (rowDiv.appendChild(fragment), deferHomeRest && !homeRestDeferred && i >= FIRST_CHUNK && i < sortedList.length) {
+            useMobileMasonry ? mobileColumns.forEach((col, ix) => col.appendChild(columnFragments[ix])) : rowDiv.appendChild(fragment);
+            if (deferHomeRest && !homeRestDeferred && i >= FIRST_CHUNK && i < sortedList.length) {
                 homeRestDeferred = true;
                 productsContainer.dataset.renderKey = renderKey, productsContainer.replaceChildren(rowDiv), productsContainer.classList.remove("changing");
                 productsContainer.style.minHeight = "";
