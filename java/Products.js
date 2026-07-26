@@ -650,13 +650,16 @@ export function createProductCard(prod) {
         const imgSize = isMobileViewport ? 360 : 750;
         const imageIndex = _priorityProductImages;
         const eagerLimit = isHomePage ? isMobileViewport ? 2 : 8 : isMobileViewport ? 2 : 6;
-        const highPriorityLimit = isHomePage ? isMobileViewport ? 1 : 3 : isMobileViewport ? 1 : 4;
+        const highPriorityLimit = isHomePage ? isMobileViewport ? 2 : 3 : isMobileViewport ? 1 : 4;
         const isPriority = imageIndex < eagerLimit;
         _priorityProductImages++;
         im.className = "product-img";
         im.alt = getTranslated(prod.name);
         im.loading = isPriority ? "eager" : "lazy";
-        imageIndex < highPriorityLimit && im.setAttribute("fetchpriority", "high");
+        if (imageIndex < highPriorityLimit) {
+            im.setAttribute("fetchpriority", "high");
+            im.fetchPriority = "high";
+        }
         im.decoding = "async";
         im.width = imgSize;
         im.height = imgSize;
