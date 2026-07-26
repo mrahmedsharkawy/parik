@@ -540,6 +540,7 @@ export function createProductCard(prod) {
         link.rel = "prefetch", link.href = productUrl, link.as = "document";
         document.head.appendChild(link);
     }
+    let touchStartX = 0, touchStartY = 0, touchStartAt = 0, suppressProductOpenUntil = 0;
     card.className = "product-card", card.style.position = "relative", card.style.cursor = "pointer", 
     card.addEventListener("pointerover", prefetchProductPage, {
         once: true,
@@ -548,7 +549,26 @@ export function createProductCard(prod) {
         once: true,
         passive: true
     }),
-    card.addEventListener("click", () => {
+    card.addEventListener("touchstart", e => {
+        if (!e.touches || e.touches.length !== 1) return;
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        touchStartAt = Date.now();
+    }, { passive: true }),
+    card.addEventListener("touchmove", e => {
+        if (!e.touches || e.touches.length !== 1) return;
+        const dx = e.touches[0].clientX - touchStartX, dy = e.touches[0].clientY - touchStartY;
+        if (Math.abs(dx) > 8 || Math.abs(dy) > 8) suppressProductOpenUntil = Date.now() + 500;
+    }, { passive: true }),
+    card.addEventListener("touchend", () => {
+        if (Date.now() - touchStartAt > 360) suppressProductOpenUntil = Date.now() + 500;
+    }, { passive: true }),
+    card.addEventListener("click", e => {
+        if (Date.now() < suppressProductOpenUntil) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            return;
+        }
         saveProductReturnScrollPosition(true);
         saveProductReturnTarget(card);
         rememberQuickProduct();
@@ -793,6 +813,16 @@ export function createProductCard(prod) {
     card.appendChild(cartBtn), card;
 }
 
+function getProductRenderKey(list) {
+    const toArr = v => Array.isArray(v) ? v.filter(Boolean) : v ? [ v ] : [];
+    const isVideo = s => /\.(mp4|webm|ogg|ogv|mov|m4v)(\?|#|$)/i.test(String(s || ""));
+    return (Array.isArray(list) ? list : []).map(p => {
+        const firstImage = [ ...toArr(p.images), ...toArr(p.img), ...toArr(p.image) ].filter(s => !isVideo(s))[0] || "";
+        const name = "object" == typeof p.name ? p.name.ar || p.name.en || "" : p.name || p.title || "";
+        return [ p.id || p.productId || p.slug || name, firstImage, name, p.price, p.oldPrice, p.salePrice, p.discount, p.stock, p.available ].map(v => null == v ? "" : String(v)).join("~");
+    }).join("|");
+}
+
 document.addEventListener("DOMContentLoaded", async function() {
     const titleEl = document.getElementById("selected-category-title"), productsContainer = document.getElementById("category-products");
     sideMenu = document.querySelector(".dropdown-content.categories-menu"), subDisplay = document.getElementById("subcategories-display");
@@ -813,6 +843,8 @@ document.addEventListener("DOMContentLoaded", async function() {
     function renderProductsGrid(list, productsContainer, direction = null) {
         if (!productsContainer) return;
         const sortedList = direction === "preserve" ? (Array.isArray(list) ? list.slice() : []) : sortProductsForStore(list), tempContainer = document.createElement("div"), rowDiv = document.createElement("div");
+        const renderKey = getProductRenderKey(sortedList);
+        if (renderKey && productsContainer.dataset.renderKey === renderKey && productsContainer.querySelector(".product-card")) return void productsContainer.classList.remove("changing");
         rowDiv.className = "products-row", tempContainer.appendChild(rowDiv);
         const isHomePage = /^(\/|\/index\.html)$/i.test(location.pathname);
         const FIRST_CHUNK = isHomePage ? Math.min(40, sortedList.length) : Math.min(20, sortedList.length);
@@ -837,7 +869,7 @@ document.addEventListener("DOMContentLoaded", async function() {
             }
             if (rowDiv.appendChild(fragment), deferHomeRest && !homeRestDeferred && i >= FIRST_CHUNK && i < sortedList.length) {
                 homeRestDeferred = true;
-                productsContainer.innerHTML = "", productsContainer.appendChild(rowDiv), productsContainer.classList.remove("changing");
+                productsContainer.dataset.renderKey = renderKey, productsContainer.replaceChildren(rowDiv), productsContainer.classList.remove("changing");
                 productsContainer.style.minHeight = "";
                 const loader = document.getElementById("temp-popstate-loader") || document.getElementById("grid-loading-indicator");
                 loader && loader.remove();
@@ -851,7 +883,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                 window.addEventListener("scroll", loadMore, { passive: true });
                 setTimeout(restoreProductReturnScrollPosition, 0);
             } else if (i < sortedList.length) requestAnimationFrame(appendChunk); else {
-                productsContainer.innerHTML = "", productsContainer.appendChild(rowDiv), productsContainer.classList.remove("changing");
+                productsContainer.dataset.renderKey = renderKey, productsContainer.replaceChildren(rowDiv), productsContainer.classList.remove("changing");
                 productsContainer.style.minHeight = "";
                 const loader = document.getElementById("temp-popstate-loader") || document.getElementById("grid-loading-indicator");
                 loader && loader.remove();
