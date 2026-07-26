@@ -11,15 +11,28 @@ function normalizeUaePhone(e) {
     r.startsWith("0") && (r = r.slice(1)), r = r.slice(0, 9), r ? "+971" + r : "";
 }
 
+function getCurrentPushLanguage() {
+    return (localStorage.getItem("lang") || document.documentElement.lang || "ar") === "en" ? "en" : "ar";
+}
+
 async function registerSW() {
     if (!("serviceWorker" in navigator)) return null;
     try {
-        const e = await navigator.serviceWorker.register("/sw.js?v=181", { updateViaCache: "none" });
+        const e = await navigator.serviceWorker.register("/sw.js?v=183", { updateViaCache: "none" });
         e.update().catch(() => {});
+        refreshCurrentPushSubscriptionLanguage();
         return e;
     } catch (e) {
         return null;
     }
+}
+
+async function refreshCurrentPushSubscriptionLanguage() {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+    try {
+        const e = await navigator.serviceWorker.ready, r = await e.pushManager.getSubscription();
+        r && saveSubscriptionToSupabase(r).catch(() => {});
+    } catch (e) {}
 }
 
 async function subscribeToPush() {
@@ -54,6 +67,7 @@ async function saveSubscriptionToSupabase(e) {
             auth: i ? btoa(String.fromCharCode(...new Uint8Array(i))) : "",
             user_phone: normalizeUaePhone(t.phone || ""),
             user_email: l,
+            user_lang: getCurrentPushLanguage(),
             created_at: (new Date).toISOString()
         }, o = {
             apikey: r,

@@ -1,5 +1,5 @@
 /* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v193';
+const CACHE = 'bariq-v195';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -349,6 +349,7 @@ function normalizePushNotificationData(data) {
   data.body = repairMojibakeText(data.body || data.msg || data.message || '');
   data.iconText = repairMojibakeText(data.iconText || '');
   data.emoji = repairMojibakeText(data.emoji || '');
+  const notifLang = String(data.lang || data.user_lang || '').toLowerCase().startsWith('en') ? 'en' : 'ar';
   const raw = `${data.title || ''} ${data.body || ''}`;
   const rawLower = raw.toLowerCase();
   const tag = data.tag || data.id || '';
@@ -364,8 +365,8 @@ function normalizePushNotificationData(data) {
     /pending|مراجعة|انتظار/.test(rawLower) ? 'pending' :
     /processing|معالجة|تجهيز/.test(rawLower) ? 'processing' : '');
   const isCashback = data.type === 'cashback' || /cashback|cash\s*back|كاش|cb-|n-cb/i.test(raw + ' ' + tag) || /\?\.\?/.test(raw);
-  const isBroken = isMostlyBrokenNotificationText(raw) || hasBrokenNotificationText(data.title) || hasBrokenNotificationText(data.body) || hasMojibakeText(raw);
-  if (!isBroken && !isCashback && !(orderId && (data.type === 'order_status' || inferredStatus))) return data;
+  const isBroken = isMostlyBrokenNotificationText(raw) || hasBrokenNotificationText(data.title) || hasBrokenNotificationText(data.body) || hasMojibakeText(raw) || /\b(?:pending|processing|confirmed|manufacturing|ready|shipped|delivered|cancelled|returned)\b\s*-\s*#?\s*\d+/i.test(raw);
+  if (!isBroken && !isCashback && !(orderId && (/^order_/i.test(String(data.type || '')) || inferredStatus))) return data;
 
   if (isCashback) {
     const amountMatch = raw.match(/(\d+(?:\.\d+)?)/);
@@ -382,7 +383,9 @@ function normalizePushNotificationData(data) {
 
   if (orderId) {
     const status = inferredStatus || 'processing';
-    const map = {
+    const orderAr = ` رقم ${orderId}`;
+    const orderEn = ` #${String(orderId).replace(/^#/, '')}`;
+    const mapAr = {
       pending:       { icon: '⏳', title: 'طلبك قيد المراجعة',     body: `طلبك رقم ${orderId} يُراجَع الآن` },
       processing:    { icon: '🔄', title: 'طلبك قيد المعالجة',     body: `جارٍ تجهيز طلبك رقم ${orderId}` },
       confirmed:     { icon: '✅', title: 'تم تأكيد طلبك',          body: `طلبك رقم ${orderId} تم تأكيده وسيُجهَّز قريباً 🎉` },
@@ -393,10 +396,23 @@ function normalizePushNotificationData(data) {
       cancelled:     { icon: '❌', title: 'تم إلغاء طلبك',         body: `طلبك رقم ${orderId} تم إلغاؤه` },
       returned:      { icon: '↩️', title: 'تمت عملية الإرجاع',      body: `تمت معالجة إرجاع طلبك رقم ${orderId}` }
     };
+    const mapEn = {
+      pending:       { icon: '⏳', title: 'Your order is under review',    body: `Your order${orderEn} is being reviewed` },
+      processing:    { icon: '🔄', title: 'Your order is being processed', body: `We are preparing your order${orderEn}` },
+      confirmed:     { icon: '✅', title: 'Your order is confirmed',       body: `Your order${orderEn} has been confirmed and will be prepared soon 🎉` },
+      manufacturing: { icon: '🔨', title: 'Your order is in production',   body: `Your order${orderEn} is being carefully made ✨` },
+      ready:         { icon: '🎁', title: 'Your order is ready',           body: `Your order${orderEn} is ready and waiting for you 🎉` },
+      shipped:       { icon: '🚚', title: 'Your order has shipped',        body: `Your order${orderEn} is on its way to you` },
+      delivered:     { icon: '✅', title: 'Your order was delivered',      body: `Your order${orderEn} was delivered successfully 🎉` },
+      cancelled:     { icon: '❌', title: 'Your order was cancelled',      body: `Your order${orderEn} was cancelled` },
+      returned:      { icon: '↩️', title: 'Return processed',              body: `The return for your order${orderEn} has been processed` }
+    };
+    const map = notifLang === 'en' ? mapEn : mapAr;
     const item = map[status] || map.processing;
     return Object.assign({}, data, {
       type: 'order_status',
       status,
+      lang: notifLang,
       iconText: item.icon,
       emoji: item.icon,
       title: `${item.icon} ${item.title}`,
@@ -409,7 +425,7 @@ function normalizePushNotificationData(data) {
   // في هذه الحالة نعرض رسالة عربية سليمة حسب الحالة بدل النص المشوّه.
   if (isBroken && (data.type === 'order_status' || inferredStatus)) {
     const status = inferredStatus || 'processing';
-    const mapNoId = {
+    const mapNoIdAr = {
       pending:       { icon: '⏳', title: 'طلبك قيد المراجعة',     body: 'طلبك يُراجَع الآن' },
       processing:    { icon: '🔄', title: 'طلبك قيد المعالجة',     body: 'جارٍ تجهيز طلبك' },
       confirmed:     { icon: '✅', title: 'تم تأكيد طلبك',          body: 'تم تأكيد طلبك وسيُجهَّز قريباً 🎉' },
@@ -420,10 +436,23 @@ function normalizePushNotificationData(data) {
       cancelled:     { icon: '❌', title: 'تم إلغاء طلبك',         body: 'تم إلغاء طلبك' },
       returned:      { icon: '↩️', title: 'تمت عملية الإرجاع',      body: 'تمت معالجة إرجاع طلبك' }
     };
+    const mapNoIdEn = {
+      pending:       { icon: '⏳', title: 'Your order is under review',    body: 'Your order is being reviewed' },
+      processing:    { icon: '🔄', title: 'Your order is being processed', body: 'We are preparing your order' },
+      confirmed:     { icon: '✅', title: 'Your order is confirmed',       body: 'Your order has been confirmed and will be prepared soon 🎉' },
+      manufacturing: { icon: '🔨', title: 'Your order is in production',   body: 'Your order is being carefully made ✨' },
+      ready:         { icon: '🎁', title: 'Your order is ready',           body: 'Your order is ready and waiting for you 🎉' },
+      shipped:       { icon: '🚚', title: 'Your order has shipped',        body: 'Your order is on its way to you' },
+      delivered:     { icon: '✅', title: 'Your order was delivered',      body: 'Your order was delivered successfully 🎉' },
+      cancelled:     { icon: '❌', title: 'Your order was cancelled',      body: 'Your order was cancelled' },
+      returned:      { icon: '↩️', title: 'Return processed',              body: 'The return for your order has been processed' }
+    };
+    const mapNoId = notifLang === 'en' ? mapNoIdEn : mapNoIdAr;
     const item = mapNoId[status] || mapNoId.processing;
     return Object.assign({}, data, {
       type: 'order_status',
       status,
+      lang: notifLang,
       iconText: item.icon,
       emoji: item.icon,
       title: `${item.icon} ${item.title}`,
@@ -457,8 +486,8 @@ self.addEventListener('push', function(e) {
         badge:   '/assets/icon.png',
         image:   data.image  || undefined,
         data:    { url: data.url || '/' },
-        dir:     'rtl',
-        lang:    'ar',
+        dir:     data.lang === 'en' ? 'ltr' : 'rtl',
+        lang:    data.lang === 'en' ? 'en' : 'ar',
         vibrate: [200, 100, 200],
         tag:     data.tag    || 'bariq-notif',
         renotify: true,

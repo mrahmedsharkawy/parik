@@ -635,6 +635,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         auth: auth ? btoa(String.fromCharCode(...new Uint8Array(auth))) : '',
         user_phone: normalizeUaePhone(profile.phone || ''),
         user_email: String(profile.email || '').trim().toLowerCase(),
+        user_lang: (localStorage.getItem('lang') || document.documentElement.lang || 'ar') === 'en' ? 'en' : 'ar',
         created_at: new Date().toISOString()
       };
       const headers = { apikey: _SB_ANON, Authorization: 'Bearer ' + _SB_ANON, 'Content-Type': 'application/json' };

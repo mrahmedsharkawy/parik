@@ -827,13 +827,9 @@ export function createProductCard(prod) {
         }
         handleCardAdd(ev);
     });
-    let cardDir = card.getAttribute("dir") || card.style.direction;
-    if (!cardDir) {
-        let parent = card.parentElement;
-        for (;parent && !cardDir; ) cardDir = parent.getAttribute("dir") || parent.style.direction, 
-        parent = parent.parentElement;
-    }
-    return cardDir || (cardDir = document.documentElement.dir || "rtl"), cartBtn.style.left = "", 
+    const cartLang = (localStorage.getItem("lang") || document.documentElement.lang || "ar").toLowerCase();
+    const cardDir = cartLang.startsWith("en") ? "ltr" : "rtl";
+    return cartBtn.style.left = "",
     cartBtn.style.right = "", cartBtn.style.insetInlineStart = "", cartBtn.style.insetInlineEnd = "", 
     "rtl" === cardDir ? cartBtn.style.left = "10px" : cartBtn.style.right = "10px", 
     card.appendChild(cartBtn), card;

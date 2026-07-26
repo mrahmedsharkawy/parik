@@ -8,8 +8,12 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
   auth        text NOT NULL,
   user_phone  text DEFAULT '',
   user_email  text DEFAULT '',
+  user_lang   text DEFAULT 'ar',
   created_at  timestamptz DEFAULT now()
 );
+
+ALTER TABLE push_subscriptions
+  ADD COLUMN IF NOT EXISTS user_lang text DEFAULT 'ar';
 
 -- السماح للمستخدمين بالإضافة (anon key)
 ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;

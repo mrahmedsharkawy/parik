@@ -13,13 +13,16 @@
     digits=digits.slice(0,9);
     return digits?'+971'+digits:'';
   }
+  function getCurrentPushLanguage(){
+    return (localStorage.getItem('lang')||document.documentElement.lang||'ar')==='en'?'en':'ar';
+  }
   async function saveSubscriptionToSupabase(sub){
     var anon='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
     try{
       var profile={};
       try{profile=JSON.parse(localStorage.getItem('x2_profile')||'{}');}catch(e){}
       var p256dh=sub.getKey('p256dh'),auth=sub.getKey('auth');
-      var payload={endpoint:sub.endpoint,p256dh:p256dh?btoa(String.fromCharCode.apply(null,new Uint8Array(p256dh))):'',auth:auth?btoa(String.fromCharCode.apply(null,new Uint8Array(auth))):'',user_phone:normalizeUaePhone(profile.phone||''),user_email:String(profile.email||'').trim().toLowerCase(),created_at:(new Date).toISOString()};
+      var payload={endpoint:sub.endpoint,p256dh:p256dh?btoa(String.fromCharCode.apply(null,new Uint8Array(p256dh))):'',auth:auth?btoa(String.fromCharCode.apply(null,new Uint8Array(auth))):'',user_phone:normalizeUaePhone(profile.phone||''),user_email:String(profile.email||'').trim().toLowerCase(),user_lang:getCurrentPushLanguage(),created_at:(new Date).toISOString()};
       var headers={apikey:anon,Authorization:'Bearer '+anon,'Content-Type':'application/json'};
       var res=await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/push_subscriptions',{method:'POST',headers:Object.assign({},headers,{Prefer:'resolution=merge-duplicates,return=minimal'}),body:JSON.stringify(payload)});
       if(!res.ok)await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/push_subscriptions?endpoint=eq.'+encodeURIComponent(sub.endpoint),{method:'PATCH',headers:Object.assign({},headers,{Prefer:'return=minimal'}),body:JSON.stringify(payload)});
@@ -47,7 +50,7 @@
         return false;
       }
       var reg=await navigator.serviceWorker.getRegistration('/');
-      if(!reg)reg=await navigator.serviceWorker.register('/sw.js?v=181',{updateViaCache:'none'});
+      if(!reg)reg=await navigator.serviceWorker.register('/sw.js?v=183',{updateViaCache:'none'});
       if(reg&&reg.update)reg.update().catch(function(){});
       await navigator.serviceWorker.ready;
       var sub=await reg.pushManager.getSubscription();

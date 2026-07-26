@@ -1937,7 +1937,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   function getStatusLabel(s) {
     const isEn = (localStorage.getItem('lang') || document.documentElement.lang) === 'en';
-    const ar = { pending:'قيد الانتظار', processing:'قيد المعالجة', confirmed:'مؤكد', manufacturing:'في مرحلة التصنع', ready:'طلبك جاهز', shipped:'تم الشحن', delivered:'تم التوصيل', cancelled:'ملغى', returned:'مرتجع' };
+    const ar = { pending:'قيد الانتظار', processing:'قيد المعالجة', confirmed:'مؤكد', manufacturing:'في مرحلة التصنيع', ready:'طلبك جاهز', shipped:'تم الشحن', delivered:'تم التوصيل', cancelled:'ملغى', returned:'مرتجع' };
     const en = { pending:'Pending', processing:'Processing', confirmed:'Confirmed', manufacturing:'In Manufacturing', ready:'Ready for Pickup', shipped:'Shipped', delivered:'Delivered', cancelled:'Cancelled', returned:'Returned' };
     return (isEn ? en[s] : ar[s]) || (isEn ? 'Processing' : 'قيد المعالجة');
   }
@@ -3677,15 +3677,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </footer>
 <script src="/java/supabase.min.js?v=supabase-20260725a" defer></script>
-<script src="/java/main.min.js?v=133" defer></script>
-<script src="/java/sw-refresh.js?v=sw-refresh-20260725j" defer></script>
+<script src="/java/main.min.js?v=134" defer></script>
+<script src="/java/sw-refresh.js?v=sw-refresh-20260725l" defer></script>
 <script src="/java/instant-nav.js?v=instant-nav-20260725a" defer></script>
 <script src="/translations/translation.min.js" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
 <script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260725h" defer></script>
-<script src="/java/push-welcome.js?v=push-welcome-20260725k" defer></script>
-<script src="/java/notifications.min.js?v=notifications-20260725j" defer></script>
-<script type="module" src="./java/Products.min.js?v=products-20260726n"></script>
+<script src="/java/push-welcome.js?v=push-welcome-20260725m" defer></script>
+<script src="/java/notifications.min.js?v=notifications-20260725l" defer></script>
+<script type="module" src="./java/Products.min.js?v=products-20260726o"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   function buildSocialBar(s) {
