@@ -172,11 +172,9 @@ async function ensureStoreProductSortLoaded() {
     _storeSortLoaded = true;
     try {
         if (!window.Supabase || !window.Supabase.Settings) return;
-        setTimeout(() => {
-            window.Supabase.Settings.get().then(settings => {
-                if (settings && settings.product_sort) localStorage.setItem("x2_store_product_sort", settings.product_sort);
-            }).catch(() => {});
-        }, 3500);
+        const settingsResult = await window.Supabase.Settings.get();
+        const settings = Array.isArray(settingsResult) ? settingsResult[0] : settingsResult;
+        if (settings && settings.product_sort) localStorage.setItem("x2_store_product_sort", settings.product_sort);
     } catch (e) {}
 }
 
@@ -278,7 +276,7 @@ function readImmediateProductsCache(invalidateTs) {
 async function fetchProductsSnapshot() {
     try {
         const res = await fetch("/java/Products.json", {
-            cache: "force-cache"
+            cache: "no-store"
         });
         if (!res.ok) return [];
         const data = await res.json();
@@ -334,11 +332,9 @@ export async function fetchProducts(forceFresh) {
         const cached = sessionStorage.getItem(PRODUCTS_SESSION_CACHE_KEY) || localStorage.getItem(PRODUCTS_LOCAL_CACHE_KEY);
         cached && (staleCache = JSON.parse(cached).data);
     } catch (e) {}
-    if (!forceFresh) {
-        const snapshot = await fetchProductsSnapshot();
-        if (snapshot.length) return _productsCache = snapshot, _productsCacheTs = Date.now(), saveProductsCache(_productsCache, _productsCacheTs), refreshProductsInBackground(), _productsCache;
-    }
     await ensureStoreProductSortLoaded();
+    const snapshot = await fetchProductsSnapshot();
+    if (snapshot.length) return _productsCache = snapshot, _productsCacheTs = Date.now(), saveProductsCache(_productsCache, _productsCacheTs), refreshProductsInBackground(), _productsCache;
     try {
         if (window.Supabase && window.Supabase.Products) {
             const sbProds = await window.Supabase.Products.getAll(100);

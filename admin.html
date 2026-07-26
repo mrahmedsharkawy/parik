@@ -1973,6 +1973,9 @@ function saveStoreSortMode(){
   localStorage.setItem('x2_store_product_sort', mode);
   localStorage.setItem('x2_products_updated', String(Date.now()));
   try { sessionStorage.removeItem('x2_prods_ss_v2'); localStorage.removeItem('x2_products_cache_v1'); } catch(e) {}
+  if (window.Supabase && window.Supabase.Settings) {
+    window.Supabase.Settings.save({ product_sort: mode }).catch(function(e){ console.warn('Store sort sync failed:', e); });
+  }
   toast('✅ تم حفظ ترتيب عرض المتجر');
 }
 
@@ -4344,6 +4347,7 @@ function saveSettings() {
     window.Supabase.Settings.save({
       whatsapp: s.wa, site_name: s.name, logo: s.logo,
       currency: 'AED', language: 'ar',
+      product_sort: localStorage.getItem('x2_store_product_sort') || 'daily_random',
       instagram: s.instagram, facebook: s.facebook, tiktok: s.tiktok,
       snapchat: s.snapchat, youtube: s.youtube, twitter: s.twitter, pinterest: s.pinterest
     }).catch(function(){});

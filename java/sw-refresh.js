@@ -8,7 +8,7 @@
     if (!('caches' in window)) return;
     caches.keys().then(function (keys) {
       keys.forEach(function (key) {
-        if (key !== 'bariq-v185') caches.delete(key).catch(function () {});
+        if (key !== 'bariq-v189') caches.delete(key).catch(function () {});
       });
     }).catch(function () {});
   }
