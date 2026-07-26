@@ -419,7 +419,7 @@ function normalizeAssetUrl(u) {
     }
 }
 
-function optimizeSupabaseImageUrl(src, width, height) {
+function optimizeSupabaseImageUrl(src, width, height, quality) {
     try {
         if (!src || !/\/storage\/v1\/object\/public\/products\//.test(String(src)) || /\/storage\/v1\/render\/image\//.test(String(src))) return src;
         const url = new URL(src, location.origin);
@@ -427,7 +427,7 @@ function optimizeSupabaseImageUrl(src, width, height) {
         url.searchParams.set("width", String(width || 240));
         url.searchParams.set("height", String(height || width || 240));
         url.searchParams.set("resize", "cover");
-        url.searchParams.set("quality", "70");
+        url.searchParams.set("quality", String(quality || 70));
         return url.href;
     } catch (e) {
         return src;
@@ -641,7 +641,7 @@ export function createProductCard(prod) {
         const im = document.createElement("img");
         const isHomePage = /^(\/|\/index\.html)$/i.test(location.pathname);
         const isMobileViewport = window.matchMedia("(max-width: 899px)").matches;
-        const imgSize = 750;
+        const imgSize = isMobileViewport ? 420 : 750;
         const imageIndex = _priorityProductImages;
         const eagerLimit = isHomePage ? isMobileViewport ? 6 : 10 : isMobileViewport ? 3 : 6;
         const highPriorityLimit = isHomePage ? isMobileViewport ? 2 : 4 : isMobileViewport ? 1 : 4;
@@ -659,7 +659,7 @@ export function createProductCard(prod) {
         im.style.aspectRatio = "1 / 1";
         im.style.objectFit = "cover";
         im.style.backgroundColor = "#f0f0f0";
-        im.src = optimizeSupabaseImageUrl(normalizeAssetUrl(firstImage || ""), imgSize, imgSize);
+        im.src = optimizeSupabaseImageUrl(normalizeAssetUrl(firstImage || ""), imgSize, imgSize, isMobileViewport ? 65 : 70);
         im.onerror = function() {
             this.src = "assets/logo.png";
         };
