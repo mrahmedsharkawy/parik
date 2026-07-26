@@ -499,7 +499,10 @@ function restoreProductReturnScrollPosition() {
 
 if (typeof window !== "undefined") {
     document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", restoreProductReturnScrollPosition, { once: true }) : restoreProductReturnScrollPosition();
-    window.addEventListener("pageshow", restoreProductReturnScrollPosition);
+    window.addEventListener("pageshow", event => {
+        if (event && event.persisted && sessionStorage.getItem("x2_return_to_scroll_url") === location.href) window.__x2ProductReturnRestored = false;
+        restoreProductReturnScrollPosition();
+    });
     document.addEventListener("click", e => {
         const link = e.target && e.target.closest && e.target.closest('a[href*="/product/"]');
         if (link && !/\/product(?:\/|\.html|$)/.test(location.pathname)) saveProductReturnScrollPosition(true);
