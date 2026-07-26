@@ -93,6 +93,18 @@ window.addEventListener('DOMContentLoaded', () => {
   changeLang(savedLang);
   const sel = document.querySelector('select');
   if (sel) sel.value = savedLang;
+  document.querySelectorAll('select#language, select#sidebar-lang').forEach(select => {
+    select.value = savedLang;
+    select.addEventListener('change', () => {
+      const nextLang = select.value === 'en' ? 'en' : 'ar';
+      localStorage.setItem('lang', nextLang);
+      document.documentElement.lang = nextLang;
+      document.documentElement.dir = nextLang === 'ar' ? 'rtl' : 'ltr';
+      const url = new URL(location.href);
+      url.searchParams.set('lang', nextLang);
+      location.assign(url.pathname + url.search + url.hash);
+    });
+  });
 
   if (savedLang === 'en') {
     document.addEventListener('click', e => {

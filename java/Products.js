@@ -647,10 +647,10 @@ export function createProductCard(prod) {
         const im = document.createElement("img");
         const isHomePage = /^(\/|\/index\.html)$/i.test(location.pathname);
         const isMobileViewport = window.matchMedia("(max-width: 899px)").matches;
-        const imgSize = isMobileViewport ? 420 : 750;
+        const imgSize = isMobileViewport ? 360 : 750;
         const imageIndex = _priorityProductImages;
-        const eagerLimit = isHomePage ? isMobileViewport ? 6 : 10 : isMobileViewport ? 3 : 6;
-        const highPriorityLimit = isHomePage ? isMobileViewport ? 2 : 4 : isMobileViewport ? 1 : 4;
+        const eagerLimit = isHomePage ? isMobileViewport ? 2 : 8 : isMobileViewport ? 2 : 6;
+        const highPriorityLimit = isHomePage ? isMobileViewport ? 1 : 3 : isMobileViewport ? 1 : 4;
         const isPriority = imageIndex < eagerLimit;
         _priorityProductImages++;
         im.className = "product-img";
@@ -886,10 +886,11 @@ document.addEventListener("DOMContentLoaded", async function() {
             });
         }
         const isHomePage = /^(\/|\/index\.html)$/i.test(location.pathname);
-        const FIRST_CHUNK = isHomePage ? Math.min(40, sortedList.length) : Math.min(20, sortedList.length);
-        const deferHomeRest = false;
+        const isMobileGrid = window.matchMedia("(max-width: 899px)").matches;
+        const FIRST_CHUNK = isHomePage ? Math.min(isMobileGrid ? 8 : 20, sortedList.length) : Math.min(20, sortedList.length);
+        const deferHomeRest = isHomePage && sortedList.length > FIRST_CHUNK;
         _priorityProductImages = 0;
-        const columns = window.matchMedia("(max-width: 899px)").matches ? 2 : window.matchMedia("(max-width: 1300px)").matches ? 3 : 4;
+        const columns = isMobileGrid ? 2 : window.matchMedia("(max-width: 1300px)").matches ? 3 : 4;
         const estimatedRows = Math.max(1, Math.ceil((deferHomeRest ? FIRST_CHUNK : sortedList.length) / columns));
         const estimatedCardHeight = window.matchMedia("(max-width: 899px)").matches ? 328 : 360;
         productsContainer.classList.add("changing"), productsContainer.style.minHeight = Math.max(200, estimatedRows * estimatedCardHeight) + "px",
