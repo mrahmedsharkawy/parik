@@ -64,6 +64,23 @@
     let allOrders = [];
     let currentPeriod = 'all';
 
+    function withTimeout(promise, ms, message){
+      return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error(message || 'انتهت مهلة الاتصال')), ms);
+        Promise.resolve(promise).then(value => {
+          clearTimeout(timer);
+          resolve(value);
+        }, err => {
+          clearTimeout(timer);
+          reject(err);
+        });
+      });
+    }
+    function setLoadingStatus(message){
+      const small = document.querySelector('#loading small');
+      if(small) small.textContent = message;
+    }
+
     function reportsPushStatus(message, ok){
       const el = document.getElementById('reportsPushStatus');
       if(!el) return;
@@ -190,6 +207,48 @@
         return null;
       }
     }
+    async function getReportsToken(){
+      let token = sessionStorage.getItem('admin_token') || '';
+      const exp = Number(sessionStorage.getItem('admin_token_exp') || 0);
+      if((!token || (exp && exp - Date.now() < 5*60*1000)) && sessionStorage.getItem('admin_refresh_token')) {
+        token = await refreshAdminToken() || token;
+      }
+      return token;
+    }
+    async function fetchReportsOrders(){
+      const token = await getReportsToken();
+      if(!token) throw new Error('انتهت جلسة الأدمن');
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 18000);
+      try {
+        const res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/orders?select=*&order=created_at.desc&limit=1000', {
+          headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+          signal: controller.signal
+        });
+        const text = await res.text();
+        if(!res.ok) {
+          if(res.status === 401 || res.status === 403) purgeReportsSessionData();
+          throw new Error(res.status === 401 || res.status === 403 ? 'جلسة الأدمن انتهت' : 'فشل تحميل الطلبات');
+        }
+        return text ? JSON.parse(text) : [];
+      } catch(e) {
+        if(e.name === 'AbortError') throw new Error('تحميل الطلبات استغرق وقت طويل');
+        throw e;
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+    async function getReportsAdmin(userId, email, token){
+      const headers = { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + (token || SUPABASE_ANON), 'Content-Type': 'application/json' };
+      async function query(path){
+        const res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/admins?' + path + '&active=eq.true&limit=1', { headers });
+        const rows = await res.json().catch(() => []);
+        if(!res.ok) throw new Error('تعذر التحقق من صلاحية الأدمن');
+        return rows && rows[0] ? rows[0] : null;
+      }
+      return await query('user_id=eq.' + encodeURIComponent(userId)).catch(() => null)
+        || await query('email=eq.' + encodeURIComponent(email)).catch(() => null);
+    }
     function hasReportsSession(){
       if(sessionStorage.getItem('admin_ok') === '1' && (sessionStorage.getItem('admin_token') || sessionStorage.getItem('admin_refresh_token'))) return true;
       try {
@@ -220,12 +279,15 @@
         <a class="btn ghost" href="/admin.html" style="width:100%;margin-top:8px">فتح لوحة الأدمن الكاملة</a>
       </form>`;
     }
-    function clearReportsSession(){
+    function purgeReportsSessionData(){
       localStorage.removeItem(REPORT_SESSION_KEY);
       sessionStorage.removeItem('admin_ok');
       sessionStorage.removeItem('admin_token');
       sessionStorage.removeItem('admin_refresh_token');
       sessionStorage.removeItem('admin_token_exp');
+    }
+    function clearReportsSession(){
+      purgeReportsSessionData();
       showReportsLogin('تم مسح الجلسة القديمة. سجّل الدخول مرة أخرى.');
     }
     async function loginReports(event){
@@ -235,20 +297,27 @@
       const password = (document.getElementById('reportLoginPass').value || '').trim();
       try {
         btn.disabled = true;
-        btn.textContent = 'جارٍ التحقق...';
+        btn.textContent = 'جارٍ تسجيل الدخول...';
         if(!await waitForSupabase()) throw new Error('تعذر تحميل Supabase');
-        const authData = await window.Supabase.Auth.signIn(email, password);
-        const admin = await window.Supabase.Auth.getAdmin(authData.user.id, authData.access_token);
-        if(!admin) throw new Error('هذا الحساب ليس أدمن');
-        const name = admin.full_name || email.split('@')[0];
+        const authData = await withTimeout(window.Supabase.Auth.signIn(email, password), 15000, 'تسجيل الدخول استغرق وقت طويل');
         sessionStorage.setItem('admin_ok', '1');
-        sessionStorage.setItem('admin_name', name);
         sessionStorage.setItem('admin_token', authData.access_token);
         sessionStorage.setItem('admin_refresh_token', authData.refresh_token || '');
         sessionStorage.setItem('admin_token_exp', String(Date.now() + (authData.expires_in || 3600) * 1000));
+        sessionStorage.setItem('admin_name', email.split('@')[0]);
+        rememberReportsSession(email.split('@')[0], authData);
+        btn.textContent = 'جارٍ التحقق من صلاحية الأدمن...';
+        const admin = await withTimeout(getReportsAdmin(authData.user.id, email, authData.access_token), 12000, 'التحقق من صلاحية الأدمن استغرق وقت طويل');
+        if(!admin) throw new Error('هذا الإيميل غير موجود في صلاحيات الأدمن');
+        const name = admin.full_name || email.split('@')[0];
+        sessionStorage.setItem('admin_name', name);
         rememberReportsSession(name, authData);
         await refreshReports();
       } catch(e) {
+        sessionStorage.removeItem('admin_ok');
+        sessionStorage.removeItem('admin_token');
+        sessionStorage.removeItem('admin_refresh_token');
+        sessionStorage.removeItem('admin_token_exp');
         showReportsLogin('تعذر الدخول: ' + (e.message || 'تحقق من البيانات'));
       }
     }
@@ -332,19 +401,24 @@
       if(!requireAdmin()) return;
       document.getElementById('loading').classList.remove('hidden');
       try {
+        setLoadingStatus('يتم تحميل بيانات التقارير...');
         if(!await waitForSupabase()) throw new Error('تعذر تحميل بيانات Supabase');
-        allOrders = await window.Supabase.Orders.getAll();
+        allOrders = await fetchReportsOrders();
         document.getElementById('app').hidden = false;
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('lastSync').textContent = 'آخر تحديث: ' + new Date().toLocaleTimeString('ar-AE');
         renderReports();
       } catch(e) {
+        if(/جلسة الأدمن انتهت|انتهت جلسة الأدمن/.test(e.message || '')) {
+          showReportsLogin('انتهت الجلسة. سجّل الدخول مرة أخرى.');
+          return;
+        }
         allOrders = [];
         document.getElementById('app').hidden = false;
         document.getElementById('loading').classList.add('hidden');
-        document.getElementById('lastSync').textContent = 'تعذر تحميل الطلبات - سجّل الدخول مرة أخرى أو اضغط تحديث';
+        document.getElementById('lastSync').textContent = 'تعذر تحميل الطلبات - ' + (e.message || 'اضغط تحديث أو سجّل الدخول مرة أخرى');
         renderReports();
-        document.getElementById('latestOrders').innerHTML = '<div class="empty">تعذر تحميل الطلبات من قاعدة البيانات</div>';
+        document.getElementById('latestOrders').innerHTML = '<div class="empty">تعذر تحميل الطلبات من قاعدة البيانات<br><button class="btn gold" onclick="clearReportsSession()" style="margin-top:10px">تسجيل دخول من جديد</button></div>';
       }
     }
     function downloadCsv(){

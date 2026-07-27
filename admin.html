@@ -1319,6 +1319,19 @@ async function getValidAdminToken() {
   return token || null;
 }
 
+async function getAdminAccount(userId, email, token) {
+  const anon = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+  const headers = { apikey: anon, Authorization: 'Bearer ' + (token || anon), 'Content-Type': 'application/json' };
+  async function query(path) {
+    const res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/admins?' + path + '&active=eq.true&limit=1', { headers });
+    const rows = await res.json().catch(() => []);
+    if (!res.ok) return null;
+    return rows && rows[0] ? rows[0] : null;
+  }
+  return await query('user_id=eq.' + encodeURIComponent(userId))
+    || await query('email=eq.' + encodeURIComponent(email));
+}
+
 /* ================= البوابة ================= */
 async function checkGate(){
   const email     = ($('gateUser').value || '').trim();
@@ -1338,10 +1351,10 @@ async function checkGate(){
     const authData = await window.Supabase.Auth.signIn(email, password);
 
     // 2. التحقق أن المستخدم admin نشط في جدول admins
-    const admin = await window.Supabase.Auth.getAdmin(authData.user.id, authData.access_token);
+    const admin = await getAdminAccount(authData.user.id, email, authData.access_token);
     if (!admin) {
       await window.Supabase.Auth.signOut(authData.access_token);
-      showErr('❌ ليس لديك صلاحية دخول لوحة التحكم');
+      showErr('❌ هذا الإيميل غير موجود في صلاحيات الأدمن');
       btn.disabled = false; btn.textContent = 'دخول';
       return;
     }
