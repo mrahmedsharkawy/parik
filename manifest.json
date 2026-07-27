@@ -13,16 +13,16 @@
   "dir": "rtl",
   "icons": [
     {
-      "src": "assets/icon.png",
-      "sizes": "512x512",
+      "src": "/assets/icon-96.png?v=site-icon-20260727",
+      "sizes": "96x96",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "assets/icon.png",
-      "sizes": "512x512",
+      "src": "/assets/icon.png?v=site-icon-20260727",
+      "sizes": "202x202",
       "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     }
   ],
   "categories": ["shopping", "lifestyle"],
@@ -34,7 +34,7 @@
       "short_name": "التقارير",
       "description": "ملخص مبيعات وطلبات Bariq",
       "url": "/admin-reports.html",
-      "icons": [{ "src": "assets/icon.png", "sizes": "512x512", "type": "image/png" }]
+      "icons": [{ "src": "/assets/icon-96.png?v=site-icon-20260727", "sizes": "96x96", "type": "image/png" }]
     }
   ],
   "screenshots": []

@@ -2,8 +2,9 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/favicon.ico", "destination": "/assets/logo.png" },
-    { "source": "/assets/favicon.svg", "destination": "/assets/logo.png" },
+    { "source": "/favicon.ico", "destination": "/assets/icon-96.png" },
+    { "source": "/favicon.png", "destination": "/assets/icon-96.png" },
+    { "source": "/assets/favicon.svg", "destination": "/assets/icon-96.png" },
     { "source": "/assets/categories/sticker/:file", "destination": "/assets/categories/Sticker/:file" },
     { "source": "/assets/categories/ramadan/:file", "destination": "/assets/categories/Ramadan/:file" },
     { "source": "/assets/categories/forex/:file", "destination": "/assets/categories/Forex/:file" },
