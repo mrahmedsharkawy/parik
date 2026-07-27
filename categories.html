@@ -81,7 +81,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <meta property="og:type" content="website">
   <style>*{box-sizing:border-box;margin:0}html,body{height:100%}body{background:#152546;font-family:'Cairo',Arial,sans-serif;padding-top:env(safe-area-inset-top)}.page{min-height:100dvh;display:flex;flex-direction:column}main{width:70%;margin:70px auto 50px;display:flex;flex-direction:column;justify-content:center}header,.main-header{background-color:#152546;padding-top:env(safe-area-inset-top)}.main-header{position:fixed;inset:0 0 auto 0;z-index:1000;width:100%;padding:7px 0;box-shadow:0 2px 4px rgba(0,0,0,.1)}.header-content{width:70%;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;min-height:50px}.logo img{height:36px}.search-container{flex:1;display:flex;align-items:center;background:#fff;border-radius:20px;margin:0 15px;max-width:1100px;height:38px;padding:0 10px}.search-container input{border:none;flex:1;outline:none;padding:6px 10px;font-size:16px;background:transparent}img,video{max-width:100%;height:auto;border-radius:3px}.dp-img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:7px;background:#f0f0f0}@media(max-width:899px){.main-header .dropdown,.main-header .cart{display:none!important}body{padding-bottom:calc(65px + env(safe-area-inset-bottom))}}#category-products:empty{min-height:0;background:transparent;border-radius:8px}</style>
   <link rel="stylesheet" href="/style/style.css?v=128">
-  <link rel="stylesheet" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260726e" media="(max-width: 899px)">
+  <link rel="stylesheet" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260728b" media="(max-width: 899px)">
   <style>html,body,.page{background:#fff!important}main #category-products:empty,main .cat-products-section:has(#category-products:empty){display:none!important;min-height:0!important;background:none!important;animation:none!important}.filters-scroll-container,main .filter-dropdown,html.occasions-category-page main.main>footer.site-footer,html.occasions-category-page main.main>#category-products{display:none!important}</style>
   <noscript>
 </noscript>
@@ -506,8 +506,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 .cat-mobile-tabs {
   display: none;
   overflow-x: auto;
-  overflow-y: visible;
+  overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y pinch-zoom;
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: auto;
   scrollbar-width: none;
   gap: 8px;
   padding: 10px 14px 14px;
@@ -533,6 +536,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   cursor: pointer;
   white-space: nowrap;
   line-height: 1.25;
+  touch-action: pan-x pan-y pinch-zoom;
   transition: all 0.15s;
 }
 .cat-mobile-tab.active { border-color: #D4AF37; background: rgba(212,175,55,0.07); color: #D4AF37; }
@@ -819,7 +823,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     allTab.className = 'cat-mobile-tab active';
     allTab.dataset.slug = 'all';
     allTab.innerHTML = `💯 ${t.all}`;
-    allTab.addEventListener('click', () => selectMainCategory('all', true));
+    allTab.addEventListener('click', () => selectMainCategory('all', false));
     wrap.appendChild(allTab);
 
     allCategories.forEach(cat => {
@@ -828,9 +832,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       tab.dataset.slug = cat.categorySlug;
       const name = catName(cat);
       tab.innerHTML = `${cat.image?`<img src="${cat.image}" alt="">`:''}${name}`;
-      tab.addEventListener('click', () => selectMainCategory(cat.categorySlug, true));
+      tab.addEventListener('click', () => selectMainCategory(cat.categorySlug, false));
       wrap.appendChild(tab);
     });
+  }
+
+  function centerMobileTab(tabEl) {
+    const wrap = document.getElementById('catMobileTabs');
+    if (!wrap || !tabEl) return;
+    const target = tabEl.offsetLeft - (wrap.clientWidth - tabEl.offsetWidth) / 2;
+    wrap.scrollTo({ left: target, behavior: 'smooth' });
   }
 
   // اختيار فئة رئيسية
@@ -844,7 +855,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const sideEl = document.querySelector(`.cat-sidebar-item[data-slug="${slug}"]`);
     if (sideEl) sideEl.classList.add('active');
     const tabEl = document.querySelector(`.cat-mobile-tab[data-slug="${slug}"]`);
-    if (tabEl) { tabEl.classList.add('active'); tabEl.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'}); }
+    if (tabEl) { tabEl.classList.add('active'); centerMobileTab(tabEl); }
 
     if (slug === 'all') {
       showAllSubcategories();
@@ -945,7 +956,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     document.querySelectorAll('.cat-sub-card').forEach(c=>c.classList.remove('active'));
     const card = document.querySelector(`.cat-sub-card[data-slug="${subSlug}"]`);
-    if (card) { card.classList.add('active'); card.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+    if (card) card.classList.add('active');
 
     const filtered = filterProducts(subSlug, subName);
     showProducts(filtered, subName);
@@ -1024,7 +1035,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     if (!products.length) {
       container.innerHTML = `<p style="color:#aaa;padding:20px;text-align:center">${lang === 'en' ? 'No products in this category yet' : 'لا توجد منتجات لهذه الفئة حالياً'}</p>`;
-      sec.scrollIntoView({behavior:'smooth', block:'start'});
       return;
     }
 
@@ -1081,8 +1091,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       }, 300);
       setTimeout(() => clearInterval(waitFor), 5000);
     }
-
-    sec.scrollIntoView({behavior:'smooth', block:'start'});
   }
 
   function hideProducts() {
@@ -1224,7 +1232,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
 <script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260725h" defer></script>
 <script src="/java/push-welcome.js?v=push-welcome-20260727d" defer></script>
-<script type="module" src="./java/Products.min.js?v=products-20260727a"></script> <!-- ده يفضل يفضل في الآخر -->
+<script type="module" src="./java/Products.min.js?v=products-20260728a"></script> <!-- ده يفضل يفضل في الآخر -->
 </body>
 </html>
 

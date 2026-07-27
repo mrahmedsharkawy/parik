@@ -1240,11 +1240,6 @@ document.addEventListener("DOMContentLoaded", async function() {
                 }), span = link.querySelector("span[data-i18n]");
                 let catName = (document.documentElement.dir, span ? span.textContent.trim() : link.textContent.trim()), i18n = span ? span.getAttribute("data-i18n") : "";
                 const slugMatch = (link.getAttribute("href") || "").match(/\/categories\/([^\/\?]+)/), categorySlug = slugMatch ? slugMatch[1] : catName, direction = index > currentIndex ? "next" : "prev";
-                try {
-                    let scrollPositions = JSON.parse(sessionStorage.getItem("categoryScrollPositions") || "{}");
-                    scrollPositions[currentCategoryId] = window.scrollY, sessionStorage.setItem("categoryScrollPositions", JSON.stringify(scrollPositions));
-                } catch (err) {}
-                const savedPosition = JSON.parse(sessionStorage.getItem("categoryScrollPositions") || "{}")[categorySlug], isRepeatedVisit = void 0 !== savedPosition;
                 categoriesContainer.querySelectorAll("div a").forEach(a => a.classList.remove("active-category"));
                 const categoryLink = div.querySelector("a");
                 categoryLink && categoryLink.classList.add("active-category");
@@ -1252,17 +1247,11 @@ document.addEventListener("DOMContentLoaded", async function() {
                 window.history.pushState({
                     category: categorySlug,
                     direction: direction,
-                    forceScrollTop: !isRepeatedVisit,
-                    isRepeatedVisit: isRepeatedVisit,
+                    keepScroll: !0,
                     timestamp: Date.now()
                 }, "", url), loadProductsForCategory(categorySlug, categoriesData), showSubCategories(catName, i18n, categoriesData), 
-                isRepeatedVisit ? setTimeout(() => {
-                    window.scrollTo({
-                        top: savedPosition,
-                        behavior: "auto"
-                    });
-                }, 100) : window.scrollTo({
-                    top: 0,
+                categoriesContainer.scrollTo({
+                    left: div.offsetLeft - (categoriesContainer.clientWidth - div.offsetWidth) / 2,
                     behavior: "smooth"
                 });
             }));

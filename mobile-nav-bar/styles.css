@@ -857,7 +857,7 @@ main,
 
 /* نص التوفير والسهم */
 .product-save-text {
-  background: #D4AF37;
+  background: #152546;
   color: #fff;
   display: flex;
   align-items: center;
@@ -880,7 +880,7 @@ main,
 /* العداد */
 .product-timer {
   background: #fff;
-  color: #D4AF37;
+  color: #152546;
   padding: 0 2px;
   display: flex;
   align-items: center;
@@ -890,7 +890,7 @@ main,
   border: none;
   min-width: 15px;
   justify-content: center;
-  border: 0.2px solid #ff9900a1; /* استروك برتقالي حول العداد */
+  border: 0.2px solid rgba(21, 37, 70, 0.55);
 }
 [dir="ltr"] .product-timer {
   border-radius: 0 8px 8px 0;
