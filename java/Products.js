@@ -16,6 +16,22 @@ function x2VisitorAreaFallback() {
 
 let sideMenu, subDisplay, products = [], categories = [], _priorityProductImages = 0;
 const CATEGORIES_SESSION_CACHE_KEY = "x2_cats_ss_v1", CATEGORIES_LOCAL_CACHE_KEY = "x2_categories_cache_v1", CATEGORIES_CACHE_TTL = 18e5;
+const PRODUCT_DISCOUNT_TIMER_KEY = "x2_product_discount_fake_timer_start", PRODUCT_DISCOUNT_TIMER_DURATION = 24 * 60 * 60 * 1e3;
+
+function getProductDiscountTimerEnd() {
+    let start = 0;
+    try {
+        start = parseInt(localStorage.getItem(PRODUCT_DISCOUNT_TIMER_KEY) || "0", 10) || 0;
+    } catch (e) {}
+    const now = Date.now();
+    if (!start || now - start >= PRODUCT_DISCOUNT_TIMER_DURATION || start > now) {
+        start = now;
+        try {
+            localStorage.setItem(PRODUCT_DISCOUNT_TIMER_KEY, String(start));
+        } catch (e) {}
+    }
+    return start + PRODUCT_DISCOUNT_TIMER_DURATION;
+}
 
 "function" != typeof window.setPageTitleI18n && (window.setPageTitleI18n = function(titleAr, titleEn) {
     try {
@@ -640,9 +656,10 @@ export function createProductCard(prod) {
         };
         return symbols[currency] ? symbols[currency][lang] || symbols[currency].en : defaultSymbols[lang] || defaultSymbols.ar;
     })(prod.currency || savedCurrency);
-    const timerExpired = !!(prod.timerEnd && new Date(prod.timerEnd).getTime() <= Date.now());
-    if (!timerExpired && prod.oldPrice && prod.price && !isNaN(parseFloat(prod.oldPrice)) && !isNaN(parseFloat(prod.price)) && parseFloat(prod.oldPrice) > parseFloat(prod.price)) {
-        const discountPercent = Math.round((parseFloat(prod.oldPrice) - parseFloat(prod.price)) / parseFloat(prod.oldPrice) * 100), offerBadge = document.createElement("span");
+    const oldPriceValue = parseFloat(prod.oldPrice), priceValue = parseFloat(prod.price), hasProductDiscount = prod.oldPrice && prod.price && !isNaN(oldPriceValue) && !isNaN(priceValue) && oldPriceValue > priceValue;
+    const timerExpired = false;
+    if (hasProductDiscount) {
+        const discountPercent = Math.round((oldPriceValue - priceValue) / oldPriceValue * 100), offerBadge = document.createElement("span");
         offerBadge.className = "offer-badge", offerBadge.textContent = "ar" === lang ? `خصم ${discountPercent}%` : `${discountPercent}% OFF`, 
         card.appendChild(offerBadge);
     }
@@ -712,29 +729,25 @@ export function createProductCard(prod) {
         content.appendChild(ratingContainer);
     }
     const price = document.createElement("span");
-    if (price.className = "product-price", prod.oldPrice && prod.price && !isNaN(parseFloat(prod.oldPrice)) && !isNaN(parseFloat(prod.price)) && parseFloat(prod.oldPrice) > parseFloat(prod.price) && price.classList.add("product-price-discount"), 
+    if (price.className = "product-price", hasProductDiscount && price.classList.add("product-price-discount"),
     price.textContent = `${null != prod.price ? prod.price : ""} ${currencySymbol}`, 
-    !timerExpired && prod.timerEnd && prod.oldPrice && prod.price && !isNaN(parseFloat(prod.oldPrice)) && !isNaN(parseFloat(prod.price)) && parseFloat(prod.oldPrice) > parseFloat(prod.price)) {
+    hasProductDiscount) {
         const timerSaveBox = document.createElement("div");
         timerSaveBox.className = "product-timer-save-box";
         const saveText = document.createElement("span");
         saveText.className = "product-save-text";
-        const arrow = '<span class="save-arrow">&#8595;</span>', discount = (parseFloat(prod.oldPrice) - parseFloat(prod.price)).toFixed(2);
+        const arrow = '<span class="save-arrow">&#8595;</span>', discount = (oldPriceValue - priceValue).toFixed(2);
         saveText.innerHTML = "ar" === lang ? `${arrow} خصم ${discount} ${currencySymbol} إضافي` : `${arrow} Save ${discount} ${currencySymbol} extra`;
         const timer = document.createElement("span");
         let interval;
         function updateTimer() {
-            const end = new Date(prod.timerEnd).getTime(), now = Date.now();
+            const end = getProductDiscountTimerEnd(), now = Date.now();
             let totalSeconds = Math.max(0, Math.floor((end - now) / 1e3));
             if (totalSeconds > 0) {
                 const h = String(Math.floor(totalSeconds / 3600)).padStart(2, "0"), m = String(Math.floor(totalSeconds % 3600 / 60)).padStart(2, "0"), s = String(totalSeconds % 60).padStart(2, "0");
                 timer.textContent = `${h}:${m}:${s}`;
             } else {
-                timer.textContent = "00:00:00", timerSaveBox.style.display = "none";
-                const offerBadge = card.querySelector(".offer-badge");
-                offerBadge && (offerBadge.style.display = "none"), price.textContent = `${prod.oldPrice} ${currencySymbol}`;
-                const oldPriceStriked = card.querySelector(".product-old-price-striked");
-                oldPriceStriked && (oldPriceStriked.style.display = "none"), clearInterval(interval);
+                timer.textContent = "24:00:00";
             }
         }
         timer.className = "product-timer", timerSaveBox.appendChild(saveText), timerSaveBox.appendChild(timer), 
@@ -753,7 +766,7 @@ export function createProductCard(prod) {
         return (dayOfMonth % 2 == 0 ? baseValue + variation : baseValue - variation).toFixed(1) + "k+";
     }(prod.id || prod.productId);
     if (sales.textContent = "en" === lang ? `sold ${salesNumber}` : `تم بيع ${salesNumber}`, 
-    priceRow.appendChild(sales), content.appendChild(priceRow), !timerExpired && prod.oldPrice && prod.price && !isNaN(parseFloat(prod.oldPrice)) && !isNaN(parseFloat(prod.price)) && parseFloat(prod.oldPrice) > parseFloat(prod.price)) {
+    priceRow.appendChild(sales), content.appendChild(priceRow), hasProductDiscount) {
         const oldPriceStriked = document.createElement("div");
         oldPriceStriked.className = "product-old-price-striked", oldPriceStriked.textContent = `${prod.oldPrice} ${currencySymbol}`, 
         content.appendChild(oldPriceStriked);

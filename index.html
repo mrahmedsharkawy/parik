@@ -47,9 +47,9 @@
   <script src="/java/auth-reset.js" defer></script>
   <title data-i18n="الصفحة الرئيسية - بريق">الصفحة الرئيسية - بريق</title>
   <!-- Full CSS loads asynchronously; critical above-fold CSS is inlined below. -->
-  <link rel="preload" href="/style/style.css?v=126" as="style" fetchpriority="low" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="/style/style.css?v=128" as="style" fetchpriority="low" onload="this.onload=null;this.rel='stylesheet'">
   <link rel="preload" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260726e" as="style" fetchpriority="low" media="(max-width: 899px)" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="/style/style.css?v=126"><link rel="stylesheet" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260726e" media="(max-width: 899px)"></noscript>
+  <noscript><link rel="stylesheet" href="/style/style.css?v=128"><link rel="stylesheet" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260726e" media="(max-width: 899px)"></noscript>
   <style>html,body,.page{background:#fff!important}.categories a{font-family:"Segoe UI Emoji","Segoe UI Symbol","Apple Color Emoji","Noto Color Emoji",Arial,Tahoma,sans-serif!important}</style>
   <!-- Preload LCP image -->
   <script>
@@ -190,6 +190,17 @@
     }
   }
   </script>
+  <style>
+  @media(max-width:899px){
+    .flash-deal-banner{height:78px!important;margin:4px 0 10px!important;border-radius:24px!important;overflow:visible!important;background:#fff!important;padding:6px 8px!important;box-shadow:none!important}
+    .flash-deal-banner .promo-link{display:block!important;width:100%!important;height:100%!important;text-decoration:none!important}
+    .flash-deal-banner .promo-inner{height:100%!important;position:relative!important;display:grid!important;grid-template-columns:auto 1fr auto!important;align-items:center!important;gap:10px!important;padding:8px 10px!important;border-radius:18px!important;background:linear-gradient(180deg,#071a35 0%,#0d274b 100%)!important;border:1px solid rgba(255,255,255,.16)!important;box-shadow:0 8px 20px rgba(8,23,48,.18)!important;overflow:hidden!important}
+    .flash-deal-banner .promo-inner::before,.flash-deal-banner .promo-inner::after{content:'';position:absolute;top:50%;width:52px;height:64px;transform:translateY(-50%);border-radius:999px;background:#fff;z-index:1}.flash-deal-banner .promo-inner::before{left:-34px}.flash-deal-banner .promo-inner::after{right:-34px}
+    .flash-deal-banner .banner-bg{display:none!important}.flash-deal-banner .scrolling-text-container{position:relative!important;z-index:2!important;overflow:visible!important;white-space:normal!important}.flash-deal-banner .scrolling-text{animation:none!important;transform:none!important;display:flex!important;justify-content:center!important;gap:0!important}.flash-deal-banner .scrolling-text .text-item:nth-child(n+2){display:none!important}.flash-deal-banner .text-item{display:flex!important;align-items:center!important;justify-content:center!important;gap:8px!important;color:#fff!important;font-weight:900!important;font-size:1.05rem!important}.flash-deal-banner .promo-title{color:#fff!important;font-size:1.08rem!important;font-weight:900!important}.flash-deal-banner .promo-icon{color:#d4af37!important;font-size:1.35rem!important;text-shadow:0 0 12px rgba(212,175,55,.45)!important}.flash-deal-banner .promo-sub{position:relative!important;z-index:2!important;background:linear-gradient(180deg,#f0cf56,#d4af37)!important;color:#152546!important;border-radius:999px!important;padding:8px 13px!important;font-size:.72rem!important;font-weight:900!important;box-shadow:inset 0 1px rgba(255,255,255,.55),0 5px 14px rgba(0,0,0,.18)!important;white-space:nowrap!important}
+    .flash-mobile-countdown{position:relative;z-index:2;display:flex;gap:6px;direction:ltr}.flash-mobile-countdown .flash-count-box{min-width:42px;height:42px;border-radius:8px;background:rgba(4,15,32,.86);border:1px solid rgba(212,175,55,.38);box-shadow:inset 0 1px 6px rgba(255,255,255,.06);display:flex;flex-direction:column;align-items:center;justify-content:center}.flash-mobile-countdown b{font-size:1rem;line-height:1;color:#d4af37;font-weight:900;font-family:Arial,Tahoma,sans-serif!important}.flash-mobile-countdown span{font-size:.55rem;line-height:1.25;color:#fff;font-weight:800}
+  }
+  .stars-container{position:relative;display:inline-block;line-height:1;letter-spacing:1px}.stars-empty{color:rgba(212,175,55,.28)!important}.stars-filled{color:#d4af37!important;position:absolute;top:0;overflow:hidden;white-space:nowrap}.product-rating-container .stars-container,.daily-picks-grid .stars-container,#category-products .stars-container{color:#d4af37!important}
+  </style>
 </head>
 <body class="home-immersive-header">
 <!-- Google Tag Manager (noscript) -->
@@ -475,6 +486,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div class="promo-inner">
       <!-- صورة الخلفية -->
       <img src="/assets/home/2.webp" class="banner-bg" alt="" aria-hidden="true" loading="eager" fetchpriority="low" decoding="async" width="1000" height="200">
+      <div class="flash-mobile-countdown" aria-label="عداد العروض">
+        <div class="flash-count-box"><b id="flashMobileHours">00</b></div>
+        <span class="flash-count-sep" aria-hidden="true"><i></i><i></i></span>
+        <div class="flash-count-box"><b id="flashMobileMinutes">00</b></div>
+        <span class="flash-count-sep" aria-hidden="true"><i></i><i></i></span>
+        <div class="flash-count-box"><b id="flashMobileSeconds">00</b></div>
+      </div>
+
+      <div class="flash-static-text" aria-hidden="true">
+        <span class="promo-icon">⚡</span>
+        <span class="promo-title" data-i18n="promo.banner.title">عروض خاطفة</span>
+        <span class="promo-sub" data-i18n="promo.banner.sub">عرض لوقت محدود</span>
+      </div>
 
       <!-- النص المتحرك في خط واحد -->
       <div class="scrolling-text-container">
@@ -494,6 +518,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div>
   </a>
 </section>
+<script>
+(function(){
+  function pad(n){return String(Math.max(0,Math.floor(n))).padStart(2,'0')}
+  function updateFlashMobileTimer(){
+    var h=document.getElementById('flashMobileHours'),m=document.getElementById('flashMobileMinutes'),s=document.getElementById('flashMobileSeconds');
+    if(!h||!m||!s)return;
+    var now=new Date(),end=new Date(now);end.setHours(23,59,59,999);
+    var total=Math.max(0,Math.floor((end-now)/1000));
+    h.textContent=pad(total/3600);m.textContent=pad(total%3600/60);s.textContent=pad(total%60);
+  }
+  updateFlashMobileTimer();setInterval(updateFlashMobileTimer,1000);
+})();
+</script>
   <!-- محتوى الموقع هنا -->
   <div id="searchResults" style="margin-top: 10px;"></div>
 
@@ -692,7 +729,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260725h" defer></script>
 <script src="/java/push-welcome.js?v=push-welcome-20260727d" defer></script>
 <script src="/java/notifications.min.js?v=notifications-20260725o" defer></script>
-<script type="module" src="/java/Products.min.js?v=products-20260726u" defer></script>
+<script type="module" src="/java/Products.min.js?v=products-20260727a" defer></script>
 
 <style>
 .campaign-popup-backdrop{position:fixed;inset:0;z-index:100200;background:rgba(7,16,32,.52);display:flex;align-items:center;justify-content:center;padding:18px;opacity:0;pointer-events:none;transition:opacity .22s ease}.campaign-popup-backdrop.show{opacity:1;pointer-events:auto}.campaign-popup{width:min(92vw,460px);overflow:hidden;border-radius:18px;background:#fff;box-shadow:0 28px 70px rgba(10,22,40,.32);transform:translateY(18px) scale(.96);transition:transform .28s cubic-bezier(.18,1.16,.36,1)}.campaign-popup-backdrop.show .campaign-popup{transform:translateY(0) scale(1)}.campaign-popup-media{position:relative;min-height:170px;background:linear-gradient(135deg,#152546,#2d405f)}.campaign-popup-media img{width:100%;height:230px;object-fit:cover;display:block;border-radius:0}.campaign-popup-media.no-image{display:flex;align-items:center;justify-content:center;color:#fff}.campaign-popup-badge{position:absolute;top:14px;inset-inline-start:14px;background:#D4AF37;color:#152546;border-radius:999px;padding:6px 12px;font-weight:900;font-size:.82rem}.campaign-popup-close{position:absolute;top:12px;inset-inline-end:12px;width:34px;height:34px;border:0;border-radius:50%;background:rgba(255,255,255,.92);color:#152546;font-size:20px;line-height:1;cursor:pointer}.campaign-popup-body{padding:20px;text-align:start}.campaign-popup-title{margin:0 0 8px;color:#152546;font-size:1.35rem;font-weight:900}.campaign-popup-desc{margin:0;color:#516078;line-height:1.7;font-size:.96rem}.campaign-popup-actions{display:flex;gap:10px;margin-top:18px}.campaign-popup-primary{flex:1;text-align:center;text-decoration:none;border-radius:999px;background:#152546;color:#fff;padding:12px 16px;font-weight:800}.campaign-popup-secondary{border:1px solid #d9e0ec;background:#fff;color:#152546;border-radius:999px;padding:12px 16px;font-weight:800;cursor:pointer}@media(max-width:520px){.campaign-popup{border-radius:16px}.campaign-popup-media img{height:190px}.campaign-popup-actions{flex-direction:column}.campaign-popup-title{font-size:1.18rem}}
@@ -825,7 +862,7 @@ body.home-immersive-header .dp-card .dp-badge{position:absolute!important;left:5
 body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:0!important}
 @media(min-width:900px){
   body.home-immersive-header .daily-picks-section{height:172px!important;min-height:172px!important}
-  body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:20px!important}
+  body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:6px!important}
 }
 @media(max-width:899px){
   html,body{height:auto!important;min-height:100%!important;max-width:100%!important;overflow-x:clip!important}
@@ -858,7 +895,7 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:0!importan
   body.home-immersive-header *{font-family:Arial,Tahoma,"Segoe UI Emoji","Segoe UI Symbol",sans-serif!important}
   body.home-immersive-header main.main{touch-action:pan-y pinch-zoom!important}
   body.home-immersive-header .categories a{font-family:"Segoe UI Emoji","Segoe UI Symbol","Apple Color Emoji","Noto Color Emoji",Arial,Tahoma,sans-serif!important}
-  body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:20px!important}
+  body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:6px!important}
   body.home-immersive-header .product-card{contain:none!important;content-visibility:visible!important;transform:none!important;will-change:auto!important;padding-bottom:4px!important;box-sizing:border-box!important;overflow:visible!important;touch-action:pan-y pinch-zoom!important}
   body.home-immersive-header .product-card *{touch-action:pan-y pinch-zoom!important}
   body.home-immersive-header .product-card:active,
@@ -881,6 +918,33 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin-top:0!importan
   body.home-immersive-header .trust-bar{height:36px!important;min-height:36px!important;overflow:hidden!important}
   body.home-immersive-header .categories{height:54px!important;min-height:54px!important;overflow-x:auto!important;overflow-y:hidden!important;-webkit-overflow-scrolling:touch!important;touch-action:pan-x pan-y pinch-zoom!important;white-space:nowrap!important;padding-bottom:7px!important}
   body.home-immersive-header .categories a{height:38px!important;min-height:38px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;line-height:1.25!important;touch-action:pan-x pan-y pinch-zoom!important}
+}
+</style>
+
+<style>
+.flash-deal-banner .flash-static-text{display:none}
+@media(max-width:899px){
+  body.home-immersive-header .flash-deal-banner{width:100%!important;max-width:100%!important;height:38px!important;min-height:38px!important;margin:2px auto 4px!important;padding:2px!important;border-radius:11px!important;background:#fff!important;border:1px solid #152546!important;overflow:hidden!important;box-shadow:none!important;box-sizing:border-box!important}
+  body.home-immersive-header .flash-deal-banner .promo-link{display:block!important;width:100%!important;height:100%!important;text-decoration:none!important}
+  body.home-immersive-header .flash-deal-banner .promo-inner{height:100%!important;min-height:0!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:0!important;direction:ltr!important;padding:0 12px!important;border-radius:8px!important;background:linear-gradient(90deg,#071a35 0%,#102b52 100%)!important;border:0!important;box-shadow:none!important;overflow:hidden!important;position:relative!important}
+  body.home-immersive-header .flash-deal-banner .promo-inner::before,body.home-immersive-header .flash-deal-banner .promo-inner::after{content:''!important;display:block!important;position:absolute!important;top:50%!important;width:18px!important;height:22px!important;transform:translateY(-50%)!important;background:#fff!important;border-radius:999px!important;z-index:2!important;pointer-events:none!important}
+  body.home-immersive-header .flash-deal-banner .promo-inner::before{left:-11px!important}
+  body.home-immersive-header .flash-deal-banner .promo-inner::after{right:-11px!important}
+  body.home-immersive-header .flash-deal-banner .banner-bg{display:none!important}
+  body.home-immersive-header .flash-mobile-countdown{position:absolute!important;z-index:3!important;left:48px!important;top:50%!important;transform:translateY(-50%)!important;display:flex!important;align-items:center!important;flex:0 0 auto!important;gap:2px!important;direction:ltr!important;order:1!important;margin:0!important}
+  body.home-immersive-header .flash-mobile-countdown .flash-count-box{width:25px!important;min-width:25px!important;height:22px!important;border-radius:6px!important;background:rgba(9,24,47,.88)!important;border:1px solid rgba(212,175,55,.45)!important;display:flex!important;align-items:center!important;justify-content:center!important;box-shadow:none!important}
+  body.home-immersive-header .flash-mobile-countdown b{font-size:.78rem!important;line-height:1!important;color:#d4af37!important;font-weight:900!important;letter-spacing:.02em!important}
+  body.home-immersive-header .flash-mobile-countdown .flash-count-sep{display:inline-flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:3px!important;width:5px!important;height:22px!important;color:#d4af37!important;line-height:1!important;animation:flashCountPulse 1s ease-in-out infinite!important}
+  body.home-immersive-header .flash-mobile-countdown .flash-count-sep i{display:block!important;width:3px!important;height:3px!important;border-radius:50%!important;background:currentColor!important}
+  @keyframes flashCountPulse{0%,100%{opacity:.45;transform:scale(.92)}50%{opacity:1;transform:scale(1.08)}}
+  body.home-immersive-header .flash-deal-banner .flash-static-text{position:static!important;z-index:4!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;flex:0 1 auto!important;min-width:0!important;height:100%!important;color:#fff!important;white-space:nowrap!important;direction:ltr!important;order:2!important}
+  body.home-immersive-header .flash-deal-banner .scrolling-text-container{display:none!important}
+  body.home-immersive-header .flash-deal-banner .scrolling-text{display:flex!important;align-items:center!important;justify-content:center!important;width:100%!important;height:100%!important;animation:none!important;transform:translate3d(0,0,0)!important;white-space:nowrap!important}
+  body.home-immersive-header .flash-deal-banner .scrolling-text .text-item:nth-child(n+2){display:none!important;visibility:hidden!important}
+  body.home-immersive-header .flash-deal-banner .text-item{position:static!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;width:100%!important;max-width:100%!important;height:100%!important;margin:0!important;padding:0!important;direction:ltr!important;white-space:nowrap!important;color:#fff!important;animation:none!important;transform:none!important}
+  body.home-immersive-header .flash-deal-banner .promo-icon{flex:0 0 auto!important;color:#d4af37!important;font-size:.98rem!important;line-height:1!important;text-shadow:0 0 10px rgba(212,175,55,.45)!important}
+  body.home-immersive-header .flash-deal-banner .promo-title{flex:0 1 auto!important;min-width:0!important;text-align:center!important;color:#fff!important;font-size:.86rem!important;font-weight:900!important;line-height:1!important;overflow:visible!important;text-overflow:clip!important}
+  body.home-immersive-header .flash-deal-banner .promo-sub{position:absolute!important;left:auto!important;right:48px!important;top:50%!important;bottom:auto!important;inset-inline-start:auto!important;inset-inline-end:48px!important;transform:translateY(-50%)!important;flex:0 0 auto!important;width:auto!important;background:linear-gradient(180deg,#f1d15b,#d4af37)!important;color:#152546!important;border-radius:999px!important;padding:5px 8px!important;font-size:.5rem!important;font-weight:900!important;line-height:1!important;text-align:center!important;box-shadow:none!important;white-space:nowrap!important;max-width:none!important;overflow:visible!important;text-overflow:clip!important}
 }
 </style>
 
