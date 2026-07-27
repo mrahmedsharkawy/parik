@@ -170,6 +170,26 @@
         }));
       } catch(e) {}
     }
+    async function refreshAdminToken() {
+      const refreshToken = sessionStorage.getItem('admin_refresh_token');
+      if (!refreshToken) return null;
+      try {
+        const res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/auth/v1/token?grant_type=refresh_token', {
+          method: 'POST',
+          headers: { apikey: SUPABASE_ANON, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refresh_token: refreshToken })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.access_token) return null;
+        sessionStorage.setItem('admin_token', data.access_token);
+        sessionStorage.setItem('admin_refresh_token', data.refresh_token || refreshToken);
+        sessionStorage.setItem('admin_token_exp', String(Date.now() + (data.expires_in || 3600) * 1000));
+        rememberReportsSession(sessionStorage.getItem('admin_name') || 'admin', data);
+        return data.access_token;
+      } catch(e) {
+        return null;
+      }
+    }
     function hasReportsSession(){
       if(sessionStorage.getItem('admin_ok') === '1' && (sessionStorage.getItem('admin_token') || sessionStorage.getItem('admin_refresh_token'))) return true;
       try {
@@ -196,8 +216,17 @@
         <label style="display:block;font-size:.76rem;color:var(--muted);font-weight:800;margin-bottom:5px">كلمة المرور</label>
         <input id="reportLoginPass" type="password" required autocomplete="current-password" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:11px;margin-bottom:12px;font:inherit">
         <button class="btn gold" id="reportLoginBtn" style="width:100%" type="submit">دخول التقارير</button>
+        <button class="btn ghost" type="button" onclick="clearReportsSession()" style="width:100%;margin-top:8px">مسح جلسة قديمة</button>
         <a class="btn ghost" href="/admin.html" style="width:100%;margin-top:8px">فتح لوحة الأدمن الكاملة</a>
       </form>`;
+    }
+    function clearReportsSession(){
+      localStorage.removeItem(REPORT_SESSION_KEY);
+      sessionStorage.removeItem('admin_ok');
+      sessionStorage.removeItem('admin_token');
+      sessionStorage.removeItem('admin_refresh_token');
+      sessionStorage.removeItem('admin_token_exp');
+      showReportsLogin('تم مسح الجلسة القديمة. سجّل الدخول مرة أخرى.');
     }
     async function loginReports(event){
       event.preventDefault();
@@ -280,8 +309,23 @@
       document.getElementById('latestOrders').innerHTML = latest.length ? latest.map(order => `<article class="order"><div class="order-head"><span class="order-id">${order.order_number || order.id}</span><span class="amount">${fmt(orderTotal(order))}</span></div><div class="meta">${order.customer_name || order.customerName || 'عميل'} · ${order.customer_phone || order.customerPhone || ''}<br>${orderDate(order).toLocaleString('ar-AE')} <span class="pill">${statusLabels[String(order.status || '').toLowerCase()] || order.status || 'طلب'}</span></div></article>`).join('') : '<div class="empty">لا توجد طلبات</div>';
     }
     function setPeriod(period){ currentPeriod = period; renderReports(); }
+    function loadSupabaseRuntime(){
+      return new Promise(resolve => {
+        const existing = document.querySelector('script[data-reports-supabase-fallback]');
+        if(existing) { existing.addEventListener('load', () => resolve(true), {once:true}); existing.addEventListener('error', () => resolve(false), {once:true}); return; }
+        const script = document.createElement('script');
+        script.src = '/java/supabase.min.js?v=supabase-20260727b-' + Date.now();
+        script.defer = true;
+        script.dataset.reportsSupabaseFallback = '1';
+        script.onload = () => resolve(true);
+        script.onerror = () => resolve(false);
+        document.head.appendChild(script);
+      });
+    }
     async function waitForSupabase(){
-      for(let i=0;i<100;i+=1){ if(window.Supabase && window.Supabase.Orders) return true; await new Promise(resolve => setTimeout(resolve,100)); }
+      for(let i=0;i<50;i+=1){ if(window.Supabase && window.Supabase.Auth && window.Supabase.Orders) return true; await new Promise(resolve => setTimeout(resolve,100)); }
+      await loadSupabaseRuntime();
+      for(let i=0;i<100;i+=1){ if(window.Supabase && window.Supabase.Auth && window.Supabase.Orders) return true; await new Promise(resolve => setTimeout(resolve,100)); }
       return false;
     }
     async function refreshReports(){

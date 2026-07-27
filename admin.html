@@ -1271,11 +1271,17 @@ function getAdminCreds() {
   } catch(e) { return { user: GATE_USER, pass: GATE_PASS }; }
 }
 
-function rememberAdminReportsSession(name) {
+function rememberAdminReportsSession(name, authData) {
+  const token = authData && authData.access_token || sessionStorage.getItem('admin_token') || '';
+  const refreshToken = authData && authData.refresh_token || sessionStorage.getItem('admin_refresh_token') || '';
+  if (!token && !refreshToken) return;
   try {
     localStorage.setItem('x2_admin_reports_session', JSON.stringify({
       ok: true,
       name: name || 'admin',
+      token: token,
+      refreshToken: refreshToken,
+      tokenExp: Date.now() + ((authData && authData.expires_in) || 3600) * 1000,
       expires: Date.now() + 30 * 24 * 60 * 60 * 1000
     }));
   } catch(e) {}
@@ -1346,7 +1352,7 @@ async function checkGate(){
     sessionStorage.setItem('admin_refresh_token', authData.refresh_token || '');
     sessionStorage.setItem('admin_token_exp', String(Date.now() + (authData.expires_in || 3600) * 1000));
     sessionStorage.setItem('admin_name', admin.full_name || email.split('@')[0]);
-    rememberAdminReportsSession(admin.full_name || email.split('@')[0]);
+    rememberAdminReportsSession(admin.full_name || email.split('@')[0], authData);
     $('gate').style.display = 'none';
     toast('✅ مرحباً ' + (admin.full_name || 'بالأدمن'));
 
