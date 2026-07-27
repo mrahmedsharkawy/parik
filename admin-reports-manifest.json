@@ -1,0 +1,32 @@
+{
+  "name": "تقارير Bariq",
+  "short_name": "التقارير",
+  "description": "لوحة تقارير ومبيعات Bariq للأدمن",
+  "start_url": "/admin-reports",
+  "scope": "/",
+  "id": "https://bariqgifts.com/admin-reports",
+  "display": "standalone",
+  "background_color": "#152546",
+  "theme_color": "#152546",
+  "orientation": "portrait-primary",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "assets/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["business", "productivity", "shopping"],
+  "prefer_related_applications": false,
+  "display_override": ["standalone", "minimal-ui"],
+  "screenshots": []
+}
