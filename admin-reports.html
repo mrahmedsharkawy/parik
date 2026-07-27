@@ -48,7 +48,7 @@
       <div class="card"><h3>أكثر المنتجات مبيعاً</h3><div id="topProducts"><div class="empty">لا توجد بيانات</div></div></div>
       <div class="card"><h3>حالات الطلبات</h3><div id="statusBreakdown"><div class="empty">لا توجد بيانات</div></div></div>
       <div class="card wide"><h3>آخر الطلبات</h3><div class="orders" id="latestOrders"><div class="empty">لا توجد طلبات</div></div></div>
-      <div class="card wide"><h3>إشعارات طلبات الأدمن</h3><p style="margin:0 0 10px;color:var(--muted);font-size:.8rem;line-height:1.7">فعّلها من هذا الهاتف مرة واحدة، ثم اختبر وصول الإشعار قبل الاعتماد على الطلبات الجديدة.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn navy" onclick="enableReportsAdminPush()">تفعيل إشعارات الطلبات</button><button class="btn ghost" onclick="sendReportsAdminPushTest()">اختبار الإشعار</button></div><div id="reportsPushStatus" style="margin-top:10px;color:var(--muted);font-size:.78rem">غير مفعّل بعد على هذا الجهاز.</div></div>
+      <div class="card wide"><h3>إشعارات طلبات الأدمن</h3><p style="margin:0 0 10px;color:var(--muted);font-size:.8rem;line-height:1.7">فعّلها من هذا الهاتف مرة واحدة، ثم اختبر وصول الإشعار قبل الاعتماد على الطلبات الجديدة.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn navy" onclick="enableReportsAdminPush()">تفعيل إشعارات الطلبات</button><button class="btn ghost" onclick="sendReportsAdminPushTest()">اختبار الإشعار</button></div><div id="reportsPushStatus" style="margin-top:10px;color:var(--muted);font-size:.78rem">غير مفعّل بعد على هذا الجهاز.</div><div style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px"><h4 style="margin:0 0 8px;color:var(--navy);font-size:.88rem">نغمة تنبيه التقارير</h4><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><select id="reportsSoundSelect" onchange="setReportsPushSound(this.value)" style="border:1px solid var(--line);border-radius:10px;padding:9px 10px;font:inherit;font-size:.78rem;min-width:170px"><option value="classic">كلاسيك</option><option value="urgent">طلب عاجل</option><option value="soft">هادئة</option><option value="off">بدون صوت</option></select><button class="btn ghost" onclick="testReportsPushSound()">اختبار النغمة</button></div><div id="reportsSoundStatus" style="margin-top:8px;color:var(--muted);font-size:.76rem">تعمل النغمة داخل تطبيق التقارير عند وصول إشعار جديد.</div></div></div>
       <div class="card wide"><h3>تنزيل التقرير</h3><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn gold" onclick="downloadCsv()">تنزيل CSV</button><button class="btn ghost" onclick="window.print()">طباعة / PDF</button></div></div>
     </section>
   </main>
@@ -58,6 +58,7 @@
     const fmt = value => (Number(value)||0).toLocaleString('ar-AE',{maximumFractionDigits:2}) + ' د.إ';
     const statusLabels = {pending:'قيد الانتظار',processing:'قيد المعالجة',confirmed:'مؤكد',manufacturing:'تصنيع',ready:'جاهز',shipped:'تم الشحن',delivered:'تم التسليم',cancelled:'ملغى',returned:'مرتجع'};
     const REPORT_SESSION_KEY = 'x2_admin_reports_session';
+    const REPORTS_SOUND_KEY = 'x2_admin_reports_push_sound';
     const ADMIN_PUSH_EMAIL = '__bariq_admin_orders__@bariq.local';
     const ADMIN_PUSH_VAPID_PUBLIC_KEY = 'BPojY-23BXbIfa1IRkkQD3vAELjTn3nltgFBrlEIjZ3aEbphXAQvFY2E5B2R_mfikZLhGPo0lBeCedB8qoP5-SE';
     const REPORTS_SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
@@ -86,6 +87,49 @@
       if(!el) return;
       el.textContent = message;
       el.style.color = ok ? 'var(--green)' : 'var(--muted)';
+    }
+    function getReportsPushSound(){
+      return localStorage.getItem(REPORTS_SOUND_KEY) || 'classic';
+    }
+    function initReportsPushSound(){
+      const select = document.getElementById('reportsSoundSelect');
+      if(select) select.value = getReportsPushSound();
+    }
+    function setReportsPushSound(value){
+      localStorage.setItem(REPORTS_SOUND_KEY, value || 'classic');
+      const status = document.getElementById('reportsSoundStatus');
+      if(status) status.textContent = value === 'off' ? 'تم إيقاف صوت التنبيه داخل التقارير.' : 'تم حفظ نغمة التنبيه.';
+    }
+    function playReportsPushSound(kind){
+      kind = kind || getReportsPushSound();
+      if(kind === 'off') return;
+      const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+      if(!AudioContextCtor) return;
+      const ctx = new AudioContextCtor();
+      const patterns = {
+        classic: [{ f: 880, t: 0, d: .12 }, { f: 1175, t: .16, d: .14 }],
+        urgent: [{ f: 988, t: 0, d: .1 }, { f: 988, t: .14, d: .1 }, { f: 1319, t: .28, d: .16 }],
+        soft: [{ f: 659, t: 0, d: .18 }, { f: 784, t: .22, d: .2 }]
+      };
+      const notes = patterns[kind] || patterns.classic;
+      notes.forEach(note => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = note.f;
+        gain.gain.setValueAtTime(0.0001, ctx.currentTime + note.t);
+        gain.gain.exponentialRampToValueAtTime(0.16, ctx.currentTime + note.t + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + note.t + note.d);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(ctx.currentTime + note.t);
+        osc.stop(ctx.currentTime + note.t + note.d + 0.02);
+      });
+      setTimeout(() => ctx.close().catch(() => {}), 900);
+    }
+    function testReportsPushSound(){
+      playReportsPushSound(getReportsPushSound());
+      const status = document.getElementById('reportsSoundStatus');
+      if(status) status.textContent = 'تم تشغيل اختبار النغمة.';
     }
     function pushKeyToBytes(base64String){
       const base64 = (base64String + '='.repeat((4 - base64String.length % 4) % 4)).replace(/-/g, '+').replace(/_/g, '/');
@@ -406,6 +450,7 @@
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('lastSync').textContent = 'آخر تحديث: ' + new Date().toLocaleTimeString('ar-AE');
         renderReports();
+        initReportsPushSound();
       } catch(e) {
         if(/جلسة الأدمن انتهت|انتهت جلسة الأدمن/.test(e.message || '')) {
           showReportsLogin('انتهت الجلسة. سجّل الدخول مرة أخرى.');
@@ -416,6 +461,7 @@
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('lastSync').textContent = 'تعذر تحميل الطلبات - ' + (e.message || 'اضغط تحديث أو سجّل الدخول مرة أخرى');
         renderReports();
+        initReportsPushSound();
         document.getElementById('latestOrders').innerHTML = '<div class="empty">تعذر تحميل الطلبات من قاعدة البيانات<br><button class="btn gold" onclick="clearReportsSession()" style="margin-top:10px">تسجيل دخول من جديد</button></div>';
       }
     }
@@ -429,7 +475,17 @@
       a.click();
       setTimeout(()=>URL.revokeObjectURL(a.href),1000);
     }
-    window.addEventListener('DOMContentLoaded', refreshReports);
+    if(navigator.serviceWorker) {
+      navigator.serviceWorker.addEventListener('message', event => {
+        const data = event.data || {};
+        const notification = data.notification || {};
+        if(data.type === 'X2_PUSH_NOTIFICATION' && (notification.type === 'admin_new_order' || /طلب جديد|new order/i.test(notification.title || notification.msg || ''))) {
+          playReportsPushSound(getReportsPushSound());
+          setTimeout(() => refreshReports(), 800);
+        }
+      });
+    }
+    window.addEventListener('DOMContentLoaded', () => { initReportsPushSound(); refreshReports(); });
   </script>
 </body>
 </html>
