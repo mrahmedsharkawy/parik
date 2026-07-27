@@ -31,10 +31,10 @@
     </section>
 
     <nav class="filters" aria-label="فلاتر الفترة">
-      <button class="active" data-period="today" onclick="setPeriod('today')">اليوم</button>
+      <button data-period="today" onclick="setPeriod('today')">اليوم</button>
       <button data-period="week" onclick="setPeriod('week')">7 أيام</button>
       <button data-period="month" onclick="setPeriod('month')">الشهر</button>
-      <button data-period="all" onclick="setPeriod('all')">الكل</button>
+      <button class="active" data-period="all" onclick="setPeriod('all')">الكل</button>
     </nav>
 
     <section class="stats">
@@ -48,21 +48,184 @@
       <div class="card"><h3>أكثر المنتجات مبيعاً</h3><div id="topProducts"><div class="empty">لا توجد بيانات</div></div></div>
       <div class="card"><h3>حالات الطلبات</h3><div id="statusBreakdown"><div class="empty">لا توجد بيانات</div></div></div>
       <div class="card wide"><h3>آخر الطلبات</h3><div class="orders" id="latestOrders"><div class="empty">لا توجد طلبات</div></div></div>
+      <div class="card wide"><h3>إشعارات طلبات الأدمن</h3><p style="margin:0 0 10px;color:var(--muted);font-size:.8rem;line-height:1.7">فعّلها من هذا الهاتف مرة واحدة، ثم اختبر وصول الإشعار قبل الاعتماد على الطلبات الجديدة.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn navy" onclick="enableReportsAdminPush()">تفعيل إشعارات الطلبات</button><button class="btn ghost" onclick="sendReportsAdminPushTest()">اختبار الإشعار</button></div><div id="reportsPushStatus" style="margin-top:10px;color:var(--muted);font-size:.78rem">غير مفعّل بعد على هذا الجهاز.</div></div>
       <div class="card wide"><h3>تنزيل التقرير</h3><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn gold" onclick="downloadCsv()">تنزيل CSV</button><button class="btn ghost" onclick="window.print()">طباعة / PDF</button></div></div>
     </section>
   </main>
 
-  <script src="/java/supabase.js" defer></script>
+  <script src="/java/supabase.min.js?v=supabase-20260727b" defer></script>
   <script>
     const fmt = value => (Number(value)||0).toLocaleString('ar-AE',{maximumFractionDigits:2}) + ' د.إ';
     const statusLabels = {pending:'قيد الانتظار',processing:'قيد المعالجة',confirmed:'مؤكد',manufacturing:'تصنيع',ready:'جاهز',shipped:'تم الشحن',delivered:'تم التسليم',cancelled:'ملغى',returned:'مرتجع'};
+    const REPORT_SESSION_KEY = 'x2_admin_reports_session';
+    const ADMIN_PUSH_EMAIL = '__bariq_admin_orders__@bariq.local';
+    const ADMIN_PUSH_VAPID_PUBLIC_KEY = 'BPojY-23BXbIfa1IRkkQD3vAELjTn3nltgFBrlEIjZ3aEbphXAQvFY2E5B2R_mfikZLhGPo0lBeCedB8qoP5-SE';
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
     let allOrders = [];
-    let currentPeriod = 'today';
+    let currentPeriod = 'all';
 
+    function reportsPushStatus(message, ok){
+      const el = document.getElementById('reportsPushStatus');
+      if(!el) return;
+      el.textContent = message;
+      el.style.color = ok ? 'var(--green)' : 'var(--muted)';
+    }
+    function pushKeyToBytes(base64String){
+      const base64 = (base64String + '='.repeat((4 - base64String.length % 4) % 4)).replace(/-/g, '+').replace(/_/g, '/');
+      const raw = atob(base64);
+      return Uint8Array.from([].map.call(raw, c => c.charCodeAt(0)));
+    }
+    async function saveReportsAdminPushSubscription(sub){
+      const p256dh = sub.getKey('p256dh');
+      const auth = sub.getKey('auth');
+      const payload = {
+        endpoint: sub.endpoint,
+        p256dh: p256dh ? btoa(String.fromCharCode.apply(null, new Uint8Array(p256dh))) : '',
+        auth: auth ? btoa(String.fromCharCode.apply(null, new Uint8Array(auth))) : '',
+        user_phone: '',
+        user_email: ADMIN_PUSH_EMAIL,
+        user_lang: 'ar',
+        created_at: new Date().toISOString()
+      };
+      const headers = { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON, 'Content-Type': 'application/json' };
+      const res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/push_subscriptions', {
+        method: 'POST',
+        headers: { ...headers, Prefer: 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify(payload)
+      });
+      if(res.ok) return true;
+      const patch = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/push_subscriptions?endpoint=eq.' + encodeURIComponent(sub.endpoint), {
+        method: 'PATCH',
+        headers: { ...headers, Prefer: 'return=minimal' },
+        body: JSON.stringify(payload)
+      });
+      return patch.ok;
+    }
+    async function enableReportsAdminPush(){
+      if(!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+        reportsPushStatus('الإشعارات غير مدعومة على هذا الجهاز.', false);
+        return;
+      }
+      if(Notification.permission === 'denied') {
+        reportsPushStatus('الإشعارات مرفوضة من إعدادات الهاتف. فعّلها من إعدادات المتصفح.', false);
+        return;
+      }
+      try {
+        reportsPushStatus('جارٍ تفعيل إشعارات الطلبات...', false);
+        const permission = await Notification.requestPermission();
+        if(permission !== 'granted') {
+          reportsPushStatus('لم يتم منح إذن الإشعارات.', false);
+          return;
+        }
+        const reg = await navigator.serviceWorker.register('/sw.js?v=186', { updateViaCache: 'none' });
+        if(reg.update) reg.update().catch(() => {});
+        await navigator.serviceWorker.ready;
+        let sub = await reg.pushManager.getSubscription();
+        if(!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: pushKeyToBytes(ADMIN_PUSH_VAPID_PUBLIC_KEY) });
+        const saved = await saveReportsAdminPushSubscription(sub);
+        if(!saved) throw new Error('تعذر حفظ اشتراك الأدمن');
+        localStorage.setItem('x2_admin_push_enabled', '1');
+        reportsPushStatus('تم تفعيل إشعارات الطلبات على هذا الجهاز.', true);
+      } catch(e) {
+        reportsPushStatus('تعذر التفعيل: ' + (e.message || 'خطأ غير معروف'), false);
+      }
+    }
+    async function sendReportsAdminPushTest(){
+      try {
+        reportsPushStatus('جارٍ إرسال اختبار...', false);
+        const resp = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/functions/v1/hyper-api', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON },
+          body: JSON.stringify({
+            title: 'اختبار إشعارات الأدمن',
+            body: 'إذا وصل هذا الإشعار فالتقارير جاهزة لاستقبال الطلبات الجديدة.',
+            url: '/admin-reports',
+            type: 'admin_push_test',
+            iconText: '📲',
+            emoji: '📲',
+            user_email: ADMIN_PUSH_EMAIL
+          })
+        });
+        const result = await resp.json().catch(() => null);
+        if(!resp.ok) throw new Error(result && result.error ? result.error : 'فشل الإرسال');
+        if(!result || !result.sent) {
+          reportsPushStatus('لم يصل الاختبار لأن هذا الهاتف غير مشترك بعد. اضغط تفعيل أولاً.', false);
+          return;
+        }
+        reportsPushStatus('تم إرسال اختبار الإشعار بنجاح.', true);
+      } catch(e) {
+        reportsPushStatus('تعذر إرسال الاختبار: ' + (e.message || 'خطأ غير معروف'), false);
+      }
+    }
+
+    function rememberReportsSession(name, authData){
+      try {
+        localStorage.setItem(REPORT_SESSION_KEY, JSON.stringify({
+          ok: true,
+          name: name || 'admin',
+          token: authData && authData.access_token || '',
+          refreshToken: authData && authData.refresh_token || '',
+          tokenExp: Date.now() + ((authData && authData.expires_in) || 3600) * 1000,
+          expires: Date.now() + 30*24*60*60*1000
+        }));
+      } catch(e) {}
+    }
+    function hasReportsSession(){
+      if(sessionStorage.getItem('admin_ok') === '1' && (sessionStorage.getItem('admin_token') || sessionStorage.getItem('admin_refresh_token'))) return true;
+      try {
+        const saved = JSON.parse(localStorage.getItem(REPORT_SESSION_KEY) || 'null');
+        if(saved && saved.ok && Number(saved.expires || 0) > Date.now() && (saved.token || saved.refreshToken)) {
+          sessionStorage.setItem('admin_ok', '1');
+          if(saved.name) sessionStorage.setItem('admin_name', saved.name);
+          if(saved.token) sessionStorage.setItem('admin_token', saved.token);
+          if(saved.refreshToken) sessionStorage.setItem('admin_refresh_token', saved.refreshToken);
+          if(saved.tokenExp) sessionStorage.setItem('admin_token_exp', String(saved.tokenExp));
+          return true;
+        }
+      } catch(e) {}
+      return false;
+    }
+    function showReportsLogin(message){
+      const loading = document.getElementById('loading');
+      loading.classList.remove('hidden');
+      loading.innerHTML = `<form onsubmit="loginReports(event)" style="width:min(360px,calc(100vw - 32px));background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 18px 50px rgba(21,37,70,.14);text-align:right">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><img src="/assets/icon.png" alt="" style="width:38px;height:38px;border-radius:10px"><div><b style="display:block;color:var(--navy);font-size:1rem">دخول تقارير Bariq</b><small style="color:var(--muted)">سجّل مرة واحدة على هذا الهاتف</small></div></div>
+        ${message ? `<div style="background:#fff4e5;color:#8a5200;border-radius:10px;padding:9px 10px;font-size:.78rem;margin-bottom:10px">${message}</div>` : ''}
+        <label style="display:block;font-size:.76rem;color:var(--muted);font-weight:800;margin-bottom:5px">إيميل الأدمن</label>
+        <input id="reportLoginEmail" type="email" required autocomplete="username" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:11px;margin-bottom:10px;font:inherit">
+        <label style="display:block;font-size:.76rem;color:var(--muted);font-weight:800;margin-bottom:5px">كلمة المرور</label>
+        <input id="reportLoginPass" type="password" required autocomplete="current-password" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:11px;margin-bottom:12px;font:inherit">
+        <button class="btn gold" id="reportLoginBtn" style="width:100%" type="submit">دخول التقارير</button>
+        <a class="btn ghost" href="/admin.html" style="width:100%;margin-top:8px">فتح لوحة الأدمن الكاملة</a>
+      </form>`;
+    }
+    async function loginReports(event){
+      event.preventDefault();
+      const btn = document.getElementById('reportLoginBtn');
+      const email = (document.getElementById('reportLoginEmail').value || '').trim();
+      const password = (document.getElementById('reportLoginPass').value || '').trim();
+      try {
+        btn.disabled = true;
+        btn.textContent = 'جارٍ التحقق...';
+        if(!await waitForSupabase()) throw new Error('تعذر تحميل Supabase');
+        const authData = await window.Supabase.Auth.signIn(email, password);
+        const admin = await window.Supabase.Auth.getAdmin(authData.user.id, authData.access_token);
+        if(!admin) throw new Error('هذا الحساب ليس أدمن');
+        const name = admin.full_name || email.split('@')[0];
+        sessionStorage.setItem('admin_ok', '1');
+        sessionStorage.setItem('admin_name', name);
+        sessionStorage.setItem('admin_token', authData.access_token);
+        sessionStorage.setItem('admin_refresh_token', authData.refresh_token || '');
+        sessionStorage.setItem('admin_token_exp', String(Date.now() + (authData.expires_in || 3600) * 1000));
+        rememberReportsSession(name, authData);
+        await refreshReports();
+      } catch(e) {
+        showReportsLogin('تعذر الدخول: ' + (e.message || 'تحقق من البيانات'));
+      }
+    }
     function requireAdmin(){
-      if(sessionStorage.getItem('admin_ok') === '1') return true;
-      document.getElementById('loading').innerHTML = 'يجب تسجيل دخول الأدمن أولاً<small>سيتم تحويلك إلى لوحة التحكم...</small>';
-      setTimeout(()=>{ location.href = '/admin.html'; }, 1200);
+      if(hasReportsSession()) return true;
+      showReportsLogin('سجّل دخولك لفتح تقارير الهاتف. سيتم حفظ الدخول على هذا الجهاز.');
       return false;
     }
     function cutoffDate(){
@@ -118,18 +281,27 @@
     }
     function setPeriod(period){ currentPeriod = period; renderReports(); }
     async function waitForSupabase(){
-      for(let i=0;i<50;i+=1){ if(window.Supabase && window.Supabase.Orders) return true; await new Promise(resolve => setTimeout(resolve,100)); }
+      for(let i=0;i<100;i+=1){ if(window.Supabase && window.Supabase.Orders) return true; await new Promise(resolve => setTimeout(resolve,100)); }
       return false;
     }
     async function refreshReports(){
       if(!requireAdmin()) return;
       document.getElementById('loading').classList.remove('hidden');
-      if(!await waitForSupabase()) throw new Error('Supabase unavailable');
-      allOrders = await window.Supabase.Orders.getAll();
-      document.getElementById('app').hidden = false;
-      document.getElementById('loading').classList.add('hidden');
-      document.getElementById('lastSync').textContent = 'آخر تحديث: ' + new Date().toLocaleTimeString('ar-AE');
-      renderReports();
+      try {
+        if(!await waitForSupabase()) throw new Error('تعذر تحميل بيانات Supabase');
+        allOrders = await window.Supabase.Orders.getAll();
+        document.getElementById('app').hidden = false;
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('lastSync').textContent = 'آخر تحديث: ' + new Date().toLocaleTimeString('ar-AE');
+        renderReports();
+      } catch(e) {
+        allOrders = [];
+        document.getElementById('app').hidden = false;
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('lastSync').textContent = 'تعذر تحميل الطلبات - سجّل الدخول مرة أخرى أو اضغط تحديث';
+        renderReports();
+        document.getElementById('latestOrders').innerHTML = '<div class="empty">تعذر تحميل الطلبات من قاعدة البيانات</div>';
+      }
     }
     function downloadCsv(){
       const rows = filteredOrders().map(order => ({id:order.order_number || order.id,date:orderDate(order).toISOString(),customer:order.customer_name || order.customerName || '',phone:order.customer_phone || order.customerPhone || '',status:order.status || '',total:orderTotal(order)}));

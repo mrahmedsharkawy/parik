@@ -1166,6 +1166,7 @@
         <div class="hint">الإشعارات تظهر على شاشة الهاتف وأيقونة التطبيق حتى لو الموقع مغلق</div>
         <div style="display:flex;gap:8px;align-items:center;margin:10px 0 14px;flex-wrap:wrap">
           <button class="btn-navy btn-sm" type="button" onclick="enableAdminOrderPush()">📲 تفعيل إشعارات طلبات الأدمن</button>
+          <button class="btn-ghost btn-sm" type="button" onclick="sendAdminOrderPushTest()">اختبار إشعار الأدمن</button>
           <span id="admin-push-status" style="font-size:.78rem;color:#7a8296">فعّلها من هاتف الأدمن مرة واحدة.</span>
         </div>
         <label>عنوان الإشعار</label>
@@ -1270,6 +1271,16 @@ function getAdminCreds() {
   } catch(e) { return { user: GATE_USER, pass: GATE_PASS }; }
 }
 
+function rememberAdminReportsSession(name) {
+  try {
+    localStorage.setItem('x2_admin_reports_session', JSON.stringify({
+      ok: true,
+      name: name || 'admin',
+      expires: Date.now() + 30 * 24 * 60 * 60 * 1000
+    }));
+  } catch(e) {}
+}
+
 /* ================= تجديد التوكن تلقائياً ================= */
 async function refreshAdminToken() {
   const refreshToken = sessionStorage.getItem('admin_refresh_token');
@@ -1335,6 +1346,7 @@ async function checkGate(){
     sessionStorage.setItem('admin_refresh_token', authData.refresh_token || '');
     sessionStorage.setItem('admin_token_exp', String(Date.now() + (authData.expires_in || 3600) * 1000));
     sessionStorage.setItem('admin_name', admin.full_name || email.split('@')[0]);
+    rememberAdminReportsSession(admin.full_name || email.split('@')[0]);
     $('gate').style.display = 'none';
     toast('✅ مرحباً ' + (admin.full_name || 'بالأدمن'));
 
@@ -4261,6 +4273,38 @@ async function enableAdminOrderPush() {
   } catch (e) {
     console.warn('Admin push subscription failed:', e);
     adminPushSetStatus('تعذر التفعيل: ' + (e.message || 'خطأ غير معروف'), false);
+  }
+}
+
+async function sendAdminOrderPushTest() {
+  const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+  try {
+    adminPushSetStatus('جارٍ إرسال اختبار للأدمن...', false);
+    const resp = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/functions/v1/hyper-api', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: ANON, Authorization: 'Bearer ' + ANON },
+      body: JSON.stringify({
+        title: 'اختبار إشعارات الأدمن',
+        body: 'إذا وصل هذا الإشعار فالهاتف جاهز لاستقبال الطلبات الجديدة.',
+        url: '/admin.html?tab=orders',
+        type: 'admin_push_test',
+        iconText: '📲',
+        emoji: '📲',
+        user_email: ADMIN_PUSH_EMAIL
+      })
+    });
+    const result = await resp.json().catch(() => null);
+    if (!resp.ok) throw new Error(result && result.error ? result.error : await resp.text());
+    if (!result || !result.sent) {
+      adminPushSetStatus('لم يصل الاختبار لأن جهاز الأدمن غير مشترك بعد. اضغط تفعيل أولاً من الهاتف.', false);
+      toast('⚠️ لا يوجد اشتراك أدمن محفوظ لهذا الجهاز');
+      return;
+    }
+    adminPushSetStatus('تم إرسال اختبار إشعار الأدمن بنجاح.', true);
+    toast('📲 تم إرسال اختبار إشعار الأدمن');
+  } catch(e) {
+    console.warn('Admin push test failed:', e);
+    adminPushSetStatus('تعذر إرسال الاختبار: ' + (e.message || 'خطأ غير معروف'), false);
   }
 }
 
