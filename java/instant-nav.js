@@ -53,13 +53,41 @@
     } catch (e) {}
   }
 
+  function addPrerenderLink(path) {
+    try {
+      if (document.head.querySelector('link[rel="prerender"][href="' + path + '"]')) return;
+      var link = document.createElement("link");
+      link.rel = "prerender";
+      link.href = path;
+      document.head.appendChild(link);
+    } catch (e) {}
+  }
+
+  function addSpeculationRules(paths) {
+    try {
+      if (!paths.length || document.getElementById("x2-categories-speculation")) return;
+      var script = document.createElement("script");
+      script.id = "x2-categories-speculation";
+      script.type = "speculationrules";
+      script.textContent = JSON.stringify({
+        prerender: [{ source: "list", urls: paths, eagerness: "immediate" }],
+        prefetch: [{ source: "list", urls: paths, eagerness: "immediate" }]
+      });
+      document.head.appendChild(script);
+    } catch (e) {}
+  }
+
+  function primeCategoriesPage() {
+    var path = normalizePath("/categories");
+    if (!path || path === normalizePath(location.href)) return;
+    addPrefetchLink(path);
+    addPrerenderLink(path);
+    addSpeculationRules([path]);
+  }
+
   function doWarm(path) {
     addPrefetchLink(path);
-    return fetch(path, {
-      method: "GET",
-      credentials: "include",
-      cache: "force-cache"
-    }).catch(function () {});
+    return Promise.resolve();
   }
 
   function pumpQueue() {
@@ -111,6 +139,8 @@
   document.addEventListener("pointerover", onIntent, { passive: true, capture: true });
   document.addEventListener("touchstart", onIntent, { passive: true, capture: true });
   document.addEventListener("focusin", onIntent, { passive: true, capture: true });
+
+  primeCategoriesPage();
 
   window.addEventListener("load", function () {
     var run = function () { setTimeout(bootWarmup, 4500); };

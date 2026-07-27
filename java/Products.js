@@ -822,10 +822,10 @@ export function createProductCard(prod) {
             }));
         } catch (e) {}
         const origBg = cartBtn.style.background;
-        cartBtn.style.background = "#D4AF37";
+        cartBtn.style.background = "#152546";
         const pathEl = cartBtn.querySelector("path");
-        pathEl && (pathEl.style.fill = "#fff"), setTimeout(() => {
-            cartBtn.style.background = origBg, pathEl && (pathEl.style.fill = "");
+        pathEl && pathEl.style.setProperty("fill", "#fff", "important"), setTimeout(() => {
+            cartBtn.style.background = origBg, pathEl && pathEl.style.removeProperty("fill");
         }, 900);
     }
     cartBtn.addEventListener("touchstart", ev => {

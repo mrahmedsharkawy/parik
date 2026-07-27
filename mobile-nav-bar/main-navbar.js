@@ -1,7 +1,48 @@
 ﻿async function initMobileNav() {
   const isMobileViewport = window.matchMedia('(max-width: 899px)').matches || window.innerWidth <= 899 || document.documentElement.clientWidth <= 899;
   if (!isMobileViewport) return;
-  if (document.querySelector('.mobile-nav')) return;
+  const existingNav = document.querySelector('.mobile-nav');
+  if (existingNav && existingNav.dataset.mobileNavEnhanced === '1') return;
+
+  const fallbackNavHtml = `
+<nav class="mobile-nav" role="navigation" aria-label="التنقل أسفل الشاشة">
+  <ul>
+    <li>
+      <a href="/" class="nav-link" data-key="home">
+        <img src="icons/home.svg" class="icon" alt="" aria-hidden="true" width="25" height="25">
+        <span data-i18n="الرئيسية">الرئيسية</span>
+      </a>
+    </li>
+    <li>
+      <a href="/categories" class="nav-link" data-key="categories">
+        <img src="icons/categories.svg" class="icon" alt="" aria-hidden="true" width="25" height="25">
+        <span data-i18n="المناسبات">المناسبات</span>
+      </a>
+    </li>
+    <li class="fire-deal-item">
+      <a href="/offers" class="nav-link fire-deal-link" data-key="offers">
+        <span class="fire-nav-icon">🔥</span>
+        <span data-i18n="عروض">عروض</span>
+      </a>
+    </li>
+    <li>
+      <a href="/account" class="nav-link" data-key="account">
+        <span class="icon-wrap account-badge" data-count="0" aria-label="عدد الإشعارات">
+          <img src="icons/account.svg" class="icon" alt="" aria-hidden="true" width="25" height="25">
+        </span>
+        <span data-i18n="حسابي">حسابي</span>
+      </a>
+    </li>
+    <li>
+      <a href="/Cart" class="nav-link" data-key="cart">
+        <span class="icon-wrap cart-badge" data-count="0" aria-label="عدد العناصر في السلة">
+          <img src="icons/cart.svg" class="icon" alt="" aria-hidden="true" width="25" height="25">
+        </span>
+        <span data-i18n="السلة">السلة</span>
+      </a>
+    </li>
+  </ul>
+</nav>`;
 
   try {
     const currentUrl = new URL(location.href);
@@ -16,7 +57,7 @@
   const base = scriptBase.endsWith('/') ? scriptBase : scriptBase + '/';
 
   // ????? CSS
-  const cssHref = base + 'styles.css?v=apple-liquid-20260726e';
+  const cssHref = base + 'styles.css?v=apple-liquid-20260728h';
   if (!Array.from(document.styleSheets).some(s => s.href && s.href.includes('/mobile-nav-bar/styles.css'))) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
@@ -27,19 +68,24 @@
 
   try {
     // Cache navbar HTML ?? sessionStorage ????? fetch ?? ?? ???? (?????? ??????)
-    const CACHE_KEY = 'mnav_v7';
+    const CACHE_KEY = 'mnav_v8';
     let text = sessionStorage.getItem(CACHE_KEY);
     if (!text) {
-      const res = await fetch(base + 'navbar.html');
-      if (!res.ok) throw new Error('navbar ' + res.status);
-      text = await res.text();
-      try { sessionStorage.setItem(CACHE_KEY, text); } catch(e) {}
+      text = fallbackNavHtml;
+      fetch(base + 'navbar.html')
+        .then(res => res.ok ? res.text() : '')
+        .then(html => { if (html) try { sessionStorage.setItem(CACHE_KEY, html); } catch(e) {} })
+        .catch(() => {});
     }
 
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(text, 'text/html');
-    const nav = doc.querySelector('.mobile-nav') || doc.querySelector('nav');
-    if (!nav) throw new Error('no .mobile-nav in navbar.html');
+    let nav = existingNav;
+    if (!nav) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(text, 'text/html');
+      nav = doc.querySelector('.mobile-nav') || doc.querySelector('nav');
+      if (!nav) throw new Error('no .mobile-nav in navbar.html');
+    }
+    nav.dataset.mobileNavEnhanced = '1';
 
     const currentLang = localStorage.getItem('lang') || document.documentElement.lang || 'ar';
     const withLang = href => currentLang === 'en' ? href + (href.includes('?') ? '&' : '?') + 'lang=en' : href;
@@ -107,7 +153,7 @@
       });
     });
 
-    document.body.appendChild(nav);
+    if (!nav.isConnected) document.body.appendChild(nav);
 
     // -- ????? ?????? ??? ????? ????? ??????? ??? ????? ????? -----
     let lastY = window.scrollY || window.pageYOffset || 0;

@@ -218,6 +218,7 @@ function x2VisitorAreaFallback() {
     function renderList(items) {
         listRoot.querySelectorAll(".product-card-cart, .product-card").forEach(n => n.remove()),
         items.forEach(addCard), toggleEmptyState(), updateSummary();
+        document.documentElement.classList.add("x2-cart-rendered");
     }
     function persistFromDOM() {
         const items = Array.from(listRoot.querySelectorAll(".product-card-cart, .product-card")).map(card => {
