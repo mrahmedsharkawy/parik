@@ -923,19 +923,26 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const itemsCount = (order.items || []).reduce((sum, item) => sum + (Number(item.qty) || 1), 0);
       const title = 'طلب جديد من Bariq';
       const body = `${order.id} - ${fmt(order.total)} - ${order.customerName || 'عميل'} - ${itemsCount || 1} منتج`;
-      await fetch('https://knleehjjejfeobcmpwnw.supabase.co/functions/v1/hyper-api', {
+      const payload = {
+        title,
+        body,
+        url: '/admin-reports?order=' + encodeURIComponent(order.id),
+        type: 'admin_new_order',
+        status: 'processing',
+        orderId: order.id,
+        order_id: order.id,
+        iconText: '📦',
+        emoji: '📦',
+        user_email: '__bariq_admin_orders__@bariq.local'
+      };
+      const endpoint = 'https://knleehjjejfeobcmpwnw.supabase.co/functions/v1/hyper-api';
+      const send = fetch(endpoint, {
         method: 'POST',
+        keepalive: true,
         headers: { 'Content-Type': 'application/json', apikey: ANON_PUSH, Authorization: 'Bearer ' + ANON_PUSH },
-        body: JSON.stringify({
-          title,
-          body,
-          url: '/admin.html?tab=orders&order=' + encodeURIComponent(order.id),
-          type: 'admin_new_order',
-          iconText: '📦',
-          emoji: '📦',
-          user_email: '__bariq_admin_orders__@bariq.local'
-        })
+        body: JSON.stringify(payload)
       }).catch(() => {});
+      await Promise.race([send, new Promise(resolve => setTimeout(resolve, 1800))]);
     } catch(e) {}
   }
 
@@ -949,7 +956,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   };
 
   // إتمام الطلب
-  window.placeOrder = function() {
+  window.placeOrder = async function() {
     const fname = document.getElementById('co-first-name').value.trim();
     const lname = document.getElementById('co-last-name').value.trim();
     const email = document.getElementById('co-email').value.trim();
@@ -1001,7 +1008,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       }
     } catch(e) {}
 
-    notifyAdminNewOrder(order);
+    await notifyAdminNewOrder(order);
 
     const itemsText = cartItems.map(it => `- ${it.name || it.title || 'Product'} x${Number(it.qty || 1)}`).join('\n');
     const msg = encodeURIComponent([

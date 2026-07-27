@@ -60,7 +60,7 @@
     const REPORT_SESSION_KEY = 'x2_admin_reports_session';
     const ADMIN_PUSH_EMAIL = '__bariq_admin_orders__@bariq.local';
     const ADMIN_PUSH_VAPID_PUBLIC_KEY = 'BPojY-23BXbIfa1IRkkQD3vAELjTn3nltgFBrlEIjZ3aEbphXAQvFY2E5B2R_mfikZLhGPo0lBeCedB8qoP5-SE';
-    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+    const REPORTS_SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
     let allOrders = [];
     let currentPeriod = 'all';
 
@@ -104,7 +104,7 @@
         user_lang: 'ar',
         created_at: new Date().toISOString()
       };
-      const headers = { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON, 'Content-Type': 'application/json' };
+      const headers = { apikey: REPORTS_SUPABASE_ANON, Authorization: 'Bearer ' + REPORTS_SUPABASE_ANON, 'Content-Type': 'application/json' };
       const res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/push_subscriptions', {
         method: 'POST',
         headers: { ...headers, Prefer: 'resolution=merge-duplicates,return=minimal' },
@@ -152,7 +152,7 @@
         reportsPushStatus('جارٍ إرسال اختبار...', false);
         const resp = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/functions/v1/hyper-api', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON, Authorization: 'Bearer ' + SUPABASE_ANON },
+          headers: { 'Content-Type': 'application/json', apikey: REPORTS_SUPABASE_ANON, Authorization: 'Bearer ' + REPORTS_SUPABASE_ANON },
           body: JSON.stringify({
             title: 'اختبار إشعارات الأدمن',
             body: 'إذا وصل هذا الإشعار فالتقارير جاهزة لاستقبال الطلبات الجديدة.',
@@ -193,7 +193,7 @@
       try {
         const res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/auth/v1/token?grant_type=refresh_token', {
           method: 'POST',
-          headers: { apikey: SUPABASE_ANON, 'Content-Type': 'application/json' },
+          headers: { apikey: REPORTS_SUPABASE_ANON, 'Content-Type': 'application/json' },
           body: JSON.stringify({ refresh_token: refreshToken })
         });
         const data = await res.json().catch(() => ({}));
@@ -222,7 +222,7 @@
       const timer = setTimeout(() => controller.abort(), 18000);
       try {
         const res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/orders?select=*&order=created_at.desc&limit=1000', {
-          headers: { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+          headers: { apikey: REPORTS_SUPABASE_ANON, Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
           signal: controller.signal
         });
         const text = await res.text();
@@ -239,7 +239,7 @@
       }
     }
     async function getReportsAdmin(userId, email, token){
-      const headers = { apikey: SUPABASE_ANON, Authorization: 'Bearer ' + (token || SUPABASE_ANON), 'Content-Type': 'application/json' };
+      const headers = { apikey: REPORTS_SUPABASE_ANON, Authorization: 'Bearer ' + (token || REPORTS_SUPABASE_ANON), 'Content-Type': 'application/json' };
       async function query(path){
         const res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/admins?' + path + '&active=eq.true&limit=1', { headers });
         const rows = await res.json().catch(() => []);
@@ -380,15 +380,13 @@
     function setPeriod(period){ currentPeriod = period; renderReports(); }
     function loadSupabaseRuntime(){
       return new Promise(resolve => {
-        const existing = document.querySelector('script[data-reports-supabase-fallback]');
-        if(existing) { existing.addEventListener('load', () => resolve(true), {once:true}); existing.addEventListener('error', () => resolve(false), {once:true}); return; }
-        const script = document.createElement('script');
-        script.src = '/java/supabase.min.js?v=supabase-20260727b-' + Date.now();
-        script.defer = true;
-        script.dataset.reportsSupabaseFallback = '1';
-        script.onload = () => resolve(true);
-        script.onerror = () => resolve(false);
-        document.head.appendChild(script);
+        const existing = document.querySelector('script[src*="/java/supabase"]');
+        if(!existing) { resolve(false); return; }
+        let done = false;
+        const finish = ok => { if(done) return; done = true; resolve(ok); };
+        existing.addEventListener('load', () => finish(!!(window.Supabase && window.Supabase.Auth && window.Supabase.Orders)), {once:true});
+        existing.addEventListener('error', () => finish(false), {once:true});
+        setTimeout(() => finish(!!(window.Supabase && window.Supabase.Auth && window.Supabase.Orders)), 3000);
       });
     }
     async function waitForSupabase(){
