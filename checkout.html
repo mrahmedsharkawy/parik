@@ -917,6 +917,28 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     });
   }
 
+  async function notifyAdminNewOrder(order) {
+    try {
+      const ANON_PUSH = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+      const itemsCount = (order.items || []).reduce((sum, item) => sum + (Number(item.qty) || 1), 0);
+      const title = 'طلب جديد من Bariq';
+      const body = `${order.id} - ${fmt(order.total)} - ${order.customerName || 'عميل'} - ${itemsCount || 1} منتج`;
+      await fetch('https://knleehjjejfeobcmpwnw.supabase.co/functions/v1/hyper-api', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: ANON_PUSH, Authorization: 'Bearer ' + ANON_PUSH },
+        body: JSON.stringify({
+          title,
+          body,
+          url: '/admin.html?tab=orders&order=' + encodeURIComponent(order.id),
+          type: 'admin_new_order',
+          iconText: '📦',
+          emoji: '📦',
+          user_email: '__bariq_admin_orders__@bariq.local'
+        })
+      }).catch(() => {});
+    } catch(e) {}
+  }
+
   renderItems();
 
   // toggle installment details
@@ -978,6 +1000,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         window.Supabase.Orders.insert(order).catch(err => console.warn('Supabase order save failed:', err));
       }
     } catch(e) {}
+
+    notifyAdminNewOrder(order);
 
     const itemsText = cartItems.map(it => `- ${it.name || it.title || 'Product'} x${Number(it.qty || 1)}`).join('\n');
     const msg = encodeURIComponent([
@@ -1146,14 +1170,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </div>
   </div>
 </footer>
-<script src="/java/main.min.js?v=134" defer></script>
+<script src="/java/main.min.js?v=135" defer></script>
 <script src="/java/sw-refresh.js?v=sw-refresh-20260725p" defer></script>
 <script src="/java/instant-nav.js?v=instant-nav-20260725a" defer></script>
 <script src="/java/supabase.min.js?v=supabase-20260725a" defer></script>
 <script src="/translations/translation.min.js?v=translation-20260726c" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
 <script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260725h" defer></script>
-<script src="/java/push-welcome.js?v=push-welcome-20260727b" defer></script>
+<script src="/java/push-welcome.js?v=push-welcome-20260727d" defer></script>
 <script type="module" src="/java/Products.min.js?v=products-20260726u"></script> <!-- ده يفضل يفضل في الآخر -->
 </body>
 </html>

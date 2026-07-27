@@ -86,9 +86,10 @@
     var ua=navigator.userAgent||'';
     return isInstalledMobileApp()||/Android/i.test(ua);
   }
+  var pushWelcomeTimer=0;
   function canShowPushWelcome(){
     try{
-      return canPromptForPush()&&'Notification'in window&&Notification.permission!=='granted'&&sessionStorage.getItem('x2_push_welcome_dismissed')!=='1';
+      return canPromptForPush()&&'Notification'in window&&Notification.permission!=='granted'&&sessionStorage.getItem('x2_push_welcome_dismissed')!=='1'&&sessionStorage.getItem('x2_push_welcome_prompted')!=='1';
     }catch(e){return false;}
   }
   function ensurePushWelcomeModal(){
@@ -97,6 +98,7 @@
   }
   window.dismissPushWelcome=function(){
     try{
+      if(pushWelcomeTimer){clearTimeout(pushWelcomeTimer);pushWelcomeTimer=0;}
       if('Notification'in window&&Notification.permission==='granted')localStorage.setItem('x2_push_welcome_seen','1');
       else sessionStorage.setItem('x2_push_welcome_dismissed','1');
     }catch(e){}
@@ -109,7 +111,16 @@
       localStorage.removeItem('x2_push_welcome_seen');
       ensurePushWelcomeModal();
       var modal=document.getElementById('pushWelcomeModal');
-      if(modal)setTimeout(function(){modal.style.display='flex';},700);
+      if(modal){
+        if(pushWelcomeTimer)clearTimeout(pushWelcomeTimer);
+        pushWelcomeTimer=setTimeout(function(){
+          pushWelcomeTimer=0;
+          if(canShowPushWelcome()){
+            sessionStorage.setItem('x2_push_welcome_prompted','1');
+            modal.style.display='flex';
+          }
+        },700);
+      }
     }catch(e){}
   };
   document.addEventListener('click',function(e){

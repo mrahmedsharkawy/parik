@@ -815,6 +815,7 @@
     <div class="card" style="margin-top:16px">
       <h2>📤 تصدير التقارير</h2>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <a class="btn-navy" href="/admin-reports.html" style="text-decoration:none">📱 شاشة تقارير الهاتف</a>
         <button class="btn-gold" onclick="exportReportExcel()">📊 تصدير Excel</button>
         <button class="btn-navy" onclick="exportReportPDF()">📄 تصدير PDF</button>
         <button class="btn-ghost" onclick="exportReportJSON()">📋 تصدير JSON</button>
@@ -1163,6 +1164,10 @@
       <div class="card">
         <h2>🔔 إرسال إشعار Push للعملاء</h2> 
         <div class="hint">الإشعارات تظهر على شاشة الهاتف وأيقونة التطبيق حتى لو الموقع مغلق</div>
+        <div style="display:flex;gap:8px;align-items:center;margin:10px 0 14px;flex-wrap:wrap">
+          <button class="btn-navy btn-sm" type="button" onclick="enableAdminOrderPush()">📲 تفعيل إشعارات طلبات الأدمن</button>
+          <span id="admin-push-status" style="font-size:.78rem;color:#7a8296">فعّلها من هاتف الأدمن مرة واحدة.</span>
+        </div>
         <label>عنوان الإشعار</label>
         <input type="text" id="push-title" placeholder="عرض خاص 🔥" maxlength="50">
         <label>نص الإشعار</label>
@@ -4178,6 +4183,87 @@ function insertProductVars() {
 }
 
 /* ============ Push Notifications ============ */
+const ADMIN_PUSH_EMAIL = '__bariq_admin_orders__@bariq.local';
+const ADMIN_PUSH_VAPID_PUBLIC_KEY = 'BPojY-23BXbIfa1IRkkQD3vAELjTn3nltgFBrlEIjZ3aEbphXAQvFY2E5B2R_mfikZLhGPo0lBeCedB8qoP5-SE';
+
+function adminPushKeyToBytes(base64String) {
+  const base64 = (base64String + '='.repeat((4 - base64String.length % 4) % 4)).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(base64);
+  return Uint8Array.from([].map.call(raw, c => c.charCodeAt(0)));
+}
+
+function adminPushSetStatus(message, ok) {
+  const el = $('admin-push-status');
+  if (!el) return;
+  el.textContent = message;
+  el.style.color = ok ? '#1e8e4e' : '#7a8296';
+}
+
+async function saveAdminPushSubscription(sub) {
+  const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+  const p256dh = sub.getKey('p256dh');
+  const auth = sub.getKey('auth');
+  const payload = {
+    endpoint: sub.endpoint,
+    p256dh: p256dh ? btoa(String.fromCharCode.apply(null, new Uint8Array(p256dh))) : '',
+    auth: auth ? btoa(String.fromCharCode.apply(null, new Uint8Array(auth))) : '',
+    user_phone: '',
+    user_email: ADMIN_PUSH_EMAIL,
+    user_lang: 'ar',
+    created_at: new Date().toISOString()
+  };
+  const headers = { apikey: ANON, Authorization: 'Bearer ' + ANON, 'Content-Type': 'application/json' };
+  const res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/push_subscriptions', {
+    method: 'POST',
+    headers: { ...headers, Prefer: 'resolution=merge-duplicates,return=minimal' },
+    body: JSON.stringify(payload)
+  });
+  if (res.ok) return true;
+  const patch = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/push_subscriptions?endpoint=eq.' + encodeURIComponent(sub.endpoint), {
+    method: 'PATCH',
+    headers: { ...headers, Prefer: 'return=minimal' },
+    body: JSON.stringify(payload)
+  });
+  return patch.ok;
+}
+
+async function enableAdminOrderPush() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+    adminPushSetStatus('الإشعارات غير مدعومة على هذا الجهاز.', false);
+    return;
+  }
+  if (Notification.permission === 'denied') {
+    adminPushSetStatus('الإشعارات مرفوضة من إعدادات الهاتف. فعّلها من إعدادات المتصفح.', false);
+    return;
+  }
+  try {
+    adminPushSetStatus('جارٍ تفعيل إشعارات طلبات الأدمن...', false);
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      adminPushSetStatus('لم يتم منح إذن الإشعارات.', false);
+      return;
+    }
+    const reg = await navigator.serviceWorker.register('/sw.js?v=186', { updateViaCache: 'none' });
+    if (reg.update) reg.update().catch(() => {});
+    await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: adminPushKeyToBytes(ADMIN_PUSH_VAPID_PUBLIC_KEY)
+      });
+    }
+    const saved = await saveAdminPushSubscription(sub);
+    if (!saved) throw new Error('تعذر حفظ اشتراك الأدمن');
+    localStorage.setItem('x2_admin_push_enabled', '1');
+    adminPushSetStatus('تم تفعيل إشعارات طلبات الأدمن على هذا الجهاز.', true);
+    toast('✅ تم تفعيل إشعارات طلبات الأدمن');
+  } catch (e) {
+    console.warn('Admin push subscription failed:', e);
+    adminPushSetStatus('تعذر التفعيل: ' + (e.message || 'خطأ غير معروف'), false);
+  }
+}
+
 async function sendPushNotification() {
   const title = ($('push-title').value || '').trim();
   const body  = ($('push-body').value  || '').trim();
