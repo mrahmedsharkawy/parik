@@ -731,9 +731,6 @@ function x2VisitorAreaFallback() {
         function handleVisibilityReturn() {
             if (!document.hidden) returnToAccount();
         }
-        sessionStorage.setItem("x2_after_wa", "1");
-        document.addEventListener("visibilitychange", handleVisibilityReturn);
-        window.open(url, "_self");
         let appliedCouponForOrder = null;
         try {
             const applied = JSON.parse(sessionStorage.getItem("x2_coupon_applied") || localStorage.getItem("x2_coupon_applied") || "null");
@@ -802,7 +799,7 @@ function x2VisitorAreaFallback() {
                     const synced = JSON.parse(localStorage.getItem("x2_orders_synced") || "[]");
                     synced.includes(orderId) || (synced.push(orderId), localStorage.setItem("x2_orders_synced", JSON.stringify(synced)));
                 } catch (e2) {}
-                window.Supabase.Orders.insert({
+                await window.Supabase.Orders.insert({
                     id: orderId,
                     items: newOrder.items,
                     total: totalAmt,
@@ -829,6 +826,9 @@ function x2VisitorAreaFallback() {
         } catch (e) {
             console.error("خطأ في إنشاء الطلب:", e);
         }
+        sessionStorage.setItem("x2_after_wa", "1");
+        document.addEventListener("visibilitychange", handleVisibilityReturn);
+        window.open(url, "_self");
         try {
             localStorage.setItem("x2_cart", "[]"), document.querySelectorAll(".cart-badge").forEach(el => el.setAttribute("data-count", "")),
             window.__cartCount = 0;
