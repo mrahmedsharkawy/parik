@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>فواتير المبيعات - Bariq</title>
+  <link rel="icon" href="/assets/logo.png">
+  <link rel="manifest" href="/sales-invoices-manifest.json">
+  <style>
+    :root{--navy:#152546;--gold:#d4af37;--line:#e5eaf3;--muted:#7a8296;--bg:#f5f7fb;--green:#16884b;--red:#c0392b}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--navy);font-family:Tahoma,Arial,sans-serif}.wrap{max-width:1280px;margin:auto;padding:16px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:0 8px 24px rgba(21,37,70,.06);margin-bottom:12px}.brand{display:flex;align-items:center;gap:10px;font-weight:900}.brand img{width:42px;height:42px;object-fit:contain}.panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 8px 24px rgba(21,37,70,.06)}.grid{display:grid;grid-template-columns:minmax(340px,1fr) minmax(360px,.9fr);gap:12px}.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}input,select,textarea{border:1px solid #dfe5ef;border-radius:9px;padding:10px 11px;font:inherit;outline:none;background:#fff;color:var(--navy)}textarea{width:100%;min-height:82px;resize:vertical}button{border:0;border-radius:9px;padding:10px 12px;font-weight:900;cursor:pointer;background:var(--navy);color:#fff}.btn-gold{background:var(--gold);color:#111}.btn-ghost{background:#fff;color:var(--navy);border:1px solid #dfe5ef}.btn-green{background:#25d366}.btn-red{background:var(--red)}.list{display:grid;gap:9px;max-height:72vh;overflow:auto;padding-left:4px}.row{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff}.info{min-width:0;line-height:1.75}.badge{display:inline-flex;align-items:center;border-radius:999px;padding:2px 8px;font-size:.72rem;font-weight:900;background:#eef3fb;color:var(--navy);margin-inline-start:4px}.b-ok{background:#e7f7ee;color:#137744}.b-warn{background:#fff4ce;color:#8a6500}.b-red{background:#ffe7e7;color:#b62828}.muted{color:var(--muted);font-size:.82rem}.builder{display:grid;gap:10px}.twocol{display:grid;grid-template-columns:1fr 1fr;gap:8px}.preview{background:#f8f9fc;border:1px solid var(--line);border-radius:12px;padding:12px;line-height:1.9}.login{max-width:420px;margin:11vh auto}.hide{display:none!important}.msg{font-size:.85rem;color:var(--muted)}.bank{background:#f8f9fc;border:1px solid var(--line);border-radius:12px;padding:10px;display:grid;gap:6px}.bank div{display:flex;justify-content:space-between;gap:10px;background:#fff;border:1px solid #edf0f6;border-radius:8px;padding:8px}.bank b{direction:ltr;text-align:left;word-break:break-word}.actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.copy{padding:6px 9px;font-size:.72rem}.toast{position:fixed;bottom:18px;left:18px;background:var(--navy);color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18);z-index:20}.hero-note{background:#fff8e1;border:1px solid #f1d27a;color:#6b5200;border-radius:10px;padding:10px;font-weight:800}
+    body{font-size:13px}.wrap{max-width:1540px}.top{padding:10px 12px;border-radius:10px}.brand img{width:34px;height:34px}h2{font-size:1.05rem;margin:0 0 10px}.panel{border-radius:10px;padding:12px}.grid{grid-template-columns:minmax(390px,1.08fr) minmax(360px,.96fr) minmax(280px,.72fr);align-items:stretch}.grid>.panel{height:100%}input,select,textarea{font-size:.86rem;padding:8px 9px;border-radius:7px}textarea{min-height:68px}button{font-size:.82rem;padding:8px 10px;border-radius:7px}.list{max-height:76vh}.row{padding:9px;border-radius:10px}.row .info>.badges-line{display:flex;align-items:center;gap:4px;flex-wrap:nowrap;white-space:nowrap}.row .badges-line .badge{font-size:.6rem;padding:1px 6px;line-height:1.45}.info{line-height:1.55}.actions{display:flex;gap:7px;flex-wrap:wrap;align-items:center}.row .actions select{max-width:140px}.preview{font-size:.82rem;line-height:1.55;padding:0;background:#fff;border:0}.field{display:grid;gap:4px}.field label{color:var(--muted);font-size:.68rem;font-weight:900}.field input,.field select{width:100%}.invoice-card{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}.invoice-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;background:linear-gradient(135deg,#fff,#fbf4dc);border-bottom:1px solid #efe6c8}.invoice-title{font-weight:950;font-size:.95rem}.invoice-sub{color:var(--muted);font-size:.74rem}.invoice-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px 12px}.metric{background:#f8f9fc;border:1px solid #e7eaf2;border-radius:10px;padding:9px;min-width:0}.metric span{display:block;color:var(--muted);font-size:.7rem;margin-bottom:4px}.metric b{display:block;font-size:.86rem}.payment-note{margin:0 12px 10px;padding:9px 10px;border-radius:10px;background:#fff8df;border:1px solid #f1d27a;color:#6b5200;font-weight:800;font-size:.78rem}.bank{margin:0 12px 12px}.bank div{display:grid;grid-template-columns:.85fr 1.35fr auto;align-items:center;gap:8px;padding:6px 8px}.bank span{font-size:.72rem;color:var(--muted)}.bank b{font-size:.74rem;font-weight:500;color:#24324d;overflow-wrap:anywhere}.copy{padding:4px 7px;font-size:.68rem}.invoice-link{padding:0 12px 12px;direction:ltr;text-align:left;font-size:.74rem;overflow-wrap:anywhere}.stats-filter{width:100%;margin-bottom:10px}.stats-total{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}.stat-box{background:#f8f9fc;border:1px solid #e7eaf2;border-radius:10px;padding:10px}.stat-box span{display:block;color:var(--muted);font-size:.72rem}.stat-box b{font-size:1rem}.status-stat{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:9px;margin-bottom:8px;background:#fff}.status-stat small{display:block;color:var(--muted);margin-top:3px}.status-stat b{font-size:.92rem}.period-title{font-weight:950;margin:6px 0 8px}.empty-state{color:var(--muted);font-size:.82rem;text-align:center;padding:14px;border:1px dashed var(--line);border-radius:10px;background:#fafbfe}
+    @media(max-width:1180px){.grid{grid-template-columns:1fr 1fr}.stats-panel{grid-column:1/-1}.stats-total{grid-template-columns:repeat(4,1fr)}}
+    @media(max-width:900px){.grid{grid-template-columns:1fr}.list{max-height:none}.twocol{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.row{align-items:flex-start;flex-direction:column}.actions{justify-content:flex-start}.stats-total,.invoice-summary{grid-template-columns:1fr}.stats-panel{grid-column:auto}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand"><img src="/assets/logo.png" alt="Bariq"><div><div>فواتير المبيعات</div><div class="muted">صفحة أونلاين مستقلة لتحديث الطلبات وإرسال الفواتير</div></div></div>
+      <div class="actions"><button class="btn-ghost" onclick="loadOrders()">↻ تحديث الطلبات</button><button id="installAppBtn" class="btn-ghost hide" onclick="installSalesApp()">تثبيت التطبيق</button><button class="btn-red" onclick="logout()">خروج</button></div>
+    </div>
+
+    <section id="loginBox" class="panel login">
+      <h2>تسجيل دخول الأدمن</h2>
+      <p class="muted">استخدم نفس الإيميل وكلمة المرور الخاصة بلوحة التحكم. الصفحة تعمل أونلاين وتتصل بقاعدة البيانات مباشرة.</p>
+      <input id="email" type="email" placeholder="البريد الإلكتروني" autocomplete="username" style="width:100%;margin-bottom:8px">
+      <input id="password" type="password" placeholder="كلمة المرور" autocomplete="current-password" style="width:100%;margin-bottom:10px">
+      <button class="btn-gold" onclick="login()" style="width:100%">دخول</button>
+      <div id="loginMsg" class="msg" style="margin-top:10px"></div>
+    </section>
+
+    <section id="app" class="grid hide">
+      <div class="panel">
+        <h2>طلبات الفواتير</h2>
+        <div class="filters">
+          <input id="search" placeholder="بحث باسم العميل أو رقم الطلب أو الهاتف" oninput="render()" style="flex:1;min-width:190px">
+          <select id="invoiceFilter" onchange="render()"><option value="all">كل الفواتير</option><option value="with">فواتير محفوظة</option><option value="without">بدون فاتورة</option></select>
+          <select id="statusFilter" onchange="render()"></select>
+        </div>
+        <div id="count" class="muted" style="margin-bottom:8px"></div>
+        <div id="orders" class="list"></div>
+      </div>
+
+      <div class="panel">
+        <h2>إنشاء / إرسال فاتورة</h2>
+        <div id="emptyPick" class="muted">اختر طلبًا من القائمة.</div>
+        <div id="builder" class="builder hide">
+          <div class="twocol"><div class="field"><label for="invOrder">رقم الطلب</label><input id="invOrder" readonly></div><div class="field"><label for="invCustomer">اسم العميل</label><input id="invCustomer" readonly></div></div>
+          <div class="twocol"><div class="field"><label for="invPhone">رقم الهاتف</label><input id="invPhone" readonly></div><div class="field"><label for="invTotal">إجمالي الطلب</label><input id="invTotal" type="number" min="0" step="any" oninput="recalc()"></div></div>
+          <div class="twocol"><div class="field"><label for="invType">نوع الدفع</label><select id="invType" onchange="recalc()"><option value="deposit25">عربون 25%</option><option value="deposit50">عربون 50%</option><option value="full">المبلغ كامل</option></select></div><div class="field"><label for="invDue">المطلوب الآن</label><input id="invDue" type="number" readonly></div></div>
+          <div class="field"><label for="invNote">ملاحظة الفاتورة</label><textarea id="invNote"></textarea></div>
+          <div class="actions"><button class="btn-gold" onclick="saveInvoice()">حفظ الفاتورة</button><button class="btn-green" onclick="sendWhatsApp()">إرسال واتساب</button><button class="btn-ghost" onclick="copyLink()">نسخ الرابط</button></div>
+          <div id="preview" class="preview"></div>
+        </div>
+      </div>
+
+      <div class="panel stats-panel">
+        <h2>إحصائيات المبيعات</h2>
+        <select id="periodFilter" class="stats-filter" onchange="render()">
+          <option value="day">اليوم</option>
+          <option value="week">الأسبوع</option>
+          <option value="month">الشهر</option>
+          <option value="year">السنة</option>
+        </select>
+        <div id="statsSummary" class="stats-total"></div>
+        <div id="statusStats"></div>
+      </div>
+    </section>
+  </div>
+  <div id="toast" class="toast hide"></div>
+
+<script>
+const CONFIG={
+  supabaseUrl:'https://knleehjjejfeobcmpwnw.supabase.co',
+  anon:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E',
+  invoiceMark:'\n[BARIQ_INVOICE]',
+  invoiceNote:'برجاء إرسال إيصال الدفع في واتساب بعد التحويل.',
+  bank:{beneficiary:'AHMED SHARKAWI GHANDOUR SHEHATA SHARKAWI',bank:'ADIB',iban:'AE100500000000028859428',account:'28859428',swift:'ABDIAEADXXX',currency:'AED',whatsapp:'971554423151'},
+  accountBase:'https://bariqgifts.com/account?section=invoices&order='
+};
+const STATUS={pending:['قيد الانتظار','b-warn','⏳'],processing:['قيد المعالجة','','🔄'],confirmed:['مؤكد','b-ok','✅'],manufacturing:['في مرحلة التصنيع','','🔨'],ready:['طلبك جاهز','b-ok','🎁'],shipped:['تم الشحن','','🚚'],delivered:['تم التوصيل','b-ok','✅'],cancelled:['ملغى','b-red','❌'],returned:['مرتجع','b-red','↩️']};
+let token=localStorage.getItem('bariq_sales_token')||'';
+let refreshToken=localStorage.getItem('bariq_sales_refresh')||'';
+let orders=[];
+let selected=null;
+let deferredInstallPrompt=null;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.remove('hide');clearTimeout(window._toastTimer);window._toastTimer=setTimeout(()=>t.classList.add('hide'),2600)}
+function money(n){return (Math.round((Number(n)||0)*100)/100).toLocaleString('en-US')+' '+CONFIG.bank.currency}
+function orderNum(o){return o.order_number||o.orderNumber||o.id||''}
+function splitNotes(notes){const raw=String(notes||''),idx=raw.indexOf(CONFIG.invoiceMark);if(idx<0)return{base:raw.trim(),invoice:null};try{return{base:raw.slice(0,idx).trim(),invoice:JSON.parse(raw.slice(idx+CONFIG.invoiceMark.length).trim())}}catch(e){return{base:raw.trim(),invoice:null}}}
+function getInv(o){return o&& (o.invoice||splitNotes(o.notes).invoice)}
+function invoiceLink(o){const n=orderNum(o);return CONFIG.accountBase+encodeURIComponent(n)+'&invoice='+encodeURIComponent(n)}
+function remaining(inv){return Math.max(0,(Number(inv&&inv.total)||0)-(Number(inv&&inv.due)||0))}
+function normPhone(v){let p=String(v||'').replace(/\D/g,'');if(p.startsWith('00971'))p=p.slice(2);if(/^05\d{8}$/.test(p))p='971'+p.slice(1);else if(/^5\d{8}$/.test(p))p='971'+p;return p}
+async function api(path,opt={}){const res=await fetch(CONFIG.supabaseUrl+'/rest/v1/'+path,{...opt,headers:{apikey:CONFIG.anon,Authorization:'Bearer '+(token||CONFIG.anon),'Content-Type':'application/json',Prefer:opt.prefer||'return=representation',...(opt.headers||{})}});if(!res.ok){if((res.status===401||res.status===403)&&await refreshAuth())return api(path,opt);throw new Error(await res.text())}return res.status===204?null:res.json()}
+async function refreshAuth(){if(!refreshToken)return false;try{const res=await fetch(CONFIG.supabaseUrl+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{apikey:CONFIG.anon,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:refreshToken})});const data=await res.json();if(!res.ok||!data.access_token)return false;token=data.access_token;refreshToken=data.refresh_token||refreshToken;localStorage.setItem('bariq_sales_token',token);localStorage.setItem('bariq_sales_refresh',refreshToken);return true}catch(e){return false}}
+async function login(){const msg=$('loginMsg');msg.textContent='جارٍ الدخول...';try{const res=await fetch(CONFIG.supabaseUrl+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:CONFIG.anon,'Content-Type':'application/json'},body:JSON.stringify({email:$('email').value.trim(),password:$('password').value})});const data=await res.json();if(!res.ok)throw new Error(data.error_description||data.msg||'فشل الدخول');token=data.access_token;refreshToken=data.refresh_token||'';const admin=await api('admins?or=(user_id.eq.'+encodeURIComponent(data.user.id)+',email.eq.'+encodeURIComponent(data.user.email)+')&active=eq.true&limit=1');if(!admin||!admin[0])throw new Error('هذا الحساب ليس أدمن نشط');localStorage.setItem('bariq_sales_token',token);localStorage.setItem('bariq_sales_refresh',refreshToken);showApp();await loadOrders()}catch(e){token='';refreshToken='';msg.textContent='خطأ: '+e.message}}
+function logout(){localStorage.removeItem('bariq_sales_token');localStorage.removeItem('bariq_sales_refresh');location.reload()}
+function showApp(){$('loginBox').classList.add('hide');$('app').classList.remove('hide')}
+async function loadOrders(){try{orders=await api('orders?select=*&order=created_at.desc&limit=1000')||[];render();toast('تم تحديث الطلبات')}catch(e){toast('فشل تحميل الطلبات');alert('فشل تحميل الطلبات: '+e.message)}}
+function renderStatusFilter(){const s=$('statusFilter');s.innerHTML='<option value="all">كل حالات الطلب</option>'+Object.keys(STATUS).map(k=>'<option value="'+k+'">'+STATUS[k][0]+'</option>').join('')}
+function orderDate(o){const value=o.created_at||o.createdAt||o.updated_at||o.date||o.order_date;const d=new Date(value);return isNaN(d.getTime())?new Date():d}
+function periodRange(period){const now=new Date(),start=new Date(now);start.setHours(0,0,0,0);let label='اليوم';if(period==='week'){const day=(start.getDay()+6)%7;start.setDate(start.getDate()-day);label='الأسبوع'}else if(period==='month'){start.setDate(1);label='الشهر'}else if(period==='year'){start.setMonth(0,1);label='السنة'}return{start,end:now,label}}
+function periodOrders(){const period=$('periodFilter')&&$('periodFilter').value||'day',range=periodRange(period);return{range,rows:orders.filter(o=>{const d=orderDate(o);return d>=range.start&&d<=range.end})}}
+function renderStats(){const summary=$('statsSummary'),box=$('statusStats');if(!summary||!box)return;const data=periodOrders(),rows=data.rows,total=rows.reduce((sum,o)=>sum+(Number(o.total)||0),0),invoices=rows.filter(o=>!!getInv(o)).length,avg=rows.length?total/rows.length:0;summary.innerHTML='<div class="stat-box"><span>طلبات '+data.range.label+'</span><b>'+rows.length+'</b></div><div class="stat-box"><span>إجمالي '+data.range.label+'</span><b>'+money(total)+'</b></div><div class="stat-box"><span>فواتير محفوظة</span><b>'+invoices+'</b></div><div class="stat-box"><span>متوسط الطلب</span><b>'+money(avg)+'</b></div>';box.innerHTML='<div class="period-title">الإجمالي حسب حالة الطلب</div>'+Object.keys(STATUS).map(k=>{const st=STATUS[k],items=rows.filter(o=>(o.status||'pending')===k),amount=items.reduce((sum,o)=>sum+(Number(o.total)||0),0);return '<div class="status-stat"><div><span class="badge '+st[1]+'">'+st[2]+' '+st[0]+'</span><small>عدد الطلبات: '+items.length+'</small></div><b>'+money(amount)+'</b></div>'}).join('')}
+function invoiceEarnedBadge(o){return o&&o.status==='delivered'?'<span class="badge b-ok">تم الاستحقاق ✓</span>':''}
+function render(){const q=($('search').value||'').trim().toLowerCase(),invoiceFilter=$('invoiceFilter').value,statusFilter=$('statusFilter').value;let rows=orders.slice();if(invoiceFilter!=='all')rows=rows.filter(o=>invoiceFilter==='with'?!!getInv(o):!getInv(o));if(statusFilter!=='all')rows=rows.filter(o=>(o.status||'pending')===statusFilter);if(q)rows=rows.filter(o=>[orderNum(o),o.customer_name,o.customer_phone,o.customer_email].some(v=>String(v||'').toLowerCase().includes(q)));$('count').textContent='عدد الطلبات: '+rows.length;renderStats();$('orders').innerHTML=rows.map(o=>{const inv=getInv(o),st=STATUS[o.status||'pending']||STATUS.pending,opts=Object.keys(STATUS).map(k=>'<option value="'+k+'" '+(k===(o.status||'pending')?'selected':'')+'>'+STATUS[k][0]+'</option>').join('');return '<div class="row"><div class="info"><div class="badges-line"><b>#'+esc(orderNum(o))+'</b> <span class="badge '+(inv?'b-ok':'b-warn')+'">'+(inv?'فاتورة محفوظة':'بدون فاتورة')+'</span> <span class="badge '+st[1]+'">'+st[0]+'</span> '+invoiceEarnedBadge(o)+'</div><div>'+esc(o.customer_name||'بدون اسم')+' <span class="muted">· '+esc(o.customer_phone||'')+'</span></div><div class="muted">الإجمالي: '+money(o.total)+' · المطلوب: '+(inv?money(inv.due):'لم تنشأ')+'</div></div><div class="actions"><select onchange="updateStatus(\''+esc(o.id)+'\',this.value)">'+opts+'</select><button class="btn-gold" onclick="pick(\''+esc(o.id)+'\')">إنشاء فاتورة</button></div></div>'}).join('')||'<div class="empty-state">لا توجد طلبات مطابقة</div>'}
+function pick(id){selected=orders.find(o=>String(o.id)===String(id));if(!selected)return;const inv=getInv(selected)||{};$('emptyPick').classList.add('hide');$('builder').classList.remove('hide');$('invOrder').value=orderNum(selected);$('invCustomer').value=selected.customer_name||'';$('invPhone').value=selected.customer_phone||'';$('invTotal').value=Number(inv.total||selected.total||0).toFixed(2);$('invType').value=inv.type||'deposit25';$('invNote').value=inv.note||CONFIG.invoiceNote;recalc()}
+function recalc(){const total=Number($('invTotal').value)||0,type=$('invType').value,ratio=type==='deposit25'?.25:type==='deposit50'?.5:1;$('invDue').value=(total*ratio).toFixed(2);preview()}
+function payload(){if(!selected)return null;const labels={deposit25:'عربون 25%',deposit50:'عربون 50%',full:'المبلغ كامل'},total=Number($('invTotal').value)||0,due=Number($('invDue').value)||0;return{version:1,orderId:String(selected.id),orderNumber:orderNum(selected),customer:$('invCustomer').value,phone:$('invPhone').value,total,due,remaining:Math.max(0,total-due),type:$('invType').value,typeLabel:labels[$('invType').value],note:$('invNote').value.trim()||CONFIG.invoiceNote,link:invoiceLink(selected),bank:CONFIG.bank,createdAt:new Date().toISOString()}}
+function paymentHint(inv){if(inv.type==='full')return 'المبلغ كامل: العميل يدفع كامل قيمة الطلب الآن، والمتبقي بعد التسليم '+money(0)+'.';return inv.typeLabel+': المطلوب الآن هو '+money(inv.due)+'، والمتبقي بعد التسليم '+money(remaining(inv))+'.'}
+function preview(){const inv=payload();if(!inv)return;const bankRows=[['اسم المصرف',CONFIG.bank.bank],['اسم صاحب الحساب',CONFIG.bank.beneficiary],['رقم الحساب',CONFIG.bank.account],['رقم الآيبان',CONFIG.bank.iban],['السويفت',CONFIG.bank.swift],['العملة',CONFIG.bank.currency],['سبب التحويل','Order '+inv.orderNumber]].map(([label,value])=>'<div><span>'+esc(label)+'</span><b>'+esc(value)+'</b><button class="btn-ghost copy" onclick="copyText(\''+esc(value)+'\')">نسخ</button></div>').join('');$('preview').innerHTML='<section class="invoice-card"><div class="invoice-head"><div><div class="invoice-title">فاتورة طلب #'+esc(inv.orderNumber)+'</div><div class="invoice-sub">'+esc(inv.customer||'بدون اسم')+' · '+esc(inv.phone||'بدون هاتف')+'</div></div><span class="badge b-ok">'+esc(inv.typeLabel)+'</span></div><div class="invoice-summary"><div class="metric"><span>إجمالي الطلب</span><b>'+money(inv.total)+'</b></div><div class="metric"><span>المطلوب الآن</span><b>'+money(inv.due)+'</b></div><div class="metric"><span>المتبقي بعد التسليم</span><b>'+money(remaining(inv))+'</b></div></div><div class="payment-note">'+esc(paymentHint(inv))+'<br>'+esc(inv.note)+'</div><div class="bank">'+bankRows+'</div><div class="invoice-link"><a href="'+esc(inv.link)+'" target="_blank">'+esc(inv.link)+'</a></div></section>'}
+function copyText(value){navigator.clipboard.writeText(value).then(()=>toast('تم النسخ'))}
+async function saveInvoice(){const inv=payload();if(!inv)return null;const base=splitNotes(selected.notes).base;selected.notes=(base?base+'\n':'')+CONFIG.invoiceMark+JSON.stringify(inv);selected.invoice=inv;await api('orders?id=eq.'+encodeURIComponent(selected.id),{method:'PATCH',body:JSON.stringify({notes:selected.notes})});const idx=orders.findIndex(o=>String(o.id)===String(selected.id));if(idx>=0)orders[idx]=selected;render();toast('تم حفظ الفاتورة');return inv}
+function invoiceText(inv){return 'مرحباً '+(inv.customer||'')+'\nتم تجهيز فاتورة طلبك رقم '+inv.orderNumber+'\nإجمالي الطلب: '+money(inv.total)+'\nالعربون / المطلوب الآن: '+money(inv.due)+'\nالمتبقي بعد التسليم: '+money(remaining(inv))+'\nنوع الدفع: '+inv.typeLabel+'\n\nرابط الفاتورة:\n'+inv.link+'\n\nبرجاء إرسال إيصال الدفع في واتساب بعد التحويل.'}
+async function sendWhatsApp(){const inv=await saveInvoice();if(!inv)return;const p=normPhone(inv.phone);if(!p)return alert('لا يوجد رقم هاتف صحيح');open('https://wa.me/'+p+'?text='+encodeURIComponent(invoiceText(inv)),'_blank','noopener')}
+function copyLink(){const inv=payload();if(inv)navigator.clipboard.writeText(inv.link).then(()=>toast('تم نسخ الرابط'))}
+async function updateStatus(id,status){const o=orders.find(x=>String(x.id)===String(id));if(!o)return;const old=o.status,oldCashback=o.cashback_status;o.status=status;if(status==='delivered')o.cashback_status='earned';else if(o.cashback_status==='earned')o.cashback_status='pending';render();try{const update={status,cashback_status:status==='delivered'?'earned':'pending'};await api('orders?id=eq.'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify(update)});o.cashback_status=update.cashback_status;sendStatusPush(o,status).catch(()=>{});toast('تم تحديث الحالة');render()}catch(e){o.status=old;o.cashback_status=oldCashback;render();alert('فشل تحديث الحالة: '+e.message)}}
+async function sendStatusPush(o,status){const st=STATUS[status]||STATUS.pending,phone=normPhone(o.customer_phone),email=String(o.customer_email||'').trim().toLowerCase();if(!phone&&!email)return;const body={title:st[2]+' '+st[0],body:'تم تحديث حالة طلبك رقم '+orderNum(o)+' إلى '+st[0],url:'/account.html?section=orders',type:'order_status',status:status,orderId:orderNum(o),iconText:st[2],emoji:st[2]};if(phone)body.user_phone='+'+phone;if(email)body.user_email=email;await fetch(CONFIG.supabaseUrl+'/functions/v1/hyper-api',{method:'POST',headers:{'Content-Type':'application/json',apikey:CONFIG.anon,Authorization:'Bearer '+(token||CONFIG.anon)},body:JSON.stringify(body)})}
+function updateInstallButton(){const btn=$('installAppBtn');if(!btn)return;const standalone=window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches;if(standalone){btn.classList.add('hide');return}if(deferredInstallPrompt)btn.classList.remove('hide');else btn.classList.add('hide')}
+async function installSalesApp(){if(!deferredInstallPrompt){toast('لو زر التثبيت غير ظاهر في المتصفح استخدم قائمة Chrome/Edge ثم تثبيت التطبيق');return}deferredInstallPrompt.prompt();const result=await deferredInstallPrompt.userChoice.catch(()=>null);deferredInstallPrompt=null;updateInstallButton();toast(result&&result.outcome==='accepted'?'تم بدء تثبيت التطبيق':'لم يتم تثبيت التطبيق')}
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;updateInstallButton()});
+window.addEventListener('appinstalled',()=>{deferredInstallPrompt=null;updateInstallButton();toast('تم تثبيت التطبيق')});
+renderStatusFilter();
+updateInstallButton();
+if(token){showApp();loadOrders()}
+</script>
+</body>
+</html>

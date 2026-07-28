@@ -1,0 +1,32 @@
+{
+  "name": "فواتير المبيعات - Bariq",
+  "short_name": "فواتير المبيعات",
+  "description": "تطبيق فواتير المبيعات لتحديث الطلبات وإرسال فواتير Bariq",
+  "start_url": "/sales-invoices.html",
+  "scope": "/",
+  "id": "https://bariqgifts.com/sales-invoices",
+  "display": "standalone",
+  "background_color": "#f5f7fb",
+  "theme_color": "#152546",
+  "orientation": "portrait-primary",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "/assets/icon-96.png?v=sales-app-20260729",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/icon.png?v=sales-app-20260729",
+      "sizes": "202x202",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "shopping"],
+  "prefer_related_applications": false,
+  "display_override": ["standalone", "minimal-ui"],
+  "screenshots": []
+}

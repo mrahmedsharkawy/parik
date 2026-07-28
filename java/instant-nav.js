@@ -5,22 +5,11 @@
   var conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
   if (conn && (conn.saveData || /2g/.test(String(conn.effectiveType || "")))) return;
 
-  var ROUTES = [
-    "/",
-    "/categories",
-    "/offers",
-    "/Cart",
-    "/account",
-    "/checkout",
-    "/affiliate",
-    "/policy"
-  ];
-
   var queued = [];
   var inFlight = 0;
-  var maxInFlight = 3;
+  var maxInFlight = 1;
   var seen = new Set();
-  var maxSeen = 60;
+  var maxSeen = 20;
 
   function normalizePath(href) {
     try {
@@ -53,38 +42,6 @@
     } catch (e) {}
   }
 
-  function addPrerenderLink(path) {
-    try {
-      if (document.head.querySelector('link[rel="prerender"][href="' + path + '"]')) return;
-      var link = document.createElement("link");
-      link.rel = "prerender";
-      link.href = path;
-      document.head.appendChild(link);
-    } catch (e) {}
-  }
-
-  function addSpeculationRules(paths) {
-    try {
-      if (!paths.length || document.getElementById("x2-categories-speculation")) return;
-      var script = document.createElement("script");
-      script.id = "x2-categories-speculation";
-      script.type = "speculationrules";
-      script.textContent = JSON.stringify({
-        prerender: [{ source: "list", urls: paths, eagerness: "immediate" }],
-        prefetch: [{ source: "list", urls: paths, eagerness: "immediate" }]
-      });
-      document.head.appendChild(script);
-    } catch (e) {}
-  }
-
-  function primeCategoriesPage() {
-    var path = normalizePath("/categories");
-    if (!path || path === normalizePath(location.href)) return;
-    addPrefetchLink(path);
-    addPrerenderLink(path);
-    addSpeculationRules([path]);
-  }
-
   function doWarm(path) {
     addPrefetchLink(path);
     try {
@@ -92,12 +49,7 @@
         navigator.serviceWorker.controller.postMessage({ type: "WARM_ROUTES", urls: [path] });
       }
     } catch (e) {}
-    return fetch(path, {
-      method: "GET",
-      credentials: "same-origin",
-      cache: "reload",
-      priority: "low"
-    }).catch(function () {});
+    return Promise.resolve();
   }
 
   function pumpQueue() {
@@ -120,24 +72,6 @@
     pumpQueue();
   }
 
-  function warmVisibleLinks() {
-    var anchors = document.querySelectorAll("a[href]");
-    var count = 0;
-    for (var i = 0; i < anchors.length && count < 16; i++) {
-      var a = anchors[i];
-      if (!a || !a.href) continue;
-      if (a.closest && a.closest(".mobile-nav, .site-footer, .header-content, .acc-nav-grid")) {
-        queueWarm(a.href);
-        count++;
-      }
-    }
-  }
-
-  function bootWarmup() {
-    for (var i = 0; i < ROUTES.length; i++) queueWarm(ROUTES[i]);
-    warmVisibleLinks();
-  }
-
   function onIntent(event) {
     var target = event.target;
     if (!target || !target.closest) return;
@@ -151,11 +85,4 @@
   document.addEventListener("touchstart", onIntent, { passive: true, capture: true });
   document.addEventListener("focusin", onIntent, { passive: true, capture: true });
 
-  primeCategoriesPage();
-
-  window.addEventListener("load", function () {
-    var run = function () { setTimeout(bootWarmup, 1200); };
-    if ("requestIdleCallback" in window) requestIdleCallback(run, { timeout: 2500 });
-    else setTimeout(bootWarmup, 1800);
-  }, { once: true });
 })();

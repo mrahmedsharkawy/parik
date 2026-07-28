@@ -1251,6 +1251,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div class="acc-nav-item" onclick="showSection('history')"><span class="ico">❤️</span> <span data-i18n="منتجات في اهتمامك">منتجات في اهتمامك</span></div>
       <div class="acc-nav-item" onclick="showSection('settings')"><span class="ico">📍</span> <span data-i18n="عنواني">عنواني</span></div>
       <div class="acc-nav-item" onclick="showSection('payment')"><span class="ico">💰</span> <span data-i18n="طرق الدفع">طرق الدفع</span></div>
+      <div class="acc-nav-item" onclick="showSection('invoices')"><span class="ico">🧾</span> <span>الفواتير</span></div>
       <div class="acc-nav-item" onclick="showSection('support')"><span class="ico">🤖</span> <span data-i18n="الخدمة الذاتية">الخدمة الذاتية</span></div>
       <div class="acc-nav-item" onclick="showSection('notifications')"><span class="ico">🔔</span> <span data-i18n="الإشعارات">الإشعارات</span></div>
 
@@ -1520,6 +1521,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </div>
     </div>
 
+    <div id="section-invoices" style="display:none">
+      <div class="acc-profile-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+          <div>
+            <h3 style="font-size:1.08rem;font-weight:900;color:#152546;margin:0 0 4px">🧾 فواتيري</h3>
+            <div style="font-size:.78rem;color:#8b93a4">افتح الفاتورة لعرض بيانات التحويل ونسخ كل بند منفرداً.</div>
+          </div>
+          <button onclick="refreshAccountInvoices()" style="border:1px solid #dfe4ef;background:#fff;color:#152546;border-radius:9px;padding:8px 12px;font-size:.78rem;font-weight:800;cursor:pointer">تحديث</button>
+        </div>
+        <div id="accountInvoicesList" style="display:grid;gap:12px"></div>
+      </div>
+    </div>
+
     <div id="section-payment" style="display:none">
       <div class="acc-profile-card">
         <h3 style="font-size:1rem;font-weight:800;color:#152546;margin-bottom:16px">💳 <span data-i18n="طرق الدفع">طرق الدفع</span></h3>
@@ -1549,10 +1563,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <div class="pm-icons" style="font-size:1.8rem">🏦</div>
           <div class="pm-info">
             <div class="pm-title" data-i18n="تحويل بنكي">تحويل بنكي</div>
-            <div class="pm-sub" data-i18n="البنك: بنك الإمارات">البنك: بنك الإمارات</div>
+            <div class="pm-sub">البنك: ADIB</div>
             <div style="margin-top:6px;background:#f8f9fc;border-radius:8px;padding:8px 10px;font-size:0.75rem;color:#333;">
-              📌 <span data-i18n="رقم الحساب:">رقم الحساب:</span> <strong>AE07 0331 2345 6789 0123 456</strong><br>
-              🏦 <span data-i18n="اسم البنك: بنك الإمارات، الإمارات">اسم البنك: بنك الإمارات، الإمارات</span><br>
+              📌 <span data-i18n="رقم الحساب:">رقم الحساب:</span> <strong>28859428</strong><br>
+              🏦 اسم المصرف: ADIB<br>
+              👤 اسم صاحب الحساب: AHMED SHARKAWI GHANDOUR SHEHATA SHARKAWI<br>
+              📌 رقم الآيبان: <strong>AE100500000000028859428</strong><br>
+              🌐 السويفت: <strong>ABDIAEADXXX</strong><br>
               <span style="color:#9aa3b2;font-size:0.68rem" data-i18n="بعد التحويل أرسل إيصال الدفع عبر واتساب">بعد التحويل أرسل إيصال الدفع عبر واتساب</span>
             </div>
           </div>
@@ -1643,6 +1660,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   const PAGE_SIZE   = 10;
   let isRenderingOrders = false;
   let offersLoaded = false;
+  const INVOICE_MARK = '\n[BARIQ_INVOICE]';
+  const INVOICE_DEFAULT_NOTE = 'برجاء إرسال إيصال الدفع في واتساب بعد التحويل.';
+  const BANK_INFO = {
+    beneficiary: 'AHMED SHARKAWI GHANDOUR SHEHATA SHARKAWI',
+    bank: 'ADIB',
+    iban: 'AE100500000000028859428',
+    account: '28859428',
+    swift: 'ABDIAEADXXX',
+    currency: 'AED',
+    whatsapp: '971554423151'
+  };
   const ACC_EN = (localStorage.getItem('lang') || document.documentElement.lang || 'ar') === 'en';
   const accText = (ar, en) => ACC_EN ? en : ar;
   const accDate = value => new Date(value).toLocaleDateString(ACC_EN ? 'en-US' : 'ar-AE', { year:'numeric', month:'short', day:'numeric' });
@@ -1875,6 +1903,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       }
 
       function remoteOrderToLocal(r) {
+        const parsedInvoice = getInvoiceFromNotes(r.notes || '');
         return {
           id: String(r.order_number || r.id || ''),
           date: r.created_at || r.updated_at || new Date().toISOString(),
@@ -1884,6 +1913,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           cashback: parseFloat(r.cashback) || 5,
           cashbackStatus: r.cashback_status || 'pending',
           cashbackExpiresAt: r.cashback_expires_at || '',
+          notes: r.notes || '',
+          invoice: parsedInvoice,
           shipping: r.address || {},
           _synced: true
         };
@@ -1904,6 +1935,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const lo = local[idx];
         if (r.status && lo.status !== r.status) {
           lo.status = r.status;
+          changed = true;
+        }
+        if (r.notes && lo.notes !== r.notes) {
+          lo.notes = r.notes;
+          lo.invoice = getInvoiceFromNotes(r.notes);
           changed = true;
         }
         // إضافة الكاش باك للرصيد مرة واحدة فقط عند اعتماده من الأدمن
@@ -2006,6 +2042,166 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     } catch(e) { _prodsCache = {}; }
     return _prodsCache;
   }
+
+  function getInvoiceFromNotes(notes) {
+    const raw = String(notes || '');
+    const idx = raw.indexOf(INVOICE_MARK);
+    if (idx === -1) return null;
+    try { return JSON.parse(raw.slice(idx + INVOICE_MARK.length).trim()); } catch(e) { return null; }
+  }
+  function getOrderInvoice(order) {
+    return order && (order.invoice || getInvoiceFromNotes(order.notes));
+  }
+  function invoiceEarnedBadge(order) {
+    const earned = order && order.status === 'delivered';
+    return earned ? '<span style="background:#e7f7ee;color:#137744;border-radius:999px;padding:4px 8px;font-size:.72rem;font-weight:900">تم الاستحقاق ✓</span>' : '';
+  }
+  function invoiceMoney(value) {
+    return (Math.round((Number(value)||0)*100)/100).toLocaleString('en-US') + ' ' + BANK_INFO.currency;
+  }
+  function invoiceRemaining(inv) {
+    if (!inv) return 0;
+    if (inv.remaining != null) return Math.max(0, Number(inv.remaining) || 0);
+    return Math.max(0, (Number(inv.total) || 0) - (Number(inv.due) || 0));
+  }
+  function invoiceCopyText(inv) {
+    return [
+      `رقم الطلب: ${inv.orderNumber}`,
+      `إجمالي الطلب: ${invoiceMoney(inv.total)}`,
+      `المبلغ المطلوب: ${invoiceMoney(inv.due)}`,
+      `المتبقي بعد التسليم: ${invoiceMoney(invoiceRemaining(inv))}`,
+      `نوع الدفع: ${inv.typeLabel || ''}`,
+      `اسم المصرف: ${BANK_INFO.bank}`,
+      `اسم صاحب الحساب: ${BANK_INFO.beneficiary}`,
+      `رقم الحساب: ${BANK_INFO.account}`,
+      `رقم الآيبان: ${BANK_INFO.iban}`,
+      `السويفت: ${BANK_INFO.swift}`,
+      `العملة: ${BANK_INFO.currency}`,
+      `سبب التحويل: Order ${inv.orderNumber}`,
+      INVOICE_DEFAULT_NOTE
+    ].join('\n');
+  }
+  function invoiceFileName(inv) {
+    return 'bariq-invoice-' + String((inv && inv.orderNumber) || 'order').replace(/[^\w-]+/g, '-') + '.html';
+  }
+  async function invoiceLogoSrc() {
+    try {
+      const res = await fetch('/assets/logo.png', { cache: 'force-cache' });
+      const blob = await res.blob();
+      return await new Promise(resolve => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => resolve('https://bariqgifts.com/assets/logo.png');
+        reader.readAsDataURL(blob);
+      });
+    } catch(e) { return 'https://bariqgifts.com/assets/logo.png'; }
+  }
+  function invoiceStandaloneHtml(inv, order, logoSrc) {
+    const items = (order.items || []).map(i => `<tr><td>${escapeHtml(i.title || i.name || 'منتج')}</td><td>${Number(i.qty)||1}</td></tr>`).join('') || '<tr><td>تفاصيل الطلب</td><td>1</td></tr>';
+    const bankRows = [
+      ['اسم المصرف', BANK_INFO.bank],
+      ['اسم صاحب الحساب', BANK_INFO.beneficiary],
+      ['رقم الحساب', BANK_INFO.account],
+      ['رقم الآيبان', BANK_INFO.iban],
+      ['السويفت', BANK_INFO.swift],
+      ['العملة', BANK_INFO.currency],
+      ['سبب التحويل', 'Order ' + inv.orderNumber]
+    ].map(([label, value]) => `<div class="bank-row"><span>${escapeHtml(label)}</span><b dir="ltr">${escapeHtml(value)}</b></div>`).join('');
+    return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>فاتورة طلب ${escapeHtml(inv.orderNumber)}</title><style>body{margin:0;background:#f5f7fb;color:#152546;font-family:Tahoma,Arial,sans-serif}.page{max-width:760px;margin:24px auto;padding:16px}.invoice{background:#fff;border:1px solid #e5e9f2;border-radius:18px;overflow:hidden;box-shadow:0 14px 38px rgba(21,37,70,.12)}.head{background:linear-gradient(135deg,#fff,#fbf4dc);padding:22px;display:flex;gap:14px;align-items:center;border-bottom:1px solid #ece4c7}.logo{width:74px;height:74px;object-fit:contain;background:#fff;border:1px solid #eee;border-radius:14px}.title{font-size:1.3rem;font-weight:900;margin-bottom:6px}.muted{color:#7a8296;font-size:.9rem}.body{padding:22px}.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}.sum{background:#f8f9fc;border:1px solid #e7eaf2;border-radius:12px;padding:12px}.sum span{display:block;color:#7a8296;font-size:.78rem;margin-bottom:5px}.sum b{font-size:1.05rem}table{width:100%;border-collapse:collapse;margin:12px 0}td,th{border-bottom:1px solid #edf0f6;padding:10px;text-align:right}.note{background:#fff8e1;border:1px solid #f1d27a;color:#6b5200;border-radius:12px;padding:12px;font-weight:800;margin:14px 0}.bank{display:grid;gap:9px;background:#f8f9fc;border:1px solid #e7eaf2;border-radius:14px;padding:12px}.bank-row{display:flex;justify-content:space-between;gap:14px;background:#fff;border:1px solid #edf0f6;border-radius:10px;padding:10px}.bank-row span{color:#7a8296}.footer{padding:14px 22px;color:#8b93a4;font-size:.82rem;border-top:1px solid #edf0f6}@media(max-width:640px){.summary{grid-template-columns:1fr}.head{align-items:flex-start}.page{padding:8px;margin:8px auto}}</style></head><body><div class="page"><section class="invoice"><div class="head"><img class="logo" src="${escapeHtml(logoSrc || 'https://bariqgifts.com/assets/logo.png')}" alt="Bariq"><div><div class="title">فاتورة طلب ${escapeHtml(inv.orderNumber)}</div><div class="muted">${escapeHtml(inv.customer || '')}${inv.phone ? ' · ' + escapeHtml(inv.phone) : ''}</div></div></div><div class="body"><div class="summary"><div class="sum"><span>إجمالي الطلب</span><b>${invoiceMoney(inv.total)}</b></div><div class="sum"><span>العربون / المطلوب الآن</span><b>${invoiceMoney(inv.due)}</b></div><div class="sum"><span>المتبقي بعد التسليم</span><b>${invoiceMoney(invoiceRemaining(inv))}</b></div></div><table><thead><tr><th>المنتج</th><th>الكمية</th></tr></thead><tbody>${items}</tbody></table><div>نوع الدفع: <b>${escapeHtml(inv.typeLabel || '')}</b></div><div class="note">${escapeHtml(inv.note || INVOICE_DEFAULT_NOTE)}</div><h3>بيانات التحويل</h3><div class="bank">${bankRows}</div></div><div class="footer">Bariq Gifts - هذه الفاتورة محفوظة كملف مستقل ويمكن فتحها مباشرة في المتصفح.</div></section></div></body></html>`;
+  }
+  async function downloadInvoiceHtml(inv, order) {
+    const blob = new Blob([invoiceStandaloneHtml(inv, order, await invoiceLogoSrc())], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = invoiceFileName(inv);
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+  window.downloadInvoiceFile = async function(orderId) {
+    const order = getOrders().find(o => String(o.id) === String(orderId));
+    const inv = getOrderInvoice(order);
+    if (!order || !inv) return;
+    await downloadInvoiceHtml(inv, order);
+  };
+  function copyTextValue(value, label) {
+    const text = String(value || '');
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => alert('تم نسخ ' + label)).catch(() => alert(text));
+  }
+  window.copyInvoiceField = function(value, label) { copyTextValue(value, label || 'البيان'); };
+  window.copyInvoicePayment = function(orderId) {
+    const order = getOrders().find(o => String(o.id) === String(orderId));
+    const inv = getOrderInvoice(order);
+    if (!inv) return;
+    navigator.clipboard.writeText(invoiceCopyText(inv)).then(() => alert('تم نسخ بيانات التحويل')).catch(() => alert(invoiceCopyText(inv)));
+  };
+  window.sendInvoiceProof = function(orderId) {
+    const order = getOrders().find(o => String(o.id) === String(orderId));
+    const inv = getOrderInvoice(order);
+    if (!inv) return;
+    const text = `مرحباً، أرسلت إيصال الدفع في واتساب\nرقم الطلب: ${inv.orderNumber}\nالمبلغ: ${invoiceMoney(inv.due)}\nالاسم: ${inv.customer || ''}`;
+    window.open('https://wa.me/' + BANK_INFO.whatsapp + '?text=' + encodeURIComponent(text), '_blank', 'noopener');
+  };
+  function renderAccountInvoices() {
+    const box = document.getElementById('accountInvoicesList');
+    if (!box) return;
+    const invoices = getOrders().map(order => ({ order, invoice: getOrderInvoice(order) })).filter(x => x.invoice);
+    if (!invoices.length) {
+      box.innerHTML = `<div style="color:#8b93a4;font-size:.82rem;text-align:center;padding:12px">لا توجد فواتير محفوظة حتى الآن.</div>`;
+      return;
+    }
+    const params = new URLSearchParams(location.search);
+    const focus = params.get('order') || params.get('invoice');
+    box.innerHTML = invoices.map(({ order, invoice }) => {
+      const active = focus && String(invoice.orderNumber) === String(focus);
+      const items = (order.items || []).map(i => `${i.title || i.name || 'منتج'} × ${Number(i.qty)||1}`).join('، ');
+      const safeOrder = String(invoice.orderNumber || order.id || '').replace(/[^\w-]/g,'');
+      const bankRows = [
+        ['اسم المصرف', BANK_INFO.bank],
+        ['اسم صاحب الحساب', BANK_INFO.beneficiary],
+        ['رقم الحساب', BANK_INFO.account],
+        ['رقم الآيبان', BANK_INFO.iban],
+        ['السويفت', BANK_INFO.swift],
+        ['العملة', BANK_INFO.currency]
+      ];
+      return `<details id="invoice-${safeOrder}" ${active ? 'open' : ''} style="background:#fff;border:${active?'2px solid #d4af37':'1px solid #e4e8f0'};border-radius:14px;overflow:hidden;box-shadow:0 8px 22px rgba(21,37,70,.08)">
+        <summary style="list-style:none;cursor:pointer;padding:14px;background:linear-gradient(135deg,#fff,#fbf7ea);display:flex;align-items:center;gap:12px">
+          <img src="/assets/logo.png" alt="Bariq" style="width:48px;height:48px;object-fit:contain;border-radius:10px;background:#fff;border:1px solid #eee">
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:950;color:#152546;font-size:.98rem">فاتورة طلب ${invoice.orderNumber}</div>
+            <div style="font-size:.74rem;color:#8b93a4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${invoice.customer || ''} ${invoice.phone ? ' · ' + invoice.phone : ''}</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:7px;font-size:.72rem;font-weight:900">
+              <span style="background:#eef3fb;color:#152546;border-radius:999px;padding:4px 8px">الإجمالي ${invoiceMoney(invoice.total)}</span>
+              <span style="background:#fff4cc;color:#8A6500;border-radius:999px;padding:4px 8px">العربون ${invoiceMoney(invoice.due)}</span>
+              ${invoiceEarnedBadge(order)}
+            </div>
+          </div>
+          <span style="color:#8b93a4;font-size:1.2rem">⌄</span>
+        </summary>
+        <div style="padding:14px;font-size:.84rem;color:#30384a;line-height:1.9">
+          ${items ? `<div>🛒 ${items}</div>` : ''}
+          <div>إجمالي الطلب: <b>${invoiceMoney(invoice.total)}</b></div>
+          <div>العربون / المطلوب الآن: <b style="color:#8A6500">${invoiceMoney(invoice.due)}</b> <span style="color:#8b93a4">(${invoice.typeLabel || ''})</span></div>
+          <div>المتبقي بعد التسليم: <b>${invoiceMoney(invoiceRemaining(invoice))}</b></div>
+          <div style="background:#fff8e1;border:1px solid #f1d27a;color:#6b5200;border-radius:10px;padding:9px 10px;margin:9px 0;font-weight:800">${invoice.note || INVOICE_DEFAULT_NOTE}</div>
+          <div style="margin-top:10px;background:#f8f9fc;border:1px solid #e7eaf2;border-radius:12px;padding:10px;display:grid;gap:8px">
+            ${bankRows.map(([label, value]) => `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid #edf0f6;border-radius:9px;padding:8px 9px"><span style="color:#7a8296">${label}</span><b dir="ltr" style="color:#152546;text-align:left;word-break:break-word">${value}</b><button onclick="copyInvoiceField('${String(value).replace(/'/g,'&#39;')}', '${label}')" style="border:none;background:#152546;color:#fff;border-radius:7px;padding:6px 9px;font-size:.72rem;font-weight:800;cursor:pointer;flex:0 0 auto">نسخ</button></div>`).join('')}
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid #edf0f6;border-radius:9px;padding:8px 9px"><span style="color:#7a8296">سبب التحويل</span><b dir="ltr" style="color:#152546">Order ${invoice.orderNumber}</b><button onclick="copyInvoiceField('Order ${String(invoice.orderNumber).replace(/'/g,'&#39;')}', 'سبب التحويل')" style="border:none;background:#152546;color:#fff;border-radius:7px;padding:6px 9px;font-size:.72rem;font-weight:800;cursor:pointer">نسخ</button></div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+            <button onclick="copyInvoicePayment('${order.id}')" style="border:none;background:#152546;color:#fff;border-radius:9px;padding:8px 12px;font-size:.78rem;font-weight:800;cursor:pointer">نسخ بيانات التحويل</button>
+            <button onclick="sendInvoiceProof('${order.id}')" style="border:none;background:#25D366;color:#fff;border-radius:9px;padding:8px 12px;font-size:.78rem;font-weight:800;cursor:pointer">إرسال إثبات الدفع واتساب</button>
+          </div>
+        </div>
+      </details>`;
+    }).join('');
+  }
+  window.refreshAccountInvoices = function() {
+    syncOrdersFromSupabase().then(() => { renderAccountInvoices(); renderOrders(); });
+  };
 
   function getFilteredOrders() {
     const orders = getOrders();
@@ -2155,7 +2351,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     if (qmap[section]) { const qel = document.getElementById(qmap[section]); if (qel) qel.classList.add('active'); }
 
     if (section === 'address') section = 'settings';
-    const sections = ['orders','profile','notifications','offers','support','payment','settings','history','credit','reviews'];
+    const sections = ['orders','profile','notifications','offers','support','payment','invoices','settings','history','credit','reviews'];
     if (sections.includes(section)) {
       document.getElementById('section-' + section).style.display = '';
     } else {
@@ -2167,6 +2363,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
 
     if (section === 'reviews') renderReviews();
+    if (section === 'invoices') renderAccountInvoices();
 
     if (section === 'support' && !window._scInited) {
       window._scInited = true;
@@ -3437,12 +3634,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   // فتح قسم مباشر لو جاي من رابط خارجي
   (function() {
-    const goto = localStorage.getItem('x2_goto_section') || new URLSearchParams(location.search).get('section');
+    const params = new URLSearchParams(location.search);
+    let goto = localStorage.getItem('x2_goto_section') || params.get('section');
+    if (goto === 'payment' && params.get('invoice')) goto = 'invoices';
     if (goto) {
       localStorage.removeItem('x2_goto_section');
       setTimeout(() => {
         if (typeof showSection === 'function') showSection(goto);
-        if (goto === 'profile' && new URLSearchParams(location.search).get('complete') === '1') {
+        if (goto === 'profile' && params.get('complete') === '1') {
           const note = document.getElementById('profile-complete-note');
           if (note) note.style.display = 'block';
           const phone = document.getElementById('pf-phone');
@@ -3701,8 +3900,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </footer>
 <script src="/java/supabase.min.js?v=supabase-20260725a" defer></script>
 <script src="/java/main.min.js?v=139" defer></script>
-<script src="/java/sw-refresh.js?v=sw-refresh-20260728d" defer></script>
-<script src="/java/instant-nav.js?v=instant-nav-20260728d" defer></script>
+<script src="/java/sw-refresh.js?v=sw-refresh-20260728q" defer></script>
+<script src="/java/instant-nav.js?v=instant-nav-20260728e" defer></script>
 <script src="/translations/translation.min.js?v=translation-20260726c" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
 <script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260728e" defer></script>

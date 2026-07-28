@@ -1,5 +1,5 @@
 /* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v224';
+const CACHE = 'bariq-v238';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -11,6 +11,9 @@ const STATIC_URLS = [
   '/Cart.html',
   '/account',
   '/account.html',
+  '/sales-invoices',
+  '/sales-invoices.html',
+  '/sales-invoices-manifest.json',
   '/login',
   '/login.html',
   '/offers',

@@ -227,6 +227,7 @@
 <div class="tabs">
   <div class="tab active" data-tab="products" onclick="switchTab('products')">🛍️ المنتجات</div>
   <div class="tab" data-tab="orders" onclick="switchTab('orders')">📊 الطلبات</div>
+  <div class="tab" data-tab="invoices" onclick="switchTab('invoices')">🧾 الفواتير</div>
   <div class="tab" data-tab="marketing" onclick="switchTab('marketing')">🎯 التسويق</div>
   <div class="tab" data-tab="external-marketing" onclick="switchTab('external-marketing')">🌍 تسويق خارجي</div>
   <div class="tab" data-tab="reports" onclick="switchTab('reports')">📈 التقارير</div>
@@ -489,6 +490,75 @@
         <div class="pager" id="ordPager"></div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- ============ الفواتير ============ -->
+  <div class="panel" id="panel-invoices">
+    <div class="grid">
+      <div class="card">
+        <h2>🧾 فواتير طلبات واتساب</h2>
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+          <input type="text" id="invSearch" placeholder="بحث باسم العميل أو رقم الطلب أو الهاتف" oninput="renderInvoices()" style="flex:1;min-width:190px">
+          <button class="btn-navy btn-sm" onclick="syncStoreOrders(true).then(renderInvoices)">↻ تحديث الطلبات</button>
+          <button class="btn-gold btn-sm" onclick="openSalesInvoicesPage()">↗ فتح صفحة المبيعات</button>
+          <button class="btn-ghost btn-sm" onclick="downloadSalesInvoicesPage()">⬇ تحميل اختصار الصفحة</button>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+          <select id="invInvoiceFilter" onchange="renderInvoices()" style="flex:1;min-width:150px">
+            <option value="all">كل الفواتير</option>
+            <option value="with">فواتير محفوظة</option>
+            <option value="without">بدون فاتورة</option>
+          </select>
+          <select id="invStatusFilter" onchange="renderInvoices()" style="flex:1;min-width:150px">
+            <option value="all">كل حالات الطلب</option>
+            <option value="pending">قيد الانتظار</option>
+            <option value="processing">قيد المعالجة</option>
+            <option value="confirmed">مؤكد</option>
+            <option value="manufacturing">في مرحلة التصنيع</option>
+            <option value="ready">طلبك جاهز</option>
+            <option value="shipped">تم الشحن</option>
+            <option value="delivered">تم التوصيل</option>
+            <option value="cancelled">ملغى</option>
+            <option value="returned">مرتجع</option>
+          </select>
+        </div>
+        <div class="plist" id="invoiceOrdersList"><div class="empty">اختر تبويب الفواتير لتحميل الطلبات</div></div>
+      </div>
+
+      <div class="card" id="invoiceBuilder">
+        <h2>📄 إنشاء / تعديل فاتورة</h2>
+        <input type="hidden" id="inv-order-id">
+        <div class="row">
+          <div><label>رقم الطلب</label><input type="text" id="inv-order-number" readonly></div>
+          <div><label>اسم العميل</label><input type="text" id="inv-customer" readonly></div>
+        </div>
+        <div class="row">
+          <div><label>هاتف العميل</label><input type="text" id="inv-phone" readonly></div>
+          <div><label>إجمالي الطلب</label><input type="number" id="inv-total" min="0" step="any" oninput="recalcInvoiceDue()"></div>
+        </div>
+        <div class="row">
+          <div>
+            <label>نوع الدفع</label>
+            <select id="inv-type" onchange="recalcInvoiceDue()">
+              <option value="deposit25">عربون 25%</option>
+              <option value="deposit50">عربون 50%</option>
+              <option value="full">المبلغ كامل</option>
+            </select>
+          </div>
+          <div><label>المطلوب دفعه الآن</label><input type="number" id="inv-due" min="0" step="any" readonly></div>
+        </div>
+        <label>تفاصيل الفاتورة / ملاحظات الدفع</label>
+        <textarea id="inv-note" placeholder="برجاء إرسال إيصال الدفع في واتساب بعد التحويل."></textarea>
+        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+          <button class="btn-gold" onclick="saveInvoiceForSelectedOrder()">💾 حفظ الفاتورة</button>
+          <button class="btn-navy" onclick="sendSelectedInvoiceWhatsApp()">💬 إرسال للعميل واتساب</button>
+          <button class="btn-ghost" onclick="copySelectedInvoiceLink()">🔗 نسخ الرابط</button>
+        </div>
+        <div id="invoicePreview" style="margin-top:14px;background:#f8f9fc;border:1px solid var(--line);border-radius:12px;padding:14px;color:#263047;font-size:.86rem">
+          اختر طلبًا من القائمة لإنشاء الفاتورة.
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1390,6 +1460,7 @@ function switchTab(name){
   sessionStorage.setItem('admin_active_tab', name);
   if(name==='comments'){ fillProductSelects(); $('commentList').innerHTML='<div class="empty">جارٍ التحميل...</div>'; loadSbReviews().then(()=>renderComments()); }
   if(name==='orders'){ fillProductSelects(); syncStoreOrders(true); renderStats(); renderOrders(); if(!$('o-date').value) $('o-date').value = isoToLocalInput(new Date().toISOString()); }
+  if(name==='invoices'){ syncStoreOrders(true).then(renderInvoices); }
   if(name==='marketing'){ loadPushSubscribersCount(); }
   if(name==='external-marketing'){ renderExternalMarketing(); }
 }
@@ -2294,6 +2365,7 @@ function remoteOrderToAdminOrder(r) {
 function waitForSupabase(timeout = 5000) {
   return new Promise((resolve) => {
     if (window.Supabase) {
+      ensureOrderAdminHelpers();
       resolve(true);
       return;
     }
@@ -2301,6 +2373,7 @@ function waitForSupabase(timeout = 5000) {
     const check = setInterval(() => {
       if (window.Supabase) {
         clearInterval(check);
+        ensureOrderAdminHelpers();
         resolve(true);
       } else if (Date.now() - start > timeout) {
         clearInterval(check);
@@ -2309,6 +2382,19 @@ function waitForSupabase(timeout = 5000) {
       }
     }, 100);
   });
+}
+function ensureOrderAdminHelpers(){
+  if(!window.Supabase || !window.Supabase.Orders || !window.sbFetch) return;
+  if(typeof window.Supabase.Orders.update !== 'function'){
+    window.Supabase.Orders.update = function(id, data){
+      return window.sbFetch('orders?id=eq.' + encodeURIComponent(id), { method: 'PATCH', prefer: 'return=representation', body: JSON.stringify(data) });
+    };
+  }
+  if(typeof window.Supabase.Orders.remove !== 'function'){
+    window.Supabase.Orders.remove = function(id){
+      return window.sbFetch('orders?id=eq.' + encodeURIComponent(id), { method: 'DELETE', prefer: 'return=minimal' });
+    };
+  }
 }
 
 // جلب الطلبات من Supabase
@@ -2454,6 +2540,7 @@ async function saveOrder(){
             notes: order.notes || null
           };
           if (order.status === 'delivered') updateData.cashback_status = 'earned';
+          else if (order.cashbackStatus === 'earned' || order.cashback_status === 'earned') updateData.cashback_status = 'pending';
           await window.Supabase.Orders.update(order.id, updateData);
         } catch(e) {
           console.error('فشل تحديث الطلب في Supabase:', e);
@@ -2506,9 +2593,8 @@ async function changeOrderStatus(id, status){
     try {
       const updateData = { status };
       // عند التسليم: تفعيل الكاش باك (earned) ليُحسب في حساب العميل عند مزامنته
-      if (status === 'delivered' && o.cashbackStatus !== 'earned') {
-        updateData.cashback_status = 'earned';
-      }
+      if (status === 'delivered') updateData.cashback_status = 'earned';
+      else if (o.cashbackStatus === 'earned' || o.cashback_status === 'earned') updateData.cashback_status = 'pending';
       const result = await window.Supabase.Orders.update(id, updateData);
 
       // Prefer:return=representation يرجع الصفوف المحدَّثة فعلياً؛ لو رجعت فارغة يعني لم يتم تحديث أي صف
@@ -2721,6 +2807,325 @@ function renderPeriod(){
 }
 
 /* ---- عرض الطلبات ---- */
+const INVOICE_MARK = '\n[BARIQ_INVOICE]';
+const INVOICE_DEFAULT_NOTE = 'برجاء إرسال إيصال الدفع في واتساب بعد التحويل.';
+const BANK_INFO = {
+  beneficiary: 'AHMED SHARKAWI GHANDOUR SHEHATA SHARKAWI',
+  bank: 'ADIB',
+  iban: 'AE100500000000028859428',
+  account: '28859428',
+  swift: 'ABDIAEADXXX',
+  currency: 'AED',
+  whatsapp: '971554423151'
+};
+let selectedInvoiceOrder = null;
+
+function splitInvoiceNotes(notes){
+  const raw = String(notes || '');
+  const idx = raw.indexOf(INVOICE_MARK);
+  if(idx === -1) return { base: raw.trim(), invoice: null };
+  const base = raw.slice(0, idx).trim();
+  const json = raw.slice(idx + INVOICE_MARK.length).trim();
+  try { return { base, invoice: JSON.parse(json) }; } catch(e) { return { base: raw.trim(), invoice: null }; }
+}
+function visibleOrderNotes(notes){ return splitInvoiceNotes(notes).base; }
+function getOrderInvoice(order){ return order && order.invoice || splitInvoiceNotes(order && order.notes).invoice; }
+function orderPublicNumber(order){ return order && (order.orderNumber || order.order_number || order.id) || ''; }
+function invoiceLink(order){
+  const number = orderPublicNumber(order);
+  return 'https://bariqgifts.com/account?section=invoices&order=' + encodeURIComponent(number) + '&invoice=' + encodeURIComponent(number);
+}
+function formatMoney(n){ return (Math.round((Number(n)||0)*100)/100).toLocaleString('en-US') + ' ' + BANK_INFO.currency; }
+function invoiceRemaining(inv){ return Math.max(0, (Number(inv && inv.total)||0) - (Number(inv && inv.due)||0)); }
+function buildNotesWithInvoice(order, invoice){
+  const base = visibleOrderNotes(order && order.notes);
+  return (base ? base + '\n' : '') + INVOICE_MARK + JSON.stringify(invoice);
+}
+function recalcInvoiceDue(){
+  const total = Number($('inv-total') && $('inv-total').value) || 0;
+  const type = $('inv-type') && $('inv-type').value || 'deposit25';
+  const ratio = type === 'deposit25' ? .25 : type === 'deposit50' ? .5 : 1;
+  if($('inv-due')) $('inv-due').value = (total * ratio).toFixed(2);
+  renderInvoicePreview();
+}
+function selectInvoiceOrder(id){
+  selectedInvoiceOrder = getOrders().find(o => String(o.id) === String(id));
+  if(!selectedInvoiceOrder) return;
+  const inv = getOrderInvoice(selectedInvoiceOrder) || {};
+  $('inv-order-id').value = selectedInvoiceOrder.id || '';
+  $('inv-order-number').value = orderPublicNumber(selectedInvoiceOrder);
+  $('inv-customer').value = selectedInvoiceOrder.customer || '';
+  $('inv-phone').value = selectedInvoiceOrder.phone || '';
+  $('inv-total').value = Number(inv.total || selectedInvoiceOrder.total || 0).toFixed(2);
+  $('inv-type').value = inv.type || 'deposit25';
+  $('inv-note').value = inv.note || INVOICE_DEFAULT_NOTE;
+  recalcInvoiceDue();
+}
+function currentInvoicePayload(){
+  if(!selectedInvoiceOrder) return null;
+  const total = Number($('inv-total').value) || 0;
+  const type = $('inv-type').value;
+  const due = Number($('inv-due').value) || 0;
+  const labels = { deposit25: 'عربون 25%', deposit50: 'عربون 50%', full: 'المبلغ كامل' };
+  return {
+    version: 1,
+    orderId: String(selectedInvoiceOrder.id || ''),
+    orderNumber: orderPublicNumber(selectedInvoiceOrder),
+    customer: $('inv-customer').value || selectedInvoiceOrder.customer || '',
+    phone: $('inv-phone').value || selectedInvoiceOrder.phone || '',
+    total,
+    due,
+    remaining: Math.max(0, total - due),
+    type,
+    typeLabel: labels[type] || labels.deposit25,
+    note: $('inv-note').value.trim() || INVOICE_DEFAULT_NOTE,
+    link: invoiceLink(selectedInvoiceOrder),
+    bank: BANK_INFO,
+    createdAt: new Date().toISOString()
+  };
+}
+function renderInvoicePreview(){
+  const box = $('invoicePreview');
+  if(!box) return;
+  const inv = currentInvoicePayload();
+  if(!inv){ box.textContent = 'اختر طلبًا من القائمة لإنشاء الفاتورة.'; return; }
+  const itemsText = (selectedInvoiceOrder.items || []).map(i => `${esc(i.title || i.name || 'منتج')} × ${Number(i.qty)||1}`).join('، ') || esc(selectedInvoiceOrder.productName || 'تفاصيل الطلب');
+  box.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <img src="/assets/logo.png" alt="Bariq" style="width:44px;height:44px;object-fit:contain;border-radius:8px;background:#fff;border:1px solid var(--line)">
+      <div><b style="color:var(--navy);font-size:1rem">فاتورة طلب ${esc(inv.orderNumber)}</b><br><span style="color:#7a8296">${esc(inv.customer)} · ${esc(inv.phone || 'بدون هاتف')}</span></div>
+    </div>
+    <div style="line-height:1.9">
+      <div>🛒 ${itemsText}</div>
+      <div>💰 إجمالي الطلب: <b>${formatMoney(inv.total)}</b></div>
+      <div>🏷️ نوع الدفع: <b>${esc(inv.typeLabel)}</b></div>
+      <div>✅ العربون / المطلوب الآن: <b style="color:var(--gold)">${formatMoney(inv.due)}</b></div>
+      <div>📦 المتبقي بعد التسليم: <b>${formatMoney(invoiceRemaining(inv))}</b></div>
+      ${inv.note ? `<div>📝 ${esc(inv.note)}</div>` : ''}
+      <hr style="border:0;border-top:1px solid var(--line);margin:10px 0">
+      <div>🏦 اسم المصرف: <b>${esc(BANK_INFO.bank)}</b></div>
+      <div>👤 اسم صاحب الحساب: <b>${esc(BANK_INFO.beneficiary)}</b></div>
+      <div>🔢 رقم الحساب: <b dir="ltr">${esc(BANK_INFO.account)}</b></div>
+      <div>📌 رقم الآيبان: <b dir="ltr">${esc(BANK_INFO.iban)}</b></div>
+      <div>🌐 السويفت: <b dir="ltr">${esc(BANK_INFO.swift)}</b></div>
+      <div>💱 العملة: <b>${esc(BANK_INFO.currency)}</b></div>
+      <div>🔗 <a href="${escAttr(inv.link)}" target="_blank">${esc(inv.link)}</a></div>
+    </div>`;
+}
+async function saveInvoiceForSelectedOrder(){
+  const inv = currentInvoicePayload();
+  if(!inv){ toast('اختر طلب أولاً'); return null; }
+  const notes = buildNotesWithInvoice(selectedInvoiceOrder, inv);
+  selectedInvoiceOrder.notes = notes;
+  selectedInvoiceOrder.invoice = inv;
+  try {
+    if(window.sbFetch) await window.sbFetch('orders?id=eq.' + encodeURIComponent(selectedInvoiceOrder.id), { method: 'PATCH', body: JSON.stringify({ notes }) });
+    saveOrders(getOrders());
+    renderInvoices();
+    renderOrders();
+    toast('✅ تم حفظ الفاتورة');
+    return inv;
+  } catch(e) {
+    console.error(e);
+    toast('⚠️ فشل حفظ الفاتورة');
+    return null;
+  }
+}
+function invoiceWhatsAppText(inv){
+  return `مرحباً ${inv.customer || ''}\nتم تجهيز فاتورة طلبك رقم ${inv.orderNumber}\nإجمالي الطلب: ${formatMoney(inv.total)}\nالعربون / المطلوب الآن: ${formatMoney(inv.due)}\nالمتبقي بعد التسليم: ${formatMoney(invoiceRemaining(inv))}\nنوع الدفع: ${inv.typeLabel}\n\nرابط الفاتورة:\n${inv.link}\n\nبرجاء إرسال إيصال الدفع في واتساب بعد التحويل.`;
+}
+async function sendSelectedInvoiceWhatsApp(){
+  const inv = await saveInvoiceForSelectedOrder();
+  if(!inv) return;
+  let phone = String(inv.phone || '').replace(/\D/g,'');
+  if(/^05\d{8}$/.test(phone)) phone = '971' + phone.slice(1);
+  else if(/^5\d{8}$/.test(phone)) phone = '971' + phone;
+  if(!phone){ toast('لا يوجد رقم هاتف للعميل'); return; }
+  window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(invoiceWhatsAppText(inv)), '_blank', 'noopener');
+}
+function copySelectedInvoiceLink(){
+  const inv = currentInvoicePayload();
+  if(!inv){ toast('اختر طلب أولاً'); return; }
+  navigator.clipboard.writeText(inv.link).then(()=>toast('✅ تم نسخ رابط الفاتورة')).catch(()=>toast('انسخ الرابط يدوياً من المعاينة'));
+}
+function invoiceDownloadFileName(inv){
+  return 'bariq-invoice-' + String((inv && inv.orderNumber) || 'order').replace(/[^\w-]+/g, '-') + '.html';
+}
+async function invoiceLogoSrc(){
+  try {
+    const res = await fetch('/assets/logo.png', { cache: 'force-cache' });
+    const blob = await res.blob();
+    return await new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => resolve('https://bariqgifts.com/assets/logo.png');
+      reader.readAsDataURL(blob);
+    });
+  } catch(e) { return 'https://bariqgifts.com/assets/logo.png'; }
+}
+function invoiceStandaloneHtml(inv, order, logoSrc){
+  const items = (order.items || []).map(i => `<tr><td>${esc(i.title || i.name || 'منتج')}</td><td>${Number(i.qty)||1}</td></tr>`).join('') || '<tr><td>تفاصيل الطلب</td><td>1</td></tr>';
+  const bankRows = [
+    ['اسم المصرف', BANK_INFO.bank],
+    ['اسم صاحب الحساب', BANK_INFO.beneficiary],
+    ['رقم الحساب', BANK_INFO.account],
+    ['رقم الآيبان', BANK_INFO.iban],
+    ['السويفت', BANK_INFO.swift],
+    ['العملة', BANK_INFO.currency],
+    ['سبب التحويل', 'Order ' + inv.orderNumber]
+  ].map(([label, value]) => `<div class="bank-row"><span>${esc(label)}</span><b dir="ltr">${esc(value)}</b></div>`).join('');
+  return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>فاتورة طلب ${esc(inv.orderNumber)}</title><style>body{margin:0;background:#f5f7fb;color:#152546;font-family:Tahoma,Arial,sans-serif}.page{max-width:760px;margin:24px auto;padding:16px}.invoice{background:#fff;border:1px solid #e5e9f2;border-radius:18px;overflow:hidden;box-shadow:0 14px 38px rgba(21,37,70,.12)}.head{background:linear-gradient(135deg,#fff,#fbf4dc);padding:22px;display:flex;gap:14px;align-items:center;border-bottom:1px solid #ece4c7}.logo{width:74px;height:74px;object-fit:contain;background:#fff;border:1px solid #eee;border-radius:14px}.title{font-size:1.3rem;font-weight:900;margin-bottom:6px}.muted{color:#7a8296;font-size:.9rem}.body{padding:22px}.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}.sum{background:#f8f9fc;border:1px solid #e7eaf2;border-radius:12px;padding:12px}.sum span{display:block;color:#7a8296;font-size:.78rem;margin-bottom:5px}.sum b{font-size:1.05rem}table{width:100%;border-collapse:collapse;margin:12px 0}td,th{border-bottom:1px solid #edf0f6;padding:10px;text-align:right}.note{background:#fff8e1;border:1px solid #f1d27a;color:#6b5200;border-radius:12px;padding:12px;font-weight:800;margin:14px 0}.bank{display:grid;gap:9px;background:#f8f9fc;border:1px solid #e7eaf2;border-radius:14px;padding:12px}.bank-row{display:flex;justify-content:space-between;gap:14px;background:#fff;border:1px solid #edf0f6;border-radius:10px;padding:10px}.bank-row span{color:#7a8296}.footer{padding:14px 22px;color:#8b93a4;font-size:.82rem;border-top:1px solid #edf0f6}@media(max-width:640px){.summary{grid-template-columns:1fr}.head{align-items:flex-start}.page{padding:8px;margin:8px auto}}</style></head><body><div class="page"><section class="invoice"><div class="head"><img class="logo" src="${esc(logoSrc || 'https://bariqgifts.com/assets/logo.png')}" alt="Bariq"><div><div class="title">فاتورة طلب ${esc(inv.orderNumber)}</div><div class="muted">${esc(inv.customer || '')}${inv.phone ? ' · ' + esc(inv.phone) : ''}</div></div></div><div class="body"><div class="summary"><div class="sum"><span>إجمالي الطلب</span><b>${formatMoney(inv.total)}</b></div><div class="sum"><span>العربون / المطلوب الآن</span><b>${formatMoney(inv.due)}</b></div><div class="sum"><span>المتبقي بعد التسليم</span><b>${formatMoney(invoiceRemaining(inv))}</b></div></div><table><thead><tr><th>المنتج</th><th>الكمية</th></tr></thead><tbody>${items}</tbody></table><div>نوع الدفع: <b>${esc(inv.typeLabel || '')}</b></div><div class="note">${esc(inv.note || INVOICE_DEFAULT_NOTE)}</div><h3>بيانات التحويل</h3><div class="bank">${bankRows}</div></div><div class="footer">Bariq Gifts - هذه الفاتورة محفوظة كملف مستقل ويمكن فتحها مباشرة في المتصفح.</div></section></div></body></html>`;
+}
+async function downloadSelectedInvoiceFile(){
+  const inv = currentInvoicePayload();
+  if(!inv || !selectedInvoiceOrder){ toast('اختر طلب أولاً'); return; }
+  const blob = new Blob([invoiceStandaloneHtml(inv, selectedInvoiceOrder, await invoiceLogoSrc())], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = invoiceDownloadFileName(inv);
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast('⬇ تم تحميل ملف الفاتورة');
+}
+async function salesShortcutIconBlob(){
+  try {
+    const res = await fetch('/assets/icon.png', { cache: 'force-cache' });
+    const png = new Uint8Array(await res.arrayBuffer());
+    const header = new ArrayBuffer(22);
+    const view = new DataView(header);
+    view.setUint16(0, 0, true);
+    view.setUint16(2, 1, true);
+    view.setUint16(4, 1, true);
+    view.setUint8(6, 0);
+    view.setUint8(7, 0);
+    view.setUint8(8, 0);
+    view.setUint8(9, 0);
+    view.setUint16(10, 1, true);
+    view.setUint16(12, 32, true);
+    view.setUint32(14, png.length, true);
+    view.setUint32(18, 22, true);
+    return new Blob([header, png], { type: 'image/x-icon' });
+  } catch(e) {
+    return null;
+  }
+}
+function downloadBlobFile(blob, filename){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function zipCrc32(bytes){
+  let crc = -1;
+  for(let i = 0; i < bytes.length; i++){
+    crc ^= bytes[i];
+    for(let bit = 0; bit < 8; bit++) crc = (crc >>> 1) ^ (0xEDB88320 & -(crc & 1));
+  }
+  return (crc ^ -1) >>> 0;
+}
+function zipHeader(size){ return new Uint8Array(size); }
+function writeZipU16(view, offset, value){ view.setUint16(offset, value, true); }
+function writeZipU32(view, offset, value){ view.setUint32(offset, value, true); }
+function makeZipBlob(files){
+  const encoder = new TextEncoder();
+  const chunks = [];
+  const central = [];
+  let offset = 0;
+  files.forEach(function(file){
+    const name = encoder.encode(file.name);
+    const data = file.data instanceof Uint8Array ? file.data : encoder.encode(String(file.data || ''));
+    const crc = zipCrc32(data);
+    const local = zipHeader(30 + name.length);
+    const localView = new DataView(local.buffer);
+    writeZipU32(localView, 0, 0x04034b50);
+    writeZipU16(localView, 4, 20);
+    writeZipU16(localView, 8, 0);
+    writeZipU32(localView, 14, crc);
+    writeZipU32(localView, 18, data.length);
+    writeZipU32(localView, 22, data.length);
+    writeZipU16(localView, 26, name.length);
+    local.set(name, 30);
+    chunks.push(local, data);
+    const dir = zipHeader(46 + name.length);
+    const dirView = new DataView(dir.buffer);
+    writeZipU32(dirView, 0, 0x02014b50);
+    writeZipU16(dirView, 4, 20);
+    writeZipU16(dirView, 6, 20);
+    writeZipU32(dirView, 16, crc);
+    writeZipU32(dirView, 20, data.length);
+    writeZipU32(dirView, 24, data.length);
+    writeZipU16(dirView, 28, name.length);
+    writeZipU32(dirView, 42, offset);
+    dir.set(name, 46);
+    central.push(dir);
+    offset += local.length + data.length;
+  });
+  const centralSize = central.reduce((sum, item) => sum + item.length, 0);
+  const end = zipHeader(22);
+  const endView = new DataView(end.buffer);
+  writeZipU32(endView, 0, 0x06054b50);
+  writeZipU16(endView, 8, files.length);
+  writeZipU16(endView, 10, files.length);
+  writeZipU32(endView, 12, centralSize);
+  writeZipU32(endView, 16, offset);
+  return new Blob(chunks.concat(central, [end]), { type: 'application/zip' });
+}
+async function downloadSalesInvoicesPage(){
+  const shortcut = '[InternetShortcut]\r\nURL=https://bariqgifts.com/sales-invoices.html\r\nIconFile=https://bariqgifts.com/assets/bariq-shortcut.ico\r\nIconIndex=0\r\n';
+  downloadBlobFile(new Blob([shortcut], { type: 'application/octet-stream' }), 'Bariq Sales Invoices.url');
+  toast('⬇ تم تحميل اختصار صفحة الفواتير');
+}
+function openSalesInvoicesPage(){ window.open('/sales-invoices.html', '_blank', 'noopener'); }
+async function changeInvoiceOrderStatus(id, status){
+  await changeOrderStatus(id, status);
+  renderInvoices();
+  if(selectedInvoiceOrder && String(selectedInvoiceOrder.id) === String(id)){
+    const fresh = getOrders().find(o => String(o.id) === String(id));
+    if(fresh) selectedInvoiceOrder = fresh;
+    renderInvoicePreview();
+  }
+}
+function invoiceEarnedBadge(order){
+  const earned = order && order.status === 'delivered';
+  return earned ? '<span class="status-badge st-delivered" style="font-size:.6rem;padding:1px 6px;line-height:1.45">تم الاستحقاق ✓</span>' : '';
+}
+function renderInvoices(){
+  const list = $('invoiceOrdersList');
+  if(!list) return;
+  const q = String($('invSearch') && $('invSearch').value || '').trim().toLowerCase();
+  const invoiceFilter = $('invInvoiceFilter')?.value || 'all';
+  const statusFilter = $('invStatusFilter')?.value || 'all';
+  let orders = getOrders();
+  if(invoiceFilter !== 'all') orders = orders.filter(o => invoiceFilter === 'with' ? !!getOrderInvoice(o) : !getOrderInvoice(o));
+  if(statusFilter !== 'all') orders = orders.filter(o => (o.status || 'pending') === statusFilter);
+  if(q) orders = orders.filter(o => [orderPublicNumber(o), o.customer, o.phone, o.productName].some(v => String(v||'').toLowerCase().includes(q)));
+  if(!orders.length){ list.innerHTML = '<div class="empty">لا توجد طلبات مطابقة</div>'; return; }
+  list.innerHTML = orders.map(o => {
+    const inv = getOrderInvoice(o);
+    const orderNum = orderPublicNumber(o);
+    const due = inv ? formatMoney(inv.due) : 'لم تنشأ';
+    const st = STATUS[o.status] || STATUS.pending;
+    const statusOptions = Object.keys(STATUS).map(k=>`<option value="${k}" ${k===o.status?'selected':''}>${STATUS[k].label}</option>`).join('');
+    return `<div class="ord-row">
+      <div class="oinfo" style="flex:1">
+        <div style="display:flex;align-items:center;gap:4px;flex-wrap:nowrap;white-space:nowrap"><b style="color:var(--navy)">#${esc(orderNum)}</b> ${inv ? '<span class="status-badge st-confirmed" style="font-size:.6rem;padding:1px 6px;line-height:1.45">فاتورة محفوظة</span>' : '<span class="status-badge st-pending" style="font-size:.6rem;padding:1px 6px;line-height:1.45">بدون فاتورة</span>'} <span class="status-badge ${st.cls}" style="font-size:.6rem;padding:1px 6px;line-height:1.45">${st.label}</span> ${invoiceEarnedBadge(o)}</div>
+        <div style="font-size:.9rem;margin-top:4px">${esc(o.customer || 'بدون اسم')} ${o.phone ? `<small style="color:#7a8296"> · ${esc(o.phone)}</small>` : ''}</div>
+        <div style="font-size:.8rem;color:#7a8296;margin-top:3px">الإجمالي: ${formatMoney(o.total)} · المطلوب: ${due}</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+        <select onchange="changeInvoiceOrderStatus(${Number(o.id)}, this.value)" title="تحديث حالة الطلب" style="font-size:.78rem;min-width:132px">${statusOptions}</select>
+        <button class="btn-gold btn-sm" onclick="selectInvoiceOrder('${escAttr(o.id)}')">إنشاء فاتورة</button>
+      </div>
+    </div>`;
+  }).join('');
+}
 function renderOrders(){
   const filter = $('ordFilter')?.value || 'all';
   const search = ($('ordSearch')?.value || '').toLowerCase();
@@ -2782,7 +3187,7 @@ function renderOrders(){
           ${o.productName?'🛒 '+esc(o.productName)+' — ':''}<b style="color:var(--gold)">${money(o.total)} د.إ</b>
         </div>
         <div style="font-size:.72rem;color:#9aa2b4;margin-top:2px">📅 ${new Date(o.date).toLocaleString('ar-EG')}</div>
-        ${o.notes?`<div style="font-size:.75rem;color:#7a8296;margin-top:3px">📝 ${esc(o.notes)}</div>`:''}
+        ${visibleOrderNotes(o.notes)?`<div style="font-size:.75rem;color:#7a8296;margin-top:3px">📝 ${esc(visibleOrderNotes(o.notes))}</div>`:''}
       </div>
       <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;min-width:120px">
         <select onchange="changeOrderStatus(${o.id}, this.value)" style="font-size:.8rem">${opts}</select>
