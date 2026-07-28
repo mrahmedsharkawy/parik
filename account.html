@@ -2064,6 +2064,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     if (inv.remaining != null) return Math.max(0, Number(inv.remaining) || 0);
     return Math.max(0, (Number(inv.total) || 0) - (Number(inv.due) || 0));
   }
+  function invoiceDueForOrder(order, inv) {
+    return order && order.status === 'delivered' ? 0 : Number(inv && inv.due) || 0;
+  }
   function invoiceCopyText(inv) {
     return [
       `رقم الطلب: ${inv.orderNumber}`,
@@ -2159,6 +2162,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const active = focus && String(invoice.orderNumber) === String(focus);
       const items = (order.items || []).map(i => `${i.title || i.name || 'منتج'} × ${Number(i.qty)||1}`).join('، ');
       const safeOrder = String(invoice.orderNumber || order.id || '').replace(/[^\w-]/g,'');
+      const dueNow = invoiceDueForOrder(order, invoice);
       const bankRows = [
         ['اسم المصرف', BANK_INFO.bank],
         ['اسم صاحب الحساب', BANK_INFO.beneficiary],
@@ -2175,7 +2179,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <div style="font-size:.74rem;color:#8b93a4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${invoice.customer || ''} ${invoice.phone ? ' · ' + invoice.phone : ''}</div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:7px;font-size:.72rem;font-weight:900">
               <span style="background:#eef3fb;color:#152546;border-radius:999px;padding:4px 8px">الإجمالي ${invoiceMoney(invoice.total)}</span>
-              <span style="background:#fff4cc;color:#8A6500;border-radius:999px;padding:4px 8px">العربون ${invoiceMoney(invoice.due)}</span>
+              <span style="background:#fff4cc;color:#8A6500;border-radius:999px;padding:4px 8px">العربون ${invoiceMoney(dueNow)}</span>
               ${invoiceEarnedBadge(order)}
             </div>
           </div>
@@ -2184,7 +2188,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div style="padding:14px;font-size:.84rem;color:#30384a;line-height:1.9">
           ${items ? `<div>🛒 ${items}</div>` : ''}
           <div>إجمالي الطلب: <b>${invoiceMoney(invoice.total)}</b></div>
-          <div>العربون / المطلوب الآن: <b style="color:#8A6500">${invoiceMoney(invoice.due)}</b> <span style="color:#8b93a4">(${invoice.typeLabel || ''})</span></div>
+          <div>العربون / المطلوب الآن: <b style="color:#8A6500">${invoiceMoney(dueNow)}</b> <span style="color:#8b93a4">(${invoice.typeLabel || ''})</span></div>
           <div>المتبقي بعد التسليم: <b>${invoiceMoney(invoiceRemaining(invoice))}</b></div>
           <div style="background:#fff8e1;border:1px solid #f1d27a;color:#6b5200;border-radius:10px;padding:9px 10px;margin:9px 0;font-weight:800">${invoice.note || INVOICE_DEFAULT_NOTE}</div>
           <div style="margin-top:10px;background:#f8f9fc;border:1px solid #e7eaf2;border-radius:12px;padding:10px;display:grid;gap:8px">
@@ -3900,7 +3904,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </footer>
 <script src="/java/supabase.min.js?v=supabase-20260725a" defer></script>
 <script src="/java/main.min.js?v=139" defer></script>
-<script src="/java/sw-refresh.js?v=sw-refresh-20260728r" defer></script>
+<script src="/java/sw-refresh.js?v=sw-refresh-20260728t" defer></script>
 <script src="/java/instant-nav.js?v=instant-nav-20260728e" defer></script>
 <script src="/translations/translation.min.js?v=translation-20260726c" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
