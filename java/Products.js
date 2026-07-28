@@ -895,7 +895,13 @@ document.addEventListener("DOMContentLoaded", async function() {
         if (!productsContainer) return;
         const sortedList = direction === "preserve" ? (Array.isArray(list) ? list.slice() : []) : sortProductsForStore(list), tempContainer = document.createElement("div"), rowDiv = document.createElement("div");
         const renderKey = getProductRenderKey(sortedList);
-        if (renderKey && productsContainer.dataset.renderKey === renderKey && productsContainer.querySelector(".product-card")) return void productsContainer.classList.remove("changing");
+        const isHomePage = /^(\/|\/index\.html)$/i.test(location.pathname);
+        const hasRenderedCards = !!productsContainer.querySelector(".product-card");
+        if (renderKey && productsContainer.dataset.renderKey === renderKey && hasRenderedCards) return void productsContainer.classList.remove("changing");
+        if (isHomePage && hasRenderedCards && !productsContainer.dataset.renderKey) {
+            productsContainer.dataset.renderKey = renderKey;
+            return void productsContainer.classList.remove("changing");
+        }
         rowDiv.className = "products-row", tempContainer.appendChild(rowDiv);
         const useMobileMasonry = window.matchMedia("(max-width: 494px)").matches;
         const mobileColumns = useMobileMasonry ? [ document.createElement("div"), document.createElement("div") ] : null;
@@ -905,7 +911,6 @@ document.addEventListener("DOMContentLoaded", async function() {
                 col.className = "products-column", rowDiv.appendChild(col);
             });
         }
-        const isHomePage = /^(\/|\/index\.html)$/i.test(location.pathname);
         const isMobileGrid = window.matchMedia("(max-width: 899px)").matches;
         let restoreTargetIndex = -1;
         try {
@@ -955,7 +960,9 @@ document.addEventListener("DOMContentLoaded", async function() {
                 setTimeout(loadMore, 120);
                 setTimeout(restoreProductReturnScrollPosition, 0);
             } else if (i < sortedList.length) requestAnimationFrame(appendChunk); else {
-                productsContainer.dataset.renderKey = renderKey, productsContainer.replaceChildren(rowDiv), productsContainer.classList.remove("changing");
+                productsContainer.dataset.renderKey = renderKey;
+                if (!(deferHomeRest && homeRestDeferred && productsContainer.firstElementChild === rowDiv)) productsContainer.replaceChildren(rowDiv);
+                productsContainer.classList.remove("changing");
                 productsContainer.style.minHeight = "";
                 const loader = document.getElementById("temp-popstate-loader") || document.getElementById("grid-loading-indicator");
                 loader && loader.remove();
@@ -1032,7 +1039,8 @@ document.addEventListener("DOMContentLoaded", async function() {
         });
     }
     function loadProductsForCategory(categorySlug, categoriesData) {
-        const forceFreshProducts = /^(\/|\/index\.html)$/i.test(location.pathname);
+        const isHomePage = /^(\/|\/index\.html)$/i.test(location.pathname);
+        const forceFreshProducts = false;
         fetchProducts(forceFreshProducts).then(data => {
             let filteredProducts;
             if (products = data, categorySlug && "all" !== categorySlug.toLowerCase() && "الكل" !== categorySlug && "جميع الفئات" !== categorySlug) {
@@ -1082,6 +1090,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                     titleEl.textContent = catName, document.title = catName;
                 }
             }
+            if (isHomePage && productsContainer && productsContainer.querySelector(".product-card")) return;
             productsContainer && renderProductsGrid(filteredProducts, productsContainer);
             const categoryObj = categoriesData.find(c => c.categorySlug === categorySlug);
             if (categoryObj) showSubCategories(categoryObj.name.ar || categoryObj.name.en, null, categoriesData); else {
