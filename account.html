@@ -62,7 +62,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <meta name="author" content="Bariq">
   <meta property="og:title" content="Bariq">
   <meta property="og:description" content="متجر إلكتروني شامل يقدم آلاف المنتجات بأفضل الأسعار. شحن سريع، دفع آمن، وضمان جودة.">
-  <meta property="og:image" content="assets/logo.png">
+  <meta property="og:image" content="https://bariqgifts.com/assets/logo.png?v=logo-stroke-20260729">
   <meta property="og:url" content="https://bariq.com">
   <meta property="og:type" content="website">
   <style>*{box-sizing:border-box;margin:0}html,body{height:100%}body{background:#152546;font-family:'Cairo',Arial,sans-serif;padding-top:env(safe-area-inset-top)}.page{min-height:100dvh;display:flex;flex-direction:column}main{width:70%;margin:70px auto 50px;display:flex;flex-direction:column;justify-content:center}header,.main-header{background-color:#152546;padding-top:env(safe-area-inset-top)}.main-header{position:fixed;inset:0 0 auto 0;z-index:1000;width:100%;padding:7px 0;box-shadow:0 2px 4px rgba(0,0,0,.1)}.header-content{width:70%;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;min-height:50px}.logo img{height:36px}.search-container{flex:1;display:flex;align-items:center;background:#fff;border-radius:20px;margin:0 15px;max-width:1100px;height:38px;padding:0 10px}.search-container input{border:none;flex:1;outline:none;padding:6px 10px;font-size:16px;background:transparent}img,video{max-width:100%;height:auto;border-radius:3px}.dp-img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:7px;background:#f0f0f0}@media(max-width:899px){.main-header .dropdown,.main-header .cart,.main-header .logo{display:none!important}body{padding-bottom:calc(65px + env(safe-area-inset-bottom))}}</style>
@@ -2065,7 +2065,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     return Math.max(0, (Number(inv.total) || 0) - (Number(inv.due) || 0));
   }
   function invoiceDueForOrder(order, inv) {
-    return order && order.status === 'delivered' ? 0 : Number(inv && inv.due) || 0;
+    return Number(inv && inv.due) || 0;
+  }
+  function invoiceRemainingForOrder(order, inv) {
+    return order && order.status === 'delivered' ? 0 : invoiceRemaining(inv);
+  }
+  function invoiceProductImage(order) {
+    const item = order && Array.isArray(order.items) && order.items[0] || {};
+    return item.img || item.image || item.photo || item.thumbnail || item.cover || order.product_image || order.image || '/assets/logo.png';
   }
   function invoiceCopyText(inv) {
     return [
@@ -2163,6 +2170,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const items = (order.items || []).map(i => `${i.title || i.name || 'منتج'} × ${Number(i.qty)||1}`).join('، ');
       const safeOrder = String(invoice.orderNumber || order.id || '').replace(/[^\w-]/g,'');
       const dueNow = invoiceDueForOrder(order, invoice);
+      const remainingNow = invoiceRemainingForOrder(order, invoice);
+      const earned = order && order.status === 'delivered';
+      const productImage = invoiceProductImage(order);
       const bankRows = [
         ['اسم المصرف', BANK_INFO.bank],
         ['اسم صاحب الحساب', BANK_INFO.beneficiary],
@@ -2173,7 +2183,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       ];
       return `<details id="invoice-${safeOrder}" ${active ? 'open' : ''} style="background:#fff;border:${active?'2px solid #d4af37':'1px solid #e4e8f0'};border-radius:14px;overflow:hidden;box-shadow:0 8px 22px rgba(21,37,70,.08)">
         <summary style="list-style:none;cursor:pointer;padding:14px;background:linear-gradient(135deg,#fff,#fbf7ea);display:flex;align-items:center;gap:12px">
-          <img src="/assets/logo.png" alt="Bariq" style="width:48px;height:48px;object-fit:contain;border-radius:10px;background:#fff;border:1px solid #eee">
+          <img src="${productImage}" alt="${items || 'Product'}" onerror="this.src='/assets/logo.png'" style="width:54px;height:54px;object-fit:cover;border-radius:10px;background:#fff;border:1px solid #eee">
           <div style="flex:1;min-width:0">
             <div style="font-weight:950;color:#152546;font-size:.98rem">فاتورة طلب ${invoice.orderNumber}</div>
             <div style="font-size:.74rem;color:#8b93a4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${invoice.customer || ''} ${invoice.phone ? ' · ' + invoice.phone : ''}</div>
@@ -2189,13 +2199,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           ${items ? `<div>🛒 ${items}</div>` : ''}
           <div>إجمالي الطلب: <b>${invoiceMoney(invoice.total)}</b></div>
           <div>العربون / المطلوب الآن: <b style="color:#8A6500">${invoiceMoney(dueNow)}</b> <span style="color:#8b93a4">(${invoice.typeLabel || ''})</span></div>
-          <div>المتبقي بعد التسليم: <b>${invoiceMoney(invoiceRemaining(invoice))}</b></div>
+          <div>المتبقي بعد التسليم: <b>${invoiceMoney(remainingNow)}</b></div>
           <div style="background:#fff8e1;border:1px solid #f1d27a;color:#6b5200;border-radius:10px;padding:9px 10px;margin:9px 0;font-weight:800">${invoice.note || INVOICE_DEFAULT_NOTE}</div>
-          <div style="margin-top:10px;background:#f8f9fc;border:1px solid #e7eaf2;border-radius:12px;padding:10px;display:grid;gap:8px">
+          <div style="margin-top:10px;background:#f8f9fc;border:1px solid #e7eaf2;border-radius:12px;padding:10px;display:${earned?'none':'grid'};gap:8px">
             ${bankRows.map(([label, value]) => `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid #edf0f6;border-radius:9px;padding:8px 9px"><span style="color:#7a8296">${label}</span><b dir="ltr" style="color:#152546;text-align:left;word-break:break-word">${value}</b><button onclick="copyInvoiceField('${String(value).replace(/'/g,'&#39;')}', '${label}')" style="border:none;background:#152546;color:#fff;border-radius:7px;padding:6px 9px;font-size:.72rem;font-weight:800;cursor:pointer;flex:0 0 auto">نسخ</button></div>`).join('')}
             <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid #edf0f6;border-radius:9px;padding:8px 9px"><span style="color:#7a8296">سبب التحويل</span><b dir="ltr" style="color:#152546">Order ${invoice.orderNumber}</b><button onclick="copyInvoiceField('Order ${String(invoice.orderNumber).replace(/'/g,'&#39;')}', 'سبب التحويل')" style="border:none;background:#152546;color:#fff;border-radius:7px;padding:6px 9px;font-size:.72rem;font-weight:800;cursor:pointer">نسخ</button></div>
           </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+          <div style="display:${earned?'none':'flex'};gap:8px;flex-wrap:wrap;margin-top:12px">
             <button onclick="copyInvoicePayment('${order.id}')" style="border:none;background:#152546;color:#fff;border-radius:9px;padding:8px 12px;font-size:.78rem;font-weight:800;cursor:pointer">نسخ بيانات التحويل</button>
             <button onclick="sendInvoiceProof('${order.id}')" style="border:none;background:#25D366;color:#fff;border-radius:9px;padding:8px 12px;font-size:.78rem;font-weight:800;cursor:pointer">إرسال إثبات الدفع واتساب</button>
           </div>
@@ -3904,7 +3914,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </footer>
 <script src="/java/supabase.min.js?v=supabase-20260725a" defer></script>
 <script src="/java/main.min.js?v=139" defer></script>
-<script src="/java/sw-refresh.js?v=sw-refresh-20260728t" defer></script>
+<script src="/java/sw-refresh.js?v=sw-refresh-20260728v" defer></script>
 <script src="/java/instant-nav.js?v=instant-nav-20260728e" defer></script>
 <script src="/translations/translation.min.js?v=translation-20260726c" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
