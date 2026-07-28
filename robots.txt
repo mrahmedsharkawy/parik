@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin.html
+Disallow: /admin-reports
+Disallow: /admin-reports.html
+Disallow: /checkout
+Disallow: /Cart
+Disallow: /account
+Disallow: /login
+
+Sitemap: https://bariqgifts.com/sitemap.xml

@@ -1,5 +1,5 @@
 /* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v221';
+const CACHE = 'bariq-v222';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -45,6 +45,7 @@ const STATIC_URLS = [
   '/mobile-nav-bar/styles.css',
   '/assets/home/1.webp',
   '/assets/home/2.webp',
+  '/assets/home/صور الغلاف/1-412.webp',
   '/assets/home/صور الغلاف/1-420.webp',
   '/assets/home/صور الغلاف/1-480.webp',
   '/assets/categories/Acrylic/Born in.webp',

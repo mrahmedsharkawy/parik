@@ -1730,7 +1730,33 @@ document.addEventListener("DOMContentLoaded", async function() {
             const el = document.getElementById(id);
             el && (el.textContent = val);
         };
-        set("category", getT(p.category)), set("name", getT(p.name)), document.title = getT(p.name) + " - Bariq";
+        const productTitle = getT(p.name) || "Bariq";
+        const productDescription = String(p.desc || p.description || productTitle || "").replace(/\s+/g, " ").trim();
+        const productUrl = `https://bariqgifts.com/product/${encodeURIComponent(p.id || productId)}`;
+        const productImage = imgs[0] || (Array.isArray(p.img) ? p.img[0] : p.img || p.image || "");
+        set("category", getT(p.category)), set("name", productTitle), document.title = productTitle + " - Bariq";
+        try {
+            let canonical = document.querySelector('link[rel="canonical"]');
+            canonical || (canonical = document.createElement("link"), canonical.rel = "canonical", document.head.appendChild(canonical));
+            canonical.href = productUrl;
+            const ensureMeta = (selector, attr, value) => {
+                let el = document.head.querySelector(selector);
+                return el || (el = document.createElement("meta"), el.setAttribute(attr, value), document.head.appendChild(el)), el;
+            };
+            const setMeta = (selector, attr, value, content) => {
+                content && ensureMeta(selector, attr, value).setAttribute("content", content);
+            };
+            const desc = productDescription || `${productTitle} من بريق للهدايا. هدايا مخصصة للمناسبات مع شحن سريع ودفع آمن.`;
+            const imageUrl = productImage ? new URL(productImage, location.origin).href : "https://bariqgifts.com/assets/logo.png";
+            setMeta('meta[name="description"]', "name", "description", desc);
+            setMeta('meta[property="og:title"]', "property", "og:title", productTitle + " - Bariq");
+            setMeta('meta[property="og:description"]', "property", "og:description", desc);
+            setMeta('meta[property="og:url"]', "property", "og:url", productUrl);
+            setMeta('meta[property="og:image"]', "property", "og:image", imageUrl);
+            setMeta('meta[name="twitter:title"]', "name", "twitter:title", productTitle + " - Bariq");
+            setMeta('meta[name="twitter:description"]', "name", "twitter:description", desc);
+            setMeta('meta[name="twitter:image"]', "name", "twitter:image", imageUrl);
+        } catch (e) {}
         const starsEl = document.getElementById("stars");
         var r;
         starsEl && (starsEl.innerHTML = `<span style="color:#f59e0b;letter-spacing:1px">${r = p.rating, 
