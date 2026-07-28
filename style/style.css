@@ -1,5 +1,5 @@
 /* Tighten daily pick cards so bottom spacing matches the top. */
-@view-transition{navigation:auto}::view-transition-old(root),::view-transition-new(root){animation:none!important}.mobile-nav{view-transition-name:mobile-nav}::view-transition-group(mobile-nav){animation-duration:.001s!important}
+::view-transition-old(root),::view-transition-new(root),::view-transition-group(root){display:none!important;animation:none!important}.mobile-nav{view-transition-name:none!important}
 @media(min-width:768px){main{width:100%!important;max-width:1200px!important;padding-inline:16px!important;box-sizing:border-box!important}}
 .daily-picks-grid{align-items:flex-start!important;height:132px!important;min-height:132px!important}
 .dp-card{height:124px!important;min-height:124px!important;padding-top:6px!important;padding-bottom:6px!important;box-sizing:border-box!important;overflow:visible!important}

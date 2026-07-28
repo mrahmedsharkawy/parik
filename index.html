@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
+  <meta name="theme-color" content="#152546">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <style>html,body{background:#152546!important}</style>
 <script>(function(){try{var p=new URLSearchParams(location.search),u=p.get('lang'),s=localStorage.getItem('lang'),l=(u==='en'||u==='ar')?u:(s==='en'?'en':'ar'),r=sessionStorage.getItem('x2_return_to_scroll_url')===location.href;localStorage.setItem('lang',l);document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';if(l==='en'&&!r)document.documentElement.classList.add('x2-i18n-pending');setTimeout(function(){document.documentElement.classList.remove('x2-i18n-pending')},1600)}catch(e){}})();</script>
 <!-- Google Tag Manager: lazy loaded after first interaction to protect initial render speed. -->
 <script>
@@ -46,9 +49,9 @@
   </script>
   <script src="/java/auth-reset.js" defer></script>
   <title data-i18n="الصفحة الرئيسية - بريق">الصفحة الرئيسية - بريق</title>
-  <link rel="stylesheet" href="/style/style.css?v=130">
+  <link rel="stylesheet" href="/style/style.css?v=131">
   <link rel="stylesheet" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260728h" media="(max-width: 899px)">
-  <style>html,body,.page{background:#fff!important}.categories a{font-family:"Segoe UI Emoji","Segoe UI Symbol","Apple Color Emoji","Noto Color Emoji",Arial,Tahoma,sans-serif!important}</style>
+  <style>html,body{background:#152546!important}.page,main.main{background:#fff!important}@media(min-width:900px){.mobile-nav{display:none!important}}.categories a{font-family:"Segoe UI Emoji","Segoe UI Symbol","Apple Color Emoji","Noto Color Emoji",Arial,Tahoma,sans-serif!important}</style>
   <!-- Preload LCP image -->
   <script>
   (function(){
@@ -216,164 +219,105 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 
   <div class="page">
-    <header class="main-header" id="mainHeader">
+        <header class="main-header" id="mainHeader">
       <div class="header-content">
+        <div class="logo">
+          <a href="/">
+            <picture>
+              <img src="/assets/logo-header.png" alt="بريق" width="50" height="50" decoding="async" />
+            </picture>
+          </a>
+        </div>
 
-    <!-- الشعار -->
-    <div class="logo">
-      <a href="/">
-      <picture>
-        <img src="/assets/logo-header.png" alt="بريق" width="50" height="50" decoding="async" />
-      </picture>
-    </a>
-    </div>
+        <div class="dropdown">
+          <a href="/categories" class="dropbtn-link" style="text-decoration:none;">
+            <button class="dropbtn" style="border:none;outline:none;background:transparent;padding:0;margin:0;box-shadow:none;"><span data-i18n="جميع الفئات">جميع الفئات</span></button>
+          </a>
+          <div class="dropdown-content categories-menu">
+            <a href="/categories/Occasions">🎉<span data-i18n="مناسبات">مناسبات</span></a>
+            <a href="/categories/Acrylic">💎<span data-i18n=" اكريلك">اكريلك</span></a>
+            <a href="/categories/paper">📄<span data-i18n="ورق ">ورق</span></a>
+            <a href="/categories/Forex">🪙<span data-i18n="فوركس ">فوركس</span></a>
+            <a href="/categories/wood">🪵<span data-i18n="خشب  ">خشب</span></a>
+            <a href="/categories/leather">👞<span data-i18n="جلد  ">جلد</span></a>
+            <a href="/categories/sticker">🏷️<span data-i18n="استيكر">استيكر</span></a>
+            <a href="/categories/Ramadan">🌙<span data-i18n="رمضان">رمضان</span></a>
+          </div>
+        </div>
 
-<!-- القائمة الجانبية للفئات -->
-<div class="dropdown">
-  <a href="/categories" class="dropbtn-link" style="text-decoration:none;">
-    <button class="dropbtn" style="border:none;outline:none;background:transparent;padding:0;margin:0;box-shadow:none;"><span data-i18n="جميع الفئات">جميع الفئات</span>
-    </button>
-  </a>
+        <div class="search-container">
+          <input type="text" id="textSearch" placeholder="ابحث بالاسم" data-i18n-placeholder="ابحث بالاسم">
+          <span class="icon search search-icon" onclick="performTextSearch()" style="cursor:pointer;display:flex;align-items:center;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+          </span>
+          <label class="icon camera camera-icon" for="imageSearchInput" style="cursor:pointer;display:flex;align-items:center;margin-right:4px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+          </label>
+          <input type="file" id="imageSearchInput" accept="image/*" style="display:none;">
+        </div>
 
-  <div class="dropdown-content categories-menu">
+        <div class="dropdown">
+          <button class="dropbtn"><span data-i18n="الحساب">الحساب</span></button>
+          <div class="dropdown-content">
+            <a href="/login">🔑<span data-i18n="تسجيل الدخول"> تسجيل الدخول</span></a>
+            <a href="/login?tab=register">📝<span data-i18n="إنشاء حساب"> إنشاء حساب</span></a>
+            <a href="/account">👤<span data-i18n="حسابي"> حسابي</span></a>
+          </div>
+        </div>
 
-    <!-- 1.  مناسبات-->
-    <li class="category-item">
-      <a href="/categories/Occasions">🎉<span data-i18n="مناسبات">مناسبات</span><span class="arrow">›</span></a>
-      <div class="flyout category-flyout">
-        <ul class="subcategories">
-          <li><a href="/categories/Occasions/National Day"><img src="/assets/categories/Occasions/National Day.png" alt="اليوم الوطني" loading="lazy"><span data-i18n="اليوم الوطني  ">اليوم الوطني  </span></a></li>
-          <li><a href="/categories/Occasions/Haq Al-Laila"><img src="/assets/categories/Occasions/Haq Al-Laila.png" alt="حق الليلة" loading="lazy"><span data-i18n="حق الليلة ">حق الليلة </span></a></li>
-          <li><a href="/categories/Occasions/Mother's Day"><img src="/assets/categories/Occasions/Mother's Day.png" alt="عيد الام" loading="lazy"><span data-i18n="عيد الام ">عيد الام </span></a></li>
-          <li><a href="/categories/Occasions/Graduation"><img src="/assets/categories/Occasions/Graduation.webp" alt="تخرج" loading="lazy"><span data-i18n="تخرج ">تخرج </span></a></li>
-          <li><a href="/categories/Occasions/Eid"><img src="/assets/categories/Occasions/Eid.webp" alt="العيد" loading="lazy"><span data-i18n="العيد ">العيد </span></a></li>
-          <li><a href="/categories/Occasions/Hajj"><img src="/assets/categories/Occasions/Hajj.webp" alt="حج" loading="lazy"><span data-i18n="حج ">حج </span></a></li>
-        </ul>
+        <div class="dropdown">
+          <button class="dropbtn"><span data-i18n="الدعم">الدعم</span></button>
+          <div class="dropdown-content">
+            <a href="/policy?page=contact">📘<span data-i18n="تواصل معنا"> تواصل معنا</span></a>
+            <a href="/policy?page=security-center">🛡️<span data-i18n="مركز الأمان"> مركز الأمان</span></a>
+            <a href="/policy?page=returns">📜<span data-i18n="سياسة الإرجاع والاسترداد"> سياسة الإرجاع والاسترداد</span></a>
+            <a href="/policy?page=shipping-info">📦 <span data-i18n="معلومات الشحن">معلومات الشحن</span></a>
+            <a href="/policy?page=work-with-Bariq">💱 <span data-i18n="اعمل مع Bariq">اعمل مع Bariq</span></a>
+          </div>
+        </div>
+
+        <div class="dropdown">
+          <button class="dropbtn"><span data-i18n="البلد">البلد</span></button>
+          <div class="dropdown-content lang-country">
+            <label for="language">🌐<span data-i18n="اللغة"> اللغة</span></label>
+            <select id="language">
+              <option value="ar">العربية</option>
+              <option value="en">English</option>
+            </select>
+            <label for="currency">💱<span data-i18n="العملة"> العملة</span></label>
+            <select id="currency">
+              <option value="AED"><span data-i18n="درهم">درهم</span></option>
+              <option value="USD"><span data-i18n="دولار">دولار</span></option>
+              <option value="EUR"><span data-i18n="يورو">يورو</span></option>
+              <option value="SAR"><span data-i18n="ريال سعودي">ريال سعودي</span></option>
+              <option value="EGP"><span data-i18n="جنيه مصري">جنيه مصري</span></option>
+              <option value="KWD"><span data-i18n="دينار كويتي">دينار كويتي</span></option>
+              <option value="JOD"><span data-i18n="دينار أردني">دينار أردني</span></option>
+              <option value="GBP"><span data-i18n="جنيه إسترليني">جنيه إسترليني</span></option>
+            </select>
+            <div class="country-info">🏳️ <span data-i18n="أنت الآن تتسوق في">أنت الآن تتسوق في</span> <span data-i18n="الإمارات"> الإمارات</span></div>
+          </div>
+        </div>
+
+        <div class="cart">
+          <a href="/Cart" title="سلة التسوق">
+            <svg class="cart-icon" xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+              <path d="M6 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+              <path d="M17 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+              <path d="M17 17h-11v-14h-2" />
+              <path d="M6 5l14 1l-1 7h-13" />
+            </svg>
+            <span class="cart-count" id="checkout-count" style="display:none"></span>
+          </a>
+        </div>
       </div>
-    </li>
-
-    <!-- 2.  اكريلك -->
-    <li class="category-item">
-      <a href="/categories/Acrylic">💎<span data-i18n=" اكريلك">اكريلك </span><span class="arrow">›</span></a>
-      <div class="flyout category-flyout">
-        <ul class="subcategories">
-          <li><a href="/categories/Acrylic/Box"><img src="/assets/categories/Acrylic/Box.webp" alt="بوكس" loading="lazy"><span data-i18n="بوكس">بوكس</span></a></li>
-          <li><a href="/categories/Acrylic/Tables"><img src="/assets/categories/Acrylic/Tables.webp" alt="طولات " loading="lazy"><span data-i18n="طولات ">طولات </span></a></li>
-          <li><a href="/categories/Acrylic/Born in"><img src="/assets/categories/Acrylic/Born in.png" alt="مواليد " loading="lazy"><span data-i18n="مواليد ">مواليد </span></a></li>
-          <li><a href="/categories/Acrylic/censer"><img src="/assets/categories/Acrylic/censer.webp" alt="مباخر " loading="lazy"><span data-i18n="مباخر ">مباخر </span></a></li>
-          <li><a href="/categories/Acrylic/Trays"><img src="/assets/categories/Acrylic/Trays.webp" alt="صواني " loading="lazy"><span data-i18n="صواني ">صواني </span></a></li>
-          <li><a href="/categories/Acrylic/Stand"><img src="/assets/categories/Acrylic/Stand.webp" alt="استاند " loading="lazy"><span data-i18n="استاند ">استاند </span></a></li>
-        </ul>
-      </div>
-    </li>
-
-    <!-- 3.  ورق -->
-    <li class="category-item">
-      <a href="/categories/paper">📄<span data-i18n="ورق ">ورق </span><span class="arrow">›</span></a>
-      <div class="flyout category-flyout">
-        <ul class="subcategories">
-          <li><a href="/categories/paper/Bags"><img src="/assets/categories/paper/Bags.webp" alt="شنط  " loading="lazy"><span data-i18n="شنط  ">شنط  </span></a></li>
-          <li><a href="/categories/paper/Cups"><img src="/assets/categories/paper/Cups.webp" alt="كوب " loading="lazy"><span data-i18n="كوب ">كوب </span></a></li>
-          <li><a href="/categories/paper/Tissues"><img src="/assets/categories/paper/Tissues.webp" alt="تيشو " loading="lazy"><span data-i18n="تيشو ">تيشو </span></a></li>
-          <li><a href="/categories/paper/Stickers"><img src="/assets/categories/paper/Stickers.webp" alt="استيكر " loading="lazy"><span data-i18n="استيكر ">استيكر </span></a></li>
-        </ul>
-      </div>
-    </li>
-
-    <!-- 4.  فوركس -->
-    <li class="category-item">
-      <a href="/categories/Forex">🪙<span data-i18n="فوركس ">فوركس </span><span class="arrow">›</span></a>
-      <div class="flyout category-flyout">
-        <ul class="subcategories">
-          <li><a href="/categories/Forex/tables"><img src="/assets/categories/Forex/tables.webp" alt="طولات " loading="lazy"><span data-i18n="طولات ">طولات </span></a></li>
-          <li><a href="/categories/Forex/stands"><img src="/assets/categories/Forex/stands.webp" alt="استاند  " loading="lazy"><span data-i18n="استاند  ">استاند  </span></a></li>
-          <li><a href="/categories/Forex/models"><img src="/assets/categories/Forex/models.webp" alt="مجسم " loading="lazy"><span data-i18n="مجسم ">مجسم </span></a></li>
-          <li><a href="/categories/Forex/rotations"><img src="/assets/categories/Forex/rotations.webp" alt="دوران " loading="lazy"><span data-i18n="دوران ">دوران </span></a></li>
-        </ul>
-      </div>
-    </li>
-
-    <!-- 5.  خشب   -->
-    <li class="category-item">
-      <a href="/categories/wood">🪵<span data-i18n="خشب  "> خشب  </span><span class="arrow">›</span></a>
-      <div class="flyout category-flyout">
-        <ul class="subcategories">
-          <li><a href="/categories/wood/tables"><img src="/assets/categories/wood/tables.webp" alt="طولات " loading="lazy"><span data-i18n="طولات">طولات </span></a></li>
-          <li><a href="/categories/wood/chairs"><img src="/assets/categories/wood/chairs.webp" alt="دوران " loading="lazy"><span data-i18n="دوران  ">دوران  </span></a></li>
-          <li><a href="/categories/wood/benches"><img src="/assets/categories/wood/benches.webp" alt="مجسم " loading="lazy"><span data-i18n="مجسم ">مجسم </span></a></li>
-          <li><a href="/categories/wood/cabinets"><img src="/assets/categories/wood/cabinets.webp" alt="استاند  " loading="lazy"><span data-i18n="استاند  ">استاند  </span></a></li>
-        </ul>
-      </div>
-    </li>
-
-    <!-- 6.   جلد -->
-    <li class="category-item">
-      <a href="/categories/leather">👞<span data-i18n="جلد  ">جلد  </span><span class="arrow">›</span></a>
-      <div class="flyout category-flyout">
-        <ul class="subcategories">
-          <li><a href="/categories/leather/boxes"><img src="/assets/categories/leather/boxes.webp" alt="بوكسات " loading="lazy"><span data-i18n="بوكسات ">بوكسات</span></a></li>
-          <li><a href="/categories/leather/born-in"><img src="/assets/categories/leather/born-in.webp" alt="مواليد " loading="lazy"><span data-i18n="مواليد ">مواليد</span></a></li>
-          <li><a href="/categories/leather/trays"><img src="/assets/categories/leather/trays.webp" alt="صواني " loading="lazy"><span data-i18n="صواني ">صواني</span></a></li>
-          <li><a href="/categories/leather/tables"><img src="/assets/categories/leather/tables.webp" alt="طولات " loading="lazy"><span data-i18n="طولات ">طولات</span></a></li>
-        </ul>
-      </div>
-    </li>
-
-
-    <!-- 7.   استيكر -->
-    <li class="category-item">
-      <a href="/categories/sticker">🏷️<span data-i18n="استيكر">استيكر</span><span class="arrow">›</span></a>
-      <div class="flyout category-flyout">
-        <ul class="subcategories">
-          <li><a href="/categories/Sticker/born-in"><img src="/assets/categories/Sticker/born-in.webp" alt="مواليد " loading="lazy"><span data-i18n="مواليد ">مواليد</span></a></li>
-          <li><a href="/categories/Sticker/empty"><img src="/assets/categories/Sticker/empty.webp" alt="مفرغ " loading="lazy"><span data-i18n="مفرغ ">مفرغ</span></a></li>
-          <li><a href="/categories/Sticker/full"><img src="/assets/categories/Sticker/full.webp" alt="كامل " loading="lazy"><span data-i18n="كامل ">كامل</span></a></li>
-          <li><a href="/categories/Sticker/occasions"><img src="/assets/categories/Sticker/occasions.webp" alt="المناسبات" loading="lazy"><span data-i18n="المناسبات">المناسبات</span></a></li>
-        </ul>
-      </div>
-    </li>
-
-
-        <!-- 8.   رمضان -->
-    <li class="category-item">
-      <a href="/categories/Ramadan">🌙<span data-i18n="رمضان">رمضان</span><span class="arrow">›</span></a>
-      <div class="flyout category-flyout">
-        <ul class="subcategories">
-          <li><a href="/categories/Ramadan/wood"><img src="/assets/categories/Ramadan/wood.webp" alt="خشب" loading="lazy"><span data-i18n="خشب">خشب</span></a></li>
-          <li><a href="/categories/Ramadan/acrylic"><img src="/assets/categories/Ramadan/acrylic.webp" alt="اكريلك " loading="lazy"><span data-i18n="اكريلك ">اكريلك</span></a></li>
-          <li><a href="/categories/Ramadan/forex"><img src="/assets/categories/Ramadan/forex.webp" alt="فوركس " loading="lazy"><span data-i18n="فوركس ">فوركس </span></a></li>
-          <li><a href="/categories/Ramadan/leather"><img src="/assets/categories/Ramadan/leather.webp" alt="جلد " loading="lazy"><span data-i18n="جلد "> جلد</span></a></li>
-        </ul>
-      </div>
-    </li>
-
-  </div>
-</div>
-
-
-
-
-    <!-- داخل شريط البحث -->
-<div class="search-container">
-<input type="text" id="textSearch"
-  placeholder="ابحث بالاسم"
-  data-i18n-placeholder="ابحث بالاسم">
-  <!-- أيقونة البحث -->
-  <span class="icon search search-icon" onclick="performTextSearch()" style="cursor:pointer;display:flex;align-items:center;">
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-    </svg>
-  </span>
-
-  <!-- أيقونة الكاميرا -->
-  <label class="icon camera camera-icon" for="imageSearchInput" style="cursor:pointer;display:flex;align-items:center;margin-right:4px;">
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-      <circle cx="12" cy="13" r="4"/>
-    </svg>
-  </label>
-  <input type="file" id="imageSearchInput" accept="image/*" style="display:none;">
-</div>
+    </header>
 
 <script>
 (function(){
@@ -417,73 +361,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   });
 })();
 </script>
-
-
-    <!-- الحساب -->
-    <div class="dropdown">
-      <button class="dropbtn"><span data-i18n="الحساب">الحساب</span> </button>
-      <div class="dropdown-content">
-        <a href="/login">🔑<span data-i18n="تسجيل الدخول"> تسجيل الدخول</span></a>
-        <a href="login.html?tab=register">📝<span data-i18n="إنشاء حساب"> إنشاء حساب</span></a>
-        <a href="/account">👤<span data-i18n="حسابي"> حسابي</span></a>
-      </div>
-    </div>
-
-   <!-- الدعم -->
-    <div class="dropdown">
-      <button class="dropbtn"><span data-i18n="الدعم">الدعم</span> </button>
-      <div class="dropdown-content">
-        <a href="/policy.html?page=contact">📘<span data-i18n="تواصل معنا"> تواصل معنا</span></a>
-        <a href="/policy.html?page=security-center">🛡️<span data-i18n="مركز الأمان"> مركز الأمان</span></a>
-        <a href="/policy.html?page=returns">📜<span data-i18n="سياسة الإرجاع والاسترداد"> سياسة الإرجاع والاسترداد</span></a>
-        <a href="/policy.html?page=shipping-info">📦 <span data-i18n="معلومات الشحن">معلومات الشحن</span></a>
-        <a href="/policy.html?page=work-with-Bariq">💱 <span data-i18n="اعمل مع Bariq">اعمل مع Bariq</span></a>
-      </div>
-    </div>
-
-    <!-- البلد -->
-    <div class="dropdown">
-      <button class="dropbtn"><span data-i18n="البلد">البلد</span> </button>
-      <div class="dropdown-content lang-country">
-        <label for="language">🌐<span data-i18n="اللغة"> اللغة</span></label>
-        <select id="language">
-          <option value="ar">العربية</option>
-          <option value="en">English</option>
-        </select>
-
-        <label for="currency">💱<span data-i18n="العملة"> العملة</span></label>
-        <select id="currency">
-          <option value="AED"><span data-i18n="درهم">درهم</span></option>
-          <option value="USD"><span data-i18n="دولار">دولار</span></option>
-          <option value="EUR"><span data-i18n="يورو">يورو</span></option>
-          <option value="SAR"><span data-i18n="ريال سعودي">ريال سعودي</span></option>
-          <option value="EGP"><span data-i18n="جنيه مصري">جنيه مصري</span></option>
-          <option value="KWD"><span data-i18n="دينار كويتي">دينار كويتي</span></option>
-          <option value="JOD"><span data-i18n="دينار أردني">دينار أردني</span></option>
-          <option value="GBP"><span data-i18n="جنيه إسترليني">جنيه إسترليني</span></option>
-        </select><br>
-
-        <div class="country-info">
-          🏳️ <span data-i18n="أنت الآن تتسوق في">أنت الآن تتسوق في</span> <span data-i18n="الإمارات"> الإمارات</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- السلة -->
-    <div class="cart">
-      <a href="/Cart" title="سلة التسوق">
-        <svg class="cart-icon" xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-shopping-cart">
-          <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-          <path d="M6 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-          <path d="M17 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
-          <path d="M17 17h-11v-14h-2" />
-          <path d="M6 5l14 1l-1 7h-13" />
-        </svg>
-        <span class="cart-count" id="checkout-count" style="display:none"></span>
-      </a>
-    </div>
-  </div>
-</header>
 
 <main class="main" id="main">
   
@@ -755,19 +632,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </footer>
 <script src="/java/supabase.min.js?v=supabase-20260725a" defer></script>
-<script src="/java/main.min.js?v=135" defer></script>
-<script src="/java/sw-refresh.js?v=sw-refresh-20260725p" defer></script>
-<script src="/java/instant-nav.js?v=instant-nav-20260728b" defer></script>
+<script src="/java/main.min.js?v=136" defer></script>
+<script src="/java/sw-refresh.js?v=sw-refresh-20260728b" defer></script>
+<script src="/java/instant-nav.js?v=instant-nav-20260728d" defer></script>
 <script src="/translations/translation.min.js?v=translation-20260726c" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
 <script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260728d" defer></script>
-<script src="/java/push-welcome.js?v=push-welcome-20260727d" defer></script>
+<script src="/java/push-welcome.js?v=push-welcome-20260728a" defer></script>
 <script src="/java/notifications.min.js?v=notifications-20260725o" defer></script>
 <script type="module" src="/java/Products.min.js?v=products-20260728c" defer></script>
 
 <style>
 .campaign-popup-backdrop{position:fixed;inset:0;z-index:100200;background:rgba(7,16,32,.52);display:flex;align-items:center;justify-content:center;padding:18px;opacity:0;pointer-events:none;transition:opacity .22s ease}.campaign-popup-backdrop.show{opacity:1;pointer-events:auto}.campaign-popup{width:min(92vw,460px);overflow:hidden;border-radius:18px;background:#fff;box-shadow:0 28px 70px rgba(10,22,40,.32);transform:translateY(18px) scale(.96);transition:transform .28s cubic-bezier(.18,1.16,.36,1)}.campaign-popup-backdrop.show .campaign-popup{transform:translateY(0) scale(1)}.campaign-popup-media{position:relative;min-height:170px;background:linear-gradient(135deg,#152546,#2d405f)}.campaign-popup-media img{width:100%;height:230px;object-fit:cover;display:block;border-radius:0}.campaign-popup-media.no-image{display:flex;align-items:center;justify-content:center;color:#fff}.campaign-popup-badge{position:absolute;top:14px;inset-inline-start:14px;background:#D4AF37;color:#152546;border-radius:999px;padding:6px 12px;font-weight:900;font-size:.82rem}.campaign-popup-close{position:absolute;top:12px;inset-inline-end:12px;width:34px;height:34px;border:0;border-radius:50%;background:rgba(255,255,255,.92);color:#152546;font-size:20px;line-height:1;cursor:pointer}.campaign-popup-body{padding:20px;text-align:start}.campaign-popup-title{margin:0 0 8px;color:#152546;font-size:1.35rem;font-weight:900}.campaign-popup-desc{margin:0;color:#516078;line-height:1.7;font-size:.96rem}.campaign-popup-actions{display:flex;gap:10px;margin-top:18px}.campaign-popup-primary{flex:1;text-align:center;text-decoration:none;border-radius:999px;background:#152546;color:#fff;padding:12px 16px;font-weight:800}.campaign-popup-secondary{border:1px solid #d9e0ec;background:#fff;color:#152546;border-radius:999px;padding:12px 16px;font-weight:800;cursor:pointer}@media(max-width:520px){.campaign-popup{border-radius:16px}.campaign-popup-media img{height:190px}.campaign-popup-actions{flex-direction:column}.campaign-popup-title{font-size:1.18rem}}
-.campaign-popup-code{margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px dashed #D4AF37;background:#fff9e2;color:#152546;border-radius:14px;padding:12px 14px;font-weight:900;letter-spacing:.08em;direction:ltr}.campaign-popup-code span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.campaign-popup-use{width:100%;margin-top:12px;border:0;border-radius:999px;background:#152546;color:#fff;padding:12px 16px;font-weight:900;cursor:pointer}.campaign-popup-use.done{background:#1f8f56}
+.campaign-popup-code{margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px dashed #D4AF37;background:#fff9e2;color:#152546;border-radius:14px;padding:12px 14px;font-weight:900;letter-spacing:.08em;direction:ltr}.campaign-popup-code span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.campaign-popup-use{width:100%;margin-top:12px;border:0;border-radius:999px;background:#152546;color:#fff;padding:12px 16px;font-weight:900;cursor:pointer}.campaign-popup-actions .campaign-popup-use{margin-top:0}.campaign-popup-use.done{background:#1f8f56}
 </style>
 
 <script>
@@ -796,6 +673,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
     return 'x2_campaign_popup_seen_' + encodeURIComponent(customer) + '_' + (c.id || c.created_at || c.name || 'active');
   }
+  function campaignSessionKey(c){
+    return 'x2_campaign_popup_session_' + (c.id || c.created_at || c.name || 'active');
+  }
   function activeCampaign(c){
     const day = function(v){ const d = new Date(v); return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(); };
     const today = day(Date.now());
@@ -809,9 +689,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   function showCampaignPopup(c){
     const code = campaignCode(c);
     if (!code) return;
-    const seenKey = campaignSeenKey(c);
-    if (localStorage.getItem(seenKey) === '1') return;
-    localStorage.setItem(seenKey, '1');
+    const sessionKey = campaignSessionKey(c);
+    try { if (sessionStorage.getItem(sessionKey) === '1') return; } catch(e) {}
     const banner = c.banner || c.image || '';
     const discount = parseFloat(c.discount) || 0;
     const title = c.name || tr('عرض خاص', 'Special offer');
@@ -828,14 +707,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <h3 class="campaign-popup-title">${esc(title)}</h3>
         ${desc ? `<p class="campaign-popup-desc">${esc(desc)}</p>` : ''}
         <div class="campaign-popup-code"><span>${esc(code)}</span></div>
-        <button class="campaign-popup-use" type="button">${esc(tr('نسخ الكوبون', 'Copy coupon'))}</button>
+        <div class="campaign-popup-actions">
+          <button class="campaign-popup-use" type="button">${esc(tr('نسخ الكوبون', 'Copy coupon'))}</button>
+          <button class="campaign-popup-later campaign-popup-secondary" type="button">${esc(tr('لاحقًا', 'Later'))}</button>
+        </div>
       </div>
     </div>`;
-    const close = function(){ backdrop.classList.remove('show'); setTimeout(function(){ backdrop.remove(); }, 240); };
+    const markSession = function(){ try { sessionStorage.setItem(sessionKey, '1'); } catch(e) {} };
+    const close = function(){ markSession(); backdrop.classList.remove('show'); setTimeout(function(){ backdrop.remove(); }, 240); };
     backdrop.addEventListener('click', function(e){ if (e.target === backdrop) close(); });
     backdrop.querySelector('.campaign-popup-close').addEventListener('click', close);
+    backdrop.querySelector('.campaign-popup-later').addEventListener('click', close);
     backdrop.querySelector('.campaign-popup-use').addEventListener('click', async function(){
       const btn = this;
+      markSession();
       try { await navigator.clipboard.writeText(code); } catch(e) {}
       btn.classList.add('done');
       btn.textContent = tr('تم نسخ الكوبون', 'Coupon copied');
@@ -868,8 +753,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       setTimeout(loadCampaignPopup, delay || 0);
     };
     ['pointerdown','keydown','touchstart','scroll'].forEach(function(type){
-      window.addEventListener(type, function(){ start(900); }, { once:true, passive:true });
+      window.addEventListener(type, function(){ start(3200); }, { once:true, passive:true });
     });
+    setTimeout(function(){ start(4200); }, 0);
   }
   window.addEventListener('load', scheduleCampaignPopup, { once:true });
 })();
@@ -954,6 +840,10 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin:18px 0 6px!imp
   body.home-immersive-header .categories{height:54px!important;min-height:54px!important;overflow-x:auto!important;overflow-y:hidden!important;-webkit-overflow-scrolling:touch!important;touch-action:pan-x pan-y pinch-zoom!important;white-space:nowrap!important;padding-bottom:7px!important}
   body.home-immersive-header .categories a{height:38px!important;min-height:38px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;line-height:1.25!important;touch-action:pan-x pan-y pinch-zoom!important}
 }
+@media(min-width:700px) and (max-width:899px){
+  body.home-immersive-header #category-products .products-row{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important}
+  body.home-immersive-header .product-img{height:150px!important;min-height:150px!important}
+}
 </style>
 
 <style>
@@ -1020,7 +910,7 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin:18px 0 6px!imp
   const themeMeta = document.querySelector('meta[name="theme-color"]');
   const appleStatusMeta = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
   if (themeMeta) themeMeta.setAttribute('content', siteThemeColor);
-  if (appleStatusMeta) appleStatusMeta.setAttribute('content', 'default');
+  if (appleStatusMeta) appleStatusMeta.setAttribute('content', 'black-translucent');
 })();
 </script>
 
@@ -1278,7 +1168,7 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin:18px 0 6px!imp
   // تسجيل Service Worker لدعم PWA (تثبيت الموقع كتطبيق)
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function() {
-      navigator.serviceWorker.register('/sw.js?v=186', { updateViaCache: 'none' }).then(function(reg) {
+      navigator.serviceWorker.register('/sw.js?v=188', { updateViaCache: 'none' }).then(function(reg) {
         var refreshing = false;
         navigator.serviceWorker.addEventListener('controllerchange', function() {
           if (refreshing || sessionStorage.getItem('sw-v181-refresh') === '1') return;

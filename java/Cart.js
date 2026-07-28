@@ -218,6 +218,8 @@ function x2VisitorAreaFallback() {
     function renderList(items) {
         listRoot.querySelectorAll(".product-card-cart, .product-card").forEach(n => n.remove()),
         items.forEach(addCard), toggleEmptyState(), updateSummary();
+        document.documentElement.classList.toggle("x2-cart-empty", !items.length);
+        document.documentElement.classList.toggle("x2-cart-has-items", !!items.length);
         document.documentElement.classList.add("x2-cart-rendered");
     }
     function persistFromDOM() {

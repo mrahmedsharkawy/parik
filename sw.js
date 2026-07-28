@@ -1,5 +1,5 @@
 /* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v199';
+const CACHE = 'bariq-v204';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -176,6 +176,37 @@ async function closeVisibleNotifications() {
   } catch(e) {}
 }
 
+function appHtmlCachePath(path) {
+  if (path === '/' || path === '' || path === '/index.html') return '/';
+  if (path === '/Cart' || path === '/Cart.html') return '/Cart';
+  if (path === '/product' || path === '/product.html' || /^\/product\//.test(path)) return '/product';
+  if (/\.html$/.test(path)) return path.replace(/\.html$/, '');
+  return path;
+}
+
+function warmHtmlRoute(path) {
+  try {
+    const url = new URL(path, self.location.origin);
+    if (url.origin !== self.location.origin) return Promise.resolve();
+    const cacheKey = appHtmlCachePath(url.pathname || '/');
+    const request = new Request(cacheKey, { cache: 'reload', credentials: 'same-origin' });
+    return caches.open(CACHE).then(function(cache) {
+      return fetch(request).then(function(res) {
+        if (res.ok && !res.redirected && res.type !== 'opaqueredirect') {
+          return cache.put(cacheKey, res.clone());
+        }
+      }).catch(function() {});
+    });
+  } catch(e) {
+    return Promise.resolve();
+  }
+}
+
+function warmHtmlRoutes(paths) {
+  if (!Array.isArray(paths) || !paths.length) return Promise.resolve();
+  return Promise.all(paths.slice(0, 12).map(warmHtmlRoute));
+}
+
 self.addEventListener('install', function(e) {
   self.skipWaiting();
 });
@@ -184,6 +215,8 @@ self.addEventListener('activate', function(e) {
   e.waitUntil(
     caches.keys().then(function(keys) {
       return Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)));
+    }).then(function() {
+      if (self.registration.navigationPreload) return self.registration.navigationPreload.enable().catch(function(){});
     }).then(function() {
       return self.clients.claim();
     })
@@ -267,15 +300,15 @@ self.addEventListener('fetch', function(e) {
     return;
   }
 
-  // HTML: network-first to avoid stale pages after deployments on mobile devices.
+  // Static HTML routes: cache-first for app-like mobile navigation, refresh in background.
   if (isHtml) {
     e.respondWith(
       caches.open(CACHE).then(function(cache) {
-        return refreshCache(cache, e.request, htmlCacheKey).catch(function() {
-          return cache.match(htmlCacheKey).then(function(cached) {
-            if (cached) return cached;
-            return offlineFallback();
+        return cache.match(htmlCacheKey).then(function(cached) {
+          const fresh = refreshCache(cache, e.request, htmlCacheKey).catch(function() {
+            return cached || offlineFallback();
           });
+          return cached || fresh;
         });
       })
     );
@@ -604,6 +637,9 @@ self.addEventListener('message', function(e) {
   }
   if (e.data && e.data.type === 'SET_PUSH_LANG') {
     e.waitUntil(setStoredPushLanguage(e.data.lang));
+  }
+  if (e.data && e.data.type === 'WARM_ROUTES') {
+    e.waitUntil(warmHtmlRoutes(e.data.urls));
   }
   if (e.data && e.data.type === 'CLEAR_BADGE') {
     _badgeCount = 0;

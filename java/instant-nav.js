@@ -18,7 +18,7 @@
 
   var queued = [];
   var inFlight = 0;
-  var maxInFlight = 2;
+  var maxInFlight = 3;
   var seen = new Set();
   var maxSeen = 60;
 
@@ -87,7 +87,17 @@
 
   function doWarm(path) {
     addPrefetchLink(path);
-    return Promise.resolve();
+    try {
+      if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({ type: "WARM_ROUTES", urls: [path] });
+      }
+    } catch (e) {}
+    return fetch(path, {
+      method: "GET",
+      credentials: "same-origin",
+      cache: "reload",
+      priority: "low"
+    }).catch(function () {});
   }
 
   function pumpQueue() {
@@ -137,14 +147,15 @@
   }
 
   document.addEventListener("pointerover", onIntent, { passive: true, capture: true });
+  document.addEventListener("pointerdown", onIntent, { passive: true, capture: true });
   document.addEventListener("touchstart", onIntent, { passive: true, capture: true });
   document.addEventListener("focusin", onIntent, { passive: true, capture: true });
 
   primeCategoriesPage();
 
   window.addEventListener("load", function () {
-    var run = function () { setTimeout(bootWarmup, 4500); };
-    if ("requestIdleCallback" in window) requestIdleCallback(run, { timeout: 6000 });
-    else setTimeout(bootWarmup, 6500);
+    var run = function () { setTimeout(bootWarmup, 1200); };
+    if ("requestIdleCallback" in window) requestIdleCallback(run, { timeout: 2500 });
+    else setTimeout(bootWarmup, 1800);
   }, { once: true });
 })();

@@ -87,6 +87,7 @@
     return isInstalledMobileApp()||/Android/i.test(ua);
   }
   var pushWelcomeTimer=0;
+  var PUSH_WELCOME_DELAY=4200;
   function canShowPushWelcome(){
     try{
       return canPromptForPush()&&'Notification'in window&&Notification.permission!=='granted'&&sessionStorage.getItem('x2_push_welcome_dismissed')!=='1'&&sessionStorage.getItem('x2_push_welcome_prompted')!=='1';
@@ -119,7 +120,7 @@
             sessionStorage.setItem('x2_push_welcome_prompted','1');
             modal.style.display='flex';
           }
-        },700);
+        },PUSH_WELCOME_DELAY);
       }
     }catch(e){}
   };
@@ -132,8 +133,8 @@
     }
   });
   function initPushWelcome(){
-    setTimeout(window.maybeShowPushWelcome, 900);
-    window.addEventListener('pageshow', function(){ setTimeout(window.maybeShowPushWelcome, 900); });
+    setTimeout(window.maybeShowPushWelcome, 1600);
+    window.addEventListener('pageshow', function(){ setTimeout(window.maybeShowPushWelcome, 1600); });
   }
   if(document.body)initPushWelcome();
   else document.addEventListener('DOMContentLoaded',initPushWelcome,{once:true});

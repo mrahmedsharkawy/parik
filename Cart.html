@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
   <head>
 <script>(function(){try{var p=new URLSearchParams(location.search),u=p.get('lang'),s=localStorage.getItem('lang'),l=(u==='en'||u==='ar')?u:(s==='en'?'en':'ar');localStorage.setItem('lang',l);document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';if(l==='en')document.documentElement.classList.add('x2-i18n-pending');setTimeout(function(){document.documentElement.classList.remove('x2-i18n-pending')},1600)}catch(e){}})();</script>
-<script>(function(){try{var raw=localStorage.getItem('x2_cart'),items=raw?JSON.parse(raw):[];if(Array.isArray(items)&&items.length)document.documentElement.classList.add('x2-cart-has-items')}catch(e){}})();</script>
+<script>(function(){try{var raw=localStorage.getItem('x2_cart'),items=raw?JSON.parse(raw):[];if(Array.isArray(items)&&items.length)document.documentElement.classList.add('x2-cart-has-items');else document.documentElement.classList.add('x2-cart-empty')}catch(e){document.documentElement.classList.add('x2-cart-empty')}})();</script>
 <!-- Google Tag Manager -->
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -49,9 +49,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <meta property="og:url" content="https://bariq.com">
   <meta property="og:type" content="website">
   <style>*{box-sizing:border-box;margin:0}html,body{height:100%}body{background:#152546;font-family:'Cairo',Arial,sans-serif;padding-top:env(safe-area-inset-top)}.page{min-height:100dvh;display:flex;flex-direction:column}main{width:70%;margin:70px auto 50px;display:flex;flex-direction:column;justify-content:center}header,.main-header{background-color:#152546;padding-top:env(safe-area-inset-top)}.main-header{position:fixed;inset:0 0 auto 0;z-index:1000;width:100%;padding:7px 0;box-shadow:0 2px 4px rgba(0,0,0,.1)}.header-content{width:70%;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;min-height:50px}.logo img{height:36px}.search-container{flex:1;display:flex;align-items:center;background:#fff;border-radius:20px;margin:0 15px;max-width:1100px;height:38px;padding:0 10px}.search-container input{border:none;flex:1;outline:none;padding:6px 10px;font-size:16px;background:transparent}img,video{max-width:100%;height:auto;border-radius:3px}.dp-img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:7px;background:#f0f0f0}@media(max-width:899px){.main-header .dropdown,.main-header .cart,.main-header .logo{display:none!important}body{padding-bottom:calc(65px + env(safe-area-inset-bottom))}}</style>
-  <link rel="stylesheet" href="/style/style.css?v=130">
+  <link rel="stylesheet" href="/style/style.css?v=131">
   <link rel="stylesheet" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260728h" media="(max-width: 899px)">
-  <style>html,body,.page{background:#fff!important}</style>
+  <style>html,body{background:#152546!important}.page,main.main{background:#fff!important}@media(min-width:900px){.mobile-nav{display:none!important}}</style>
 
   <noscript>
 </noscript>
@@ -131,6 +131,7 @@ main#main {
 #category-products .products-row { column-count: 4 !important; }
 @media (max-width: 1300px) { #category-products .products-row { column-count: 3 !important; } }
 @media (max-width: 992px)  { #category-products .products-row { column-count: 2 !important; } }
+@media (min-width: 700px) and (max-width: 899px) { #category-products .products-row { column-count: 3 !important; } }
 
 
 /* 5. شريط الشحن المجاني */
@@ -180,11 +181,26 @@ div.free-shipping-bar * { color: #1f5f20 !important; }
 .recommended-title { color: #152546 !important; }
 
 /* عند السلة الفارغة: أخفِ الملخص واجعل كتلة الفراغ فوق التوصيات */
+html.x2-cart-empty .cart-left { display: none !important; }
+html.x2-cart-empty .free-shipping-bar,
+html.x2-cart-empty .cart-selection-bar { display: none !important; }
+html.x2-cart-empty #deleteSelectedBtn,
+html.x2-cart-empty .delete-selected,
+html.x2-cart-empty .delete-selected:before { display: none !important; content: none !important; }
+html.x2-cart-empty .cart-right { width: 100% !important; }
+html.x2-cart-empty .empty-cart-wrap { display: block !important; padding-top: 8px; }
+html.x2-cart-empty .recommended-title { display: block !important; margin-top: 14px !important; }
+html.x2-cart-empty #category-products { display: block !important; margin-top: 10px !important; }
 body.cart-is-empty .cart-left { display: none !important; }
+body.cart-is-empty .free-shipping-bar,
+body.cart-is-empty .cart-selection-bar { display: none !important; }
+body.cart-is-empty #deleteSelectedBtn,
+body.cart-is-empty .delete-selected,
+body.cart-is-empty .delete-selected:before { display: none !important; content: none !important; }
 body.cart-is-empty .cart-right { width: 100% !important; }
 body.cart-is-empty .empty-cart-wrap { display: block !important; padding-top: 8px; }
-body.cart-is-empty .recommended-title { margin-top: 14px !important; }
-body.cart-is-empty #category-products { margin-top: 10px !important; }
+body.cart-is-empty .recommended-title { display: block !important; margin-top: 14px !important; }
+body.cart-is-empty #category-products { display: block !important; margin-top: 10px !important; }
 html.x2-cart-has-items:not(.x2-cart-rendered) .cart-left,
 html.x2-cart-has-items:not(.x2-cart-rendered) .recommended-title,
 html.x2-cart-has-items:not(.x2-cart-rendered) #category-products { visibility: hidden !important; }
@@ -1396,14 +1412,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </footer>
 <script src="/java/supabase.min.js?v=supabase-20260725a" defer></script>
-<script src="/java/main.min.js?v=135" defer></script>
-<script src="/java/sw-refresh.js?v=sw-refresh-20260725p" defer></script>
-<script src="/java/instant-nav.js?v=instant-nav-20260728b" defer></script>
-<script type="module" src="./java/Cart.min.js?v=131"></script>
+<script src="/java/main.min.js?v=136" defer></script>
+<script src="/java/sw-refresh.js?v=sw-refresh-20260728b" defer></script>
+<script src="/java/instant-nav.js?v=instant-nav-20260728d" defer></script>
+<script type="module" src="./java/Cart.min.js?v=132"></script>
 <script src="/translations/translation.min.js?v=translation-20260726c" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
 <script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260728d" defer></script>
-<script src="/java/push-welcome.js?v=push-welcome-20260727d" defer></script>
+<script src="/java/push-welcome.js?v=push-welcome-20260728a" defer></script>
 <script src="/java/notifications.min.js?v=notifications-20260725o" defer></script>
 <script>
   // إظهار بانر تسجيل الدخول لغير المسجلين

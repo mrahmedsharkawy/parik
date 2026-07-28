@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
-<script>(function(){try{var p=new URLSearchParams(location.search),u=p.get('lang'),s=localStorage.getItem('lang'),l=(u==='en'||u==='ar')?u:(s==='en'?'en':'ar'),r=sessionStorage.getItem('x2_return_to_scroll_url')===location.href;localStorage.setItem('lang',l);document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';if(l==='en'&&!r)document.documentElement.classList.add('x2-i18n-pending');setTimeout(function(){document.documentElement.classList.remove('x2-i18n-pending')},1600)}catch(e){}})();</script>
+<script>(function(){try{var p=new URLSearchParams(location.search),u=p.get('lang'),s=localStorage.getItem('lang'),l=(u==='en'||u==='ar')?u:(s==='en'?'en':'ar'),r=sessionStorage.getItem('x2_return_to_scroll_url')===location.href;localStorage.setItem('lang',l);document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';document.documentElement.classList.add('x2-categories-booting');if(l==='en'&&!r)document.documentElement.classList.add('x2-i18n-pending');setTimeout(function(){document.documentElement.classList.remove('x2-i18n-pending')},1600)}catch(e){}})();</script>
 <!-- Google Tag Manager -->
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
 new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -35,7 +35,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   </script>
   <script src="/java/auth-reset.js"></script>
   <title data-i18n="جميع الفئات - Bariq">جميع الفئات - Bariq</title>
-  <meta name="theme-color" content="#007bff">
+  <meta name="theme-color" content="#152546">
   <link rel="icon" type="image/png" sizes="96x96" href="/assets/icon-96.png?v=site-icon-20260727">
   <link rel="icon" type="image/png" sizes="202x202" href="/assets/icon.png?v=site-icon-20260727">
   <link rel="apple-touch-icon" sizes="202x202" href="/assets/icon.png?v=site-icon-20260727">
@@ -80,9 +80,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <meta property="og:url" content="https://bariq.com">
   <meta property="og:type" content="website">
   <style>*{box-sizing:border-box;margin:0}html,body{height:100%}body{background:#152546;font-family:'Cairo',Arial,sans-serif;padding-top:env(safe-area-inset-top)}.page{min-height:100dvh;display:flex;flex-direction:column}main{width:70%;margin:70px auto 50px;display:flex;flex-direction:column;justify-content:center}header,.main-header{background-color:#152546;padding-top:env(safe-area-inset-top)}.main-header{position:fixed;inset:0 0 auto 0;z-index:1000;width:100%;padding:7px 0;box-shadow:0 2px 4px rgba(0,0,0,.1)}.header-content{width:70%;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;min-height:50px}.logo img{height:36px}.search-container{flex:1;display:flex;align-items:center;background:#fff;border-radius:20px;margin:0 15px;max-width:1100px;height:38px;padding:0 10px}.search-container input{border:none;flex:1;outline:none;padding:6px 10px;font-size:16px;background:transparent}img,video{max-width:100%;height:auto;border-radius:3px}.dp-img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:7px;background:#f0f0f0}@media(max-width:899px){.main-header .dropdown,.main-header .cart,.main-header .logo{display:none!important}body{padding-bottom:calc(65px + env(safe-area-inset-bottom))}}#category-products:empty{min-height:0;background:transparent;border-radius:8px}</style>
-  <link rel="stylesheet" href="/style/style.css?v=130">
+  <link rel="stylesheet" href="/style/style.css?v=131">
   <link rel="stylesheet" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260728h" media="(max-width: 899px)">
-  <style>html,body,.page{background:#fff!important}main #category-products:empty,main .cat-products-section:has(#category-products:empty){display:none!important;min-height:0!important;background:none!important;animation:none!important}.filters-scroll-container,main .filter-dropdown,html.occasions-category-page main.main>footer.site-footer,html.occasions-category-page main.main>#category-products{display:none!important}</style>
+  <style>html,body{background:#152546!important}.page,main.main{background:#fff!important}@media(min-width:900px){.mobile-nav{display:none!important}}html.x2-categories-booting .cat-page{visibility:hidden!important}main #category-products:empty,main .cat-products-section:has(#category-products:empty){display:none!important;min-height:0!important;background:none!important;animation:none!important}.filters-scroll-container,main .filter-dropdown,html.occasions-category-page main.main>footer.site-footer,html.occasions-category-page main.main>#category-products{display:none!important}</style>
   <noscript>
 </noscript>
   <link rel="canonical" href="https://bariqgifts.com/categories">
@@ -723,17 +723,23 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     buildSidebar();
     buildMobileTabs();
     applyCurrentRoute();
+    document.documentElement.classList.remove('x2-categories-booting');
   }
 
   async function initPage() {
     let cats = [], prods = [];
     let adminCats = [];
     try {
+      const cached = JSON.parse(localStorage.getItem('x2_categories_cache') || 'null');
+      if (cached && Array.isArray(cached.data) && cached.data.length) renderCategoryShell(cached.data);
+    } catch(e) {}
+    try {
       const saved = JSON.parse(localStorage.getItem('admin_categories') || 'null');
       if (Array.isArray(saved) && saved.length) adminCats = saved;
     } catch(e) {}
-    try { cats = await fetch('java/Categories.json', {cache:'no-store'}).then(r=>r.json()); } catch(e) {}
+    try { cats = await fetch('java/Categories.json', {cache:'force-cache'}).then(r=>r.json()); } catch(e) {}
     cats = mergeCategoryLists(cats, adminCats);
+    if (cats.length) try { localStorage.setItem('x2_categories_cache', JSON.stringify({ts:Date.now(), data:cats})); } catch(e) {}
     if (cats.length) renderCategoryShell(cats);
     cats = await loadSupabaseCategories(cats);
     if (cats.length) renderCategoryShell(cats);
@@ -747,7 +753,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
     // fallback: Products.json
     if (!prods.length) {
-      try { prods = await fetch('/java/Products.json', {cache:'no-store'}).then(r=>r.json()); } catch(e) {}
+      try { prods = await fetch('/java/Products.json', {cache:'force-cache'}).then(r=>r.json()); } catch(e) {}
     }
 
     allProducts = prods;
@@ -788,6 +794,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
     initPage().catch(() => {
       document.getElementById('catSubGrid').innerHTML = `<p style="color:#aaa;padding:20px">${t.loadError}</p>`;
+      document.documentElement.classList.remove('x2-categories-booting');
     });
   });
 
@@ -1233,13 +1240,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </footer>
 <script src="/java/supabase.min.js?v=supabase-20260725a" defer></script>
-<script src="/java/main.min.js?v=135" defer></script>
-<script src="/java/sw-refresh.js?v=sw-refresh-20260725p" defer></script>
-<script src="/java/instant-nav.js?v=instant-nav-20260728b" defer></script>
+<script src="/java/main.min.js?v=136" defer></script>
+<script src="/java/sw-refresh.js?v=sw-refresh-20260728b" defer></script>
+<script src="/java/instant-nav.js?v=instant-nav-20260728d" defer></script>
 <script src="/translations/translation.min.js?v=translation-20260726c" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
 <script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260728d" defer></script>
-<script src="/java/push-welcome.js?v=push-welcome-20260727d" defer></script>
+<script src="/java/push-welcome.js?v=push-welcome-20260728a" defer></script>
 <script type="module" src="./java/Products.min.js?v=products-20260728c"></script> <!-- ده يفضل يفضل في الآخر -->
 </body>
 </html>
