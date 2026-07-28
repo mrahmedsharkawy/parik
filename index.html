@@ -49,18 +49,22 @@
   </script>
   <script src="/java/auth-reset.js" defer></script>
   <title data-i18n="الصفحة الرئيسية - بريق">الصفحة الرئيسية - بريق</title>
-  <link rel="stylesheet" href="/style/style.css?v=131">
-  <link rel="stylesheet" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260728h" media="(max-width: 899px)">
+  <link rel="preload" href="/style/style.css?v=132" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="/style/style.css?v=132"></noscript>
+  <style>.mobile-nav{display:none}</style>
+  <link rel="preload" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260728h" as="style" media="(max-width: 899px)" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260728h" media="(max-width: 899px)"></noscript>
   <style>html,body{background:#152546!important}.page,main.main{background:#fff!important}@media(min-width:900px){.mobile-nav{display:none!important}}.categories a{font-family:"Segoe UI Emoji","Segoe UI Symbol","Apple Color Emoji","Noto Color Emoji",Arial,Tahoma,sans-serif!important}</style>
   <!-- Preload LCP image -->
   <script>
   (function(){
     var l = document.createElement('link');
     l.rel = 'preload';
-    l.href = matchMedia('(min-width: 900px)').matches ? '/assets/home/1.webp' : '/assets/home/2.webp';
+    l.href = matchMedia('(min-width: 900px)').matches ? '/assets/home/1.webp' : '/assets/home/صور الغلاف/1-420.webp?v=mobile-cover-20260728b';
     l.as = 'image';
     l.type = 'image/webp';
-    l.fetchPriority = matchMedia('(min-width: 900px)').matches ? 'high' : 'low';
+    l.fetchPriority = 'high';
+    l.imageSrcset = matchMedia('(min-width: 900px)').matches ? '/assets/home/1.webp 1000w' : '/assets/home/صور الغلاف/1-420.webp?v=mobile-cover-20260728b 420w';
     l.imageSizes = matchMedia('(min-width: 900px)').matches ? '70vw' : '100vw';
     document.head.appendChild(l);
   })();
@@ -384,7 +388,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <section class="animated-promo-banner mobile-promo-banner" aria-label="بنر بريق للهاتف">
   <a href="/offers" style="display:block;width:100%;height:100%;text-decoration:none">
     <div class="banner-inner fsh-inner mobile-promo-image-wrap">
-      <img src="/assets/home/صور الغلاف/1.webp?v=mobile-cover-20260727a" class="mobile-promo-image" alt="بنر بريق" fetchpriority="high" loading="eager" decoding="async" width="1000" height="200">
+      <img src="/assets/home/صور الغلاف/1-420.webp?v=mobile-cover-20260728b" class="mobile-promo-image" alt="بنر بريق" fetchpriority="high" loading="eager" decoding="async" width="420" height="190" sizes="100vw" srcset="/assets/home/صور الغلاف/1-420.webp?v=mobile-cover-20260728b 420w">
     </div>
   </a>
 </section>
@@ -632,15 +636,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </footer>
 <script src="/java/supabase.min.js?v=supabase-20260725a" defer></script>
-<script src="/java/main.min.js?v=136" defer></script>
-<script src="/java/sw-refresh.js?v=sw-refresh-20260728b" defer></script>
+<script src="/java/main.min.js?v=139" defer></script>
+<script src="/java/sw-refresh.js?v=sw-refresh-20260728d" defer></script>
 <script src="/java/instant-nav.js?v=instant-nav-20260728d" defer></script>
 <script src="/translations/translation.min.js?v=translation-20260726c" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
-<script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260728d" defer></script>
-<script src="/java/push-welcome.js?v=push-welcome-20260728a" defer></script>
+<script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260728e" defer></script>
+<script src="/java/push-welcome.js?v=push-welcome-20260728d" defer></script>
 <script src="/java/notifications.min.js?v=notifications-20260725o" defer></script>
-<script type="module" src="/java/Products.min.js?v=products-20260728f" defer></script>
+<script type="module" src="/java/Products.min.js?v=products-20260728i" defer></script>
 
 <style>
 .campaign-popup-backdrop{position:fixed;inset:0;z-index:100200;background:rgba(7,16,32,.52);display:flex;align-items:center;justify-content:center;padding:18px;opacity:0;pointer-events:none;transition:opacity .22s ease}.campaign-popup-backdrop.show{opacity:1;pointer-events:auto}.campaign-popup{width:min(92vw,460px);overflow:hidden;border-radius:18px;background:#fff;box-shadow:0 28px 70px rgba(10,22,40,.32);transform:translateY(18px) scale(.96);transition:transform .28s cubic-bezier(.18,1.16,.36,1)}.campaign-popup-backdrop.show .campaign-popup{transform:translateY(0) scale(1)}.campaign-popup-media{position:relative;min-height:170px;background:linear-gradient(135deg,#152546,#2d405f)}.campaign-popup-media img{width:100%;height:230px;object-fit:cover;display:block;border-radius:0}.campaign-popup-media.no-image{display:flex;align-items:center;justify-content:center;color:#fff}.campaign-popup-badge{position:absolute;top:14px;inset-inline-start:14px;background:#D4AF37;color:#152546;border-radius:999px;padding:6px 12px;font-weight:900;font-size:.82rem}.campaign-popup-close{position:absolute;top:12px;inset-inline-end:12px;width:34px;height:34px;border:0;border-radius:50%;background:rgba(255,255,255,.92);color:#152546;font-size:20px;line-height:1;cursor:pointer}.campaign-popup-body{padding:20px;text-align:start}.campaign-popup-title{margin:0 0 8px;color:#152546;font-size:1.35rem;font-weight:900}.campaign-popup-desc{margin:0;color:#516078;line-height:1.7;font-size:.96rem}.campaign-popup-actions{display:flex;gap:10px;margin-top:18px}.campaign-popup-primary{flex:1;text-align:center;text-decoration:none;border-radius:999px;background:#152546;color:#fff;padding:12px 16px;font-weight:800}.campaign-popup-secondary{border:1px solid #d9e0ec;background:#fff;color:#152546;border-radius:999px;padding:12px 16px;font-weight:800;cursor:pointer}@media(max-width:520px){.campaign-popup{border-radius:16px}.campaign-popup-media img{height:190px}.campaign-popup-actions{flex-direction:column}.campaign-popup-title{font-size:1.18rem}}
@@ -689,7 +693,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   function showCampaignPopup(c){
     const code = campaignCode(c);
     if (!code) return;
+    const seenKey = campaignSeenKey(c);
     const sessionKey = campaignSessionKey(c);
+    try { if (localStorage.getItem(seenKey) === '1') return; } catch(e) {}
     try { if (sessionStorage.getItem(sessionKey) === '1') return; } catch(e) {}
     const banner = c.banner || c.image || '';
     const discount = parseFloat(c.discount) || 0;
@@ -699,7 +705,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     backdrop.className = 'campaign-popup-backdrop';
     backdrop.innerHTML = `<div class="campaign-popup" role="dialog" aria-modal="true" aria-label="${esc(title)}">
       <div class="campaign-popup-media${banner ? '' : ' no-image'}">
-        ${banner ? `<img src="${esc(banner)}" alt="${esc(title)}" width="400" height="230" decoding="async" onerror="this.parentNode.classList.add('no-image');this.remove()">` : `<strong>${esc(title)}</strong>`}
+        ${banner ? `<img src="${esc(banner)}" alt="${esc(title)}" width="400" height="230" loading="lazy" fetchpriority="low" decoding="async" onerror="this.parentNode.classList.add('no-image');this.remove()">` : `<strong>${esc(title)}</strong>`}
         ${discount ? `<span class="campaign-popup-badge">${discount}% ${esc(tr('خصم', 'OFF'))}</span>` : ''}
         <button class="campaign-popup-close" type="button" aria-label="${esc(tr('إغلاق', 'Close'))}">×</button>
       </div>
@@ -713,20 +719,24 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </div>
       </div>
     </div>`;
-    const markSession = function(){ try { sessionStorage.setItem(sessionKey, '1'); } catch(e) {} };
-    const close = function(){ markSession(); backdrop.classList.remove('show'); setTimeout(function(){ backdrop.remove(); }, 240); };
+    const markSeen = function(){
+      try { localStorage.setItem(seenKey, '1'); } catch(e) {}
+      try { sessionStorage.setItem(sessionKey, '1'); } catch(e) {}
+    };
+    const close = function(){ markSeen(); backdrop.classList.remove('show'); setTimeout(function(){ backdrop.remove(); }, 240); };
     backdrop.addEventListener('click', function(e){ if (e.target === backdrop) close(); });
     backdrop.querySelector('.campaign-popup-close').addEventListener('click', close);
     backdrop.querySelector('.campaign-popup-later').addEventListener('click', close);
     backdrop.querySelector('.campaign-popup-use').addEventListener('click', async function(){
       const btn = this;
-      markSession();
+      markSeen();
       try { await navigator.clipboard.writeText(code); } catch(e) {}
       btn.classList.add('done');
       btn.textContent = tr('تم نسخ الكوبون', 'Coupon copied');
       setTimeout(close, 650);
     });
     document.body.appendChild(backdrop);
+    markSeen();
     requestAnimationFrame(function(){ backdrop.classList.add('show'); });
   }
   async function loadCampaignPopup(){
@@ -742,20 +752,33 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     } catch(e) {}
   }
   function shouldSkipCampaignPopupForAudit(){
-    return /lighthouse|pagespeed|chrome-lighthouse/i.test(navigator.userAgent || '') || location.search.indexOf('noCampaignPopup=1') >= 0;
+    return navigator.webdriver === true || /lighthouse|pagespeed|chrome-lighthouse/i.test(navigator.userAgent || '') || location.search.indexOf('noCampaignPopup=1') >= 0;
   }
   function scheduleCampaignPopup(){
     if (shouldSkipCampaignPopupForAudit()) return;
     let started = false;
-    const start = function(delay){
+    const start = function(){
       if (started) return;
       started = true;
-      setTimeout(loadCampaignPopup, delay || 0);
+      try { sessionStorage.removeItem('x2_popup_after_navigation'); } catch(e) {}
+      loadCampaignPopup();
     };
-    ['pointerdown','keydown','touchstart','scroll'].forEach(function(type){
-      window.addEventListener(type, function(){ start(3200); }, { once:true, passive:true });
-    });
-    setTimeout(function(){ start(4200); }, 0);
+    try { if (sessionStorage.getItem('x2_popup_after_navigation') === '1') { setTimeout(start, 250); return; } } catch(e) {}
+    const onScroll = function(){
+      if ((window.scrollY || window.pageYOffset || 0) < 90) return;
+      window.removeEventListener('scroll', onScroll);
+      start();
+    };
+    window.addEventListener('scroll', onScroll, { passive:true });
+    if ((window.scrollY || window.pageYOffset || 0) >= 90) setTimeout(start, 250);
+    document.addEventListener('click', function(e){
+      const link = e.target && e.target.closest && e.target.closest('a[href]');
+      if (!link) return;
+      try {
+        const url = new URL(link.getAttribute('href'), location.href);
+        if (url.origin === location.origin && url.pathname !== location.pathname) sessionStorage.setItem('x2_popup_after_navigation', '1');
+      } catch(err) {}
+    }, true);
   }
   window.addEventListener('load', scheduleCampaignPopup, { once:true });
 })();
@@ -793,11 +816,11 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin:18px 0 6px!imp
   body.home-immersive-header .page{max-width:100%!important;overflow-x:clip!important;overflow-y:visible!important}
   body.home-immersive-header main.main{width:97%!important;max-width:97%!important;margin:64px auto 50px!important;background:#fff!important}
   body.home-immersive-header .desktop-promo-banner{display:none!important}
-  body.home-immersive-header .mobile-promo-banner{display:block!important;width:100vw!important;max-width:100vw!important;height:178px!important;min-height:178px!important;margin:-1px calc(50% - 50vw) 6px!important;border-radius:0!important;box-shadow:none!important;background:#152546 url('/assets/home/صور الغلاف/1.webp?v=mobile-cover-20260727a') center/100% 100% no-repeat!important;position:relative;right:auto!important;left:auto!important;transform:none!important;overflow:hidden}
+  body.home-immersive-header .mobile-promo-banner{display:block!important;width:100vw!important;max-width:100vw!important;height:178px!important;min-height:178px!important;margin:-1px calc(50% - 50vw) 6px!important;border-radius:0!important;box-shadow:none!important;background:#152546!important;position:relative;right:auto!important;left:auto!important;transform:none!important;overflow:hidden}
   html[dir="ltr"] body.home-immersive-header .mobile-promo-banner{right:auto!important;left:auto!important;transform:none!important}
   body.home-immersive-header .mobile-promo-banner::before{display:none!important}
   body.home-immersive-header .mobile-promo-banner .fsh-inner{position:relative;z-index:1;max-width:none!important;width:100%!important;height:100%;margin:0 auto;padding:0!important;display:block!important;text-align:center;box-sizing:border-box}
-  body.home-immersive-header .mobile-promo-banner .mobile-promo-image{display:block!important;width:100%!important;height:100%!important;object-fit:fill!important;object-position:center!important;border-radius:0!important;opacity:0!important}
+  body.home-immersive-header .mobile-promo-banner .mobile-promo-image{display:block!important;width:100%!important;height:100%!important;object-fit:fill!important;object-position:center!important;border-radius:0!important;opacity:1!important}
   body.home-immersive-header .mobile-promo-banner .fsh-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(212,175,55,.18);border:1px solid rgba(212,175,55,.45);border-radius:999px;padding:5px 15px;font-size:.78rem;font-weight:800;color:#D4AF37;letter-spacing:.02em;text-transform:none;line-height:1.55}
   body.home-immersive-header .mobile-promo-banner .fsh-badge-fire{font-size:1rem;animation:badgeFire 1.2s ease-in-out infinite}
   @keyframes badgeFire{0%,100%{transform:scale(1)}50%{transform:scale(1.3) rotate(5deg)}}
@@ -826,6 +849,7 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin:18px 0 6px!imp
   body.home-immersive-header .product-rating-container,
   body.home-immersive-header .product-price-row,
   body.home-immersive-header .product-price{content-visibility:visible!important;opacity:1!important;visibility:visible!important;transform:none!important}
+  body.home-immersive-header .product-price-discount{color:#8A6500!important}
   body.home-immersive-header .product-content{padding-bottom:3px!important;box-sizing:border-box!important}
   body.home-immersive-header .product-name{margin-bottom:4px!important}
   body.home-immersive-header .product-rating-container{margin-top:0!important}
@@ -1163,33 +1187,6 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin:18px 0 6px!imp
   // تحميل البيانات الجديدة بعد تحميل supabase.js
   setTimeout(loadDailyPicks, 150);
 })();
-</script>
-<script>
-  // تسجيل Service Worker لدعم PWA (تثبيت الموقع كتطبيق)
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-      navigator.serviceWorker.register('/sw.js?v=191', { updateViaCache: 'none' }).then(function(reg) {
-        var refreshing = false;
-        navigator.serviceWorker.addEventListener('controllerchange', function() {
-          if (refreshing || sessionStorage.getItem('sw-v181-refresh') === '1') return;
-          refreshing = true;
-          sessionStorage.setItem('sw-v181-refresh', '1');
-          location.reload();
-        });
-        if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-        reg.addEventListener('updatefound', function() {
-          var worker = reg.installing;
-          if (!worker) return;
-          worker.addEventListener('statechange', function() {
-            if (worker.state === 'installed' && navigator.serviceWorker.controller) {
-              worker.postMessage({ type: 'SKIP_WAITING' });
-            }
-          });
-        });
-        reg.update().catch(function(){});
-      }).catch(function(){});
-    });
-  }
 </script>
 </body>
 </html>

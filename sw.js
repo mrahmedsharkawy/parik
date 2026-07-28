@@ -1,5 +1,5 @@
 /* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v207';
+const CACHE = 'bariq-v221';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -45,6 +45,8 @@ const STATIC_URLS = [
   '/mobile-nav-bar/styles.css',
   '/assets/home/1.webp',
   '/assets/home/2.webp',
+  '/assets/home/صور الغلاف/1-420.webp',
+  '/assets/home/صور الغلاف/1-480.webp',
   '/assets/categories/Acrylic/Born in.webp',
   '/assets/categories/Acrylic/Box.webp',
   '/assets/categories/Acrylic/censer.webp',
@@ -178,6 +180,7 @@ async function closeVisibleNotifications() {
 
 function appHtmlCachePath(path) {
   if (path === '/' || path === '' || path === '/index.html') return '/';
+  if (path === '/categories' || path === '/categories.html' || /^\/categories\//.test(path)) return '/categories';
   if (path === '/Cart' || path === '/Cart.html') return '/Cart';
   if (path === '/product' || path === '/product.html' || /^\/product\//.test(path)) return '/product';
   if (/\.html$/.test(path)) return path.replace(/\.html$/, '');
@@ -216,7 +219,7 @@ self.addEventListener('activate', function(e) {
     caches.keys().then(function(keys) {
       return Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)));
     }).then(function() {
-      if (self.registration.navigationPreload) return self.registration.navigationPreload.enable().catch(function(){});
+      if (self.registration.navigationPreload) return self.registration.navigationPreload.disable().catch(function(){});
     }).then(function() {
       return self.clients.claim();
     })
@@ -262,6 +265,7 @@ self.addEventListener('fetch', function(e) {
 
   function htmlCachePath(path) {
     if (path === '/' || path === '' || path === '/index.html') return '/';
+    if (path === '/categories' || path === '/categories.html' || /^\/categories\//.test(path)) return '/categories';
     if (path === '/Cart' || path === '/Cart.html') return '/Cart';
     if (path === '/product' || path === '/product.html' || /^\/product\//.test(path)) return '/product';
     if (/\.html$/.test(path)) return path.replace(/\.html$/, '');
@@ -270,7 +274,8 @@ self.addEventListener('fetch', function(e) {
 
   const isHtml = e.request.destination === 'document'
     || url.endsWith('.html')
-    || /\/(categories|product|Cart|account|login|offers|checkout|affiliate|policy|admin)$/.test(new URL(url).pathname)
+    || /^\/categories(?:\/|$)/.test(new URL(url).pathname)
+    || /\/(product|Cart|account|login|offers|checkout|affiliate|policy|admin)$/.test(new URL(url).pathname)
     || new URL(url).pathname === '/';
   const isAsset = url.includes('/style/') || url.includes('/java/') || url.includes('/translations/') || url.includes('/mobile-nav-bar/');
   const isMutableRuntime = /\/java\/(instant-nav\.js|sw-refresh\.js|main\.min\.js|push-welcome\.js|supabase\.js|supabase\.min\.js)(\?|$)/.test(url)

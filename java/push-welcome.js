@@ -87,7 +87,8 @@
     return isInstalledMobileApp()||/Android/i.test(ua);
   }
   var pushWelcomeTimer=0;
-  var PUSH_WELCOME_DELAY=4200;
+  var pushWelcomeInteractionBound=false;
+  var PUSH_WELCOME_DELAY=0;
   function canShowPushWelcome(){
     try{
       return canPromptForPush()&&'Notification'in window&&Notification.permission!=='granted'&&sessionStorage.getItem('x2_push_welcome_dismissed')!=='1'&&sessionStorage.getItem('x2_push_welcome_prompted')!=='1';
@@ -124,6 +125,24 @@
       }
     }catch(e){}
   };
+  function markPopupNavigation(e){
+    var link=e&&e.target&&e.target.closest&&e.target.closest('a[href]');
+    if(!link)return;
+    try{
+      var url=new URL(link.getAttribute('href'),location.href);
+      if(url.origin===location.origin&&url.pathname!==location.pathname)sessionStorage.setItem('x2_popup_after_navigation','1');
+    }catch(err){}
+  }
+  function bindPushWelcomeInteraction(){
+    if(pushWelcomeInteractionBound)return;
+    pushWelcomeInteractionBound=true;
+    var trigger=function(){window.removeEventListener('scroll',onScroll);window.maybeShowPushWelcome();};
+    var onScroll=function(){if((window.scrollY||window.pageYOffset||0)>=90)trigger();};
+    window.addEventListener('scroll',onScroll,{passive:true});
+    document.addEventListener('click',markPopupNavigation,true);
+    if((window.scrollY||window.pageYOffset||0)>=90)setTimeout(trigger,250);
+    try{if(sessionStorage.getItem('x2_popup_after_navigation')==='1')setTimeout(window.maybeShowPushWelcome,250);}catch(e){}
+  }
   document.addEventListener('click',function(e){
     var btn=e.target&&e.target.closest&&e.target.closest('#push-welcome-subscribe-btn');
     var modal=document.getElementById('pushWelcomeModal');
@@ -133,8 +152,8 @@
     }
   });
   function initPushWelcome(){
-    setTimeout(window.maybeShowPushWelcome, 1600);
-    window.addEventListener('pageshow', function(){ setTimeout(window.maybeShowPushWelcome, 1600); });
+    bindPushWelcomeInteraction();
+    window.addEventListener('pageshow', bindPushWelcomeInteraction);
   }
   if(document.body)initPushWelcome();
   else document.addEventListener('DOMContentLoaded',initPushWelcome,{once:true});

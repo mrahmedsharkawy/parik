@@ -262,9 +262,18 @@
         liquidPill.style.transform = `translate3d(${metrics.centerX - metrics.width / 2}px, -50%, 0)`;
       };
 
+      let pillFrame = 0;
+      const scheduleMovePillToLink = (link, animate = true) => {
+        if (pillFrame) cancelAnimationFrame(pillFrame);
+        pillFrame = requestAnimationFrame(() => {
+          pillFrame = 0;
+          movePillToLink(link, animate);
+        });
+      };
+
       nav.__updateLiquidPillPosition = (animate = false) => {
         if (dragState) return;
-        movePillToLink(activeLink, animate);
+        scheduleMovePillToLink(activeLink, animate);
       };
 
       const findNearestLink = (clientX) => {
@@ -405,12 +414,12 @@
             return;
           }
           setActiveLink(link);
-          movePillToLink(link, true);
+          scheduleMovePillToLink(link, true);
         });
       });
 
-      movePillToLink(activeLink, false);
-      window.addEventListener('resize', () => movePillToLink(activeLink, false), { passive: true });
+      scheduleMovePillToLink(activeLink, false);
+      window.addEventListener('resize', () => scheduleMovePillToLink(activeLink, false), { passive: true });
     }
 
     // -- ???? ????? --------------------------------------------------

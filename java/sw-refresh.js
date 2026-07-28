@@ -1,14 +1,14 @@
 (function () {
   if (!('serviceWorker' in navigator)) return;
 
-  var REFRESH_KEY = 'sw-v191-global-refresh';
+  var REFRESH_KEY = 'sw-v205-global-refresh';
   var refreshed = false;
 
   function clearOldCaches() {
     if (!('caches' in window)) return;
     caches.keys().then(function (keys) {
       keys.forEach(function (key) {
-        if (key !== 'bariq-v207') caches.delete(key).catch(function () {});
+        if (key !== 'bariq-v221') caches.delete(key).catch(function () {});
       });
     }).catch(function () {});
   }
@@ -61,11 +61,10 @@
   navigator.serviceWorker.addEventListener('controllerchange', function () {
     if (refreshed) return;
     refreshed = true;
-    if (markRefreshed()) return;
-    location.reload();
+    markRefreshed();
   });
 
-  navigator.serviceWorker.register('/sw.js?v=191', { updateViaCache: 'none' }).then(function (reg) {
+  navigator.serviceWorker.register('/sw.js?v=205', { updateViaCache: 'none' }).then(function (reg) {
     clearOldCaches();
     requestActivation(reg);
     sendPushLanguage(reg);

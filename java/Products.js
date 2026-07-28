@@ -560,8 +560,37 @@ export function createProductCard(prod) {
         link.rel = "prefetch", link.href = productUrl, link.as = "document";
         document.head.appendChild(link);
     }
-    let touchStartX = 0, touchStartY = 0, touchStartAt = 0, suppressProductOpenUntil = 0;
-    card.className = "product-card", card.style.position = "relative", card.style.cursor = "pointer", 
+    let touchStartX = 0, touchStartY = 0, touchStartAt = 0, suppressProductOpenUntil = 0, productOpenStarted = false;
+    if (typeof window !== "undefined") {
+        window.addEventListener("pageshow", () => {
+            productOpenStarted = false;
+            suppressProductOpenUntil = 0;
+        });
+    }
+    function isProductCardControl(target) {
+        return target && target.closest && target.closest("button,a,input,select,textarea,.product-cart-btn,[data-no-product-open]");
+    }
+    function openProductFromCard() {
+        if (productOpenStarted) return;
+        productOpenStarted = true;
+        saveProductReturnScrollPosition(true);
+        saveProductReturnTarget(card);
+        rememberQuickProduct();
+        try {
+            const HIST_KEY = "x2_history", img = Array.isArray(prod.img) ? prod.img[0] : prod.img || "", name = "object" == typeof prod.name ? prod.name.ar || prod.name.en : prod.name || "", entry = {
+                id: prod.id,
+                name: name,
+                img: img.startsWith("data:") ? "" : img,
+                price: prod.price,
+                oldPrice: prod.oldPrice
+            };
+            let hist = JSON.parse(localStorage.getItem(HIST_KEY) || "[]");
+            hist = hist.filter(h => String(h.id) !== String(prod.id)), hist.unshift(entry),
+            hist.length > 20 && (hist = hist.slice(0, 20)), localStorage.setItem(HIST_KEY, JSON.stringify(hist));
+        } catch (e) {}
+        setTimeout(() => window.location.assign(productUrl), 20);
+    }
+    card.className = "product-card", card.style.position = "relative", card.style.cursor = "pointer", card.style.touchAction = "manipulation",
     card.addEventListener("pointerover", prefetchProductPage, {
         once: true,
         passive: true
@@ -578,33 +607,28 @@ export function createProductCard(prod) {
     card.addEventListener("touchmove", e => {
         if (!e.touches || e.touches.length !== 1) return;
         const dx = e.touches[0].clientX - touchStartX, dy = e.touches[0].clientY - touchStartY;
-        if (Math.abs(dx) > 8 || Math.abs(dy) > 8) suppressProductOpenUntil = Date.now() + 500;
+        if (Math.abs(dx) > 18 || Math.abs(dy) > 18) suppressProductOpenUntil = Date.now() + 500;
     }, { passive: true }),
-    card.addEventListener("touchend", () => {
-        if (Date.now() - touchStartAt > 360) suppressProductOpenUntil = Date.now() + 500;
-    }, { passive: true }),
+    card.addEventListener("touchend", e => {
+        if (isProductCardControl(e.target)) return;
+        const touch = e.changedTouches && e.changedTouches[0];
+        const dx = touch ? touch.clientX - touchStartX : 0, dy = touch ? touch.clientY - touchStartY : 0;
+        const quickTap = Date.now() - touchStartAt <= 520 && Math.abs(dx) <= 18 && Math.abs(dy) <= 18;
+        if (!quickTap) {
+            suppressProductOpenUntil = Date.now() + 500;
+            return;
+        }
+        suppressProductOpenUntil = Date.now() + 700;
+        e.preventDefault();
+        openProductFromCard();
+    }, { passive: false }),
     card.addEventListener("click", e => {
         if (Date.now() < suppressProductOpenUntil) {
             e.preventDefault();
             e.stopImmediatePropagation();
             return;
         }
-        saveProductReturnScrollPosition(true);
-        saveProductReturnTarget(card);
-        rememberQuickProduct();
-        try {
-            const HIST_KEY = "x2_history", img = Array.isArray(prod.img) ? prod.img[0] : prod.img || "", name = "object" == typeof prod.name ? prod.name.ar || prod.name.en : prod.name || "", entry = {
-                id: prod.id,
-                name: name,
-                img: img.startsWith("data:") ? "" : img,
-                price: prod.price,
-                oldPrice: prod.oldPrice
-            };
-            let hist = JSON.parse(localStorage.getItem(HIST_KEY) || "[]");
-            hist = hist.filter(h => String(h.id) !== String(prod.id)), hist.unshift(entry), 
-            hist.length > 20 && (hist = hist.slice(0, 20)), localStorage.setItem(HIST_KEY, JSON.stringify(hist));
-        } catch (e) {}
-        setTimeout(() => window.location.assign(productUrl), 80);
+        openProductFromCard();
     });
     const lang = localStorage.getItem("lang") || document.documentElement.lang || document.documentElement.getAttribute("lang") || "ar";
     const productCardLang = String(lang).toLowerCase().startsWith("en") ? "en" : "ar";
@@ -926,7 +950,7 @@ document.addEventListener("DOMContentLoaded", async function() {
         const columns = isMobileGrid ? 2 : window.matchMedia("(max-width: 1300px)").matches ? 3 : 4;
         const estimatedRows = Math.max(1, Math.ceil((deferHomeRest ? FIRST_CHUNK : sortedList.length) / columns));
         const estimatedCardHeight = window.matchMedia("(max-width: 899px)").matches ? 328 : 360;
-        productsContainer.classList.add("changing"), productsContainer.style.minHeight = Math.max(200, estimatedRows * estimatedCardHeight) + "px",
+        if (!isHomePage) productsContainer.classList.add("changing"), productsContainer.style.minHeight = Math.max(200, estimatedRows * estimatedCardHeight) + "px";
         productsContainer.style.position = "relative";
         let i = 0;
         let homeRestDeferred = false;
