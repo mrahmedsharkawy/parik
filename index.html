@@ -60,11 +60,11 @@
   (function(){
     var l = document.createElement('link');
     l.rel = 'preload';
-    l.href = matchMedia('(min-width: 900px)').matches ? '/assets/home/1.webp' : '/assets/home/صور الغلاف/1-618.webp?v=mobile-cover-20260728d';
+    l.href = matchMedia('(min-width: 900px)').matches ? '/assets/home/1.webp' : '/assets/home/صور الغلاف/1-618.webp?v=home-mobile-banner-20260729a';
+    l.imageSrcset = matchMedia('(min-width: 900px)').matches ? '/assets/home/1.webp 1000w' : '/assets/home/صور الغلاف/1-412.webp?v=home-mobile-banner-20260729a 412w, /assets/home/صور الغلاف/1-618.webp?v=home-mobile-banner-20260729a 618w';
     l.as = 'image';
     l.type = 'image/webp';
     l.fetchPriority = 'high';
-    l.imageSrcset = matchMedia('(min-width: 900px)').matches ? '/assets/home/1.webp 1000w' : '/assets/home/صور الغلاف/1-618.webp?v=mobile-cover-20260728d 618w';
     l.imageSizes = matchMedia('(min-width: 900px)').matches ? '70vw' : '412px';
     document.head.appendChild(l);
   })();
@@ -397,7 +397,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <section class="animated-promo-banner mobile-promo-banner" aria-label="بنر بريق للهاتف">
   <a href="/offers" style="display:block;width:100%;height:100%;text-decoration:none">
     <div class="banner-inner fsh-inner mobile-promo-image-wrap">
-      <img src="/assets/home/صور الغلاف/1-618.webp?v=mobile-cover-20260728d" class="mobile-promo-image" alt="بنر بريق" fetchpriority="high" loading="eager" decoding="async" width="618" height="267" sizes="412px" srcset="/assets/home/صور الغلاف/1-618.webp?v=mobile-cover-20260728d 618w">
+      <img src="/assets/home/صور%20الغلاف/1-618.webp?v=home-mobile-banner-20260729a" class="mobile-promo-image" alt="بنر بريق" fetchpriority="high" loading="eager" decoding="async" width="618" height="267" sizes="412px" srcset="/assets/home/صور%20الغلاف/1-412.webp?v=home-mobile-banner-20260729a 412w, /assets/home/صور%20الغلاف/1-618.webp?v=home-mobile-banner-20260729a 618w">
     </div>
   </a>
 </section>
@@ -646,7 +646,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </footer>
 <script src="/java/supabase.min.js?v=supabase-20260725a" defer></script>
 <script src="/java/main.min.js?v=139" defer></script>
-<script src="/java/sw-refresh.js?v=sw-refresh-20260729l" defer></script>
+<script src="/java/sw-refresh.js?v=sw-refresh-20260729o" defer></script>
 <script src="/java/instant-nav.js?v=instant-nav-20260728e" defer></script>
 <script src="/translations/translation.min.js?v=translation-20260726c" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
@@ -831,11 +831,11 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin:18px 0 6px!imp
   body.home-immersive-header .page{max-width:100%!important;overflow-x:clip!important;overflow-y:visible!important}
   body.home-immersive-header main.main{width:97%!important;max-width:97%!important;margin:64px auto 50px!important;background:#fff!important}
   body.home-immersive-header .desktop-promo-banner{display:none!important}
-  body.home-immersive-header .mobile-promo-banner{display:block!important;width:100vw!important;max-width:100vw!important;height:178px!important;min-height:178px!important;margin:-1px calc(50% - 50vw) 6px!important;border-radius:0!important;box-shadow:none!important;background:#152546!important;position:relative;right:auto!important;left:auto!important;transform:none!important;overflow:hidden}
+  body.home-immersive-header .mobile-promo-banner{display:block!important;width:100%!important;max-width:100%!important;height:160px!important;min-height:160px!important;margin:10px auto 8px!important;border-radius:16px!important;box-shadow:none!important;background:#fff!important;position:relative;right:auto!important;left:auto!important;transform:none!important;overflow:hidden}
   html[dir="ltr"] body.home-immersive-header .mobile-promo-banner{right:auto!important;left:auto!important;transform:none!important}
   body.home-immersive-header .mobile-promo-banner::before{display:none!important}
   body.home-immersive-header .mobile-promo-banner .fsh-inner{position:relative;z-index:1;max-width:none!important;width:100%!important;height:100%;margin:0 auto;padding:0!important;display:block!important;text-align:center;box-sizing:border-box}
-  body.home-immersive-header .mobile-promo-banner .mobile-promo-image{display:block!important;width:100%!important;height:100%!important;object-fit:fill!important;object-position:center!important;border-radius:0!important;opacity:1!important}
+  body.home-immersive-header .mobile-promo-banner .mobile-promo-image{display:block!important;width:100%!important;height:100%!important;object-fit:fill!important;object-position:center!important;border-radius:16px!important;opacity:1!important}
   body.home-immersive-header .mobile-promo-banner .fsh-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(212,175,55,.18);border:1px solid rgba(212,175,55,.45);border-radius:999px;padding:5px 15px;font-size:.78rem;font-weight:800;color:#D4AF37;letter-spacing:.02em;text-transform:none;line-height:1.55}
   body.home-immersive-header .mobile-promo-banner .fsh-badge-fire{font-size:1rem;animation:badgeFire 1.2s ease-in-out infinite}
   @keyframes badgeFire{0%,100%{transform:scale(1)}50%{transform:scale(1.3) rotate(5deg)}}
@@ -1108,6 +1108,7 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin:18px 0 6px!imp
         return Number.isFinite(id) ? id : 0;
       };
       const newestFirst = list => (Array.isArray(list) ? list.slice() : []).sort((a,b) => newestValue(b) - newestValue(a));
+      const sortLang = (localStorage.getItem('lang') || document.documentElement.lang || 'ar') === 'en' ? 'en' : 'ar';
       const dailyRandomValue = p => {
         const today = new Date(), dayKey = today.getFullYear() * 1e4 + (today.getMonth()+1) * 100 + today.getDate();
         const key = String(p && (p.id || p.productId || (p.name && (p.name.ar || p.name.en)) || p.name || ''));
@@ -1124,7 +1125,7 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin:18px 0 6px!imp
         if (mode === 'price_desc') return copy.sort((a,b) => (parseFloat(b.price)||0) - (parseFloat(a.price)||0));
         if (mode === 'discount') return copy.sort((a,b) => ((parseFloat(b.oldPrice)-parseFloat(b.price))/(parseFloat(b.oldPrice)||1)) - ((parseFloat(a.oldPrice)-parseFloat(a.price))/(parseFloat(a.oldPrice)||1)));
         if (mode === 'rating') return copy.sort((a,b) => (parseFloat(b.rating)||0) - (parseFloat(a.rating)||0));
-        if (mode === 'name_az') return copy.sort((a,b) => String(a.name?.ar || a.name?.en || a.name || '').localeCompare(String(b.name?.ar || b.name?.en || b.name || ''), lang === 'en' ? 'en' : 'ar'));
+        if (mode === 'name_az') return copy.sort((a,b) => String(a.name?.ar || a.name?.en || a.name || '').localeCompare(String(b.name?.ar || b.name?.en || b.name || ''), sortLang));
         return copy.sort((a,b) => dailyRandomValue(b) - dailyRandomValue(a));
       };
       const hasSupabaseProducts = await new Promise(resolve => {
