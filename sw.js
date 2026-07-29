@@ -1,5 +1,5 @@
 /* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v243';
+const CACHE = 'bariq-v252';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -283,7 +283,7 @@ self.addEventListener('fetch', function(e) {
     || /\/(product|Cart|account|login|offers|checkout|affiliate|policy|admin)$/.test(new URL(url).pathname)
     || new URL(url).pathname === '/';
   const isAsset = url.includes('/style/') || url.includes('/java/') || url.includes('/translations/') || url.includes('/mobile-nav-bar/');
-  const isMutableRuntime = /\/java\/(instant-nav\.js|sw-refresh\.js|main\.min\.js|push-welcome\.js|supabase\.js|supabase\.min\.js)(\?|$)/.test(url)
+  const isMutableRuntime = /\/java\/(instant-nav\.js|sw-refresh\.js|main\.min\.js|push-welcome\.js|supabase\.js|supabase\.min\.js|Products\.js|Products\.min\.js|Products\.json)(\?|$)/.test(url)
     || /\/mobile-nav-bar\/main-navbar\.min\.js(\?|$)/.test(url);
   const path = new URL(url).pathname.replace(/\/index\.html$/, '/') || '/';
   const htmlCacheKey = htmlCachePath(path);

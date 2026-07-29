@@ -1828,7 +1828,7 @@ async function sendDiscountProductPush(product){
   const pushPayload = {
     title: 'عرض جديد في بريق',
     body: `${name} عليه خصم ${pct}% لفترة محدودة`,
-    url: `/product/${encodeURIComponent(product.supabaseId || product.id)}`,
+    url: `/product.html?id=${encodeURIComponent(product.supabaseId || product.id)}`,
     image: imgs.find(s => s && !String(s).startsWith('data:')) || undefined,
     type: 'discount_product',
     iconText: '🔥',
@@ -1953,7 +1953,7 @@ async function saveProduct(){
           .then(function(){
             toast('✅ تم تحديث المنتج في Supabase');
             if (idx>=0) { products[idx].supabaseId = targetId; products[idx].id = targetId; saveLocal(); renderProducts(); }
-            try { localStorage.setItem('x2_products_updated', String(Date.now())); } catch(e) {}
+            clearStorefrontProductCaches();
             if (shouldSendDiscountPush) sendDiscountProductPush(products[idx] || { ...prod, supabaseId: targetId }).then(function(result){ toast(result && result.sent ? '📲 تم إرسال إشعار الخصم للعملاء' : '⚠️ لا يوجد مشتركون للإشعارات'); }).catch(function(e){ console.warn('Discount push failed:', e); toast('⚠️ فشل إرسال إشعار الخصم'); });
           })
           .catch(function(e){ toast('⚠️ خطأ Supabase: ' + e.message); });
@@ -1973,7 +1973,7 @@ async function saveProduct(){
             } else {
               toast('✅ تم حفظ المنتج في Supabase');
             }
-            try { localStorage.setItem('x2_products_updated', String(Date.now())); } catch(e) {}
+            clearStorefrontProductCaches();
             if (shouldSendDiscountPush) sendDiscountProductPush(savedProduct).then(function(result){ toast(result && result.sent ? '📲 تم إرسال إشعار الخصم للعملاء' : '⚠️ لا يوجد مشتركون للإشعارات'); }).catch(function(e){ console.warn('Discount push failed:', e); toast('⚠️ فشل إرسال إشعار الخصم'); });
           })
           .catch(function(e){ toast('⚠️ خطأ Supabase: ' + e.message); });
@@ -2012,16 +2012,19 @@ function editProduct(id){
 function deleteProduct(id){
   if(!confirm('حذف هذا المنتج؟')) return;
   const target = products.find(p=>Number(p.id)===Number(id));
-  const supaId = target ? target.supabaseId : null;
+  const supaId = target ? (target.supabaseId || target.id) : null;
   products = products.filter(p=>Number(p.id)!==Number(id));
   saveLocal();
   renderProducts();
   toast('تم الحذف');
-  // حذف من Supabase - حذف حقيقي
-  if (window.sbFetch && supaId) {
-    window.sbFetch('products?id=eq.'+supaId, { method: 'DELETE' }).catch(function(){});
+  if (window.Supabase && window.Supabase.Products && supaId) {
+    window.Supabase.Products.remove(supaId).catch(function(){
+      if (window.sbFetch) window.sbFetch('products?id=eq.'+supaId, { method: 'PATCH', body: JSON.stringify({ active:false }) }).catch(function(){});
+    });
+  } else if (window.sbFetch && supaId) {
+    window.sbFetch('products?id=eq.'+supaId, { method: 'PATCH', body: JSON.stringify({ active:false }) }).catch(function(){});
   }
-  try { localStorage.setItem('x2_products_updated', String(Date.now())); } catch(e) {}
+  clearStorefrontProductCaches();
 }
 
 function resetForm(){
@@ -2075,13 +2078,31 @@ function filterByCat(slug){
   renderProducts();
 }
 
-function saveStoreSortMode(){
+function clearStorefrontProductCaches(){
+  try {
+    localStorage.setItem('x2_products_updated', String(Date.now()));
+    sessionStorage.removeItem('x2_prods_ss_v2');
+    sessionStorage.removeItem('x2_prods_ss_v3');
+    sessionStorage.removeItem('x2_prods_ss_v4');
+    localStorage.removeItem('x2_products_cache_v1');
+    localStorage.removeItem('x2_products_cache_v2');
+    localStorage.removeItem('x2_products_cache_v3');
+    localStorage.removeItem('admin_products');
+  } catch(e) {}
+}
+
+async function saveStoreSortMode(){
   const mode = $('storeSortMode')?.value || 'daily_random';
   localStorage.setItem('x2_store_product_sort', mode);
-  localStorage.setItem('x2_products_updated', String(Date.now()));
-  try { sessionStorage.removeItem('x2_prods_ss_v2'); localStorage.removeItem('x2_products_cache_v1'); } catch(e) {}
+  clearStorefrontProductCaches();
   if (window.Supabase && window.Supabase.Settings) {
-    window.Supabase.Settings.save({ product_sort: mode }).catch(function(e){ console.warn('Store sort sync failed:', e); });
+    try {
+      await window.Supabase.Settings.save({ product_sort: mode });
+    } catch(e) {
+      console.warn('Store sort sync failed:', e);
+      toast('⚠️ تعذر حفظ الترتيب في Supabase');
+      return;
+    }
   }
   toast('✅ تم حفظ ترتيب عرض المتجر');
 }
@@ -3864,7 +3885,23 @@ function renderDailyPicker() {
   $('dailyPager').innerHTML = '';
 }
 function toggleDailyPick(id, checked) { if(checked) dailyPickIds.add(String(id)); else dailyPickIds.delete(String(id)); }
-function saveDailyPicks() { localStorage.setItem(LS_DAILY_PICKS, JSON.stringify([...dailyPickIds])); toast('✅ تم حفظ اختيارات اليوم'); }
+async function saveDailyPicks() {
+  const ids = [...dailyPickIds];
+  localStorage.setItem(LS_DAILY_PICKS, JSON.stringify(ids));
+  try { localStorage.removeItem('x2_dp_cache'); localStorage.setItem('x2_products_updated', String(Date.now())); } catch(e) {}
+  if (window.Supabase && window.Supabase.Settings) {
+    try {
+      await window.Supabase.Settings.save({ daily_picks: ids });
+      toast('✅ تم حفظ اختيارات اليوم في المتجر');
+      return;
+    } catch(e) {
+      console.warn('Daily picks remote save failed:', e);
+      toast('⚠️ تم الحفظ محلياً، لكن يلزم إضافة عمود daily_picks في Supabase');
+      return;
+    }
+  }
+  toast('✅ تم حفظ اختيارات اليوم');
+}
 
 /* ================= إضافة عميل يدوياً ================= */
 const LS_MANUAL_CUSTOMERS = 'admin_manual_customers';
@@ -4883,6 +4920,7 @@ function loadSettings() {
         localStorage.setItem('x2_store_product_sort', r.product_sort);
         initStoreSortMode();
       }
+      if (Array.isArray(r.daily_picks)) localStorage.setItem(LS_DAILY_PICKS, JSON.stringify(r.daily_picks.map(String)));
     }).catch(function(){});
   }
 }
@@ -5215,6 +5253,7 @@ async function loadSettingsFromSupabase() {
       if (remote.site_name) s.name = remote.site_name;
       if (remote.logo)      s.logo = remote.logo;
       if (remote.product_sort) localStorage.setItem('x2_store_product_sort', remote.product_sort);
+      if (Array.isArray(remote.daily_picks)) localStorage.setItem(LS_DAILY_PICKS, JSON.stringify(remote.daily_picks.map(String)));
       localStorage.setItem(LS_SETTINGS, JSON.stringify(s));
     }
   } catch(e) {}

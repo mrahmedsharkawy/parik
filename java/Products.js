@@ -16,21 +16,40 @@ function x2VisitorAreaFallback() {
 
 let sideMenu, subDisplay, products = [], categories = [], _priorityProductImages = 0;
 const CATEGORIES_SESSION_CACHE_KEY = "x2_cats_ss_v1", CATEGORIES_LOCAL_CACHE_KEY = "x2_categories_cache_v1", CATEGORIES_CACHE_TTL = 18e5;
-const PRODUCT_DISCOUNT_TIMER_KEY = "x2_product_discount_fake_timer_start", PRODUCT_DISCOUNT_TIMER_DURATION = 24 * 60 * 60 * 1e3;
+const PRODUCT_DISCOUNT_TIMER_PREFIX = "x2_product_discount_timer_v2_", PRODUCT_DISCOUNT_TIMER_MAX_HOURS = 70;
 
-function getProductDiscountTimerEnd() {
-    let start = 0;
-    try {
-        start = parseInt(localStorage.getItem(PRODUCT_DISCOUNT_TIMER_KEY) || "0", 10) || 0;
-    } catch (e) {}
-    const now = Date.now();
-    if (!start || now - start >= PRODUCT_DISCOUNT_TIMER_DURATION || start > now) {
-        start = now;
-        try {
-            localStorage.setItem(PRODUCT_DISCOUNT_TIMER_KEY, String(start));
-        } catch (e) {}
+function stableProductHash(value) {
+    const text = String(value || "product");
+    let hash = 2166136261;
+    for (let i = 0; i < text.length; i++) {
+        hash ^= text.charCodeAt(i);
+        hash = Math.imul(hash, 16777619) >>> 0;
     }
-    return start + PRODUCT_DISCOUNT_TIMER_DURATION;
+    return hash >>> 0;
+}
+
+function productTimerIdentity(prod) {
+    const name = prod && prod.name && (prod.name.ar || prod.name.en || prod.name);
+    return String(prod && (prod.id || prod.productId || prod.slug) || name || "product").replace(/[^\w-]+/g, "_").slice(0, 80);
+}
+
+function productTimerDuration(prod, cycle) {
+    const hash = stableProductHash(productTimerIdentity(prod) + ":" + (cycle || 0));
+    const hours = 6 + hash % (PRODUCT_DISCOUNT_TIMER_MAX_HOURS - 5);
+    const minutes = hash % 60;
+    return ((hours * 60) + minutes) * 60 * 1e3;
+}
+
+function getProductDiscountTimerEnd(prod) {
+    const key = PRODUCT_DISCOUNT_TIMER_PREFIX + productTimerIdentity(prod), now = Date.now();
+    let state = null;
+    try { state = JSON.parse(localStorage.getItem(key) || "null"); } catch (e) { state = null; }
+    if (!state || !state.start || !state.duration || state.start > now || now >= state.start + state.duration) {
+        const cycle = state && Number.isFinite(Number(state.cycle)) ? Number(state.cycle) + 1 : stableProductHash(key) % 29;
+        state = { start: now, duration: productTimerDuration(prod, cycle), cycle };
+        try { localStorage.setItem(key, JSON.stringify(state)); } catch (e) {}
+    }
+    return state.start + state.duration;
 }
 
 "function" != typeof window.setPageTitleI18n && (window.setPageTitleI18n = function(titleAr, titleEn) {
@@ -156,7 +175,18 @@ async function loadSupabaseCategories(base) {
 }
 
 let _productsCache = null, _productsCacheTs = 0, _productsRefreshPromise = null;
-const PRODUCTS_SESSION_CACHE_KEY = "x2_prods_ss_v2", PRODUCTS_LOCAL_CACHE_KEY = "x2_products_cache_v1", PRODUCTS_LOCAL_CACHE_TTL = 18e5;
+const PRODUCTS_SESSION_CACHE_KEY = "x2_prods_ss_v4", PRODUCTS_LOCAL_CACHE_KEY = "x2_products_cache_v3", PRODUCTS_LOCAL_CACHE_TTL = 18e5;
+
+function clearLegacyProductsCache() {
+    try {
+        sessionStorage.removeItem("x2_prods_ss_v2");
+        sessionStorage.removeItem("x2_prods_ss_v3");
+        localStorage.removeItem("x2_products_cache_v1");
+        localStorage.removeItem("x2_products_cache_v2");
+        localStorage.removeItem("admin_products");
+    } catch (e) {}
+}
+clearLegacyProductsCache();
 
 function productNewestValue(product) {
     const dateValue = product?.created_at || product?.createdAt || product?.updated_at || product?.updatedAt || product?.date || product?.timerEnd || "";
@@ -179,12 +209,12 @@ function dailyRandomValue(product) {
 }
 
 function getStoreProductSort() {
-    try { return localStorage.getItem("x2_store_product_sort") || "newest"; } catch (e) { return "newest"; }
+    try { return localStorage.getItem("x2_store_product_sort") || "daily_random"; } catch (e) { return "daily_random"; }
 }
 
 let _storeSortLoaded = false;
-async function ensureStoreProductSortLoaded() {
-    if (_storeSortLoaded) return;
+async function ensureStoreProductSortLoaded(force) {
+    if (_storeSortLoaded && !force) return;
     _storeSortLoaded = true;
     try {
         if (!window.Supabase || !window.Supabase.Settings) return;
@@ -292,16 +322,6 @@ function readImmediateProductsCache(invalidateTs) {
         const obj = readProductsCache(source[0], source[1], invalidateTs || 0, PRODUCTS_LOCAL_CACHE_TTL);
         if (obj) return obj;
     } catch (e) {}
-    try {
-        const adminProds = localStorage.getItem("admin_products");
-        if (adminProds) {
-            const parsed = JSON.parse(adminProds);
-            if (Array.isArray(parsed) && parsed.length) return {
-                ts: Date.now(),
-                data: parsed
-            };
-        }
-    } catch (e) {}
     return null;
 }
 
@@ -329,6 +349,22 @@ function refreshProductsInBackground() {
     });
 }
 
+function waitForSupabaseProducts(timeout) {
+    if (window.Supabase && window.Supabase.Products) return Promise.resolve(true);
+    return new Promise(resolve => {
+        const started = Date.now();
+        const timer = setInterval(function() {
+            if (window.Supabase && window.Supabase.Products) {
+                clearInterval(timer);
+                resolve(true);
+            } else if (Date.now() - started >= (timeout || 1800)) {
+                clearInterval(timer);
+                resolve(false);
+            }
+        }, 80);
+    });
+}
+
 "undefined" != typeof window && window.addEventListener("storage", function(e) {
     if ("x2_products_updated" === e.key) {
         _productsCache = null, _productsCacheTs = 0;
@@ -343,12 +379,16 @@ export async function fetchProducts(forceFresh) {
     try {
         invalidateTs = parseInt(localStorage.getItem("x2_products_updated") || "0", 10);
     } catch (e) {}
+    await ensureStoreProductSortLoaded(forceFresh);
+    const canUseSupabaseProducts = await waitForSupabaseProducts();
     if (!forceFresh) {
-        const instant = readImmediateProductsCache(invalidateTs);
-        if (instant && Array.isArray(instant.data) && instant.data.length) return _productsCache = sortProductsForStore(instant.data), _productsCacheTs = instant.ts, refreshProductsInBackground(), _productsCache;
+        if (!canUseSupabaseProducts) {
+            const instant = readImmediateProductsCache(invalidateTs);
+            if (instant && Array.isArray(instant.data) && instant.data.length) return _productsCache = sortProductsForStore(instant.data), _productsCacheTs = instant.ts, _productsCache;
+        }
     }
     let staleCache = null;
-    if (!forceFresh) {
+    if (!forceFresh && !canUseSupabaseProducts) {
         try {
             const obj = readProductsCache(sessionStorage, PRODUCTS_SESSION_CACHE_KEY, invalidateTs, 6e5);
             if (obj) return _productsCache = sortProductsForStore(obj.data), _productsCacheTs = obj.ts, _productsCache;
@@ -360,18 +400,17 @@ export async function fetchProducts(forceFresh) {
             if (obj) return _productsCache = sortProductsForStore(obj.data), _productsCacheTs = obj.ts, saveProductsCache(_productsCache, _productsCacheTs),
             refreshProductsInBackground(), _productsCache;
         } catch (e) {}
-    } else try {
+    } else if (!canUseSupabaseProducts) try {
         const cached = sessionStorage.getItem(PRODUCTS_SESSION_CACHE_KEY) || localStorage.getItem(PRODUCTS_LOCAL_CACHE_KEY);
         cached && (staleCache = JSON.parse(cached).data);
     } catch (e) {}
-    await ensureStoreProductSortLoaded();
-    const snapshot = await fetchProductsSnapshot();
+    const snapshot = canUseSupabaseProducts ? [] : await fetchProductsSnapshot();
     try {
-        if (window.Supabase && window.Supabase.Products) {
+        if (canUseSupabaseProducts) {
             const sbProds = await window.Supabase.Products.getAll(100);
             if (Array.isArray(sbProds)) {
-                const mergedProducts = mergeProductLists(snapshot, mapSupabaseProducts(sbProds));
-                if (_productsCache = sortProductsForStore(mergedProducts), _productsCache.length > 0) {
+                const liveProducts = mapSupabaseProducts(sbProds);
+                if (_productsCache = sortProductsForStore(liveProducts), _productsCache.length > 0) {
                     _productsCacheTs = Date.now();
                     saveProductsCache(_productsCache, _productsCacheTs);
                 } else try {
@@ -381,24 +420,12 @@ export async function fetchProducts(forceFresh) {
             }
         }
     } catch (e) {
+        if (canUseSupabaseProducts) return [];
         if (snapshot.length) return _productsCache = snapshot, _productsCacheTs = Date.now(), saveProductsCache(_productsCache, _productsCacheTs), refreshProductsInBackground(), _productsCache;
         if (staleCache && staleCache.length > 0) return _productsCache = sortProductsForStore(staleCache), _productsCache;
     }
     if (snapshot.length) return _productsCache = snapshot, _productsCacheTs = Date.now(), saveProductsCache(_productsCache, _productsCacheTs), refreshProductsInBackground(), _productsCache;
-    if (staleCache && staleCache.length > 0) return _productsCache = sortProductsForStore(staleCache), _productsCache;
-    try {
-        const adminProds = localStorage.getItem("admin_products");
-        if (adminProds) {
-            const parsed = JSON.parse(adminProds);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-                _productsCache = sortProductsForStore(parsed);
-                try {
-                    saveProductsCache(_productsCache, Date.now());
-                } catch (e) {}
-                return _productsCache;
-            }
-        }
-    } catch (e) {}
+    if (!canUseSupabaseProducts && staleCache && staleCache.length > 0) return _productsCache = sortProductsForStore(staleCache), _productsCache;
     return [];
 }
 
@@ -520,7 +547,7 @@ if (typeof window !== "undefined") {
         restoreProductReturnScrollPosition();
     });
     document.addEventListener("click", e => {
-        const link = e.target && e.target.closest && e.target.closest('a[href*="/product/"]');
+        const link = e.target && e.target.closest && e.target.closest('a[href*="product.html?id="],a[href*="/product/"]');
         if (link && !/\/product(?:\/|\.html|$)/.test(location.pathname)) saveProductReturnScrollPosition(true);
     }, true);
 }
@@ -529,7 +556,7 @@ export function createProductCard(prod) {
     window.createProductCard || (window.createProductCard = createProductCard);
     const card = document.createElement("div");
     card.dataset.productId = String(prod.id || prod.productId || "");
-    const productUrl = `/product/${encodeURIComponent(prod.id)}${(localStorage.getItem("lang") || document.documentElement.lang) === "en" ? "?lang=en" : ""}`;
+    const productUrl = `product.html?id=${encodeURIComponent(prod.id)}${(localStorage.getItem("lang") || document.documentElement.lang) === "en" ? "&lang=en" : ""}`;
     function rememberQuickProduct() {
         try {
             const toArr = v => Array.isArray(v) ? v.filter(Boolean) : v ? [ v ] : [], isVideo = s => /\.(mp4|webm|ogg|ogv|mov|m4v)(\?|#|$)/i.test(String(s || ""));
@@ -765,13 +792,13 @@ export function createProductCard(prod) {
         const timer = document.createElement("span");
         let interval;
         function updateTimer() {
-            const end = getProductDiscountTimerEnd(), now = Date.now();
+            const end = getProductDiscountTimerEnd(prod), now = Date.now();
             let totalSeconds = Math.max(0, Math.floor((end - now) / 1e3));
             if (totalSeconds > 0) {
                 const h = String(Math.floor(totalSeconds / 3600)).padStart(2, "0"), m = String(Math.floor(totalSeconds % 3600 / 60)).padStart(2, "0"), s = String(totalSeconds % 60).padStart(2, "0");
                 timer.textContent = `${h}:${m}:${s}`;
             } else {
-                timer.textContent = "24:00:00";
+                timer.textContent = "00:00:00";
             }
         }
         timer.className = "product-timer", timerSaveBox.appendChild(saveText), timerSaveBox.appendChild(timer), 
@@ -870,15 +897,6 @@ export function createProductCard(prod) {
         }
         suppressCartClickUntil = Date.now() + 500;
         handleCardAdd(ev);
-    }, {
-        passive: !1
-    }), cartBtn.addEventListener("click", ev => {
-        if (Date.now() < suppressCartClickUntil) {
-            ev.preventDefault();
-            ev.stopPropagation();
-            return;
-        }
-        handleCardAdd(ev);
     });
     const cartLang = (localStorage.getItem("lang") || document.documentElement.lang || "ar").toLowerCase();
     const cardDir = cartLang.startsWith("en") ? "ltr" : "rtl";
@@ -922,10 +940,6 @@ document.addEventListener("DOMContentLoaded", async function() {
         const isHomePage = /^(\/|\/index\.html)$/i.test(location.pathname);
         const hasRenderedCards = !!productsContainer.querySelector(".product-card");
         if (renderKey && productsContainer.dataset.renderKey === renderKey && hasRenderedCards) return void productsContainer.classList.remove("changing");
-        if (isHomePage && hasRenderedCards && !productsContainer.dataset.renderKey) {
-            productsContainer.dataset.renderKey = renderKey;
-            return void productsContainer.classList.remove("changing");
-        }
         rowDiv.className = "products-row", tempContainer.appendChild(rowDiv);
         const useMobileMasonry = window.matchMedia("(max-width: 494px)").matches;
         const mobileColumns = useMobileMasonry ? [ document.createElement("div"), document.createElement("div") ] : null;
@@ -994,6 +1008,19 @@ document.addEventListener("DOMContentLoaded", async function() {
             }
         }();
     }
+    window.refreshStoreProductSort = async function() {
+        await ensureStoreProductSortLoaded(true);
+        productsContainer && products && products.length && renderProductsGrid(products, productsContainer);
+    };
+    window.addEventListener("pageshow", function(event) {
+        event.persisted && window.refreshStoreProductSort && window.refreshStoreProductSort();
+    });
+    document.addEventListener("visibilitychange", function() {
+        if (!document.hidden) window.refreshStoreProductSort && window.refreshStoreProductSort();
+    });
+    window.addEventListener("storage", function(event) {
+        if (event.key === "x2_store_product_sort" || event.key === "x2_products_updated") window.refreshStoreProductSort && window.refreshStoreProductSort();
+    });
     function showSubCategories(categoryName, i18n, categoriesData) {
         if (!subDisplay) return;
         subDisplay.innerHTML = "";
@@ -1353,6 +1380,10 @@ document.addEventListener("DOMContentLoaded", async function() {
         input.addEventListener("change", function() {
             applyFilters();
         });
+    });
+    filtersScroll && filtersScroll.querySelectorAll("select").forEach(select => {
+        select.addEventListener("change", applyFilters);
+        select.addEventListener("input", applyFilters);
     });
     const resetFiltersBtn = document.querySelector(".reset-filters");
     function applyFilters() {
@@ -1778,16 +1809,17 @@ document.addEventListener("DOMContentLoaded", async function() {
         } else discEl.style.display = "none";
         set("stock", p.stock || "");
         const timerEl = document.getElementById("timer");
-        timerEl && function(timerEnd, el) {
+        timerEl && function(product, el) {
             const wrap = document.getElementById("timer-box") || el.parentElement;
-            if (!timerEnd) return void (wrap && (wrap.style.display = "none"));
-            const end = new Date(timerEnd).getTime();
             function tick() {
+                if (!hasDisc) return void (wrap && (wrap.style.display = "none"));
+                wrap && (wrap.style.display = "flex");
+                const end = getProductDiscountTimerEnd(product);
                 const d = end - Date.now();
                 el.textContent = d <= 0 ? "00:00:00" : [ Math.floor(d / 36e5), Math.floor(d % 36e5 / 6e4), Math.floor(d % 6e4 / 1e3) ].map(n => String(n).padStart(2, "0")).join(":");
             }
             tick(), setInterval(tick, 1e3);
-        }(p.timerEnd, timerEl), set("desc", "");
+        }(p, timerEl), set("desc", "");
         const qty = document.getElementById("qty");
         document.getElementById("minus")?.addEventListener("click", () => {
             qty && parseInt(qty.value) > 1 && (qty.value = parseInt(qty.value) - 1);

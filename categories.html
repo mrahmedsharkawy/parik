@@ -80,7 +80,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <meta property="og:url" content="https://bariq.com">
   <meta property="og:type" content="website">
   <style>*{box-sizing:border-box;margin:0}html,body{height:100%}body{background:#152546;font-family:'Cairo',Arial,sans-serif;padding-top:env(safe-area-inset-top)}.page{min-height:100dvh;display:flex;flex-direction:column}main{width:70%;margin:70px auto 50px;display:flex;flex-direction:column;justify-content:center}header,.main-header{background-color:#152546;padding-top:env(safe-area-inset-top)}.main-header{position:fixed;inset:0 0 auto 0;z-index:1000;width:100%;padding:7px 0;box-shadow:0 2px 4px rgba(0,0,0,.1)}.header-content{width:70%;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;min-height:50px}.logo img{height:36px}.search-container{flex:1;display:flex;align-items:center;background:#fff;border-radius:20px;margin:0 15px;max-width:1100px;height:38px;padding:0 10px}.search-container input{border:none;flex:1;outline:none;padding:6px 10px;font-size:16px;background:transparent}img,video{max-width:100%;height:auto;border-radius:3px}.dp-img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:7px;background:#f0f0f0}@media(max-width:899px){.main-header .dropdown,.main-header .cart,.main-header .logo{display:none!important}body{padding-bottom:calc(65px + env(safe-area-inset-bottom))}}#category-products:empty{min-height:0;background:transparent;border-radius:8px}</style>
-  <link rel="stylesheet" href="/style/style.css?v=132">
+  <link rel="stylesheet" href="/style/style.css?v=134">
   <style>.mobile-nav{display:none}</style>
   <link rel="stylesheet" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260728h" media="(max-width: 899px)">
   <style>html,body{background:#152546!important}.page,main.main{background:#fff!important}@media(min-width:900px){.mobile-nav{display:none!important}}html.x2-categories-booting .cat-page{visibility:hidden!important}main #category-products:empty,main .cat-products-section:has(#category-products:empty){display:none!important;min-height:0!important;background:none!important;animation:none!important}.filters-scroll-container,main .filter-dropdown,html.occasions-category-page main.main>footer.site-footer,html.occasions-category-page main.main>#category-products{display:none!important}</style>
@@ -745,15 +745,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     cats = await loadSupabaseCategories(cats);
     if (cats.length) renderCategoryShell(cats);
 
+    const hasSupabaseProducts = !!(window.Supabase && window.Supabase.Products);
     // جلب المنتجات من Supabase أولاً
-    if (window.Supabase && window.Supabase.Products) {
+    if (hasSupabaseProducts) {
       try {
         const sb = await window.Supabase.Products.getAll(500);
-        if (Array.isArray(sb) && sb.length) prods = sb.map(mapSbProduct);
+        if (Array.isArray(sb)) prods = sb.map(mapSbProduct);
       } catch(e) {}
     }
-    // fallback: Products.json
-    if (!prods.length) {
+    // fallback: Products.json فقط لو Supabase غير متاح
+    if (!hasSupabaseProducts && !prods.length) {
       try { prods = await fetch('/java/Products.json', {cache:'force-cache'}).then(r=>r.json()); } catch(e) {}
     }
 
@@ -1061,7 +1062,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const name = (typeof p.name==='object'?(p.name[lang]||p.name.ar||p.name.en):(p.name||(lang === 'en' ? 'Product' : 'منتج')));
       const img  = (Array.isArray(p.img)?p.img[0]:p.img)||'assets/logo.png';
       const langParam = (localStorage.getItem('lang') || document.documentElement.lang) === 'en' ? '?lang=en' : '';
-      const link = p.id ? `/product/${encodeURIComponent(p.id)}${langParam}` : '#';
+      const link = p.id ? `product.html?id=${encodeURIComponent(p.id)}${langParam ? '&lang=en' : ''}` : '#';
       const price = parseFloat(p.price)||0;
       const oldPrice = parseFloat(p.oldPrice)||0;
       const sym = {AED:'د.إ',USD:'$',SAR:'ر.س',EGP:'ج.م'}[localStorage.getItem('currency')||'AED']||'د.إ';
@@ -1242,13 +1243,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </footer>
 <script src="/java/supabase.min.js?v=supabase-20260725a" defer></script>
 <script src="/java/main.min.js?v=139" defer></script>
-<script src="/java/sw-refresh.js?v=sw-refresh-20260728v" defer></script>
+<script src="/java/sw-refresh.js?v=sw-refresh-20260729e" defer></script>
 <script src="/java/instant-nav.js?v=instant-nav-20260728e" defer></script>
 <script src="/translations/translation.min.js?v=translation-20260726c" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
 <script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260728e" defer></script>
 <script src="/java/push-welcome.js?v=push-welcome-20260728d" defer></script>
-<script type="module" src="./java/Products.min.js?v=products-20260728i"></script> <!-- ده يفضل يفضل في الآخر -->
+<script type="module" src="./java/Products.min.js?v=products-20260729g"></script> <!-- ده يفضل يفضل في الآخر -->
 </body>
 </html>
 

@@ -50,6 +50,7 @@ CREATE TABLE IF NOT EXISTS settings (
 );
 
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS product_sort TEXT DEFAULT 'daily_random';
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS daily_picks JSONB DEFAULT '[]'::jsonb;
 
 -- Row Level Security (اختياري - للحماية)
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
