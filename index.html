@@ -49,11 +49,11 @@
   </script>
   <script src="/java/auth-reset.js" defer></script>
   <title data-i18n="الصفحة الرئيسية - بريق">الصفحة الرئيسية - بريق</title>
-  <link rel="preload" href="/style/style.css?v=134" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="/style/style.css?v=134"></noscript>
+  <link rel="preload" href="/style/style.css?v=135" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="/style/style.css?v=135"></noscript>
   <style>.mobile-nav{display:none}</style>
-  <link rel="preload" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260728h" as="style" media="(max-width: 899px)" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260728h" media="(max-width: 899px)"></noscript>
+  <link rel="preload" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260729d" as="style" media="(max-width: 899px)" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260729d" media="(max-width: 899px)"></noscript>
   <style>html,body{background:#152546!important}.page,main.main{background:#fff!important}@media(min-width:900px){.mobile-nav{display:none!important}}.categories a{font-family:"Segoe UI Emoji","Segoe UI Symbol","Apple Color Emoji","Noto Color Emoji",Arial,Tahoma,sans-serif!important}</style>
   <!-- Preload LCP image -->
   <script>
@@ -639,14 +639,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </footer>
 <script src="/java/supabase.min.js?v=supabase-20260725a" defer></script>
 <script src="/java/main.min.js?v=139" defer></script>
-<script src="/java/sw-refresh.js?v=sw-refresh-20260729e" defer></script>
+<script src="/java/sw-refresh.js?v=sw-refresh-20260729f" defer></script>
 <script src="/java/instant-nav.js?v=instant-nav-20260728e" defer></script>
 <script src="/translations/translation.min.js?v=translation-20260726c" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
 <script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260728e" defer></script>
 <script src="/java/push-welcome.js?v=push-welcome-20260728d" defer></script>
 <script src="/java/notifications.min.js?v=notifications-20260725o" defer></script>
-<script type="module" src="/java/Products.min.js?v=products-20260729g" defer></script>
+<script type="module" src="/java/Products.min.js?v=products-20260729k" defer></script>
 
 <style>
 .campaign-popup-backdrop{position:fixed;inset:0;z-index:100200;background:rgba(7,16,32,.52);display:flex;align-items:center;justify-content:center;padding:18px;opacity:0;pointer-events:none;transition:opacity .22s ease}.campaign-popup-backdrop.show{opacity:1;pointer-events:auto}.campaign-popup{width:min(92vw,460px);overflow:hidden;border-radius:18px;background:#fff;box-shadow:0 28px 70px rgba(10,22,40,.32);transform:translateY(18px) scale(.96);transition:transform .28s cubic-bezier(.18,1.16,.36,1)}.campaign-popup-backdrop.show .campaign-popup{transform:translateY(0) scale(1)}.campaign-popup-media{position:relative;min-height:170px;background:linear-gradient(135deg,#152546,#2d405f)}.campaign-popup-media img{width:100%;height:230px;object-fit:cover;display:block;border-radius:0}.campaign-popup-media.no-image{display:flex;align-items:center;justify-content:center;color:#fff}.campaign-popup-badge{position:absolute;top:14px;inset-inline-start:14px;background:#D4AF37;color:#152546;border-radius:999px;padding:6px 12px;font-weight:900;font-size:.82rem}.campaign-popup-close{position:absolute;top:12px;inset-inline-end:12px;width:34px;height:34px;border:0;border-radius:50%;background:rgba(255,255,255,.92);color:#152546;font-size:20px;line-height:1;cursor:pointer}.campaign-popup-body{padding:20px;text-align:start}.campaign-popup-title{margin:0 0 8px;color:#152546;font-size:1.35rem;font-weight:900}.campaign-popup-desc{margin:0;color:#516078;line-height:1.7;font-size:.96rem}.campaign-popup-actions{display:flex;gap:10px;margin-top:18px}.campaign-popup-primary{flex:1;text-align:center;text-decoration:none;border-radius:999px;background:#152546;color:#fff;padding:12px 16px;font-weight:800}.campaign-popup-secondary{border:1px solid #d9e0ec;background:#fff;color:#152546;border-radius:999px;padding:12px 16px;font-weight:800;cursor:pointer}@media(max-width:520px){.campaign-popup{border-radius:16px}.campaign-popup-media img{height:190px}.campaign-popup-actions{flex-direction:column}.campaign-popup-title{font-size:1.18rem}}
@@ -793,14 +793,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   body.home-immersive-header .header-content>.cart,
   body.home-immersive-header .header-content>.logo{flex:0 0 auto!important}
   body.home-immersive-header .search-container{min-width:260px!important;margin:0 10px!important}
-  body.home-immersive-header #category-products .products-row{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(210px,230px))!important;gap:18px!important;column-count:auto!important;align-items:start!important;justify-content:center!important}
-  body.home-immersive-header #category-products .product-card{width:100%!important;min-width:0!important;max-width:230px!important;height:auto!important;min-height:0!important;margin:0!important;display:flex!important;flex-direction:column!important;align-self:start!important;box-sizing:border-box!important}
+  body.home-immersive-header #category-products .products-row{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:14px!important;column-count:auto!important;align-items:start!important;justify-content:center!important}
+  body.home-immersive-header #category-products .product-card{width:100%!important;min-width:0!important;max-width:none!important;height:auto!important;min-height:0!important;margin:0!important;display:flex!important;flex-direction:column!important;align-self:start!important;box-sizing:border-box!important}
   body.home-immersive-header #category-products .product-img{width:100%!important;height:auto!important;min-height:0!important;aspect-ratio:1/1!important;object-fit:cover!important;display:block!important}
-  body.home-immersive-header #category-products .product-content{flex:0 0 auto!important;min-height:137px!important;box-sizing:border-box!important}
+  body.home-immersive-header #category-products .product-content{flex:0 0 auto!important;min-height:120px!important;box-sizing:border-box!important}
 }
-@media(min-width:900px) and (max-width:1199px){
-  body.home-immersive-header #category-products .products-row{grid-template-columns:repeat(auto-fill,minmax(188px,210px))!important;gap:14px!important}
-  body.home-immersive-header #category-products .product-card{max-width:210px!important}
+@media(min-width:1200px){
+  body.home-immersive-header #category-products .products-row{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))!important;max-width:1200px!important;margin-inline:auto!important;gap:16px!important}
+  body.home-immersive-header #category-products .product-card{max-width:230px!important}
+  body.home-immersive-header #category-products .product-content{min-height:137px!important}
 }
 body.home-immersive-header .daily-picks-section{height:156px!important;min-height:156px!important;padding-bottom:0!important;overflow:visible!important}
   body.home-immersive-header .daily-picks-grid{height:126px!important;min-height:126px!important;overflow-x:auto!important;overflow-y:visible!important;-webkit-overflow-scrolling:touch!important;touch-action:pan-x pan-y pinch-zoom!important;scroll-behavior:auto!important}
@@ -872,8 +873,10 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin:18px 0 6px!imp
   body.home-immersive-header .categories a{height:38px!important;min-height:38px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;line-height:1.25!important;touch-action:pan-x pan-y pinch-zoom!important}
 }
 @media(min-width:700px) and (max-width:899px){
-  body.home-immersive-header #category-products .products-row{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important}
-  body.home-immersive-header .product-img{height:150px!important;min-height:150px!important}
+  body.home-immersive-header #category-products .products-row{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:12px!important;column-count:auto!important;align-items:start!important}
+  body.home-immersive-header #category-products .product-card{width:100%!important;min-width:0!important;max-width:none!important;margin:0!important;display:flex!important;flex-direction:column!important;align-self:start!important;box-sizing:border-box!important}
+  body.home-immersive-header #category-products .product-img{width:100%!important;height:auto!important;min-height:0!important;aspect-ratio:1/1!important;object-fit:cover!important;display:block!important}
+  body.home-immersive-header #category-products .product-content{flex:0 0 auto!important;min-height:118px!important;box-sizing:border-box!important}
 }
 </style>
 
@@ -1168,21 +1171,15 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin:18px 0 6px!imp
       }
       let dailyIds = new Set(dailyPickList);
 
-      let chosen = [];
-
-      if (dailyIds.size > 0) {
-        // عرض المنتجات المحددة من الأدمن
-        const byId = {};
-        products.forEach(p => { byId[String(p.id)] = p; });
-        chosen = dailyPickList.map(id => byId[String(id)]).filter(Boolean);
-      } else {
-        // fallback: 12 منتج مخفّض حسب ترتيب المتجر
-        const discounted = products.filter(p => {
-          const pr = parseFloat(p.price), old = parseFloat(p.oldPrice);
-          return old > pr && pr > 0;
-        });
-        chosen = storeSort(discounted).slice(0, 12);
+      if (dailyIds.size <= 0) {
+        grid.innerHTML = '';
+        try { localStorage.removeItem('x2_dp_cache'); } catch(e) {}
+        return;
       }
+
+      const byId = {};
+      products.forEach(p => { byId[String(p.id)] = p; });
+      const chosen = dailyPickList.map(id => byId[String(id)]).filter(Boolean);
 
       if (!chosen.length) { grid.innerHTML = ''; return; }
       grid.innerHTML = chosen.map(renderCard).join('');
@@ -1192,13 +1189,18 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin:18px 0 6px!imp
     }
   }
 
-  // عرض الكاش فوراً (بدون تأخير)
+  // عرض الكاش فوراً (بدون تأخير) فقط لو يوجد اختيار محفوظ من الأدمن.
   (function showCacheNow() {
     try {
+      const savedDailyPicks = JSON.parse(localStorage.getItem('x2_daily_picks') || '[]');
+      if (!Array.isArray(savedDailyPicks) || !savedDailyPicks.length) {
+        localStorage.removeItem('x2_dp_cache');
+        return;
+      }
       const dpCache = localStorage.getItem('x2_dp_cache');
       if (dpCache) {
         const { chosen, ts } = JSON.parse(dpCache);
-        if (Date.now() - ts < 10 * 60 * 1000) {
+        if (Date.now() - ts < 10 * 60 * 1000 && Array.isArray(chosen) && chosen.some(p => savedDailyPicks.map(String).includes(String(p && p.id)))) {
           grid.innerHTML = chosen.map(renderCard).join('');
         }
       }

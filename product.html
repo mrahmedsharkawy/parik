@@ -47,9 +47,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <link rel="icon" type="image/png" sizes="96x96" href="/assets/icon-96.png?v=site-icon-20260727">
   <link rel="icon" type="image/png" sizes="202x202" href="/assets/icon.png?v=site-icon-20260727">
   <link rel="shortcut icon" type="image/png" href="/assets/icon-96.png?v=site-icon-20260727">
-  <link rel="stylesheet" href="/style/style.css?v=134">
+  <link rel="stylesheet" href="/style/style.css?v=135">
   <style>.mobile-nav{display:none}</style>
-  <link rel="stylesheet" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260728h" media="(max-width: 899px)">
+  <link rel="stylesheet" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260729d" media="(max-width: 899px)">
   <style>html,body{background:#152546!important}.page,main.main{background:#fff!important}@media(min-width:900px){.mobile-nav{display:none!important}}</style>
   <noscript>
 </noscript>
@@ -350,10 +350,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
         </div>
 
-        <div class="stock">
+        <div class="stock" id="stock-line" style="display:none">
 
-            <span data-i18n="المتبقي">المتبقي</span> :
-            <b id="stock"></b>
+          <span id="stock">🔥 عرض لفترة محدودة</span>
 
         </div>
 
@@ -445,7 +444,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
     var timerBox = document.getElementById('timer-box');
     if(timerBox) timerBox.style.display = 'none';
-    setText('stock', cached.stock || '');
+    var stockLine = document.getElementById('stock-line');
+    if(stockLine) stockLine.style.display = hasCachedDiscount ? '' : 'none';
+    setText('stock', hasCachedDiscount ? '🔥 عرض لفترة محدودة' : '');
     setText('ratingCount', cached.ratingCount ? '(' + cached.ratingCount + ' تقييم)' : '');
     var stars = document.getElementById('stars');
     if(stars && cached.rating){
@@ -505,6 +506,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   .pmv-count{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);color:#fff;background:rgba(0,0,0,.45);border-radius:999px;padding:5px 12px;font-size:.82rem}
   #prodCarousel{cursor:grab}.main-image img{cursor:zoom-in}
   @media(max-width:600px){.pmv-nav{width:36px;height:48px;font-size:1.7rem}.pmv-prev{left:8px}.pmv-next{right:8px}.product-media-viewer{padding:8px}.pmv-img{max-height:84vh}}
+  .product-trust-notes{max-width:700px;margin:0 auto 18px;padding:0 12px}
+  .product-trust-notes h3{margin:0 0 8px;color:#152546;font-size:.96rem;font-weight:800;text-align:right}
+  .trust-note-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .trust-note{background:#fff;border:1px solid #eef0f4;border-radius:10px;padding:9px 10px;color:#39445c;font-size:.78rem;line-height:1.55;font-weight:700;box-shadow:0 2px 8px rgba(21,37,70,.04)}
+  .trust-note .ico{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin-left:5px;border-radius:50%;background:#fff7df;color:#d4af37;font-size:.78rem;vertical-align:middle}
+  @media(max-width:420px){.trust-note-grid{grid-template-columns:1fr}.trust-note{font-size:.8rem}}
 </style>
 
 <section class="reviews-section" id="reviewsSection">
@@ -658,6 +665,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- صور المنتج - تُعبأ بواسطة Products.js -->
 <div id="rv-product-imgs" style="display:none;gap:8px;padding:0 12px;max-width:700px;margin:0 auto 16px"></div>
 
+<section class="product-trust-notes" aria-label="مميزات المنتج من Bariq">
+  <h3>مميزات يثق بها عملاء Bariq</h3>
+  <div class="trust-note-grid">
+    <div class="trust-note"><span class="ico">✓</span>جودة ممتازة وسعر مناسب داخل الإمارات.</div>
+    <div class="trust-note"><span class="ico">✓</span>تعامل سريع وراقي من بداية الطلب حتى التسليم.</div>
+    <div class="trust-note"><span class="ico">✓</span>اختيار مميز للهدايا والمناسبات الخاصة.</div>
+    <div class="trust-note"><span class="ico">✓</span>تشطيب نظيف وخامات مختارة بعناية.</div>
+  </div>
+</section>
+
 <hr>
 
 <h2 class="related-title" data-i18n="منتجات مشابهة">
@@ -784,14 +801,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </footer>
 <script src="/java/supabase.min.js?v=supabase-20260725a" defer></script>
 <script src="/java/main.min.js?v=139" defer></script>
-<script src="/java/sw-refresh.js?v=sw-refresh-20260729e" defer></script>
+<script src="/java/sw-refresh.js?v=sw-refresh-20260729g" defer></script>
 <script src="/java/instant-nav.js?v=instant-nav-20260728e" defer></script>
 <script src="/translations/translation.min.js?v=translation-20260726c" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
 <script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260728e" defer></script>
 <script src="/java/push-welcome.js?v=push-welcome-20260728d" defer></script>
 <script src="/java/notifications.min.js?v=notifications-20260725o" defer></script>
-<script type="module" src="/java/Products.js?v=products-20260729g"></script> <!-- ده يفضل يفضل في الآخر -->
+<script type="module" src="/java/Products.js?v=products-20260729k"></script> <!-- ده يفضل يفضل في الآخر -->
 </body>
 </html>
 

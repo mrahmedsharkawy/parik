@@ -40,10 +40,11 @@ function productTimerDuration(prod, cycle) {
     return ((hours * 60) + minutes) * 60 * 1e3;
 }
 
-function getProductDiscountTimerEnd(prod) {
+function getProductDiscountTimerEnd(prod, renewExpired = true) {
     const key = PRODUCT_DISCOUNT_TIMER_PREFIX + productTimerIdentity(prod), now = Date.now();
     let state = null;
     try { state = JSON.parse(localStorage.getItem(key) || "null"); } catch (e) { state = null; }
+    if (state && state.start && state.duration && now >= state.start + state.duration && !renewExpired) return state.start + state.duration;
     if (!state || !state.start || !state.duration || state.start > now || now >= state.start + state.duration) {
         const cycle = state && Number.isFinite(Number(state.cycle)) ? Number(state.cycle) + 1 : stableProductHash(key) % 29;
         state = { start: now, duration: productTimerDuration(prod, cycle), cycle };
@@ -941,7 +942,7 @@ document.addEventListener("DOMContentLoaded", async function() {
         const hasRenderedCards = !!productsContainer.querySelector(".product-card");
         if (renderKey && productsContainer.dataset.renderKey === renderKey && hasRenderedCards) return void productsContainer.classList.remove("changing");
         rowDiv.className = "products-row", tempContainer.appendChild(rowDiv);
-        const useMobileMasonry = window.matchMedia("(max-width: 494px)").matches;
+        const useMobileMasonry = window.matchMedia("(max-width: 699px)").matches;
         const mobileColumns = useMobileMasonry ? [ document.createElement("div"), document.createElement("div") ] : null;
         if (useMobileMasonry) {
             rowDiv.classList.add("products-masonry");
@@ -1807,16 +1808,20 @@ document.addEventListener("DOMContentLoaded", async function() {
             const pct = Math.round(100 * (1 - parseFloat(p.price) / parseFloat(p.oldPrice)));
             discEl.textContent = `${pct}% ${"en" === lang ? "OFF" : "خصم"}`, discEl.style.display = "";
         } else discEl.style.display = "none";
-        set("stock", p.stock || "");
+        const stockLine = document.getElementById("stock-line") || document.querySelector(".stock");
+        stockLine && (stockLine.style.display = hasDisc ? "" : "none");
+        set("stock", hasDisc ? ("en" === lang ? "🔥 Limited-time offer" : "🔥 عرض لفترة محدودة") : "");
         const timerEl = document.getElementById("timer");
         timerEl && function(product, el) {
-            const wrap = document.getElementById("timer-box") || el.parentElement;
+            const wrap = document.getElementById("timer-box") || el.parentElement, originalPrice = parseFloat(product.oldPrice), salePrice = parseFloat(product.price);
             function tick() {
                 if (!hasDisc) return void (wrap && (wrap.style.display = "none"));
+                if (!Number.isFinite(originalPrice) || !Number.isFinite(salePrice) || originalPrice <= salePrice) return void (wrap && (wrap.style.display = "none"));
                 wrap && (wrap.style.display = "flex");
                 const end = getProductDiscountTimerEnd(product);
                 const d = end - Date.now();
-                el.textContent = d <= 0 ? "00:00:00" : [ Math.floor(d / 36e5), Math.floor(d % 36e5 / 6e4), Math.floor(d % 6e4 / 1e3) ].map(n => String(n).padStart(2, "0")).join(":");
+                if (d <= 0) return void tick();
+                el.textContent = [ Math.floor(d / 36e5), Math.floor(d % 36e5 / 6e4), Math.floor(d % 6e4 / 1e3) ].map(n => String(n).padStart(2, "0")).join(":");
             }
             tick(), setInterval(tick, 1e3);
         }(p, timerEl), set("desc", "");
@@ -2057,14 +2062,27 @@ document.addEventListener("DOMContentLoaded", async function() {
                 const suggested = suggestedIds.size ? all.filter(x => String(x.id) !== String(productId) && suggestedIds.has(String(x.id))) : [];
                 const finalRel = suggested.length ? suggested : fallback.length ? fallback : all.filter(x => String(x.id) !== String(productId));
                 const row = document.createElement("div");
-                row.className = "products-row";
+                row.className = "products-row related-products-row";
+                const useRelatedMasonry = window.matchMedia("(max-width: 699px)").matches;
+                const relatedColumns = useRelatedMasonry ? [ document.createElement("div"), document.createElement("div") ] : null;
+                if (useRelatedMasonry) {
+                    row.classList.add("products-masonry");
+                    relatedColumns.forEach(col => {
+                        col.className = "products-column";
+                        row.appendChild(col);
+                    });
+                }
                 relEl.appendChild(row);
                 let shown = 0;
                 const CHUNK = 8;
                 function loadMore() {
                     const frag = document.createDocumentFragment();
-                    finalRel.slice(shown, shown + CHUNK).forEach(x => frag.appendChild(createProductCard(x)));
-                    row.appendChild(frag);
+                    const columnFrags = useRelatedMasonry ? [ document.createDocumentFragment(), document.createDocumentFragment() ] : null;
+                    finalRel.slice(shown, shown + CHUNK).forEach((x, offset) => {
+                        const card = createProductCard(x);
+                        useRelatedMasonry ? columnFrags[(shown + offset) % 2].appendChild(card) : frag.appendChild(card);
+                    });
+                    useRelatedMasonry ? relatedColumns.forEach((col, ix) => col.appendChild(columnFrags[ix])) : row.appendChild(frag);
                     shown += CHUNK;
                 }
                 loadMore();

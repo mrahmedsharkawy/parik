@@ -57,7 +57,7 @@
   const base = scriptBase.endsWith('/') ? scriptBase : scriptBase + '/';
 
   // ????? CSS
-  const cssHref = base + 'styles.css?v=apple-liquid-20260728h';
+  const cssHref = base + 'styles.css?v=apple-liquid-20260729d';
   if (!Array.from(document.styleSheets).some(s => s.href && s.href.includes('/mobile-nav-bar/styles.css'))) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
