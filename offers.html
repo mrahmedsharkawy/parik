@@ -38,9 +38,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <meta name="robots" content="index, follow">
   <meta name="author" content="Bariq">
   <style>*{box-sizing:border-box;margin:0}html,body{height:100%}body{background:#152546;font-family:'Cairo',Arial,sans-serif;padding-top:env(safe-area-inset-top)}.page{min-height:100dvh;display:flex;flex-direction:column}main{width:70%;margin:70px auto 50px;display:flex;flex-direction:column;justify-content:center}header,.main-header{background-color:#152546;padding-top:env(safe-area-inset-top)}.main-header{position:fixed;inset:0 0 auto 0;z-index:1000;width:100%;padding:7px 0;box-shadow:0 2px 4px rgba(0,0,0,.1)}.header-content{width:70%;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;min-height:50px}.logo img{height:36px}.search-container{flex:1;display:flex;align-items:center;background:#fff;border-radius:20px;margin:0 15px;max-width:1100px;height:38px;padding:0 10px}.search-container input{border:none;flex:1;outline:none;padding:6px 10px;font-size:16px;background:transparent}img,video{max-width:100%;height:auto;border-radius:3px}.dp-img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:7px;background:#f0f0f0}@media(max-width:899px){.main-header .dropdown,.main-header .cart,.main-header .logo{display:none!important}body{padding-bottom:calc(65px + env(safe-area-inset-bottom))}}#offersGrid:empty{min-height:0;background:transparent;border-radius:8px}</style>
-  <link rel="stylesheet" href="/style/style.css?v=135">
+  <link rel="stylesheet" href="/style/style.css?v=137">
   <style>.mobile-nav{display:none}</style>
-  <link rel="stylesheet" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260729d" media="(max-width: 899px)">
+  <link rel="stylesheet" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260729f" media="(max-width: 899px)">
   <style>html,body{background:#152546!important}.page,main.main{background:#fff!important}@media(min-width:900px){.mobile-nav{display:none!important}}</style>
   <noscript>
 </noscript>
@@ -238,16 +238,32 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     }
 
     .offers-products-grid {
-      column-count: 4;
-      column-gap: 14px;
+      display: grid !important;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)) !important;
+      gap: 16px !important;
+      max-width: 1200px !important;
+      margin-inline: auto !important;
+      column-count: auto !important;
+      column-gap: 16px !important;
     }
     .offers-products-grid .product-card {
-      display: inline-block;   /* ضروري لـ columns */
-      width: 100%;
-      max-width: none;
-      min-width: 0;
-      margin: 0 0 14px 0;      /* الفاصل السفلي ثابت */
-      break-inside: avoid;
+      display: flex !important;
+      flex-direction: column !important;
+      width: 100% !important;
+      max-width: 230px !important;
+      min-width: 0 !important;
+      margin: 0 !important;
+      align-self: start !important;
+      justify-self: center !important;
+      break-inside: auto !important;
+    }
+    .offers-products-grid .product-img {
+      width: 100% !important;
+      height: auto !important;
+      min-height: 0 !important;
+      aspect-ratio: 1 / 1 !important;
+      object-fit: cover !important;
+      display: block !important;
     }
     /* إلغاء الإزاحة القديمة */
     .offers-products-grid .product-card:nth-child(even) {
@@ -301,14 +317,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       align-items: center;
       justify-content: center;
       gap: 6px;
-      width: calc(100% - 16px);
-      margin: 0 8px 10px;
-      padding: 8px 12px;
-      border-radius: 20px;
+      width: calc(100% - 20px);
+      margin: 0 10px 9px;
+      padding: 6px 10px;
+      border-radius: 16px;
       border: 1.5px solid #D4AF37;
       background: #fff;
       color: #152546;
-      font-size: 0.78rem;
+      font-size: 0.72rem;
       font-weight: 700;
       cursor: pointer;
       transition: background 0.15s, color 0.15s;
@@ -325,18 +341,22 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     }
 
     /* =======  Responsive ======= */
-    @media (max-width: 900px) {
+    @media (max-width: 1199px) {
       .offers-page-main { width: 94%; }
-      .offers-products-grid { column-count: 3; }
+      .offers-products-grid { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 12px !important; max-width: none !important; }
+      .offers-products-grid .product-card { max-width: none !important; }
+    }
+    @media (max-width: 899px) {
+      .offers-products-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
     }
     @media (max-width: 600px) {
       .fsh-inner { padding: 22px 14px 20px; gap: 12px; }
       .offers-page-main { width: 96%; padding: 16px 0 80px; }
       .offers-products-grid {
-        column-count: 2;
-        column-gap: 10px;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important;
       }
-      .offers-products-grid .product-card { margin-bottom: 10px; }
+      .offers-products-grid .product-card { margin-bottom: 0; }
       /* الفرز في صف واحد قابل للتمرير */
       .offers-sort-bar {
         flex-wrap: nowrap;
@@ -504,7 +524,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <script src="/java/supabase.min.js?v=supabase-20260725a" defer></script>
 <script src="/java/main.min.js?v=139" defer></script>
-<script src="/java/sw-refresh.js?v=sw-refresh-20260729g" defer></script>
+<script src="/java/sw-refresh.js?v=sw-refresh-20260729k" defer></script>
 <script src="/java/instant-nav.js?v=instant-nav-20260728e" defer></script>
 <script src="/translations/translation.min.js?v=translation-20260726c" defer></script>
 <script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260728e" defer></script>
@@ -516,6 +536,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   const PRODUCTS_URL = '/java/Products.json';
   const CART_KEY     = 'x2_cart';
+  const OFFERS_CACHE_KEY = 'x2_offers_deals_cache_v1';
   let allDeals  = [];
   let sortKey   = 'discount';
   const lang = (localStorage.getItem('lang') || document.documentElement.lang || 'ar') === 'en' ? 'en' : 'ar';
@@ -752,6 +773,28 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     renderGrid();
   }
 
+  function readCachedDeals() {
+    try {
+      const cached = JSON.parse(sessionStorage.getItem(OFFERS_CACHE_KEY) || localStorage.getItem(OFFERS_CACHE_KEY) || 'null');
+      return cached && Array.isArray(cached.products) && cached.products.length ? cached.products : null;
+    } catch(e) {}
+    return null;
+  }
+
+  function showCachedDeals() {
+    const cachedProducts = readCachedDeals();
+    if (cachedProducts) applyDeals(cachedProducts);
+  }
+
+  function saveDealsCache(products) {
+    try {
+      if (!Array.isArray(products) || !products.length) return;
+      const payload = JSON.stringify({ ts: Date.now(), products: products.slice(0, 300) });
+      sessionStorage.setItem(OFFERS_CACHE_KEY, payload);
+      localStorage.setItem(OFFERS_CACHE_KEY, payload);
+    } catch(e) {}
+  }
+
   function waitForSupabaseProducts() {
     if (window.Supabase && window.Supabase.Products) return Promise.resolve(true);
     return new Promise(resolve => {
@@ -768,12 +811,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const grid = document.getElementById('offersGrid');
     try {
       let products = null;
-      try {
+      showCachedDeals();
+      const settingsPromise = (async function() { try {
         if (window.Supabase && window.Supabase.Settings) {
           const settings = await window.Supabase.Settings.get();
           if (settings && settings.product_sort) localStorage.setItem('x2_store_product_sort', settings.product_sort);
         }
-      } catch(e) {}
+      } catch(e) {} })();
       // قراءة المنتجات من Supabase أولاً حتى لا تظهر منتجات محذوفة من كاش محلي.
       const hasSupabaseProducts = await waitForSupabaseProducts();
       if (hasSupabaseProducts) {
@@ -801,13 +845,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         } catch(e) {}
       }
 
+      if (!products && hasSupabaseProducts) {
+        products = readCachedDeals();
+        if (!products && allDeals.length) return;
+      }
+
       // Products.json fallback فقط لو Supabase غير متاح
       if (!hasSupabaseProducts && !products) {
         const res = await fetch(PRODUCTS_URL, { cache: 'no-store' });
         products = await res.json();
       }
 
-      applyDeals(products);
+      if (Array.isArray(products)) {
+        applyDeals(products);
+        saveDealsCache(products);
+      }
+      settingsPromise.then(function(){ if (sortKey !== 'discount') renderGrid(); }).catch(function(){});
     } catch (e) {
       grid.innerHTML = `
         <div class="offers-state">

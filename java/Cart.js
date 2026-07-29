@@ -14,10 +14,10 @@ function x2VisitorAreaFallback() {
     }
 }
 
-!function() {
-    if (window.X2CartInitialized) return;
+function initX2Cart() {
+    if (window.X2CartInitialized) return !0;
     let listRoot = document.querySelector(".cart-right .cart-items-list");
-    if (listRoot || (listRoot = document.querySelector(".cart-items-list")), !listRoot) return;
+    if (listRoot || (listRoot = document.querySelector(".cart-items-list")), !listRoot) return !1;
     window.X2CartInitialized = !0;
     function cssEsc(s) {
         try {
@@ -529,7 +529,9 @@ function x2VisitorAreaFallback() {
             checkoutBtn.classList.add("shake"), setTimeout(() => checkoutBtn.classList.remove("shake"), 600));
         }), checkoutBtn._bound = !0);
     });
-}(), function() {
+    return !0;
+}
+initX2Cart() || document.addEventListener("DOMContentLoaded", initX2Cart, { once: !0 }), function() {
     function moveOrderSummary() {
         const container = document.querySelector(".cart-layout-container"), cartLeft = document.querySelector(".cart-left"), cartRight = document.querySelector(".cart-right"), cartItems = document.querySelector(".cart-items-list");
         container && cartLeft && cartRight && cartItems && (window.innerWidth <= 1200 ? (cartLeft.parentElement !== cartRight || cartItems.nextElementSibling !== cartLeft) && cartRight.insertBefore(cartLeft, cartItems.nextSibling) : cartLeft.parentElement !== container && container.insertBefore(cartLeft, cartRight));

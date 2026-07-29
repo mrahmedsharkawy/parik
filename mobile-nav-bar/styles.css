@@ -830,6 +830,14 @@ main,
   margin-top: 6px;
   margin-bottom: 6px;
   color: #222;
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  line-height: 1.35 !important;
+  min-width: 0 !important;
 }
 
 
@@ -1134,8 +1142,8 @@ main,
   background: #fff;
   color: #152546;
   border: none;
-  width: 34px;
-  height: 30px;
+  width: 30px;
+  height: 28px;
   font-size: 10px;
   cursor: pointer;
   box-shadow: 0 3px 10px rgba(21,37,70,.12);
@@ -1145,15 +1153,15 @@ main,
   display: flex;
   align-items: center;
   justify-content: center;
-  padding:  5px;
+  padding: 4px;
   z-index: 8;
   opacity: 1;
   visibility: visible;
 }
 .product-cart-btn .cart-svg-icon {
   display: block;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
 }
 .product-cart-btn .cart-svg-icon path {
   fill: #152546 !important;
