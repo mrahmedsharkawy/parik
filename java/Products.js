@@ -341,7 +341,7 @@ async function fetchProductsSnapshot() {
 
 function refreshProductsInBackground() {
     if (_productsRefreshPromise || !(window.Supabase && window.Supabase.Products)) return;
-    _productsRefreshPromise = window.Supabase.Products.getAll(100).then(function(sbProds) {
+    _productsRefreshPromise = window.Supabase.Products.getAll(100000).then(function(sbProds) {
         if (!Array.isArray(sbProds) || !sbProds.length) return;
         const mapped = mapSupabaseProducts(sbProds), ts = Date.now();
         _productsCache = mapped, _productsCacheTs = ts, saveProductsCache(mapped, ts);
@@ -408,7 +408,7 @@ export async function fetchProducts(forceFresh) {
     const snapshot = canUseSupabaseProducts ? [] : await fetchProductsSnapshot();
     try {
         if (canUseSupabaseProducts) {
-            const sbProds = await window.Supabase.Products.getAll(100);
+            const sbProds = await window.Supabase.Products.getAll(100000);
             if (Array.isArray(sbProds)) {
                 const liveProducts = mapSupabaseProducts(sbProds);
                 if (_productsCache = sortProductsForStore(liveProducts), _productsCache.length > 0) {

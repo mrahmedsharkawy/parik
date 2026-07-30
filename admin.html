@@ -1510,7 +1510,7 @@ async function loadProducts(){
   // ثانياً: جرّب Supabase (المصدر الحقيقي)
   if (window.Supabase) {
     try {
-      const sbProds = await window.Supabase.Products.getAll(500);
+      const sbProds = await window.Supabase.Products.getAll(100000);
       if (Array.isArray(sbProds)) {
         products = sbProds.map(function(p) {
           const imgs = [];
@@ -1546,7 +1546,7 @@ async function syncFromSupabase(){
   if (!window.Supabase) { toast('Supabase غير متصل'); return; }
   toast('⏳ جارٍ المزامنة...');
   try {
-    const sbProds = await window.Supabase.Products.getAll(500);
+    const sbProds = await window.Supabase.Products.getAll(100000);
     if (!Array.isArray(sbProds)) throw new Error('رد غير صالح');
     products = sbProds.map(function(p) {
       const imgs = [];
@@ -1942,7 +1942,7 @@ async function saveProduct(){
       // لو مفيش supabaseId محفوظ محلياً، حاول تطابق بالاسم لمنع التكرار
       if (!targetId && editing) {
         try {
-          const allSb = await window.Supabase.Products.getAll(1000);
+          const allSb = await window.Supabase.Products.getAll(100000);
           const match = (allSb||[]).find(function(sp){ return sp.name_ar && sp.name_ar.trim() === nameAr.trim(); });
           if (match) targetId = match.id;
         } catch(e) {}
@@ -3266,7 +3266,7 @@ async function pushAllProductsToSupabase() {
   // جلب كل منتجات Supabase الحالية لمطابقتها بالاسم (منع التكرار أول مرة)
   var existingByName = {};
   try {
-    var allSb = await window.Supabase.Products.getAll(1000);
+    var allSb = await window.Supabase.Products.getAll(100000);
     (allSb||[]).forEach(function(sp){ if(sp.name_ar) existingByName[sp.name_ar.trim()] = sp.id; });
   } catch(e) {}
 
@@ -6041,7 +6041,7 @@ async function restoreDeletedProducts() {
   toast('⏳ جاري البحث عن منتجات محذوفة...');
   try {
     // جلب كل المنتجات بـ active=false
-    const deleted = await window.sbFetch('products?active=eq.false&order=sort_order.asc&limit=500');
+    const deleted = await window.sbFetch('products?active=eq.false&order=sort_order.asc&limit=100000');
     if (!deleted || !deleted.length) { toast('لا توجد منتجات محذوفة'); return; }
     // فلتر: استبعد الـ [object Object]
     const valid = deleted.filter(p => {
