@@ -1,5 +1,5 @@
 /* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v263';
+const CACHE = 'bariq-v272';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -294,9 +294,10 @@ self.addEventListener('fetch', function(e) {
   };
 
   const isAuthPage = path === '/login' || path === '/login.html';
+  const isFreshHtmlPage = isAuthPage || path === '/product' || path === '/product.html' || /^\/product\//.test(path) || path === '/account' || path === '/account.html';
 
-  // Auth pages must be fresh so signup/login fixes cannot be stuck behind old HTML.
-  if (isHtml && isAuthPage) {
+  // Auth/product/account pages must be fresh so form, wishlist, and checkout fixes cannot be stuck behind old HTML.
+  if (isHtml && isFreshHtmlPage) {
     e.respondWith(
       caches.open(CACHE).then(function(cache) {
         return refreshCache(cache, e.request, htmlCacheKey).catch(function() {

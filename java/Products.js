@@ -1704,6 +1704,81 @@ document.addEventListener("DOMContentLoaded", async function() {
             paint();
         }
         if (mainImg) mainImg.addEventListener("click", () => openProductMediaViewer(0));
+        function productWishlistItem() {
+            return {
+                id: p.id,
+                name: getT(p.name) || "منتج",
+                img: imgs[0] || "",
+                price: p.price,
+                oldPrice: p.oldPrice || 0
+            };
+        }
+        function readWishlist() {
+            try {
+                return JSON.parse(localStorage.getItem("x2_wishlist") || "[]");
+            } catch (e) {
+                return [];
+            }
+        }
+        function writeWishlist(items) {
+            try {
+                localStorage.setItem("x2_wishlist", JSON.stringify(items));
+                window.dispatchEvent(new CustomEvent("wishlist:updated", { detail: { items } }));
+                if (window.SupaUserSync && "function" == typeof window.SupaUserSync.push) window.SupaUserSync.push("wishlist").catch(function() {});
+            } catch (e) {}
+        }
+        function isWishlisted() {
+            return readWishlist().some(item => String(item.id) === String(p.id));
+        }
+        function setWishlistButtonState(btn) {
+            if (!btn) return;
+            const active = isWishlisted();
+            btn.classList.toggle("active", active);
+            btn.setAttribute("aria-pressed", active ? "true" : "false");
+            btn.setAttribute("aria-label", active ? "إزالة من المفضلة" : "إضافة إلى المفضلة");
+        }
+        let productMediaControls = null, dots = null, dotEls = [];
+        if (mainWrap) {
+            productMediaControls = document.createElement("div");
+            productMediaControls.className = "product-media-controls";
+                        productMediaControls.innerHTML = '<div class="pmc-dots" aria-label="صور المنتج"></div>';
+            mainWrap.appendChild(productMediaControls);
+                        const nameEl = document.getElementById("name"), infoEl = document.querySelector(".product-page .info"), titleLine = document.createElement("div"), actions = document.createElement("div");
+                        actions.className = "pmc-actions";
+                        actions.innerHTML = `
+                            <button class="pmc-btn pmc-share" type="button" aria-label="مشاركة المنتج">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="M7 8l5-5 5 5"></path><path d="M5 13v6h14v-6"></path></svg>
+                            </button>
+                            <button class="pmc-btn pmc-wishlist" type="button" aria-label="إضافة إلى المفضلة" aria-pressed="false">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6c-1.7-1.7-4.5-1.7-6.2 0L12 7.2 9.4 4.6c-1.7-1.7-4.5-1.7-6.2 0s-1.7 4.5 0 6.2L12 19.6l8.8-8.8c1.7-1.7 1.7-4.5 0-6.2z"></path></svg>
+                            </button>`;
+                        if (nameEl && infoEl) {
+                                titleLine.className = "product-title-line";
+                                infoEl.insertBefore(titleLine, nameEl);
+                                titleLine.appendChild(nameEl);
+                        }
+                        if (nameEl && titleLine.parentNode) {
+                            titleLine.insertBefore(actions, nameEl);
+                        } else {
+                            mainWrap.insertAdjacentElement("afterend", actions);
+                        }
+                        const shareBtn = actions.querySelector(".pmc-share"), wishBtn = actions.querySelector(".pmc-wishlist");
+            setWishlistButtonState(wishBtn);
+            wishBtn && wishBtn.addEventListener("click", function() {
+                let items = readWishlist();
+                const exists = items.some(item => String(item.id) === String(p.id));
+                items = exists ? items.filter(item => String(item.id) !== String(p.id)) : [ productWishlistItem(), ...items.filter(item => String(item.id) !== String(p.id)) ];
+                if (items.length > 60) items = items.slice(0, 60);
+                writeWishlist(items), setWishlistButtonState(wishBtn);
+            });
+            shareBtn && shareBtn.addEventListener("click", async function() {
+                const shareData = { title: getT(p.name) || document.title, text: getT(p.name) || document.title, url: window.location.href };
+                try {
+                    if (navigator.share) await navigator.share(shareData); else if (navigator.clipboard) await navigator.clipboard.writeText(shareData.url);
+                } catch (e) {}
+            });
+            dots = productMediaControls.querySelector(".pmc-dots");
+        }
         if (mainWrap && media.length > 1) {
             const carousel = document.createElement("div");
             carousel.id = "prodCarousel", carousel.style.cssText = "display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;width:100%;height:100%;border-radius:inherit;direction:ltr;visibility:hidden;";
@@ -1714,21 +1789,19 @@ document.addEventListener("DOMContentLoaded", async function() {
                 if (slide.style.cssText = "flex:0 0 100%;scroll-snap-align:center;width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;", 
                 "video" === item.type) {
                     const vid = document.createElement("video");
-                    vid.src = item.src, vid.controls = !0, vid.playsInline = !0, vid.style.cssText = "width:100%;height:100%;object-fit:cover;", 
+                    vid.src = item.src, vid.controls = !0, vid.playsInline = !0, vid.style.cssText = "width:100%;height:100%;object-fit:contain;background:#fff;", 
                     slide.appendChild(vid);
                 } else {
                     const img = document.createElement("img");
-                    img.src = item.src, img.alt = getT(p.name), img.style.cssText = "width:100%;height:100%;object-fit:cover;", 
+                    img.src = item.src, img.alt = getT(p.name), img.style.cssText = "width:100%;height:100%;object-fit:contain;background:#fff;", 
                     img.loading = i === baseIndex ? "eager" : "lazy", i === baseIndex && img.setAttribute("fetchpriority", "high"),
                     slide.appendChild(img), slide.style.cursor = "zoom-in", slide.addEventListener("click", () => openProductMediaViewer(modIndex(i)));
                 }
                 carousel.appendChild(slide), slides.push(slide);
             });
-            const dots = document.createElement("div");
-            dots.style.cssText = "position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:10;";
-            const dotEls = media.map((_, i) => {
+            dotEls = media.map((_, i) => {
                 const d = document.createElement("span");
-                return d.style.cssText = `width:${0 === i ? "18px" : "7px"};height:7px;border-radius:999px;background:${0 === i ? "#D4AF37" : "rgba(255,255,255,0.6)"};transition:all 0.3s;cursor:pointer;`, 
+                return d.className = "pmc-dot" + (0 === i ? " active" : ""), 
                 d.addEventListener("click", () => {
                     carousel.scrollTo({
                         left: (baseIndex + i) * carousel.offsetWidth,
@@ -1742,8 +1815,8 @@ document.addEventListener("DOMContentLoaded", async function() {
             });
             carousel.addEventListener("scroll", () => {
                 const rawIdx = Math.round(carousel.scrollLeft / carousel.offsetWidth), idx = modIndex(rawIdx);
-                if (idx !== currentIdx && (dotEls[currentIdx].style.cssText = "width:7px;height:7px;border-radius:999px;background:rgba(255,255,255,0.6);transition:all 0.3s;cursor:pointer;", 
-                currentIdx = idx, dotEls[idx].style.cssText = "width:18px;height:7px;border-radius:999px;background:#D4AF37;transition:all 0.3s;cursor:pointer;", 
+                if (idx !== currentIdx && (dotEls[currentIdx] && dotEls[currentIdx].classList.remove("active"), 
+                currentIdx = idx, dotEls[idx] && dotEls[idx].classList.add("active"), 
                 thumbs)) {
                     thumbs.querySelectorAll(".active").forEach(t => t.classList.remove("active"));
                     const thumbItems = thumbs.querySelectorAll("img, .thumb-video");
@@ -1755,8 +1828,9 @@ document.addEventListener("DOMContentLoaded", async function() {
                 }, 90);
             }, {
                 passive: !0
-            }), mainWrap.style.position = "relative", mainWrap.appendChild(carousel), mainWrap.appendChild(dots),
-            thumbs && (thumbs.style.display = window.innerWidth <= 900 ? "none" : "flex");
+            }), mainWrap.style.position = "relative", mainWrap.appendChild(carousel),
+            mainImg && mainImg.style.setProperty("display", "none", "important"), mainVid && mainVid.style.setProperty("display", "none", "important"),
+            thumbs && (thumbs.style.display = window.innerWidth <= 700 ? "none" : "flex");
         }
         const set = (id, val) => {
             const el = document.getElementById(id);
@@ -1998,7 +2072,9 @@ document.addEventListener("DOMContentLoaded", async function() {
                     customerAddress = "موقع العميل";
                 }
             }
+            const customizationLines = "function" == typeof window.getProductCustomizationSummary ? window.getProductCustomizationSummary() : [];
             const msgLines = [ "مرحباً، أريد تخصيص طلب:", "", `رقم الطلب: ${orderId}`, "", "بيانات العميل:", `الاسم: ${customerName || "غير متوفر"}`, `الهاتف: ${customerPhone || "غير متوفر"}`, `البريد: ${customerEmail || "غير متوفر"}`, `العنوان: ${customerAddress || "موقع العميل"}`, "", "تفاصيل الطلب:", `المنتج: ${getT(p.name)}`, `الكمية: ${qtyVal}`, `السعر: ${total} ${sym}`, `الرابط: ${productUrl}` ];
+            customizationLines.length && msgLines.push("", "بيانات التخصيص:", ...customizationLines);
             const msgText = msgLines.join("\n");
             const msg = encodeURIComponent(msgText);
             let accountReturnTimer;
@@ -2107,16 +2183,42 @@ document.addEventListener("DOMContentLoaded", async function() {
             })[ch]);
             imgPreviewEl.style.display = "flex";
             imgPreviewEl.style.flexDirection = "column";
-            imgPreviewEl.innerHTML = `<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:100%;">${show.map(src => `<img class="rv-product-img" src="${src}" alt="" loading="lazy" decoding="async" style="width:100%;border-radius:10px;object-fit:cover;aspect-ratio:1.35/1;background:#f2f2f2;cursor:zoom-in;">`).join("")}</div>${productDesc ? `<div class="rv-product-desc" style="margin-top:12px;text-align:right;color:#39445c;line-height:1.8;background:#fafafa;border:1px solid #eee;border-radius:10px;padding:12px 14px;"><h3 style="margin:0 0 7px;color:#152546;font-size:1rem;font-weight:800;">${"en" === lang ? "Product Description" : "وصف المنتج"}</h3><p id="rvProductDescText" style="margin:0;font-size:.9rem;white-space:pre-line;max-height:9em;overflow:hidden;">${productDescHtml}</p>${productDesc.length > 180 ? `<button id="rvProductDescMore" type="button" style="margin-top:8px;border:1px solid #d4af37;background:#fff;color:#152546;border-radius:999px;padding:5px 14px;font-family:inherit;font-weight:700;font-size:.8rem;cursor:pointer;">${"en" === lang ? "Show All" : "إظهار الكل"}</button>` : ""}</div>` : ""}`;
+            imgPreviewEl.innerHTML = `<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:100%;">${show.map(src => `<img class="rv-product-img" src="${src}" alt="" loading="lazy" decoding="async" style="width:100%;border-radius:10px;object-fit:cover;aspect-ratio:1.35/1;background:#f2f2f2;cursor:zoom-in;">`).join("")}</div>${productDesc ? `<div class="rv-product-desc" style="margin-top:12px;text-align:right;color:#39445c;line-height:1.8;background:#fafafa;border:1px solid #eee;border-radius:10px;padding:12px 14px;"><h3 style="margin:0 0 7px;color:#152546;font-size:1rem;font-weight:800;">${"en" === lang ? "Product Description" : "وصف المنتج"}</h3><p id="rvProductDescText" style="margin:0;font-size:.9rem;white-space:pre-line;max-height:3.6em;overflow:hidden;">${productDescHtml}</p>${productDesc.length > 180 ? `<button id="rvProductDescMore" type="button" aria-expanded="false" style="margin-top:8px;border:1px solid #d4af37;background:#fff;color:#152546;border-radius:999px;padding:5px 14px;font-family:inherit;font-weight:700;font-size:.8rem;cursor:pointer;">${"en" === lang ? "Show All" : "إظهار الكل"}</button>` : ""}</div>` : ""}`;
+            const customizationTemplate = document.getElementById("productCustomizationTemplate");
+            if (customizationTemplate && !document.getElementById("productCustomization")) {
+                const customizationNode = customizationTemplate.content.firstElementChild.cloneNode(!0);
+                imgPreviewEl.appendChild(customizationNode), "function" == typeof window.initProductCustomization && window.initProductCustomization(customizationNode);
+            }
             imgPreviewEl.querySelectorAll(".rv-product-img").forEach((img, i) => {
                 img.addEventListener("click", () => openProductMediaViewer(i));
             });
-            const descMoreBtn = document.getElementById("rvProductDescMore"), descTextEl = document.getElementById("rvProductDescText");
-            descMoreBtn && descTextEl && (descMoreBtn.onclick = function() {
-                descTextEl.style.maxHeight = "none";
-                descTextEl.style.overflow = "visible";
-                descMoreBtn.style.display = "none";
-            });
+            let descMoreBtn = document.getElementById("rvProductDescMore");
+            const descTextEl = document.getElementById("rvProductDescText");
+            if (descTextEl) {
+                const ensureDescToggle = function() {
+                    const needsToggle = descTextEl.scrollHeight > descTextEl.clientHeight + 2 || !!descMoreBtn;
+                    if (!needsToggle) return;
+                    if (!descMoreBtn) {
+                        descMoreBtn = document.createElement("button");
+                        descMoreBtn.id = "rvProductDescMore";
+                        descMoreBtn.type = "button";
+                        descMoreBtn.style.cssText = "margin-top:8px;border:1px solid #d4af37;background:#fff;color:#152546;border-radius:999px;padding:5px 14px;font-family:inherit;font-weight:700;font-size:.8rem;cursor:pointer;";
+                        descTextEl.parentElement && descTextEl.parentElement.appendChild(descMoreBtn);
+                    }
+                    descMoreBtn.setAttribute("aria-expanded", descMoreBtn.getAttribute("aria-expanded") || "false");
+                    descMoreBtn.textContent = "true" === descMoreBtn.getAttribute("aria-expanded") ? ("en" === lang ? "Hide" : "إخفاء") : ("en" === lang ? "Show All" : "إظهار الكل");
+                    descMoreBtn.onclick = function() {
+                        const expanded = "true" === descMoreBtn.getAttribute("aria-expanded");
+                        descMoreBtn.setAttribute("aria-expanded", expanded ? "false" : "true");
+                        descTextEl.style.maxHeight = expanded ? "3.6em" : "none";
+                        descTextEl.style.overflow = expanded ? "hidden" : "visible";
+                        descMoreBtn.textContent = expanded ? ("en" === lang ? "Show All" : "إظهار الكل") : ("en" === lang ? "Hide" : "إخفاء");
+                    };
+                };
+                window.refreshProductDescriptionToggle = ensureDescToggle;
+                requestAnimationFrame(ensureDescToggle);
+                setTimeout(ensureDescToggle, 250);
+            }
         }
         (function() {
             const fvSrc = explicitVideos[0] || media.find(m => m.type === "video")?.src;

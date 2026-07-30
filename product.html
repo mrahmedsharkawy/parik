@@ -43,14 +43,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <meta property="og:image" content="https://bariqgifts.com/assets/logo.png?v=logo-stroke-20260729">
   <meta property="og:url" content="https://bariqgifts.com/product">
   <meta property="og:type" content="website">
-  <style>*{box-sizing:border-box;margin:0}html,body{height:100%}body{background:#152546;font-family:'Cairo',Arial,sans-serif;padding-top:env(safe-area-inset-top)}.page{min-height:100dvh;display:flex;flex-direction:column}main{width:70%;margin:70px auto 50px;display:flex;flex-direction:column;justify-content:center}header,.main-header{background-color:#152546;padding-top:env(safe-area-inset-top)}.main-header{position:fixed;inset:0 0 auto 0;z-index:1000;width:100%;padding:7px 0;box-shadow:0 2px 4px rgba(0,0,0,.1)}.header-content{width:70%;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;min-height:50px}.logo img{height:36px}.search-container{flex:1;display:flex;align-items:center;background:#fff;border-radius:20px;margin:0 15px;max-width:1100px;height:38px;padding:0 10px}.search-container input{border:none;flex:1;outline:none;padding:6px 10px;font-size:16px;background:transparent}img,video{max-width:100%;height:auto;border-radius:3px}.dp-img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:7px;background:#f0f0f0}@media(max-width:899px){.main-header .dropdown,.main-header .cart,.main-header .logo{display:none!important}body{padding-bottom:calc(65px + env(safe-area-inset-bottom))}}#productDetail:empty,#product-main:empty,.product-page-body main:empty{min-height:500px}</style>
+  <style>*{box-sizing:border-box;margin:0}html,body{height:100%}body{background:#152546;font-family:'Cairo',Arial,sans-serif;padding-top:env(safe-area-inset-top)}.page{min-height:100dvh;display:flex;flex-direction:column}main{width:70%;margin:70px auto 50px;display:flex;flex-direction:column;justify-content:center}header,.main-header{background-color:#152546;padding-top:env(safe-area-inset-top)}.main-header{position:fixed;inset:0 0 auto 0;z-index:1000;width:100%;padding:7px 0;box-shadow:0 2px 4px rgba(0,0,0,.1)}.header-content{width:70%;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;min-height:50px}.logo img{height:36px}.search-container{flex:1;display:flex;align-items:center;background:#fff;border-radius:20px;margin:0 15px;max-width:1100px;height:38px;padding:0 10px}.search-container input{border:none;flex:1;outline:none;padding:6px 10px;font-size:16px;background:transparent}img,video{max-width:100%;height:auto;border-radius:3px}.dp-img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:7px;background:#f0f0f0}@media(max-width:1024px){.main-header .dropdown,.main-header .cart,.main-header .logo{display:none!important}body{padding-bottom:calc(65px + env(safe-area-inset-bottom))}}#productDetail:empty,#product-main:empty,.product-page-body main:empty{min-height:500px}</style>
   <link rel="icon" type="image/png" sizes="96x96" href="/assets/icon-96.png?v=site-icon-20260727">
   <link rel="icon" type="image/png" sizes="202x202" href="/assets/icon.png?v=site-icon-20260727">
   <link rel="shortcut icon" type="image/png" href="/assets/icon-96.png?v=site-icon-20260727">
   <link rel="stylesheet" href="/style/style.css?v=137">
   <style>.mobile-nav{display:none}</style>
-  <link rel="stylesheet" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260729f" media="(max-width: 899px)">
-  <style>html,body{background:#152546!important}.page,main.main{background:#fff!important}@media(min-width:900px){.mobile-nav{display:none!important}}</style>
+  <link rel="stylesheet" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260730a" media="(max-width: 1024px)">
+  <style>html,body{background:#152546!important}.page,main.main{background:#fff!important}@media(min-width:1025px){.mobile-nav{display:none!important}}</style>
   <noscript>
 </noscript>
   <link rel="canonical" href="https://bariqgifts.com/product">
@@ -366,6 +366,23 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
         <p class="description" id="desc"></p>
 
+        <template id="productCustomizationTemplate">
+        <section class="product-customization" id="productCustomization" aria-label="تفاصيل التخصيص">
+          <label class="pc-upload" for="customImages">
+            <input type="file" id="customImages" accept="image/*" multiple>
+            <span class="pc-upload-ico">📷</span>
+            <span class="pc-upload-title">رفع صور التخصيص</span>
+            <span class="pc-upload-sub">يمكنك اختيار أكثر من صورة للشعار، الاسم، التصميم أو المرجع.</span>
+          </label>
+          <div class="pc-image-list" id="customImageList" aria-live="polite"></div>
+
+          <label class="pc-field pc-notes">
+            <span>ملاحظات التخصيص</span>
+            <textarea id="customNotes" rows="4" placeholder="اكتب اللون، المقاس، العبارة المطلوبة، أماكن الصور، أو أي تفاصيل مهمة..."></textarea>
+          </label>
+        </section>
+        </template>
+
         <div class="quantity">
 
             <button id="minus">-</button>
@@ -505,14 +522,98 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   .pmv-prev{left:16px}.pmv-next{right:16px}
   .pmv-count{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);color:#fff;background:rgba(0,0,0,.45);border-radius:999px;padding:5px 12px;font-size:.82rem}
   #prodCarousel{cursor:grab}.main-image img{cursor:zoom-in}
+  body.product-page-body .gallery{position:relative;width:max-content;max-width:100%;justify-self:center}
+  body.product-page-body .main-image{position:relative;overflow:hidden;aspect-ratio:auto;height:700px!important;min-height:700px;max-height:none!important;background:#fff}
+  body.product-page-body .main-image #prodCarousel{position:absolute!important;inset:0;width:100%!important;height:100%!important}
+  body.product-page-body .main-image #prodCarousel img,body.product-page-body .main-image #prodCarousel video{object-fit:contain!important;object-position:center top!important;background:#fff!important}
+  body.product-page-body .main-image:has(#prodCarousel)>#mainImage{display:none!important}
+  body.product-page-body .main-image .product-media-controls{position:absolute!important;left:0!important;right:0!important;bottom:4px!important;z-index:12;width:100%!important;min-height:0!important;margin:0!important;pointer-events:none;grid-column:auto!important;justify-self:auto!important}
+  body.product-page-body .main-image .product-media-controls .pmc-dots{pointer-events:auto;margin:0!important}
+  .product-media-controls{width:100%;display:flex;align-items:center;justify-content:center;min-height:22px;margin:12px 0 4px;direction:ltr}
+  body.product-page-body .gallery .product-media-controls{grid-column:1/-1;justify-self:stretch;min-width:0}
+  @media(min-width:1025px){body.product-page-body .product-page{align-items:start!important}body.product-page-body .gallery{display:grid!important;grid-template-columns:88px minmax(0,572px)!important;gap:0;width:max-content;max-width:100%;justify-self:center;align-self:start!important;margin-top:0!important;align-items:start;direction:rtl}body.product-page-body .gallery #thumbs{height:700px!important;max-height:700px!important}body.product-page-body .gallery .main-image{width:min(572px,calc(100vw - 794px))!important;min-width:360px;max-width:572px!important;height:700px!important;min-height:700px!important;max-height:none!important;aspect-ratio:auto!important}}
+  @media(min-width:1025px) and (max-width:1200px){body.product-page-body .product-page{grid-template-columns:minmax(0,1fr)!important;gap:16px!important}body.product-page-body .gallery{grid-template-columns:88px minmax(0,580px)!important;width:max-content!important;justify-self:center!important}body.product-page-body .gallery #thumbs{height:min(40vw,438px)!important;max-height:min(40vw,438px)!important}body.product-page-body .gallery .main-image{width:min(68vw,580px)!important;min-width:0!important;max-width:580px!important;height:min(40vw,438px)!important;min-height:0!important}body.product-page-body .info{width:min(100%,688px)!important;max-width:688px!important;justify-self:center!important}}
+  .product-title-line{display:flex;align-items:center;justify-content:space-between;gap:12px;direction:rtl;width:100%;margin:6px 0 10px}
+  .product-title-line h1#name{flex:1;min-width:0;margin:0!important;text-align:right}
+  .pmc-actions{display:flex;align-items:center;gap:20px;direction:ltr;flex-shrink:0}
+  .pmc-btn{width:34px;height:34px;border:0;background:transparent;color:#111;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .pmc-btn svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;overflow:visible}
+  .pmc-wishlist svg{width:29px;height:29px;stroke-width:1.8}
+  .pmc-wishlist.active svg{fill:#111;stroke:#111}
+  .pmc-dots{display:flex;align-items:center;justify-content:center;gap:18px;min-height:22px;justify-self:center}
+  .pmc-dot{display:block;width:13px;height:13px;border-radius:50%;background:#9a9b9f;cursor:pointer;transition:width .25s,background .25s,transform .25s}
+  .pmc-dot.active{width:14px;height:14px;background:#000;transform:scale(1.05)}
+  .pmc-spacer{min-width:1px}
   @media(max-width:600px){.pmv-nav{width:36px;height:48px;font-size:1.7rem}.pmv-prev{left:8px}.pmv-next{right:8px}.product-media-viewer{padding:8px}.pmv-img{max-height:84vh}}
-  .product-trust-notes{max-width:700px;margin:0 auto 18px;padding:0 12px}
-  .product-trust-notes h3{margin:0 0 8px;color:#152546;font-size:.96rem;font-weight:800;text-align:right}
-  .trust-note-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-  .trust-note{background:#fff;border:1px solid #eef0f4;border-radius:10px;padding:9px 10px;color:#39445c;font-size:.78rem;line-height:1.55;font-weight:700;box-shadow:0 2px 8px rgba(21,37,70,.04)}
-  .trust-note .ico{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin-left:5px;border-radius:50%;background:#fff7df;color:#d4af37;font-size:.78rem;vertical-align:middle}
-  @media(max-width:600px){.trust-note-grid{grid-template-columns:1fr;gap:6px}.trust-note{font-size:clamp(.58rem,2.55vw,.72rem);line-height:1.25;padding:7px 9px;white-space:nowrap}.trust-note .ico{width:18px;height:18px;font-size:.66rem;margin-left:4px}}
+  .product-customization{margin:14px 0 16px;padding:14px;border:1px solid #eef0f4;border-radius:14px;background:#fff;box-shadow:0 4px 16px rgba(21,37,70,.05);direction:rtl}
+  .pc-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px}
+  .pc-head h3{margin:0;color:#152546;font-size:.98rem;font-weight:900;text-align:right}
+  .pc-head p{margin:3px 0 0;color:#7a8296;font-size:.76rem;font-weight:700;line-height:1.5}
+  .pc-badge{background:#fff7df;color:#9b7410;border:1px solid #f0d88b;border-radius:999px;padding:4px 9px;font-size:.68rem;font-weight:900;white-space:nowrap}
+  .pc-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:10px}
+  .pc-option{display:flex;align-items:center;gap:7px;border:1px solid #e8ebf2;border-radius:10px;padding:9px 10px;background:#fafbfe;color:#152546;font-size:.78rem;font-weight:800;cursor:pointer}
+  .pc-option input{accent-color:#152546;width:16px;height:16px;flex-shrink:0}
+  .pc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:10px}
+  .pc-field{display:flex;flex-direction:column;gap:5px;color:#152546;font-size:.78rem;font-weight:800}
+  .pc-field input,.pc-field select,.pc-field textarea{width:100%;border:1.5px solid #e1e5ee;border-radius:10px;background:#fff;color:#152546;font:inherit;font-weight:700;padding:10px 11px;outline:none;box-sizing:border-box}
+  .pc-field input:focus,.pc-field select:focus,.pc-field textarea:focus{border-color:#D4AF37;box-shadow:0 0 0 3px rgba(212,175,55,.12)}
+  .pc-upload{display:flex;align-items:center;gap:10px;border:1.5px dashed #d7deea;background:#fafbfe;border-radius:12px;padding:12px;margin:2px 0 10px;cursor:pointer;color:#152546}
+  .pc-upload input{display:none}
+  .pc-upload-ico{width:36px;height:36px;border-radius:50%;background:#152546;color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.05rem;flex-shrink:0}
+  .pc-upload-title{font-size:.84rem;font-weight:900;display:block}
+  .pc-upload-sub{font-size:.7rem;color:#7a8296;font-weight:700;line-height:1.45;display:block}
+  .pc-image-list{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px}
+  .pc-image-pill{display:flex;align-items:center;gap:6px;max-width:100%;background:#f5f7fb;border:1px solid #e5e9f2;border-radius:999px;padding:5px 9px;color:#39445c;font-size:.72rem;font-weight:800}
+  .pc-image-pill img{width:26px;height:26px;border-radius:50%;object-fit:cover;background:#fff;flex-shrink:0}
+  .pc-notes textarea{resize:vertical;min-height:86px;line-height:1.6}
+  body.product-page-body .info h1#name{font-size:21px!important;line-height:1.25!important;font-weight:600!important;color:#152546!important;margin:4px 0 8px!important}
+  @media(max-width:600px){.product-customization{padding:11px;margin:12px 0}.pc-options,.pc-grid{grid-template-columns:1fr}.pc-head h3{font-size:.92rem}.pc-upload{align-items:flex-start}.pc-upload-sub{font-size:.66rem}.pc-field input,.pc-field select,.pc-field textarea{font-size:16px}}
+  @media(min-width:701px) and (max-width:1024px){body.product-page-body .gallery{display:grid!important;grid-template-columns:108px minmax(0,min(76vw,580px))!important;gap:12px;align-items:start;justify-content:center;justify-self:center;width:max-content;max-width:100%;direction:rtl}body.product-page-body .gallery #thumbs{display:flex!important;width:108px;height:min(57vw,438px)!important;max-height:min(57vw,438px)!important;overflow-y:auto;overflow-x:hidden;gap:8px;flex-direction:column;align-items:center;scrollbar-width:none!important;scrollbar-color:transparent transparent!important;-ms-overflow-style:none!important}body.product-page-body .gallery #thumbs::-webkit-scrollbar{width:0!important;height:0!important;display:none!important}body.product-page-body .gallery #thumbs img,body.product-page-body .gallery #thumbs .thumb-video{width:96px!important;max-width:none!important;height:96px!important;min-height:96px;box-sizing:border-box;object-fit:cover;border-radius:7px;flex:0 0 auto;display:block}body.product-page-body .gallery .main-image{width:min(76vw,580px)!important;max-width:580px!important;height:min(57vw,438px)!important;min-height:0!important;max-height:none!important;aspect-ratio:auto!important;justify-self:start}body.product-page-body .main-image #prodCarousel img,body.product-page-body .main-image #prodCarousel video{object-fit:cover!important;object-position:center center!important}}
+  @media(max-width:700px){html:has(body.product-page-body),body.product-page-body{width:100%!important;max-width:100%!important;height:auto!important;min-height:100%!important;overflow-x:hidden!important;overflow-y:auto!important;touch-action:pan-y!important}body.product-page-body .page{height:auto!important;min-height:100dvh!important}body.product-page-body main#main,body.product-page-body main.main{margin-top:58px!important}body.product-page-body .page,body.product-page-body main.main,body.product-page-body .product-page{width:100%!important;max-width:100%!important;min-width:0!important;margin-left:0!important;margin-right:0!important;overflow:visible!important;box-sizing:border-box!important}body.product-page-body .gallery{display:flex!important;flex-direction:column!important;align-items:stretch!important;width:100%!important;max-width:100%!important;margin-left:0!important;margin-right:0!important;overflow:hidden!important}body.product-page-body .gallery #thumbs{display:none!important}body.product-page-body .main-image{width:100%!important;max-width:100%!important;margin-left:0!important;margin-right:0!important;overflow:hidden!important}body.product-page-body #prodCarousel{touch-action:pan-x pan-y!important}body.product-page-body .main-image .product-media-controls{position:absolute;left:0;right:0;bottom:3px!important;z-index:12;width:100%;min-height:0;margin:0;pointer-events:none}.product-media-controls .pmc-dots{pointer-events:auto}.product-title-line{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin:7px 10px 6px;direction:ltr;width:auto;max-width:100%;box-sizing:border-box}.gallery>.pmc-actions{display:none}.product-title-line .pmc-actions{display:flex;gap:8px;flex:0 0 auto;margin:0}.pmc-btn{width:26px;height:26px}.pmc-btn svg{width:18px;height:18px}.pmc-wishlist svg{width:21px;height:21px}.pmc-dots{gap:9px;min-height:10px}.pmc-dots:empty{display:none}.pmc-dot{width:5px;height:5px;background:rgba(0,0,0,.35)}.pmc-dot.active{width:6px;height:6px;background:#000;transform:none}body.product-page-body .info h1#name{font-size:clamp(17px,4.8vw,20px)!important;line-height:1.25!important;font-weight:500!important;display:-webkit-box!important;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;text-align:right;flex:1;min-width:0;margin:0!important;direction:rtl}}
+  @media(max-width:700px){body.product-page-body main#main,body.product-page-body main.main{margin-top:76px!important}body.product-page-body .gallery{width:calc(100% - 20px)!important;max-width:calc(100% - 20px)!important;margin-left:10px!important;margin-right:10px!important}body.product-page-body .main-image{height:min(94vw,350px)!important;min-height:0!important;max-height:none!important;aspect-ratio:auto!important}body.product-page-body .main-image #prodCarousel img,body.product-page-body .main-image #prodCarousel video{object-fit:cover!important;object-position:center center!important}body.product-page-body .main-image .product-media-controls{bottom:8px!important}}
 </style>
+
+<script>
+(function(){
+  function ready(fn){ document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', fn, {once:true}) : fn(); }
+  function bindProductCustomization(root){
+    root = root || document;
+    var input = root.querySelector ? root.querySelector('#customImages') : document.getElementById('customImages');
+    var list = root.querySelector ? root.querySelector('#customImageList') : document.getElementById('customImageList');
+    if(input && list){
+      input.addEventListener('change', function(){
+        list.innerHTML = '';
+        Array.prototype.slice.call(input.files || [], 0, 8).forEach(function(file){
+          var pill = document.createElement('span');
+          pill.className = 'pc-image-pill';
+          var img = document.createElement('img');
+          img.alt = '';
+          img.src = URL.createObjectURL(file);
+          img.onload = function(){ URL.revokeObjectURL(img.src); };
+          var name = document.createElement('span');
+          name.textContent = file.name;
+          pill.appendChild(img);
+          pill.appendChild(name);
+          list.appendChild(pill);
+        });
+      });
+    }
+  }
+  ready(function(){
+    bindProductCustomization(document);
+    window.getProductCustomizationSummary = function(){
+      var notes = (document.getElementById('customNotes') || {}).value || '';
+      var input = document.getElementById('customImages');
+      var files = input && input.files ? Array.prototype.slice.call(input.files).map(function(file){ return file.name; }) : [];
+      var lines = [];
+      if(notes.trim()) lines.push('ملاحظات التخصيص: ' + notes.trim());
+      if(files.length) lines.push('صور مرفوعة في الصفحة: ' + files.join('، '), 'سأرسل الصور في واتساب بعد فتح المحادثة.');
+      return lines;
+    };
+    window.initProductCustomization = bindProductCustomization;
+  });
+})();
+</script>
 
 <section class="reviews-section" id="reviewsSection">
   <div class="rv-head">
@@ -665,24 +766,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- صور المنتج - تُعبأ بواسطة Products.js -->
 <div id="rv-product-imgs" style="display:none;gap:8px;padding:0 12px;max-width:700px;margin:0 auto 16px"></div>
 
-<section class="product-trust-notes" aria-label="مميزات المنتج من Bariq">
-  <h3>مميزات يثق بها عملاء Bariq</h3>
-  <div class="trust-note-grid">
-    <div class="trust-note"><span class="ico">✓</span>جودة ممتازة وسعر مناسب داخل الإمارات.</div>
-    <div class="trust-note"><span class="ico">✓</span>تعامل سريع وراقي من بداية الطلب حتى التسليم.</div>
-    <div class="trust-note"><span class="ico">✓</span>اختيار مميز للهدايا والمناسبات الخاصة.</div>
-    <div class="trust-note"><span class="ico">✓</span>تشطيب نظيف وخامات مختارة بعناية.</div>
-  </div>
-</section>
-
-<script>
-(function(){
-  const trust = document.querySelector('.product-trust-notes');
-  const reviews = document.getElementById('reviewsSection');
-  if (trust && reviews && trust.nextElementSibling !== reviews) trust.insertAdjacentElement('afterend', reviews);
-})();
-</script>
-
 <hr>
 
 <h2 class="related-title" data-i18n="منتجات مشابهة">
@@ -809,14 +892,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </footer>
 <script src="/java/supabase.min.js?v=supabase-20260725a" defer></script>
 <script src="/java/main.min.js?v=139" defer></script>
-<script src="/java/sw-refresh.js?v=sw-refresh-20260729o" defer></script>
+<script src="/java/sw-refresh.js?v=sw-refresh-20260730b" defer></script>
 <script src="/java/instant-nav.js?v=instant-nav-20260728e" defer></script>
 <script src="/translations/translation.min.js?v=translation-20260726c" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
 <script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260728e" defer></script>
 <script src="/java/push-welcome.js?v=push-welcome-20260728d" defer></script>
 <script src="/java/notifications.min.js?v=notifications-20260725o" defer></script>
-<script type="module" src="/java/Products.js?v=products-20260729k"></script> <!-- ده يفضل يفضل في الآخر -->
+<script src="/java/abandoned-cart.js?v=abandoned-cart-20260730a" defer></script>
+<script type="module" src="/java/Products.js?v=products-20260730m"></script> <!-- ده يفضل يفضل في الآخر -->
 </body>
 </html>
 
