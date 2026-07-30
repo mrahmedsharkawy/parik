@@ -2072,7 +2072,35 @@ document.addEventListener("DOMContentLoaded", async function() {
                     customerAddress = "موقع العميل";
                 }
             }
+            async function uploadCustomizationFile(file) {
+                const anonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E";
+                const safeName = String(file.name || "custom-image").replace(/[^a-z0-9._-]+/gi, "-").slice(-80) || "custom-image.jpg";
+                const fileName = `custom-orders/${String(orderId).replace(/[^0-9a-z_-]+/gi, "") || Date.now()}/${Date.now()}-${Math.random().toString(36).slice(2)}-${safeName}`;
+                const res = await fetch("https://knleehjjejfeobcmpwnw.supabase.co/storage/v1/object/products/" + fileName, {
+                    method: "POST",
+                    headers: {
+                        apikey: anonKey,
+                        Authorization: "Bearer " + anonKey,
+                        "Content-Type": file.type || "application/octet-stream",
+                        "x-upsert": "true"
+                    },
+                    body: file
+                });
+                if (!res.ok) throw new Error(await res.text());
+                return "https://knleehjjejfeobcmpwnw.supabase.co/storage/v1/object/public/products/" + fileName;
+            }
             const customizationLines = "function" == typeof window.getProductCustomizationSummary ? window.getProductCustomizationSummary() : [];
+            const customizationFiles = "function" == typeof window.getProductCustomizationFiles ? window.getProductCustomizationFiles() : [];
+            if (customizationFiles.length) {
+                try {
+                    const uploadedUrls = [];
+                    for (const file of customizationFiles) uploadedUrls.push(await uploadCustomizationFile(file));
+                    uploadedUrls.length && customizationLines.push("روابط صور التخصيص:", ...uploadedUrls.map((url, i) => `${i + 1}- ${url}`));
+                } catch (err) {
+                    console.warn("Customization image upload failed:", err);
+                    customizationLines.push("تنبيه: العميل اختار صور تخصيص، برجاء طلب إرسالها في واتساب إذا لم تظهر كمرفقات.");
+                }
+            }
             const msgLines = [ "مرحباً، أريد تخصيص طلب:", "", `رقم الطلب: ${orderId}`, "", "بيانات العميل:", `الاسم: ${customerName || "غير متوفر"}`, `الهاتف: ${customerPhone || "غير متوفر"}`, `البريد: ${customerEmail || "غير متوفر"}`, `العنوان: ${customerAddress || "موقع العميل"}`, "", "تفاصيل الطلب:", `المنتج: ${getT(p.name)}`, `الكمية: ${qtyVal}`, `السعر: ${total} ${sym}`, `الرابط: ${productUrl}` ];
             customizationLines.length && msgLines.push("", "بيانات التخصيص:", ...customizationLines);
             const msgText = msgLines.join("\n");
