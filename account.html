@@ -1981,6 +1981,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           lo.cashbackExpiresAt = r.cashback_expires_at;
           changed = true;
         }
+        if ((r.cashback_status || '').toLowerCase() === 'claimed' && lo.cashbackStatus !== 'claimed') {
+          lo.cashbackStatus = 'claimed';
+          changed = true;
+        }
         // إضافة الكاش باك مرة واحدة فور التسليم، مع انتهاء صلاحية بعد 30 يوم إذا لم يستخدمه العميل
         if (lo.cashbackStatus !== 'claimed' && cashbackIsEarned(lo, r) && (lo.cashbackStatus !== 'earned' || !hasCashbackCredit(lo.id))) {
           lo.cashbackStatus = 'earned';
@@ -4007,7 +4011,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </footer>
 <script src="/java/supabase.min.js?v=supabase-20260725a" defer></script>
 <script src="/java/main.min.js?v=140" defer></script>
-<script src="/java/sw-refresh.js?v=sw-refresh-20260731e" defer></script>
+<script src="/java/sw-refresh.js?v=sw-refresh-20260731f" defer></script>
 <script src="/java/instant-nav.js?v=instant-nav-20260728e" defer></script>
 <script src="/translations/translation.min.js?v=translation-20260726c" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>

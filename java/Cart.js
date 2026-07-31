@@ -159,6 +159,30 @@ function initX2Cart() {
         } catch (e) {}
         return !1;
     }
+    async function markRemoteCashbackOrdersClaimed(couponCode) {
+        if (!couponCode || !window.Supabase || !window.Supabase.Orders || typeof window.Supabase.Orders.getByPhone !== "function" || typeof window.Supabase.Orders.updateCashback !== "function") return;
+        let profile = {}, storedCoupon = null;
+        try { profile = JSON.parse(localStorage.getItem("x2_profile") || "{}"); } catch (e) {}
+        try { storedCoupon = JSON.parse(localStorage.getItem("x2_coupon_code") || "null"); } catch (e) {}
+        const phone = normalizeCouponPhone(profile.phone || profile.customer_phone || "");
+        if (!phone) return;
+        const generatedAt = storedCoupon && storedCoupon.generated ? new Date(storedCoupon.generated).getTime() : 0;
+        try {
+            const remoteOrders = await window.Supabase.Orders.getByPhone(phone);
+            const now = Date.now();
+            const updates = (Array.isArray(remoteOrders) ? remoteOrders : []).filter(order => {
+                const status = order.status || "";
+                const cashbackStatus = order.cashback_status || order.cashbackStatus || "";
+                if (status !== "delivered" || cashbackStatus === "claimed") return false;
+                const expiresRaw = order.cashback_expires_at || order.cashbackExpiresAt || order.cashback_available_at || "";
+                const expiresAt = expiresRaw ? new Date(expiresRaw).getTime() : 0;
+                if (expiresAt && !isNaN(expiresAt) && expiresAt <= now) return false;
+                const orderTime = new Date(order.updated_at || order.created_at || order.date || new Date().toISOString()).getTime();
+                return !generatedAt || isNaN(orderTime) || orderTime <= generatedAt;
+            }).map(order => order.order_number || order.orderNumber || order.id).filter(Boolean);
+            await Promise.all(updates.map(orderNum => window.Supabase.Orders.updateCashback(orderNum, "claimed").catch(() => null)));
+        } catch (e) {}
+    }
     function makeKey(p) {
         if (p?.id) return String(p.id);
         return `${(p?.title || "").trim().toLowerCase()}|${(p?.meta || "").trim().toLowerCase()}|${Number(p?.priceCurrent || 0).toFixed(2)}|${p?.img || ""}`;
@@ -590,6 +614,55 @@ initX2Cart() || document.addEventListener("DOMContentLoaded", initX2Cart, { once
             };
         });
     }
+    function checkoutNormalizeCouponPhone(v) {
+        return String(v || "").replace(/\D/g, "");
+    }
+    function checkoutCouponCustomerKey(profile) {
+        const p = profile || {};
+        const phone = checkoutNormalizeCouponPhone(p.phone || p.customer_phone || ""), email = String(p.email || p.customer_email || "").trim().toLowerCase();
+        if (phone) return "phone:" + phone;
+        if (email) return "email:" + email;
+        let guest = localStorage.getItem("x2_coupon_client_id") || "";
+        if (!guest) {
+            guest = "guest-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
+            localStorage.setItem("x2_coupon_client_id", guest);
+        }
+        return "guest:" + guest;
+    }
+    function markCouponUsedForCurrentCustomer(code) {
+        try {
+            const couponCode = String(code || "").toUpperCase();
+            if (!couponCode) return;
+            const profile = readJson("x2_profile", {}), key = checkoutCouponCustomerKey(profile);
+            const usage = readJson("x2_coupon_usage_by_customer", {});
+            const list = Array.isArray(usage[couponCode]) ? usage[couponCode] : [];
+            if (!list.includes(key)) list.push(key);
+            usage[couponCode] = list;
+            localStorage.setItem("x2_coupon_usage_by_customer", JSON.stringify(usage));
+        } catch (e) {}
+    }
+    async function markRemoteCashbackOrdersClaimed(couponCode) {
+        if (!couponCode || !window.Supabase || !window.Supabase.Orders || typeof window.Supabase.Orders.getByPhone !== "function" || typeof window.Supabase.Orders.updateCashback !== "function") return;
+        const profile = readJson("x2_profile", {}), storedCoupon = readJson("x2_coupon_code", null);
+        const phone = checkoutNormalizeCouponPhone(profile.phone || profile.customer_phone || "");
+        if (!phone) return;
+        const generatedAt = storedCoupon && storedCoupon.generated ? new Date(storedCoupon.generated).getTime() : 0;
+        try {
+            const remoteOrders = await window.Supabase.Orders.getByPhone(phone);
+            const now = Date.now();
+            const updates = (Array.isArray(remoteOrders) ? remoteOrders : []).filter(order => {
+                const status = order.status || "";
+                const cashbackStatus = order.cashback_status || order.cashbackStatus || "";
+                if (status !== "delivered" || cashbackStatus === "claimed") return false;
+                const expiresRaw = order.cashback_expires_at || order.cashbackExpiresAt || order.cashback_available_at || "";
+                const expiresAt = expiresRaw ? new Date(expiresRaw).getTime() : 0;
+                if (expiresAt && !isNaN(expiresAt) && expiresAt <= now) return false;
+                const orderTime = new Date(order.updated_at || order.created_at || order.date || new Date().toISOString()).getTime();
+                return !generatedAt || isNaN(orderTime) || orderTime <= generatedAt;
+            }).map(order => order.order_number || order.orderNumber || order.id).filter(Boolean);
+            await Promise.all(updates.map(orderNum => window.Supabase.Orders.updateCashback(orderNum, "claimed").catch(() => null)));
+        } catch (e) {}
+    }
     function buildWhatsAppMessage(options) {
         const opts = options || {}, orderId = opts.orderId || "ORD-" + Date.now(), includeProductLinks = !1 !== opts.includeProductLinks, includeImages = !1 !== opts.includeImages, maxItems = Math.max(1, Number(opts.maxItems || 50)), items = getSelectedItemsForOrder(), customer = function() {
             const profile = readJson("x2_profile", {}), orders = readJson("x2_orders", []), lastOrder = Array.isArray(orders) && orders.length ? orders[0] : null, shipping = lastOrder?.shipping || {};
@@ -752,6 +825,7 @@ initX2Cart() || document.addEventListener("DOMContentLoaded", initX2Cart, { once
                         isActive && "claimed" !== o.cashbackStatus && (o.cashbackStatus = "claimed");
                     }), localStorage.setItem("x2_orders", JSON.stringify(ords));
                 } catch (e2) {}
+                await markRemoteCashbackOrdersClaimed(applied.code);
                 sessionStorage.removeItem("x2_coupon_applied"), localStorage.removeItem("x2_coupon_applied"),
                 setTimeout(() => {
                     try {

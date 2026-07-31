@@ -2419,6 +2419,26 @@ function ensureOrderAdminHelpers(){
   }
 }
 
+function isMissingSupabaseColumnError(error, column){
+  const text = String((error && (error.message || error.details || error.hint || error.code)) || error || '');
+  return text.includes(column) && /schema cache|column|Could not find/i.test(text);
+}
+
+async function updateOrderInSupabaseSafe(id, data){
+  try {
+    return await window.Supabase.Orders.update(id, data);
+  } catch(e) {
+    if (data && Object.prototype.hasOwnProperty.call(data, 'cashback_expires_at') && isMissingSupabaseColumnError(e, 'cashback_expires_at')) {
+      const fallbackData = Object.assign({}, data);
+      delete fallbackData.cashback_expires_at;
+      console.warn('cashback_expires_at غير موجود في Supabase؛ سيتم تحديث الحالة والكاش باك بدون تاريخ انتهاء.', e);
+      toast('⚠️ عمود انتهاء الكاش باك غير موجود في قاعدة البيانات، تم تحديث الحالة بدونه');
+      return await window.Supabase.Orders.update(id, fallbackData);
+    }
+    throw e;
+  }
+}
+
 // جلب الطلبات من Supabase
 async function loadOrdersFromSupabase() {
   // انتظار تحميل Supabase
@@ -2562,11 +2582,13 @@ async function saveOrder(){
             notes: order.notes || null
           };
           if (order.status === 'delivered') {
+            const deliveredAt = new Date().toISOString();
             updateData.cashback_status = 'earned';
             updateData.cashback_expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+            updateData.updated_at = deliveredAt;
           }
           else if (order.cashbackStatus === 'earned' || order.cashback_status === 'earned') updateData.cashback_status = 'pending';
-          await window.Supabase.Orders.update(order.id, updateData);
+          await updateOrderInSupabaseSafe(order.id, updateData);
         } catch(e) {
           console.error('فشل تحديث الطلب في Supabase:', e);
           toast('⚠️ تم الحفظ محلياً، فشل التحديث في قاعدة البيانات');
@@ -2619,11 +2641,13 @@ async function changeOrderStatus(id, status){
       const updateData = { status };
       // عند التسليم: يضاف الكاش باك للعميل فوراً، وينتهي إذا لم يستخدمه خلال 30 يوم
       if (status === 'delivered') {
+        const deliveredAt = new Date().toISOString();
         updateData.cashback_status = 'earned';
         updateData.cashback_expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+        updateData.updated_at = deliveredAt;
       }
       else if (o.cashbackStatus === 'earned' || o.cashback_status === 'earned') updateData.cashback_status = 'pending';
-      const result = await window.Supabase.Orders.update(id, updateData);
+      const result = await updateOrderInSupabaseSafe(id, updateData);
 
       // Prefer:return=representation يرجع الصفوف المحدَّثة فعلياً؛ لو رجعت فارغة يعني لم يتم تحديث أي صف
       if (!result || !Array.isArray(result) || result.length === 0) {
