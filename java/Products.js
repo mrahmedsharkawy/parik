@@ -1,4 +1,4 @@
-﻿try {
+try {
     Object.defineProperty(navigator, "geolocation", {
         value: null,
         configurable: true
@@ -2216,6 +2216,20 @@ document.addEventListener("DOMContentLoaded", async function() {
             const customizationTemplate = document.getElementById("productCustomizationTemplate");
             if (customizationTemplate && !document.getElementById("productCustomization")) {
                 const customizationNode = customizationTemplate.content.firstElementChild.cloneNode(!0);
+                if ("en" === lang) {
+                    customizationNode.querySelectorAll("[data-i18n]").forEach(el => {
+                        const map = {
+                            "رفع صور التخصيص": "Upload customization images",
+                            "يمكنك اختيار أكثر من صورة للشعار، الاسم، التصميم أو المرجع.": "You can choose more than one image for the logo, name, design, or reference.",
+                            "ملاحظات التخصيص": "Customization notes"
+                        };
+                        const key = el.getAttribute("data-i18n");
+                        if (map[key]) el.textContent = map[key];
+                    });
+                    customizationNode.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
+                        if (el.getAttribute("data-i18n-placeholder") === "اكتب اللون، المقاس، العبارة المطلوبة، أماكن الصور، أو أي تفاصيل مهمة...") el.placeholder = "Write the color, size, requested phrase, image placement, or any important details...";
+                    });
+                }
                 imgPreviewEl.appendChild(customizationNode), "function" == typeof window.initProductCustomization && window.initProductCustomization(customizationNode);
             }
             imgPreviewEl.querySelectorAll(".rv-product-img").forEach((img, i) => {

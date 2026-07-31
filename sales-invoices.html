@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>فواتير المبيعات - Bariq</title>
+  <title data-i18n="فواتير المبيعات - Bariq">فواتير المبيعات - Bariq</title>
   <link rel="icon" href="/assets/logo.png">
   <link rel="manifest" href="/sales-invoices-manifest.json">
   <style>
@@ -18,25 +18,25 @@
 <body>
   <div class="wrap">
     <div class="top">
-      <div class="brand"><img src="/assets/logo.png" alt="Bariq"><div><div>فواتير المبيعات</div><div class="muted">صفحة أونلاين مستقلة لتحديث الطلبات وإرسال الفواتير</div></div></div>
-      <div class="actions"><button class="btn-ghost" onclick="loadOrders()">↻ تحديث الطلبات</button><button id="installAppBtn" class="btn-ghost hide" onclick="installSalesApp()">تثبيت التطبيق</button><button class="btn-red" onclick="logout()">خروج</button></div>
+      <div class="brand"><img src="/assets/logo.png" alt="Bariq"><div><div data-i18n="فواتير المبيعات">فواتير المبيعات</div><div class="muted" data-i18n="صفحة أونلاين مستقلة لتحديث الطلبات وإرسال الفواتير">صفحة أونلاين مستقلة لتحديث الطلبات وإرسال الفواتير</div></div></div>
+      <div class="actions"><button class="btn-ghost" onclick="loadOrders()">↻ <span data-i18n="تحديث الطلبات">تحديث الطلبات</span></button><button id="installAppBtn" class="btn-ghost hide" onclick="installSalesApp()" data-i18n="تثبيت التطبيق">تثبيت التطبيق</button><button class="btn-red" onclick="logout()" data-i18n="خروج">خروج</button></div>
     </div>
 
     <section id="loginBox" class="panel login">
-      <h2>تسجيل دخول الأدمن</h2>
-      <p class="muted">استخدم نفس الإيميل وكلمة المرور الخاصة بلوحة التحكم. الصفحة تعمل أونلاين وتتصل بقاعدة البيانات مباشرة.</p>
-      <input id="email" type="email" placeholder="البريد الإلكتروني" autocomplete="username" style="width:100%;margin-bottom:8px">
-      <input id="password" type="password" placeholder="كلمة المرور" autocomplete="current-password" style="width:100%;margin-bottom:10px">
-      <button class="btn-gold" onclick="login()" style="width:100%">دخول</button>
+      <h2 data-i18n="تسجيل دخول الأدمن">تسجيل دخول الأدمن</h2>
+      <p class="muted" data-i18n="استخدم نفس الإيميل وكلمة المرور الخاصة بلوحة التحكم. الصفحة تعمل أونلاين وتتصل بقاعدة البيانات مباشرة.">استخدم نفس الإيميل وكلمة المرور الخاصة بلوحة التحكم. الصفحة تعمل أونلاين وتتصل بقاعدة البيانات مباشرة.</p>
+      <input id="email" type="email" placeholder="البريد الإلكتروني" data-i18n-placeholder="البريد الإلكتروني" autocomplete="username" style="width:100%;margin-bottom:8px">
+      <input id="password" type="password" placeholder="كلمة المرور" data-i18n-placeholder="كلمة المرور" autocomplete="current-password" style="width:100%;margin-bottom:10px">
+      <button class="btn-gold" onclick="login()" style="width:100%" data-i18n="دخول">دخول</button>
       <div id="loginMsg" class="msg" style="margin-top:10px"></div>
     </section>
 
     <section id="app" class="grid hide">
       <div class="panel">
-        <h2>طلبات الفواتير</h2>
+        <h2 data-i18n="طلبات الفواتير">طلبات الفواتير</h2>
         <div class="filters">
-          <input id="search" placeholder="بحث باسم العميل أو رقم الطلب أو الهاتف" oninput="render()" style="flex:1;min-width:190px">
-          <select id="invoiceFilter" onchange="render()"><option value="all">كل الفواتير</option><option value="with">فواتير محفوظة</option><option value="without">بدون فاتورة</option></select>
+          <input id="search" placeholder="بحث باسم العميل أو رقم الطلب أو الهاتف" data-i18n-placeholder="بحث باسم العميل أو رقم الطلب أو الهاتف" oninput="render()" style="flex:1;min-width:190px">
+          <select id="invoiceFilter" onchange="render()"><option value="all" data-i18n="كل الفواتير">كل الفواتير</option><option value="with" data-i18n="فواتير محفوظة">فواتير محفوظة</option><option value="without" data-i18n="بدون فاتورة">بدون فاتورة</option></select>
           <select id="statusFilter" onchange="render()"></select>
         </div>
         <div id="count" class="muted" style="margin-bottom:8px"></div>
@@ -44,25 +44,25 @@
       </div>
 
       <div class="panel">
-        <h2>إنشاء / إرسال فاتورة</h2>
-        <div id="emptyPick" class="muted">اختر طلبًا من القائمة.</div>
+        <h2 data-i18n="إنشاء / إرسال فاتورة">إنشاء / إرسال فاتورة</h2>
+        <div id="emptyPick" class="muted" data-i18n="اختر طلبًا من القائمة.">اختر طلبًا من القائمة.</div>
         <div id="builder" class="builder hide">
-          <div class="twocol"><div class="field"><label for="invOrder">رقم الطلب</label><input id="invOrder" readonly></div><div class="field"><label for="invCustomer">اسم العميل</label><input id="invCustomer" readonly></div></div>
-          <div class="twocol"><div class="field"><label for="invPhone">رقم الهاتف</label><input id="invPhone" readonly></div><div class="field"><label for="invTotal">إجمالي الطلب</label><input id="invTotal" type="number" min="0" step="any" oninput="recalc()"></div></div>
-          <div class="twocol"><div class="field"><label for="invType">نوع الدفع</label><select id="invType" onchange="recalc()"><option value="deposit25">عربون 25%</option><option value="deposit50">عربون 50%</option><option value="full">المبلغ كامل</option></select></div><div class="field"><label for="invDue">المطلوب الآن</label><input id="invDue" type="number" readonly></div></div>
-          <div class="field"><label for="invNote">ملاحظة الفاتورة</label><textarea id="invNote"></textarea></div>
-          <div class="actions"><button class="btn-gold" onclick="saveInvoice()">حفظ الفاتورة</button><button class="btn-green" onclick="sendWhatsApp()">إرسال واتساب</button><button class="btn-ghost" onclick="copyLink()">نسخ الرابط</button></div>
+          <div class="twocol"><div class="field"><label for="invOrder" data-i18n="رقم الطلب">رقم الطلب</label><input id="invOrder" readonly></div><div class="field"><label for="invCustomer" data-i18n="اسم العميل">اسم العميل</label><input id="invCustomer" readonly></div></div>
+          <div class="twocol"><div class="field"><label for="invPhone" data-i18n="رقم الهاتف">رقم الهاتف</label><input id="invPhone" readonly></div><div class="field"><label for="invTotal" data-i18n="إجمالي الطلب">إجمالي الطلب</label><input id="invTotal" type="number" min="0" step="any" oninput="recalc()"></div></div>
+          <div class="twocol"><div class="field"><label for="invType" data-i18n="نوع الدفع">نوع الدفع</label><select id="invType" onchange="recalc()"><option value="deposit25" data-i18n="عربون 25%">عربون 25%</option><option value="deposit50" data-i18n="عربون 50%">عربون 50%</option><option value="full" data-i18n="المبلغ كامل">المبلغ كامل</option></select></div><div class="field"><label for="invDue" data-i18n="المطلوب الآن">المطلوب الآن</label><input id="invDue" type="number" readonly></div></div>
+          <div class="field"><label for="invNote" data-i18n="ملاحظة الفاتورة">ملاحظة الفاتورة</label><textarea id="invNote"></textarea></div>
+          <div class="actions"><button class="btn-gold" onclick="saveInvoice()" data-i18n="حفظ الفاتورة">حفظ الفاتورة</button><button class="btn-green" onclick="sendWhatsApp()" data-i18n="إرسال واتساب">إرسال واتساب</button><button class="btn-ghost" onclick="copyLink()" data-i18n="نسخ الرابط">نسخ الرابط</button></div>
           <div id="preview" class="preview"></div>
         </div>
       </div>
 
       <div class="panel stats-panel">
-        <h2>إحصائيات المبيعات</h2>
+        <h2 data-i18n="إحصائيات المبيعات">إحصائيات المبيعات</h2>
         <select id="periodFilter" class="stats-filter" onchange="render()">
-          <option value="day">اليوم</option>
-          <option value="week">الأسبوع</option>
-          <option value="month">الشهر</option>
-          <option value="year">السنة</option>
+          <option value="day" data-i18n="اليوم">اليوم</option>
+          <option value="week" data-i18n="الأسبوع">الأسبوع</option>
+          <option value="month" data-i18n="الشهر">الشهر</option>
+          <option value="year" data-i18n="السنة">السنة</option>
         </select>
         <div id="statsSummary" class="stats-total"></div>
         <div id="statusStats"></div>
@@ -135,5 +135,6 @@ renderStatusFilter();
 updateInstallButton();
 if(token){showApp();loadOrders()}
 </script>
+<script src="/translations/translation.min.js?v=translation-20260731g" defer></script>
 </body>
 </html>

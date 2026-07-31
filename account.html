@@ -228,8 +228,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- داخل شريط البحث -->
 <div class="search-container">
 <input type="text" id="textSearch"
-  placeholder="ابحث بالصورة او الاسم او رقم الطلب"
-  data-i18n-placeholder="ابحث بالصورة او الاسم او رقم الطلب">
+  placeholder="ابحث بالصورة او الاسم او المناسبة"
+  data-i18n-placeholder="ابحث بالصورة او الاسم او المناسبة">
   <!-- أيقونة البحث -->
   <span class="icon search search-icon" onclick="performTextSearch()" style="cursor:pointer;display:flex;align-items:center;">
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -1264,7 +1264,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div class="acc-nav-item" onclick="showSection('history')"><span class="ico">❤️</span> <span data-i18n="المفضلة">المفضلة</span></div>
       <div class="acc-nav-item" onclick="showSection('settings')"><span class="ico">📍</span> <span data-i18n="عنواني">عنواني</span></div>
       <div class="acc-nav-item" onclick="showSection('payment')"><span class="ico">💰</span> <span data-i18n="طرق الدفع">طرق الدفع</span></div>
-      <div class="acc-nav-item" onclick="showSection('invoices')"><span class="ico">🧾</span> <span>الفواتير</span></div>
+      <div class="acc-nav-item" onclick="showSection('invoices')"><span class="ico">🧾</span> <span data-i18n="الفواتير">الفواتير</span></div>
       <div class="acc-nav-item" onclick="showSection('support')"><span class="ico">🤖</span> <span data-i18n="الخدمة الذاتية">الخدمة الذاتية</span></div>
       <div class="acc-nav-item" onclick="showSection('notifications')"><span class="ico">🔔</span> <span data-i18n="الإشعارات">الإشعارات</span></div>
 
@@ -1538,10 +1538,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div class="acc-profile-card">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;flex-wrap:wrap">
           <div>
-            <h3 style="font-size:1.08rem;font-weight:900;color:#152546;margin:0 0 4px">🧾 فواتيري</h3>
-            <div style="font-size:.78rem;color:#8b93a4">افتح الفاتورة لعرض بيانات التحويل ونسخ كل بند منفرداً.</div>
+            <h3 style="font-size:1.08rem;font-weight:900;color:#152546;margin:0 0 4px">🧾 <span data-i18n="فواتيري">فواتيري</span></h3>
+            <div style="font-size:.78rem;color:#8b93a4" data-i18n="افتح الفاتورة لعرض بيانات التحويل ونسخ كل بند منفرداً.">افتح الفاتورة لعرض بيانات التحويل ونسخ كل بند منفرداً.</div>
           </div>
-          <button onclick="refreshAccountInvoices()" style="border:1px solid #dfe4ef;background:#fff;color:#152546;border-radius:9px;padding:8px 12px;font-size:.78rem;font-weight:800;cursor:pointer">تحديث</button>
+          <button onclick="refreshAccountInvoices()" style="border:1px solid #dfe4ef;background:#fff;color:#152546;border-radius:9px;padding:8px 12px;font-size:.78rem;font-weight:800;cursor:pointer" data-i18n="تحديث">تحديث</button>
         </div>
         <div id="accountInvoicesList" style="display:grid;gap:12px"></div>
       </div>
@@ -1617,8 +1617,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div id="section-history" style="display:none">
       <div class="acc-profile-card" style="padding:16px 14px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-          <div style="font-size:1rem;font-weight:800;color:#152546;">❤️ المفضلة</div>
-          <button onclick="clearHistory()" style="border:none;background:none;color:#aaa;font-size:0.72rem;cursor:pointer;">🗑 مسح</button>
+          <div style="font-size:1rem;font-weight:800;color:#152546;">❤️ <span data-i18n="المفضلة">المفضلة</span></div>
+          <button onclick="clearHistory()" style="border:none;background:none;color:#aaa;font-size:0.72rem;cursor:pointer;">🗑 <span data-i18n="مسح">مسح</span></button>
         </div>
         <div id="historyGrid" class="history-grid"></div>
       </div>
@@ -2207,7 +2207,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     if (!box) return;
     const invoices = getOrders().map(order => ({ order, invoice: getOrderInvoice(order) })).filter(x => x.invoice);
     if (!invoices.length) {
-      box.innerHTML = `<div style="color:#8b93a4;font-size:.82rem;text-align:center;padding:12px">لا توجد فواتير محفوظة حتى الآن.</div>`;
+      box.innerHTML = `<div style="color:#8b93a4;font-size:.82rem;text-align:center;padding:12px">${accText('لا توجد فواتير محفوظة حتى الآن.', 'No saved invoices yet.')}</div>`;
       return;
     }
     const params = new URLSearchParams(location.search);
@@ -2221,22 +2221,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const earned = order && order.status === 'delivered';
       const productImage = invoiceProductImage(order);
       const bankRows = [
-        ['اسم المصرف', BANK_INFO.bank],
-        ['اسم صاحب الحساب', BANK_INFO.beneficiary],
-        ['رقم الحساب', BANK_INFO.account],
-        ['رقم الآيبان', BANK_INFO.iban],
-        ['السويفت', BANK_INFO.swift],
-        ['العملة', BANK_INFO.currency]
+        [accText('اسم المصرف', 'Bank name'), BANK_INFO.bank],
+        [accText('اسم صاحب الحساب', 'Account holder'), BANK_INFO.beneficiary],
+        [accText('رقم الحساب', 'Account number'), BANK_INFO.account],
+        [accText('رقم الآيبان', 'IBAN'), BANK_INFO.iban],
+        [accText('السويفت', 'SWIFT'), BANK_INFO.swift],
+        [accText('العملة', 'Currency'), BANK_INFO.currency]
       ];
       return `<details id="invoice-${safeOrder}" ${active ? 'open' : ''} style="background:#fff;border:${active?'2px solid #d4af37':'1px solid #e4e8f0'};border-radius:14px;overflow:hidden;box-shadow:0 8px 22px rgba(21,37,70,.08)">
         <summary style="list-style:none;cursor:pointer;padding:14px;background:linear-gradient(135deg,#fff,#fbf7ea);display:flex;align-items:center;gap:12px">
           <img src="${productImage}" alt="${items || 'Product'}" onerror="this.src='/assets/logo.png'" style="width:54px;height:54px;object-fit:cover;border-radius:10px;background:#fff;border:1px solid #eee">
           <div style="flex:1;min-width:0">
-            <div style="font-weight:950;color:#152546;font-size:.98rem">فاتورة طلب ${invoice.orderNumber}</div>
+            <div style="font-weight:950;color:#152546;font-size:.98rem">${accText('فاتورة طلب', 'Invoice for order')} ${invoice.orderNumber}</div>
             <div style="font-size:.74rem;color:#8b93a4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${invoice.customer || ''} ${invoice.phone ? ' · ' + invoice.phone : ''}</div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:7px;font-size:.72rem;font-weight:900">
-              <span style="background:#eef3fb;color:#152546;border-radius:999px;padding:4px 8px">الإجمالي ${invoiceMoney(invoice.total)}</span>
-              <span style="background:#fff4cc;color:#8A6500;border-radius:999px;padding:4px 8px">العربون ${invoiceMoney(dueNow)}</span>
+              <span style="background:#eef3fb;color:#152546;border-radius:999px;padding:4px 8px">${accText('الإجمالي', 'Total')} ${invoiceMoney(invoice.total)}</span>
+              <span style="background:#fff4cc;color:#8A6500;border-radius:999px;padding:4px 8px">${accText('العربون', 'Deposit')} ${invoiceMoney(dueNow)}</span>
               ${invoiceEarnedBadge(order)}
             </div>
           </div>
@@ -2244,17 +2244,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </summary>
         <div style="padding:14px;font-size:.84rem;color:#30384a;line-height:1.9">
           ${items ? `<div>🛒 ${items}</div>` : ''}
-          <div>إجمالي الطلب: <b>${invoiceMoney(invoice.total)}</b></div>
-          <div>العربون / المطلوب الآن: <b style="color:#8A6500">${invoiceMoney(dueNow)}</b> <span style="color:#8b93a4">(${invoice.typeLabel || ''})</span></div>
-          <div>المتبقي بعد التسليم: <b>${invoiceMoney(remainingNow)}</b></div>
+          <div>${accText('إجمالي الطلب:', 'Order total:')} <b>${invoiceMoney(invoice.total)}</b></div>
+          <div>${accText('العربون / المطلوب الآن:', 'Deposit / due now:')} <b style="color:#8A6500">${invoiceMoney(dueNow)}</b> <span style="color:#8b93a4">(${invoice.typeLabel || ''})</span></div>
+          <div>${accText('المتبقي بعد التسليم:', 'Remaining after delivery:')} <b>${invoiceMoney(remainingNow)}</b></div>
           <div style="background:#fff8e1;border:1px solid #f1d27a;color:#6b5200;border-radius:10px;padding:9px 10px;margin:9px 0;font-weight:800">${invoice.note || INVOICE_DEFAULT_NOTE}</div>
           <div style="margin-top:10px;background:#f8f9fc;border:1px solid #e7eaf2;border-radius:12px;padding:10px;display:${earned?'none':'grid'};gap:8px">
-            ${bankRows.map(([label, value]) => `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid #edf0f6;border-radius:9px;padding:8px 9px"><span style="color:#7a8296">${label}</span><b dir="ltr" style="color:#152546;text-align:left;word-break:break-word">${value}</b><button onclick="copyInvoiceField('${String(value).replace(/'/g,'&#39;')}', '${label}')" style="border:none;background:#152546;color:#fff;border-radius:7px;padding:6px 9px;font-size:.72rem;font-weight:800;cursor:pointer;flex:0 0 auto">نسخ</button></div>`).join('')}
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid #edf0f6;border-radius:9px;padding:8px 9px"><span style="color:#7a8296">سبب التحويل</span><b dir="ltr" style="color:#152546">Order ${invoice.orderNumber}</b><button onclick="copyInvoiceField('Order ${String(invoice.orderNumber).replace(/'/g,'&#39;')}', 'سبب التحويل')" style="border:none;background:#152546;color:#fff;border-radius:7px;padding:6px 9px;font-size:.72rem;font-weight:800;cursor:pointer">نسخ</button></div>
+            ${bankRows.map(([label, value]) => `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid #edf0f6;border-radius:9px;padding:8px 9px"><span style="color:#7a8296">${label}</span><b dir="ltr" style="color:#152546;text-align:left;word-break:break-word">${value}</b><button onclick="copyInvoiceField('${String(value).replace(/'/g,'&#39;')}', '${label}')" style="border:none;background:#152546;color:#fff;border-radius:7px;padding:6px 9px;font-size:.72rem;font-weight:800;cursor:pointer;flex:0 0 auto">${accText('نسخ', 'Copy')}</button></div>`).join('')}
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid #edf0f6;border-radius:9px;padding:8px 9px"><span style="color:#7a8296">${accText('سبب التحويل', 'Transfer reason')}</span><b dir="ltr" style="color:#152546">Order ${invoice.orderNumber}</b><button onclick="copyInvoiceField('Order ${String(invoice.orderNumber).replace(/'/g,'&#39;')}', '${accText('سبب التحويل', 'Transfer reason')}')" style="border:none;background:#152546;color:#fff;border-radius:7px;padding:6px 9px;font-size:.72rem;font-weight:800;cursor:pointer">${accText('نسخ', 'Copy')}</button></div>
           </div>
           <div style="display:${earned?'none':'flex'};gap:8px;flex-wrap:wrap;margin-top:12px">
-            <button onclick="copyInvoicePayment('${order.id}')" style="border:none;background:#152546;color:#fff;border-radius:9px;padding:8px 12px;font-size:.78rem;font-weight:800;cursor:pointer">نسخ بيانات التحويل</button>
-            <button onclick="sendInvoiceProof('${order.id}')" style="border:none;background:#25D366;color:#fff;border-radius:9px;padding:8px 12px;font-size:.78rem;font-weight:800;cursor:pointer">إرسال إثبات الدفع واتساب</button>
+            <button onclick="copyInvoicePayment('${order.id}')" style="border:none;background:#152546;color:#fff;border-radius:9px;padding:8px 12px;font-size:.78rem;font-weight:800;cursor:pointer">${accText('نسخ بيانات التحويل', 'Copy transfer details')}</button>
+            <button onclick="sendInvoiceProof('${order.id}')" style="border:none;background:#25D366;color:#fff;border-radius:9px;padding:8px 12px;font-size:.78rem;font-weight:800;cursor:pointer">${accText('إرسال إثبات الدفع واتساب', 'Send payment proof on WhatsApp')}</button>
           </div>
         </div>
       </details>`;
@@ -3325,14 +3325,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   // ===== Self-Service Chat =====
   const SC_ANSWERS = {
-    'تتبع طلبي': 'لتتبع طلبك، اذهب لقسم **طلباتي** من القائمة، ستجد آخر حالة لكل طلب مع رقمه وتاريخ التوصيل المتوقع. 📦\n\nإذا مضى أكثر من 7 أيام ولم يصلك، تواصل معنا على واتساب مباشرة.',
-    'كيف أرجع منتج': 'يمكنك الإرجاع خلال **10 أيام** من تاريخ الاستلام بشرط أن يكون المنتج بحالته الأصلية.\n\n**خطوات الإرجاع:**\n1️⃣ راسلنا على واتساب برقم طلبك\n2️⃣ أرسل صور للمنتج\n3️⃣ سنحدد موعد الاستلام\n\nالإرجاع مجاني 🎉',
-    'طرق الدفع': 'نقبل طرق دفع متعددة:\n\n💳 فيزا / ماستركارد / أمريكان إكسبريس\n📱 Apple Pay / Google Pay\n🏦 تحويل بنكي\n💵 الدفع عند الاستلام (مناطق محددة)\n\nجميع المعاملات مشفرة وآمنة 100% 🔒',
-    'موعد التوصيل': 'مواعيد التوصيل:\n\n📍 **داخل الإمارات:** 2-7 أيام عمل\n🌍 **السعودية والخليج:** 3-10 أيام\n✈️ **دول أخرى:** 7-14 يوم\n\nستصلك رسالة نصية عند خروج الشحنة مع رابط التتبع 📲',
-    'هل يوجد خصومات': 'نعم! لدينا عروض دائمة:\n\n🔥 عروض يومية في صفحة **العروض**\n🎁 كوبون ترحيبي للمشتركين الجدد\n📧 اشترك في النشرة البريدية للحصول على خصم 10%\n⭐ عملاء VIP يحصلون على خصم دائم 15%',
-    'هل يوجد تغليف هدايا': 'نعم، نوفر تغليف هدايا أنيق لمعظم المنتجات 🎀\n\nيمكنك طلب التغليف في ملاحظات الطلب، أو مراسلتنا على واتساب بعد الطلب مباشرة برقم الطلب. سنؤكد لك توفر التغليف قبل التجهيز.',
-    'كيف أغير عنوان التوصيل': 'يمكنك تغيير عنوان التوصيل قبل خروج الطلب للشحن.\n\nافتح واتساب وأرسل لنا:\n1️⃣ رقم الطلب\n2️⃣ العنوان الجديد كامل\n3️⃣ رقم الهاتف للتواصل\n\nإذا خرج الطلب بالفعل، سنحاول التنسيق مع شركة الشحن حسب الإمكانية 📍',
-    'تحدث مع موظف': 'سأوصلك بفريق الدعم الآن! 👋\n\nوقت العمل: **السبت - الخميس 9ص - 7م**\n\nاضغط على الزر أدناه للتواصل المباشر:'
+    'تتبع طلبي': accText('لتتبع طلبك، اذهب لقسم **طلباتي** من القائمة، ستجد آخر حالة لكل طلب مع رقمه وتاريخ التوصيل المتوقع. 📦\n\nإذا مضى أكثر من 7 أيام ولم يصلك، تواصل معنا على واتساب مباشرة.', 'To track your order, open **My Orders** from the menu. You will see the latest status, order number, and expected delivery date. 📦\n\nIf more than 7 days have passed, contact us directly on WhatsApp.'),
+    'كيف أرجع منتج': accText('يمكنك الإرجاع خلال **10 أيام** من تاريخ الاستلام بشرط أن يكون المنتج بحالته الأصلية.\n\n**خطوات الإرجاع:**\n1️⃣ راسلنا على واتساب برقم طلبك\n2️⃣ أرسل صور للمنتج\n3️⃣ سنحدد موعد الاستلام\n\nالإرجاع مجاني 🎉', 'You can return an item within **10 days** of delivery if it is still in its original condition.\n\n**Return steps:**\n1️⃣ Message us on WhatsApp with your order number\n2️⃣ Send photos of the product\n3️⃣ We will arrange the pickup time\n\nReturns are free 🎉'),
+    'طرق الدفع': accText('نقبل طرق دفع متعددة:\n\n💳 فيزا / ماستركارد / أمريكان إكسبريس\n📱 Apple Pay / Google Pay\n🏦 تحويل بنكي\n💵 الدفع عند الاستلام (مناطق محددة)\n\nجميع المعاملات مشفرة وآمنة 100% 🔒', 'We accept several payment methods:\n\n💳 Visa / Mastercard / American Express\n📱 Apple Pay / Google Pay\n🏦 Bank transfer\n💵 Cash on delivery in selected areas\n\nAll transactions are encrypted and 100% secure 🔒'),
+    'موعد التوصيل': accText('مواعيد التوصيل:\n\n📍 **داخل الإمارات:** 2-7 أيام عمل\n🌍 **السعودية والخليج:** 3-10 أيام\n✈️ **دول أخرى:** 7-14 يوم\n\nستصلك رسالة نصية عند خروج الشحنة مع رابط التتبع 📲', 'Delivery times:\n\n📍 **UAE:** 2-7 business days\n🌍 **Saudi Arabia and Gulf:** 3-10 days\n✈️ **Other countries:** 7-14 days\n\nYou will receive an SMS with the tracking link when the shipment leaves 📲'),
+    'هل يوجد خصومات': accText('نعم! لدينا عروض دائمة:\n\n🔥 عروض يومية في صفحة **العروض**\n🎁 كوبون ترحيبي للمشتركين الجدد\n📧 اشترك في النشرة البريدية للحصول على خصم 10%\n⭐ عملاء VIP يحصلون على خصم دائم 15%', 'Yes. We always have offers:\n\n🔥 Daily deals on the **Offers** page\n🎁 Welcome coupon for new subscribers\n📧 Subscribe to the newsletter for 10% off\n⭐ VIP customers get a permanent 15% discount'),
+    'هل يوجد تغليف هدايا': accText('نعم، نوفر تغليف هدايا أنيق لمعظم المنتجات 🎀\n\nيمكنك طلب التغليف في ملاحظات الطلب، أو مراسلتنا على واتساب بعد الطلب مباشرة برقم الطلب. سنؤكد لك توفر التغليف قبل التجهيز.', 'Yes, elegant gift wrapping is available for most products 🎀\n\nRequest it in the order notes, or message us on WhatsApp after ordering with your order number. We will confirm availability before preparation.'),
+    'كيف أغير عنوان التوصيل': accText('يمكنك تغيير عنوان التوصيل قبل خروج الطلب للشحن.\n\nافتح واتساب وأرسل لنا:\n1️⃣ رقم الطلب\n2️⃣ العنوان الجديد كامل\n3️⃣ رقم الهاتف للتواصل\n\nإذا خرج الطلب بالفعل، سنحاول التنسيق مع شركة الشحن حسب الإمكانية 📍', 'You can change the delivery address before the order ships.\n\nOpen WhatsApp and send us:\n1️⃣ Order number\n2️⃣ Full new address\n3️⃣ Contact phone number\n\nIf the order has already shipped, we will coordinate with the carrier where possible 📍'),
+    'تحدث مع موظف': accText('سأوصلك بفريق الدعم الآن! 👋\n\nوقت العمل: **السبت - الخميس 9ص - 7م**\n\nاضغط على الزر أدناه للتواصل المباشر:', 'I will connect you with our support team now. 👋\n\nWorking hours: **Saturday - Thursday, 9 AM - 7 PM**\n\nTap the button below to contact us directly:')
   };
 
   const SC_FALLBACK = accText('شكراً لسؤالك! للإجابة الدقيقة على استفسارك، اضغط على **"تحدث مع موظف"** أو تواصل معنا عبر واتساب وسيرد عليك فريقنا خلال دقائق. 😊', 'Thanks for your question. For the most accurate help, choose **"Real Agent"** or contact us on WhatsApp and our team will reply within minutes. 😊');
@@ -3389,10 +3389,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     msgs.appendChild(div);
 
     // إذا كان رد "تحدث مع موظف" → أضف زر واتساب
-    if (text.includes('اضغط على الزر أدناه')) {
+    if (text.includes('اضغط على الزر أدناه') || text.includes('Tap the button below')) {
       const waBtn = document.createElement('div');
       waBtn.style.cssText = 'padding:4px 0 0 36px;';
-      waBtn.innerHTML = `<a href="https://wa.me/971554423151?text=%D9%85\u0631\u062d\u0628\u0627\u060c%20\u0623\u062d\u062a\u0627\u062c%20\u0645\u0633\u0627\u0639\u062f\u0629" target="_blank" style="display:inline-flex;align-items:center;gap:7px;background:#25D366;color:#fff;border-radius:20px;padding:8px 16px;font-size:0.78rem;font-weight:700;text-decoration:none;">💬 فتح واتساب</a>`;
+      waBtn.innerHTML = `<a href="https://wa.me/971554423151?text=%D9%85\u0631\u062d\u0628\u0627\u060c%20\u0623\u062d\u062a\u0627\u062c%20\u0645\u0633\u0627\u0639\u062f\u0629" target="_blank" style="display:inline-flex;align-items:center;gap:7px;background:#25D366;color:#fff;border-radius:20px;padding:8px 16px;font-size:0.78rem;font-weight:700;text-decoration:none;">💬 ${accText('فتح واتساب', 'Open WhatsApp')}</a>`;
       msgs.appendChild(waBtn);
     }
 
@@ -4010,8 +4010,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </footer>
 <script src="/java/supabase.min.js?v=supabase-20260725a" defer></script>
-<script src="/java/main.min.js?v=140" defer></script>
-<script src="/java/sw-refresh.js?v=sw-refresh-20260731f" defer></script>
+<script src="/java/main.min.js?v=141" defer></script>
+<script src="/java/sw-refresh.js?v=sw-refresh-20260731g" defer></script>
 <script src="/java/instant-nav.js?v=instant-nav-20260728e" defer></script>
 <script src="/translations/translation.min.js?v=translation-20260726c" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
@@ -4019,7 +4019,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="/java/push-welcome.js?v=push-welcome-20260728d" defer></script>
 <script src="/java/notifications.min.js?v=notifications-20260725o" defer></script>
 <script src="/java/abandoned-cart.js?v=abandoned-cart-20260730a" defer></script>
-<script type="module" src="./java/Products.min.js?v=products-20260731b"></script>
+<script type="module" src="./java/Products.min.js?v=products-20260731c"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   function buildSocialBar(s) {

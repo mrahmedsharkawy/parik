@@ -220,8 +220,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- داخل شريط البحث -->
 <div class="search-container">
 <input type="text" id="textSearch"
-  placeholder="ابحث بالصورة او الاسم او رقم الطلب"
-  data-i18n-placeholder="ابحث بالصورة او الاسم او رقم الطلب">
+  placeholder="ابحث بالصورة او الاسم او المناسبة"
+  data-i18n-placeholder="ابحث بالصورة او الاسم او المناسبة">
   <!-- أيقونة البحث -->
   <span class="icon search search-icon" onclick="performTextSearch()" style="cursor:pointer;display:flex;align-items:center;">
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -367,18 +367,18 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <p class="description" id="desc"></p>
 
         <template id="productCustomizationTemplate">
-        <section class="product-customization" id="productCustomization" aria-label="تفاصيل التخصيص">
+        <section class="product-customization" id="productCustomization" aria-label="تفاصيل التخصيص" data-i18n-title="تفاصيل التخصيص">
           <label class="pc-upload" for="customImages">
             <input type="file" id="customImages" accept="image/*" multiple>
             <span class="pc-upload-ico">📷</span>
-            <span class="pc-upload-title">رفع صور التخصيص</span>
-            <span class="pc-upload-sub">يمكنك اختيار أكثر من صورة للشعار، الاسم، التصميم أو المرجع.</span>
+            <span class="pc-upload-title" data-i18n="رفع صور التخصيص">رفع صور التخصيص</span>
+            <span class="pc-upload-sub" data-i18n="يمكنك اختيار أكثر من صورة للشعار، الاسم، التصميم أو المرجع.">يمكنك اختيار أكثر من صورة للشعار، الاسم، التصميم أو المرجع.</span>
           </label>
           <div class="pc-image-list" id="customImageList" aria-live="polite"></div>
 
           <label class="pc-field pc-notes">
-            <span>ملاحظات التخصيص</span>
-            <textarea id="customNotes" rows="4" placeholder="اكتب اللون، المقاس، العبارة المطلوبة، أماكن الصور، أو أي تفاصيل مهمة..."></textarea>
+            <span data-i18n="ملاحظات التخصيص">ملاحظات التخصيص</span>
+            <textarea id="customNotes" rows="4" placeholder="اكتب اللون، المقاس، العبارة المطلوبة، أماكن الصور، أو أي تفاصيل مهمة..." data-i18n-placeholder="اكتب اللون، المقاس، العبارة المطلوبة، أماكن الصور، أو أي تفاصيل مهمة..."></textarea>
           </label>
         </section>
         </template>
@@ -901,8 +901,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </footer>
 <script src="/java/supabase.min.js?v=supabase-20260725a" defer></script>
-<script src="/java/main.min.js?v=140" defer></script>
-<script src="/java/sw-refresh.js?v=sw-refresh-20260731f" defer></script>
+<script src="/java/main.min.js?v=141" defer></script>
+<script src="/java/sw-refresh.js?v=sw-refresh-20260731g" defer></script>
 <script src="/java/instant-nav.js?v=instant-nav-20260728e" defer></script>
 <script src="/translations/translation.min.js?v=translation-20260726c" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
@@ -910,7 +910,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="/java/push-welcome.js?v=push-welcome-20260728d" defer></script>
 <script src="/java/notifications.min.js?v=notifications-20260725o" defer></script>
 <script src="/java/abandoned-cart.js?v=abandoned-cart-20260730a" defer></script>
-<script type="module" src="/java/Products.js?v=products-20260731b"></script> <!-- ده يفضل يفضل في الآخر -->
+<script type="module" src="/java/Products.js?v=products-20260731c"></script> <!-- ده يفضل يفضل في الآخر -->
 </body>
 </html>
 
