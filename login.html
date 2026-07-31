@@ -18,6 +18,29 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <style>@media(max-width:899px){.main-header .dropdown,.main-header .cart,.main-header .logo{display:none!important}}</style>
   <link rel="stylesheet" href="/style/style.css?v=137" />
+  <style id="bariq-mobile-unified-header">
+  .logo-text{display:none}
+  .mh-cats-strip{display:none}
+  .login-mobile-search,.login-mobile-icon{display:none}
+  @media(max-width:899px){
+    .main-header{position:fixed!important;top:0!important;left:0!important;right:0!important;width:100%!important;max-width:100%!important;z-index:10000!important;background:#152546!important;box-shadow:0 1px 4px rgba(0,0,0,.18)!important;padding:7px 0!important;overflow:visible!important;transform:none!important}
+    .login-header-content{width:100%!important;max-width:100%!important;margin:0!important;padding:0 11px!important;gap:8px!important;display:flex!important;align-items:center!important;justify-content:flex-start!important;flex-wrap:nowrap!important;overflow:visible!important;min-height:40px!important}
+    .login-logo{display:flex!important;align-items:center!important;text-decoration:none!important;flex-shrink:0!important}
+    .login-logo img{display:none!important}
+    .logo-text{display:block!important;font-size:1.36rem!important;font-weight:900!important;color:#fff!important;font-family:'Segoe UI','Arial Black',Arial,sans-serif!important;letter-spacing:-.2px!important;line-height:1!important;white-space:nowrap!important}
+    .login-back-link{display:none!important}
+    .login-mobile-search{flex:1!important;min-width:0!important;max-width:calc(100% - 126px)!important;background:#f0f1f5!important;border-radius:12px!important;height:36px!important;margin:0!important;overflow:visible!important;padding:0 10px!important;display:flex!important;align-items:center!important;position:relative!important}
+    .login-mobile-search input{min-width:0!important;width:100%!important;text-align:right!important;font-size:.92rem!important;font-weight:600!important;background:transparent!important;border:0!important;outline:0!important;color:#152546!important;padding:6px 0!important}
+    .login-mobile-search input::placeholder{color:#8a8f9c!important;font-weight:600!important;font-size:.92rem!important;opacity:1!important}
+    .login-mobile-icon{display:flex!important;align-items:center!important;justify-content:center!important;flex-shrink:0!important;width:30px!important;height:36px!important;padding:0!important;color:#fff!important;background:transparent!important}
+    .login-mobile-icon svg{stroke:#fff!important;width:24px!important;height:24px!important;display:block!important}
+    .mh-cats-strip{display:flex!important;position:relative!important;z-index:1!important;gap:0;margin-top:54px!important;padding:4px 14px 0!important;overflow-x:auto!important;overflow-y:hidden!important;-webkit-overflow-scrolling:touch!important;scrollbar-width:none!important;background:#fff!important;white-space:nowrap!important}
+    .mh-cats-strip::-webkit-scrollbar{display:none!important}
+    .mh-cats-strip a{flex-shrink:0!important;padding:10px 16px!important;font-size:.88rem!important;font-weight:700!important;color:#666!important;text-decoration:none!important;white-space:nowrap!important;border-bottom:2.5px solid transparent!important}
+    .mh-cats-strip a.active{color:#152546!important;font-weight:900!important;border-bottom-color:#152546!important}
+    #main.main{padding:68px 16px 40px!important;min-height:auto!important;justify-content:flex-start!important}
+  }
+  </style>
   <style>
     /* === override main === */
     body { background: #f4f5f702; }
@@ -303,9 +326,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <div class="page">
 
   <header class="main-header" style="background:#152546;padding:10px 0">
-    <div style="max-width:1400px;margin:0 auto;padding:0 20px;display:flex;align-items:center;justify-content:space-between">
-      <a href="index.html"><img src="/assets/logo.png" alt="Bariq Logo" style="height:34px"></a>
-      <a href="index.html" style="color:#fff;font-size:0.85rem;text-decoration:none;display:flex;align-items:center;gap:6px">
+    <div class="login-header-content" style="max-width:1400px;margin:0 auto;padding:0 20px;display:flex;align-items:center;justify-content:space-between">
+      <a href="index.html" class="login-logo"><img src="/assets/logo.png" alt="Bariq Logo" style="height:34px"><span class="logo-text">Bariq</span></a>
+      <div class="search-container login-mobile-search">
+        <input type="text" id="loginMobileSearch" placeholder="ابحث في بريق..." autocomplete="off">
+      </div>
+      <span class="icon search-icon login-mobile-icon" style="cursor:pointer;display:none;align-items:center;" onclick="document.getElementById('loginMobileSearch')?.focus()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </span>
+      <label class="icon camera-icon login-mobile-icon" for="loginImageSearchInput" style="cursor:pointer;display:none;align-items:center;margin-right:0;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      </label>
+      <input type="file" id="loginImageSearchInput" accept="image/*" style="display:none;">
+      <a href="index.html" class="login-back-link" style="color:#fff;font-size:0.85rem;text-decoration:none;display:flex;align-items:center;gap:6px">
         ← العودة للمتجر
       </a>
     </div>
