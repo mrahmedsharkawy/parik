@@ -2376,6 +2376,7 @@ function remoteOrderToAdminOrder(r) {
     items: r.items || [],
     cashback: r.cashback,
     cashbackStatus: r.cashback_status,
+    cashbackExpiresAt: r.cashback_expires_at,
     notes: r.notes || '',
     city: orderArea || customerAreaByIdentity(customerPhone, customerEmail),
     address: orderArea || customerAreaByIdentity(customerPhone, customerEmail)
@@ -2560,7 +2561,10 @@ async function saveOrder(){
             status: order.status,
             notes: order.notes || null
           };
-          if (order.status === 'delivered') updateData.cashback_status = 'earned';
+          if (order.status === 'delivered') {
+            updateData.cashback_status = 'earned';
+            updateData.cashback_expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+          }
           else if (order.cashbackStatus === 'earned' || order.cashback_status === 'earned') updateData.cashback_status = 'pending';
           await window.Supabase.Orders.update(order.id, updateData);
         } catch(e) {
@@ -2613,8 +2617,11 @@ async function changeOrderStatus(id, status){
   if (window.Supabase) {
     try {
       const updateData = { status };
-      // عند التسليم: تفعيل الكاش باك (earned) ليُحسب في حساب العميل عند مزامنته
-      if (status === 'delivered') updateData.cashback_status = 'earned';
+      // عند التسليم: يضاف الكاش باك للعميل فوراً، وينتهي إذا لم يستخدمه خلال 30 يوم
+      if (status === 'delivered') {
+        updateData.cashback_status = 'earned';
+        updateData.cashback_expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+      }
       else if (o.cashbackStatus === 'earned' || o.cashback_status === 'earned') updateData.cashback_status = 'pending';
       const result = await window.Supabase.Orders.update(id, updateData);
 
@@ -2624,6 +2631,7 @@ async function changeOrderStatus(id, status){
       }
 
       if (updateData.cashback_status) o.cashbackStatus = updateData.cashback_status;
+      if (updateData.cashback_expires_at) o.cashbackExpiresAt = updateData.cashback_expires_at;
       toast('✅ تم تحديث الحالة في قاعدة البيانات');
 
       // ========== إشعار Push تلقائي للعميل ==========
@@ -3114,8 +3122,14 @@ async function changeInvoiceOrderStatus(id, status){
   }
 }
 function invoiceEarnedBadge(order){
-  const earned = order && order.status === 'delivered';
-  return earned ? '<span class="status-badge st-delivered" style="font-size:.6rem;padding:1px 6px;line-height:1.45">تم الاستحقاق ✓</span>' : '';
+  if (!order || order.status !== 'delivered') return '';
+  const expiresAt = order.cashbackExpiresAt || order.cashback_available_at || order.cashback_expires_at || '';
+  const expiresTime = expiresAt ? new Date(expiresAt).getTime() : NaN;
+  if (!isNaN(expiresTime) && expiresTime <= Date.now()) {
+    return '<span class="status-badge st-pending" style="font-size:.6rem;padding:1px 6px;line-height:1.45">انتهت الصلاحية</span>';
+  }
+  const daysLeft = isNaN(expiresTime) ? 30 : Math.max(1, Math.ceil((expiresTime - Date.now()) / (24*60*60*1000)));
+  return `<span class="status-badge st-delivered" style="font-size:.6rem;padding:1px 6px;line-height:1.45">ينتهي خلال ${daysLeft} يوم</span>`;
 }
 function renderInvoices(){
   const list = $('invoiceOrdersList');

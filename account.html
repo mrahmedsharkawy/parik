@@ -1867,6 +1867,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       let changed = false;
       const cashbackToAdd = [];
       const remoteIds = new Set(remote.map(r => String(r.order_number)));
+      const CASHBACK_EXPIRE_MS = 30 * 24 * 60 * 60 * 1000;
+      const cashbackExpiresAt = (order, remoteOrder) => {
+        const raw = (remoteOrder && remoteOrder.cashback_expires_at) || order.cashbackAvailableAt || order.cashbackExpiresAt || '';
+        if (raw) {
+          const t = new Date(raw).getTime();
+          if (!isNaN(t)) return t;
+        }
+        const deliveredBase = (remoteOrder && (remoteOrder.updated_at || remoteOrder.created_at)) || order.updatedAt || order.date || new Date().toISOString();
+        const base = new Date(deliveredBase).getTime();
+        return (isNaN(base) ? Date.now() : base) + CASHBACK_EXPIRE_MS;
+      };
+      const cashbackIsEarned = (order, remoteOrder) => {
+        return (remoteOrder && remoteOrder.status || order.status) === 'delivered';
+      };
 
       function hasCashbackCredit(orderId) {
         try {
@@ -1912,6 +1926,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           status: r.status || 'processing',
           cashback: parseFloat(r.cashback) || 5,
           cashbackStatus: r.cashback_status || 'pending',
+          cashbackAvailableAt: r.cashback_expires_at || '',
           cashbackExpiresAt: r.cashback_expires_at || '',
           notes: r.notes || '',
           invoice: parsedInvoice,
@@ -1926,7 +1941,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         if (idx === -1) {
           const newLocalOrder = remoteOrderToLocal(r);
           local.unshift(newLocalOrder);
-          if (r.cashback_status === 'earned' && !hasCashbackCredit(newLocalOrder.id)) {
+          if (cashbackIsEarned(newLocalOrder, r) && !hasCashbackCredit(newLocalOrder.id)) {
+            newLocalOrder.cashbackStatus = 'earned';
+            if (!newLocalOrder.cashbackExpiresAt) {
+              const exp = new Date(cashbackExpiresAt(newLocalOrder, r)).toISOString();
+              newLocalOrder.cashbackAvailableAt = exp;
+              newLocalOrder.cashbackExpiresAt = exp;
+            }
             cashbackToAdd.push({ orderId: newLocalOrder.id, amount: parseFloat(newLocalOrder.cashback || r.cashback || 5) });
           }
           changed = true;
@@ -1942,10 +1963,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           lo.invoice = getInvoiceFromNotes(r.notes);
           changed = true;
         }
-        // إضافة الكاش باك للرصيد مرة واحدة فقط عند اعتماده من الأدمن
-        // لو الطلب اتحوّل لـ claimed محلياً (تم استخدامه في كوبون) لا تُعده earned تاني حتى لو السيرفر لسه بيقول earned
-        if (lo.cashbackStatus !== 'claimed' && r.cashback_status === 'earned' && (lo.cashbackStatus !== 'earned' || !hasCashbackCredit(lo.id))) {
+        if (r.cashback_expires_at && lo.cashbackAvailableAt !== r.cashback_expires_at) {
+          lo.cashbackAvailableAt = r.cashback_expires_at;
+          lo.cashbackExpiresAt = r.cashback_expires_at;
+          changed = true;
+        }
+        // إضافة الكاش باك مرة واحدة فور التسليم، مع انتهاء صلاحية بعد 30 يوم إذا لم يستخدمه العميل
+        if (lo.cashbackStatus !== 'claimed' && cashbackIsEarned(lo, r) && (lo.cashbackStatus !== 'earned' || !hasCashbackCredit(lo.id))) {
           lo.cashbackStatus = 'earned';
+          if (!lo.cashbackExpiresAt) {
+            const exp = new Date(cashbackExpiresAt(lo, r)).toISOString();
+            lo.cashbackAvailableAt = exp;
+            lo.cashbackExpiresAt = exp;
+          }
           if (!hasCashbackCredit(lo.id)) cashbackToAdd.push({ orderId: lo.id, amount: parseFloat(lo.cashback || r.cashback || 5) });
           changed = true;
         }
@@ -2479,6 +2509,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     // حساب الرصيد الحقيقي من الطلبات (فقط غير المنتهية)
     const now = Date.now();
     const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+    const cashbackExpiresAt = o => {
+      const raw = o.cashbackAvailableAt || o.cashbackExpiresAt || '';
+      if (raw) {
+        const t = new Date(raw).getTime();
+        if (!isNaN(t)) return t;
+      }
+      const base = new Date(o.updatedAt || o.date || new Date().toISOString()).getTime();
+      return (isNaN(base) ? now : base) + THIRTY_DAYS;
+    };
 
     // فلترة الطلبات حسب حالة الكاش باك
     // earned = تم التسليم وأُضيف للرصيد
@@ -2486,8 +2525,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     // claimed = استُخدم في كوبون
     // (الطلبات القديمة بدون cashbackStatus: نحكم من status)
     const getEffectiveStatus = o => {
-      if (o.cashbackStatus) return o.cashbackStatus;
-      if (o.status === 'delivered') return 'earned'; // قديم تم تسليمه
+      if (o.cashbackStatus === 'claimed') return 'claimed';
+      if (o.status !== 'delivered') return 'pending';
+      if (cashbackExpiresAt(o) <= now) return 'expired';
+      if (o.cashbackStatus === 'earned' || !o.cashbackStatus || o.cashbackStatus === 'pending') return 'earned';
       return 'pending';
     };
 
@@ -2495,28 +2536,31 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const getCbAmount = o => {
       const v = parseFloat(o.cashback);
       if (v > 0) return v;
-      // الطلبات القديمة المسلّمة بدون حقل cashback → تُعامل كـ 5 د.إ
+      // الطلبات القديمة المستحقة بدون حقل cashback → تُعامل كـ 5 د.إ
       if (getEffectiveStatus(o) === 'earned') return 5;
       return 0;
     };
+    const getOrderCashbackKey = o => String(o && (o.id || o.orderNumber || o.order_number || o.srcId || '') || '').trim();
+    const uniqueCashbackOrders = list => {
+      const seen = new Set();
+      const out = [];
+      (Array.isArray(list) ? list : []).forEach(o => {
+        const key = getOrderCashbackKey(o);
+        if (key && seen.has(key)) return;
+        if (key) seen.add(key);
+        out.push(o);
+      });
+      return out;
+    };
 
-    const validOrders   = orders.filter(o => {
+    const uniqueOrders = uniqueCashbackOrders(orders);
+    const validOrders   = uniqueOrders.filter(o => {
       if (getCbAmount(o) <= 0) return false;
       if (getEffectiveStatus(o) !== 'earned') return false;
-      const exp = o.cashbackExpiresAt
-        ? new Date(o.cashbackExpiresAt).getTime()
-        : new Date(o.date).getTime() + THIRTY_DAYS;
-      return exp > now;
-    });
-    const expiredOrders = orders.filter(o => {
-      if (getCbAmount(o) <= 0 || getEffectiveStatus(o) !== 'earned') return false;
-      const exp = o.cashbackExpiresAt
-        ? new Date(o.cashbackExpiresAt).getTime()
-        : new Date(o.date).getTime() + THIRTY_DAYS;
-      return exp <= now;
+      return true;
     });
 
-    // الرصيد = فقط الطلبات المسلّمة (earned) + غير منتهية + غير مستخدمة
+    // الرصيد = فقط الطلبات المسلّمة التي مر عليها 30 يوم ولم تُستخدم
     const ordersBalance = validOrders.reduce((s,o) => s + getCbAmount(o), 0);
     const displayBalance = ordersBalance;
 
@@ -2524,18 +2568,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     // عرض سجل الطلبات (valid أولاً ثم expired)
     if (hist) {
-      const allCb = orders.filter(o => getCbAmount(o) > 0 || getEffectiveStatus(o) === 'earned');
+      const allCb = uniqueOrders.filter(o => getCbAmount(o) > 0 || getEffectiveStatus(o) === 'earned');
       if (!allCb.length) {
         hist.innerHTML = `<p style="color:#aaa;text-align:center;font-size:.8rem">${accText('لم تضع أي طلب بعد', 'You have not placed any orders yet')}</p>`;
       } else {
         hist.innerHTML = allCb.slice(0,10).map(o => {
           const d = new Date(o.date).toLocaleDateString(ACC_EN ? 'en-US' : 'ar-AE',{year:'numeric',month:'short',day:'numeric'});
           const cbStatus = getEffectiveStatus(o);
-          const exp = o.cashbackExpiresAt
-            ? new Date(o.cashbackExpiresAt).getTime()
-            : new Date(o.date).getTime() + THIRTY_DAYS;
-          const isExpired = cbStatus === 'earned' && exp <= now;
-          const daysLeft  = (!isExpired && cbStatus === 'earned') ? Math.ceil((exp - now) / (24*60*60*1000)) : 0;
+          const expiresAt = cashbackExpiresAt(o);
+          const daysLeft = Math.max(0, Math.ceil((expiresAt - now) / (24*60*60*1000)));
 
           let statusBadge, amtColor, bgColor, opacity = 1;
           if (cbStatus === 'claimed') {
@@ -2544,19 +2585,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           } else if (cbStatus === 'pending') {
             statusBadge = `<span style="font-size:.68rem;color:#e65100;background:#fff3e0;padding:1px 7px;border-radius:999px">⏳ ${accText('استحقاق بعد التسليم', 'Earns after delivery')}</span>`;
             amtColor = '#e65100'; bgColor = '#fffbf5';
-          } else if (isExpired) {
-            statusBadge = `<span style="font-size:.68rem;color:#c62828;background:#fce4ec;padding:1px 7px;border-radius:999px">${accText('منتهي الصلاحية', 'Expired')}</span>`;
+          } else if (cbStatus === 'waiting') {
+            statusBadge = `<span style="font-size:.68rem;color:#e65100;background:#fff3e0;padding:1px 7px;border-radius:999px">⏳ ${accText('استحقاق بعد التسليم', 'Earns after delivery')}</span>`;
+            amtColor = '#e65100'; bgColor = '#fffbf5';
+          } else if (cbStatus === 'expired') {
+            statusBadge = `<span style="font-size:.68rem;color:#c62828;background:#fce4ec;padding:1px 7px;border-radius:999px">${accText('انتهت الصلاحية', 'Expired')}</span>`;
             amtColor = '#bbb'; bgColor = '#fafafa'; opacity = 0.55;
-          } else if (daysLeft <= 7) {
-            statusBadge = `<span style="font-size:.68rem;color:#e65100;background:#fff3e0;padding:1px 7px;border-radius:999px">${ACC_EN ? `Expires in ${daysLeft} days` : `ينتهي خلال ${daysLeft} يوم`}</span>`;
+          } else if (cbStatus === 'earned') {
+            statusBadge = `<span style="font-size:.68rem;color:#2e7d32;background:#e8f5e9;padding:1px 7px;border-radius:999px">${ACC_EN ? `Expires in ${daysLeft} days` : `ينتهي خلال ${daysLeft} يوم`}</span>`;
             amtColor = '#2e7d32'; bgColor = '#f8f9fc';
           } else {
-            statusBadge = `<span style="font-size:.68rem;color:#9aa3b2">${accText('ينتهي', 'Expires')} ${new Date(exp).toLocaleDateString(ACC_EN ? 'en-US' : 'ar-AE',{month:'short',day:'numeric'})}</span>`;
-            amtColor = '#2e7d32'; bgColor = '#f8f9fc';
+            statusBadge = `<span style="font-size:.68rem;color:#9aa3b2">${accText('قيد المراجعة', 'Pending')}</span>`;
+            amtColor = '#e65100'; bgColor = '#fffbf5';
           }
 
           const cbAmt = getCbAmount(o);
-          const prefix = cbStatus === 'earned' && !isExpired ? '+' : '';
+          const prefix = cbStatus === 'earned' ? '+' : '';
           return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:${bgColor};border-radius:8px;margin-bottom:7px;font-size:.8rem;opacity:${opacity}">
             <div>
               <div style="font-weight:700;color:#111">${accText('طلب', 'Order')} ${o.id||''}</div>
@@ -3916,8 +3960,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </footer>
 <script src="/java/supabase.min.js?v=supabase-20260725a" defer></script>
-<script src="/java/main.min.js?v=139" defer></script>
-<script src="/java/sw-refresh.js?v=sw-refresh-20260731a" defer></script>
+<script src="/java/main.min.js?v=140" defer></script>
+<script src="/java/sw-refresh.js?v=sw-refresh-20260731d" defer></script>
 <script src="/java/instant-nav.js?v=instant-nav-20260728e" defer></script>
 <script src="/translations/translation.min.js?v=translation-20260726c" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
@@ -3925,7 +3969,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="/java/push-welcome.js?v=push-welcome-20260728d" defer></script>
 <script src="/java/notifications.min.js?v=notifications-20260725o" defer></script>
 <script src="/java/abandoned-cart.js?v=abandoned-cart-20260730a" defer></script>
-<script type="module" src="./java/Products.min.js?v=products-20260731a"></script>
+<script type="module" src="./java/Products.min.js?v=products-20260731b"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   function buildSocialBar(s) {

@@ -747,7 +747,9 @@ initX2Cart() || document.addEventListener("DOMContentLoaded", initX2Cart, { once
                 try {
                     const ords = JSON.parse(localStorage.getItem("x2_orders") || "[]");
                     ords.forEach(o => {
-                        ("earned" === o.cashbackStatus || !o.cashbackStatus && "delivered" === o.status) && (o.cashbackStatus = "claimed");
+                        const expiresAt = o.cashbackAvailableAt || o.cashbackExpiresAt || "";
+                        const isActive = "delivered" === o.status && (!expiresAt || new Date(expiresAt).getTime() > Date.now());
+                        ("earned" === o.cashbackStatus || !o.cashbackStatus && isActive) && (o.cashbackStatus = "claimed");
                     }), localStorage.setItem("x2_orders", JSON.stringify(ords));
                 } catch (e2) {}
                 sessionStorage.removeItem("x2_coupon_applied"), localStorage.removeItem("x2_coupon_applied"),
@@ -770,7 +772,8 @@ initX2Cart() || document.addEventListener("DOMContentLoaded", initX2Cart, { once
                 date: (new Date).toISOString(),
                 cashback: 5,
                 cashbackStatus: "pending",
-                cashbackExpiresAt: expiresAt,
+                cashbackAvailableAt: "",
+                cashbackExpiresAt: "",
                 couponCode: appliedCouponForOrder,
                 items: items.map(i => {
                     const rawImg = i.image || i.img || "";

@@ -1974,7 +1974,8 @@ document.addEventListener("DOMContentLoaded", async function() {
                 date: (new Date).toISOString(),
                 cashback: 5,
                 cashbackStatus: "pending",
-                cashbackExpiresAt: expiresAt,
+                cashbackAvailableAt: "",
+                cashbackExpiresAt: "",
                 items: [ {
                     id: String(p.id || ""),
                     title: getT(p.name),
