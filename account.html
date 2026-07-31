@@ -1090,7 +1090,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  height: 520px;
+  height: 650px;
   box-shadow: 0 4px 24px rgba(21,37,70,0.08);
 }
 .sc-header {
@@ -1209,8 +1209,21 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 .sc-send-btn:hover { background: #D4AF37; color: #fff; }
 
 @media (max-width: 600px) {
-  .sc-wrap { height: 460px; }
-  .sc-quick-btns button { font-size: 0.68rem; padding: 5px 10px; }
+  .sc-wrap { height: 640px; }
+  .sc-quick-btns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    padding: 8px 10px;
+  }
+  .sc-quick-btns button {
+    width: 100%;
+    min-width: 0;
+    min-height: 32px;
+    font-size: 0.68rem;
+    padding: 5px 8px;
+    white-space: nowrap;
+  }
 }
 </style>
 
@@ -2553,7 +2566,33 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       return out;
     };
 
-    const uniqueOrders = uniqueCashbackOrders(orders);
+    const reconcileUsedCashbackCoupon = list => {
+      let storedCoupon = null;
+      try { storedCoupon = JSON.parse(localStorage.getItem('x2_coupon_code') || 'null'); } catch(e) {}
+      if (!storedCoupon || !storedCoupon.used || !storedCoupon.code) return false;
+      const migrationKey = 'x2_cashback_claim_migration_' + String(storedCoupon.code).toUpperCase();
+      try { if (localStorage.getItem(migrationKey) === '1') return false; } catch(e) {}
+
+      const generatedAt = storedCoupon.generated ? new Date(storedCoupon.generated).getTime() : 0;
+      let changed = false;
+      (Array.isArray(list) ? list : []).forEach(o => {
+        const expiresAt = cashbackExpiresAt(o);
+        const orderTime = new Date(o.updatedAt || o.date || new Date().toISOString()).getTime();
+        const existedWhenCouponWasMade = !generatedAt || isNaN(orderTime) || orderTime <= generatedAt;
+        if (o.status === 'delivered' && expiresAt > now && existedWhenCouponWasMade && o.cashbackStatus !== 'claimed') {
+          o.cashbackStatus = 'claimed';
+          changed = true;
+        }
+      });
+      if (changed) {
+        try { localStorage.setItem('x2_orders', JSON.stringify(orders)); } catch(e) {}
+      }
+      try { localStorage.setItem(migrationKey, '1'); } catch(e) {}
+      return changed;
+    };
+
+    let uniqueOrders = uniqueCashbackOrders(orders);
+    if (reconcileUsedCashbackCoupon(uniqueOrders)) uniqueOrders = uniqueCashbackOrders(orders);
     const validOrders   = uniqueOrders.filter(o => {
       if (getCbAmount(o) <= 0) return false;
       if (getEffectiveStatus(o) !== 'earned') return false;
@@ -2563,6 +2602,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     // الرصيد = فقط الطلبات المسلّمة التي مر عليها 30 يوم ولم تُستخدم
     const ordersBalance = validOrders.reduce((s,o) => s + getCbAmount(o), 0);
     const displayBalance = ordersBalance;
+
+    try {
+      const storedCashback = JSON.parse(localStorage.getItem(CASHBACK_KEY) || '{}');
+      if (!storedCashback || typeof storedCashback !== 'object' || parseFloat(storedCashback.balance) !== displayBalance) {
+        localStorage.setItem(CASHBACK_KEY, JSON.stringify(Object.assign({}, storedCashback || {}, { balance: displayBalance, history: Array.isArray(storedCashback && storedCashback.history) ? storedCashback.history : [] })));
+      }
+    } catch(e) {}
 
     if (balEl) balEl.textContent = displayBalance.toFixed(2) + ' ' + sym;
 
@@ -3961,7 +4007,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </footer>
 <script src="/java/supabase.min.js?v=supabase-20260725a" defer></script>
 <script src="/java/main.min.js?v=140" defer></script>
-<script src="/java/sw-refresh.js?v=sw-refresh-20260731d" defer></script>
+<script src="/java/sw-refresh.js?v=sw-refresh-20260731e" defer></script>
 <script src="/java/instant-nav.js?v=instant-nav-20260728e" defer></script>
 <script src="/translations/translation.min.js?v=translation-20260726c" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>

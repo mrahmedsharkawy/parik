@@ -749,7 +749,7 @@ initX2Cart() || document.addEventListener("DOMContentLoaded", initX2Cart, { once
                     ords.forEach(o => {
                         const expiresAt = o.cashbackAvailableAt || o.cashbackExpiresAt || "";
                         const isActive = "delivered" === o.status && (!expiresAt || new Date(expiresAt).getTime() > Date.now());
-                        ("earned" === o.cashbackStatus || !o.cashbackStatus && isActive) && (o.cashbackStatus = "claimed");
+                        isActive && "claimed" !== o.cashbackStatus && (o.cashbackStatus = "claimed");
                     }), localStorage.setItem("x2_orders", JSON.stringify(ords));
                 } catch (e2) {}
                 sessionStorage.removeItem("x2_coupon_applied"), localStorage.removeItem("x2_coupon_applied"),
