@@ -334,7 +334,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <script>
 (function(){
-  var prompts = ['ابحث بالاسم', 'ابحث بالصورة', 'ابحث بالمناسبة', 'ابحث حسب الهدية'];
+  var promptSets = {
+    ar: ['ابحث بالاسم', 'ابحث بالصورة', 'ابحث بالمناسبة', 'ابحث حسب الهدية'],
+    en: ['Search by name', 'Search by image', 'Search by occasion', 'Search by gift']
+  };
+  function currentPrompts(){
+    var lang = (localStorage.getItem('lang') || document.documentElement.lang || 'ar') === 'en' ? 'en' : 'ar';
+    return promptSets[lang];
+  }
   var index = 0;
   var charIndex = 0;
   var deleting = false;
@@ -346,9 +353,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       timer = setTimeout(typeSearchPrompt, 500);
       return;
     }
+    var prompts = currentPrompts();
+    if (index >= prompts.length) index = 0;
     var text = prompts[index];
     input.placeholder = text.slice(0, charIndex);
-    input.setAttribute('data-i18n-placeholder', text);
     if (!deleting && charIndex < text.length) {
       charIndex += 1;
       timer = setTimeout(typeSearchPrompt, 95);
@@ -368,6 +376,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     index = (index + 1) % prompts.length;
     timer = setTimeout(typeSearchPrompt, 180);
   }
+  window.addEventListener('bariq:languagechange', function(){
+    clearTimeout(timer);
+    index = 0;
+    charIndex = 0;
+    deleting = false;
+    typeSearchPrompt();
+  });
   document.addEventListener('DOMContentLoaded', function(){
     clearTimeout(timer);
     typeSearchPrompt();
@@ -646,7 +661,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </footer>
 <script src="/java/supabase.min.js?v=supabase-20260725a" defer></script>
 <script src="/java/main.min.js?v=141" defer></script>
-<script src="/java/sw-refresh.js?v=sw-refresh-20260731g" defer></script>
+<script src="/java/sw-refresh.js?v=sw-refresh-20260731h" defer></script>
 <script src="/java/instant-nav.js?v=instant-nav-20260728e" defer></script>
 <script src="/translations/translation.min.js?v=translation-20260726c" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
