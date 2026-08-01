@@ -587,6 +587,29 @@ function saveProductReturnTarget(card) {
     } catch (e) {}
 }
 
+function saveHomeProductsSnapshot() {
+    try {
+        const homeProducts = document.getElementById("home-category-products");
+        if (homeProducts && homeProducts.querySelector(".product-card") && homeProducts.innerHTML) sessionStorage.setItem("x2_home_products_snapshot", JSON.stringify({
+            url: location.href,
+            html: homeProducts.innerHTML,
+            at: Date.now()
+        }));
+    } catch (e) {}
+}
+
+function finishProductReturnRestore() {
+    try {
+        window.__x2ProductReturnRestored = true;
+        clearTimeout(window.__x2ProductReturnGuardTimer);
+        clearTimeout(window.__x2ProductReturnRetryTimer);
+        document.documentElement.classList.remove("x2-product-return-guard");
+        document.documentElement.classList.remove("x2-product-returning");
+        sessionStorage.removeItem("x2_return_to_scroll_url");
+        sessionStorage.removeItem("x2_product_return_target");
+    } catch (e) {}
+}
+
 function getProductReturnDesiredOffset(target) {
     try {
         if (!target) return Number(target && target.offset) || 8;
@@ -637,9 +660,7 @@ function restoreProductReturnTarget() {
             if ((document.documentElement.scrollHeight || 0) >= y + Math.min(500, window.innerHeight || 0)) {
                 window.scrollTo({ top: y, behavior: "auto" });
                 pinScrollTarget(y, 1500);
-                window.__x2ProductReturnRestored = true;
-                sessionStorage.removeItem("x2_return_to_scroll_url");
-                sessionStorage.removeItem("x2_product_return_target");
+                finishProductReturnRestore();
                 return true;
             }
         }
@@ -667,9 +688,7 @@ function restoreProductReturnTarget() {
             if (expectedY > 0) {
                 window.scrollTo({ top: expectedY, behavior: "auto" });
                 pinScrollTarget(expectedY, 1500);
-                window.__x2ProductReturnRestored = true;
-                sessionStorage.removeItem("x2_return_to_scroll_url");
-                sessionStorage.removeItem("x2_product_return_target");
+                finishProductReturnRestore();
                 return true;
             }
             return false;
@@ -694,10 +713,8 @@ function restoreProductReturnTarget() {
         }
         window.scrollTo({ top: y, behavior: "auto" });
         pinScrollTarget(y, 1500);
-        window.__x2ProductReturnRestored = true;
         scheduleProductReturnFineTune(target, 5);
-        sessionStorage.removeItem("x2_return_to_scroll_url");
-        sessionStorage.removeItem("x2_product_return_target");
+        finishProductReturnRestore();
         return true;
     } catch (e) {
         return false;
@@ -787,6 +804,7 @@ export function createProductCard(prod) {
         productOpenStarted = true;
         saveProductReturnScrollPosition(true);
         saveProductReturnTarget(card);
+        saveHomeProductsSnapshot();
         rememberQuickProduct();
         try {
             const HIST_KEY = "x2_history", img = Array.isArray(prod.img) ? prod.img[0] : prod.img || "", name = "object" == typeof prod.name ? prod.name.ar || prod.name.en : prod.name || "", entry = {
@@ -800,7 +818,7 @@ export function createProductCard(prod) {
             hist = hist.filter(h => String(h.id) !== String(prod.id)), hist.unshift(entry),
             hist.length > 20 && (hist = hist.slice(0, 20)), localStorage.setItem(HIST_KEY, JSON.stringify(hist));
         } catch (e) {}
-        setTimeout(() => window.location.assign(productUrl), 20);
+        window.location.assign(productUrl);
     }
     card.className = "product-card", card.style.position = "relative", card.style.cursor = "pointer", card.style.touchAction = "manipulation",
     card.addEventListener("pointerover", prefetchProductPage, {
@@ -1244,13 +1262,16 @@ document.addEventListener("DOMContentLoaded", async function() {
         }();
     }
     window.refreshStoreProductSort = async function() {
+        if (sessionStorage.getItem("x2_return_to_scroll_url") === location.href && productsContainer && productsContainer.querySelector(".product-card")) return;
         await ensureStoreProductSortLoaded(true);
         !categoriesPageOwnsProductGrid && productsContainer && products && products.length && renderProductsGrid(products, productsContainer);
     };
     window.addEventListener("pageshow", function(event) {
+        if (event.persisted && sessionStorage.getItem("x2_return_to_scroll_url") === location.href) return void restoreProductReturnScrollPosition();
         event.persisted && window.refreshStoreProductSort && window.refreshStoreProductSort();
     });
     document.addEventListener("visibilitychange", function() {
+        if (!document.hidden && sessionStorage.getItem("x2_return_to_scroll_url") === location.href) return void restoreProductReturnScrollPosition();
         if (!document.hidden) window.refreshStoreProductSort && window.refreshStoreProductSort();
     });
     window.addEventListener("storage", function(event) {
@@ -1293,6 +1314,7 @@ document.addEventListener("DOMContentLoaded", async function() {
         }
         function showSubcategoryProducts(filtered, subName) {
             if (categoriesPageOwnsProductGrid) return;
+            latestCategoryLoadToken++;
             const targetContainer = productsContainer;
             if (!targetContainer) return;
             const lang = localStorage.getItem("lang") || document.documentElement.lang || document.documentElement.getAttribute("lang") || "ar";
@@ -1355,7 +1377,8 @@ document.addEventListener("DOMContentLoaded", async function() {
     function loadProductsForCategory(categorySlug, categoriesData, scrollToProducts = false, allowMobileCategoryBar = false) {
         const loadToken = ++latestCategoryLoadToken;
         const isMobileCategoryViewport = window.matchMedia("(max-width: 899px)").matches;
-        if (isMobileCategoryViewport && !allowMobileCategoryBar) return;
+        const isCartPage = /\/Cart(?:\.html)?$/i.test(location.pathname);
+        if (isMobileCategoryViewport && !allowMobileCategoryBar && !isCartPage) return;
         const homeProductsContainer = document.getElementById("home-category-products");
         const isAllCategory = !categorySlug || "all" === String(categorySlug).toLowerCase() || "الكل" === categorySlug || "جميع الفئات" === categorySlug;
         const sameKey = (a, b) => String(a || "").trim().toLowerCase() === String(b || "").trim().toLowerCase();

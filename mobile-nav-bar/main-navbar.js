@@ -242,7 +242,29 @@ async function initMobileNav() {
         return targetUrl.origin === location.origin && normalizePath(targetUrl.pathname) === normalizePath(location.pathname);
       };
 
+      const clearSavedScrollForCurrentPage = () => {
+        try {
+          const href = location.href;
+          const cleanUrl = new URL(location.href);
+          cleanUrl.searchParams.delete('__nav_reload');
+          const keys = [href, cleanUrl.href, cleanUrl.pathname + cleanUrl.search + cleanUrl.hash];
+          ['x2_scroll_positions', 'x2_product_return_positions', 'categoryScrollPositions', 'scrollPositions'].forEach((storageKey) => {
+            try {
+              const positions = JSON.parse(sessionStorage.getItem(storageKey) || '{}');
+              keys.forEach((key) => { delete positions[key]; });
+              sessionStorage.setItem(storageKey, JSON.stringify(positions));
+            } catch(e) {}
+          });
+          if (sessionStorage.getItem('x2_return_to_scroll_url') === href || sessionStorage.getItem('x2_return_to_scroll_url') === cleanUrl.href) {
+            sessionStorage.removeItem('x2_return_to_scroll_url');
+            sessionStorage.removeItem('x2_product_return_target');
+          }
+        } catch(e) {}
+      };
+
       const reloadSamePage = () => {
+        clearSavedScrollForCurrentPage();
+        window.addEventListener('pagehide', clearSavedScrollForCurrentPage, { once: true });
         const url = new URL(location.href);
         url.searchParams.set('__nav_reload', String(Date.now()));
         location.assign(url.href);
