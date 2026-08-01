@@ -260,6 +260,9 @@ function mapSupabaseProducts(sbProds) {
             desc: { ar: p.description_ar || "", en: p.description_en || "" },
             img: imgs.length ? imgs : void 0,
             category: Array.isArray(p.categories) ? p.categories : p.categories ? [ p.categories ] : [],
+            subcategory: p.subcategory || "",
+            categorySlug: p.category_slug || p.categorySlug || "",
+            subcategorySlug: p.subcategory_slug || p.subcategorySlug || "",
             price: p.price,
             oldPrice: p.old_price || void 0,
             stock: p.stock || void 0,
@@ -1026,6 +1029,46 @@ document.addEventListener("DOMContentLoaded", async function() {
         if (!subDisplay) return;
         subDisplay.innerHTML = "";
         const categoryObj = categoriesData.find(c => c.name.ar === categoryName || c.name.en === categoryName || c.categorySlug === categoryName);
+        const norm = v => String(v || "").replace(/[\u064B-\u065F\u0670]/g, "").replace(/\s+/g, " ").trim().toLowerCase();
+        const addValues = (out, value) => {
+            if (!value) return;
+            if (Array.isArray(value)) return void value.forEach(v => addValues(out, v));
+            if ("object" == typeof value) return void [ value.ar, value.en, value.name_ar, value.name_en, value.slug, value.categorySlug ].forEach(v => addValues(out, v));
+            const text = norm(value);
+            text && out.add(text);
+        };
+        const makeTargets = values => {
+            const out = new Set();
+            values.forEach(v => addValues(out, v));
+            return out;
+        };
+        const productValues = product => {
+            const out = new Set();
+            [ product.category, product.categories, product.subCategory, product.subcategory, product.mainCategory, product.categorySlug, product.subcategorySlug, product.subCategorySlug, product.mainCategorySlug, product.category_slug, product.subcategory_slug ].forEach(v => addValues(out, v));
+            return out;
+        };
+        const hasAny = (values, targets) => {
+            for (const value of values) if (targets.has(value)) return !0;
+            return !1;
+        };
+        function productsForSubcategory(sub, parentCategory) {
+            const subTargets = makeTargets([ sub && sub.categorySlug, sub && sub.name ]);
+            const parentTargets = makeTargets([ parentCategory && parentCategory.categorySlug, parentCategory && parentCategory.name, categoryName, i18n ]);
+            return products.filter(product => {
+                const values = productValues(product);
+                if (!hasAny(values, subTargets)) return !1;
+                return !parentTargets.size || hasAny(values, parentTargets);
+            });
+        }
+        function showSubcategoryProducts(filtered, subName) {
+            const homeContainer = document.getElementById("home-category-products");
+            const targetContainer = homeContainer || productsContainer;
+            if (!targetContainer) return;
+            const lang = localStorage.getItem("lang") || document.documentElement.lang || document.documentElement.getAttribute("lang") || "ar";
+            0 === filtered.length ? targetContainer.innerHTML = "en" === lang ? "<p style='color:gray;'>No products for this subcategory.</p>" : "<p style='color:gray;'>لا توجد منتجات لهذه الفئة الفرعية.</p>" : renderProductsGrid(filtered, targetContainer);
+            if (productsContainer && productsContainer !== targetContainer) productsContainer.innerHTML = "";
+            titleEl && (titleEl.textContent = subName), document.title = subName;
+        }
         if (categoryObj && categoryObj.subcategories && categoryObj.subcategories.length > 0) {
             if (categoryObj.subcategories.forEach(sub => {
                 if (!sub.name) return;
@@ -1039,19 +1082,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                 label.className = "subcategory-label", label.textContent = subName, wrap.appendChild(label), 
                 wrap.addEventListener("click", ev => {
                     ev.preventDefault();
-                    const filtered = products.filter(p => {
-                        const subNameAr = sub.name.ar || "", subNameEn = sub.name.en || "";
-                        function matchField(val) {
-                            return !!val && (Array.isArray(val) ? val.includes(subNameAr) || val.includes(subNameEn) : "object" == typeof val ? val.ar === subNameAr || val.en === subNameEn || val.ar === subNameEn || val.en === subNameAr : val === subNameAr || val === subNameEn);
-                        }
-                        const matchSlug = p.subcategorySlug === sub.categorySlug;
-                        return matchField(p.subCategory) || matchField(p.category) || matchField(p.mainCategory) || matchSlug;
-                    });
-                    if (productsContainer) {
-                        const lang = localStorage.getItem("lang") || document.documentElement.lang || document.documentElement.getAttribute("lang") || "ar";
-                        0 === filtered.length ? productsContainer.innerHTML = "en" === lang ? "<p style='color:gray;'>No products for this subcategory.</p>" : "<p style='color:gray;'>لا توجد منتجات لهذه الفئة الفرعية.</p>" : renderProductsGrid(filtered, productsContainer);
-                    }
-                    titleEl && (titleEl.textContent = subName), document.title = subName;
+                    showSubcategoryProducts(productsForSubcategory(sub, categoryObj), subName);
                 }), subDisplay.appendChild(wrap);
             }), 0 === categoryObj.subcategories.length) {
                 const lang = localStorage.getItem("lang") || document.documentElement.lang || document.documentElement.getAttribute("lang") || "ar";
@@ -1084,19 +1115,21 @@ document.addEventListener("DOMContentLoaded", async function() {
             }
             wrap.addEventListener("click", ev => {
                 ev.preventDefault();
-                const filtered = products.filter(p => "string" == typeof p.subCategory && p.subCategory === subName || Array.isArray(p.subCategory) && p.subCategory.includes(subName) || "string" == typeof p.category && p.category === subName || Array.isArray(p.category) && p.category.includes(subName) || "string" == typeof p.mainCategory && p.mainCategory === subName || Array.isArray(p.mainCategory) && p.mainCategory.includes(subName));
-                productsContainer && (0 === filtered.length ? productsContainer.innerHTML = "<p style='color:gray;'>لا توجد منتجات لهذه الفئة الفرعية.</p>" : renderProductsGrid(filtered, productsContainer)), 
-                titleEl && (titleEl.textContent = subName), document.title = subName;
+                const subTargets = makeTargets([ subName ]), filtered = products.filter(product => hasAny(productValues(product), subTargets));
+                showSubcategoryProducts(filtered, subName);
             }), subDisplay.appendChild(wrap);
         });
     }
-    function loadProductsForCategory(categorySlug, categoriesData) {
+    function loadProductsForCategory(categorySlug, categoriesData, scrollToProducts = false) {
         const isHomePage = /^(\/|\/index\.html)$/i.test(location.pathname);
+        const homeProductsContainer = document.getElementById("home-category-products");
+        const isAllCategory = !categorySlug || "all" === String(categorySlug).toLowerCase() || "الكل" === categorySlug || "جميع الفئات" === categorySlug;
+        const sameKey = (a, b) => String(a || "").trim().toLowerCase() === String(b || "").trim().toLowerCase();
         const forceFreshProducts = false;
         fetchProducts(forceFreshProducts).then(data => {
             let filteredProducts;
-            if (products = data, categorySlug && "all" !== categorySlug.toLowerCase() && "الكل" !== categorySlug && "جميع الفئات" !== categorySlug) {
-                const categoryObj = categories.find(c => c.categorySlug === categorySlug || c.name && c.name.ar === categorySlug || c.name && c.name.en === categorySlug);
+            if (products = data, !isAllCategory) {
+                const categoryObj = categories.find(c => sameKey(c.categorySlug, categorySlug) || c.name && (sameKey(c.name.ar, categorySlug) || sameKey(c.name.en, categorySlug)));
                 let categoryIdentifiers = [ categorySlug ];
                 categoryObj && (categoryObj.name && categoryObj.name.ar && categoryIdentifiers.push(categoryObj.name.ar), 
                 categoryObj.name && categoryObj.name.en && categoryIdentifiers.push(categoryObj.name.en), 
@@ -1105,7 +1138,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                     const out = [], push = v => {
                         if (null != v) {
                             if (!Array.isArray(v)) return "object" == typeof v ? (v.ar && out.push(String(v.ar).toLowerCase().trim()), 
-                            void (v.en && out.push(String(v.en).toLowerCase().trim()))) : void out.push(String(v).toLowerCase().trim());
+                            void (v.en && out.push(String(v.en).toLowerCase().trim()))) : void (String(v).trim() && out.push(String(v).toLowerCase().trim()));
                             v.forEach(push);
                         }
                     };
@@ -1123,12 +1156,12 @@ document.addEventListener("DOMContentLoaded", async function() {
                     const productCats = collectCategoryValues(p);
                     return categoryIdentifiers.some(id => {
                         const normalizedId = id.toString().toLowerCase().trim();
-                        return productCats.some(pc => pc.includes(normalizedId) || normalizedId.includes(pc));
+                        return normalizedId && productCats.some(pc => pc && (pc.includes(normalizedId) || normalizedId.includes(pc)));
                     });
                 }));
             } else filteredProducts = products;
             if (titleEl) {
-                const categoryObj = categoriesData.find(c => c.categorySlug === categorySlug);
+                const categoryObj = categoriesData.find(c => sameKey(c.categorySlug, categorySlug));
                 if (categoryObj) titleEl.textContent = "rtl" === document.documentElement.dir ? categoryObj.name.ar || categoryObj.name.en : categoryObj.name.en || categoryObj.name.ar, 
                 document.title = titleEl.textContent; else {
                     const lang = document.documentElement.lang || document.documentElement.getAttribute("lang") || "ar", categoryElement = document.querySelector(`.categories a[href*="${categorySlug}"]`);
@@ -1142,12 +1175,17 @@ document.addEventListener("DOMContentLoaded", async function() {
                     titleEl.textContent = catName, document.title = catName;
                 }
             }
-            if (isHomePage && productsContainer && productsContainer.querySelector(".product-card")) return;
-            productsContainer && renderProductsGrid(filteredProducts, productsContainer);
-            const categoryObj = categoriesData.find(c => c.categorySlug === categorySlug);
+            if (isHomePage && isAllCategory && productsContainer && productsContainer.querySelector(".product-card")) return;
+            const renderContainer = homeProductsContainer && !isAllCategory ? homeProductsContainer : productsContainer;
+            if (renderContainer) {
+                const lang = localStorage.getItem("lang") || document.documentElement.lang || document.documentElement.getAttribute("lang") || "ar";
+                filteredProducts.length ? renderProductsGrid(filteredProducts, renderContainer) : renderContainer.innerHTML = "en" === lang ? "<p style='color:gray;padding:20px;text-align:center'>No products in this category yet.</p>" : "<p style='color:gray;padding:20px;text-align:center'>لا توجد منتجات لهذه الفئة حالياً.</p>";
+            }
+            if (productsContainer && productsContainer !== renderContainer) productsContainer.innerHTML = "";
+            const categoryObj = categoriesData.find(c => sameKey(c.categorySlug, categorySlug));
             if (categoryObj) showSubCategories(categoryObj.name.ar || categoryObj.name.en, null, categoriesData); else {
                 const categoryElements = document.querySelectorAll(".categories > div a");
-                for (const elem of categoryElements) if (elem.getAttribute("href").includes(categorySlug)) {
+                for (const elem of categoryElements) if (String(elem.getAttribute("href") || "").toLowerCase().includes(String(categorySlug || "").toLowerCase())) {
                     const span = elem.querySelector("span[data-i18n]");
                     showSubCategories(span ? span.textContent.trim() : elem.textContent.trim(), span ? span.getAttribute("data-i18n") : "", categoriesData);
                     break;
@@ -1291,7 +1329,11 @@ document.addEventListener("DOMContentLoaded", async function() {
         } catch (e) {}
         categoriesContainer && categoriesContainer.querySelectorAll("div").forEach(function(div, index) {
             const link = div.querySelector("a");
-            link && (div.style.cursor = "pointer", div.addEventListener("click", function(e) {
+            link && (link.addEventListener("click", function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                div.click();
+            }), div.style.cursor = "pointer", div.addEventListener("click", function(e) {
                 e.preventDefault();
                 const currentCategoryId = new URLSearchParams(window.location.search).get("category") || "all", currentIndex = Array.from(categoriesContainer.querySelectorAll("div")).findIndex(d => {
                     const a = d.querySelector("a");
