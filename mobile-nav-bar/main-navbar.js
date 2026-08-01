@@ -55,8 +55,12 @@
   const scriptEl = document.currentScript || Array.from(document.scripts).find(s => s.src && /\/mobile-nav-bar\/main-navbar(?:\.min)?\.js(?:\?|$)/.test(s.src));
   const scriptBase = scriptEl ? scriptEl.src.replace(/\/[^\/]*$/, '/') : '/mobile-nav-bar/';
   const base = scriptBase.endsWith('/') ? scriptBase : scriptBase + '/';
+  const resolveNavAssetPath = (path) => {
+    const clean = String(path || '').replace(/^(\.\/|\.\.\/)+/,'').replace(/^\/?mobile-nav-bar\//,'');
+    return base + clean.replace(/^\/+/,'');
+  };
 
-  // ????? CSS
+  // Load mobile navigation styles once.
   const cssHref = base + 'styles.css?v=apple-liquid-20260729f';
   if (!Array.from(document.styleSheets).some(s => s.href && s.href.includes('/mobile-nav-bar/styles.css'))) {
     const link = document.createElement('link');
@@ -67,7 +71,7 @@
   }
 
   try {
-    // Cache navbar HTML ?? sessionStorage ????? fetch ?? ?? ???? (?????? ??????)
+    // Use fallback markup immediately, then refresh navbar.html outside the critical path.
     const CACHE_KEY = 'mnav_v8';
     let text = sessionStorage.getItem(CACHE_KEY);
     if (!text) {
@@ -125,36 +129,33 @@
       }
     }
 
-    // ????? ???????? ??????? (src / data-src)
+    // Normalize relative asset paths inside injected navbar markup.
     nav.querySelectorAll('[src],[data-src]').forEach(el => {
       ['src','data-src'].forEach(attr => {
         if (!el.hasAttribute(attr)) return;
         let src = el.getAttribute(attr) || '';
         if (!src || /^(https?:|\/|data:)/.test(src)) return;
-        let clean = src.replace(/^(\.\/|\.\.\/)+/,'').replace(/^\/?mobile-nav-bar\//,'');
-        el.setAttribute(attr, base + clean.replace(/^\/+/,''));
+        el.setAttribute(attr, resolveNavAssetPath(src));
       });
     });
 
-    // ????? ?????? background url()
+    // Normalize relative background url() values.
     nav.querySelectorAll('[style*="url("]').forEach(el => {
       const style = el.getAttribute('style') || '';
       const fixed = style.replace(/url\(['"]?([^'")]+)['"]?\)/g, (m, url) => {
         if (/^(https?:|\/|data:)/.test(url)) return m;
-        let clean = url.replace(/^(\.\/|\.\.\/)+/,'').replace(/^\/?mobile-nav-bar\//,'');
-        return `url('${base + clean.replace(/^\/+/,'')}')`;
+        return `url('${resolveNavAssetPath(url)}')`;
       });
       if (fixed !== style) el.setAttribute('style', fixed);
     });
 
-    // ????? SVG use href
+    // Normalize relative SVG use href values.
     nav.querySelectorAll('use').forEach(el => {
       Array.from(el.attributes).forEach(attr => {
         if (!attr.name.endsWith('href')) return;
         const href = attr.value;
         if (href && !href.startsWith('#') && !/^(https?:|\/|data:)/.test(href)) {
-          let clean = href.replace(/^(\.\/|\.\.\/)+/,'').replace(/^\/?mobile-nav-bar\//,'');
-          el.setAttribute(attr.name, base + clean.replace(/^\/+/,''));
+          el.setAttribute(attr.name, resolveNavAssetPath(href));
         }
       });
     });
@@ -319,7 +320,7 @@
         }
 
         const nextX = clampPillX(dragState.startTranslateX + dx);
-  dragState.lastX = clientX;
+        dragState.lastX = clientX;
         liquidPill.style.transition = 'none';
         const pull = Math.min(Math.abs(dx) / 220, 0.12);
         const squeezeX = dx > 0 ? 1 - pull : 1 + pull;

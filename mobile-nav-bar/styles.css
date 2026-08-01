@@ -7,7 +7,6 @@
   --nav-bg: linear-gradient(135deg, #152546 0%, #1c3158 48%, #101d38 100%);
   --nav-fg: #fff;
   --nav-accent: #D4AF37;
-  --nav-shadow: 0 -6px 18px rgba(0, 0, 0, 0.12);
   --badge-bg: #D4AF37;
   --badge-fg: #152546;
   --font-size: 14px;
@@ -40,7 +39,6 @@ body{
     radial-gradient(140% 180% at 12% 0%, rgba(255,255,255,0.12), rgba(255,255,255,0) 44%),
     linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0, 0, 0, 0.1)),
     var(--nav-bg);
-  box-shadow:var(--nav-shadow);
   z-index:100000;
   display:flex;
   align-items:center;
@@ -253,10 +251,7 @@ body{
   stroke: #ffffff !important;
 }
 
-.mobile-nav a.active img.icon {
-  filter: brightness(0) saturate(100%) invert(100%) !important;
-}
-
+.mobile-nav a.active img.icon,
 .mobile-nav a.active img.nav-icon {
   filter: brightness(0) saturate(100%) invert(100%) !important;
 }
@@ -274,15 +269,6 @@ body{
   border:0;
   white-space:nowrap;
 }
-
-/* إزالة تأثير التحويم حتى لا يتعارض مع تنسيق الأيقونات النشطة */
-/* 
-.mobile-nav a:hover .icon,
-.mobile-nav button:hover .icon {
-  transform: scale(1.1);
-  transition: transform 0.2s ease;
-}
-*/
 
 /* focus styles */
 .mobile-nav a:focus,
@@ -828,7 +814,7 @@ main,
   font-weight: normal;
   font-size: 15px;
   margin-top: 6px;
-  margin-bottom: 6px;
+  margin-bottom: 4px !important;
   color: #222;
   display: block !important;
   width: 100% !important;
@@ -838,11 +824,6 @@ main,
   text-overflow: ellipsis !important;
   line-height: 1.35 !important;
   min-width: 0 !important;
-}
-
-
-.product-name {
-  margin-bottom: 4px !important;
 }
   /* ✅ حالة نفاذ المخزون */
 .product-stock {
@@ -1169,9 +1150,6 @@ main,
   font-weight: normal;
 }
 
-.product-rating-container {
-  flex-direction: auto;
-}
 /* زر السلة */
 .product-cart-btn {
   position: absolute;

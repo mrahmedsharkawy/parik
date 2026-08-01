@@ -264,17 +264,7 @@ self.addEventListener('fetch', function(e) {
         });
       }
       throw new Error('redirected or missing response skipped');
-      return res;
     });
-  }
-
-  function htmlCachePath(path) {
-    if (path === '/' || path === '' || path === '/index.html') return '/';
-    if (path === '/categories' || path === '/categories.html' || /^\/categories\//.test(path)) return '/categories';
-    if (path === '/Cart' || path === '/Cart.html') return '/Cart';
-    if (path === '/product' || path === '/product.html' || /^\/product\//.test(path)) return '/product';
-    if (/\.html$/.test(path)) return path.replace(/\.html$/, '');
-    return path;
   }
 
   const isHtml = e.request.destination === 'document'
@@ -286,7 +276,7 @@ self.addEventListener('fetch', function(e) {
   const isMutableRuntime = /\/java\/(instant-nav\.js|sw-refresh\.js|main\.min\.js|push-welcome\.js|supabase\.js|supabase\.min\.js|Products\.js|Products\.min\.js|Products\.json|Cart\.js|Cart\.min\.js)(\?|$)/.test(url)
     || /\/mobile-nav-bar\/main-navbar\.min\.js(\?|$)/.test(url);
   const path = new URL(url).pathname.replace(/\/index\.html$/, '/') || '/';
-  const htmlCacheKey = htmlCachePath(path);
+  const htmlCacheKey = appHtmlCachePath(path);
   const offlineFallback = function() {
     return caches.match('/index.html').then(function(indexCached) {
       return indexCached || new Response('Offline', {status: 503});
