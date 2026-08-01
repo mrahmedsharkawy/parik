@@ -10,6 +10,7 @@
   var MAX_IN_FLIGHT = 1;
   var seen = new Set();
   var MAX_SEEN = 20;
+  var STORE_ROUTES = ["/", "/categories", "/offers", "/monthly-offers", "/Cart", "/account", "/checkout", "/policy", "/affiliate", "/login"];
 
   function normalizePath(href) {
     try {
@@ -21,8 +22,11 @@
       if (/\.(pdf|zip|rar|7z|docx?|xlsx?)$/i.test(path)) return "";
       if (/^\/admin(\/|$)/i.test(path)) return "";
       if (path === "/index.html") path = "/";
+      if (/^\/(categories|offers|monthly-offers|Cart|account|checkout|affiliate|policy|product|login)\.html$/i.test(path)) {
+        path = path.replace(/\.html$/i, "");
+      }
       if (path.length > 1) path = path.replace(/\/+$/, "");
-      var safeTopLevel = /^\/(|categories|offers|Cart|account|checkout|affiliate|policy|product|login)$/i.test(path);
+      var safeTopLevel = /^\/(|categories|offers|monthly-offers|Cart|account|checkout|affiliate|policy|product|login)$/i.test(path);
       var safeProductDetail = /^\/product\/\d+(?:\/)?$/i.test(path);
       if (!safeTopLevel && !safeProductDetail) return "";
       return path + (url.search || "");
@@ -70,6 +74,18 @@
     pumpQueue();
   }
 
+  function scheduleIdle(callback, timeout) {
+    if ("requestIdleCallback" in window) return window.requestIdleCallback(callback, { timeout: timeout || 2500 });
+    return setTimeout(callback, Math.min(timeout || 2500, 1200));
+  }
+
+  function warmStoreRoutes() {
+    STORE_ROUTES.forEach(function (path, index) {
+      if (path === location.pathname || (path === "/" && location.pathname === "/index.html")) return;
+      scheduleIdle(function () { queueWarm(path); }, 600 + index * 220);
+    });
+  }
+
   function onIntent(event) {
     var target = event.target;
     if (!target || !target.closest) return;
@@ -82,5 +98,11 @@
   document.addEventListener("pointerdown", onIntent, { passive: true, capture: true });
   document.addEventListener("touchstart", onIntent, { passive: true, capture: true });
   document.addEventListener("focusin", onIntent, { passive: true, capture: true });
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function () { scheduleIdle(warmStoreRoutes, 1800); }, { once: true });
+  } else {
+    scheduleIdle(warmStoreRoutes, 1800);
+  }
 
 })();

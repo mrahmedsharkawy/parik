@@ -1,4 +1,4 @@
-﻿async function initMobileNav() {
+async function initMobileNav() {
   const isMobileViewport = window.matchMedia('(max-width: 899px)').matches || window.innerWidth <= 899 || document.documentElement.clientWidth <= 899;
   if (!isMobileViewport) return;
   const existingNav = document.querySelector('.mobile-nav');
@@ -283,6 +283,15 @@
         scheduleMovePillToLink(activeLink, animate);
       };
 
+      const afterInitialPaint = (callback) => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            if ('requestIdleCallback' in window) requestIdleCallback(callback, { timeout: 900 });
+            else setTimeout(callback, 120);
+          });
+        });
+      };
+
       const findNearestLink = (clientX) => {
         let nearest = activeLink;
         let minDist = Infinity;
@@ -425,7 +434,7 @@
         });
       });
 
-      scheduleMovePillToLink(activeLink, false);
+      afterInitialPaint(() => scheduleMovePillToLink(activeLink, false));
       window.addEventListener('resize', () => scheduleMovePillToLink(activeLink, false), { passive: true });
     }
 
@@ -569,7 +578,7 @@ window.addEventListener('orientationchange', initMobileNav, { passive: true });
     if (intervalId) return;
     lastY = window.scrollY || window.pageYOffset || 0;
     intervalId = window.setInterval(updateCompact, 120);
-    updateCompact();
+    setTimeout(updateCompact, 180);
   }
 
   document.addEventListener('DOMContentLoaded', start, { once: true });
