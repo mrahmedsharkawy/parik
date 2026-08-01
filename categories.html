@@ -1108,11 +1108,48 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const row = document.createElement('div');
     row.className = 'products-row';
     const orderedProducts = (window.sortProductsForStore || sortProductsForStore)(products);
-    orderedProducts.forEach(p => {
-      const card = renderCard(p);
-      if (card) row.appendChild(card);
-    });
+    const FIRST_CHUNK = 60;
+    const NEXT_CHUNK = 40;
+    let shown = 0;
+    let activeRow = row;
+    let activeRenderer = renderCard;
+    if (container._x2LazyProductsCleanup) container._x2LazyProductsCleanup();
+    function appendChunk(targetRow, renderer) {
+      const fragment = document.createDocumentFragment();
+      const next = Math.min(shown + (shown ? NEXT_CHUNK : FIRST_CHUNK), orderedProducts.length);
+      for (; shown < next; shown++) {
+        const card = renderer(orderedProducts[shown]);
+        if (card) fragment.appendChild(card);
+      }
+      targetRow.appendChild(fragment);
+    }
+    appendChunk(row, renderCard);
     container.appendChild(row);
+    let loadingMoreProducts = false;
+    let lastLoadScrollY = -1;
+    let lastLoadAt = 0;
+    function loadMoreProducts() {
+      if (loadingMoreProducts || shown >= orderedProducts.length) return;
+      const scrollY = window.scrollY || window.pageYOffset || 0;
+      const now = Date.now();
+      if (lastLoadAt && now - lastLoadAt < 1200) return;
+      if (lastLoadScrollY >= 0 && Math.abs(scrollY - lastLoadScrollY) < 80) return;
+      const rect = container.getBoundingClientRect();
+      const nearRenderedBottom = rect.bottom <= window.innerHeight + 1200;
+      const nearPageBottom = window.innerHeight + (window.scrollY || window.pageYOffset || 0) >= document.documentElement.scrollHeight - 1200;
+      if (!nearRenderedBottom && !nearPageBottom) return;
+      lastLoadScrollY = scrollY;
+      lastLoadAt = now;
+      loadingMoreProducts = true;
+      requestAnimationFrame(() => {
+        appendChunk(activeRow, activeRenderer);
+        lastLoadScrollY = window.scrollY || window.pageYOffset || 0;
+        loadingMoreProducts = false;
+        if (shown >= orderedProducts.length) window.removeEventListener('scroll', loadMoreProducts);
+      });
+    }
+    window.addEventListener('scroll', loadMoreProducts, { passive: true });
+    container._x2LazyProductsCleanup = () => window.removeEventListener('scroll', loadMoreProducts);
 
     // حاول استخدام createProductCard لو اتحمل لاحقاً
     if (typeof window.createProductCard !== 'function') {
@@ -1122,7 +1159,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           container.innerHTML = '';
           const row2 = document.createElement('div');
           row2.className = 'products-row';
-          orderedProducts.forEach(p => row2.appendChild(window.createProductCard(p)));
+          shown = 0;
+          activeRow = row2;
+          activeRenderer = window.createProductCard;
+          appendChunk(row2, window.createProductCard);
           container.appendChild(row2);
         }
       }, 300);
@@ -1131,8 +1171,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   }
 
   function hideProducts() {
+    const container = document.getElementById('category-products');
+    if (container && container._x2LazyProductsCleanup) {
+      container._x2LazyProductsCleanup();
+      container._x2LazyProductsCleanup = null;
+    }
     document.getElementById('catProductsSection').style.display = 'none';
-    document.getElementById('category-products').innerHTML = '';
+    if (container) container.innerHTML = '';
   }
 
   function updateUrl(cat, sub) {
@@ -1270,7 +1315,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260728e" defer></script>
 <script src="/java/push-welcome.js?v=push-welcome-20260728d" defer></script>
 <script src="/java/abandoned-cart.js?v=abandoned-cart-20260730a" defer></script>
-<script type="module" src="./java/Products.min.js?v=products-20260801h"></script> <!-- ده يفضل يفضل في الآخر -->
+<script type="module" src="./java/Products.min.js?v=products-20260801k"></script> <!-- ده يفضل يفضل في الآخر -->
 </body>
 </html>
 
