@@ -2,33 +2,36 @@ function changeLang(lang) {
   fetch(`/translations/${lang}.json`)
     .then(res => res.json())
     .then(data => {
-      // ترجمة النصوص data-i18n
-      document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.getAttribute('data-i18n');
-        if (data[key]) el.textContent = data[key];
-      });
-      // ترجمة placeholder
-      document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-        const key = el.getAttribute('data-i18n-placeholder');
-        if (data[key]) el.placeholder = data[key];
-      });
-      // ترجمة title
-      document.querySelectorAll('[data-i18n-title]').forEach(el => {
-        const key = el.getAttribute('data-i18n-title');
-        if (data[key]) el.title = data[key];
-      });
+      applyMappedTranslations(data);
       applyAttributeTranslations(lang, data);
       applyCategoryNames(lang);
       applyTextNodeTranslations(lang, data);
       if (lang === 'en' && data[document.title]) document.title = data[document.title];
-      localStorage.setItem('lang', lang);
-      document.documentElement.lang = lang;
-      document.documentElement.dir  = lang === 'ar' ? 'rtl' : 'ltr';
+      setDocumentLanguage(lang);
       document.documentElement.classList.remove('x2-i18n-pending');
       window.dispatchEvent(new CustomEvent('bariq:languagechange', { detail: { lang } }));
     }).catch(() => {
       document.documentElement.classList.remove('x2-i18n-pending');
     });
+}
+
+function applyMappedTranslations(data) {
+  [
+    ['[data-i18n]', 'data-i18n', 'textContent'],
+    ['[data-i18n-placeholder]', 'data-i18n-placeholder', 'placeholder'],
+    ['[data-i18n-title]', 'data-i18n-title', 'title']
+  ].forEach(([selector, keyAttr, targetProp]) => {
+    document.querySelectorAll(selector).forEach(el => {
+      const key = el.getAttribute(keyAttr);
+      if (data[key]) el[targetProp] = data[key];
+    });
+  });
+}
+
+function setDocumentLanguage(lang) {
+  localStorage.setItem('lang', lang);
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
 }
 
 function applyAttributeTranslations(lang, data) {
@@ -87,9 +90,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const urlLang = new URLSearchParams(location.search).get('lang');
   const storedLang = localStorage.getItem('lang');
   const savedLang = (urlLang === 'en' || urlLang === 'ar') ? urlLang : (storedLang || 'ar');
-  localStorage.setItem('lang', savedLang);
-  document.documentElement.lang = savedLang;
-  document.documentElement.dir = savedLang === 'ar' ? 'rtl' : 'ltr';
+  setDocumentLanguage(savedLang);
   changeLang(savedLang);
   const sel = document.querySelector('select');
   if (sel) sel.value = savedLang;
@@ -97,9 +98,7 @@ window.addEventListener('DOMContentLoaded', () => {
     select.value = savedLang;
     select.addEventListener('change', () => {
       const nextLang = select.value === 'en' ? 'en' : 'ar';
-      localStorage.setItem('lang', nextLang);
-      document.documentElement.lang = nextLang;
-      document.documentElement.dir = nextLang === 'ar' ? 'rtl' : 'ltr';
+      setDocumentLanguage(nextLang);
       const url = new URL(location.href);
       url.searchParams.set('lang', nextLang);
       location.assign(url.pathname + url.search + url.hash);

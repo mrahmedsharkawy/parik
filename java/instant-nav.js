@@ -7,9 +7,9 @@
 
   var queued = [];
   var inFlight = 0;
-  var maxInFlight = 1;
+  var MAX_IN_FLIGHT = 1;
   var seen = new Set();
-  var maxSeen = 20;
+  var MAX_SEEN = 20;
 
   function normalizePath(href) {
     try {
@@ -53,7 +53,7 @@
   }
 
   function pumpQueue() {
-    if (!queued.length || inFlight >= maxInFlight) return;
+    if (!queued.length || inFlight >= MAX_IN_FLIGHT) return;
     var next = queued.shift();
     inFlight++;
     Promise.resolve(doWarm(next)).finally(function () {
@@ -64,9 +64,7 @@
 
   function queueWarm(href) {
     var path = normalizePath(href);
-    if (!path) return;
-    if (seen.has(path)) return;
-    if (seen.size >= maxSeen) return;
+    if (!path || seen.has(path) || seen.size >= MAX_SEEN) return;
     seen.add(path);
     queued.push(path);
     pumpQueue();

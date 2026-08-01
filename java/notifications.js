@@ -1,4 +1,5 @@
 const VAPID_PUBLIC_KEY = "BPojY-23BXbIfa1IRkkQD3vAELjTn3nltgFBrlEIjZ3aEbphXAQvFY2E5B2R_mfikZLhGPo0lBeCedB8qoP5-SE";
+const SERVICE_WORKER_URL = "/sw.js?v=264";
 
 function urlBase64ToUint8Array(e) {
     const r = (e + "=".repeat((4 - e.length % 4) % 4)).replace(/-/g, "+").replace(/_/g, "/"), t = window.atob(r);
@@ -33,7 +34,7 @@ function sendPushLanguageToServiceWorker() {
 async function registerSW() {
     if (!("serviceWorker" in navigator)) return null;
     try {
-        const e = await navigator.serviceWorker.register("/sw.js?v=186", { updateViaCache: "none" });
+        const e = await navigator.serviceWorker.register(SERVICE_WORKER_URL, { updateViaCache: "none" });
         e.update().catch(() => {});
         sendPushLanguageToServiceWorker();
         refreshCurrentPushSubscriptionLanguage();
@@ -170,10 +171,7 @@ async function initPushButton() {
 }
 
 (async () => {
-    await registerSW(), initPushButton(), "clearAppBadge" in navigator && navigator.clearAppBadge().catch(() => {}),
-    "serviceWorker" in navigator && navigator.serviceWorker.controller && navigator.serviceWorker.controller.postMessage({
-        type: "CLEAR_BADGE"
-    });
+    await registerSW(), initPushButton(), clearBadge();
     try {
         const e = JSON.parse(localStorage.getItem("x2_notifications") || "[]").filter(e => !e.read).length;
         e > 0 ? updateBadge(e) : clearBadge();

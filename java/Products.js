@@ -16,7 +16,7 @@ function x2VisitorAreaFallback() {
 
 let sideMenu, subDisplay, products = [], categories = [], _priorityProductImages = 0;
 const CATEGORIES_SESSION_CACHE_KEY = "x2_cats_ss_v1", CATEGORIES_LOCAL_CACHE_KEY = "x2_categories_cache_v1", CATEGORIES_CACHE_TTL = 18e5;
-const PRODUCT_DISCOUNT_TIMER_PREFIX = "x2_product_discount_timer_v2_", PRODUCT_DISCOUNT_TIMER_MAX_HOURS = 70;
+const PRODUCT_DISCOUNT_TIMER_PREFIX = "x2_product_discount_timer_v7_crosspage_", PRODUCT_DISCOUNT_TIMER_DURATIONS_HOURS = [ 6, 44 ];
 
 function stableProductHash(value) {
     const text = String(value || "product");
@@ -34,10 +34,43 @@ function productTimerIdentity(prod) {
 }
 
 function productTimerDuration(prod, cycle) {
-    const hash = stableProductHash(productTimerIdentity(prod) + ":" + (cycle || 0));
-    const hours = 6 + hash % (PRODUCT_DISCOUNT_TIMER_MAX_HOURS - 5);
-    const minutes = hash % 60;
-    return ((hours * 60) + minutes) * 60 * 1e3;
+    const hours = PRODUCT_DISCOUNT_TIMER_DURATIONS_HOURS[Math.abs(Number(cycle) || 0) % PRODUCT_DISCOUNT_TIMER_DURATIONS_HOURS.length];
+    return hours * 60 * 60 * 1e3;
+}
+
+function initialProductTimerState(prod) {
+    const durations = PRODUCT_DISCOUNT_TIMER_DURATIONS_HOURS.map(hours => hours * 60 * 60 * 1e3), total = durations.reduce((sum, duration) => sum + duration, 0), offset = stableProductHash(productTimerIdentity(prod)) % total;
+    let elapsed = offset;
+    for (let cycle = 0; cycle < durations.length; cycle++) {
+        if (elapsed < durations[cycle]) return { cycle, remaining: durations[cycle] - elapsed };
+        elapsed -= durations[cycle];
+    }
+    return { cycle: 0, remaining: durations[0] };
+}
+
+function countdownParts(totalSeconds) {
+    totalSeconds = Math.max(0, Math.floor(Number(totalSeconds) || 0));
+    return {
+        h: String(Math.floor(totalSeconds / 3600)).padStart(2, "0"),
+        m: String(Math.floor(totalSeconds % 3600 / 60)).padStart(2, "0"),
+        s: String(totalSeconds % 60).padStart(2, "0")
+    };
+}
+
+function updateCountdownElement(el, totalSeconds) {
+    if (!el) return;
+    if (!el.querySelector(".timer-h")) {
+        el.innerHTML = '<span class="timer-h"></span><span class="timer-sep timer-sep-hm">:</span><span class="timer-m"></span><span class="timer-sep timer-sep-ms">:</span><span class="timer-s"></span>';
+    }
+    const tick = Math.floor(Date.now() / 1e3), lastTick = Number(el.dataset.timerLastTick || 0), hEl = el.querySelector(".timer-h"), mEl = el.querySelector(".timer-m"), sEl = el.querySelector(".timer-s"), current = hEl && mEl && sEl && hEl.textContent && mEl.textContent && sEl.textContent ? Number(hEl.textContent) * 3600 + Number(mEl.textContent) * 60 + Number(sEl.textContent) : null;
+    if (lastTick && tick <= lastTick) return;
+    el.dataset.timerLastTick = String(tick);
+    if (current != null && current > 0 && Math.abs(current - totalSeconds) <= 5) totalSeconds = current - 1;
+    const parts = countdownParts(totalSeconds);
+    [ [ "h", ".timer-h" ], [ "m", ".timer-m" ], [ "s", ".timer-s" ] ].forEach(([key, selector]) => {
+        const part = el.querySelector(selector);
+        if (part && part.textContent !== parts[key]) part.textContent = parts[key];
+    });
 }
 
 function getProductDiscountTimerEnd(prod, renewExpired = true) {
@@ -46,8 +79,8 @@ function getProductDiscountTimerEnd(prod, renewExpired = true) {
     try { state = JSON.parse(localStorage.getItem(key) || "null"); } catch (e) { state = null; }
     if (state && state.start && state.duration && now >= state.start + state.duration && !renewExpired) return state.start + state.duration;
     if (!state || !state.start || !state.duration || state.start > now || now >= state.start + state.duration) {
-        const cycle = state && Number.isFinite(Number(state.cycle)) ? Number(state.cycle) + 1 : stableProductHash(key) % 29;
-        state = { start: now, duration: productTimerDuration(prod, cycle), cycle };
+        const next = state && Number.isFinite(Number(state.cycle)) ? { cycle: Number(state.cycle) + 1, remaining: productTimerDuration(prod, Number(state.cycle) + 1) } : initialProductTimerState(prod);
+        state = { start: now, duration: next.remaining, cycle: next.cycle };
         try { localStorage.setItem(key, JSON.stringify(state)); } catch (e) {}
     }
     return state.start + state.duration;
@@ -792,18 +825,13 @@ export function createProductCard(prod) {
         const saveText = document.createElement("span");
         saveText.className = "product-save-text";
         const arrow = '<span class="save-arrow">&#8595;</span>', discount = (oldPriceValue - priceValue).toFixed(2);
-        saveText.innerHTML = "ar" === lang ? `${arrow} خصم ${discount} ${currencySymbol} إضافي` : `${arrow} Save ${discount} ${currencySymbol} extra`;
+        saveText.innerHTML = "ar" === lang ? `${arrow} خصم إضافي ${discount} ${currencySymbol}` : `${arrow} Extra ${currencySymbol} ${discount} off`;
         const timer = document.createElement("span");
         let interval;
         function updateTimer() {
             const end = getProductDiscountTimerEnd(prod), now = Date.now();
             let totalSeconds = Math.max(0, Math.floor((end - now) / 1e3));
-            if (totalSeconds > 0) {
-                const h = String(Math.floor(totalSeconds / 3600)).padStart(2, "0"), m = String(Math.floor(totalSeconds % 3600 / 60)).padStart(2, "0"), s = String(totalSeconds % 60).padStart(2, "0");
-                timer.textContent = `${h}:${m}:${s}`;
-            } else {
-                timer.textContent = "00:00:00";
-            }
+            updateCountdownElement(timer, totalSeconds);
         }
         timer.className = "product-timer", timerSaveBox.appendChild(saveText), timerSaveBox.appendChild(timer), 
         content.appendChild(timerSaveBox), updateTimer(), interval = setInterval(updateTimer, 1e3);
@@ -1937,7 +1965,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                 const end = getProductDiscountTimerEnd(product);
                 const d = end - Date.now();
                 if (d <= 0) return void tick();
-                el.textContent = [ Math.floor(d / 36e5), Math.floor(d % 36e5 / 6e4), Math.floor(d % 6e4 / 1e3) ].map(n => String(n).padStart(2, "0")).join(":");
+                updateCountdownElement(el, Math.floor(d / 1e3));
             }
             tick(), setInterval(tick, 1e3);
         }(p, timerEl), set("desc", "");
