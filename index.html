@@ -36,7 +36,7 @@
           if (sessionStorage.getItem('x2_return_to_scroll_url') !== location.href) return;
           document.documentElement.classList.add('x2-product-returning');
           clearTimeout(window.__x2ReturningGuardTimer);
-          window.__x2ReturningGuardTimer = setTimeout(function(){ document.documentElement.classList.remove('x2-product-returning'); }, 6000);
+          window.__x2ReturningGuardTimer = setTimeout(function(){ document.documentElement.classList.remove('x2-product-returning'); }, 1200);
         } catch(e) {}
       }
       applyReturningGuard();
@@ -74,7 +74,7 @@
           window.scrollTo(0, targetY);
           document.documentElement.scrollTop = targetY;
           document.body.scrollTop = targetY;
-          pinScrollTarget(targetY, 1500);
+          pinScrollTarget(targetY, 220);
         } catch(e) {}
       }
       function getMobileDesiredOffset(target){
@@ -112,9 +112,13 @@
       function clearProductReturnRestoreState(){
         try { sessionStorage.removeItem('x2_return_to_scroll_url'); sessionStorage.removeItem('x2_product_return_target'); } catch(e) {}
       }
+      function suppressProductOpenAfterReturn(){
+        try { window.__x2SuppressProductOpenUntil = Date.now() + 900; } catch(e) {}
+      }
       function finishProductReturnRestore(){
         try {
           window.__x2ProductReturnRestored = true;
+          suppressProductOpenAfterReturn();
           clearTimeout(window.__x2ReturningGuardTimer);
           document.documentElement.classList.remove('x2-product-returning');
           document.documentElement.classList.remove('x2-force-instant-scroll');
@@ -170,7 +174,7 @@
             }
           }
           if (!card) {
-            if (attempt < 24) { scheduleProductReturnRetry(); return false; }
+            if (attempt < 10) { scheduleProductReturnRetry(); return false; }
             if (expectedY > 0) {
               forceScrollToY(expectedY);
               finishProductReturnRestore();
@@ -181,7 +185,7 @@
           var y = Math.max(0, Math.round((window.scrollY || window.pageYOffset || 0) + card.getBoundingClientRect().top - desiredOffset));
           var absoluteY = Number(target.absoluteY || 0);
           if (absoluteY > 0 && Math.abs(y - absoluteY) > Math.max(600, Math.round((window.innerHeight || 0) * 0.8))) {
-            if (attempt < 24) { scheduleProductReturnRetry(); return false; }
+            if (attempt < 10) { scheduleProductReturnRetry(); return false; }
             y = expectedY > 0 ? Math.max(0, Math.round(expectedY)) : y;
           }
           if (expectedY > 0 && Math.abs(y - expectedY) > Math.max(300, Math.round((window.innerHeight || 0) * 0.4))) {
@@ -189,7 +193,7 @@
             y = Math.max(0, Math.round(expectedY));
           }
           forceScrollToY(y);
-          scheduleMobileFineTune(target, 5);
+          scheduleMobileFineTune(target, 2);
           finishProductReturnRestore();
           return true;
         } catch(e) { return false; }
@@ -201,7 +205,14 @@
           return false;
         } catch(e) { return false; }
       }
-      window.addEventListener('pageshow', function(){ applyReturningGuard(); setTimeout(function(){ restoreSavedScrollEarly(); }, 120); }, true);
+      window.addEventListener('pageshow', function(){ if (sessionStorage.getItem('x2_return_to_scroll_url') === location.href) suppressProductOpenAfterReturn(); applyReturningGuard(); setTimeout(function(){ restoreSavedScrollEarly(); }, 120); }, true);
+      document.addEventListener('click', function(e){
+        if (Date.now() > (window.__x2SuppressProductOpenUntil || 0)) return;
+        var link = e.target && e.target.closest && e.target.closest('a[href*="product.html?id="],a[href*="/product/"]');
+        if (!link) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+      }, true);
       if (sessionStorage.getItem('x2_return_to_scroll_url') !== location.href) return;
       setTimeout(function(){ restoreSavedScrollEarly(); }, 140);
     } catch(e) {}
@@ -845,6 +856,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         }
       }
     }catch(e){}
+    if(restoredHomeSnapshot)return;
     if(container.children.length&&!restoredHomeSnapshot)return;
     var lang=(localStorage.getItem('lang')||document.documentElement.lang||'ar')==='en'?'en':'ar';
     var strip=document.getElementById('mhCatsStrip');
@@ -1031,7 +1043,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="/java/push-welcome.js?v=push-welcome-20260728d" defer></script>
 <script src="/java/notifications.min.js?v=notifications-20260801a" defer></script>
 <script src="/java/abandoned-cart.js?v=abandoned-cart-20260730a" defer></script>
-<script type="module" src="/java/Products.min.js?v=products-20260801ac" defer></script>
+<script type="module" src="/java/Products.min.js?v=products-20260802b" defer></script>
 
 <style>
 .campaign-popup-backdrop{position:fixed;inset:0;z-index:100200;background:rgba(7,16,32,.52);display:flex;align-items:center;justify-content:center;padding:18px;opacity:0;pointer-events:none;transition:opacity .22s ease}.campaign-popup-backdrop.show{opacity:1;pointer-events:auto}.campaign-popup{width:min(92vw,460px);overflow:hidden;border-radius:18px;background:#fff;box-shadow:0 28px 70px rgba(10,22,40,.32);transform:translateY(18px) scale(.96);transition:transform .28s cubic-bezier(.18,1.16,.36,1)}.campaign-popup-backdrop.show .campaign-popup{transform:translateY(0) scale(1)}.campaign-popup-media{position:relative;min-height:170px;background:linear-gradient(135deg,#152546,#2d405f)}.campaign-popup-media img{width:100%;height:230px;object-fit:cover;display:block;border-radius:0}.campaign-popup-media.no-image{display:flex;align-items:center;justify-content:center;color:#fff}.campaign-popup-badge{position:absolute;top:14px;inset-inline-start:14px;background:#D4AF37;color:#152546;border-radius:999px;padding:6px 12px;font-weight:900;font-size:.82rem}.campaign-popup-close{position:absolute;top:12px;inset-inline-end:12px;width:34px;height:34px;border:0;border-radius:50%;background:rgba(255,255,255,.92);color:#152546;font-size:20px;line-height:1;cursor:pointer}.campaign-popup-body{padding:20px;text-align:start}.campaign-popup-title{margin:0 0 8px;color:#152546;font-size:1.35rem;font-weight:900}.campaign-popup-desc{margin:0;color:#516078;line-height:1.7;font-size:.96rem}.campaign-popup-actions{display:flex;gap:10px;margin-top:18px}.campaign-popup-primary{flex:1;text-align:center;text-decoration:none;border-radius:999px;background:#152546;color:#fff;padding:12px 16px;font-weight:800}.campaign-popup-secondary{border:1px solid #d9e0ec;background:#fff;color:#152546;border-radius:999px;padding:12px 16px;font-weight:800;cursor:pointer}@media(max-width:520px){.campaign-popup{border-radius:16px}.campaign-popup-media img{height:190px}.campaign-popup-actions{flex-direction:column}.campaign-popup-title{font-size:1.18rem}}

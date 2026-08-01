@@ -564,7 +564,7 @@ function applyProductReturnGuard() {
         clearTimeout(window.__x2ProductReturnGuardTimer);
         window.__x2ProductReturnGuardTimer = setTimeout(() => {
             document.documentElement.classList.remove("x2-product-return-guard");
-        }, 6000);
+        }, 1200);
     } catch (e) {}
 }
 
@@ -601,6 +601,7 @@ function saveHomeProductsSnapshot() {
 function finishProductReturnRestore() {
     try {
         window.__x2ProductReturnRestored = true;
+        window.__x2SuppressProductOpenUntil = Date.now() + 900;
         clearTimeout(window.__x2ProductReturnGuardTimer);
         clearTimeout(window.__x2ProductReturnRetryTimer);
         document.documentElement.classList.remove("x2-product-return-guard");
@@ -659,7 +660,7 @@ function restoreProductReturnTarget() {
             const y = Math.max(0, expectedY);
             if ((document.documentElement.scrollHeight || 0) >= y + Math.min(500, window.innerHeight || 0)) {
                 window.scrollTo({ top: y, behavior: "auto" });
-                pinScrollTarget(y, 1500);
+                pinScrollTarget(y, 220);
                 finishProductReturnRestore();
                 return true;
             }
@@ -680,14 +681,14 @@ function restoreProductReturnTarget() {
             }
         });
         if (!card) {
-            if (attempt < 24) {
+            if (attempt < 10) {
                 clearTimeout(window.__x2ProductReturnRetryTimer);
                 window.__x2ProductReturnRetryTimer = setTimeout(restoreProductReturnTarget, 180);
                 return false;
             }
             if (expectedY > 0) {
                 window.scrollTo({ top: expectedY, behavior: "auto" });
-                pinScrollTarget(expectedY, 1500);
+                pinScrollTarget(expectedY, 220);
                 finishProductReturnRestore();
                 return true;
             }
@@ -696,7 +697,7 @@ function restoreProductReturnTarget() {
         let y = Math.max(0, Math.round((window.scrollY || window.pageYOffset || 0) + card.getBoundingClientRect().top - desiredOffset));
         const absoluteY = Number(target.absoluteY || 0);
         if (absoluteY > 0 && Math.abs(y - absoluteY) > Math.max(600, Math.round((window.innerHeight || 0) * 0.8))) {
-            if (attempt < 24) {
+            if (attempt < 10) {
                 clearTimeout(window.__x2ProductReturnRetryTimer);
                 window.__x2ProductReturnRetryTimer = setTimeout(restoreProductReturnTarget, 180);
                 return false;
@@ -704,7 +705,7 @@ function restoreProductReturnTarget() {
             if (expectedY > 0) y = Math.max(0, Math.round(expectedY));
         }
         if (expectedY > 0 && Math.abs(y - expectedY) > Math.max(800, Math.round((window.innerHeight || 0) * 0.9))) {
-            if (attempt < 24) {
+            if (attempt < 10) {
                 clearTimeout(window.__x2ProductReturnRetryTimer);
                 window.__x2ProductReturnRetryTimer = setTimeout(restoreProductReturnTarget, 180);
                 return false;
@@ -712,8 +713,8 @@ function restoreProductReturnTarget() {
             y = Math.max(0, Math.round(expectedY));
         }
         window.scrollTo({ top: y, behavior: "auto" });
-        pinScrollTarget(y, 1500);
-        scheduleProductReturnFineTune(target, 5);
+        pinScrollTarget(y, 220);
+        scheduleProductReturnFineTune(target, 2);
         finishProductReturnRestore();
         return true;
     } catch (e) {
@@ -735,16 +736,26 @@ function restoreProductReturnScrollPosition() {
         setTimeout(() => {
             observer.disconnect();
             if (!window.__x2ProductReturnRestored) sessionStorage.removeItem("x2_return_to_scroll_url");
-        }, 6000);
+        }, 2200);
     } catch (e) {}
 }
 
 if (typeof window !== "undefined") {
     document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", restoreProductReturnScrollPosition, { once: true }) : restoreProductReturnScrollPosition();
     window.addEventListener("pageshow", event => {
-        if (event && event.persisted && sessionStorage.getItem("x2_return_to_scroll_url") === location.href) window.__x2ProductReturnRestored = false;
+        if (event && event.persisted && sessionStorage.getItem("x2_return_to_scroll_url") === location.href) {
+            window.__x2ProductReturnRestored = false;
+            window.__x2SuppressProductOpenUntil = Date.now() + 900;
+        }
         restoreProductReturnScrollPosition();
     });
+    document.addEventListener("click", e => {
+        if (Date.now() >= (window.__x2SuppressProductOpenUntil || 0)) return;
+        const link = e.target && e.target.closest && e.target.closest('a[href*="product.html?id="],a[href*="/product/"]');
+        if (!link) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+    }, true);
     document.addEventListener("click", e => {
         const link = e.target && e.target.closest && e.target.closest('a[href*="product.html?id="],a[href*="/product/"]');
         if (link && !/\/product(?:\/|\.html|$)/.test(location.pathname)) {
@@ -801,6 +812,7 @@ export function createProductCard(prod) {
         return target && target.closest && target.closest("button,a,input,select,textarea,.product-cart-btn,[data-no-product-open]");
     }
     function openProductFromCard() {
+        if (Date.now() < (window.__x2SuppressProductOpenUntil || 0)) return;
         if (productOpenStarted) return;
         productOpenStarted = true;
         saveProductReturnScrollPosition(true);
@@ -2053,8 +2065,9 @@ document.addEventListener("DOMContentLoaded", async function() {
             productMediaControls.className = "product-media-controls";
                         productMediaControls.innerHTML = '<div class="pmc-dots" aria-label="صور المنتج"></div>';
             mainWrap.appendChild(productMediaControls);
-                        const nameEl = document.getElementById("name"), infoEl = document.querySelector(".product-page .info"), titleLine = document.createElement("div"), actions = document.createElement("div");
+                        const nameEl = document.getElementById("name"), infoEl = document.querySelector(".product-page .info"), titleLine = nameEl && nameEl.closest(".product-title-line") || document.createElement("div"), actions = titleLine.querySelector(".pmc-actions") || document.createElement("div");
                         actions.className = "pmc-actions";
+                        actions.removeAttribute("aria-hidden");
                         actions.innerHTML = `
                             <button class="pmc-btn pmc-share" type="button" aria-label="مشاركة المنتج">
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="M7 8l5-5 5 5"></path><path d="M5 13v6h14v-6"></path></svg>
@@ -2062,14 +2075,15 @@ document.addEventListener("DOMContentLoaded", async function() {
                             <button class="pmc-btn pmc-wishlist" type="button" aria-label="إضافة إلى المفضلة" aria-pressed="false">
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6c-1.7-1.7-4.5-1.7-6.2 0L12 7.2 9.4 4.6c-1.7-1.7-4.5-1.7-6.2 0s-1.7 4.5 0 6.2L12 19.6l8.8-8.8c1.7-1.7 1.7-4.5 0-6.2z"></path></svg>
                             </button>`;
-                        if (nameEl && infoEl) {
-                                titleLine.className = "product-title-line";
+                        if (nameEl && infoEl && !titleLine.parentNode) {
+                            titleLine.className = "product-title-line";
                                 infoEl.insertBefore(titleLine, nameEl);
                                 titleLine.appendChild(nameEl);
                         }
+                        if (titleLine) titleLine.classList.add("product-title-line");
                         if (nameEl && titleLine.parentNode) {
-                            titleLine.insertBefore(actions, nameEl);
-                        } else {
+                            if (actions.parentNode !== titleLine) titleLine.insertBefore(actions, nameEl);
+                        } else if (actions.parentNode !== mainWrap.parentNode) {
                             mainWrap.insertAdjacentElement("afterend", actions);
                         }
                         const shareBtn = actions.querySelector(".pmc-share"), wishBtn = actions.querySelector(".pmc-wishlist");

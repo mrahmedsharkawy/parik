@@ -346,7 +346,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
         <span class="category" id="category"></span>
 
-        <h1 id="name"></h1>
+        <div class="product-title-line">
+          <div class="pmc-actions" aria-hidden="true">
+            <button class="pmc-btn pmc-share" type="button" aria-label="مشاركة المنتج" tabindex="-1">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"></path><path d="M7 8l5-5 5 5"></path><path d="M5 13v6h14v-6"></path></svg>
+            </button>
+            <button class="pmc-btn pmc-wishlist" type="button" aria-label="إضافة إلى المفضلة" aria-pressed="false" tabindex="-1">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6c-1.7-1.7-4.5-1.7-6.2 0L12 7.2 9.4 4.6c-1.7-1.7-4.5-1.7-6.2 0s-1.7 4.5 0 6.2L12 19.6l8.8-8.8c1.7-1.7 1.7-4.5 0-6.2z"></path></svg>
+            </button>
+          </div>
+          <h1 id="name"></h1>
+        </div>
 
         <div class="rating-box">
 
@@ -480,7 +490,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       discountEl.style.display = hasCachedDiscount ? '' : 'none';
     }
     var timerBox = document.getElementById('timer-box');
-    if(timerBox) timerBox.style.display = 'none';
+    if(timerBox) timerBox.style.display = hasCachedDiscount ? 'flex' : 'none';
+    setText('timer', hasCachedDiscount ? '--:--:--' : '');
     var stockLine = document.getElementById('stock-line');
     if(stockLine) stockLine.style.display = hasCachedDiscount ? '' : 'none';
     setText('stock', hasCachedDiscount ? '🔥 عرض لفترة محدودة' : '');
@@ -931,7 +942,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="/java/push-welcome.js?v=push-welcome-20260728d" defer></script>
 <script src="/java/notifications.min.js?v=notifications-20260801a" defer></script>
 <script src="/java/abandoned-cart.js?v=abandoned-cart-20260730a" defer></script>
-<script type="module" src="/java/Products.min.js?v=products-20260801ac"></script> <!-- ده يفضل يفضل في الآخر -->
+<script type="module" src="/java/Products.min.js?v=products-20260802b"></script> <!-- ده يفضل يفضل في الآخر -->
 </body>
 </html>
 
