@@ -789,6 +789,7 @@ export function createProductCard(prod) {
         link.rel = "prefetch", link.href = productUrl, link.as = "document";
         document.head.appendChild(link);
     }
+    const PRODUCT_TAP_MOVE_LIMIT = 28;
     let touchStartX = 0, touchStartY = 0, touchStartAt = 0, suppressProductOpenUntil = 0, productOpenStarted = false;
     if (typeof window !== "undefined") {
         window.addEventListener("pageshow", () => {
@@ -820,7 +821,7 @@ export function createProductCard(prod) {
         } catch (e) {}
         window.location.assign(productUrl);
     }
-    card.className = "product-card", card.style.position = "relative", card.style.cursor = "pointer", card.style.touchAction = "manipulation",
+    card.className = "product-card", card.style.position = "relative", card.style.cursor = "pointer", card.style.touchAction = "pan-x pan-y pinch-zoom",
     card.addEventListener("pointerover", prefetchProductPage, {
         once: true,
         passive: true
@@ -837,13 +838,13 @@ export function createProductCard(prod) {
     card.addEventListener("touchmove", e => {
         if (!e.touches || e.touches.length !== 1) return;
         const dx = e.touches[0].clientX - touchStartX, dy = e.touches[0].clientY - touchStartY;
-        if (Math.abs(dx) > 18 || Math.abs(dy) > 18) suppressProductOpenUntil = Date.now() + 500;
+        if (Math.abs(dx) > PRODUCT_TAP_MOVE_LIMIT || Math.abs(dy) > PRODUCT_TAP_MOVE_LIMIT) suppressProductOpenUntil = Date.now() + 500;
     }, { passive: true }),
     card.addEventListener("touchend", e => {
         if (isProductCardControl(e.target)) return;
         const touch = e.changedTouches && e.changedTouches[0];
         const dx = touch ? touch.clientX - touchStartX : 0, dy = touch ? touch.clientY - touchStartY : 0;
-        const quickTap = Date.now() - touchStartAt <= 520 && Math.abs(dx) <= 18 && Math.abs(dy) <= 18;
+        const quickTap = Date.now() - touchStartAt <= 520 && Math.abs(dx) <= PRODUCT_TAP_MOVE_LIMIT && Math.abs(dy) <= PRODUCT_TAP_MOVE_LIMIT;
         if (!quickTap) {
             suppressProductOpenUntil = Date.now() + 500;
             return;
