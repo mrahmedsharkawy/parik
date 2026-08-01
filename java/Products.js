@@ -611,6 +611,19 @@ function finishProductReturnRestore() {
     } catch (e) {}
 }
 
+function finishNativeProductHistoryReturn() {
+    try {
+        window.__x2ProductReturnRestored = true;
+        clearTimeout(window.__x2ProductReturnGuardTimer);
+        clearTimeout(window.__x2ProductReturnRetryTimer);
+        clearTimeout(window.__x2ProductReturnFineTuneTimer);
+        document.documentElement.classList.remove("x2-product-return-guard");
+        document.documentElement.classList.remove("x2-product-returning");
+        sessionStorage.removeItem("x2_return_to_scroll_url");
+        sessionStorage.removeItem("x2_product_return_target");
+    } catch (e) {}
+}
+
 function getProductReturnDesiredOffset(target) {
     try {
         if (!target) return Number(target && target.offset) || 8;
@@ -743,6 +756,10 @@ function restoreProductReturnScrollPosition() {
 if (typeof window !== "undefined") {
     document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", restoreProductReturnScrollPosition, { once: true }) : restoreProductReturnScrollPosition();
     window.addEventListener("pageshow", event => {
+        if (event && event.persisted) {
+            finishNativeProductHistoryReturn();
+            return;
+        }
         if (event && event.persisted && sessionStorage.getItem("x2_return_to_scroll_url") === location.href) {
             window.__x2ProductReturnRestored = false;
             window.__x2SuppressProductOpenUntil = Date.now() + 900;
@@ -1280,11 +1297,11 @@ document.addEventListener("DOMContentLoaded", async function() {
         !categoriesPageOwnsProductGrid && productsContainer && products && products.length && renderProductsGrid(products, productsContainer);
     };
     window.addEventListener("pageshow", function(event) {
-        if (event.persisted && sessionStorage.getItem("x2_return_to_scroll_url") === location.href) return void restoreProductReturnScrollPosition();
-        event.persisted && window.refreshStoreProductSort && window.refreshStoreProductSort();
+        if (event.persisted && sessionStorage.getItem("x2_return_to_scroll_url") === location.href) return void finishNativeProductHistoryReturn();
+        if (event.persisted) return;
     });
     document.addEventListener("visibilitychange", function() {
-        if (!document.hidden && sessionStorage.getItem("x2_return_to_scroll_url") === location.href) return void restoreProductReturnScrollPosition();
+        if (!document.hidden && sessionStorage.getItem("x2_return_to_scroll_url") === location.href) return;
         if (!document.hidden) window.refreshStoreProductSort && window.refreshStoreProductSort();
     });
     window.addEventListener("storage", function(event) {
