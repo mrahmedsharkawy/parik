@@ -1175,8 +1175,8 @@ document.addEventListener("DOMContentLoaded", async function() {
                     titleEl.textContent = catName, document.title = catName;
                 }
             }
-            if (isHomePage && isAllCategory && productsContainer && productsContainer.querySelector(".product-card")) return;
-            const renderContainer = homeProductsContainer && !isAllCategory ? homeProductsContainer : productsContainer;
+            const hasHomeProductsSurface = !!(homeProductsContainer && (document.getElementById("mhCatsStrip") || document.querySelector(".home-offer-cards")));
+            const renderContainer = hasHomeProductsSurface ? homeProductsContainer : productsContainer;
             if (renderContainer) {
                 const lang = localStorage.getItem("lang") || document.documentElement.lang || document.documentElement.getAttribute("lang") || "ar";
                 filteredProducts.length ? renderProductsGrid(filteredProducts, renderContainer) : renderContainer.innerHTML = "en" === lang ? "<p style='color:gray;padding:20px;text-align:center'>No products in this category yet.</p>" : "<p style='color:gray;padding:20px;text-align:center'>لا توجد منتجات لهذه الفئة حالياً.</p>";
@@ -1342,7 +1342,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                     return (slugMatch ? slugMatch[1] : "") === currentCategoryId;
                 }), span = link.querySelector("span[data-i18n]");
                 let catName = (document.documentElement.dir, span ? span.textContent.trim() : link.textContent.trim()), i18n = span ? span.getAttribute("data-i18n") : "";
-                const slugMatch = (link.getAttribute("href") || "").match(/\/categories\/([^\/\?]+)/), categorySlug = slugMatch ? slugMatch[1] : catName, direction = index > currentIndex ? "next" : "prev";
+                const slugMatch = (link.getAttribute("href") || "").match(/\/categories\/([^\/\?]+)/), normalizedCatName = String(catName || "").trim().toLowerCase(), categorySlug = slugMatch ? slugMatch[1] : !normalizedCatName || "الكل" === normalizedCatName || "all" === normalizedCatName || "جميع الفئات" === normalizedCatName ? "all" : catName, direction = index > currentIndex ? "next" : "prev";
                 categoriesContainer.querySelectorAll("div a").forEach(a => a.classList.remove("active-category"));
                 const categoryLink = div.querySelector("a");
                 categoryLink && categoryLink.classList.add("active-category");

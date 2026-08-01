@@ -72,10 +72,16 @@
     let text = sessionStorage.getItem(CACHE_KEY);
     if (!text) {
       text = fallbackNavHtml;
-      fetch(base + 'navbar.html')
-        .then(res => res.ok ? res.text() : '')
-        .then(html => { if (html) try { sessionStorage.setItem(CACHE_KEY, html); } catch(e) {} })
-        .catch(() => {});
+      const refreshNavbarCache = () => {
+        fetch(base + 'navbar.html')
+          .then(res => res.ok ? res.text() : '')
+          .then(html => { if (html) try { sessionStorage.setItem(CACHE_KEY, html); } catch(e) {} })
+          .catch(() => {});
+      };
+      setTimeout(() => {
+        if ('requestIdleCallback' in window) requestIdleCallback(refreshNavbarCache, { timeout: 3000 });
+        else refreshNavbarCache();
+      }, 2500);
     }
 
     let nav = existingNav;
