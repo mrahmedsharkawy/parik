@@ -49,8 +49,6 @@
   </script>
   <script src="/java/auth-reset.js" defer></script>
   <title data-i18n="الصفحة الرئيسية - بريق">الصفحة الرئيسية - بريق</title>
-  <link rel="preload" href="/assets/cairo-arabic.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/assets/cairo-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/style/style.css?v=139">
   <style>.mobile-nav{display:none}</style>
   <link rel="preload" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260730b" as="style" media="(max-width: 899px)" onload="this.onload=null;this.rel='stylesheet'">
@@ -61,25 +59,13 @@
   (function(){
     var l = document.createElement('link');
     l.rel = 'preload';
-    var isDesktop = matchMedia('(min-width: 900px)').matches;
-    l.href = isDesktop ? '/assets/home/1.webp' : '/assets/home/صور الغلاف/small-tmp/2-360.webp';
-    l.imageSrcset = isDesktop ? '/assets/home/1.webp 1000w' : '/assets/home/صور الغلاف/small-tmp/2-360.webp 360w';
+    l.href = matchMedia('(min-width: 900px)').matches ? '/assets/home/1.webp' : '/assets/home/صور الغلاف/1-618.webp?v=home-mobile-banner-20260729a';
+    l.imageSrcset = matchMedia('(min-width: 900px)').matches ? '/assets/home/1.webp 1000w' : '/assets/home/صور الغلاف/1-412.webp?v=home-mobile-banner-20260729a 412w, /assets/home/صور الغلاف/1-618.webp?v=home-mobile-banner-20260729a 618w';
     l.as = 'image';
     l.type = 'image/webp';
     l.fetchPriority = 'high';
-    l.imageSizes = isDesktop ? '70vw' : '50vw';
+    l.imageSizes = matchMedia('(min-width: 900px)').matches ? '70vw' : '412px';
     document.head.appendChild(l);
-    if (!isDesktop) {
-      var second = document.createElement('link');
-      second.rel = 'preload';
-      second.as = 'image';
-      second.type = 'image/webp';
-      second.href = '/assets/home/صور الغلاف/small-tmp/1-360.webp';
-      second.imageSrcset = '/assets/home/صور الغلاف/small-tmp/1-360.webp 360w';
-      second.imageSizes = '50vw';
-      second.fetchPriority = 'high';
-      document.head.appendChild(second);
-    }
   })();
   </script>
   <!-- Critical above-fold CSS (prevents FOUC while style.css loads) -->
@@ -526,7 +512,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </section>
   <section class="home-offer-cards" aria-label="عروض بريق السريعة" data-i18n-aria-label="عروض بريق السريعة">
     <a href="/offers" class="home-offer-card flash" aria-label="عروض خاطفة" data-i18n-aria-label="عروض خاطفة">
-      <img class="home-offer-card-img" src="assets/home/صور الغلاف/small-tmp/2-360.webp" alt="عروض خاطفة" width="360" height="330" loading="eager" fetchpriority="high" decoding="async">
+      <img class="home-offer-card-img" src="assets/home/صور الغلاف/small-tmp/2-360.webp" alt="عروض خاطفة" width="360" height="330" loading="eager" decoding="async">
       <div class="home-image-countdown" aria-label="الوقت المتبقي للعرض">
         <span class="home-count-box" id="homeFlashHours">00</span>
         <span class="home-count-box" id="homeFlashMinutes">00</span>
@@ -540,7 +526,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <span class="home-offer-btn" data-i18n="تسوق الآن">تسوق الآن</span>
     </a>
     <a href="/monthly-offers.html" class="home-offer-card month" aria-label="عروض الشهر" data-i18n-aria-label="عروض الشهر">
-      <img class="home-offer-card-img" src="assets/home/صور الغلاف/small-tmp/1-360.webp" alt="عروض الشهر" width="360" height="338" loading="eager" fetchpriority="high" decoding="async">
+      <img class="home-offer-card-img" src="assets/home/صور الغلاف/small-tmp/1-360.webp" alt="عروض الشهر" width="360" height="338" loading="eager" decoding="async">
       <div class="home-offer-top"><span data-i18n="عروض الشهر">عروض الشهر</span><span class="home-offer-icon" aria-hidden="true">🎁</span></div>
       <div class="home-offer-meta">
         <span class="home-offer-discount" data-i18n="خصم حتى 70%">خصم حتى 70%</span>
@@ -807,7 +793,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </footer>
 <script src="/java/supabase.min.js?v=supabase-20260725a" defer></script>
 <script src="/java/main.min.js?v=141" defer></script>
-<script src="/java/sw-refresh.js?v=sw-refresh-20260801e" defer></script>
+<script src="/java/sw-refresh.js?v=sw-refresh-20260801d" defer></script>
 <script src="/java/instant-nav.js?v=instant-nav-20260728e" defer></script>
 <script src="/translations/translation.min.js?v=translation-20260726c" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
