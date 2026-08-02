@@ -1112,37 +1112,6 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin:18px 0 6px!imp
 
 <script>
 (function(){
-  let touchStartX = 0;
-  let touchStartY = 0;
-  let suppressCardClickUntil = 0;
-  const cardSelector = '.product-card, .dp-card';
-
-  document.addEventListener('touchstart', function(e) {
-    if (!e.touches || e.touches.length !== 1) return;
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
-    if (!e.target.closest || !e.target.closest(cardSelector)) return;
-  }, { passive: true, capture: true });
-
-  document.addEventListener('touchmove', function(e) {
-    if (!e.touches || e.touches.length !== 1) return;
-    if (!e.target.closest || !e.target.closest(cardSelector)) return;
-    const dx = e.touches[0].clientX - touchStartX;
-    const dy = e.touches[0].clientY - touchStartY;
-    if (Math.abs(dx) > 8 || Math.abs(dy) > 8) suppressCardClickUntil = Date.now() + 450;
-  }, { passive: true, capture: true });
-
-  document.addEventListener('click', function(e) {
-    if (Date.now() >= suppressCardClickUntil) return;
-    if (!e.target.closest || !e.target.closest(cardSelector)) return;
-    e.preventDefault();
-    e.stopImmediatePropagation();
-  }, true);
-})();
-</script>
-
-<script>
-(function(){
   const siteThemeColor = '#152546';
   const themeMeta = document.querySelector('meta[name="theme-color"]');
   const appleStatusMeta = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
