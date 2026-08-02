@@ -523,18 +523,6 @@ function saveProductReturnTarget(card) {
     } catch (e) {}
 }
 
-function saveHomeProductsSnapshot() {
-    try {
-        const container = document.getElementById("home-category-products");
-        if (!container || !container.querySelector(".product-card") || !container.innerHTML) return;
-        sessionStorage.setItem("x2_home_products_snapshot", JSON.stringify({
-            url: x2PageKey(location.href),
-            html: container.innerHTML,
-            at: Date.now()
-        }));
-    } catch (e) {}
-}
-
 function restoreProductReturnTarget() {
     try {
         if (window.__x2ProductReturnRestored) return true;
@@ -633,7 +621,6 @@ export function createProductCard(prod) {
         productOpenStarted = true;
         saveProductReturnScrollPosition(true);
         saveProductReturnTarget(card);
-        saveHomeProductsSnapshot();
         rememberQuickProduct();
         try {
             const HIST_KEY = "x2_history", img = Array.isArray(prod.img) ? prod.img[0] : prod.img || "", name = "object" == typeof prod.name ? prod.name.ar || prod.name.en : prod.name || "", entry = {
