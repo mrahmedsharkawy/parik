@@ -625,6 +625,13 @@ function finishNativeProductHistoryReturn() {
     } catch (e) {}
 }
 
+function suppressProductOpenAfterProductExit() {
+    try {
+        const until = Number(sessionStorage.getItem("x2_product_exit_suppress_until") || 0);
+        if (until > Date.now()) window.__x2SuppressProductOpenUntil = Math.max(window.__x2SuppressProductOpenUntil || 0, until);
+    } catch (e) {}
+}
+
 function getProductReturnDesiredOffset(target) {
     try {
         if (!target) return Number(target && target.offset) || 8;
@@ -755,8 +762,10 @@ function restoreProductReturnScrollPosition() {
 }
 
 if (typeof window !== "undefined") {
+    suppressProductOpenAfterProductExit();
     document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", restoreProductReturnScrollPosition, { once: true }) : restoreProductReturnScrollPosition();
     window.addEventListener("pageshow", event => {
+        suppressProductOpenAfterProductExit();
         if (event && event.persisted) {
             finishNativeProductHistoryReturn();
             return;

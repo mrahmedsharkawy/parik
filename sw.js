@@ -1,5 +1,5 @@
 /* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v317';
+const CACHE = 'bariq-v320';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -284,7 +284,7 @@ self.addEventListener('fetch', function(e) {
   };
 
   const isAuthPage = path === '/login' || path === '/login.html';
-  const isFreshHtmlPage = isAuthPage || path === '/product' || path === '/product.html' || /^\/product\//.test(path) || path === '/account' || path === '/account.html' || path === '/Cart' || path === '/Cart.html' || path === '/admin' || path === '/admin.html';
+  const isFreshHtmlPage = isAuthPage || path === '/' || path === '/index.html' || path === '/product' || path === '/product.html' || /^\/product\//.test(path) || path === '/account' || path === '/account.html' || path === '/Cart' || path === '/Cart.html' || path === '/admin' || path === '/admin.html';
 
   // Key order/account/cart/admin pages must be fresh so checkout and status fixes cannot be stuck behind old HTML.
   if (isHtml && isFreshHtmlPage) {
