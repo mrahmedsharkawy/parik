@@ -591,7 +591,7 @@ export function createProductCard(prod) {
         link.rel = "prefetch", link.href = productUrl, link.as = "document";
         document.head.appendChild(link);
     }
-    let touchStartX = 0, touchStartY = 0, touchStartAt = 0, suppressProductOpenUntil = 0, productOpenStarted = false;
+    let touchStartX = 0, touchStartY = 0, touchStartAt = 0, suppressProductOpenUntil = 0, productOpenStarted = false, touchStartedOnCard = false, touchMoved = false;
     if (typeof window !== "undefined") {
         window.addEventListener("pageshow", () => {
             productOpenStarted = false;
@@ -634,28 +634,39 @@ export function createProductCard(prod) {
         touchStartX = e.touches[0].clientX;
         touchStartY = e.touches[0].clientY;
         touchStartAt = Date.now();
+        touchStartedOnCard = true;
+        touchMoved = false;
     }, { passive: true }),
     card.addEventListener("touchmove", e => {
-        if (!e.touches || e.touches.length !== 1) return;
+        if (!e.touches || e.touches.length !== 1 || !touchStartedOnCard) return;
         const dx = e.touches[0].clientX - touchStartX, dy = e.touches[0].clientY - touchStartY;
-        if (Math.abs(dx) > 10 || Math.abs(dy) > 10) suppressProductOpenUntil = Date.now() + 650;
+        if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
+            touchMoved = true;
+            suppressProductOpenUntil = Date.now() + 800;
+        }
     }, { passive: true }),
     card.addEventListener("touchend", e => {
         if (isProductCardControl(e.target)) return;
         const touch = e.changedTouches && e.changedTouches[0];
         const dx = touch ? touch.clientX - touchStartX : 0, dy = touch ? touch.clientY - touchStartY : 0;
-        const quickTap = Date.now() - touchStartAt <= 520 && Math.abs(dx) <= 10 && Math.abs(dy) <= 10;
+        const quickTap = Date.now() - touchStartAt <= 520 && Math.abs(dx) <= 8 && Math.abs(dy) <= 8 && !touchMoved;
         if (!quickTap) {
-            suppressProductOpenUntil = Date.now() + 650;
+            suppressProductOpenUntil = Date.now() + 800;
+            touchStartedOnCard = false;
+            touchMoved = false;
             return;
         }
         suppressProductOpenUntil = Date.now() + 700;
         e.preventDefault();
         e.stopPropagation();
+        touchStartedOnCard = false;
+        touchMoved = false;
         openProductFromCard();
     }, { passive: false }),
     card.addEventListener("touchcancel", () => {
-        suppressProductOpenUntil = Date.now() + 650;
+        suppressProductOpenUntil = Date.now() + 800;
+        touchStartedOnCard = false;
+        touchMoved = false;
     }, { passive: true }),
     card.addEventListener("click", e => {
         if (Date.now() < suppressProductOpenUntil) {
