@@ -15,7 +15,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     try {
       if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
       if (sessionStorage.getItem('x2_return_to_scroll_url') !== location.href) return;
-      if (sessionStorage.getItem('x2_product_return_target')) return;
       var productPositions = JSON.parse(sessionStorage.getItem('x2_product_return_positions') || '{}');
       var positions = productPositions[location.href] ? productPositions : JSON.parse(sessionStorage.getItem('x2_scroll_positions') || '{}');
       var y = Number(positions[location.href] || 0);
