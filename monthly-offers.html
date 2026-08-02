@@ -151,7 +151,7 @@
         const oldPrice = price(product.oldPrice);
         const current = price(product.price);
         const saved = Math.max(0, oldPrice - current).toFixed(2);
-        const link = product.id ? '/product.html?id=' + encodeURIComponent(product.id) : '/product.html';
+        const link = product.id ? '/product?id=' + encodeURIComponent(product.id) : '/product';
         return `
           <article class="monthly-card">
             <a href="${link}" aria-label="${nameOf(product).replace(/"/g,'&quot;')}">

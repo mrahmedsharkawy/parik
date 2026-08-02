@@ -601,7 +601,7 @@ function saveHomeProductsSnapshot() {
 function finishProductReturnRestore() {
     try {
         window.__x2ProductReturnRestored = true;
-        window.__x2SuppressProductOpenUntil = Date.now() + 900;
+        window.__x2SuppressProductOpenUntil = Date.now() + 2500;
         clearTimeout(window.__x2ProductReturnGuardTimer);
         clearTimeout(window.__x2ProductReturnRetryTimer);
         document.documentElement.classList.remove("x2-product-return-guard");
@@ -614,6 +614,7 @@ function finishProductReturnRestore() {
 function finishNativeProductHistoryReturn() {
     try {
         window.__x2ProductReturnRestored = true;
+        window.__x2SuppressProductOpenUntil = Date.now() + 2500;
         clearTimeout(window.__x2ProductReturnGuardTimer);
         clearTimeout(window.__x2ProductReturnRetryTimer);
         clearTimeout(window.__x2ProductReturnFineTuneTimer);
@@ -762,19 +763,19 @@ if (typeof window !== "undefined") {
         }
         if (event && event.persisted && sessionStorage.getItem("x2_return_to_scroll_url") === location.href) {
             window.__x2ProductReturnRestored = false;
-            window.__x2SuppressProductOpenUntil = Date.now() + 900;
+            window.__x2SuppressProductOpenUntil = Date.now() + 2500;
         }
         restoreProductReturnScrollPosition();
     });
     document.addEventListener("click", e => {
         if (Date.now() >= (window.__x2SuppressProductOpenUntil || 0)) return;
-        const link = e.target && e.target.closest && e.target.closest('a[href*="product.html?id="],a[href*="/product/"]');
+        const link = e.target && e.target.closest && e.target.closest('a[href*="product.html?id="],a[href*="/product?id="],a[href*="/product/"]');
         if (!link) return;
         e.preventDefault();
         e.stopImmediatePropagation();
     }, true);
     document.addEventListener("click", e => {
-        const link = e.target && e.target.closest && e.target.closest('a[href*="product.html?id="],a[href*="/product/"]');
+        const link = e.target && e.target.closest && e.target.closest('a[href*="product.html?id="],a[href*="/product?id="],a[href*="/product/"]');
         if (link && !/\/product(?:\/|\.html|$)/.test(location.pathname)) {
             saveProductReturnScrollPosition(true);
             saveProductReturnTarget(link.closest('.product-card[data-product-id]'));
@@ -786,7 +787,7 @@ export function createProductCard(prod) {
     window.createProductCard || (window.createProductCard = createProductCard);
     const card = document.createElement("div");
     card.dataset.productId = String(prod.id || prod.productId || "");
-    const productUrl = `product.html?id=${encodeURIComponent(prod.id)}${(localStorage.getItem("lang") || document.documentElement.lang) === "en" ? "&lang=en" : ""}`;
+    const productUrl = `/product?id=${encodeURIComponent(prod.id)}${(localStorage.getItem("lang") || document.documentElement.lang) === "en" ? "&lang=en" : ""}`;
     function rememberQuickProduct() {
         try {
             const toArr = v => Array.isArray(v) ? v.filter(Boolean) : v ? [ v ] : [], isVideo = s => /\.(mp4|webm|ogg|ogv|mov|m4v)(\?|#|$)/i.test(String(s || ""));

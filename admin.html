@@ -1828,7 +1828,7 @@ async function sendDiscountProductPush(product){
   const pushPayload = {
     title: 'عرض جديد في بريق',
     body: `${name} عليه خصم ${pct}% لفترة محدودة`,
-    url: `/product.html?id=${encodeURIComponent(product.supabaseId || product.id)}`,
+    url: `/product?id=${encodeURIComponent(product.supabaseId || product.id)}`,
     image: imgs.find(s => s && !String(s).startsWith('data:')) || undefined,
     type: 'discount_product',
     iconText: '🔥',
@@ -4675,7 +4675,7 @@ function insertProductVars() {
   if (!pid) { if (preview) preview.style.display = 'none'; return; }
   const p = products.find(x => String(x.id) === String(pid));
   if (!p) return;
-  const link = `${location.origin}/product.html?id=${p.id}`;
+  const link = `${location.origin}/product?id=${p.id}`;
   const img  = (Array.isArray(p.img) ? p.img[0] : p.img) || '';
   if (preview) {
     preview.style.display = 'block';
@@ -4891,7 +4891,7 @@ function sendBulkMsg() {
   // بيانات المنتج
   const pid = $('msg-product')?.value;
   const prod = pid ? products.find(x => String(x.id) === String(pid)) : null;
-  const prodLink = prod ? `${location.origin}/product.html?id=${prod.id}` : '';
+  const prodLink = prod ? `${location.origin}/product?id=${prod.id}` : '';
   const prodImg  = prod ? ((Array.isArray(prod.img) ? prod.img[0] : prod.img) || '') : '';
   bulkIdx = 0;
   sendNextMsg(msg, type, delay, prodLink, prodImg);

@@ -220,7 +220,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         } catch(e) {}
       }
       function onPointerLike(e){
-        var link = e && e.target && e.target.closest && e.target.closest('a[href*="product.html?id="],a[href*="/product/"]');
+        var link = e && e.target && e.target.closest && e.target.closest('a[href*="product.html?id="],a[href*="/product?id="],a[href*="/product/"]');
         if (!link) return;
         saveProductReturnFromLink(link);
       }
@@ -1279,7 +1279,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const name = (typeof p.name==='object'?(p.name[lang]||p.name.ar||p.name.en):(p.name||(lang === 'en' ? 'Product' : 'منتج')));
       const img  = (Array.isArray(p.img)?p.img[0]:p.img)||'assets/logo.png';
       const langParam = (localStorage.getItem('lang') || document.documentElement.lang) === 'en' ? '?lang=en' : '';
-      const link = p.id ? `product.html?id=${encodeURIComponent(p.id)}${langParam ? '&lang=en' : ''}` : '#';
+      const link = p.id ? `/product?id=${encodeURIComponent(p.id)}${langParam ? '&lang=en' : ''}` : '#';
       const price = parseFloat(p.price)||0;
       const oldPrice = parseFloat(p.oldPrice)||0;
       const sym = {AED:'د.إ',USD:'$',SAR:'ر.س',EGP:'ج.م'}[localStorage.getItem('currency')||'AED']||'د.إ';
@@ -1533,7 +1533,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </footer>
 <script src="/java/supabase.min.js?v=supabase-20260801a" defer></script>
-<script src="/java/main.min.js?v=146" defer></script>
+<script src="/java/main.min.js?v=147" defer></script>
 <script src="/java/sw-refresh.js?v=sw-refresh-20260802a" defer></script>
 <script src="/java/instant-nav.min.js?v=instant-nav-20260801b" defer></script>
 <script src="/translations/translation.min.js?v=translation-20260726c" defer></script>
@@ -1541,7 +1541,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260801c" defer></script>
 <script src="/java/push-welcome.js?v=push-welcome-20260728d" defer></script>
 <script src="/java/abandoned-cart.js?v=abandoned-cart-20260730a" defer></script>
-<script type="module" src="./java/Products.min.js?v=products-20260802c"></script> <!-- ده يفضل يفضل في الآخر -->
+<script type="module" src="./java/Products.min.js?v=products-20260802e"></script> <!-- ده يفضل يفضل في الآخر -->
 </body>
 </html>
 

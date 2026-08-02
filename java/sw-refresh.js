@@ -37,7 +37,7 @@
 
   // The service worker uses skipWaiting + clients.claim, so a forced reload here
   // would blank the page mid-navigation (breaks iOS swipe-back).
-  navigator.serviceWorker.register('/sw.js?v=315', { updateViaCache: 'none' }).then(function (reg) {
+  navigator.serviceWorker.register('/sw.js?v=317', { updateViaCache: 'none' }).then(function (reg) {
     requestActivation(reg);
     sendPushLanguage(reg);
     reg.update().catch(function () {});

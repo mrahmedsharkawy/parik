@@ -2334,7 +2334,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                      (prod ? (Array.isArray(prod.img)?prod.img[0]:prod.img)||'' : '') ||
                      'assets/logo.png';
       const resolvedId = item.id || prod?.id || '';
-      const prodLink = resolvedId ? `product.html?id=${encodeURIComponent(resolvedId)}` : '';
+      const prodLink = resolvedId ? `/product?id=${encodeURIComponent(resolvedId)}` : '';
       const prodName = prod && typeof prod.name === 'object'
         ? (prod.name[ACC_EN ? 'en' : 'ar'] || prod.name.ar || prod.name.en || '')
         : (prod && prod.name ? String(prod.name) : '');
@@ -2482,7 +2482,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       }
       const sym = {AED:'د.إ',USD:'$',SAR:'ر.س',EGP:'ج.م'}[localStorage.getItem('currency')||'AED']||'د.إ';
       grid.innerHTML = hist.map(p => `
-        <a class="hist-card" href="product.html?id=${encodeURIComponent(p.id)}">
+        <a class="hist-card" href="/product?id=${encodeURIComponent(p.id)}">
           <img class="hist-img" src="${p.img||'assets/logo.png'}" alt="${p.name}" onerror="this.src='/assets/logo.png'" loading="lazy">
           <div class="hist-info">
             <div class="hist-name">${p.name||'منتج'}</div>
@@ -3273,7 +3273,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const oldPrice = getPriceValue(product.oldPrice);
     const discount = oldPrice > price ? Math.round(((oldPrice - price) / oldPrice) * 100) : 0;
     const img = Array.isArray(product.img) ? product.img[0] : product.img || 'assets/logo.png';
-    const link = product.id ? `product.html?id=${encodeURIComponent(product.id)}` : 'product.html';
+    const link = product.id ? `/product?id=${encodeURIComponent(product.id)}` : '/product';
     const savedAmt = (oldPrice - price).toFixed(2);
     return `
       <a class="product-card" href="${link}" style="text-decoration:none;">
@@ -3613,7 +3613,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       ${deliveredItems.map((entry, idx) => {
         const pname = productName(entry.item, entry.prod);
         const pimg = productImage(entry.item, entry.prod);
-        const link = entry.prod?.id || entry.item.id ? `product.html?id=${encodeURIComponent(entry.prod?.id || entry.item.id)}` : '#';
+        const link = entry.prod?.id || entry.item.id ? `/product?id=${encodeURIComponent(entry.prod?.id || entry.item.id)}` : '#';
         return `<div class="my-rv-form-card" data-rv-pid="${escapeHtml(entry.pid)}">
           <a href="${link}" class="my-rv-form-head">
             <img src="${escapeHtml(pimg)}" alt="" loading="lazy" onerror="this.src='/assets/logo.png'">
@@ -3636,7 +3636,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const pimg  = prod && prod.img && !String(Array.isArray(prod.img)?prod.img[0]:prod.img).startsWith('data:')
         ? (Array.isArray(prod.img)?prod.img[0]:prod.img) : '';
       const date  = rv.date ? new Date(rv.date).toLocaleDateString(ACC_EN ? 'en-US' : 'ar-AE',{year:'numeric',month:'short',day:'numeric'}) : '';
-      const link  = rv.pid ? `product.html?id=${encodeURIComponent(rv.pid)}` : '#';
+      const link  = rv.pid ? `/product?id=${encodeURIComponent(rv.pid)}` : '#';
       return `<div class="my-rv-card">
         <a href="${link}" class="my-rv-product">
           ${pimg ? `<img src="${escapeHtml(pimg)}" alt="" loading="lazy" onerror="this.style.display='none'">` : '<span style="font-size:1.8rem;flex-shrink:0">📦</span>'}
@@ -3657,7 +3657,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const pimg  = prod && prod.img && !String(Array.isArray(prod.img)?prod.img[0]:prod.img).startsWith('data:')
         ? (Array.isArray(prod.img)?prod.img[0]:prod.img) : '';
       const date  = rv.date ? new Date(rv.date).toLocaleDateString(ACC_EN ? 'en-US' : 'ar-AE',{year:'numeric',month:'short',day:'numeric'}) : '';
-      const link  = rv.pid ? `product.html?id=${encodeURIComponent(rv.pid)}` : '#';
+      const link  = rv.pid ? `/product?id=${encodeURIComponent(rv.pid)}` : '#';
       return `<div class="my-rv-card">
         <a href="${link}" class="my-rv-product">
           ${pimg ? `<img src="${escapeHtml(pimg)}" alt="" loading="lazy" onerror="this.style.display='none'">` : '<span style="font-size:1.8rem;flex-shrink:0">📦</span>'}
@@ -4031,7 +4031,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </footer>
 <script src="/java/supabase.min.js?v=supabase-20260725a" defer></script>
-<script src="/java/main.min.js?v=146" defer></script>
+<script src="/java/main.min.js?v=147" defer></script>
 <script src="/java/sw-refresh.js?v=sw-refresh-20260802a" defer></script>
 <script src="/java/instant-nav.min.js?v=instant-nav-20260801b" defer></script>
 <script src="/translations/translation.min.js?v=translation-20260726c" defer></script>
@@ -4040,7 +4040,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="/java/push-welcome.js?v=push-welcome-20260728d" defer></script>
 <script src="/java/notifications.min.js?v=notifications-20260801a" defer></script>
 <script src="/java/abandoned-cart.js?v=abandoned-cart-20260730a" defer></script>
-<script type="module" src="./java/Products.min.js?v=products-20260802c"></script>
+<script type="module" src="./java/Products.min.js?v=products-20260802e"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   function buildSocialBar(s) {

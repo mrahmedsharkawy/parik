@@ -1,5 +1,5 @@
 {
-  "cleanUrls": true,
+  "cleanUrls": false,
   "trailingSlash": false,
   "rewrites": [
     { "source": "/favicon.ico", "destination": "/assets/icon-96.png" },
@@ -8,12 +8,25 @@
     { "source": "/assets/categories/sticker/:file", "destination": "/assets/categories/Sticker/:file" },
     { "source": "/assets/categories/ramadan/:file", "destination": "/assets/categories/Ramadan/:file" },
     { "source": "/assets/categories/forex/:file", "destination": "/assets/categories/Forex/:file" },
-    { "source": "/affiliate-program", "destination": "/affiliate" },
-    { "source": "/affiliate-program.html", "destination": "/affiliate" },
+    { "source": "/affiliate-program", "destination": "/affiliate.html" },
+    { "source": "/affiliate-program.html", "destination": "/affiliate.html" },
     { "source": "/categories/:path*", "destination": "/categories.html" },
-    { "source": "/policy/:slug", "destination": "/policy" },
-    { "source": "/product/:id/:slug", "destination": "/product" },
-    { "source": "/product/:id",       "destination": "/product" }
+    { "source": "/policy/:slug", "destination": "/policy.html" },
+    { "source": "/product/:id/:slug", "destination": "/product.html" },
+    { "source": "/product/:id",       "destination": "/product.html" },
+    { "source": "/product", "destination": "/product.html" },
+    { "source": "/categories", "destination": "/categories.html" },
+    { "source": "/Cart", "destination": "/Cart.html" },
+    { "source": "/account", "destination": "/account.html" },
+    { "source": "/login", "destination": "/login.html" },
+    { "source": "/offers", "destination": "/offers.html" },
+    { "source": "/monthly-offers", "destination": "/monthly-offers.html" },
+    { "source": "/checkout", "destination": "/checkout.html" },
+    { "source": "/policy", "destination": "/policy.html" },
+    { "source": "/affiliate", "destination": "/affiliate.html" },
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/admin-reports", "destination": "/admin-reports.html" },
+    { "source": "/sales-invoices", "destination": "/sales-invoices.html" }
   ],
   "headers": [
     {
