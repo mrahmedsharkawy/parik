@@ -90,8 +90,8 @@
   <!-- Critical above-fold CSS (prevents FOUC while style.css loads) -->
   <style>
     *{box-sizing:border-box;margin:0}
-    html,body{height:100%;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:auto}
-    body{background:#fff;font-family:Arial,Tahoma,sans-serif;padding-top:env(safe-area-inset-top);overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:auto}
+    html,body{height:100%;overscroll-behavior-y:none}
+    body{background:#fff;font-family:Arial,Tahoma,sans-serif;padding-top:env(safe-area-inset-top);overscroll-behavior-y:none}
     .page{min-height:100dvh;display:flex;flex-direction:column}
     main{width:70%;margin:70px auto 50px;display:flex;flex-direction:column;justify-content:center}
     header,.main-header{background-color:#152546;padding-top:env(safe-area-inset-top)}
