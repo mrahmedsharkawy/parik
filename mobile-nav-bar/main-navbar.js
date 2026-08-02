@@ -242,29 +242,7 @@ async function initMobileNav() {
         return targetUrl.origin === location.origin && normalizePath(targetUrl.pathname) === normalizePath(location.pathname);
       };
 
-      const clearSavedScrollForCurrentPage = () => {
-        try {
-          const href = location.href;
-          const cleanUrl = new URL(location.href);
-          cleanUrl.searchParams.delete('__nav_reload');
-          const keys = [href, cleanUrl.href, cleanUrl.pathname + cleanUrl.search + cleanUrl.hash];
-          ['x2_scroll_positions', 'x2_product_return_positions', 'categoryScrollPositions', 'scrollPositions'].forEach((storageKey) => {
-            try {
-              const positions = JSON.parse(sessionStorage.getItem(storageKey) || '{}');
-              keys.forEach((key) => { delete positions[key]; });
-              sessionStorage.setItem(storageKey, JSON.stringify(positions));
-            } catch(e) {}
-          });
-          if (sessionStorage.getItem('x2_return_to_scroll_url') === href || sessionStorage.getItem('x2_return_to_scroll_url') === cleanUrl.href) {
-            sessionStorage.removeItem('x2_return_to_scroll_url');
-            sessionStorage.removeItem('x2_product_return_target');
-          }
-        } catch(e) {}
-      };
-
       const reloadSamePage = () => {
-        clearSavedScrollForCurrentPage();
-        window.addEventListener('pagehide', clearSavedScrollForCurrentPage, { once: true });
         const url = new URL(location.href);
         url.searchParams.set('__nav_reload', String(Date.now()));
         location.assign(url.href);
@@ -303,15 +281,6 @@ async function initMobileNav() {
       nav.__updateLiquidPillPosition = (animate = false) => {
         if (dragState) return;
         scheduleMovePillToLink(activeLink, animate);
-      };
-
-      const afterInitialPaint = (callback) => {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            if ('requestIdleCallback' in window) requestIdleCallback(callback, { timeout: 900 });
-            else setTimeout(callback, 120);
-          });
-        });
       };
 
       const findNearestLink = (clientX) => {
@@ -456,7 +425,7 @@ async function initMobileNav() {
         });
       });
 
-      afterInitialPaint(() => scheduleMovePillToLink(activeLink, false));
+      scheduleMovePillToLink(activeLink, false);
       window.addEventListener('resize', () => scheduleMovePillToLink(activeLink, false), { passive: true });
     }
 
@@ -600,7 +569,7 @@ window.addEventListener('orientationchange', initMobileNav, { passive: true });
     if (intervalId) return;
     lastY = window.scrollY || window.pageYOffset || 0;
     intervalId = window.setInterval(updateCompact, 120);
-    setTimeout(updateCompact, 180);
+    updateCompact();
   }
 
   document.addEventListener('DOMContentLoaded', start, { once: true });

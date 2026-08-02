@@ -1,6 +1,26 @@
 (function () {
   if (!('serviceWorker' in navigator)) return;
 
+  var REFRESH_KEY = 'sw-v272-global-refresh';
+  var refreshed = false;
+
+  function clearOldCaches() {
+    if (!('caches' in window)) return;
+    caches.keys().then(function (keys) {
+      keys.forEach(function (key) {
+        if (key !== 'bariq-v290') caches.delete(key).catch(function () {});
+      });
+    }).catch(function () {});
+  }
+
+  function markRefreshed() {
+    try {
+      if (sessionStorage.getItem(REFRESH_KEY) === '1') return true;
+      sessionStorage.setItem(REFRESH_KEY, '1');
+    } catch (e) {}
+    return false;
+  }
+
   function requestActivation(reg) {
     if (!reg) return;
     function skipWaitingWhenInstalled(worker) {
@@ -35,9 +55,14 @@
     } catch (e) {}
   }
 
-  // The service worker uses skipWaiting + clients.claim, so a forced reload here
-  // would blank the page mid-navigation (breaks iOS swipe-back).
-  navigator.serviceWorker.register('/sw.js?v=320', { updateViaCache: 'none' }).then(function (reg) {
+  navigator.serviceWorker.addEventListener('controllerchange', function () {
+    if (refreshed) return;
+    refreshed = true;
+    if (!markRefreshed()) window.location.reload();
+  });
+
+  navigator.serviceWorker.register('/sw.js?v=269', { updateViaCache: 'none' }).then(function (reg) {
+    clearOldCaches();
     requestActivation(reg);
     sendPushLanguage(reg);
     reg.update().catch(function () {});

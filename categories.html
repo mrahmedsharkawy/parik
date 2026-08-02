@@ -14,225 +14,28 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   (function(){
     try {
       if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
-      function pinScrollTarget(y, durationMs){
-        try {
-          var target = Math.max(0, Math.round(y));
-          var start = performance.now();
-          var cancelled = false;
-          function cancel(){ cancelled = true; }
-          ['wheel','touchstart','pointerdown','keydown'].forEach(function(evt){
-            window.addEventListener(evt, cancel, { once: true, passive: true });
-          });
-          function tick(){
-            if (cancelled) return;
-            if (performance.now() - start > durationMs) return;
-            var current = window.scrollY || window.pageYOffset || 0;
-            if (Math.abs(current - target) > 2) {
-              window.scrollTo(0, target);
-              document.documentElement.scrollTop = target;
-              document.body.scrollTop = target;
-            }
-            requestAnimationFrame(tick);
-          }
-          requestAnimationFrame(tick);
-        } catch(e) {}
-      }
-      function forceScrollToY(y){
-        try {
-          var targetY = Math.max(0, Number(y) || 0);
-          window.scrollTo(0, targetY);
-          document.documentElement.scrollTop = targetY;
-          document.body.scrollTop = targetY;
-          pinScrollTarget(targetY, 1500);
-        } catch(e) {}
-      }
-      function getMobileDesiredOffset(target){
-        try {
-          if (!target) return Number(target && target.offset) || 8;
-          var isMobile = window.matchMedia && window.matchMedia('(max-width: 899px)').matches;
-          var ratio = Number(target.viewportRatio);
-          if (!isMobile || !(ratio >= 0 && ratio <= 1)) return Number(target.offset) || 8;
-          var currentVH = (window.visualViewport && Number(window.visualViewport.height)) ? Number(window.visualViewport.height) : (window.innerHeight || 0);
-          if (currentVH <= 0) return Number(target.offset) || 8;
-          return Math.max(8, Math.round(ratio * currentVH));
-        } catch(e) {
-          return Number(target && target.offset) || 8;
-        }
-      }
-      function scheduleMobileFineTune(target, triesLeft){
-        try {
-          if (!target || triesLeft <= 0) return;
-          var selector = '.product-card[data-product-id="' + String(target.productId).replace(/"/g, '\\"') + '"]';
-          setTimeout(function(){
-            try {
-              var card = document.querySelector(selector);
-              if (!card) return;
-              var desiredTop = getMobileDesiredOffset(target);
-              var currentTop = Math.round(card.getBoundingClientRect().top);
-              var delta = currentTop - desiredTop;
-              if (Math.abs(delta) > 3) {
-                forceScrollToY((window.scrollY || window.pageYOffset || 0) + delta);
-              }
-              scheduleMobileFineTune(target, triesLeft - 1);
-            } catch(e) {}
-          }, 180);
-        } catch(e) {}
-      }
-      function clearProductReturnRestoreState(){
-        try { sessionStorage.removeItem('x2_return_to_scroll_url'); sessionStorage.removeItem('x2_product_return_target'); } catch(e) {}
-      }
-      function scheduleProductReturnRetry(){
-        try {
-          if (window.__x2CategoryProductReturnRetryTimer) return;
-          window.__x2CategoryProductReturnRetryTimer = setTimeout(function(){
-            window.__x2CategoryProductReturnRetryTimer = null;
-            restoreProductTarget();
-          }, 180);
-        } catch(e) {}
-      }
-      function restoreProductTarget(){
-        try {
-          if (sessionStorage.getItem('x2_return_to_scroll_url') !== location.href) return false;
-          if (window.__x2ProductReturnRestored) return true;
-          var productPositions = JSON.parse(sessionStorage.getItem('x2_product_return_positions') || '{}');
-          var positions = productPositions[location.href] ? productPositions : JSON.parse(sessionStorage.getItem('x2_scroll_positions') || '{}');
-          var expectedY = Number(positions[location.href] || 0);
-          var attempt = Number(window.__x2ProductReturnRestoreAttempts || 0) + 1;
-          window.__x2ProductReturnRestoreAttempts = attempt;
-          var target = JSON.parse(sessionStorage.getItem('x2_product_return_target') || 'null');
-          var desiredOffset = getMobileDesiredOffset(target);
-          if (expectedY > 0 && (document.documentElement.scrollHeight || 0) >= expectedY + Math.min(300, window.innerHeight || 0)) {
-            forceScrollToY(expectedY);
-            if (!target || target.url !== location.href || !target.productId) {
-              window.__x2ProductReturnRestored = true;
-              clearProductReturnRestoreState();
-              return true;
-            }
-          }
-          if (!target || target.url !== location.href || !target.productId) {
-            if (expectedY > 0) {
-              forceScrollToY(expectedY);
-              window.__x2ProductReturnRestored = true;
-              clearProductReturnRestoreState();
-              return true;
-            }
-            return false;
-          }
-          var cards = document.querySelectorAll('.product-card[data-product-id]');
-          var card = null;
-          var bestDiff = Infinity;
-          for (var i = 0; i < cards.length; i++) {
-            if (String(cards[i].getAttribute('data-product-id')) === String(target.productId)) {
-              var candidateRect = cards[i].getBoundingClientRect();
-              if (candidateRect.width <= 0 || candidateRect.height <= 0) continue;
-              if (candidateRect.right <= 0 || candidateRect.left >= (window.innerWidth || 0)) continue;
-              var candidateY = Math.max(0, Math.round((window.scrollY || window.pageYOffset || 0) + candidateRect.top - desiredOffset));
-              var diff = expectedY > 0 ? Math.abs(candidateY - expectedY) : 0;
-              if (!card || diff < bestDiff) { card = cards[i]; bestDiff = diff; }
-            }
-          }
-          if (!card) {
-            if (attempt < 24) { scheduleProductReturnRetry(); return false; }
-            if (expectedY > 0) {
-              forceScrollToY(expectedY);
-              window.__x2ProductReturnRestored = true;
-              clearProductReturnRestoreState();
-              return true;
-            }
-            return false;
-          }
-          var y = Math.max(0, Math.round((window.scrollY || window.pageYOffset || 0) + card.getBoundingClientRect().top - desiredOffset));
-          var absoluteY = Number(target.absoluteY || 0);
-          if (absoluteY > 0 && Math.abs(y - absoluteY) > Math.max(600, Math.round((window.innerHeight || 0) * 0.8))) {
-            if (attempt < 24) { scheduleProductReturnRetry(); return false; }
-            y = expectedY > 0 ? Math.max(0, Math.round(expectedY)) : y;
-          }
-          if (expectedY > 0 && Math.abs(y - expectedY) > Math.max(300, Math.round((window.innerHeight || 0) * 0.4))) {
-            if (attempt < 24) { scheduleProductReturnRetry(); return false; }
-            y = Math.max(0, Math.round(expectedY));
-          }
-          if (document.readyState !== 'complete' && attempt < 24) { scheduleProductReturnRetry(); return false; }
-          forceScrollToY(y);
-          window.__x2ProductReturnRestored = true;
-          scheduleMobileFineTune(target, 5);
-          clearProductReturnRestoreState();
-          return true;
-        } catch(e) { return false; }
-      }
+      if (sessionStorage.getItem('x2_return_to_scroll_url') !== location.href) return;
+      if (sessionStorage.getItem('x2_product_return_target')) return;
+      var productPositions = JSON.parse(sessionStorage.getItem('x2_product_return_positions') || '{}');
+      var positions = productPositions[location.href] ? productPositions : JSON.parse(sessionStorage.getItem('x2_scroll_positions') || '{}');
+      var y = Number(positions[location.href] || 0);
+      if (!(y > 0)) return;
       var style = document.createElement('style');
-      style.textContent = 'html.x2-restoring-scroll,html.x2-restoring-scroll body{scroll-behavior:auto!important}html.x2-restoring-scroll,html.x2-restoring-scroll body,html.x2-restoring-scroll *{overflow-anchor:none!important}';
+      style.textContent = 'html.x2-restoring-scroll,html.x2-restoring-scroll body{scroll-behavior:auto!important}';
       document.head.appendChild(style);
-      function applyRestoringGuard(){
-        try {
-          document.documentElement.classList.add('x2-restoring-scroll');
-          clearTimeout(window.__x2RestoringGuardTimer);
-          window.__x2RestoringGuardTimer = setTimeout(function(){ document.documentElement.classList.remove('x2-restoring-scroll'); }, 6000);
-        } catch(e) {}
-      }
-      applyRestoringGuard();
-      function reveal(){ applyRestoringGuard(); restoreProductTarget(); setTimeout(function(){ restoreProductTarget(); document.documentElement.classList.remove('x2-restoring-scroll'); }, 320); }
+      document.documentElement.classList.add('x2-restoring-scroll');
+      function restore(){ window.scrollTo(0, y); }
+      function reveal(){ restore(); requestAnimationFrame(function(){ restore(); document.documentElement.classList.remove('x2-restoring-scroll'); }); }
+      restore();
       document.addEventListener('DOMContentLoaded', reveal, { once: true });
-      window.addEventListener('pageshow', reveal);
+      window.addEventListener('pageshow', reveal, { once: true });
       setTimeout(reveal, 700);
-    } catch(e) {}
-  })();
-  </script>
-  <script>
-  (function(){
-    try {
-      function getCurrentPageY(){
-        try {
-          var vvTop = (window.visualViewport && Number(window.visualViewport.pageTop)) ? Number(window.visualViewport.pageTop) : 0;
-          return Math.max(0, Math.round(Math.max(
-            Number(window.scrollY || 0),
-            Number(window.pageYOffset || 0),
-            Number(document.documentElement && document.documentElement.scrollTop || 0),
-            Number(document.body && document.body.scrollTop || 0),
-            vvTop
-          )));
-        } catch(e) { return Math.max(0, Math.round(Number(window.scrollY || window.pageYOffset || 0))); }
-      }
-      function saveProductReturnFromLink(link){
-        try {
-          if (!link || /\/product(?:\/|\.html|$)/i.test(location.pathname)) return;
-          var y = getCurrentPageY();
-          var positions = JSON.parse(sessionStorage.getItem('x2_scroll_positions') || '{}');
-          positions[location.href] = y;
-          sessionStorage.setItem('x2_scroll_positions', JSON.stringify(positions));
-          var productReturnPositions = JSON.parse(sessionStorage.getItem('x2_product_return_positions') || '{}');
-          productReturnPositions[location.href] = y;
-          sessionStorage.setItem('x2_product_return_positions', JSON.stringify(productReturnPositions));
-          var card = link.closest && link.closest('.product-card[data-product-id]');
-          if (card && card.dataset && card.dataset.productId) {
-            var rect = card.getBoundingClientRect();
-            var vh = (window.visualViewport && Number(window.visualViewport.height)) ? Number(window.visualViewport.height) : (window.innerHeight || 0);
-            sessionStorage.setItem('x2_product_return_target', JSON.stringify({
-              url: location.href,
-              productId: card.dataset.productId,
-              offset: Math.max(8, Math.round(rect.top)),
-              viewportY: y,
-              viewportHeight: Math.max(0, Math.round(vh)),
-              viewportRatio: vh > 0 ? Number((rect.top / vh).toFixed(4)) : null,
-              absoluteY: Math.max(0, Math.round(y + rect.top))
-            }));
-          }
-          sessionStorage.setItem('x2_return_to_scroll_url', location.href);
-        } catch(e) {}
-      }
-      function onPointerLike(e){
-        var link = e && e.target && e.target.closest && e.target.closest('a[href*="product.html?id="],a[href*="/product?id="],a[href*="/product/"]');
-        if (!link) return;
-        saveProductReturnFromLink(link);
-      }
-      document.addEventListener('pointerup', onPointerLike, true);
-      document.addEventListener('touchend', onPointerLike, true);
-      document.addEventListener('click', onPointerLike, true);
     } catch(e) {}
   })();
   </script>
   <script src="/java/auth-reset.js"></script>
   <title data-i18n="جميع الفئات - Bariq">جميع الفئات - Bariq</title>
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#152546">
   <link rel="icon" type="image/png" sizes="96x96" href="/assets/icon-96.png?v=site-icon-20260727">
   <link rel="icon" type="image/png" sizes="202x202" href="/assets/icon.png?v=site-icon-20260727">
   <link rel="apple-touch-icon" sizes="202x202" href="/assets/icon.png?v=site-icon-20260727">
@@ -276,11 +79,11 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <meta property="og:image" content="https://bariqgifts.com/assets/logo.png?v=logo-stroke-20260729">
   <meta property="og:url" content="https://bariqgifts.com/categories">
   <meta property="og:type" content="website">
-  <style>*{box-sizing:border-box;margin:0}html,body{height:100%}body{background:#fff;font-family:'Cairo',Arial,sans-serif;padding-top:env(safe-area-inset-top)}.page{min-height:100dvh;display:flex;flex-direction:column}main{width:70%;margin:70px auto 50px;display:flex;flex-direction:column;justify-content:center}header,.main-header{background-color:#152546;padding-top:env(safe-area-inset-top)}.main-header{position:fixed;inset:0 0 auto 0;z-index:1000;width:100%;padding:7px 0;box-shadow:0 2px 4px rgba(0,0,0,.1)}.header-content{width:70%;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;min-height:50px}.logo img{height:36px}.search-container{flex:1;display:flex;align-items:center;background:#fff;border-radius:20px;margin:0 15px;max-width:1100px;height:38px;padding:0 10px}.search-container input{border:none;flex:1;outline:none;padding:6px 10px;font-size:16px;background:transparent}img,video{max-width:100%;height:auto;border-radius:3px}.dp-img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:7px;background:#f0f0f0}@media(max-width:899px){.main-header .dropdown,.main-header .cart,.main-header .logo{display:none!important}body{padding-bottom:calc(65px + env(safe-area-inset-bottom))}}#category-products:empty{min-height:0;background:transparent;border-radius:8px}</style>
+  <style>*{box-sizing:border-box;margin:0}html,body{height:100%}body{background:#152546;font-family:'Cairo',Arial,sans-serif;padding-top:env(safe-area-inset-top)}.page{min-height:100dvh;display:flex;flex-direction:column}main{width:70%;margin:70px auto 50px;display:flex;flex-direction:column;justify-content:center}header,.main-header{background-color:#152546;padding-top:env(safe-area-inset-top)}.main-header{position:fixed;inset:0 0 auto 0;z-index:1000;width:100%;padding:7px 0;box-shadow:0 2px 4px rgba(0,0,0,.1)}.header-content{width:70%;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;min-height:50px}.logo img{height:36px}.search-container{flex:1;display:flex;align-items:center;background:#fff;border-radius:20px;margin:0 15px;max-width:1100px;height:38px;padding:0 10px}.search-container input{border:none;flex:1;outline:none;padding:6px 10px;font-size:16px;background:transparent}img,video{max-width:100%;height:auto;border-radius:3px}.dp-img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:7px;background:#f0f0f0}@media(max-width:899px){.main-header .dropdown,.main-header .cart,.main-header .logo{display:none!important}body{padding-bottom:calc(65px + env(safe-area-inset-bottom))}}#category-products:empty{min-height:0;background:transparent;border-radius:8px}</style>
   <link rel="stylesheet" href="/style/style.css?v=137">
   <style>.mobile-nav{display:none}</style>
   <link rel="stylesheet" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260729f" media="(max-width: 899px)">
-  <style>html,body{background:#fff!important}.page,main.main{background:#fff!important}@media(min-width:900px){.mobile-nav{display:none!important}}html.x2-categories-booting .cat-page{visibility:hidden!important}main #category-products:empty,main .cat-products-section:has(#category-products:empty){display:none!important;min-height:0!important;background:none!important;animation:none!important}.filters-scroll-container,main .filter-dropdown,html.occasions-category-page main.main>footer.site-footer,html.occasions-category-page main.main>#category-products{display:none!important}</style>
+  <style>html,body{background:#152546!important}.page,main.main{background:#fff!important}@media(min-width:900px){.mobile-nav{display:none!important}}html.x2-categories-booting .cat-page{visibility:hidden!important}main #category-products:empty,main .cat-products-section:has(#category-products:empty){display:none!important;min-height:0!important;background:none!important;animation:none!important}.filters-scroll-container,main .filter-dropdown,html.occasions-category-page main.main>footer.site-footer,html.occasions-category-page main.main>#category-products{display:none!important}</style>
   <noscript>
 </noscript>
   <link rel="canonical" href="https://bariqgifts.com/categories">
@@ -1279,7 +1082,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const name = (typeof p.name==='object'?(p.name[lang]||p.name.ar||p.name.en):(p.name||(lang === 'en' ? 'Product' : 'منتج')));
       const img  = (Array.isArray(p.img)?p.img[0]:p.img)||'assets/logo.png';
       const langParam = (localStorage.getItem('lang') || document.documentElement.lang) === 'en' ? '?lang=en' : '';
-      const link = p.id ? `/product?id=${encodeURIComponent(p.id)}${langParam ? '&lang=en' : ''}` : '#';
+      const link = p.id ? `product.html?id=${encodeURIComponent(p.id)}${langParam ? '&lang=en' : ''}` : '#';
       const price = parseFloat(p.price)||0;
       const oldPrice = parseFloat(p.oldPrice)||0;
       const sym = {AED:'د.إ',USD:'$',SAR:'ر.س',EGP:'ج.م'}[localStorage.getItem('currency')||'AED']||'د.إ';
@@ -1533,15 +1336,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </footer>
 <script src="/java/supabase.min.js?v=supabase-20260801a" defer></script>
-<script src="/java/main.min.js?v=147" defer></script>
-<script src="/java/sw-refresh.js?v=sw-refresh-20260802b" defer></script>
-<script src="/java/instant-nav.min.js?v=instant-nav-20260801b" defer></script>
+<script src="/java/main.min.js?v=141" defer></script>
+<script src="/java/sw-refresh.js?v=sw-refresh-20260801e" defer></script>
+<script src="/java/instant-nav.js?v=instant-nav-20260728e" defer></script>
 <script src="/translations/translation.min.js?v=translation-20260726c" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
-<script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260801c" defer></script>
-<script src="/java/push-welcome.js?v=push-welcome-20260802e" defer></script>
+<script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260728e" defer></script>
+<script src="/java/push-welcome.js?v=push-welcome-20260728d" defer></script>
 <script src="/java/abandoned-cart.js?v=abandoned-cart-20260730a" defer></script>
-<script type="module" src="./java/Products.min.js?v=products-20260802f"></script> <!-- ده يفضل يفضل في الآخر -->
+<script type="module" src="./java/Products.min.js?v=products-20260801l"></script> <!-- ده يفضل يفضل في الآخر -->
 </body>
 </html>
 

@@ -18,7 +18,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <link rel="apple-touch-icon" sizes="202x202" href="/assets/icon.png?v=site-icon-20260727">
   <meta name="apple-mobile-web-app-title" content="بريق للهدايا">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#152546">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
@@ -65,11 +65,11 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <meta property="og:image" content="https://bariqgifts.com/assets/logo.png?v=logo-stroke-20260729">
   <meta property="og:url" content="https://bariqgifts.com/account">
   <meta property="og:type" content="website">
-  <style>*{box-sizing:border-box;margin:0}html,body{height:100%}body{background:#fff;font-family:'Cairo',Arial,sans-serif;padding-top:env(safe-area-inset-top)}.page{min-height:100dvh;display:flex;flex-direction:column}main{width:70%;margin:70px auto 50px;display:flex;flex-direction:column;justify-content:center}header,.main-header{background-color:#152546;padding-top:env(safe-area-inset-top)}.main-header{position:fixed;inset:0 0 auto 0;z-index:1000;width:100%;padding:7px 0;box-shadow:0 2px 4px rgba(0,0,0,.1)}.header-content{width:70%;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;min-height:50px}.logo img{height:36px}.search-container{flex:1;display:flex;align-items:center;background:#fff;border-radius:20px;margin:0 15px;max-width:1100px;height:38px;padding:0 10px}.search-container input{border:none;flex:1;outline:none;padding:6px 10px;font-size:16px;background:transparent}img,video{max-width:100%;height:auto;border-radius:3px}.dp-img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:7px;background:#f0f0f0}@media(max-width:899px){.main-header .dropdown,.main-header .cart,.main-header .logo{display:none!important}body{padding-bottom:calc(65px + env(safe-area-inset-bottom))}}</style>
+  <style>*{box-sizing:border-box;margin:0}html,body{height:100%}body{background:#152546;font-family:'Cairo',Arial,sans-serif;padding-top:env(safe-area-inset-top)}.page{min-height:100dvh;display:flex;flex-direction:column}main{width:70%;margin:70px auto 50px;display:flex;flex-direction:column;justify-content:center}header,.main-header{background-color:#152546;padding-top:env(safe-area-inset-top)}.main-header{position:fixed;inset:0 0 auto 0;z-index:1000;width:100%;padding:7px 0;box-shadow:0 2px 4px rgba(0,0,0,.1)}.header-content{width:70%;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;min-height:50px}.logo img{height:36px}.search-container{flex:1;display:flex;align-items:center;background:#fff;border-radius:20px;margin:0 15px;max-width:1100px;height:38px;padding:0 10px}.search-container input{border:none;flex:1;outline:none;padding:6px 10px;font-size:16px;background:transparent}img,video{max-width:100%;height:auto;border-radius:3px}.dp-img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:7px;background:#f0f0f0}@media(max-width:899px){.main-header .dropdown,.main-header .cart,.main-header .logo{display:none!important}body{padding-bottom:calc(65px + env(safe-area-inset-bottom))}}</style>
   <link rel="stylesheet" href="/style/style.css?v=137">
   <style>.mobile-nav{display:none}</style>
   <link rel="stylesheet" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260729f" media="(max-width: 899px)">
-  <style>html,body{background:#fff!important}.page,main.main{background:#fff!important}@media(min-width:900px){.mobile-nav{display:none!important}}</style>
+  <style>html,body{background:#152546!important}.page,main.main{background:#fff!important}@media(min-width:900px){.mobile-nav{display:none!important}}</style>
   <noscript>
 </noscript>
   <link rel="canonical" href="https://bariqgifts.com/account">
@@ -2334,7 +2334,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                      (prod ? (Array.isArray(prod.img)?prod.img[0]:prod.img)||'' : '') ||
                      'assets/logo.png';
       const resolvedId = item.id || prod?.id || '';
-      const prodLink = resolvedId ? `/product?id=${encodeURIComponent(resolvedId)}` : '';
+      const prodLink = resolvedId ? `product.html?id=${encodeURIComponent(resolvedId)}` : '';
       const prodName = prod && typeof prod.name === 'object'
         ? (prod.name[ACC_EN ? 'en' : 'ar'] || prod.name.ar || prod.name.en || '')
         : (prod && prod.name ? String(prod.name) : '');
@@ -2482,7 +2482,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       }
       const sym = {AED:'د.إ',USD:'$',SAR:'ر.س',EGP:'ج.م'}[localStorage.getItem('currency')||'AED']||'د.إ';
       grid.innerHTML = hist.map(p => `
-        <a class="hist-card" href="/product?id=${encodeURIComponent(p.id)}">
+        <a class="hist-card" href="product.html?id=${encodeURIComponent(p.id)}">
           <img class="hist-img" src="${p.img||'assets/logo.png'}" alt="${p.name}" onerror="this.src='/assets/logo.png'" loading="lazy">
           <div class="hist-info">
             <div class="hist-name">${p.name||'منتج'}</div>
@@ -3273,7 +3273,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const oldPrice = getPriceValue(product.oldPrice);
     const discount = oldPrice > price ? Math.round(((oldPrice - price) / oldPrice) * 100) : 0;
     const img = Array.isArray(product.img) ? product.img[0] : product.img || 'assets/logo.png';
-    const link = product.id ? `/product?id=${encodeURIComponent(product.id)}` : '/product';
+    const link = product.id ? `product.html?id=${encodeURIComponent(product.id)}` : 'product.html';
     const savedAmt = (oldPrice - price).toFixed(2);
     return `
       <a class="product-card" href="${link}" style="text-decoration:none;">
@@ -3613,7 +3613,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       ${deliveredItems.map((entry, idx) => {
         const pname = productName(entry.item, entry.prod);
         const pimg = productImage(entry.item, entry.prod);
-        const link = entry.prod?.id || entry.item.id ? `/product?id=${encodeURIComponent(entry.prod?.id || entry.item.id)}` : '#';
+        const link = entry.prod?.id || entry.item.id ? `product.html?id=${encodeURIComponent(entry.prod?.id || entry.item.id)}` : '#';
         return `<div class="my-rv-form-card" data-rv-pid="${escapeHtml(entry.pid)}">
           <a href="${link}" class="my-rv-form-head">
             <img src="${escapeHtml(pimg)}" alt="" loading="lazy" onerror="this.src='/assets/logo.png'">
@@ -3636,7 +3636,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const pimg  = prod && prod.img && !String(Array.isArray(prod.img)?prod.img[0]:prod.img).startsWith('data:')
         ? (Array.isArray(prod.img)?prod.img[0]:prod.img) : '';
       const date  = rv.date ? new Date(rv.date).toLocaleDateString(ACC_EN ? 'en-US' : 'ar-AE',{year:'numeric',month:'short',day:'numeric'}) : '';
-      const link  = rv.pid ? `/product?id=${encodeURIComponent(rv.pid)}` : '#';
+      const link  = rv.pid ? `product.html?id=${encodeURIComponent(rv.pid)}` : '#';
       return `<div class="my-rv-card">
         <a href="${link}" class="my-rv-product">
           ${pimg ? `<img src="${escapeHtml(pimg)}" alt="" loading="lazy" onerror="this.style.display='none'">` : '<span style="font-size:1.8rem;flex-shrink:0">📦</span>'}
@@ -3657,7 +3657,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const pimg  = prod && prod.img && !String(Array.isArray(prod.img)?prod.img[0]:prod.img).startsWith('data:')
         ? (Array.isArray(prod.img)?prod.img[0]:prod.img) : '';
       const date  = rv.date ? new Date(rv.date).toLocaleDateString(ACC_EN ? 'en-US' : 'ar-AE',{year:'numeric',month:'short',day:'numeric'}) : '';
-      const link  = rv.pid ? `/product?id=${encodeURIComponent(rv.pid)}` : '#';
+      const link  = rv.pid ? `product.html?id=${encodeURIComponent(rv.pid)}` : '#';
       return `<div class="my-rv-card">
         <a href="${link}" class="my-rv-product">
           ${pimg ? `<img src="${escapeHtml(pimg)}" alt="" loading="lazy" onerror="this.style.display='none'">` : '<span style="font-size:1.8rem;flex-shrink:0">📦</span>'}
@@ -4031,16 +4031,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </footer>
 <script src="/java/supabase.min.js?v=supabase-20260725a" defer></script>
-<script src="/java/main.min.js?v=147" defer></script>
-<script src="/java/sw-refresh.js?v=sw-refresh-20260802b" defer></script>
-<script src="/java/instant-nav.min.js?v=instant-nav-20260801b" defer></script>
+<script src="/java/main.min.js?v=141" defer></script>
+<script src="/java/sw-refresh.js?v=sw-refresh-20260801e" defer></script>
+<script src="/java/instant-nav.js?v=instant-nav-20260728e" defer></script>
 <script src="/translations/translation.min.js?v=translation-20260726c" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
-<script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260801c" defer></script>
-<script src="/java/push-welcome.js?v=push-welcome-20260802e" defer></script>
-<script src="/java/notifications.min.js?v=notifications-20260802b" defer></script>
+<script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260728e" defer></script>
+<script src="/java/push-welcome.js?v=push-welcome-20260728d" defer></script>
+<script src="/java/notifications.min.js?v=notifications-20260801a" defer></script>
 <script src="/java/abandoned-cart.js?v=abandoned-cart-20260730a" defer></script>
-<script type="module" src="./java/Products.min.js?v=products-20260802f"></script>
+<script type="module" src="./java/Products.min.js?v=products-20260801l"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   function buildSocialBar(s) {

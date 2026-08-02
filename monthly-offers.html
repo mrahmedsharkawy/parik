@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#152546">
   <title>عروض الشهر - بريق</title>
   <link rel="icon" type="image/png" sizes="96x96" href="/assets/icon-96.png?v=site-icon-20260727">
   <link rel="stylesheet" href="/style/style.css?v=138">
@@ -89,9 +89,9 @@
 
   <script src="/java/supabase.min.js?v=supabase-20260801a" defer></script>
   <script src="/translations/translation.js?v=translation-monthly-20260801a" defer></script>
-  <script src="/java/sw-refresh.js?v=sw-refresh-20260802b" defer></script>
-  <script src="/java/instant-nav.min.js?v=instant-nav-20260801b" defer></script>
-  <script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260801c" defer></script>
+  <script src="/java/sw-refresh.js?v=sw-refresh-20260801e" defer></script>
+  <script src="/java/instant-nav.js?v=instant-nav-20260728e" defer></script>
+  <script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260728e" defer></script>
   <script>
   (function(){
     const grid = document.getElementById('monthlyGrid');
@@ -151,7 +151,7 @@
         const oldPrice = price(product.oldPrice);
         const current = price(product.price);
         const saved = Math.max(0, oldPrice - current).toFixed(2);
-        const link = product.id ? '/product?id=' + encodeURIComponent(product.id) : '/product';
+        const link = product.id ? '/product.html?id=' + encodeURIComponent(product.id) : '/product.html';
         return `
           <article class="monthly-card">
             <a href="${link}" aria-label="${nameOf(product).replace(/"/g,'&quot;')}">
