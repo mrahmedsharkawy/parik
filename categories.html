@@ -12,20 +12,49 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <meta charset="UTF-8" />
   <script>
   (function(){
+    function pageKey(url){
+      try {
+        var u = new URL(url || location.href, location.href);
+        var path = u.pathname.replace(/\/index\.html$/i, '/').replace(/\/+$/, '');
+        if (!path) path = '/';
+        return path + (u.search || '');
+      } catch (e) {
+        return String(url || location.href || '');
+      }
+    }
+    function readMap(key){
+      try { return JSON.parse(sessionStorage.getItem(key) || '{}'); } catch (e) { return {}; }
+    }
+    function restoreScroll(y){
+      try {
+        window.scrollTo(0, y);
+        window.scrollTo({ top: y, behavior: 'auto' });
+        if (document.scrollingElement) {
+          document.scrollingElement.scrollTop = y;
+          document.scrollingElement.scrollTo && document.scrollingElement.scrollTo(0, y);
+        }
+        document.documentElement.scrollTop = y;
+        document.body && (document.body.scrollTop = y);
+      } catch(e) {}
+    }
     try {
       if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
-      if (sessionStorage.getItem('x2_return_to_scroll_url') !== location.href) return;
-      var productPositions = JSON.parse(sessionStorage.getItem('x2_product_return_positions') || '{}');
-      var positions = productPositions[location.href] ? productPositions : JSON.parse(sessionStorage.getItem('x2_scroll_positions') || '{}');
-      var y = Number(positions[location.href] || 0);
+      var key = pageKey(location.href);
+      if (sessionStorage.getItem('x2_return_to_scroll_url') !== key) return;
+      var productPositions = readMap('x2_product_return_positions');
+      var positions = productPositions[key] ? productPositions : readMap('x2_scroll_positions');
+      var y = Number(positions[key] || 0);
       if (!(y > 0)) return;
       var style = document.createElement('style');
       style.textContent = 'html.x2-restoring-scroll,html.x2-restoring-scroll body{scroll-behavior:auto!important}';
       document.head.appendChild(style);
       document.documentElement.classList.add('x2-restoring-scroll');
-      function restore(){ window.scrollTo(0, y); }
-      function reveal(){ restore(); requestAnimationFrame(function(){ restore(); document.documentElement.classList.remove('x2-restoring-scroll'); }); }
-      restore();
+      function reveal(){
+        restoreScroll(y);
+        requestAnimationFrame(function(){ restoreScroll(y); });
+        setTimeout(function(){ restoreScroll(y); document.documentElement.classList.remove('x2-restoring-scroll'); }, 900);
+      }
+      restoreScroll(y);
       document.addEventListener('DOMContentLoaded', reveal, { once: true });
       window.addEventListener('pageshow', reveal, { once: true });
       setTimeout(reveal, 700);

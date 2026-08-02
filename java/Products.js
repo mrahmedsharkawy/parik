@@ -481,18 +481,33 @@ function optimizeSupabaseImageUrl(src, width, height, quality) {
     }
 }
 
+function x2PageKey(url) {
+    try {
+        const u = new URL(url || location.href, location.href);
+        const path = u.pathname.replace(/\/index\.html$/i, "/").replace(/\/+$/, "");
+        return (path || "/") + (u.search || "");
+    } catch (e) {
+        return String(url || location.href || "");
+    }
+}
+
+function readStoredMap(key) {
+    try { return JSON.parse(sessionStorage.getItem(key) || "{}") || {}; } catch (e) { return {}; }
+}
+
 function saveProductReturnScrollPosition(markReturn) {
     try {
         const rawY = window.scrollY || window.pageYOffset || 0;
-        const productReturnPositions = JSON.parse(sessionStorage.getItem("x2_product_return_positions") || "{}");
-        const previousY = Number(productReturnPositions[location.href] || 0);
+        const key = x2PageKey(location.href);
+        const productReturnPositions = readStoredMap("x2_product_return_positions");
+        const previousY = Number(productReturnPositions[key] || 0);
         const y = rawY > 20 ? rawY : previousY || rawY;
-        const positions = JSON.parse(sessionStorage.getItem("x2_scroll_positions") || "{}");
-        positions[location.href] = y;
+        const positions = readStoredMap("x2_scroll_positions");
+        positions[key] = y;
         sessionStorage.setItem("x2_scroll_positions", JSON.stringify(positions));
-        productReturnPositions[location.href] = y;
+        productReturnPositions[key] = y;
         sessionStorage.setItem("x2_product_return_positions", JSON.stringify(productReturnPositions));
-        if (markReturn) sessionStorage.setItem("x2_return_to_scroll_url", location.href);
+        if (markReturn) sessionStorage.setItem("x2_return_to_scroll_url", key);
     } catch (e) {}
 }
 
@@ -501,7 +516,7 @@ function saveProductReturnTarget(card) {
         if (!card || !card.dataset || !card.dataset.productId) return;
         const rect = card.getBoundingClientRect();
         sessionStorage.setItem("x2_product_return_target", JSON.stringify({
-            url: location.href,
+            url: x2PageKey(location.href),
             productId: card.dataset.productId,
             offset: Math.max(8, Math.round(rect.top))
         }));
@@ -512,7 +527,7 @@ function restoreProductReturnTarget() {
     try {
         if (window.__x2ProductReturnRestored) return true;
         const target = JSON.parse(sessionStorage.getItem("x2_product_return_target") || "null");
-        if (!target || target.url !== location.href || !target.productId) return false;
+        if (!target || target.url !== x2PageKey(location.href) || !target.productId) return false;
         const selector = `.product-card[data-product-id="${CSS.escape(String(target.productId))}"]`;
         const card = document.querySelector(selector);
         if (!card) return false;
@@ -529,7 +544,7 @@ function restoreProductReturnTarget() {
 
 function restoreProductReturnScrollPosition() {
     try {
-        if (sessionStorage.getItem("x2_return_to_scroll_url") !== location.href) return;
+        if (sessionStorage.getItem("x2_return_to_scroll_url") !== x2PageKey(location.href)) return;
         if (restoreProductReturnTarget()) return;
         const container = document.getElementById("category-products") || document.body;
         if (!container || !container.nodeType) return;
