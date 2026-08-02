@@ -75,30 +75,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <link rel="canonical" href="https://bariqgifts.com/account">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:site" content="@bariqgifts">
-  <style id="bariq-mobile-unified-header">
-  .logo-text{display:none}
-  .mh-cats-strip{display:none}
-  @media(max-width:899px){
-    .main-header{position:fixed!important;top:0!important;left:0!important;right:0!important;width:100%!important;max-width:100%!important;z-index:10000!important;background:#152546!important;box-shadow:0 1px 4px rgba(0,0,0,.18)!important;padding:7px 0!important;overflow:visible!important;transform:none!important}
-    .main-header .dropdown,.main-header .cart{display:none!important}
-    .main-header .logo{display:flex!important;align-items:center!important;flex-shrink:0!important}
-    .main-header .logo a{display:flex!important;align-items:center!important;text-decoration:none!important}
-    .main-header .logo img{display:none!important}
-    .logo-text{display:block!important;font-size:1.36rem!important;font-weight:900!important;color:#fff!important;font-family:'Segoe UI','Arial Black',Arial,sans-serif!important;letter-spacing:-.2px!important;line-height:1!important;white-space:nowrap!important}
-    .header-content{width:100%!important;max-width:100%!important;margin:0!important;padding:0 11px!important;gap:8px!important;display:flex!important;align-items:center!important;justify-content:flex-start!important;flex-wrap:nowrap!important;overflow:visible!important;min-height:40px!important}
-    .search-container{flex:1!important;min-width:0!important;max-width:calc(100% - 126px)!important;background:#f0f1f5!important;border-radius:12px!important;height:36px!important;margin:0!important;overflow:visible!important;padding:0 10px!important;display:flex!important;align-items:center!important;position:relative!important}
-    .search-container input[type="text"],.search-container input:not([type]){min-width:0!important;width:100%!important;text-align:right!important;font-size:.92rem!important;font-weight:600!important;background:transparent!important;border:0!important;outline:0!important;color:#152546!important;padding:6px 0!important}
-    .search-container input::placeholder{color:#8a8f9c!important;font-weight:600!important;font-size:.92rem!important;opacity:1!important}
-    .header-content>.search-icon,.header-content>.camera-icon{display:flex!important;align-items:center!important;justify-content:center!important;flex-shrink:0!important;width:30px!important;height:36px!important;padding:0!important;color:#fff!important;background:transparent!important}
-    .header-content>.search-icon svg,.header-content>.camera-icon svg{stroke:#fff!important;width:24px!important;height:24px!important;display:block!important}
-    .mh-cats-strip{display:flex!important;position:relative!important;z-index:1!important;gap:0;margin-top:54px!important;padding:4px 14px 0!important;overflow-x:auto!important;overflow-y:hidden!important;-webkit-overflow-scrolling:touch!important;scrollbar-width:none!important;background:#fff!important;white-space:nowrap!important}
-    .mh-cats-strip::-webkit-scrollbar{display:none!important}
-    .mh-cats-strip a{flex-shrink:0!important;padding:10px 16px!important;font-size:.88rem!important;font-weight:700!important;color:#666!important;text-decoration:none!important;white-space:nowrap!important;border-bottom:2.5px solid transparent!important}
-    .mh-cats-strip a.active{color:#152546!important;font-weight:900!important;border-bottom-color:#152546!important}
-    #searchDropdown{z-index:10001!important}
-    .page>main,main.main{margin-top:64px!important}
-  }
-  </style>
 </head>
 <body>
 <nav class="mobile-nav" role="navigation" aria-label="التنقل أسفل الشاشة">
@@ -120,7 +96,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <!-- الشعار -->
     <div class="logo">
-      <a href="/"><img src="/assets/logo.png" alt="Bariq Logo" /><span class="logo-text">Bariq</span></a>
+      <a href="/"><img src="/assets/logo.png" alt="Bariq Logo" /></a>
     </div>
 
 <!-- القائمة الجانبية للفئات -->
@@ -254,13 +230,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <input type="text" id="textSearch"
   placeholder="ابحث بالصورة او الاسم او المناسبة"
   data-i18n-placeholder="ابحث بالصورة او الاسم او المناسبة">
-  <input type="file" id="imageSearchInput" accept="image/*" style="display:none;">
-</div>
+  <!-- أيقونة البحث -->
   <span class="icon search search-icon" onclick="performTextSearch()" style="cursor:pointer;display:flex;align-items:center;">
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-  </span>  <label class="icon camera camera-icon" for="imageSearchInput" style="cursor:pointer;display:flex;align-items:center;margin-right:0;">
+  </span>
+
+  <!-- أيقونة الكاميرا -->
+  <label class="icon camera camera-icon" for="imageSearchInput" style="cursor:pointer;display:flex;align-items:center;margin-right:4px;">
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
   </label>
+  <input type="file" id="imageSearchInput" accept="image/*" style="display:none;">
+</div>
 
 
     <!-- الحساب -->
@@ -2184,8 +2164,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       ['العملة', BANK_INFO.currency],
       ['سبب التحويل', 'Order ' + inv.orderNumber]
     ].map(([label, value]) => `<div class="bank-row"><span>${escapeHtml(label)}</span><b dir="ltr">${escapeHtml(value)}</b></div>`).join('');
-    return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>فاتورة طلب ${escapeHtml(inv.orderNumber)}</title><style>body{margin:0;background:#f5f7fb;color:#152546;font-family:Tahoma,Arial,sans-serif}.page{max-width:760px;margin:24px auto;padding:16px}.invoice{background:#fff;border:1px solid #e5e9f2;border-radius:18px;overflow:hidden;box-shadow:0 14px 38px rgba(21,37,70,.12)}.head{background:linear-gradient(135deg,#fff,#fbf4dc);padding:22px;display:flex;gap:14px;align-items:center;border-bottom:1px solid #ece4c7}.logo{width:74px;height:74px;object-fit:contain;background:#fff;border:1px solid #eee;border-radius:14px}.title{font-size:1.3rem;font-weight:900;margin-bottom:6px}.muted{color:#7a8296;font-size:.9rem}.body{padding:22px}.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}.sum{background:#f8f9fc;border:1px solid #e7eaf2;border-radius:12px;padding:12px}.sum span{display:block;color:#7a8296;font-size:.78rem;margin-bottom:5px}.sum b{font-size:1.05rem}table{width:100%;border-collapse:collapse;margin:12px 0}td,th{border-bottom:1px solid #edf0f6;padding:10px;text-align:right}.note{background:#fff8e1;border:1px solid #f1d27a;color:#6b5200;border-radius:12px;padding:12px;font-weight:800;margin:14px 0}.bank{display:grid;gap:9px;background:#f8f9fc;border:1px solid #e7eaf2;border-radius:14px;padding:12px}.bank-row{display:flex;justify-content:space-between;gap:14px;background:#fff;border:1px solid #edf0f6;border-radius:10px;padding:10px}.bank-row span{color:#7a8296}.footer{padding:14px 22px;color:#8b93a4;font-size:.82rem;border-top:1px solid #edf0f6}@media(max-width:640px){.summary{grid-template-columns:1fr}.head{align-items:flex-start}.page{padding:8px;margin:8px auto}}</style>
-</head><body><div class="page"><section class="invoice"><div class="head"><img class="logo" src="${escapeHtml(logoSrc || 'https://bariqgifts.com/assets/logo.png')}" alt="Bariq"><div><div class="title">فاتورة طلب ${escapeHtml(inv.orderNumber)}</div><div class="muted">${escapeHtml(inv.customer || '')}${inv.phone ? ' · ' + escapeHtml(inv.phone) : ''}</div></div></div><div class="body"><div class="summary"><div class="sum"><span>إجمالي الطلب</span><b>${invoiceMoney(inv.total)}</b></div><div class="sum"><span>العربون / المطلوب الآن</span><b>${invoiceMoney(inv.due)}</b></div><div class="sum"><span>المتبقي بعد التسليم</span><b>${invoiceMoney(invoiceRemaining(inv))}</b></div></div><table><thead><tr><th>المنتج</th><th>الكمية</th></tr></thead><tbody>${items}</tbody></table><div>نوع الدفع: <b>${escapeHtml(inv.typeLabel || '')}</b></div><div class="note">${escapeHtml(inv.note || INVOICE_DEFAULT_NOTE)}</div><h3>بيانات التحويل</h3><div class="bank">${bankRows}</div></div><div class="footer">Bariq Gifts - هذه الفاتورة محفوظة كملف مستقل ويمكن فتحها مباشرة في المتصفح.</div></section></div></body></html>`;
+    return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>فاتورة طلب ${escapeHtml(inv.orderNumber)}</title><style>body{margin:0;background:#f5f7fb;color:#152546;font-family:Tahoma,Arial,sans-serif}.page{max-width:760px;margin:24px auto;padding:16px}.invoice{background:#fff;border:1px solid #e5e9f2;border-radius:18px;overflow:hidden;box-shadow:0 14px 38px rgba(21,37,70,.12)}.head{background:linear-gradient(135deg,#fff,#fbf4dc);padding:22px;display:flex;gap:14px;align-items:center;border-bottom:1px solid #ece4c7}.logo{width:74px;height:74px;object-fit:contain;background:#fff;border:1px solid #eee;border-radius:14px}.title{font-size:1.3rem;font-weight:900;margin-bottom:6px}.muted{color:#7a8296;font-size:.9rem}.body{padding:22px}.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}.sum{background:#f8f9fc;border:1px solid #e7eaf2;border-radius:12px;padding:12px}.sum span{display:block;color:#7a8296;font-size:.78rem;margin-bottom:5px}.sum b{font-size:1.05rem}table{width:100%;border-collapse:collapse;margin:12px 0}td,th{border-bottom:1px solid #edf0f6;padding:10px;text-align:right}.note{background:#fff8e1;border:1px solid #f1d27a;color:#6b5200;border-radius:12px;padding:12px;font-weight:800;margin:14px 0}.bank{display:grid;gap:9px;background:#f8f9fc;border:1px solid #e7eaf2;border-radius:14px;padding:12px}.bank-row{display:flex;justify-content:space-between;gap:14px;background:#fff;border:1px solid #edf0f6;border-radius:10px;padding:10px}.bank-row span{color:#7a8296}.footer{padding:14px 22px;color:#8b93a4;font-size:.82rem;border-top:1px solid #edf0f6}@media(max-width:640px){.summary{grid-template-columns:1fr}.head{align-items:flex-start}.page{padding:8px;margin:8px auto}}</style></head><body><div class="page"><section class="invoice"><div class="head"><img class="logo" src="${escapeHtml(logoSrc || 'https://bariqgifts.com/assets/logo.png')}" alt="Bariq"><div><div class="title">فاتورة طلب ${escapeHtml(inv.orderNumber)}</div><div class="muted">${escapeHtml(inv.customer || '')}${inv.phone ? ' · ' + escapeHtml(inv.phone) : ''}</div></div></div><div class="body"><div class="summary"><div class="sum"><span>إجمالي الطلب</span><b>${invoiceMoney(inv.total)}</b></div><div class="sum"><span>العربون / المطلوب الآن</span><b>${invoiceMoney(inv.due)}</b></div><div class="sum"><span>المتبقي بعد التسليم</span><b>${invoiceMoney(invoiceRemaining(inv))}</b></div></div><table><thead><tr><th>المنتج</th><th>الكمية</th></tr></thead><tbody>${items}</tbody></table><div>نوع الدفع: <b>${escapeHtml(inv.typeLabel || '')}</b></div><div class="note">${escapeHtml(inv.note || INVOICE_DEFAULT_NOTE)}</div><h3>بيانات التحويل</h3><div class="bank">${bankRows}</div></div><div class="footer">Bariq Gifts - هذه الفاتورة محفوظة كملف مستقل ويمكن فتحها مباشرة في المتصفح.</div></section></div></body></html>`;
   }
   async function downloadInvoiceHtml(inv, order) {
     const blob = new Blob([invoiceStandaloneHtml(inv, order, await invoiceLogoSrc())], { type: 'text/html;charset=utf-8' });
@@ -4031,16 +4010,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </footer>
 <script src="/java/supabase.min.js?v=supabase-20260725a" defer></script>
-<script src="/java/main.min.js?v=141" defer></script>
-<script src="/java/sw-refresh.js?v=sw-refresh-20260801d" defer></script>
+<script src="/java/main.min.js?v=140" defer></script>
+<script src="/java/sw-refresh.js?v=sw-refresh-20260731f" defer></script>
 <script src="/java/instant-nav.js?v=instant-nav-20260728e" defer></script>
 <script src="/translations/translation.min.js?v=translation-20260726c" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
 <script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260728e" defer></script>
 <script src="/java/push-welcome.js?v=push-welcome-20260728d" defer></script>
-<script src="/java/notifications.min.js?v=notifications-20260801a" defer></script>
+<script src="/java/notifications.min.js?v=notifications-20260725o" defer></script>
 <script src="/java/abandoned-cart.js?v=abandoned-cart-20260730a" defer></script>
-<script type="module" src="./java/Products.min.js?v=products-20260801l"></script>
+<script type="module" src="./java/Products.min.js?v=products-20260731b"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   function buildSocialBar(s) {

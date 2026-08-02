@@ -1,14 +1,14 @@
 (function () {
   if (!('serviceWorker' in navigator)) return;
 
-  var REFRESH_KEY = 'sw-v271-global-refresh';
+  var REFRESH_KEY = 'sw-v262-global-refresh';
   var refreshed = false;
 
   function clearOldCaches() {
     if (!('caches' in window)) return;
     caches.keys().then(function (keys) {
       keys.forEach(function (key) {
-        if (key !== 'bariq-v289') caches.delete(key).catch(function () {});
+        if (key !== 'bariq-v278') caches.delete(key).catch(function () {});
       });
     }).catch(function () {});
   }
@@ -23,20 +23,23 @@
 
   function requestActivation(reg) {
     if (!reg) return;
-    function skipWaitingWhenInstalled(worker) {
-      if (!worker) return;
-      worker.addEventListener('statechange', function () {
-        if (worker.state === 'installed' && navigator.serviceWorker.controller) {
-          try { worker.postMessage({ type: 'SKIP_WAITING' }); } catch (e) {}
-        }
-      });
-    }
     if (reg.waiting) {
       try { reg.waiting.postMessage({ type: 'SKIP_WAITING' }); } catch (e) {}
     }
-    skipWaitingWhenInstalled(reg.installing);
+    if (reg.installing) {
+      reg.installing.addEventListener('statechange', function () {
+        if (reg.installing && reg.installing.state === 'installed' && navigator.serviceWorker.controller) {
+          try { reg.installing.postMessage({ type: 'SKIP_WAITING' }); } catch (e) {}
+        }
+      });
+    }
     reg.addEventListener('updatefound', function () {
-      skipWaitingWhenInstalled(reg.installing);
+      if (!reg.installing) return;
+      reg.installing.addEventListener('statechange', function () {
+        if (reg.installing && reg.installing.state === 'installed' && navigator.serviceWorker.controller) {
+          try { reg.installing.postMessage({ type: 'SKIP_WAITING' }); } catch (e) {}
+        }
+      });
     });
   }
 
@@ -61,7 +64,7 @@
     if (!markRefreshed()) window.location.reload();
   });
 
-  navigator.serviceWorker.register('/sw.js?v=268', { updateViaCache: 'none' }).then(function (reg) {
+  navigator.serviceWorker.register('/sw.js?v=262', { updateViaCache: 'none' }).then(function (reg) {
     clearOldCaches();
     requestActivation(reg);
     sendPushLanguage(reg);

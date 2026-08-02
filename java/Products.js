@@ -16,7 +16,7 @@ function x2VisitorAreaFallback() {
 
 let sideMenu, subDisplay, products = [], categories = [], _priorityProductImages = 0;
 const CATEGORIES_SESSION_CACHE_KEY = "x2_cats_ss_v1", CATEGORIES_LOCAL_CACHE_KEY = "x2_categories_cache_v1", CATEGORIES_CACHE_TTL = 18e5;
-const PRODUCT_DISCOUNT_TIMER_PREFIX = "x2_product_discount_timer_v7_crosspage_", PRODUCT_DISCOUNT_TIMER_DURATIONS_HOURS = [ 6, 44 ];
+const PRODUCT_DISCOUNT_TIMER_PREFIX = "x2_product_discount_timer_v2_", PRODUCT_DISCOUNT_TIMER_MAX_HOURS = 70;
 
 function stableProductHash(value) {
     const text = String(value || "product");
@@ -34,43 +34,10 @@ function productTimerIdentity(prod) {
 }
 
 function productTimerDuration(prod, cycle) {
-    const hours = PRODUCT_DISCOUNT_TIMER_DURATIONS_HOURS[Math.abs(Number(cycle) || 0) % PRODUCT_DISCOUNT_TIMER_DURATIONS_HOURS.length];
-    return hours * 60 * 60 * 1e3;
-}
-
-function initialProductTimerState(prod) {
-    const durations = PRODUCT_DISCOUNT_TIMER_DURATIONS_HOURS.map(hours => hours * 60 * 60 * 1e3), total = durations.reduce((sum, duration) => sum + duration, 0), offset = stableProductHash(productTimerIdentity(prod)) % total;
-    let elapsed = offset;
-    for (let cycle = 0; cycle < durations.length; cycle++) {
-        if (elapsed < durations[cycle]) return { cycle, remaining: durations[cycle] - elapsed };
-        elapsed -= durations[cycle];
-    }
-    return { cycle: 0, remaining: durations[0] };
-}
-
-function countdownParts(totalSeconds) {
-    totalSeconds = Math.max(0, Math.floor(Number(totalSeconds) || 0));
-    return {
-        h: String(Math.floor(totalSeconds / 3600)).padStart(2, "0"),
-        m: String(Math.floor(totalSeconds % 3600 / 60)).padStart(2, "0"),
-        s: String(totalSeconds % 60).padStart(2, "0")
-    };
-}
-
-function updateCountdownElement(el, totalSeconds) {
-    if (!el) return;
-    if (!el.querySelector(".timer-h")) {
-        el.innerHTML = '<span class="timer-h"></span><span class="timer-sep timer-sep-hm">:</span><span class="timer-m"></span><span class="timer-sep timer-sep-ms">:</span><span class="timer-s"></span>';
-    }
-    const tick = Math.floor(Date.now() / 1e3), lastTick = Number(el.dataset.timerLastTick || 0), hEl = el.querySelector(".timer-h"), mEl = el.querySelector(".timer-m"), sEl = el.querySelector(".timer-s"), current = hEl && mEl && sEl && hEl.textContent && mEl.textContent && sEl.textContent ? Number(hEl.textContent) * 3600 + Number(mEl.textContent) * 60 + Number(sEl.textContent) : null;
-    if (lastTick && tick <= lastTick) return;
-    el.dataset.timerLastTick = String(tick);
-    if (current != null && current > 0 && Math.abs(current - totalSeconds) <= 5) totalSeconds = current - 1;
-    const parts = countdownParts(totalSeconds);
-    [ [ "h", ".timer-h" ], [ "m", ".timer-m" ], [ "s", ".timer-s" ] ].forEach(([key, selector]) => {
-        const part = el.querySelector(selector);
-        if (part && part.textContent !== parts[key]) part.textContent = parts[key];
-    });
+    const hash = stableProductHash(productTimerIdentity(prod) + ":" + (cycle || 0));
+    const hours = 6 + hash % (PRODUCT_DISCOUNT_TIMER_MAX_HOURS - 5);
+    const minutes = hash % 60;
+    return ((hours * 60) + minutes) * 60 * 1e3;
 }
 
 function getProductDiscountTimerEnd(prod, renewExpired = true) {
@@ -79,8 +46,8 @@ function getProductDiscountTimerEnd(prod, renewExpired = true) {
     try { state = JSON.parse(localStorage.getItem(key) || "null"); } catch (e) { state = null; }
     if (state && state.start && state.duration && now >= state.start + state.duration && !renewExpired) return state.start + state.duration;
     if (!state || !state.start || !state.duration || state.start > now || now >= state.start + state.duration) {
-        const next = state && Number.isFinite(Number(state.cycle)) ? { cycle: Number(state.cycle) + 1, remaining: productTimerDuration(prod, Number(state.cycle) + 1) } : initialProductTimerState(prod);
-        state = { start: now, duration: next.remaining, cycle: next.cycle };
+        const cycle = state && Number.isFinite(Number(state.cycle)) ? Number(state.cycle) + 1 : stableProductHash(key) % 29;
+        state = { start: now, duration: productTimerDuration(prod, cycle), cycle };
         try { localStorage.setItem(key, JSON.stringify(state)); } catch (e) {}
     }
     return state.start + state.duration;
@@ -825,13 +792,18 @@ export function createProductCard(prod) {
         const saveText = document.createElement("span");
         saveText.className = "product-save-text";
         const arrow = '<span class="save-arrow">&#8595;</span>', discount = (oldPriceValue - priceValue).toFixed(2);
-        saveText.innerHTML = "ar" === lang ? `${arrow} خصم إضافي ${discount} ${currencySymbol}` : `${arrow} Extra ${currencySymbol} ${discount} off`;
+        saveText.innerHTML = "ar" === lang ? `${arrow} خصم ${discount} ${currencySymbol} إضافي` : `${arrow} Save ${discount} ${currencySymbol} extra`;
         const timer = document.createElement("span");
         let interval;
         function updateTimer() {
             const end = getProductDiscountTimerEnd(prod), now = Date.now();
             let totalSeconds = Math.max(0, Math.floor((end - now) / 1e3));
-            updateCountdownElement(timer, totalSeconds);
+            if (totalSeconds > 0) {
+                const h = String(Math.floor(totalSeconds / 3600)).padStart(2, "0"), m = String(Math.floor(totalSeconds % 3600 / 60)).padStart(2, "0"), s = String(totalSeconds % 60).padStart(2, "0");
+                timer.textContent = `${h}:${m}:${s}`;
+            } else {
+                timer.textContent = "00:00:00";
+            }
         }
         timer.className = "product-timer", timerSaveBox.appendChild(saveText), timerSaveBox.appendChild(timer), 
         content.appendChild(timerSaveBox), updateTimer(), interval = setInterval(updateTimer, 1e3);
@@ -950,7 +922,6 @@ function getProductRenderKey(list) {
 
 document.addEventListener("DOMContentLoaded", async function() {
     const titleEl = document.getElementById("selected-category-title"), productsContainer = document.getElementById("category-products");
-    const categoriesPageOwnsProductGrid = /\/categories\.html$/i.test(location.pathname) && !!document.getElementById("catProductsSection");
     sideMenu = document.querySelector(".dropdown-content.categories-menu"), subDisplay = document.getElementById("subcategories-display");
     const categoriesContainer = document.querySelector(".categories"), filtersScroll = document.querySelector(".filters-scroll-container");
     let isNavigating = !1;
@@ -990,19 +961,19 @@ document.addEventListener("DOMContentLoaded", async function() {
                 restoreTargetIndex = sortedList.findIndex(product => String(product.id || product.productId || "") === String(target.productId));
             }
         } catch (e) {}
-        const baseFirstChunk = 60;
+        const baseFirstChunk = isHomePage ? isMobileGrid ? 8 : 20 : 20;
         const FIRST_CHUNK = Math.min(Math.max(baseFirstChunk, restoreTargetIndex >= 0 ? restoreTargetIndex + 1 : 0), sortedList.length);
-        const deferRest = sortedList.length > FIRST_CHUNK;
+        const deferHomeRest = isHomePage && sortedList.length > FIRST_CHUNK;
         _priorityProductImages = 0;
         const columns = isMobileGrid ? 2 : window.matchMedia("(max-width: 1300px)").matches ? 3 : 4;
-        const estimatedRows = Math.max(1, Math.ceil((deferRest ? FIRST_CHUNK : sortedList.length) / columns));
+        const estimatedRows = Math.max(1, Math.ceil((deferHomeRest ? FIRST_CHUNK : sortedList.length) / columns));
         const estimatedCardHeight = window.matchMedia("(max-width: 899px)").matches ? 328 : 360;
         if (!isHomePage) productsContainer.classList.add("changing"), productsContainer.style.minHeight = Math.max(200, estimatedRows * estimatedCardHeight) + "px";
         productsContainer.style.position = "relative";
         let i = 0;
-        let restDeferred = false;
+        let homeRestDeferred = false;
         !function appendChunk() {
-            const fragment = document.createDocumentFragment(), columnFragments = useMobileMasonry ? [ document.createDocumentFragment(), document.createDocumentFragment() ] : null, chunkSize = 0 === i ? FIRST_CHUNK : 40;
+            const fragment = document.createDocumentFragment(), columnFragments = useMobileMasonry ? [ document.createDocumentFragment(), document.createDocumentFragment() ] : null, chunkSize = 0 === i ? FIRST_CHUNK : 20;
             for (let k = 0; k < chunkSize && i < sortedList.length; k++, i++) {
                 try {
                     const card = createProductCard(sortedList[i]);
@@ -1012,68 +983,27 @@ document.addEventListener("DOMContentLoaded", async function() {
                 }
             }
             useMobileMasonry ? mobileColumns.forEach((col, ix) => col.appendChild(columnFragments[ix])) : rowDiv.appendChild(fragment);
-            if (deferRest && !restDeferred && i >= FIRST_CHUNK && i < sortedList.length) {
-                restDeferred = true;
+            if (deferHomeRest && !homeRestDeferred && i >= FIRST_CHUNK && i < sortedList.length) {
+                homeRestDeferred = true;
                 productsContainer.dataset.renderKey = renderKey, productsContainer.replaceChildren(rowDiv), productsContainer.classList.remove("changing");
                 productsContainer.style.minHeight = "";
                 const loader = document.getElementById("temp-popstate-loader") || document.getElementById("grid-loading-indicator");
                 loader && loader.remove();
-                let loadingMore = false;
-                let lastLoadScrollY = -1;
-                let lastLoadAt = 0;
-                let loadMoreObserver = null;
-                const loadMoreSentinel = document.createElement("div");
-                loadMoreSentinel.className = "products-load-sentinel";
-                loadMoreSentinel.setAttribute("aria-hidden", "true");
-                loadMoreSentinel.style.cssText = "height:1px;width:100%;clear:both;";
-                const isNearProductsEnd = () => {
+                const loadMore = () => {
+                    if (i >= sortedList.length) return;
                     const rect = productsContainer.getBoundingClientRect();
-                    const scrollY = window.scrollY || window.pageYOffset || 0;
-                    return rect.bottom <= window.innerHeight + 1200 || window.innerHeight + scrollY >= document.documentElement.scrollHeight - 1200;
-                };
-                const observeLoadMoreSentinel = () => {
-                    if (i >= sortedList.length) {
-                        if (loadMoreObserver) loadMoreObserver.disconnect();
-                        loadMoreSentinel.remove();
-                        return;
-                    }
-                    if (!loadMoreSentinel.parentNode) productsContainer.appendChild(loadMoreSentinel);
-                    if (!("IntersectionObserver" in window)) return;
-                    if (loadMoreObserver) loadMoreObserver.disconnect();
-                    loadMoreObserver = new IntersectionObserver(entries => {
-                        if (entries[0] && entries[0].isIntersecting && i < sortedList.length) loadMore(true);
-                    }, {
-                        root: null,
-                        rootMargin: "0px 0px 900px 0px",
-                        threshold: 0
-                    });
-                    loadMoreObserver.observe(loadMoreSentinel);
-                };
-                const loadMore = force => {
-                    if (loadingMore || i >= sortedList.length) return;
-                    const scrollY = window.scrollY || window.pageYOffset || 0;
-                    const now = Date.now();
-                    if (!force && lastLoadAt && now - lastLoadAt < 1200) return;
-                    if (!force && lastLoadScrollY >= 0 && Math.abs(scrollY - lastLoadScrollY) < 80) return;
-                    if (!isNearProductsEnd()) return;
-                    lastLoadScrollY = scrollY;
-                    lastLoadAt = now;
-                    loadingMore = true;
-                    requestAnimationFrame(() => {
-                        appendChunk();
-                        lastLoadScrollY = window.scrollY || window.pageYOffset || 0;
-                        loadingMore = false;
-                        observeLoadMoreSentinel();
-                        if (i >= sortedList.length) window.removeEventListener("scroll", loadMore);
-                        else if (isNearProductsEnd()) requestAnimationFrame(() => loadMore(true));
-                    });
+                    const nearRenderedBottom = rect.bottom <= window.innerHeight + 1200;
+                    const nearPageBottom = window.innerHeight + (window.scrollY || window.pageYOffset || 0) >= document.documentElement.scrollHeight - 1200;
+                    if (!nearRenderedBottom && !nearPageBottom) return;
+                    requestAnimationFrame(appendChunk);
+                    if (i >= sortedList.length) window.removeEventListener("scroll", loadMore);
                 };
                 window.addEventListener("scroll", loadMore, { passive: true });
-                observeLoadMoreSentinel();
+                setTimeout(loadMore, 120);
                 setTimeout(restoreProductReturnScrollPosition, 0);
             } else if (i < sortedList.length) requestAnimationFrame(appendChunk); else {
                 productsContainer.dataset.renderKey = renderKey;
-                if (!(deferRest && restDeferred && productsContainer.firstElementChild === rowDiv)) productsContainer.replaceChildren(rowDiv);
+                if (!(deferHomeRest && homeRestDeferred && productsContainer.firstElementChild === rowDiv)) productsContainer.replaceChildren(rowDiv);
                 productsContainer.classList.remove("changing");
                 productsContainer.style.minHeight = "";
                 const loader = document.getElementById("temp-popstate-loader") || document.getElementById("grid-loading-indicator");
@@ -1084,7 +1014,7 @@ document.addEventListener("DOMContentLoaded", async function() {
     }
     window.refreshStoreProductSort = async function() {
         await ensureStoreProductSortLoaded(true);
-        !categoriesPageOwnsProductGrid && productsContainer && products && products.length && renderProductsGrid(products, productsContainer);
+        productsContainer && products && products.length && renderProductsGrid(products, productsContainer);
     };
     window.addEventListener("pageshow", function(event) {
         event.persisted && window.refreshStoreProductSort && window.refreshStoreProductSort();
@@ -1131,10 +1061,7 @@ document.addEventListener("DOMContentLoaded", async function() {
             });
         }
         function showSubcategoryProducts(filtered, subName) {
-            if (categoriesPageOwnsProductGrid) return;
             const homeContainer = document.getElementById("home-category-products");
-            const isHomePage = /^(\/|\/index\.html)$/i.test(location.pathname);
-            if (isHomePage && homeContainer) return;
             const targetContainer = homeContainer || productsContainer;
             if (!targetContainer) return;
             const lang = localStorage.getItem("lang") || document.documentElement.lang || document.documentElement.getAttribute("lang") || "ar";
@@ -1248,13 +1175,13 @@ document.addEventListener("DOMContentLoaded", async function() {
                     titleEl.textContent = catName, document.title = catName;
                 }
             }
-            const hasHomeProductsSurface = !!(!isHomePage && homeProductsContainer && (document.getElementById("mhCatsStrip") || document.querySelector(".home-offer-cards")));
+            const hasHomeProductsSurface = !!(homeProductsContainer && (document.getElementById("mhCatsStrip") || document.querySelector(".home-offer-cards")));
             const renderContainer = hasHomeProductsSurface ? homeProductsContainer : productsContainer;
-            if (!categoriesPageOwnsProductGrid && renderContainer) {
+            if (renderContainer) {
                 const lang = localStorage.getItem("lang") || document.documentElement.lang || document.documentElement.getAttribute("lang") || "ar";
                 filteredProducts.length ? renderProductsGrid(filteredProducts, renderContainer) : renderContainer.innerHTML = "en" === lang ? "<p style='color:gray;padding:20px;text-align:center'>No products in this category yet.</p>" : "<p style='color:gray;padding:20px;text-align:center'>لا توجد منتجات لهذه الفئة حالياً.</p>";
             }
-            if (!categoriesPageOwnsProductGrid && productsContainer && productsContainer !== renderContainer) productsContainer.innerHTML = "";
+            if (productsContainer && productsContainer !== renderContainer) productsContainer.innerHTML = "";
             const categoryObj = categoriesData.find(c => sameKey(c.categorySlug, categorySlug));
             if (categoryObj) showSubCategories(categoryObj.name.ar || categoryObj.name.en, null, categoriesData); else {
                 const categoryElements = document.querySelectorAll(".categories > div a");
@@ -2010,7 +1937,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                 const end = getProductDiscountTimerEnd(product);
                 const d = end - Date.now();
                 if (d <= 0) return void tick();
-                updateCountdownElement(el, Math.floor(d / 1e3));
+                el.textContent = [ Math.floor(d / 36e5), Math.floor(d % 36e5 / 6e4), Math.floor(d % 6e4 / 1e3) ].map(n => String(n).padStart(2, "0")).join(":");
             }
             tick(), setInterval(tick, 1e3);
         }(p, timerEl), set("desc", "");

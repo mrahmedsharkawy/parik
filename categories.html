@@ -1108,76 +1108,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const row = document.createElement('div');
     row.className = 'products-row';
     const orderedProducts = (window.sortProductsForStore || sortProductsForStore)(products);
-    const FIRST_CHUNK = 60;
-    const NEXT_CHUNK = 40;
-    let shown = 0;
-    let activeRow = row;
-    let activeRenderer = renderCard;
-    if (container._x2LazyProductsCleanup) container._x2LazyProductsCleanup();
-    function appendChunk(targetRow, renderer) {
-      const fragment = document.createDocumentFragment();
-      const next = Math.min(shown + (shown ? NEXT_CHUNK : FIRST_CHUNK), orderedProducts.length);
-      for (; shown < next; shown++) {
-        const card = renderer(orderedProducts[shown]);
-        if (card) fragment.appendChild(card);
-      }
-      targetRow.appendChild(fragment);
-    }
-    appendChunk(row, renderCard);
+    orderedProducts.forEach(p => {
+      const card = renderCard(p);
+      if (card) row.appendChild(card);
+    });
     container.appendChild(row);
-    let loadingMoreProducts = false;
-    let lastLoadScrollY = -1;
-    let lastLoadAt = 0;
-    let loadMoreObserver = null;
-    const loadMoreSentinel = document.createElement('div');
-    loadMoreSentinel.className = 'cat-products-load-sentinel';
-    loadMoreSentinel.setAttribute('aria-hidden', 'true');
-    loadMoreSentinel.style.cssText = 'height:1px;width:100%;clear:both;';
-    function isNearProductsEnd() {
-      const rect = container.getBoundingClientRect();
-      const scrollY = window.scrollY || window.pageYOffset || 0;
-      return rect.bottom <= window.innerHeight + 1200 || window.innerHeight + scrollY >= document.documentElement.scrollHeight - 1200;
-    }
-    function observeLoadMoreSentinel() {
-      if (shown >= orderedProducts.length) {
-        if (loadMoreObserver) loadMoreObserver.disconnect();
-        loadMoreSentinel.remove();
-        return;
-      }
-      if (!loadMoreSentinel.parentNode) container.appendChild(loadMoreSentinel);
-      if (!('IntersectionObserver' in window)) return;
-      if (loadMoreObserver) loadMoreObserver.disconnect();
-      loadMoreObserver = new IntersectionObserver(entries => {
-        if (entries[0] && entries[0].isIntersecting) loadMoreProducts(true);
-      }, { root: null, rootMargin: '0px 0px 900px 0px', threshold: 0 });
-      loadMoreObserver.observe(loadMoreSentinel);
-    }
-    function loadMoreProducts(force) {
-      if (loadingMoreProducts || shown >= orderedProducts.length) return;
-      const scrollY = window.scrollY || window.pageYOffset || 0;
-      const now = Date.now();
-      if (!force && lastLoadAt && now - lastLoadAt < 1200) return;
-      if (!force && lastLoadScrollY >= 0 && Math.abs(scrollY - lastLoadScrollY) < 80) return;
-      if (!isNearProductsEnd()) return;
-      lastLoadScrollY = scrollY;
-      lastLoadAt = now;
-      loadingMoreProducts = true;
-      requestAnimationFrame(() => {
-        appendChunk(activeRow, activeRenderer);
-        lastLoadScrollY = window.scrollY || window.pageYOffset || 0;
-        loadingMoreProducts = false;
-        observeLoadMoreSentinel();
-        if (shown >= orderedProducts.length) window.removeEventListener('scroll', loadMoreProducts);
-        else if (isNearProductsEnd()) requestAnimationFrame(() => loadMoreProducts(true));
-      });
-    }
-    window.addEventListener('scroll', loadMoreProducts, { passive: true });
-    observeLoadMoreSentinel();
-    container._x2LazyProductsCleanup = () => {
-      window.removeEventListener('scroll', loadMoreProducts);
-      if (loadMoreObserver) loadMoreObserver.disconnect();
-      loadMoreSentinel.remove();
-    };
 
     // حاول استخدام createProductCard لو اتحمل لاحقاً
     if (typeof window.createProductCard !== 'function') {
@@ -1187,12 +1122,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           container.innerHTML = '';
           const row2 = document.createElement('div');
           row2.className = 'products-row';
-          shown = 0;
-          activeRow = row2;
-          activeRenderer = window.createProductCard;
-          appendChunk(row2, window.createProductCard);
+          orderedProducts.forEach(p => row2.appendChild(window.createProductCard(p)));
           container.appendChild(row2);
-          observeLoadMoreSentinel();
         }
       }, 300);
       setTimeout(() => clearInterval(waitFor), 5000);
@@ -1200,13 +1131,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   }
 
   function hideProducts() {
-    const container = document.getElementById('category-products');
-    if (container && container._x2LazyProductsCleanup) {
-      container._x2LazyProductsCleanup();
-      container._x2LazyProductsCleanup = null;
-    }
     document.getElementById('catProductsSection').style.display = 'none';
-    if (container) container.innerHTML = '';
+    document.getElementById('category-products').innerHTML = '';
   }
 
   function updateUrl(cat, sub) {
@@ -1335,16 +1261,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </div>
   </div>
 </footer>
-<script src="/java/supabase.min.js?v=supabase-20260801a" defer></script>
+<script src="/java/supabase.min.js?v=supabase-20260725a" defer></script>
 <script src="/java/main.min.js?v=141" defer></script>
-<script src="/java/sw-refresh.js?v=sw-refresh-20260801d" defer></script>
+<script src="/java/sw-refresh.js?v=sw-refresh-20260731h" defer></script>
 <script src="/java/instant-nav.js?v=instant-nav-20260728e" defer></script>
 <script src="/translations/translation.min.js?v=translation-20260726c" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
 <script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260728e" defer></script>
 <script src="/java/push-welcome.js?v=push-welcome-20260728d" defer></script>
 <script src="/java/abandoned-cart.js?v=abandoned-cart-20260730a" defer></script>
-<script type="module" src="./java/Products.min.js?v=products-20260801l"></script> <!-- ده يفضل يفضل في الآخر -->
+<script type="module" src="./java/Products.min.js?v=products-20260801a"></script> <!-- ده يفضل يفضل في الآخر -->
 </body>
 </html>
 
