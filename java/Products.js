@@ -562,7 +562,7 @@ function restoreProductReturnScrollPosition() {
 if (typeof window !== "undefined") {
     document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", restoreProductReturnScrollPosition, { once: true }) : restoreProductReturnScrollPosition();
     window.addEventListener("pageshow", event => {
-        if (event && event.persisted && sessionStorage.getItem("x2_return_to_scroll_url") === location.href) window.__x2ProductReturnRestored = false;
+        if (event && event.persisted && sessionStorage.getItem("x2_return_to_scroll_url") === x2PageKey(location.href)) window.__x2ProductReturnRestored = false;
         restoreProductReturnScrollPosition();
     });
     document.addEventListener("click", e => {

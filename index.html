@@ -4,7 +4,7 @@
   <meta name="theme-color" content="#ffffff">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <style>html,body{background:#fff!important}</style>
-<script>(function(){try{var p=new URLSearchParams(location.search),u=p.get('lang'),s=localStorage.getItem('lang'),l=(u==='en'||u==='ar')?u:(s==='en'?'en':'ar'),r=sessionStorage.getItem('x2_return_to_scroll_url')===location.href;localStorage.setItem('lang',l);document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';if(l==='en'&&!r)document.documentElement.classList.add('x2-i18n-pending');setTimeout(function(){document.documentElement.classList.remove('x2-i18n-pending')},1600)}catch(e){}})();</script>
+<script>(function(){try{var p=new URLSearchParams(location.search),u=p.get('lang'),s=localStorage.getItem('lang'),l=(u==='en'||u==='ar')?u:(s==='en'?'en':'ar'),r=(function(){try{var x=new URL(location.href),path=x.pathname.replace(/\/index\.html$/i,'/').replace(/\/+$/,'');if(!path)path='/';return sessionStorage.getItem('x2_return_to_scroll_url')===path+(x.search||'')}catch(e){return sessionStorage.getItem('x2_return_to_scroll_url')===location.href}})();localStorage.setItem('lang',l);document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';document.documentElement.classList.add('x2-home-booting');if(l==='en'&&!r)document.documentElement.classList.add('x2-i18n-pending');setTimeout(function(){document.documentElement.classList.remove('x2-i18n-pending')},1600);setTimeout(function(){document.documentElement.classList.remove('x2-home-booting')},3200)}catch(e){}})();</script>
 <!-- Google Tag Manager: lazy loaded after first interaction to protect initial render speed. -->
 <script>
 (function(w,d,s,l,i){
@@ -97,7 +97,7 @@
   <style>.mobile-nav{display:none}</style>
   <link rel="preload" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260730b" as="style" media="(max-width: 899px)" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260730b" media="(max-width: 899px)"></noscript>
-  <style>html,body{background:#fff!important}.page,main.main{background:#fff!important}@media(min-width:900px){.mobile-nav{display:none!important}}.categories a{font-family:"Segoe UI Emoji","Segoe UI Symbol","Apple Color Emoji","Noto Color Emoji",Arial,Tahoma,sans-serif!important}</style>
+  <style>html,body{background:#fff!important}.page,main.main{background:#fff!important}@media(min-width:900px){.mobile-nav{display:none!important}}html.x2-home-booting main.main,html.x2-home-booting footer.site-footer,html.x2-home-booting .footer-info-bar,html.x2-home-booting #home-category-products,html.x2-home-booting #category-products{visibility:hidden!important}html.x2-restoring-scroll main.main,html.x2-restoring-scroll footer.site-footer,html.x2-restoring-scroll .footer-info-bar{visibility:hidden!important}.categories a{font-family:"Segoe UI Emoji","Segoe UI Symbol","Apple Color Emoji","Noto Color Emoji",Arial,Tahoma,sans-serif!important}</style>
   <!-- Preload LCP image -->
   <script>
   (function(){
@@ -672,6 +672,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     function x2PageKey(url){try{var u=new URL(url||location.href,location.href);var path=u.pathname.replace(/\/index\.html$/i,'/').replace(/\/+$/,'');if(!path)path='/';return path+(u.search||'')}catch(e){return String(url||location.href||'')}}
     function x2ReadMap(key){try{return JSON.parse(sessionStorage.getItem(key)||'{}')}catch(e){return{}}}
     function clearHomeProductNavLock(){homeProductNavStarted=false}
+    function releaseHomeBooting(){document.documentElement.classList.remove('x2-home-booting')}
     window.addEventListener('pageshow',clearHomeProductNavLock);
     window.addEventListener('focus',clearHomeProductNavLock);
     document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')clearHomeProductNavLock()});
@@ -724,7 +725,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     wireSlider();
     loadStoreSort();
     function scheduleHomeTimerTick(){updateDiscountTimers();setTimeout(scheduleHomeTimerTick,Math.max(250,1020-Date.now()%1000))}
-    loadProducts().then(function(list){products=sortProducts(Array.isArray(list)?list:[]);products.forEach(function(p){byId[String(p.id||p.productId||'')]=p});updateAvailableTabs();buildTrack();scheduleHomeTimerTick();restoreHomeScrollPosition();window.__x2HomeCategorySliderRendered=true}).catch(function(){container.innerHTML='<div class="home-products-empty">تعذر تحميل المنتجات الآن</div>'});
+    loadProducts().then(function(list){products=sortProducts(Array.isArray(list)?list:[]);products.forEach(function(p){byId[String(p.id||p.productId||'')]=p});updateAvailableTabs();buildTrack();scheduleHomeTimerTick();restoreHomeScrollPosition();window.__x2HomeCategorySliderRendered=true;requestAnimationFrame(function(){requestAnimationFrame(releaseHomeBooting)})}).catch(function(){container.innerHTML='<div class="home-products-empty">تعذر تحميل المنتجات الآن</div>';releaseHomeBooting()});
   })();
   </script>
 
