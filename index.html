@@ -1284,13 +1284,23 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin:18px 0 6px!imp
     lastDailyNavAt = now;
     try {
       const y = window.scrollY || window.pageYOffset || 0;
+      const pageKey = (function(url){ try { var u = new URL(url || location.href, location.href); var path = u.pathname.replace(/\/index\.html$/i, '/').replace(/\/+$/, ''); if (!path) path = '/'; return path + (u.search || ''); } catch(err) { return String(url || location.href || ''); } })(location.href);
+      const card = link.closest && link.closest('.product-card[data-product-id]');
+      const rect = card && card.getBoundingClientRect ? card.getBoundingClientRect() : null;
       const positions = JSON.parse(sessionStorage.getItem('x2_scroll_positions') || '{}');
-      positions[location.href] = y;
+      positions[pageKey] = y;
       sessionStorage.setItem('x2_scroll_positions', JSON.stringify(positions));
       const productReturnPositions = JSON.parse(sessionStorage.getItem('x2_product_return_positions') || '{}');
-      productReturnPositions[location.href] = y;
+      productReturnPositions[pageKey] = y;
       sessionStorage.setItem('x2_product_return_positions', JSON.stringify(productReturnPositions));
-      sessionStorage.setItem('x2_return_to_scroll_url', location.href);
+      sessionStorage.setItem('x2_return_to_scroll_url', pageKey);
+      if (card && card.getAttribute('data-product-id')) {
+        sessionStorage.setItem('x2_product_return_target', JSON.stringify({
+          url: pageKey,
+          productId: card.getAttribute('data-product-id'),
+          offset: Math.max(8, Math.round(rect ? rect.top : 8))
+        }));
+      }
     } catch(e) {}
     window.location.assign(href);
   });

@@ -988,7 +988,7 @@ document.addEventListener("DOMContentLoaded", async function() {
         let restoreTargetIndex = -1;
         try {
             const target = JSON.parse(sessionStorage.getItem("x2_product_return_target") || "null");
-            if (target && target.url === location.href && target.productId) {
+            if (target && target.url === x2PageKey(location.href) && target.productId) {
                 restoreTargetIndex = sortedList.findIndex(product => String(product.id || product.productId || "") === String(target.productId));
             }
         } catch (e) {}
