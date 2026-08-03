@@ -179,7 +179,7 @@
           reportsPushStatus('لم يتم منح إذن الإشعارات.', false);
           return;
         }
-        const reg = await navigator.serviceWorker.register('/sw.js?v=331', { updateViaCache: 'none' });
+        const reg = await navigator.serviceWorker.register('/sw.js?v=333', { updateViaCache: 'none' });
         if(reg.update) reg.update().catch(() => {});
         await navigator.serviceWorker.ready;
         let sub = await reg.pushManager.getSubscription();

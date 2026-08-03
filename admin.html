@@ -2331,7 +2331,7 @@ function normalizeAdminArea(value) {
   const first = raw.split('،')[0].split(',')[0].trim();
   const low = first.toLowerCase();
   if (/^(غير\s*محدد|unknown|undefined|null|موقع\s*العميل|لم\s*يسمح)/i.test(low)) return '';
-  if (/(?:Ø|Ù|Ã|Â|â)/.test(first) && /(?:®|±|khaimah|Ø®|Ã˜Â®|ÙŠ|Ã™)/i.test(first)) return 'رأس الخيمة';
+  if (/(?:\u00d8|\u00d9|\u00c3|\u00c2|\u00e2)/.test(first) && /(?:\u00ae|\u00b1|khaimah|\u00d8\u00ae|\u00c3\u02dc\u00c2\u00ae|\u00d9\u0160|\u00c3\u2122)/i.test(first)) return 'رأس الخيمة';
   if (/^(united\s*arab\s*emirates|uae|الإمارات|الامارات|الإمارات\s*العربية\s*المتحدة|الامارات\s*العربية\s*المتحدة)$/i.test(low)) return 'الإمارات';
   if (/ras\s*al\s*khaimah|ra.?s\s*al\s*khaimah|imarat\s*ra|khaimah|rak|راس\s*الخيمه|رأس\s*الخيمة/.test(low)) return 'رأس الخيمة';
   if (/dubai|دبي/.test(low)) return 'دبي';
@@ -4770,7 +4770,7 @@ async function enableAdminOrderPush() {
       adminPushSetStatus('لم يتم منح إذن الإشعارات.', false);
       return;
     }
-    const reg = await navigator.serviceWorker.register('/sw.js?v=331', { updateViaCache: 'none' });
+    const reg = await navigator.serviceWorker.register('/sw.js?v=333', { updateViaCache: 'none' });
     if (reg.update) reg.update().catch(() => {});
     await navigator.serviceWorker.ready;
     let sub = await reg.pushManager.getSubscription();

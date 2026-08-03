@@ -1,5 +1,5 @@
 /* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v331';
+const CACHE = 'bariq-v333';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -382,15 +382,16 @@ function extractOrderIdFromNotification(text, tag) {
 
 function hasMojibakeText(value) {
   const s = String(value || '');
-  return /(?:Ø|Ù|Ð|Ñ|Ã|Â|Ê|Ë|ƒ|ðŸ|â|œ|™|€|¢|£|¤|¥|¦|§|¨|©|ª|«|¬|®|¯|³|µ|¼|½|¾)/.test(s);
+  return /(?:\u00d8|\u00d9|\u00d0|\u00d1|\u00c3|\u00c2|\u00ca|\u00cb|\u0192|\u00f0\u0178|\u00e2|\u0153|\u2122|\u20ac|\u00a2|\u00a3|\u00a4|\u00a5|\u00a6|\u00a7|\u00a8|\u00a9|\u00aa|\u00ab|\u00ac|\u00ae|\u00af|\u00b3|\u00b5|\u00bc|\u00bd|\u00be)/.test(s);
 }
 
-const WINDOWS_1252_BYTES = {
-  '€': 0x80, '‚': 0x82, 'ƒ': 0x83, '„': 0x84, '…': 0x85, '†': 0x86, '‡': 0x87,
-  'ˆ': 0x88, '‰': 0x89, 'Š': 0x8A, '‹': 0x8B, 'Œ': 0x8C, 'Ž': 0x8E,
-  '‘': 0x91, '’': 0x92, '“': 0x93, '”': 0x94, '•': 0x95, '–': 0x96, '—': 0x97,
-  '˜': 0x98, '™': 0x99, 'š': 0x9A, '›': 0x9B, 'œ': 0x9C, 'ž': 0x9E, 'Ÿ': 0x9F
-};
+const WINDOWS_1252_BYTES = {};
+[
+  [0x20AC, 0x80], [0x201A, 0x82], [0x0192, 0x83], [0x201E, 0x84], [0x2026, 0x85], [0x2020, 0x86], [0x2021, 0x87],
+  [0x02C6, 0x88], [0x2030, 0x89], [0x0160, 0x8A], [0x2039, 0x8B], [0x0152, 0x8C], [0x017D, 0x8E],
+  [0x2018, 0x91], [0x2019, 0x92], [0x201C, 0x93], [0x201D, 0x94], [0x2022, 0x95], [0x2013, 0x96], [0x2014, 0x97],
+  [0x02DC, 0x98], [0x2122, 0x99], [0x0161, 0x9A], [0x203A, 0x9B], [0x0153, 0x9C], [0x017E, 0x9E], [0x0178, 0x9F]
+].forEach(pair => { WINDOWS_1252_BYTES[String.fromCharCode(pair[0])] = pair[1]; });
 
 function mojibakeBytes(text) {
   const bytes = new Uint8Array(text.length);
