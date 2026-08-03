@@ -2,177 +2,685 @@
   "cleanUrls": false,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/favicon.ico", "destination": "/assets/icon-96.png" },
-    { "source": "/favicon.png", "destination": "/assets/icon-96.png" },
-    { "source": "/assets/favicon.svg", "destination": "/assets/icon-96.png" },
-    { "source": "/assets/categories/sticker/:file", "destination": "/assets/categories/Sticker/:file" },
-    { "source": "/assets/categories/ramadan/:file", "destination": "/assets/categories/Ramadan/:file" },
-    { "source": "/assets/categories/forex/:file", "destination": "/assets/categories/Forex/:file" },
-    { "source": "/affiliate-program", "destination": "/affiliate.html" },
-    { "source": "/affiliate-program.html", "destination": "/affiliate.html" },
-    { "source": "/categories/:path*", "destination": "/categories.html" },
-    { "source": "/policy/:slug", "destination": "/policy.html" },
-    { "source": "/product/:id/:slug", "destination": "/product.html" },
-    { "source": "/product/:id",       "destination": "/product.html" },
-    { "source": "/product", "destination": "/product.html" },
-    { "source": "/categories", "destination": "/categories.html" },
-    { "source": "/Cart", "destination": "/Cart.html" },
-    { "source": "/account", "destination": "/account.html" },
-    { "source": "/login", "destination": "/login.html" },
-    { "source": "/offers", "destination": "/offers.html" },
-    { "source": "/monthly-offers", "destination": "/monthly-offers.html" },
-    { "source": "/checkout", "destination": "/checkout.html" },
-    { "source": "/policy", "destination": "/policy.html" },
-    { "source": "/affiliate", "destination": "/affiliate.html" },
-    { "source": "/admin", "destination": "/admin.html" },
-    { "source": "/admin-reports", "destination": "/admin-reports.html" },
-    { "source": "/sales-invoices", "destination": "/sales-invoices.html" }
+    {
+      "source": "/favicon.ico",
+      "destination": "/assets/icon-96.png"
+    },
+    {
+      "source": "/favicon.png",
+      "destination": "/assets/icon-96.png"
+    },
+    {
+      "source": "/assets/favicon.svg",
+      "destination": "/assets/icon-96.png"
+    },
+    {
+      "source": "/assets/categories/sticker/:file",
+      "destination": "/assets/categories/Sticker/:file"
+    },
+    {
+      "source": "/assets/categories/ramadan/:file",
+      "destination": "/assets/categories/Ramadan/:file"
+    },
+    {
+      "source": "/assets/categories/forex/:file",
+      "destination": "/assets/categories/Forex/:file"
+    },
+    {
+      "source": "/affiliate-program",
+      "destination": "/affiliate.html"
+    },
+    {
+      "source": "/affiliate-program.html",
+      "destination": "/affiliate.html"
+    },
+    {
+      "source": "/categories/:path*",
+      "destination": "/categories.html"
+    },
+    {
+      "source": "/policy/:slug",
+      "destination": "/policy.html"
+    },
+    {
+      "source": "/product/:id/:slug",
+      "destination": "/product.html"
+    },
+    {
+      "source": "/product/:id",
+      "destination": "/product.html"
+    },
+    {
+      "source": "/product",
+      "destination": "/product.html"
+    },
+    {
+      "source": "/categories",
+      "destination": "/categories.html"
+    },
+    {
+      "source": "/Cart",
+      "destination": "/Cart.html"
+    },
+    {
+      "source": "/account",
+      "destination": "/account.html"
+    },
+    {
+      "source": "/login",
+      "destination": "/login.html"
+    },
+    {
+      "source": "/offers",
+      "destination": "/offers.html"
+    },
+    {
+      "source": "/monthly-offers",
+      "destination": "/monthly-offers.html"
+    },
+    {
+      "source": "/checkout",
+      "destination": "/checkout.html"
+    },
+    {
+      "source": "/policy",
+      "destination": "/policy.html"
+    },
+    {
+      "source": "/affiliate",
+      "destination": "/affiliate.html"
+    },
+    {
+      "source": "/admin",
+      "destination": "/admin.html"
+    },
+    {
+      "source": "/admin-reports",
+      "destination": "/admin-reports.html"
+    },
+    {
+      "source": "/sales-invoices",
+      "destination": "/sales-invoices.html"
+    }
   ],
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" },
-        { "key": "Content-Security-Policy", "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com https://knleehjjejfeobcmpwnw.supabase.co https://api.cloudinary.com; script-src-elem 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://knleehjjejfeobcmpwnw.supabase.co wss://knleehjjejfeobcmpwnw.supabase.co https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://api.cloudinary.com https://api.country.is https://get.geojs.io https://cdn.jsdelivr.net; frame-src 'self' https://www.googletagmanager.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' data: blob: https:; trusted-types default bariq dompurify" },
-        { "key": "Content-Security-Policy-Report-Only", "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com https://knleehjjejfeobcmpwnw.supabase.co https://api.cloudinary.com; script-src-elem 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://knleehjjejfeobcmpwnw.supabase.co wss://knleehjjejfeobcmpwnw.supabase.co https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://api.cloudinary.com https://api.country.is https://get.geojs.io https://cdn.jsdelivr.net; frame-src 'self' https://www.googletagmanager.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' data: blob: https:; trusted-types default bariq dompurify; require-trusted-types-for 'script'" },
-        { "key": "Cross-Origin-Opener-Policy", "value": "same-origin" },
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=(), payment=(self)" }
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        },
+        {
+          "key": "Cross-Origin-Opener-Policy",
+          "value": "same-origin"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=(), payment=(self)"
+        }
       ]
     },
     {
       "source": "/",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }]
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com https://knleehjjejfeobcmpwnw.supabase.co https://api.cloudinary.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-elem 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://knleehjjejfeobcmpwnw.supabase.co wss://knleehjjejfeobcmpwnw.supabase.co https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://api.cloudinary.com https://api.country.is https://get.geojs.io https://cdn.jsdelivr.net; frame-src 'self' https://www.googletagmanager.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' data: blob: https:; trusted-types default bariq dompurify; require-trusted-types-for 'script'"
+        }
+      ]
+    },
+    {
+      "source": "/index.html",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com https://knleehjjejfeobcmpwnw.supabase.co https://api.cloudinary.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-elem 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://knleehjjejfeobcmpwnw.supabase.co wss://knleehjjejfeobcmpwnw.supabase.co https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://api.cloudinary.com https://api.country.is https://get.geojs.io https://cdn.jsdelivr.net; frame-src 'self' https://www.googletagmanager.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' data: blob: https:; trusted-types default bariq dompurify; require-trusted-types-for 'script'"
+        }
+      ]
     },
     {
       "source": "/categories",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }]
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com https://knleehjjejfeobcmpwnw.supabase.co https://api.cloudinary.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-elem 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://knleehjjejfeobcmpwnw.supabase.co wss://knleehjjejfeobcmpwnw.supabase.co https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://api.cloudinary.com https://api.country.is https://get.geojs.io https://cdn.jsdelivr.net; frame-src 'self' https://www.googletagmanager.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' data: blob: https:; trusted-types default bariq dompurify; require-trusted-types-for 'script'"
+        }
+      ]
+    },
+    {
+      "source": "/categories.html",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com https://knleehjjejfeobcmpwnw.supabase.co https://api.cloudinary.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-elem 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://knleehjjejfeobcmpwnw.supabase.co wss://knleehjjejfeobcmpwnw.supabase.co https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://api.cloudinary.com https://api.country.is https://get.geojs.io https://cdn.jsdelivr.net; frame-src 'self' https://www.googletagmanager.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' data: blob: https:; trusted-types default bariq dompurify; require-trusted-types-for 'script'"
+        }
+      ]
     },
     {
       "source": "/categories/:path*",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }]
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com https://knleehjjejfeobcmpwnw.supabase.co https://api.cloudinary.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-elem 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://knleehjjejfeobcmpwnw.supabase.co wss://knleehjjejfeobcmpwnw.supabase.co https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://api.cloudinary.com https://api.country.is https://get.geojs.io https://cdn.jsdelivr.net; frame-src 'self' https://www.googletagmanager.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' data: blob: https:; trusted-types default bariq dompurify; require-trusted-types-for 'script'"
+        }
+      ]
     },
     {
       "source": "/product",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }]
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com https://knleehjjejfeobcmpwnw.supabase.co https://api.cloudinary.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-elem 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://knleehjjejfeobcmpwnw.supabase.co wss://knleehjjejfeobcmpwnw.supabase.co https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://api.cloudinary.com https://api.country.is https://get.geojs.io https://cdn.jsdelivr.net; frame-src 'self' https://www.googletagmanager.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' data: blob: https:; trusted-types default bariq dompurify; require-trusted-types-for 'script'"
+        }
+      ]
+    },
+    {
+      "source": "/product.html",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com https://knleehjjejfeobcmpwnw.supabase.co https://api.cloudinary.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-elem 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://knleehjjejfeobcmpwnw.supabase.co wss://knleehjjejfeobcmpwnw.supabase.co https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://api.cloudinary.com https://api.country.is https://get.geojs.io https://cdn.jsdelivr.net; frame-src 'self' https://www.googletagmanager.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' data: blob: https:; trusted-types default bariq dompurify; require-trusted-types-for 'script'"
+        }
+      ]
     },
     {
       "source": "/product/:path*",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }]
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com https://knleehjjejfeobcmpwnw.supabase.co https://api.cloudinary.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-elem 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://knleehjjejfeobcmpwnw.supabase.co wss://knleehjjejfeobcmpwnw.supabase.co https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://api.cloudinary.com https://api.country.is https://get.geojs.io https://cdn.jsdelivr.net; frame-src 'self' https://www.googletagmanager.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' data: blob: https:; trusted-types default bariq dompurify; require-trusted-types-for 'script'"
+        }
+      ]
     },
     {
       "source": "/Cart",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }]
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com https://knleehjjejfeobcmpwnw.supabase.co https://api.cloudinary.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-elem 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://knleehjjejfeobcmpwnw.supabase.co wss://knleehjjejfeobcmpwnw.supabase.co https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://api.cloudinary.com https://api.country.is https://get.geojs.io https://cdn.jsdelivr.net; frame-src 'self' https://www.googletagmanager.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' data: blob: https:; trusted-types default bariq dompurify; require-trusted-types-for 'script'"
+        }
+      ]
+    },
+    {
+      "source": "/Cart.html",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com https://knleehjjejfeobcmpwnw.supabase.co https://api.cloudinary.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-elem 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://knleehjjejfeobcmpwnw.supabase.co wss://knleehjjejfeobcmpwnw.supabase.co https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://api.cloudinary.com https://api.country.is https://get.geojs.io https://cdn.jsdelivr.net; frame-src 'self' https://www.googletagmanager.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' data: blob: https:; trusted-types default bariq dompurify; require-trusted-types-for 'script'"
+        }
+      ]
     },
     {
       "source": "/account",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }]
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com https://knleehjjejfeobcmpwnw.supabase.co https://api.cloudinary.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-elem 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://knleehjjejfeobcmpwnw.supabase.co wss://knleehjjejfeobcmpwnw.supabase.co https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://api.cloudinary.com https://api.country.is https://get.geojs.io https://cdn.jsdelivr.net; frame-src 'self' https://www.googletagmanager.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' data: blob: https:; trusted-types default bariq dompurify; require-trusted-types-for 'script'"
+        }
+      ]
+    },
+    {
+      "source": "/account.html",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com https://knleehjjejfeobcmpwnw.supabase.co https://api.cloudinary.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-elem 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://knleehjjejfeobcmpwnw.supabase.co wss://knleehjjejfeobcmpwnw.supabase.co https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://api.cloudinary.com https://api.country.is https://get.geojs.io https://cdn.jsdelivr.net; frame-src 'self' https://www.googletagmanager.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' data: blob: https:; trusted-types default bariq dompurify; require-trusted-types-for 'script'"
+        }
+      ]
     },
     {
       "source": "/login",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }]
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com https://knleehjjejfeobcmpwnw.supabase.co https://api.cloudinary.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-elem 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://knleehjjejfeobcmpwnw.supabase.co wss://knleehjjejfeobcmpwnw.supabase.co https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://api.cloudinary.com https://api.country.is https://get.geojs.io https://cdn.jsdelivr.net; frame-src 'self' https://www.googletagmanager.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' data: blob: https:; trusted-types default bariq dompurify; require-trusted-types-for 'script'"
+        }
+      ]
+    },
+    {
+      "source": "/login.html",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com https://knleehjjejfeobcmpwnw.supabase.co https://api.cloudinary.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-elem 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://knleehjjejfeobcmpwnw.supabase.co wss://knleehjjejfeobcmpwnw.supabase.co https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://api.cloudinary.com https://api.country.is https://get.geojs.io https://cdn.jsdelivr.net; frame-src 'self' https://www.googletagmanager.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' data: blob: https:; trusted-types default bariq dompurify; require-trusted-types-for 'script'"
+        }
+      ]
     },
     {
       "source": "/offers",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }]
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com https://knleehjjejfeobcmpwnw.supabase.co https://api.cloudinary.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-elem 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://knleehjjejfeobcmpwnw.supabase.co wss://knleehjjejfeobcmpwnw.supabase.co https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://api.cloudinary.com https://api.country.is https://get.geojs.io https://cdn.jsdelivr.net; frame-src 'self' https://www.googletagmanager.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' data: blob: https:; trusted-types default bariq dompurify; require-trusted-types-for 'script'"
+        }
+      ]
+    },
+    {
+      "source": "/offers.html",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com https://knleehjjejfeobcmpwnw.supabase.co https://api.cloudinary.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-elem 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://knleehjjejfeobcmpwnw.supabase.co wss://knleehjjejfeobcmpwnw.supabase.co https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://api.cloudinary.com https://api.country.is https://get.geojs.io https://cdn.jsdelivr.net; frame-src 'self' https://www.googletagmanager.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' data: blob: https:; trusted-types default bariq dompurify; require-trusted-types-for 'script'"
+        }
+      ]
+    },
+    {
+      "source": "/monthly-offers",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com https://knleehjjejfeobcmpwnw.supabase.co https://api.cloudinary.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-elem 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://knleehjjejfeobcmpwnw.supabase.co wss://knleehjjejfeobcmpwnw.supabase.co https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://api.cloudinary.com https://api.country.is https://get.geojs.io https://cdn.jsdelivr.net; frame-src 'self' https://www.googletagmanager.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' data: blob: https:; trusted-types default bariq dompurify; require-trusted-types-for 'script'"
+        }
+      ]
+    },
+    {
+      "source": "/monthly-offers.html",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com https://knleehjjejfeobcmpwnw.supabase.co https://api.cloudinary.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-elem 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://knleehjjejfeobcmpwnw.supabase.co wss://knleehjjejfeobcmpwnw.supabase.co https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://api.cloudinary.com https://api.country.is https://get.geojs.io https://cdn.jsdelivr.net; frame-src 'self' https://www.googletagmanager.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' data: blob: https:; trusted-types default bariq dompurify; require-trusted-types-for 'script'"
+        }
+      ]
     },
     {
       "source": "/checkout",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }]
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com https://knleehjjejfeobcmpwnw.supabase.co https://api.cloudinary.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-elem 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://knleehjjejfeobcmpwnw.supabase.co wss://knleehjjejfeobcmpwnw.supabase.co https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://api.cloudinary.com https://api.country.is https://get.geojs.io https://cdn.jsdelivr.net; frame-src 'self' https://www.googletagmanager.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' data: blob: https:; trusted-types default bariq dompurify; require-trusted-types-for 'script'"
+        }
+      ]
     },
     {
-      "source": "/affiliate",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }]
-    },
-    {
-      "source": "/admin",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
-    },
-    {
-      "source": "/admin-reports",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
-    },
-    {
-      "source": "/sales-invoices",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
-    },
-    {
-      "source": "/admin-reports-manifest.json",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
+      "source": "/checkout.html",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com https://knleehjjejfeobcmpwnw.supabase.co https://api.cloudinary.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-elem 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://knleehjjejfeobcmpwnw.supabase.co wss://knleehjjejfeobcmpwnw.supabase.co https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://api.cloudinary.com https://api.country.is https://get.geojs.io https://cdn.jsdelivr.net; frame-src 'self' https://www.googletagmanager.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' data: blob: https:; trusted-types default bariq dompurify; require-trusted-types-for 'script'"
+        }
+      ]
     },
     {
       "source": "/policy",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }]
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com https://knleehjjejfeobcmpwnw.supabase.co https://api.cloudinary.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-elem 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://knleehjjejfeobcmpwnw.supabase.co wss://knleehjjejfeobcmpwnw.supabase.co https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://api.cloudinary.com https://api.country.is https://get.geojs.io https://cdn.jsdelivr.net; frame-src 'self' https://www.googletagmanager.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' data: blob: https:; trusted-types default bariq dompurify; require-trusted-types-for 'script'"
+        }
+      ]
+    },
+    {
+      "source": "/policy.html",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com https://knleehjjejfeobcmpwnw.supabase.co https://api.cloudinary.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-elem 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://knleehjjejfeobcmpwnw.supabase.co wss://knleehjjejfeobcmpwnw.supabase.co https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://api.cloudinary.com https://api.country.is https://get.geojs.io https://cdn.jsdelivr.net; frame-src 'self' https://www.googletagmanager.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' data: blob: https:; trusted-types default bariq dompurify; require-trusted-types-for 'script'"
+        }
+      ]
     },
     {
       "source": "/policy/:path*",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }]
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com https://knleehjjejfeobcmpwnw.supabase.co https://api.cloudinary.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-elem 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://knleehjjejfeobcmpwnw.supabase.co wss://knleehjjejfeobcmpwnw.supabase.co https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://api.cloudinary.com https://api.country.is https://get.geojs.io https://cdn.jsdelivr.net; frame-src 'self' https://www.googletagmanager.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' data: blob: https:; trusted-types default bariq dompurify; require-trusted-types-for 'script'"
+        }
+      ]
+    },
+    {
+      "source": "/affiliate",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com https://knleehjjejfeobcmpwnw.supabase.co https://api.cloudinary.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-elem 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://knleehjjejfeobcmpwnw.supabase.co wss://knleehjjejfeobcmpwnw.supabase.co https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://api.cloudinary.com https://api.country.is https://get.geojs.io https://cdn.jsdelivr.net; frame-src 'self' https://www.googletagmanager.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' data: blob: https:; trusted-types default bariq dompurify; require-trusted-types-for 'script'"
+        }
+      ]
+    },
+    {
+      "source": "/affiliate.html",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com https://knleehjjejfeobcmpwnw.supabase.co https://api.cloudinary.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-elem 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://knleehjjejfeobcmpwnw.supabase.co wss://knleehjjejfeobcmpwnw.supabase.co https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://api.cloudinary.com https://api.country.is https://get.geojs.io https://cdn.jsdelivr.net; frame-src 'self' https://www.googletagmanager.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' data: blob: https:; trusted-types default bariq dompurify; require-trusted-types-for 'script'"
+        }
+      ]
+    },
+    {
+      "source": "/affiliate-program",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com https://knleehjjejfeobcmpwnw.supabase.co https://api.cloudinary.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-elem 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://knleehjjejfeobcmpwnw.supabase.co wss://knleehjjejfeobcmpwnw.supabase.co https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://api.cloudinary.com https://api.country.is https://get.geojs.io https://cdn.jsdelivr.net; frame-src 'self' https://www.googletagmanager.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' data: blob: https:; trusted-types default bariq dompurify; require-trusted-types-for 'script'"
+        }
+      ]
+    },
+    {
+      "source": "/affiliate-program.html",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com https://knleehjjejfeobcmpwnw.supabase.co https://api.cloudinary.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-elem 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://knleehjjejfeobcmpwnw.supabase.co wss://knleehjjejfeobcmpwnw.supabase.co https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://api.cloudinary.com https://api.country.is https://get.geojs.io https://cdn.jsdelivr.net; frame-src 'self' https://www.googletagmanager.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' data: blob: https:; trusted-types default bariq dompurify; require-trusted-types-for 'script'"
+        }
+      ]
+    },
+    {
+      "source": "/generate-icon.html",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com https://knleehjjejfeobcmpwnw.supabase.co https://api.cloudinary.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-elem 'self' https://www.googletagmanager.com https://www.google-analytics.com https://www.gstatic.com https://apis.google.com 'sha256-IU0r5xkrSjKyiVixKhllMdeG8PgwNdKmFczr2YtQ0vM=' 'sha256-bm+UUXB3HSKhzv5XykO63G46HVGMkZegh9R0TB2XjYA=' 'sha256-2u8ftKKeaSPeDqYt7X3a+uvqfSN8czWW3Ovg+s4khik='; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://knleehjjejfeobcmpwnw.supabase.co wss://knleehjjejfeobcmpwnw.supabase.co https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://api.cloudinary.com https://api.country.is https://get.geojs.io https://cdn.jsdelivr.net; frame-src 'self' https://www.googletagmanager.com; worker-src 'self' blob:; manifest-src 'self'; media-src 'self' data: blob: https:; trusted-types default bariq dompurify; require-trusted-types-for 'script'"
+        }
+      ]
+    },
+    {
+      "source": "/",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/categories",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/categories/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/product",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/product/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/Cart",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/account",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/login",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/offers",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/checkout",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/affiliate",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/admin",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/admin-reports",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/sales-invoices",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/admin-reports-manifest.json",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/policy",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/policy/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, must-revalidate"
+        }
+      ]
     },
     {
       "source": "/sw.js",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
     },
     {
       "source": "/:path*.html",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, must-revalidate"
+        }
+      ]
     },
     {
       "source": "/assets/:path*",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
     },
     {
       "source": "/style/:path*",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=2592000, stale-while-revalidate=604800" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=2592000, stale-while-revalidate=604800"
+        }
+      ]
     },
     {
       "source": "/java/Products.min.js",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
     },
     {
       "source": "/java/Cart.min.js",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
     },
     {
       "source": "/java/Products.js",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
     },
     {
       "source": "/java/:path*",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=2592000, stale-while-revalidate=604800" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=2592000, stale-while-revalidate=604800"
+        }
+      ]
     },
     {
       "source": "/java/supabase.js",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
     },
     {
       "source": "/java/supabase.min.js",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
     },
     {
       "source": "/java/main.min.js",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
     },
     {
       "source": "/java/instant-nav.js",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
     },
     {
       "source": "/java/sw-refresh.js",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
     },
     {
       "source": "/java/push-welcome.js",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
     },
     {
       "source": "/mobile-nav-bar/:path*",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
     },
     {
       "source": "/translations/:path*",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=2592000, stale-while-revalidate=604800" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=2592000, stale-while-revalidate=604800"
+        }
+      ]
     }
   ]
 }
