@@ -1,5 +1,5 @@
 /* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v305';
+const CACHE = 'bariq-v323';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -34,6 +34,8 @@ const STATIC_URLS = [
   '/java/main.min.js',
   '/java/sw-refresh.js',
   '/java/instant-nav.js',
+  '/java/visitor-location-sync.js',
+  '/java/Products.js',
   '/java/Products.min.js',
   '/java/Cart.min.js',
   '/java/supabase.min.js',
@@ -273,7 +275,7 @@ self.addEventListener('fetch', function(e) {
     || /\/(product|Cart|account|login|offers|checkout|affiliate|policy|admin)$/.test(new URL(url).pathname)
     || new URL(url).pathname === '/';
   const isAsset = url.includes('/style/') || url.includes('/java/') || url.includes('/translations/') || url.includes('/mobile-nav-bar/');
-  const isMutableRuntime = /\/java\/(instant-nav\.js|sw-refresh\.js|main\.min\.js|push-welcome\.js|supabase\.js|supabase\.min\.js|Products\.js|Products\.min\.js|Products\.json|Cart\.js|Cart\.min\.js)(\?|$)/.test(url)
+  const isMutableRuntime = /\/java\/(instant-nav\.js|sw-refresh\.js|main\.min\.js|visitor-location-sync\.js|push-welcome\.js|supabase\.js|supabase\.min\.js|Products\.js|Products\.min\.js|Products\.json|Cart\.js|Cart\.min\.js)(\?|$)/.test(url)
     || /\/mobile-nav-bar\/main-navbar\.min\.js(\?|$)/.test(url);
   const path = new URL(url).pathname.replace(/\/index\.html$/, '/') || '/';
   const htmlCacheKey = appHtmlCachePath(path);
@@ -284,7 +286,7 @@ self.addEventListener('fetch', function(e) {
   };
 
   const isAuthPage = path === '/login' || path === '/login.html';
-  const isFreshHtmlPage = path === '/' || path === '/index.html' || path === '/categories' || path === '/categories.html' || isAuthPage || path === '/account' || path === '/account.html' || path === '/Cart' || path === '/Cart.html' || path === '/admin' || path === '/admin.html';
+  const isFreshHtmlPage = path === '/' || path === '/index.html' || path === '/categories' || path === '/categories.html' || isAuthPage || path === '/account' || path === '/account.html' || path === '/Cart' || path === '/Cart.html' || path === '/product' || path === '/product.html' || path === '/admin' || path === '/admin.html';
 
   // Key order/account/cart/admin pages must be fresh so checkout and status fixes cannot be stuck behind old HTML.
   if (isHtml && isFreshHtmlPage) {
