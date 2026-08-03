@@ -58,7 +58,7 @@ async function initMobileNav() {
 
   // ????? CSS
   const cssHref = base + 'styles.css?v=apple-liquid-20260729f';
-  if (!Array.from(document.styleSheets).some(s => s.href && s.href.includes('/mobile-nav-bar/styles.css'))) {
+  if (!document.querySelector('link[href*="/mobile-nav-bar/styles.css"]')) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
     link.href = cssHref;
