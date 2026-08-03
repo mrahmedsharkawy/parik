@@ -2396,7 +2396,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                     return "";
                 }
             }
-            const isIOSVideo = /iPhone|iPad|iPod/i.test(navigator.userAgent) || navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1, hlsVideoSrc = optimizeCloudinaryHlsUrl(fvSrc), miniMp4Src = optimizeCloudinaryVideoUrl(fvSrc, "f_mp4,vc_h264,ac_aac,q_auto:eco,w_240,c_limit"), miniVideoSources = [ miniMp4Src, optimizeCloudinaryVideoUrl(fvSrc, "f_mp4,vc_h264,ac_aac,q_auto,w_240,c_limit"), ...(isIOSVideo && hlsVideoSrc ? [ hlsVideoSrc ] : []), optimizeCloudinaryVideoUrl(fvSrc, "f_mp4,vc_h264,q_auto:eco,w_240,c_limit"), optimizeCloudinaryVideoUrl(fvSrc, "q_auto,w_240,c_limit"), fvSrc ].filter((src, i, arr) => src && arr.indexOf(src) === i), fullVideoSrc = isIOSVideo && hlsVideoSrc || optimizeCloudinaryVideoUrl(fvSrc, "f_mp4,vc_h264,ac_aac,q_auto,w_720,c_limit"), posterSrc = normalizeAssetUrl(imgs[0] || "") || "/assets/logo.png";
+            const uaVideo = navigator.userAgent || "", isIOSVideo = /iPhone|iPad|iPod/i.test(uaVideo) || navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1, isSafariVideo = /Safari/i.test(uaVideo) && !/Chrome|Chromium|CriOS|FxiOS|Edg|OPR|Android/i.test(uaVideo), hlsVideoSrc = optimizeCloudinaryHlsUrl(fvSrc), miniMp4Src = optimizeCloudinaryVideoUrl(fvSrc, "f_mp4,vc_h264,ac_aac,q_auto:eco,w_240,c_limit"), miniVideoSources = (isSafariVideo ? [ fvSrc, ...(hlsVideoSrc ? [ hlsVideoSrc ] : []), miniMp4Src, optimizeCloudinaryVideoUrl(fvSrc, "f_mp4,vc_h264,ac_aac,q_auto,w_240,c_limit") ] : [ miniMp4Src, optimizeCloudinaryVideoUrl(fvSrc, "f_mp4,vc_h264,ac_aac,q_auto,w_240,c_limit"), ...(isIOSVideo && hlsVideoSrc ? [ hlsVideoSrc ] : []), optimizeCloudinaryVideoUrl(fvSrc, "f_mp4,vc_h264,q_auto:eco,w_240,c_limit"), optimizeCloudinaryVideoUrl(fvSrc, "q_auto,w_240,c_limit"), fvSrc ]).filter((src, i, arr) => src && arr.indexOf(src) === i), fullVideoSrc = isIOSVideo && hlsVideoSrc || optimizeCloudinaryVideoUrl(fvSrc, "f_mp4,vc_h264,ac_aac,q_auto,w_720,c_limit"), posterSrc = normalizeAssetUrl(imgs[0] || "") || "/assets/logo.png";
             const startMiniVideo = function() {
                 const wrap = mainWrap || document.querySelector("#mainImage")?.parentElement;
                 const pip = document.createElement("div");
@@ -2452,9 +2452,15 @@ document.addEventListener("DOMContentLoaded", async function() {
                 const playMiniVideo = function() {
                     vid.play().catch(function() {});
                 };
+                const kickMiniVideo = function() {
+                    playMiniVideo();
+                    setTimeout(playMiniVideo, 80);
+                    setTimeout(playMiniVideo, 240);
+                    if (isSafariVideo) setTimeout(playMiniVideo, 700);
+                };
                 const showMiniVideo = function() {
                     vid.style.opacity = "1";
-                    playMiniVideo();
+                    kickMiniVideo();
                 };
                 vid.addEventListener("loadeddata", showMiniVideo);
                 vid.addEventListener("canplay", showMiniVideo);
@@ -2517,11 +2523,12 @@ document.addEventListener("DOMContentLoaded", async function() {
                 pip.appendChild(vid);
                 pip.appendChild(closeBtn);
                 document.body.appendChild(pip);
+                kickMiniVideo();
                 setTimeout(function() {
                     try {
                         vid.load();
                     } catch (e) {}
-                    vid.play().catch(function() {});
+                    kickMiniVideo();
                 }, 120);
                 let ox = 0, oy = 0, sx = 0, sy = 0, dragging = false, pendingDrag = false, moved = false;
                 function onStart(e) {
