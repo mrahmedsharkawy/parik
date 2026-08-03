@@ -383,8 +383,17 @@ export async function fetchProducts(forceFresh) {
     try {
         invalidateTs = parseInt(localStorage.getItem("x2_products_updated") || "0", 10);
     } catch (e) {}
+    if (!forceFresh) {
+        const instant = readImmediateProductsCache(invalidateTs);
+        if (instant && Array.isArray(instant.data) && instant.data.length) {
+            _productsCache = sortProductsForStore(instant.data), _productsCacheTs = instant.ts;
+            refreshProductsInBackground();
+            ensureStoreProductSortLoaded(false);
+            return _productsCache;
+        }
+    }
     await ensureStoreProductSortLoaded(forceFresh);
-    const canUseSupabaseProducts = await waitForSupabaseProducts();
+    const canUseSupabaseProducts = await waitForSupabaseProducts(forceFresh ? 1800 : 350);
     if (!forceFresh) {
         if (!canUseSupabaseProducts) {
             const instant = readImmediateProductsCache(invalidateTs);
@@ -703,6 +712,7 @@ export function createProductCard(prod) {
         touchMoved = false;
     }, { passive: true }),
     card.addEventListener("click", e => {
+        if (isProductCardControl(e.target)) return;
         if (Date.now() < suppressProductOpenUntil) {
             e.preventDefault();
             e.stopPropagation();
@@ -889,6 +899,8 @@ export function createProductCard(prod) {
     infoRow.style.alignItems = "ltr" === productCardDir ? "flex-start" : "flex-end", content.appendChild(infoRow), card.appendChild(content);
     const cartBtn = document.createElement("button");
     cartBtn.className = "product-cart-btn", cartBtn.title = "en" === lang ? "Add to Cart" : "إضافة للسلة", cartBtn.type = "button",
+    cartBtn.style.setProperty("right", "en" === lang ? "10px" : "auto", "important"),
+    cartBtn.style.setProperty("left", "en" === lang ? "auto" : "10px", "important"),
     cartBtn.innerHTML = '\n    <span style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;">\n      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="cart-svg-icon">\n        <path fill-rule="evenodd" clip-rule="evenodd" d="M2 1C1.44772 1 1 1.44772 1 2C1 2.55228 1.44772 3 2 3H3.21922L6.78345 17.2569C5.73276 17.7236 5 18.7762 5 20C5 21.6569 6.34315 23 8 23C9.65685 23 11 21.6569 11 20C11 19.6494 10.9398 19.3128 10.8293 19H15.1707C15.0602 19.3128 15 19.6494 15 20C15 21.6569 16.3431 23 18 23C19.6569 23 21 21.6569 21 20C21 18.3431 19.6569 17 18 17H8.78078L8.28078 15H18C20.0642 15 21.3019 13.6959 21.9887 12.2559C22.6599 10.8487 22.8935 9.16692 22.975 7.94368C23.0884 6.24014 21.6803 5 20.1211 5H5.78078L5.15951 2.51493C4.93692 1.62459 4.13696 1 3.21922 1H2ZM18 13H7.78078L6.28078 7H20.1211C20.6742 7 21.0063 7.40675 20.9794 7.81078C20.9034 8.9522 20.6906 10.3318 20.1836 11.3949C19.6922 12.4251 19.0201 13 18 13ZM18 20.9938C17.4511 20.9938 17.0062 20.5489 17.0062 20C17.0062 19.4511 17.4511 19.0062 18 19.0062C18.5489 19.0062 18.9938 19.4511 18.9938 20C18.9938 20.5489 18.5489 20.9938 18 20.9938ZM7.00617 20C7.00617 20.5489 7.45112 20.9938 8 20.9938C8.54888 20.9938 8.99383 20.5489 8.99383 20C8.99383 19.4511 8.54888 19.0062 8 19.0062C7.45112 19.0062 7.00617 19.4511 7.00617 20Z" fill="currentColor"/>\n      </svg>\n    </span>\n  ';
     let lastAddTapTs = 0, cartTouchStartX = 0, cartTouchStartY = 0, cartTouchStartAt = 0, suppressCartAddUntil = 0, suppressCartClickUntil = 0;
     function handleCardAdd(ev) {
@@ -951,12 +963,19 @@ export function createProductCard(prod) {
         }
         suppressCartClickUntil = Date.now() + 500;
         handleCardAdd(ev);
+    }), cartBtn.addEventListener("click", ev => {
+        if (Date.now() < suppressCartClickUntil) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            return;
+        }
+        handleCardAdd(ev);
     });
     const cartLang = (localStorage.getItem("lang") || document.documentElement.lang || "ar").toLowerCase();
     const cardDir = cartLang.startsWith("en") ? "ltr" : "rtl";
-    return cartBtn.style.left = "",
-    cartBtn.style.right = "", cartBtn.style.insetInlineStart = "", cartBtn.style.insetInlineEnd = "", 
-    "rtl" === cardDir ? cartBtn.style.left = "10px" : cartBtn.style.right = "10px", 
+    return cartBtn.style.removeProperty("inset-inline-start"), cartBtn.style.removeProperty("inset-inline-end"),
+    cartBtn.style.setProperty("right", "rtl" === cardDir ? "auto" : "10px", "important"),
+    cartBtn.style.setProperty("left", "rtl" === cardDir ? "10px" : "auto", "important"),
     card.appendChild(cartBtn), card;
 }
 
@@ -994,6 +1013,7 @@ document.addEventListener("DOMContentLoaded", async function() {
         const sortedList = direction === "preserve" ? (Array.isArray(list) ? list.slice() : []) : sortProductsForStore(list), tempContainer = document.createElement("div"), rowDiv = document.createElement("div");
         const renderKey = getProductRenderKey(sortedList);
         const isHomePage = /^(\/|\/index\.html)$/i.test(location.pathname);
+        const isCartPage = /\/cart(?:\.html)?$/i.test(location.pathname);
         const hasRenderedCards = !!productsContainer.querySelector(".product-card");
         if (renderKey && productsContainer.dataset.renderKey === renderKey && hasRenderedCards) return void productsContainer.classList.remove("changing");
         rowDiv.className = "products-row", tempContainer.appendChild(rowDiv);
@@ -1013,12 +1033,12 @@ document.addEventListener("DOMContentLoaded", async function() {
                 restoreTargetIndex = sortedList.findIndex(product => String(product.id || product.productId || "") === String(target.productId));
             }
         } catch (e) {}
-        const baseFirstChunk = isHomePage ? isMobileGrid ? 8 : 20 : 20;
+        const baseFirstChunk = isHomePage || isCartPage ? isMobileGrid ? 8 : 20 : 20;
         const FIRST_CHUNK = Math.min(Math.max(baseFirstChunk, restoreTargetIndex >= 0 ? restoreTargetIndex + 1 : 0), sortedList.length);
-        const deferHomeRest = isHomePage && sortedList.length > FIRST_CHUNK;
+        const deferProgressiveRest = (isHomePage || isCartPage) && sortedList.length > FIRST_CHUNK;
         _priorityProductImages = 0;
         const columns = isMobileGrid ? 2 : window.matchMedia("(max-width: 1300px)").matches ? 3 : 4;
-        const estimatedRows = Math.max(1, Math.ceil((deferHomeRest ? FIRST_CHUNK : sortedList.length) / columns));
+        const estimatedRows = Math.max(1, Math.ceil((deferProgressiveRest ? FIRST_CHUNK : sortedList.length) / columns));
         const estimatedCardHeight = window.matchMedia("(max-width: 899px)").matches ? 328 : 360;
         if (!isHomePage) productsContainer.classList.add("changing"), productsContainer.style.minHeight = Math.max(200, estimatedRows * estimatedCardHeight) + "px";
         productsContainer.style.position = "relative";
@@ -1035,7 +1055,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                 }
             }
             useMobileMasonry ? mobileColumns.forEach((col, ix) => col.appendChild(columnFragments[ix])) : rowDiv.appendChild(fragment);
-            if (deferHomeRest && !homeRestDeferred && i >= FIRST_CHUNK && i < sortedList.length) {
+            if (deferProgressiveRest && !homeRestDeferred && i >= FIRST_CHUNK && i < sortedList.length) {
                 homeRestDeferred = true;
                 productsContainer.dataset.renderKey = renderKey, productsContainer.replaceChildren(rowDiv), productsContainer.classList.remove("changing");
                 productsContainer.style.minHeight = "";
@@ -1055,7 +1075,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                 setTimeout(restoreProductReturnScrollPosition, 0);
             } else if (i < sortedList.length) requestAnimationFrame(appendChunk); else {
                 productsContainer.dataset.renderKey = renderKey;
-                if (!(deferHomeRest && homeRestDeferred && productsContainer.firstElementChild === rowDiv)) productsContainer.replaceChildren(rowDiv);
+                if (!(deferProgressiveRest && homeRestDeferred && productsContainer.firstElementChild === rowDiv)) productsContainer.replaceChildren(rowDiv);
                 productsContainer.classList.remove("changing");
                 productsContainer.style.minHeight = "";
                 const loader = document.getElementById("temp-popstate-loader") || document.getElementById("grid-loading-indicator");

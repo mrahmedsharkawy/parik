@@ -12,8 +12,8 @@
   <link rel="preload" href="/style/style.css?v=139" as="style" data-load-stylesheet>
   <script src="/java/css-loader.js?v=20260803a" defer></script>
   <noscript><link rel="stylesheet" href="/style/style.css?v=139"></noscript>
-  <link rel="preload" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260803-pill-ready-2" as="style" media="(max-width: 899px)" data-load-stylesheet>
-  <noscript><link rel="stylesheet" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260803-pill-ready-2" media="(max-width: 899px)"></noscript>
+  <link rel="preload" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260803-cartpos" as="style" media="(max-width: 899px)" data-load-stylesheet>
+  <noscript><link rel="stylesheet" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260803-cartpos" media="(max-width: 899px)"></noscript>
   <style>html,body{background:#fff!important}.page,main.main{background:#fff!important}@media(min-width:900px){.mobile-nav{display:none!important}}@media(max-width:899px){html.x2-home-booting #home-category-products,html.x2-home-booting #category-products{visibility:hidden!important}.mobile-nav{position:fixed;left:16px;right:16px;bottom:max(12px,env(safe-area-inset-bottom));height:62px;z-index:100000;display:flex;align-items:center;justify-content:center;padding:0 8px env(safe-area-inset-bottom);border-radius:34px;background:#152546;box-shadow:0 16px 30px rgba(0,0,0,.24);overflow:hidden}.mobile-nav ul{width:100%;max-width:620px;margin:0;padding:3px 9px;display:flex;gap:7px;list-style:none;box-sizing:border-box;position:relative}.mobile-nav li{flex:1;text-align:center;position:relative;z-index:2}.mobile-nav a{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:100%;min-height:44px;text-decoration:none;color:#fff;border-radius:26px}.mobile-nav img.icon,.mobile-nav svg.icon,.mobile-nav img.nav-icon{width:25px;height:25px;display:block;object-fit:contain;filter:brightness(0) saturate(100%) invert(100%)!important}.mobile-nav a>span:not(.icon-wrap):not(.fire-nav-icon){position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0;white-space:nowrap}}.categories a{font-family:"Segoe UI Emoji","Segoe UI Symbol","Apple Color Emoji","Noto Color Emoji",Arial,Tahoma,sans-serif!important}</style>
   <link rel="preload" href="/assets/home/1.webp" as="image" type="image/webp" media="(min-width: 900px)" fetchpriority="high">
   <link rel="preload" href="/assets/home/صور الغلاف/small-tmp/2-360.webp" as="image" type="image/webp" media="(max-width: 899px)" fetchpriority="high">
@@ -146,28 +146,41 @@
     .mh-cats-strip a.active{color:#152546;font-weight:900;border-bottom-color:#152546}
     main.main{margin-top:2px!important}
     .home-offer-cards{display:grid!important;grid-template-columns:1fr 1fr;gap:8px;width:100%;margin:10px auto 8px;direction:rtl}
-    .home-offer-card{position:relative;display:block;aspect-ratio:377/331;min-height:0;padding:0;border-radius:16px;text-decoration:none;overflow:hidden;color:#fff;box-shadow:0 8px 22px rgba(11,24,48,.16);isolation:isolate;background:#fff}
+    .home-offer-card{position:relative;display:flex;flex-direction:column;justify-content:space-between;aspect-ratio:377/331;min-height:0;padding:12px;border-radius:16px;text-decoration:none;overflow:hidden;color:#fff;box-shadow:0 8px 22px rgba(11,24,48,.16);isolation:isolate;background:#fff}
     .home-offer-card>*{position:relative;z-index:2}
-    .home-offer-card::before{content:none}
-    .home-offer-card-img{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover;border-radius:16px;display:block}
-    .home-offer-card.flash,.home-offer-card.month{background:#fff;color:inherit;border:0}
-    .home-offer-card.month::after{content:none}
-    .home-offer-top{display:flex;align-items:center;justify-content:space-between;gap:6px;font-weight:900;font-size:.88rem;line-height:1.1;white-space:nowrap;overflow:visible}
+    .home-offer-card::before,.home-offer-card::after{content:'';position:absolute;z-index:1;pointer-events:none}
+    .home-offer-card-img{display:none!important}
+    .home-offer-card.flash{background:radial-gradient(circle at 16% 22%,rgba(212,175,55,.28),transparent 24%),linear-gradient(135deg,#07162e 0%,#112d57 52%,#061024 100%);border:1px solid rgba(212,175,55,.32)}
+    .home-offer-card.flash::before{inset:auto -18px -26px auto;width:116px;height:116px;border-radius:50%;background:radial-gradient(circle,#d4af37 0 2px,transparent 3px),conic-gradient(from 210deg,transparent 0 18deg,rgba(212,175,55,.9) 18deg 24deg,transparent 24deg 62deg,rgba(255,255,255,.85) 62deg 68deg,transparent 68deg 360deg);opacity:.75;filter:drop-shadow(0 0 16px rgba(212,175,55,.3))}
+    .home-offer-card.flash::after{content:none}
+    .home-offer-card.flash .home-offer-visual{position:absolute;left:18px;top:86px;z-index:2;width:72px;height:46px;border-radius:9px;pointer-events:none;overflow:hidden;background:linear-gradient(135deg,rgba(255,255,255,.13),rgba(255,255,255,.04));border:1px solid rgba(255,255,255,.18);box-shadow:inset 0 1px rgba(255,255,255,.16),0 6px 16px rgba(0,0,0,.14)}
+    .home-offer-card.flash .home-offer-visual::before{content:'';position:absolute;inset:8px 10px;border-radius:7px;background:linear-gradient(135deg,rgba(212,175,55,.95),rgba(255,229,143,.76));clip-path:polygon(50% 0,61% 33%,94% 33%,67% 52%,78% 100%,50% 68%,22% 100%,33% 52%,6% 33%,39% 33%);filter:drop-shadow(0 2px 7px rgba(212,175,55,.35))}
+    .home-offer-card.flash .home-offer-visual::after{content:'';position:absolute;right:9px;bottom:8px;width:38px;height:5px;border-radius:999px;background:rgba(255,255,255,.22);box-shadow:-13px -9px 0 rgba(255,255,255,.14),6px -18px 0 rgba(212,175,55,.34)}
+    .home-offer-card.month{background:linear-gradient(135deg,#fff 0%,#fff8e7 52%,#f7e6ba 100%);color:#152546;border:1px solid rgba(212,175,55,.26)}
+    .home-offer-card.month::before{left:-18px;bottom:-30px;width:120px;height:120px;border-radius:26px;background:linear-gradient(135deg,#d4af37,#f5dc89);transform:rotate(-13deg);box-shadow:0 8px 22px rgba(212,175,55,.25)}
+    .home-offer-card.month::after{left:18px;bottom:20px;width:72px;height:46px;border-radius:9px;background:linear-gradient(135deg,#152546 0%,#1f3c70 100%);box-shadow:inset 0 1px rgba(255,255,255,.18),0 6px 16px rgba(21,37,70,.14);opacity:.92}
+    .home-offer-card.month .home-offer-visual{position:absolute;left:18px;bottom:20px;z-index:2;width:72px;height:46px;border-radius:9px;pointer-events:none;overflow:hidden}
+    .home-offer-card.month .home-offer-visual::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent 0 42%,rgba(212,175,55,.82) 42% 53%,transparent 53% 100%),linear-gradient(0deg,transparent 0 45%,rgba(212,175,55,.78) 45% 56%,transparent 56% 100%);opacity:.78}
+    .home-offer-card.month .home-offer-visual::after{content:'';position:absolute;top:7px;left:50%;width:30px;height:15px;border:2px solid rgba(212,175,55,.82);border-bottom:0;border-radius:16px 16px 0 0;transform:translateX(-50%)}
+    .home-offer-top{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;font-weight:900;font-size:.88rem;line-height:1.1;white-space:nowrap;overflow:visible}
     .home-offer-icon{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:10px;background:rgba(255,255,255,.16);font-size:1rem;flex-shrink:0}
     .home-offer-card.month .home-offer-icon{background:rgba(21,37,70,.1);position:relative;overflow:visible}
-    .home-offer-card.month .home-offer-icon::before{content:'';position:absolute;top:27px;inset-inline-start:-14px;width:104px;height:104px;border-radius:50%;z-index:-1;pointer-events:none;background:radial-gradient(circle,#fff 0 2.5px,transparent 3.5px),radial-gradient(circle,#152546 0 2.5px,transparent 3.5px),radial-gradient(circle,#d94b38 0 2.5px,transparent 3.5px),radial-gradient(circle,#fff 0 2px,transparent 3px),radial-gradient(circle,#152546 0 2px,transparent 3px),conic-gradient(from -20deg,transparent 0 9deg,#fff 9deg 14deg,transparent 14deg 46deg,#152546 46deg 51deg,transparent 51deg 86deg,#d94b38 86deg 92deg,transparent 92deg 132deg,#fff 132deg 137deg,transparent 137deg 205deg,#152546 205deg 210deg,transparent 210deg 284deg,#fff 284deg 289deg,transparent 289deg 360deg);background-position:50% 7%,74% 31%,30% 32%,82% 62%,20% 68%,center;background-size:100% 100%;background-repeat:no-repeat;filter:drop-shadow(0 0 9px rgba(255,255,255,.95));animation:monthRocketBurst 2s ease-out infinite;transform-origin:center}
-    .home-offer-card.month .home-offer-icon::after{content:'🚀';position:absolute;top:54px;inset-inline-start:-2px;z-index:1;font-size:1.18rem;line-height:1;pointer-events:none;filter:drop-shadow(0 0 6px rgba(21,37,70,.65));animation:monthRocketLaunch 2s ease-in infinite;transform-origin:center}
-    .home-offer-meta{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:9px 0 10px;font-size:.7rem;font-weight:800;line-height:1.2;color:rgba(255,255,255,.84)}
+    .home-offer-sub{display:block;margin-top:5px;font-size:.64rem;font-weight:800;line-height:1.45;opacity:.76}
+    .home-offer-meta{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:8px 0;font-size:.7rem;font-weight:800;line-height:1.2;color:rgba(255,255,255,.84)}
     .home-offer-card.month .home-offer-meta{color:rgba(21,37,70,.7)}
     .home-offer-timer,.home-offer-count,.home-offer-discount{display:inline-flex;align-items:center;justify-content:center;min-height:24px;border-radius:999px;padding:4px 7px;background:rgba(255,255,255,.14);white-space:nowrap}
-    .home-offer-card.month .home-offer-discount{background:rgba(21,37,70,.1);color:#152546;font-size:.82rem;font-weight:900}
+    .home-offer-card.flash .home-offer-timer{display:none!important}
+    .home-offer-card.flash .home-offer-count{align-self:flex-start;background:rgba(255,255,255,.16);font-size:.68rem;color:#fff;margin-top:2px}
+    .home-flash-main{display:flex;align-items:center;justify-content:flex-start;gap:10px;margin:4px 0 auto;min-height:48px;transform:translateY(-6px)}
+    .home-flash-deal{display:flex;flex-direction:column;gap:6px;color:#fff;font-weight:900;line-height:1.25}
+    .home-flash-deal strong{font-size:1.22rem;color:#d4af37;letter-spacing:0;line-height:1.2}
+    .home-flash-deal span{font-size:.62rem;color:rgba(255,255,255,.72);line-height:1.45}
+    .home-offer-card.month .home-offer-discount{background:transparent;color:#d4af37;font-size:1.58rem;font-weight:950;line-height:.9;padding:0;display:block;text-align:start}
     .home-offer-btn{display:inline-flex;align-items:center;justify-content:center;align-self:flex-start;min-height:28px;border-radius:999px;padding:6px 10px;background:#fff;color:#152546;font-size:.72rem;font-weight:900;line-height:1;text-decoration:none;box-shadow:inset 0 1px rgba(255,255,255,.6)}
     .home-offer-card.month .home-offer-btn{background:#152546;color:#fff}
-    .home-offer-card .home-offer-top,
-    .home-offer-card .home-offer-meta,
-    .home-offer-card .home-offer-btn{display:none!important}
-    .home-image-countdown{position:absolute;z-index:3;left:6.25%;top:55.8%;display:grid;grid-template-columns:repeat(3,1fr);gap:4.4%;width:31.5%;height:10.2%;direction:ltr;pointer-events:none}
-    .home-image-countdown .home-count-box{display:flex;align-items:center;justify-content:center;border-radius:8px;background:rgba(8,23,48,.94);border:1px solid rgba(132,153,187,.48);box-shadow:inset 0 1px 5px rgba(255,255,255,.08),0 1px 4px rgba(0,0,0,.18);color:#fff;font-size:clamp(.74rem,3.35vw,1.02rem);font-weight:900;line-height:1;font-family:Arial,Tahoma,sans-serif!important;letter-spacing:.01em}
+    .home-flash-bottom{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;margin-top:0}
+    .home-image-countdown{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;width:92px;direction:ltr;pointer-events:none}
+    .home-image-countdown .home-count-box{display:flex;align-items:center;justify-content:center;height:28px;border-radius:8px;background:rgba(8,23,48,.94);border:1px solid rgba(132,153,187,.48);box-shadow:inset 0 1px 5px rgba(255,255,255,.08),0 1px 4px rgba(0,0,0,.18);color:#fff;font-size:.82rem;font-weight:900;line-height:1;font-family:Arial,Tahoma,sans-serif!important;letter-spacing:.01em}
     #category-products{display:none!important}
     #home-category-products{display:block!important;overflow:hidden!important;touch-action:pan-y pinch-zoom!important;min-height:520px!important;margin-bottom:30px!important}
     .daily-picks-section + .categories{margin-top:18px!important}
@@ -360,24 +373,25 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </section>
   <section class="home-offer-cards" aria-label="عروض بريق السريعة" data-i18n-aria-label="عروض بريق السريعة">
     <a href="/offers" class="home-offer-card flash" aria-label="عروض خاطفة" data-i18n-aria-label="عروض خاطفة">
-      <img class="home-offer-card-img" src="assets/home/صور الغلاف/small-tmp/2-360.webp" alt="عروض خاطفة" width="360" height="330" loading="eager" fetchpriority="high" decoding="async">
-      <div class="home-image-countdown" aria-label="الوقت المتبقي للعرض">
-        <span class="home-count-box" id="homeFlashHours">00</span>
-        <span class="home-count-box" id="homeFlashMinutes">00</span>
-        <span class="home-count-box" id="homeFlashSeconds">00</span>
+      <span class="home-offer-visual" aria-hidden="true"></span>
+      <div class="home-offer-top"><span><span data-i18n="عروض خاطفة">عروض خاطفة</span><span class="home-offer-sub" data-i18n="كروت جديدة">كروت جديدة</span></span><span class="home-offer-icon" aria-hidden="true">⚡</span></div>
+      <div class="home-flash-main" aria-hidden="true">
+        <div class="home-flash-deal"><strong data-i18n="خصومات">خصومات</strong><span data-i18n="لفترة محدودة">لفترة محدودة</span><span class="home-offer-count"><b id="homeFlashProductCount">--</b>&nbsp;<span data-i18n="منتج">منتج</span></span></div>
       </div>
-      <div class="home-offer-top"><span data-i18n="عروض خاطفة">عروض خاطفة</span><span class="home-offer-icon" aria-hidden="true">⚡</span></div>
-      <div class="home-offer-meta">
-        <span class="home-offer-timer" id="homeFlashOfferTimer">00:00:00</span>
-        <span class="home-offer-count"><b id="homeFlashProductCount">--</b>&nbsp;<span data-i18n="منتج">منتج</span></span>
+      <div class="home-flash-bottom">
+        <div class="home-image-countdown" aria-label="الوقت المتبقي للعرض">
+          <span class="home-count-box" id="homeFlashHours">00</span>
+          <span class="home-count-box" id="homeFlashMinutes">00</span>
+          <span class="home-count-box" id="homeFlashSeconds">00</span>
+        </div>
+        <span class="home-offer-btn" data-i18n="تسوق الآن">تسوق الآن</span>
       </div>
-      <span class="home-offer-btn" data-i18n="تسوق الآن">تسوق الآن</span>
     </a>
     <a href="/monthly-offers.html" class="home-offer-card month" aria-label="عروض الشهر" data-i18n-aria-label="عروض الشهر">
-      <img class="home-offer-card-img" src="assets/home/صور الغلاف/small-tmp/1-360.webp" alt="عروض الشهر" width="360" height="338" loading="eager" fetchpriority="high" decoding="async">
+      <span class="home-offer-visual" aria-hidden="true"></span>
       <div class="home-offer-top"><span data-i18n="عروض الشهر">عروض الشهر</span><span class="home-offer-icon" aria-hidden="true">🎁</span></div>
       <div class="home-offer-meta">
-        <span class="home-offer-discount" data-i18n="خصم حتى 70%">خصم حتى 70%</span>
+        <span><span class="home-offer-discount" data-i18n="خصم حتى 70%">خصم حتى 70%</span><span class="home-offer-sub" data-i18n="على مجموعة مختارة">على مجموعة مختارة</span></span>
       </div>
       <span class="home-offer-btn" data-i18n="عرض الكل">عرض الكل</span>
     </a>
@@ -438,7 +452,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- أضف هذا العنصر لعرض المنتجات الخاصة بالفئة المختارة -->
   <div id="home-category-products"></div>
   <div id="category-products" style="margin-bottom:30px;"></div>
-  <script src="/java/index-home-products.js?v=20260803e" defer></script>
+  <script src="/java/index-home-products.js?v=home-fast-products-20260803a" defer></script>
 
   
 </main>
@@ -557,7 +571,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </footer>
 <script src="/java/supabase.min.js?v=supabase-20260725a" defer></script>
-<script src="/java/main.min.js?v=294" defer></script>
+<script src="/java/main.min.js?v=visitor-search-20260803b" defer></script>
 <script src="/java/sw-refresh.js?v=sw-refresh-20260803-pwa304" defer></script>
 <script src="/java/instant-nav.js?v=instant-nav-20260728e" defer></script>
 <script src="/translations/translation.min.js?v=translation-20260726c" defer></script>

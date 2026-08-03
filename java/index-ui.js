@@ -71,10 +71,37 @@
     if(secondsEl)secondsEl.textContent=s;
   }
   updateTimer();setInterval(updateTimer,1000);
-  fetch('/java/Products.json',{cache:'no-store'}).then(function(r){return r.ok?r.json():[]}).then(function(list){
-    var el=document.getElementById('homeFlashProductCount');
-    if(el)el.textContent=Array.isArray(list)?list.length:0;
-  }).catch(function(){var el=document.getElementById('homeFlashProductCount');if(el)el.textContent='24'});
+  function priceValue(v){var n=parseFloat(v);return isFinite(n)?n:0}
+  function offerCount(products){
+    var list=Array.isArray(products)?products:[];
+    var featuredIds=new Set();
+    try{featuredIds=new Set(JSON.parse(localStorage.getItem('x2_featured_ids')||'[]').map(String))}catch(e){}
+    var featured=0,discounted=0;
+    list.forEach(function(p){
+      var id=String(p&&p.id||'');
+      var price=priceValue(p&&p.price);
+      var oldPrice=priceValue(p&&(p.oldPrice!=null?p.oldPrice:p.old_price));
+      if(featuredIds.has(id)) featured++;
+      else if(oldPrice>price&&price>0) discounted++;
+    });
+    return featured+discounted;
+  }
+  function readOffersCache(){try{var c=JSON.parse(sessionStorage.getItem('x2_offers_deals_cache_v1')||localStorage.getItem('x2_offers_deals_cache_v1')||'null');return c&&Array.isArray(c.products)?c.products:null}catch(e){return null}}
+  function setOfferCount(n){var el=document.getElementById('homeFlashProductCount');if(el)el.textContent=String(Math.max(0,n||0))}
+  function waitForSupabaseProducts(){if(window.Supabase&&window.Supabase.Products)return Promise.resolve(true);return new Promise(function(resolve){var started=Date.now(),timer=setInterval(function(){if(window.Supabase&&window.Supabase.Products){clearInterval(timer);resolve(true)}else if(Date.now()-started>1800){clearInterval(timer);resolve(false)}},80)})}
+  (async function(){
+    var cached=readOffersCache();
+    if(cached) setOfferCount(offerCount(cached));
+    try{
+      var hasSupabase=await waitForSupabaseProducts();
+      if(hasSupabase){
+        var sb=await window.Supabase.Products.getAll(100000);
+        if(Array.isArray(sb)){setOfferCount(offerCount(sb));return}
+      }
+      var r=await fetch('/java/Products.json',{cache:'no-store'}),list=r.ok?await r.json():[];
+      setOfferCount(offerCount(list));
+    }catch(e){if(!cached)setOfferCount(0)}
+  })();
 })();
 
 (function(){

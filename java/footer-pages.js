@@ -71,6 +71,26 @@ var footerPageSlugs =
     },
   });
 
+var footerPageEnglishContent =
+  window.footerPageEnglishContent ||
+  (window.footerPageEnglishContent = {
+    about: '<h2 class="about-x2-title">What does Bariq mean?</h2><p class="about-x2-text">Bariq is an online gift store built around thoughtful customized products, occasion giveaways, and practical gifting services for customers in the UAE and beyond.</p><h2 class="about-x2-title">What do we offer?</h2><p class="about-x2-text">We help you create memorable moments with acrylic, wood, leather, paper, sticker, and seasonal products designed for weddings, graduations, newborns, Ramadan, National Day, and more.</p><h2 class="about-x2-title">Our strengths</h2><ul class="about-x2-list"><li>A wide range of customizable products.</li><li>Reliable production and delivery partners.</li><li>Fast support before and after purchase.</li></ul><h2 class="about-x2-title">Our values</h2><div class="about-x2-values"><div class="about-x2-value"><div class="about-x2-value-title">Care</div><div>Every gift should feel personal and well made.</div></div><div class="about-x2-value"><div class="about-x2-value-title">Integrity</div><div>Clear information, fair service, and honest communication.</div></div><div class="about-x2-value"><div class="about-x2-value-title">Creativity</div><div>Fresh ideas for every occasion and every customer.</div></div></div>',
+    "shop-like-pro": '<h2 class="about-x2-title">Shop Like a Pro on Bariq</h2><p class="about-x2-text">Bariq brings curated gifts and occasion products into one easy shopping experience. Compare options, choose the design that fits your event, and complete your order with confidence.</p><ul class="about-x2-list"><li>Browse products by occasion and material.</li><li>Use offers and monthly deals to save more.</li><li>Check product details, prices, and available customization options.</li><li>Keep your cart ready and confirm your order through WhatsApp.</li></ul><div class="about-x2-text" style="text-align:center;margin-top:18px;">Shop smarter, save time, and make every gift feel intentional.</div>',
+    "affiliate-commission": '<h2 class="about-x2-title">Affiliate & Rewards Program</h2><p class="about-x2-text">Earn rewards by sharing Bariq products with your audience, friends, or customers. When purchases are completed through your referrals, your commission is tracked in your account.</p><ul class="about-x2-list"><li>Join for free and start sharing your referral links.</li><li>Track sales and pending rewards from your dashboard.</li><li>Grow your earnings by promoting seasonal products and offers.</li><li>Request payouts according to the program terms.</li></ul><div style="text-align:center;margin-top:18px;"><a href="/affiliate" class="affiliate-join-btn">Join now</a></div>',
+    contact: '<h2 class="about-x2-title">Contact Us</h2><p class="about-x2-text">Need help with an order, product, customization request, or partnership question? Send us a message and our team will get back to you as soon as possible.</p><form class="contact-form" onsubmit="event.preventDefault(); var name=this.name.value; var email=this.email.value; var msg=this.message.value; var body=msg+\'\\n\\n-- \'+name+\'\\n\'+email; var mail=\'https://mail.google.com/mail/?view=cm&fs=1&to=bariq.store@gmail.com&su=\'+encodeURIComponent(\'Message from \'+name+\' via Bariq contact page\')+\'&body=\'+encodeURIComponent(body); window.open(mail, \'_blank\'); return false;"><label>Name:</label><input type="text" name="name" required><label>Email:</label><input type="email" name="email" required><label>Message:</label><textarea name="message" required></textarea><button type="submit" class="contact-send-btn">Send via Gmail</button></form>',
+    "media-outlets": '<h2 class="about-x2-title">Media Outlets</h2><p class="about-x2-text">Follow Bariq news, campaigns, partnerships, and product updates through our official communication channels.</p><ul class="about-x2-list"><li>News about new collections and services.</li><li>Updates for seasonal campaigns and events.</li><li>Stories from customers, partners, and the Bariq community.</li><li>Announcements related to social initiatives and brand activity.</li></ul>',
+    "tree-planting": '<h2 class="about-x2-title">Bariq Tree Planting Program</h2><p class="about-x2-text">We believe that thoughtful commerce should care about the future. Bariq supports environmental awareness and responsible initiatives that help create a greener tomorrow.</p><ul class="about-x2-list"><li>Supporting local and global sustainability efforts.</li><li>Encouraging customers and partners to make responsible choices.</li><li>Building a brand culture that values long-term impact.</li></ul>',
+    "customer-service": '<h2 class="about-x2-title">Customer Service</h2><p class="about-x2-text">Our customer service team is here to help with product questions, order updates, customization details, and after-sales support.</p><ul class="about-x2-list"><li>Help before and after purchase.</li><li>Support for order changes and product questions.</li><li>Clear guidance for shipping, returns, and payment options.</li></ul>',
+    returns: '<h2 class="about-x2-title">Return & Refund Policy</h2><p class="about-x2-text">Your satisfaction matters. Returns and refunds are handled according to product condition, customization status, and the applicable order terms.</p><ul class="about-x2-list"><li>Contact support as soon as possible if there is an issue.</li><li>Items must be unused and in their original condition when return is available.</li><li>Customized products may have special return rules.</li><li>Approved refunds are processed through the available payment method.</li></ul>',
+    "intellectual-property": '<h2 class="about-x2-title">Intellectual Property Policy</h2><p class="about-x2-text">Bariq respects trademarks, copyrights, and creative rights. If you believe that any product, image, or content violates your rights, please contact us with the relevant details.</p><ul class="about-x2-list"><li>We review reports carefully and promptly.</li><li>Valid complaints may lead to content removal or product updates.</li><li>We aim to protect creators, customers, and partners fairly.</li></ul>',
+    "shipping-info": '<h2 class="about-x2-title">Shipping Information</h2><p class="about-x2-text">Bariq offers flexible delivery options through trusted shipping partners. Delivery time and cost may vary depending on product type, quantity, destination, and customization requirements.</p><ul class="about-x2-list"><li>Local and regional shipping options may be available.</li><li>Delivery estimates are shared during order confirmation.</li><li>Large or customized orders may require additional preparation time.</li><li>Shipping fees depend on order size, weight, and destination.</li></ul>',
+    "report-abuse": '<h2 class="about-x2-title">Report Suspicious Activity</h2><p class="about-x2-text">Your safety is important to us. If you notice suspicious messages, fake accounts, payment requests, or misuse of Bariq content, please report it through our official channels.</p><ul class="about-x2-list"><li>Reports are reviewed confidentially.</li><li>Our team takes action when abuse or fraud is confirmed.</li><li>Always use official Bariq pages and contact methods.</li></ul>',
+    "support-faq": '<h2 class="about-x2-title">Support Center & FAQ</h2><p class="about-x2-text">Find quick answers to common questions about orders, payment, shipping, customization, and account support.</p><div class="faq-list" style="max-width:700px;margin:0 auto;"><div class="faq-item"><button class="faq-question" onclick="this.classList.toggle(\'open\');var a=this.nextElementSibling;a.style.display=a.style.display===\'block\'?\'none\':\'block\';">What payment methods are available?</button><div class="faq-answer" style="display:none;">Available payment methods are shown during checkout and order confirmation.</div></div><div class="faq-item"><button class="faq-question" onclick="this.classList.toggle(\'open\');var a=this.nextElementSibling;a.style.display=a.style.display===\'block\'?\'none\':\'block\';">How long does delivery take?</button><div class="faq-answer" style="display:none;">Delivery time depends on location, product type, and customization requirements.</div></div><div class="faq-item"><button class="faq-question" onclick="this.classList.toggle(\'open\');var a=this.nextElementSibling;a.style.display=a.style.display===\'block\'?\'none\':\'block\';">Can I customize a product?</button><div class="faq-answer" style="display:none;">Many Bariq products support customization. Check the product page or contact support.</div></div></div>',
+    "security-center": '<h2 class="about-x2-title">Security Center</h2><p class="about-x2-text">We work to protect your account, order information, and communication with Bariq through clear processes and responsible data handling.</p><ul class="about-x2-list"><li>Use strong passwords and keep your login details private.</li><li>Do not share payment details through unofficial channels.</li><li>Report suspicious activity immediately.</li></ul>',
+    "buyer-protection": '<h2 class="about-x2-title">Buyer Protection</h2><p class="about-x2-text">Shop with confidence. Bariq supports customers from product discovery to order confirmation and delivery follow-up.</p><ul class="about-x2-list"><li>Clear product information before purchase.</li><li>Support for order issues and delivery questions.</li><li>Fair handling of eligible returns and complaints.</li></ul>',
+    "work-with-Bariq": '<h2 class="about-x2-title">Work With Bariq</h2><p class="about-x2-text">We welcome creative people, suppliers, makers, and partners who want to grow with Bariq.</p><ul class="about-x2-list"><li>Partner with us on products or services.</li><li>Join affiliate and collaboration opportunities.</li><li>Share ideas that improve the gifting experience.</li></ul><div style="text-align:center;margin-top:18px;"><a href="/affiliate" class="affiliate-join-btn">Start here</a></div>',
+  });
+
 function getFooterPagesJsonCandidates() {
   return [
     location.pathname
@@ -98,9 +118,17 @@ async function loadFooterPagesJson() {
   throw new Error("json not found: " + lastError);
 }
 
+function getFooterPageLang() {
+  const urlLang = new URLSearchParams(location.search).get("lang");
+  if ("en" === urlLang || "ar" === urlLang) return urlLang;
+  const storedLang = localStorage.getItem("lang");
+  if ("en" === storedLang || "ar" === storedLang) return storedLang;
+  return "en" === document.documentElement.lang ? "en" : "ar";
+}
+
 async function renderPolicyPage(slug) {
   if (!slug) return;
-  const lang = "en" === document.documentElement.lang ? "en" : "ar";
+  const lang = getFooterPageLang();
   let pages,
     pageName = (footerPageSlugs[slug] && footerPageSlugs[slug][lang]) || slug,
     contentDiv = document.getElementById("footer-page-content"),
@@ -113,6 +141,9 @@ async function renderPolicyPage(slug) {
     pages = await loadFooterPagesJson();
   } catch (e) {
     return void (contentDiv.innerHTML = `<div style="color:red;text-align:center">تعذر تحميل بيانات الصفحات.<br>${e.message}</div>`);
+  }
+  if ("en" === lang && footerPageEnglishContent[slug]) {
+    return void (contentDiv.innerHTML = footerPageEnglishContent[slug]);
   }
   if ("about" === slug) {
     let html = "";
@@ -143,7 +174,7 @@ if (
       match && (slug = match[1]);
     }
     if (!slug) return;
-    const lang = "en" === document.documentElement.lang ? "en" : "ar";
+    const lang = getFooterPageLang();
     let pageName =
         (footerPageSlugs[slug] && footerPageSlugs[slug][lang]) || slug,
       pageTitle = document.getElementById("page-title"),
@@ -179,6 +210,9 @@ if (
       pages = await loadFooterPagesJson();
     } catch (e) {
       return void (contentDiv.innerHTML = `<div style="color:red;text-align:center">تعذر تحميل بيانات الصفحات.<br>${e.message}</div>`);
+    }
+    if ("en" === lang && footerPageEnglishContent[slug]) {
+      return void (contentDiv.innerHTML = footerPageEnglishContent[slug]);
     }
     if ("about" === slug) {
       let html = "";
@@ -222,7 +256,8 @@ if (
       : showFooterPageNotFound(contentDiv, pageName);
   }
   (document.addEventListener("DOMContentLoaded", showPolicyPage),
-    window.addEventListener("popstate", showPolicyPage));
+    window.addEventListener("popstate", showPolicyPage),
+    window.addEventListener("bariq:languagechange", showPolicyPage));
   let lastSearch = location.search;
   setInterval(() => {
     location.search !== lastSearch &&
