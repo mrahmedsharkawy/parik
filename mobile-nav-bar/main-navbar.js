@@ -250,9 +250,14 @@ async function initMobileNav() {
         return targetUrl.origin === location.origin && normalizePath(targetUrl.pathname) === normalizePath(location.pathname);
       };
 
-      const reloadSamePage = () => {
+      const reloadSamePage = (link = activeLink) => {
         const url = new URL(location.href);
         url.searchParams.set('__nav_reload', String(Date.now()));
+        if (link && link.getAttribute('data-key') === 'home') {
+          try {
+            sessionStorage.setItem('x2_home_nav_reload_top', '1');
+          } catch(e) {}
+        }
         location.assign(url.href);
       };
 
@@ -400,7 +405,7 @@ async function initMobileNav() {
       liquidPill.addEventListener('click', (event) => {
         if (suppressPillClick) return;
         event.preventDefault();
-        if (activeLink && isSamePageLink(activeLink)) reloadSamePage();
+        if (activeLink && isSamePageLink(activeLink)) reloadSamePage(activeLink);
         else activeLink?.click();
       });
 
@@ -408,7 +413,7 @@ async function initMobileNav() {
         link.addEventListener('click', (event) => {
           if (isSamePageLink(link)) {
             event.preventDefault();
-            reloadSamePage();
+            reloadSamePage(link);
             return;
           }
           setActiveLink(link);
