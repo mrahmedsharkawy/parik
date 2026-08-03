@@ -1,5 +1,5 @@
 /* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v326';
+const CACHE = 'bariq-v328';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -452,6 +452,13 @@ function normalizePushNotificationData(data) {
   const orderId = data.orderId || data.order_id || extractOrderIdFromNotification(raw, tag);
   if (data.type === 'admin_new_order' || /admin_new_order|new order|طلب جديد/i.test(String(data.type || '') + ' ' + raw)) {
     const cleanOrderId = String(orderId || '').replace(/^#/, '').trim();
+    const shouldFallbackAdminText = !data.title || !data.body || isMostlyBrokenNotificationText(raw) || hasBrokenNotificationText(data.title) || hasBrokenNotificationText(data.body) || hasMojibakeText(raw);
+    if (!shouldFallbackAdminText) {
+      return Object.assign({}, data, {
+        iconText: data.iconText || '📦',
+        emoji: data.emoji || data.iconText || '📦'
+      });
+    }
     return Object.assign({}, data, {
       title: data.lang === 'en' ? '📦 New order from Bariq' : '📦 طلب جديد من بريق',
       body: data.lang === 'en'
@@ -494,15 +501,15 @@ function normalizePushNotificationData(data) {
     const orderAr = ` رقم ${orderId}`;
     const orderEn = ` #${String(orderId).replace(/^#/, '')}`;
     const mapAr = {
-      pending:       { icon: '⏳', title: 'طلبك قيد المراجعة',     body: `طلبك رقم ${orderId} يُراجَع الآن` },
-      processing:    { icon: '🔄', title: 'طلبك قيد المعالجة',     body: `جارٍ تجهيز طلبك رقم ${orderId}` },
-      confirmed:     { icon: '✅', title: 'تم تأكيد طلبك',          body: `طلبك رقم ${orderId} تم تأكيده وسيُجهَّز قريباً 🎉` },
-      manufacturing: { icon: '🔨', title: 'طلبك في مرحلة التصنيع', body: `طلبك رقم ${orderId} يُصنَّع الآن بعناية ✨` },
-      ready:         { icon: '🎁', title: 'طلبك جاهز للاستلام',    body: `طلبك رقم ${orderId} جاهز وبانتظارك 🎉` },
-      shipped:       { icon: '🚚', title: 'تم شحن طلبك',           body: `طلبك رقم ${orderId} في الطريق إليك` },
-      delivered:     { icon: '✅', title: 'تم توصيل طلبك',         body: `طلبك رقم ${orderId} وصل بنجاح 🎉` },
-      cancelled:     { icon: '❌', title: 'تم إلغاء طلبك',         body: `طلبك رقم ${orderId} تم إلغاؤه` },
-      returned:      { icon: '↩️', title: 'تمت عملية الإرجاع',      body: `تمت معالجة إرجاع طلبك رقم ${orderId}` }
+      pending:       { icon: '⏳', title: '\u0637\u0644\u0628\u0643 \u0642\u064a\u062f \u0627\u0644\u0645\u0631\u0627\u062c\u0639\u0629',     body: `\u0637\u0644\u0628\u0643 \u0631\u0642\u0645 ${orderId} \u064a\u064f\u0631\u0627\u062c\u064e\u0639 \u0627\u0644\u0622\u0646` },
+      processing:    { icon: '🔄', title: '\u0637\u0644\u0628\u0643 \u0642\u064a\u062f \u0627\u0644\u0645\u0639\u0627\u0644\u062c\u0629',     body: `\u062c\u0627\u0631\u064d \u062a\u062c\u0647\u064a\u0632 \u0637\u0644\u0628\u0643 \u0631\u0642\u0645 ${orderId}` },
+      confirmed:     { icon: '✅', title: '\u062a\u0645 \u062a\u0623\u0643\u064a\u062f \u0637\u0644\u0628\u0643',          body: `\u0637\u0644\u0628\u0643 \u0631\u0642\u0645 ${orderId} \u062a\u0645 \u062a\u0623\u0643\u064a\u062f\u0647 \u0648\u0633\u064a\u064f\u062c\u0647\u0651\u0632 \u0642\u0631\u064a\u0628\u0627\u064b 🎉` },
+      manufacturing: { icon: '🔨', title: '\u0637\u0644\u0628\u0643 \u0641\u064a \u0645\u0631\u062d\u0644\u0629 \u0627\u0644\u062a\u0635\u0646\u064a\u0639', body: `\u0637\u0644\u0628\u0643 \u0631\u0642\u0645 ${orderId} \u064a\u064f\u0635\u0646\u0651\u0639 \u0627\u0644\u0622\u0646 \u0628\u0639\u0646\u0627\u064a\u0629 ✨` },
+      ready:         { icon: '🎁', title: '\u0637\u0644\u0628\u0643 \u062c\u0627\u0647\u0632 \u0644\u0644\u0627\u0633\u062a\u0644\u0627\u0645',    body: `\u0637\u0644\u0628\u0643 \u0631\u0642\u0645 ${orderId} \u062c\u0627\u0647\u0632 \u0648\u0628\u0627\u0646\u062a\u0638\u0627\u0631\u0643 🎉` },
+      shipped:       { icon: '🚚', title: '\u062a\u0645 \u0634\u062d\u0646 \u0637\u0644\u0628\u0643',           body: `\u0637\u0644\u0628\u0643 \u0631\u0642\u0645 ${orderId} \u0641\u064a \u0627\u0644\u0637\u0631\u064a\u0642 \u0625\u0644\u064a\u0643` },
+      delivered:     { icon: '✅', title: '\u062a\u0645 \u062a\u0648\u0635\u064a\u0644 \u0637\u0644\u0628\u0643',         body: `\u0637\u0644\u0628\u0643 \u0631\u0642\u0645 ${orderId} \u0648\u0635\u0644 \u0628\u0646\u062c\u0627\u062d 🎉` },
+      cancelled:     { icon: '❌', title: '\u062a\u0645 \u0625\u0644\u063a\u0627\u0621 \u0637\u0644\u0628\u0643',         body: `\u0637\u0644\u0628\u0643 \u0631\u0642\u0645 ${orderId} \u062a\u0645 \u0625\u0644\u063a\u0627\u0624\u0647` },
+      returned:      { icon: '↩️', title: '\u062a\u0645\u062a \u0639\u0645\u0644\u064a\u0629 \u0627\u0644\u0625\u0631\u062c\u0627\u0639',      body: `\u062a\u0645\u062a \u0645\u0639\u0627\u0644\u062c\u0629 \u0625\u0631\u062c\u0627\u0639 \u0637\u0644\u0628\u0643 \u0631\u0642\u0645 ${orderId}` }
     };
     const mapEn = {
       pending:       { icon: '⏳', title: 'Your order is under review',    body: `Your order${orderEn} is being reviewed` },
@@ -534,15 +541,15 @@ function normalizePushNotificationData(data) {
   if (isBroken && (data.type === 'order_status' || inferredStatus)) {
     const status = inferredStatus || 'processing';
     const mapNoIdAr = {
-      pending:       { icon: '⏳', title: 'طلبك قيد المراجعة',     body: 'طلبك يُراجَع الآن' },
-      processing:    { icon: '🔄', title: 'طلبك قيد المعالجة',     body: 'جارٍ تجهيز طلبك' },
-      confirmed:     { icon: '✅', title: 'تم تأكيد طلبك',          body: 'تم تأكيد طلبك وسيُجهَّز قريباً 🎉' },
-      manufacturing: { icon: '🔨', title: 'طلبك في مرحلة التصنيع', body: 'طلبك يُصنَّع الآن بعناية ✨' },
-      ready:         { icon: '🎁', title: 'طلبك جاهز للاستلام',    body: 'طلبك جاهز وبانتظارك 🎉' },
-      shipped:       { icon: '🚚', title: 'تم شحن طلبك',           body: 'طلبك في الطريق إليك' },
-      delivered:     { icon: '✅', title: 'تم توصيل طلبك',         body: 'طلبك وصل بنجاح 🎉' },
-      cancelled:     { icon: '❌', title: 'تم إلغاء طلبك',         body: 'تم إلغاء طلبك' },
-      returned:      { icon: '↩️', title: 'تمت عملية الإرجاع',      body: 'تمت معالجة إرجاع طلبك' }
+      pending:       { icon: '⏳', title: '\u0637\u0644\u0628\u0643 \u0642\u064a\u062f \u0627\u0644\u0645\u0631\u0627\u062c\u0639\u0629',     body: '\u0637\u0644\u0628\u0643 \u064a\u064f\u0631\u0627\u062c\u064e\u0639 \u0627\u0644\u0622\u0646' },
+      processing:    { icon: '🔄', title: '\u0637\u0644\u0628\u0643 \u0642\u064a\u062f \u0627\u0644\u0645\u0639\u0627\u0644\u062c\u0629',     body: '\u062c\u0627\u0631\u064d \u062a\u062c\u0647\u064a\u0632 \u0637\u0644\u0628\u0643' },
+      confirmed:     { icon: '✅', title: '\u062a\u0645 \u062a\u0623\u0643\u064a\u062f \u0637\u0644\u0628\u0643',          body: '\u062a\u0645 \u062a\u0623\u0643\u064a\u062f \u0637\u0644\u0628\u0643 \u0648\u0633\u064a\u064f\u062c\u0647\u0651\u0632 \u0642\u0631\u064a\u0628\u0627\u064b 🎉' },
+      manufacturing: { icon: '🔨', title: '\u0637\u0644\u0628\u0643 \u0641\u064a \u0645\u0631\u062d\u0644\u0629 \u0627\u0644\u062a\u0635\u0646\u064a\u0639', body: '\u0637\u0644\u0628\u0643 \u064a\u064f\u0635\u0646\u0651\u0639 \u0627\u0644\u0622\u0646 \u0628\u0639\u0646\u0627\u064a\u0629 ✨' },
+      ready:         { icon: '🎁', title: '\u0637\u0644\u0628\u0643 \u062c\u0627\u0647\u0632 \u0644\u0644\u0627\u0633\u062a\u0644\u0627\u0645',    body: '\u0637\u0644\u0628\u0643 \u062c\u0627\u0647\u0632 \u0648\u0628\u0627\u0646\u062a\u0638\u0627\u0631\u0643 🎉' },
+      shipped:       { icon: '🚚', title: '\u062a\u0645 \u0634\u062d\u0646 \u0637\u0644\u0628\u0643',           body: '\u0637\u0644\u0628\u0643 \u0641\u064a \u0627\u0644\u0637\u0631\u064a\u0642 \u0625\u0644\u064a\u0643' },
+      delivered:     { icon: '✅', title: '\u062a\u0645 \u062a\u0648\u0635\u064a\u0644 \u0637\u0644\u0628\u0643',         body: '\u0637\u0644\u0628\u0643 \u0648\u0635\u0644 \u0628\u0646\u062c\u0627\u062d 🎉' },
+      cancelled:     { icon: '❌', title: '\u062a\u0645 \u0625\u0644\u063a\u0627\u0621 \u0637\u0644\u0628\u0643',         body: '\u062a\u0645 \u0625\u0644\u063a\u0627\u0621 \u0637\u0644\u0628\u0643' },
+      returned:      { icon: '↩️', title: '\u062a\u0645\u062a \u0639\u0645\u0644\u064a\u0629 \u0627\u0644\u0625\u0631\u062c\u0627\u0639',      body: '\u062a\u0645\u062a \u0645\u0639\u0627\u0644\u062c\u0629 \u0625\u0631\u062c\u0627\u0639 \u0637\u0644\u0628\u0643' }
     };
     const mapNoIdEn = {
       pending:       { icon: '⏳', title: 'Your order is under review',    body: 'Your order is being reviewed' },

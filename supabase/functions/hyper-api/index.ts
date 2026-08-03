@@ -228,11 +228,15 @@ Deno.serve(async (req) => {
         const orderStatusText = type === 'order_status' || status || statusFromType
           ? localizedOrderStatus(status || statusFromType, orderId || order_id, targetLang)
           : null;
-        const adminNewOrderText = type === 'admin_new_order'
+        const sourceTitle = targetLang === 'en' && title_en ? title_en : title;
+        const sourceBody = targetLang === 'en' && body_en ? body_en : body;
+        const repairedTitle = repairMojibakeText(sourceTitle);
+        const repairedBody = repairMojibakeText(sourceBody);
+        const adminNewOrderText = type === 'admin_new_order' && (!repairedTitle || !repairedBody || hasMojibakeText(`${repairedTitle} ${repairedBody}`))
           ? localizedAdminNewOrder(orderId || order_id, targetLang)
           : null;
-        const localizedTitle = repairMojibakeText(adminNewOrderText ? adminNewOrderText.title : (orderStatusText ? orderStatusText.title : (targetLang === 'en' && title_en ? title_en : title)));
-        const localizedBody = repairMojibakeText(adminNewOrderText ? adminNewOrderText.body : (orderStatusText ? orderStatusText.body : (targetLang === 'en' && body_en ? body_en : body)));
+        const localizedTitle = adminNewOrderText ? adminNewOrderText.title : (orderStatusText ? orderStatusText.title : repairedTitle);
+        const localizedBody = adminNewOrderText ? adminNewOrderText.body : (orderStatusText ? orderStatusText.body : repairedBody);
         const localizedIcon = adminNewOrderText ? adminNewOrderText.icon : (orderStatusText ? orderStatusText.icon : (iconText || emoji || null));
         const payloadStr = JSON.stringify({
           title: localizedTitle,
