@@ -1,14 +1,14 @@
 (function () {
   if (!('serviceWorker' in navigator)) return;
 
-  var REFRESH_KEY = 'sw-v294-disable-pull-refresh';
+  var REFRESH_KEY = 'sw-v301-category-masonry-cart';
   var refreshed = false;
 
   function clearOldCaches() {
     if (!('caches' in window)) return;
     caches.keys().then(function (keys) {
       keys.forEach(function (key) {
-        if (key !== 'bariq-v294') caches.delete(key).catch(function () {});
+        if (key !== 'bariq-v301') caches.delete(key).catch(function () {});
       });
     }).catch(function () {});
   }
@@ -61,7 +61,7 @@
     if (!markRefreshed()) window.location.reload();
   });
 
-  navigator.serviceWorker.register('/sw.js?v=294', { updateViaCache: 'none' }).then(function (reg) {
+  navigator.serviceWorker.register('/sw.js?v=301', { updateViaCache: 'none' }).then(function (reg) {
     clearOldCaches();
     requestActivation(reg);
     sendPushLanguage(reg);

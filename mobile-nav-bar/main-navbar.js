@@ -198,13 +198,22 @@ async function initMobileNav() {
 
     // -- ????? ?????? ????? ------------------------------------------
     // ???? Vercel clean URLs (/offers) ????? ????? ????? (/offers.html)
-    const rawSeg = location.pathname.split('/').pop() || 'index';
-    const curPage = rawSeg.replace(/\.html$/,'') || 'index';
-    nav.querySelectorAll('a').forEach(a => {
-      const hrefUrl = new URL(a.getAttribute('href') || '/', location.href);
-      const h = hrefUrl.pathname.replace(/\.html$/,'');
-      const hPage = h.split('/').pop() || 'index';
-      if (hPage === curPage) a.classList.add('active');
+    const normalizeNavPath = (path) => (path || '/')
+      .replace(/\/index\.html$/i, '/')
+      .replace(/\.html$/i, '')
+      .replace(/\/$/, '') || '/';
+    const currentPath = normalizeNavPath(location.pathname).toLowerCase();
+    const routeToKey = {
+      '/': 'home',
+      '/categories': 'categories',
+      '/offers': 'offers',
+      '/account': 'account',
+      '/login': 'account',
+      '/cart': 'cart'
+    };
+    const currentKey = routeToKey[currentPath] || 'home';
+    nav.querySelectorAll('a[data-key]').forEach(a => {
+      a.classList.toggle('active', a.dataset.key === currentKey);
     });
 
     // -- ????? ????? ????? ????? ??? ???????? ?????? ----------------
@@ -274,6 +283,7 @@ async function initMobileNav() {
         pillFrame = requestAnimationFrame(() => {
           pillFrame = 0;
           movePillToLink(link, animate);
+          liquidPill.classList.add('is-ready');
         });
       };
 
@@ -351,13 +361,7 @@ async function initMobileNav() {
         document.removeEventListener('touchmove', onPointerMove);
         document.removeEventListener('touchend', endDrag);
         document.removeEventListener('touchcancel', endDrag);
-        // نطلق النقر يدوياً دائماً عند اللمس (سواء كانت ضغطة بسيطة أو سحبة)
-        // لأن preventDefault() في startDrag يمنع المتصفح من توليد حدث click
-        // الطبيعي بعد touchend، فبدون هذا لن تعمل الضغطة البسيطة على الزر
-        // البارز إطلاقاً. بالنسبة للماوس، preventDefault على mousedown لا
-        // يمنع click الطبيعي فنكتفي بإطلاقه فقط عند حدوث سحب فعلي لتفادي
-        // ازدواج التنقل.
-        if (!cancelled && (didMove || isTouchLike)) {
+        if (!cancelled && didMove) {
           window.setTimeout(() => nearest.click(), 90);
         }
       };
@@ -401,18 +405,6 @@ async function initMobileNav() {
       });
 
       navLinks.forEach((link) => {
-        link.addEventListener('pointerdown', (event) => {
-          if (link !== activeLink) return;
-          startDrag(event);
-        }, { passive: false });
-        link.addEventListener('touchstart', (event) => {
-          if (link !== activeLink) return;
-          startDrag(event);
-        }, { passive: false });
-        link.addEventListener('mousedown', (event) => {
-          if (link !== activeLink) return;
-          startDrag(event);
-        });
         link.addEventListener('click', (event) => {
           if (isSamePageLink(link)) {
             event.preventDefault();

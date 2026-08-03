@@ -110,7 +110,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <style>*{box-sizing:border-box;margin:0}html,body{height:100%}body{background:#152546;font-family:'Cairo',Arial,sans-serif;padding-top:env(safe-area-inset-top)}.page{min-height:100dvh;display:flex;flex-direction:column}main{width:70%;margin:70px auto 50px;display:flex;flex-direction:column;justify-content:center}header,.main-header{background-color:#152546;padding-top:env(safe-area-inset-top)}.main-header{position:fixed;inset:0 0 auto 0;z-index:1000;width:100%;padding:7px 0;box-shadow:0 2px 4px rgba(0,0,0,.1)}.header-content{width:70%;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;min-height:50px}.logo img{height:36px}.search-container{flex:1;display:flex;align-items:center;background:#fff;border-radius:20px;margin:0 15px;max-width:1100px;height:38px;padding:0 10px}.search-container input{border:none;flex:1;outline:none;padding:6px 10px;font-size:16px;background:transparent}img,video{max-width:100%;height:auto;border-radius:3px}.dp-img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:7px;background:#f0f0f0}@media(max-width:899px){.main-header .dropdown,.main-header .cart,.main-header .logo{display:none!important}body{padding-bottom:calc(65px + env(safe-area-inset-bottom))}}#category-products:empty{min-height:0;background:transparent;border-radius:8px}</style>
   <link rel="stylesheet" href="/style/style.css?v=137">
   <style>.mobile-nav{display:none}</style>
-  <link rel="stylesheet" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260729f" media="(max-width: 899px)">
+  <link rel="stylesheet" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260803-category-masonry-cart" media="(max-width: 899px)">
   <style>html,body{background:#152546!important}.page,main.main{background:#fff!important}@media(min-width:900px){.mobile-nav{display:none!important}}html.x2-categories-booting .cat-page,html.x2-categories-booting main.main,html.x2-categories-booting footer.site-footer,html.x2-categories-booting .footer-info-bar,html.x2-categories-booting #category-products{visibility:hidden!important}html.x2-restoring-scroll main.main,html.x2-restoring-scroll footer.site-footer,html.x2-restoring-scroll .footer-info-bar{visibility:hidden!important}main #category-products:empty,main .cat-products-section:has(#category-products:empty){display:none!important;min-height:0!important;background:none!important;animation:none!important}.filters-scroll-container,main .filter-dropdown,html.occasions-category-page main.main>footer.site-footer,html.occasions-category-page main.main>#category-products{display:none!important}</style>
   <noscript>
 </noscript>
@@ -1106,7 +1106,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     // استخدم createProductCard لو متاحة (module)، وإلا ارسم مباشرة
     function renderCard(p) {
       if (typeof window.createProductCard === 'function') return window.createProductCard(p);
-      // fallback: كارت بسيط بنفس CSS المتجر
+      // fallback: كارت مطابق لكارت الرئيسية عند الهاتف
       const name = (typeof p.name==='object'?(p.name[lang]||p.name.ar||p.name.en):(p.name||(lang === 'en' ? 'Product' : 'منتج')));
       const img  = (Array.isArray(p.img)?p.img[0]:p.img)||'assets/logo.png';
       const langParam = (localStorage.getItem('lang') || document.documentElement.lang) === 'en' ? '?lang=en' : '';
@@ -1115,26 +1115,59 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const oldPrice = parseFloat(p.oldPrice)||0;
       const sym = {AED:'د.إ',USD:'$',SAR:'ر.س',EGP:'ج.م'}[localStorage.getItem('currency')||'AED']||'د.إ';
       const disc = oldPrice>price ? Math.round((oldPrice-price)/oldPrice*100) : 0;
+      const save = disc ? (oldPrice-price).toFixed(2) : '';
+      const money = v => lang === 'en' ? `${sym} ${v}` : `${v} ${sym}`;
+      const sales = (() => {
+        const id = String(p.id || p.productId || name || '');
+        let hash = 0;
+        for (let i = 0; i < id.length; i++) hash = (hash + id.charCodeAt(i)) % 10;
+        return (2.1 + hash / 10).toFixed(1) + 'k+';
+      })();
+      const timerHtml = '<span class="timer-h">05</span><span class="timer-sep timer-sep-hm">:</span><span class="timer-m">59</span><span class="timer-sep timer-sep-ms">:</span><span class="timer-s">59</span>';
 
-      const card = document.createElement('a');
-      card.href = link;
+      const card = document.createElement('div');
       card.className = 'product-card';
-      card.style.cssText = 'display:inline-block;text-decoration:none;color:inherit;width:100%;margin:0;break-inside:avoid;';
+      card.setAttribute('dir', lang === 'en' ? 'ltr' : 'rtl');
+      card.style.cssText = 'position:relative;cursor:pointer;width:100%;margin:0;break-inside:avoid;';
       card.innerHTML = `
-        ${disc?`<span class="offer-badge">-${disc}%</span>`:''}
-        <img class="product-img" src="${img}" alt="${name}" onerror="this.src='/assets/logo.png'" style="height:180px;object-fit:cover;">
-        <div class="product-content" style="padding:8px 10px 10px;">
-          <div class="product-name">${name}</div>
-          <div class="product-price-row">
-            <span class="product-price${disc?' product-price-discount':''}">${price.toFixed(2)} ${sym}</span>
-            ${disc?`<span class="product-old-price-striked" style="display:inline">${oldPrice.toFixed(2)} ${sym}</span>`:''}
+        <a href="${link}" style="display:block;text-decoration:none;color:inherit">
+          <img class="product-img" src="${img}" alt="${name}" width="750" height="750" loading="lazy" decoding="async" onerror="this.src='/assets/logo.png'">
+          ${disc?`<span class="offer-badge">${lang === 'en' ? disc + '% OFF' : 'خصم ' + disc + '%'}</span>`:''}
+          <div class="product-content">
+            <div class="product-name">${name}</div>
+            <div class="product-rating-container"><div class="stars-container"><div class="stars-empty">★★★★★</div><div class="stars-filled" style="width:100%">★★★★★</div></div></div>
+            ${disc?`<div class="product-timer-save-box"><span class="product-save-text"><span class="save-arrow">&#8595;</span> ${lang === 'en' ? 'Extra ' + money(save) + ' off' : 'خصم إضافي ' + money(save)}</span><span class="product-timer">${timerHtml}</span></div>`:''}
+            <div class="product-price-row"><span class="product-price${disc?' product-price-discount':''}">${money(price.toFixed(2))}</span><span class="product-fire">🔥</span><span class="product-sales">${lang === 'en' ? 'sold ' + sales : 'تم بيع ' + sales}</span></div>
+            ${disc?`<div class="product-old-price-striked">${money(oldPrice.toFixed(2))}</div>`:''}
           </div>
-        </div>`;
+        </a>
+        <button class="product-cart-btn" type="button" title="${lang === 'en' ? 'Add to cart' : 'إضافة للسلة'}" aria-label="${lang === 'en' ? 'Add to cart' : 'إضافة للسلة'}"><span style="display:flex;align-items:center;justify-content:center;width:100%;height:100%"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="cart-svg-icon"><path fill-rule="evenodd" clip-rule="evenodd" d="M2 1C1.44772 1 1 1.44772 1 2C1 2.55228 1.44772 3 2 3H3.21922L6.78345 17.2569C5.73276 17.7236 5 18.7762 5 20C5 21.6569 6.34315 23 8 23C9.65685 23 11 21.6569 11 20C11 19.6494 10.9398 19.3128 10.8293 19H15.1707C15.0602 19.3128 15 19.6494 15 20C15 21.6569 16.3431 23 18 23C19.6569 23 21 21.6569 21 20C21 18.3431 19.6569 17 18 17H8.78078L8.28078 15H18C20.0642 15 21.3019 13.6959 21.9887 12.2559C22.6599 10.8487 22.8935 9.16692 22.975 7.94368C23.0884 6.24014 21.6803 5 20.1211 5H5.78078L5.15951 2.51493C4.93692 1.62459 4.13696 1 3.21922 1H2ZM18 13H7.78078L6.28078 7H20.1211C20.6742 7 21.0063 7.40675 20.9794 7.81078C20.9034 8.9522 20.6906 10.3318 20.1836 11.3949C19.6922 12.4251 19.0201 13 18 13ZM18 20.9938C17.4511 20.9938 17.0062 20.5489 17.0062 20C17.0062 19.4511 17.4511 19.0062 18 19.0062C18.5489 19.0062 18.9938 19.4511 18.9938 20C18.9938 20.5489 18.5489 20.9938 18 20.9938ZM7.00617 20C7.00617 20.5489 7.45112 20.9938 8 20.9938C8.54888 20.9938 8.99383 20.5489 8.99383 20C8.99383 19.4511 8.54888 19.0062 8 19.0062C7.45112 19.0062 7.00617 19.4511 7.00617 20Z" fill="currentColor"></path></svg></span></button>`;
+      const cartBtn = card.querySelector('.product-cart-btn');
+      cartBtn && cartBtn.addEventListener('click', function(ev){
+        ev.preventDefault();
+        ev.stopPropagation();
+        try {
+          const item = { id: String(p.id || p.productId || ''), title: name, img: img, priceCurrent: price, priceOld: oldPrice, qty: 1 };
+          const cart = JSON.parse(localStorage.getItem('x2_cart') || '[]');
+          const ix = cart.findIndex(it => String(it.id) === String(item.id));
+          ix > -1 ? cart[ix].qty = (Number(cart[ix].qty) || 1) + 1 : cart.unshift(item);
+          localStorage.setItem('x2_cart', JSON.stringify(cart));
+          localStorage.setItem('x2_cart_ts', String(Date.now()));
+          window.dispatchEvent(new CustomEvent('cart:updated', { detail: { product: item } }));
+        } catch(e) {}
+      });
       return card;
     }
 
-    const row = document.createElement('div');
-    row.className = 'products-row';
+    function createProductsRow() {
+      const nextRow = document.createElement('div');
+      const mobileMasonry = window.matchMedia && window.matchMedia('(max-width: 899px)').matches;
+      nextRow.className = mobileMasonry ? 'products-row products-masonry' : 'products-row';
+      if (mobileMasonry) nextRow.innerHTML = '<div class="products-column"></div><div class="products-column"></div>';
+      return nextRow;
+    }
+
+    const row = createProductsRow();
     const orderedProducts = (window.sortProductsForStore || sortProductsForStore)(products);
     const FIRST_CHUNK = 60;
     const NEXT_CHUNK = 40;
@@ -1144,12 +1177,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     if (container._x2LazyProductsCleanup) container._x2LazyProductsCleanup();
     function appendChunk(targetRow, renderer) {
       const fragment = document.createDocumentFragment();
+      const columns = Array.from(targetRow.querySelectorAll(':scope > .products-column'));
       const next = Math.min(shown + (shown ? NEXT_CHUNK : FIRST_CHUNK), orderedProducts.length);
       for (; shown < next; shown++) {
         const card = renderer(orderedProducts[shown]);
-        if (card) fragment.appendChild(card);
+        if (!card) continue;
+        if (columns.length) columns[shown % columns.length].appendChild(card);
+        else fragment.appendChild(card);
       }
-      targetRow.appendChild(fragment);
+      if (!columns.length) targetRow.appendChild(fragment);
     }
     appendChunk(row, renderCard);
     container.appendChild(row);
@@ -1213,8 +1249,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         if (typeof window.createProductCard === 'function') {
           clearInterval(waitFor);
           container.innerHTML = '';
-          const row2 = document.createElement('div');
-          row2.className = 'products-row';
+          const row2 = createProductsRow();
           shown = 0;
           activeRow = row2;
           activeRenderer = window.createProductCard;
@@ -1365,11 +1400,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </footer>
 <script src="/java/supabase.min.js?v=supabase-20260801a" defer></script>
 <script src="/java/main.min.js?v=141" defer></script>
-<script src="/java/sw-refresh.js?v=sw-refresh-20260802b" defer></script>
+<script src="/java/sw-refresh.js?v=sw-refresh-20260803-pwa301" defer></script>
 <script src="/java/instant-nav.js?v=instant-nav-20260728e" defer></script>
 <script src="/translations/translation.min.js?v=translation-20260726c" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
-<script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260728e" defer></script>
+<script src="/mobile-nav-bar/main-navbar.min.js?v=mobile-nav-20260803-pill-ready" defer></script>
 <script src="/java/push-welcome.js?v=push-welcome-20260728d" defer></script>
 <script src="/java/abandoned-cart.js?v=abandoned-cart-20260730a" defer></script>
 <script type="module" src="./java/Products.min.js?v=products-20260801l"></script> <!-- ده يفضل يفضل في الآخر -->
