@@ -53,7 +53,7 @@ function normalizeLang(value: unknown) {
 }
 
 function hasMojibakeText(value: unknown) {
-  return /(?:Ø|Ù|Ð|Ñ|Ã|Â|ƒ|ðŸ|â|œ|™|€|¢|£|¤|¥|¦|§|©|«|¬|®|¯|³|µ|¼|½|¾)/.test(String(value || ''));
+  return /(?:Ø|Ù|Ð|Ñ|Ã|Â|Ê|Ë|ƒ|ðŸ|â|œ|™|€|¢|£|¤|¥|¦|§|¨|©|ª|«|¬|®|¯|³|µ|¼|½|¾)/.test(String(value || ''));
 }
 
 const WINDOWS_1252_BYTES: Record<string, number> = {
@@ -232,7 +232,7 @@ Deno.serve(async (req) => {
         const sourceBody = targetLang === 'en' && body_en ? body_en : body;
         const repairedTitle = repairMojibakeText(sourceTitle);
         const repairedBody = repairMojibakeText(sourceBody);
-        const adminNewOrderText = type === 'admin_new_order' && (!repairedTitle || !repairedBody || hasMojibakeText(`${repairedTitle} ${repairedBody}`))
+        const adminNewOrderText = type === 'admin_new_order'
           ? localizedAdminNewOrder(orderId || order_id, targetLang)
           : null;
         const localizedTitle = adminNewOrderText ? adminNewOrderText.title : (orderStatusText ? orderStatusText.title : repairedTitle);

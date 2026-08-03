@@ -1,5 +1,5 @@
 /* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v329';
+const CACHE = 'bariq-v331';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -382,7 +382,7 @@ function extractOrderIdFromNotification(text, tag) {
 
 function hasMojibakeText(value) {
   const s = String(value || '');
-  return /(?:Ø|Ù|Ð|Ñ|Ã|Â|ƒ|ðŸ|â|œ|™|€|¢|£|¤|¥|¦|§|©|«|¬|®|¯|³|µ|¼|½|¾)/.test(s);
+  return /(?:Ø|Ù|Ð|Ñ|Ã|Â|Ê|Ë|ƒ|ðŸ|â|œ|™|€|¢|£|¤|¥|¦|§|¨|©|ª|«|¬|®|¯|³|µ|¼|½|¾)/.test(s);
 }
 
 const WINDOWS_1252_BYTES = {
@@ -452,13 +452,6 @@ function normalizePushNotificationData(data) {
   const orderId = data.orderId || data.order_id || extractOrderIdFromNotification(raw, tag);
   if (data.type === 'admin_new_order' || /admin_new_order|new order|طلب جديد/i.test(String(data.type || '') + ' ' + raw)) {
     const cleanOrderId = String(orderId || '').replace(/^#/, '').trim();
-    const shouldFallbackAdminText = !data.title || !data.body || isMostlyBrokenNotificationText(raw) || hasBrokenNotificationText(data.title) || hasBrokenNotificationText(data.body) || hasMojibakeText(raw);
-    if (!shouldFallbackAdminText) {
-      return Object.assign({}, data, {
-        iconText: data.iconText || '📦',
-        emoji: data.emoji || data.iconText || '📦'
-      });
-    }
     return Object.assign({}, data, {
       title: data.lang === 'en' ? '📦 New order from Bariq' : '📦 طلب جديد من بريق',
       body: data.lang === 'en'
@@ -482,6 +475,18 @@ function normalizePushNotificationData(data) {
   const isCashback = data.type === 'cashback' || /cashback|cash\s*back|كاش|cb-|n-cb/i.test(raw + ' ' + tag) || /\?\.\?/.test(raw);
   const isBroken = isMostlyBrokenNotificationText(raw) || hasBrokenNotificationText(data.title) || hasBrokenNotificationText(data.body) || hasMojibakeText(raw) || /\b(?:pending|processing|confirmed|manufacturing|ready|shipped|delivered|cancelled|returned)\b\s*-\s*#?\s*\d+/i.test(raw);
   if (!isBroken && !isCashback && !(orderId && (/^order_/i.test(String(data.type || '')) || inferredStatus))) return data;
+
+  if (isBroken && !isCashback && !orderId && !inferredStatus) {
+    return Object.assign({}, data, {
+      type: 'order_status',
+      status: 'processing',
+      lang: notifLang,
+      iconText: '🔄',
+      emoji: '🔄',
+      title: notifLang === 'en' ? '🔄 Your order is being processed' : '🔄 طلبك قيد المعالجة',
+      body: notifLang === 'en' ? 'We are preparing your order' : 'جارٍ تجهيز طلبك'
+    });
+  }
 
   if (isCashback) {
     const amountMatch = raw.match(/(\d+(?:\.\d+)?)/);
