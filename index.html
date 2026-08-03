@@ -51,7 +51,12 @@
     .daily-picks-grid.is-dragging .dp-card{pointer-events:none}
     @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
     #dailyPicksGrid:empty{min-height:132px}
-    #subcategories-display:empty{min-height:0}
+    #subcategories-display:empty{display:none!important;min-height:0;padding:0!important;margin:0!important}
+    #subcategories-display{display:flex;gap:12px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:10px 4px 12px;margin:4px 0 10px}
+    #subcategories-display::-webkit-scrollbar{display:none}
+    #subcategories-display .subcategory-circle{flex:0 0 auto;width:78px;border:0;background:transparent;padding:0;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;color:#152546;font:inherit}
+    #subcategories-display .subcategory-circle img{width:62px;height:62px;border-radius:50%;object-fit:cover;border:2px solid rgba(212,175,55,.65);box-shadow:0 4px 12px rgba(21,37,70,.12);background:#fff}
+    #subcategories-display .subcategory-label{max-width:78px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.72rem;font-weight:800;text-align:center}
     /* Reserve space while products load → prevents footer from entering viewport → CLS fix */
     #category-products{min-height:520px!important}
     #category-products:empty{background:transparent;border-radius:12px}
@@ -170,11 +175,6 @@
     .trust-bar{margin:6px 0!important;background:linear-gradient(135deg,#fff 0%,#fffaf0 52%,#f3dd92 100%)!important;border:1px solid rgba(212,175,55,.26)!important;box-shadow:0 5px 16px rgba(21,37,70,.08)!important}
     .trust-title{color:#111!important}
     .trust-divider{background:rgba(212,175,55,.42)!important}
-    body.home-subcategory-mode .home-offer-cards,
-    body.home-subcategory-mode .daily-picks-section,
-    body.home-subcategory-mode .trust-bar,
-    body.home-subcategory-mode .categories,
-    body.home-subcategory-mode #subcategories-display{display:none!important}
     .home-product-slider{width:100%;overflow:hidden;touch-action:pan-y pinch-zoom;direction:ltr}
     .home-products-track{display:flex;width:300%;will-change:transform;transform:translateX(-33.3333%);direction:ltr}
     .home-products-track.is-animating{transition:transform .28s ease}
@@ -348,7 +348,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <a href="#home-category-products" class="mh-cat" data-i18n="كامل">كامل</a>
       </div>
 
-<script src="/java/index-ui.js?v=20260803a" defer></script>
+<script src="/java/index-ui.js?v=20260803b" defer></script>
 
 <main class="main" id="main">
   <section class="animated-promo-banner desktop-promo-banner" aria-label="عروض بريق" data-i18n-aria-label="عروض بريق">
@@ -439,7 +439,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- أضف هذا العنصر لعرض المنتجات الخاصة بالفئة المختارة -->
   <div id="home-category-products"></div>
   <div id="category-products" style="margin-bottom:30px;"></div>
-  <script src="/java/index-home-products.js?v=20260803a" defer></script>
+  <script src="/java/index-home-products.js?v=20260803e" defer></script>
 
   
 </main>

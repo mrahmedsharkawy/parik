@@ -133,6 +133,26 @@
 })();
 
 (function(){
+  function homeCategoryLabel(link) {
+    const span = link && link.querySelector && link.querySelector('span');
+    const href = link && link.getAttribute('href') || '';
+    const label = (span && span.textContent || link && link.textContent || '').replace(/[💯🎉💎📄🖼️🪵👜🏷️🌙]/g, '').trim();
+    if (/categories\.html/i.test(href)) return 'الكل';
+    const slugMatch = href.match(/\/categories\/([^\/?#]+)/i);
+    return slugMatch ? decodeURIComponent(slugMatch[1]) : label;
+  }
+
+  document.addEventListener('click', function(e) {
+    const link = e.target && e.target.closest && e.target.closest('main .categories a');
+    if (!link || !document.getElementById('home-category-products')) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+    const label = link.getAttribute('data-category-slug') || homeCategoryLabel(link);
+    window.__x2PendingHomeCategoryLabel = label;
+    window.dispatchEvent(new CustomEvent('x2:home-category-select', { detail: { label: label } }));
+  }, true);
+
   const siteThemeColor = '#152546';
   const themeMeta = document.querySelector('meta[name="theme-color"]');
   const appleStatusMeta = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
