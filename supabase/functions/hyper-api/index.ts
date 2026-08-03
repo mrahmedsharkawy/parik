@@ -93,18 +93,18 @@ function localizedOrderStatus(status: unknown, orderId: unknown, langValue: unkn
   const lang = normalizeLang(langValue);
   const cleanStatus = String(status || 'processing').toLowerCase();
   const cleanOrderId = String(orderId || '').trim();
-  const orderAr = cleanOrderId ? ` رقم ${cleanOrderId}` : '';
+  const orderAr = cleanOrderId ? ` \u0631\u0642\u0645 ${cleanOrderId}` : '';
   const orderEn = cleanOrderId ? ` #${cleanOrderId.replace(/^#/, '')}` : '';
   const ar: Record<string, { icon: string; title: string; body: string }> = {
-    pending:       { icon: '⏳', title: 'طلبك قيد المراجعة',      body: `طلبك${orderAr} يُراجَع الآن` },
-    processing:    { icon: '🔄', title: 'طلبك قيد المعالجة',      body: `جارٍ تجهيز طلبك${orderAr}` },
-    confirmed:     { icon: '✅', title: 'تم تأكيد طلبك',           body: `طلبك${orderAr} تم تأكيده وسيُجهَّز قريباً 🎉` },
-    manufacturing: { icon: '🔨', title: 'طلبك في مرحلة التصنيع',  body: `طلبك${orderAr} يُصنَّع الآن بعناية ✨` },
-    ready:         { icon: '🎁', title: 'طلبك جاهز للاستلام',     body: `طلبك${orderAr} جاهز وبانتظارك 🎉` },
-    shipped:       { icon: '🚚', title: 'تم شحن طلبك',            body: `طلبك${orderAr} في الطريق إليك` },
-    delivered:     { icon: '✅', title: 'تم توصيل طلبك',          body: `طلبك${orderAr} وصل بنجاح 🎉` },
-    cancelled:     { icon: '❌', title: 'تم إلغاء طلبك',          body: `طلبك${orderAr} تم إلغاؤه` },
-    returned:      { icon: '↩️', title: 'تمت عملية الإرجاع',       body: `تمت معالجة إرجاع طلبك${orderAr}` },
+    pending:       { icon: '⏳', title: '\u0637\u0644\u0628\u0643 \u0642\u064a\u062f \u0627\u0644\u0645\u0631\u0627\u062c\u0639\u0629',      body: `\u0637\u0644\u0628\u0643${orderAr} \u064a\u064f\u0631\u0627\u062c\u064e\u0639 \u0627\u0644\u0622\u0646` },
+    processing:    { icon: '🔄', title: '\u0637\u0644\u0628\u0643 \u0642\u064a\u062f \u0627\u0644\u0645\u0639\u0627\u0644\u062c\u0629',      body: `\u062c\u0627\u0631\u064d \u062a\u062c\u0647\u064a\u0632 \u0637\u0644\u0628\u0643${orderAr}` },
+    confirmed:     { icon: '✅', title: '\u062a\u0645 \u062a\u0623\u0643\u064a\u062f \u0637\u0644\u0628\u0643',           body: `\u0637\u0644\u0628\u0643${orderAr} \u062a\u0645 \u062a\u0623\u0643\u064a\u062f\u0647 \u0648\u0633\u064a\u064f\u062c\u0647\u0651\u0632 \u0642\u0631\u064a\u0628\u0627\u064b 🎉` },
+    manufacturing: { icon: '🔨', title: '\u0637\u0644\u0628\u0643 \u0641\u064a \u0645\u0631\u062d\u0644\u0629 \u0627\u0644\u062a\u0635\u0646\u064a\u0639',  body: `\u0637\u0644\u0628\u0643${orderAr} \u064a\u064f\u0635\u0646\u0651\u0639 \u0627\u0644\u0622\u0646 \u0628\u0639\u0646\u0627\u064a\u0629 ✨` },
+    ready:         { icon: '🎁', title: '\u0637\u0644\u0628\u0643 \u062c\u0627\u0647\u0632 \u0644\u0644\u0627\u0633\u062a\u0644\u0627\u0645',     body: `\u0637\u0644\u0628\u0643${orderAr} \u062c\u0627\u0647\u0632 \u0648\u0628\u0627\u0646\u062a\u0638\u0627\u0631\u0643 🎉` },
+    shipped:       { icon: '🚚', title: '\u062a\u0645 \u0634\u062d\u0646 \u0637\u0644\u0628\u0643',            body: `\u0637\u0644\u0628\u0643${orderAr} \u0641\u064a \u0627\u0644\u0637\u0631\u064a\u0642 \u0625\u0644\u064a\u0643` },
+    delivered:     { icon: '✅', title: '\u062a\u0645 \u062a\u0648\u0635\u064a\u0644 \u0637\u0644\u0628\u0643',          body: `\u0637\u0644\u0628\u0643${orderAr} \u0648\u0635\u0644 \u0628\u0646\u062c\u0627\u062d 🎉` },
+    cancelled:     { icon: '❌', title: '\u062a\u0645 \u0625\u0644\u063a\u0627\u0621 \u0637\u0644\u0628\u0643',          body: `\u0637\u0644\u0628\u0643${orderAr} \u062a\u0645 \u0625\u0644\u063a\u0627\u0624\u0647` },
+    returned:      { icon: '↩️', title: '\u062a\u0645\u062a \u0639\u0645\u0644\u064a\u0629 \u0627\u0644\u0625\u0631\u062c\u0627\u0639',       body: `\u062a\u0645\u062a \u0645\u0639\u0627\u0644\u062c\u0629 \u0625\u0631\u062c\u0627\u0639 \u0637\u0644\u0628\u0643${orderAr}` },
   };
   const en: Record<string, { icon: string; title: string; body: string }> = {
     pending:       { icon: '⏳', title: 'Your order is under review',    body: `Your order${orderEn} is being reviewed` },
