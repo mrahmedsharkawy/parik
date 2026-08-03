@@ -10,6 +10,13 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+function hasCronAccess(req: Request) {
+  const secret = Deno.env.get('ABANDONED_CART_CRON_SECRET') || '';
+  if (!secret) return false;
+  const bearer = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '').trim();
+  return bearer === secret || req.headers.get('x-cron-secret') === secret;
+}
+
 function normalizeLang(value: unknown) {
   return String(value || '').toLowerCase().startsWith('en') ? 'en' : 'ar';
 }
@@ -34,14 +41,27 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
+    if (!hasCronAccess(req)) {
+      return new Response(JSON.stringify({ error: 'Scheduler authorization required' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     );
 
-    const VAPID_PRIVATE = Deno.env.get('VAPID_PRIVATE_KEY') || 'FNUfl55Aw5g1_Zlw1wQWUlbgRj2WbvWqrMqJaNTCJhg';
+    const VAPID_PRIVATE = Deno.env.get('VAPID_PRIVATE_KEY') || '';
     const VAPID_PUBLIC = Deno.env.get('VAPID_PUBLIC_KEY') || 'BPojY-23BXbIfa1IRkkQD3vAELjTn3nltgFBrlEIjZ3aEbphXAQvFY2E5B2R_mfikZLhGPo0lBeCedB8qoP5-SE';
     const VAPID_EMAIL = Deno.env.get('VAPID_EMAIL') || 'mailto:admin@bariq.store';
+    if (!VAPID_PRIVATE) {
+      return new Response(JSON.stringify({ error: 'Missing VAPID_PRIVATE_KEY' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     webpush.setVapidDetails(VAPID_EMAIL, VAPID_PUBLIC, VAPID_PRIVATE);
 
     const now = new Date().toISOString();

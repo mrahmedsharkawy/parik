@@ -1324,7 +1324,7 @@ let currentMedia = []; // [{type:'image'|'video', src}]
 let catFilter = '';            // القسم المختار لتصفية المنتجات ('' = الكل)
 const LS_PRODUCTS = 'admin_products';
 const LS_REVIEWS  = 'admin_reviews';
-const GATE_PASS   = '123456789'; // الباسورد الافتراضي
+const GATE_PASS   = ''; // بوابة الدخول الحالية تعتمد على Supabase Auth
 const GATE_USER   = 'admin';     // اسم المستخدم الافتراضي
 
 /* ================= أدوات ================= */
@@ -1346,7 +1346,7 @@ function rememberAdminReportsSession(name, authData) {
   const refreshToken = authData && authData.refresh_token || sessionStorage.getItem('admin_refresh_token') || '';
   if (!token && !refreshToken) return;
   try {
-    localStorage.setItem('x2_admin_reports_session', JSON.stringify({
+    sessionStorage.setItem('x2_admin_reports_session', JSON.stringify({
       ok: true,
       name: name || 'admin',
       token: token,

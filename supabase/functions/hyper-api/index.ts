@@ -2,7 +2,7 @@
 // Supabase Edge Function: send-push
 // يرسل Web Push Notification لجميع المشتركين
 // Environment Variables needed in Supabase Dashboard:
-//   VAPID_PRIVATE_KEY = FNUfl55Aw5g1_Zlw1wQWUlbgRj2WbvWqrMqJaNTCJhg
+//   VAPID_PRIVATE_KEY
 //   VAPID_PUBLIC_KEY  = BPojY-23BXbIfa1IRkkQD3vAELjTn3nltgFBrlEIjZ3aEbphXAQvFY2E5B2R_mfikZLhGPo0lBeCedB8qoP5-SE
 //   VAPID_EMAIL       = mailto:admin@bariq.store
 
@@ -13,6 +13,40 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+function bearerToken(req: Request) {
+  const header = req.headers.get('authorization') || '';
+  const match = header.match(/^Bearer\s+(.+)$/i);
+  return match ? match[1].trim() : '';
+}
+
+async function requireAdmin(req: Request, supabase: any) {
+  const token = bearerToken(req);
+  if (!token) return false;
+  const { data: userData, error: userError } = await supabase.auth.getUser(token);
+  const user = userData?.user;
+  if (userError || !user) return false;
+  const byUserId = await supabase
+    .from('admins')
+    .select('id')
+    .eq('active', true)
+    .eq('user_id', user.id)
+    .maybeSingle();
+  if (!byUserId.error && byUserId.data) return true;
+  const byEmail = await supabase
+    .from('admins')
+    .select('id')
+    .eq('active', true)
+    .eq('email', user.email || '')
+    .maybeSingle();
+  return !byEmail.error && Boolean(byEmail.data);
+}
+
+function isAllowedPublicNewOrder(payload: any) {
+  return payload?.type === 'admin_new_order'
+    && payload?.user_email === '__bariq_admin_orders__@bariq.local'
+    && !payload?.user_phone;
+}
 
 function normalizeLang(value: unknown) {
   return String(value || '').toLowerCase().startsWith('en') ? 'en' : 'ar';
@@ -54,17 +88,22 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
-    const { title, body, title_en, body_en, url, image, user_phone, user_email, exclude_endpoint, type, status, iconText, emoji, orderId, order_id, lang, user_lang } = await req.json();
+    const payload = await req.json();
+    const { title, body, title_en, body_en, url, image, user_phone, user_email, exclude_endpoint, type, status, iconText, emoji, orderId, order_id, lang, user_lang } = payload;
     if (!title || !body) {
       return new Response(JSON.stringify({ error: 'title and body required' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    // إعداد VAPID - القيم الافتراضية مضمّنة كـ fallback
-    const VAPID_PRIVATE = Deno.env.get('VAPID_PRIVATE_KEY') || 'FNUfl55Aw5g1_Zlw1wQWUlbgRj2WbvWqrMqJaNTCJhg';
+    const VAPID_PRIVATE = Deno.env.get('VAPID_PRIVATE_KEY') || '';
     const VAPID_PUBLIC  = Deno.env.get('VAPID_PUBLIC_KEY')  || 'BPojY-23BXbIfa1IRkkQD3vAELjTn3nltgFBrlEIjZ3aEbphXAQvFY2E5B2R_mfikZLhGPo0lBeCedB8qoP5-SE';
     const VAPID_EMAIL   = Deno.env.get('VAPID_EMAIL')       || 'mailto:admin@bariq.store';
+    if (!VAPID_PRIVATE) {
+      return new Response(JSON.stringify({ error: 'Missing VAPID_PRIVATE_KEY' }), {
+        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
     webpush.setVapidDetails(VAPID_EMAIL, VAPID_PUBLIC, VAPID_PRIVATE);
 
@@ -73,6 +112,13 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
+
+    const publicNewOrder = isAllowedPublicNewOrder(payload);
+    if (!publicNewOrder && !(await requireAdmin(req, supabase))) {
+      return new Response(JSON.stringify({ error: 'Admin authorization required' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
     // إذا تم تمرير هوية عميل، نجمع الاشتراكات بالهاتف + الإيميل معاً لزيادة احتمال الوصول
     const pickByIdentity = Boolean(user_phone || user_email);

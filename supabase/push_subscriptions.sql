@@ -22,15 +22,23 @@ DROP POLICY IF EXISTS "Anyone can subscribe" ON push_subscriptions;
 DROP POLICY IF EXISTS "Anyone can update own subscription" ON push_subscriptions;
 DROP POLICY IF EXISTS "Anyone can read count" ON push_subscriptions;
 DROP POLICY IF EXISTS "Service role can delete" ON push_subscriptions;
+DROP POLICY IF EXISTS "Anyone can refresh subscription" ON push_subscriptions;
+DROP POLICY IF EXISTS "Active admins can read push subscriptions" ON push_subscriptions;
 
 CREATE POLICY "Anyone can subscribe" ON push_subscriptions
-  FOR INSERT WITH CHECK (true);
+  FOR INSERT TO anon, authenticated WITH CHECK (true);
 
-CREATE POLICY "Anyone can update own subscription" ON push_subscriptions
-  FOR UPDATE USING (true) WITH CHECK (true);
+CREATE POLICY "Anyone can refresh subscription" ON push_subscriptions
+  FOR UPDATE TO anon, authenticated USING (true) WITH CHECK (true);
 
-CREATE POLICY "Anyone can read count" ON push_subscriptions
-  FOR SELECT USING (true);
+CREATE POLICY "Active admins can read push subscriptions" ON push_subscriptions
+  FOR SELECT TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.admins a
+      WHERE a.active = true
+        AND (a.user_id = auth.uid() OR lower(a.email) = lower(auth.jwt() ->> 'email'))
+    )
+  );
 
-CREATE POLICY "Service role can delete" ON push_subscriptions
-  FOR DELETE USING (true);
+-- Deletes are handled by Edge Functions using the service role key, which bypasses RLS.

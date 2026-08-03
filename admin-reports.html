@@ -222,7 +222,7 @@
 
     function rememberReportsSession(name, authData){
       try {
-        localStorage.setItem(REPORT_SESSION_KEY, JSON.stringify({
+        sessionStorage.setItem(REPORT_SESSION_KEY, JSON.stringify({
           ok: true,
           name: name || 'admin',
           token: authData && authData.access_token || '',
@@ -297,7 +297,7 @@
     function hasReportsSession(){
       if(sessionStorage.getItem('admin_ok') === '1' && (sessionStorage.getItem('admin_token') || sessionStorage.getItem('admin_refresh_token'))) return true;
       try {
-        const saved = JSON.parse(localStorage.getItem(REPORT_SESSION_KEY) || 'null');
+        const saved = JSON.parse(sessionStorage.getItem(REPORT_SESSION_KEY) || 'null');
         if(saved && saved.ok && Number(saved.expires || 0) > Date.now() && (saved.token || saved.refreshToken)) {
           sessionStorage.setItem('admin_ok', '1');
           if(saved.name) sessionStorage.setItem('admin_name', saved.name);
@@ -325,6 +325,7 @@
       </form>`;
     }
     function purgeReportsSessionData(){
+      sessionStorage.removeItem(REPORT_SESSION_KEY);
       localStorage.removeItem(REPORT_SESSION_KEY);
       sessionStorage.removeItem('admin_ok');
       sessionStorage.removeItem('admin_token');

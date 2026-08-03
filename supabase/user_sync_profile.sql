@@ -9,19 +9,42 @@ to anon, authenticated
 with check (true);
 
 drop policy if exists "Customers can be read for login and account sync" on public.customers;
-create policy "Customers can be read for login and account sync"
+drop policy if exists "Customers can update their storefront row" on public.customers;
+drop policy if exists "Authenticated users can read own customer row" on public.customers;
+drop policy if exists "Authenticated users can update own customer row" on public.customers;
+drop policy if exists "Active admins can manage customers" on public.customers;
+
+create policy "Authenticated users can read own customer row"
 on public.customers
 for select
-to anon, authenticated
-using (true);
+to authenticated
+using (lower(email) = lower(auth.jwt() ->> 'email'));
 
-drop policy if exists "Customers can update their storefront row" on public.customers;
-create policy "Customers can update their storefront row"
+create policy "Authenticated users can update own customer row"
 on public.customers
 for update
-to anon, authenticated
-using (true)
-with check (true);
+to authenticated
+using (lower(email) = lower(auth.jwt() ->> 'email'))
+with check (lower(email) = lower(auth.jwt() ->> 'email'));
+
+create policy "Active admins can manage customers"
+on public.customers
+for all
+to authenticated
+using (
+  exists (
+    select 1 from public.admins a
+    where a.active = true
+      and (a.user_id = auth.uid() or lower(a.email) = lower(auth.jwt() ->> 'email'))
+  )
+)
+with check (
+  exists (
+    select 1 from public.admins a
+    where a.active = true
+      and (a.user_id = auth.uid() or lower(a.email) = lower(auth.jwt() ->> 'email'))
+  )
+);
 
 delete from public.user_sync s
 using (
