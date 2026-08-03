@@ -2503,10 +2503,11 @@ document.addEventListener("DOMContentLoaded", async function() {
                     } catch (e) {}
                     vid.play().catch(function() {});
                 }, 120);
-                let ox = 0, oy = 0, sx = 0, sy = 0, dragging = false, moved = false;
+                let ox = 0, oy = 0, sx = 0, sy = 0, dragging = false, pendingDrag = false, moved = false;
                 function onStart(e) {
                     if (e.target === closeBtn || closeBtn.contains(e.target)) return;
-                    dragging = true;
+                    pendingDrag = true;
+                    dragging = false;
                     moved = false;
                     pip.style.cursor = "grabbing";
                     const pt = e.touches ? e.touches[0] : e;
@@ -2517,10 +2518,13 @@ document.addEventListener("DOMContentLoaded", async function() {
                     oy = r.top;
                 }
                 function onMove(e) {
-                    if (!dragging) return;
-                    e.preventDefault();
                     const pt = e.touches ? e.touches[0] : e;
                     const dx = pt.clientX - sx, dy = pt.clientY - sy;
+                    if (!dragging) {
+                        if (!pendingDrag || Math.abs(dx) <= 8 || Math.abs(dx) <= Math.abs(dy)) return;
+                        dragging = true;
+                    }
+                    e.preventDefault();
                     if (Math.abs(dx) > 4 || Math.abs(dy) > 4) moved = true;
                     const bottomGap = window.innerWidth <= 899 ? 84 : 0;
                     pip.style.left = Math.max(0, Math.min(ox + dx, window.innerWidth - pip.offsetWidth)) + "px";
@@ -2528,6 +2532,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                     pip.style.right = "auto";
                 }
                 function onEnd() {
+                    pendingDrag = false;
                     dragging = false;
                     pip.style.cursor = "grab";
                 }

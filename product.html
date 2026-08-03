@@ -1,14 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
-<script>(function(){try{var p=new URLSearchParams(location.search),u=p.get('lang'),s=localStorage.getItem('lang'),l=(u==='en'||u==='ar')?u:(s==='en'?'en':'ar');localStorage.setItem('lang',l);document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';if(l==='en')document.documentElement.classList.add('x2-i18n-pending');setTimeout(function(){document.documentElement.classList.remove('x2-i18n-pending')},1600)}catch(e){}})();</script>
-<!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-PR8J7RM7');</script>
-<!-- End Google Tag Manager -->
+<script src="/java/product-head.js?v=20260803-wheel"></script>
   <meta charset="UTF-8" />
   <script src="/java/auth-reset.js"></script>
   <title data-i18n=" تفاصيل المنتج - Bariq">تفاصيل المنتج - Bariq</title>
@@ -18,20 +11,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script>
-  (function(){
-    var vp=document.querySelector('meta[name="viewport"]');
-    if(!vp||!/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))return;
-    var base=vp.content;
-    document.addEventListener('focusin',function(e){
-      if(['INPUT','SELECT','TEXTAREA'].indexOf(e.target.tagName)>=0)
-        vp.content=base.replace(/,?\s*maximum-scale=[^,]*/i,'')+', maximum-scale=1';
-    });
-    document.addEventListener('focusout',function(){
-      setTimeout(function(){vp.content=base;},300);
-    });
-  })();
-  </script>  
   <meta name="description" content="بريق للهدايا - تفاصيل هدية مخصصة أو توزيعات للمناسبات في الإمارات. تصاميم راقية، خامات متنوعة، دفع آمن وشحن سريع.">
   <meta name="description-en" content="Bariq Gifts - personalized gift details for occasions in the UAE with acrylic, wood, leather and paper options, secure payment and fast shipping.">
   <meta name="keywords" content="متجر إلكتروني، قرقعيان،اليوم الوطني،حق اليله، يوم العلم، افراح، عمره، حج، تخرج، عرس، خطوبه،  مواليد، ورق، جلد، خشب، فوركس، مناسبات، هدايا، اكريلك، دفع آمن، شحن سريع، أفضل الأسعار، عروض خاصة، خصومات">
@@ -57,14 +36,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:site" content="@bariqgifts">
   <meta name="twitter:title" content="تفاصيل المنتج - Bariq">
-  <script type="application/ld+json" id="product-jsonld">
-  {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    "name": "",
-    "offers": { "@type": "Offer", "priceCurrency": "AED" }
-  }
-  </script>
   <link rel="apple-touch-icon" sizes="202x202" href="/assets/icon.png?v=site-icon-20260727">
   <style id="bariq-mobile-unified-header">
   .logo-text{display:none}
@@ -248,7 +219,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   data-i18n-placeholder="ابحث بالصورة او الاسم او المناسبة">
   <input type="file" id="imageSearchInput" accept="image/*" style="display:none;">
 </div>
-  <span class="icon search search-icon" onclick="performTextSearch()" style="cursor:pointer;display:flex;align-items:center;">
+  <span class="icon search search-icon" data-product-search style="cursor:pointer;display:flex;align-items:center;">
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
   </span>  <label class="icon camera camera-icon" for="imageSearchInput" style="cursor:pointer;display:flex;align-items:center;margin-right:0;">
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
@@ -434,65 +405,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 </div>
 
-<script>
-(function(){
-  function productIdFromUrl(){
-    var q = new URLSearchParams(location.search).get('id');
-    if(q) return q;
-    var parts = location.pathname.split('/').filter(Boolean);
-    var idx = parts.findIndex(function(p){ return p.toLowerCase() === 'product' || p.toLowerCase() === 'product.html'; });
-    return idx >= 0 && parts[idx + 1] ? decodeURIComponent(parts[idx + 1]) : '';
-  }
-  function textOf(value){
-    var lang = localStorage.getItem('lang') || document.documentElement.lang || 'ar';
-    return value && typeof value === 'object' ? (value[lang] || value.ar || value.en || '') : (value || '');
-  }
-  function setText(id, value){
-    var el = document.getElementById(id);
-    if(el && value !== undefined && value !== null) el.textContent = value;
-  }
-  try {
-    var cached = JSON.parse(sessionStorage.getItem('x2_quick_product') || 'null');
-    if(!cached || String(cached.id) !== String(productIdFromUrl())) return;
-    var img = document.getElementById('mainImage');
-    var name = textOf(cached.name);
-    if(img && cached.img){
-      img.src = cached.img;
-      img.alt = name;
-      img.loading = 'eager';
-      img.decoding = 'async';
-      img.setAttribute('fetchpriority', 'high');
-    }
-    setText('category', textOf(cached.category));
-    setText('name', name);
-    if(name) document.title = name + ' - Bariq';
-    var sym = localStorage.getItem('currency') === 'USD' ? '$' : 'د.إ';
-    setText('price', cached.price !== undefined && cached.price !== null ? cached.price + ' ' + sym : '');
-    var hasCachedDiscount = cached.oldPrice && Number(cached.oldPrice) > Number(cached.price);
-    var oldEl = document.getElementById('oldPrice');
-    if(oldEl){
-      oldEl.textContent = hasCachedDiscount ? cached.oldPrice + ' ' + sym : '';
-      oldEl.style.display = oldEl.textContent ? '' : 'none';
-    }
-    var discountEl = document.getElementById('discount');
-    if(discountEl){
-      discountEl.textContent = hasCachedDiscount ? Math.round(100 * (1 - Number(cached.price) / Number(cached.oldPrice))) + '% خصم' : '';
-      discountEl.style.display = hasCachedDiscount ? '' : 'none';
-    }
-    var timerBox = document.getElementById('timer-box');
-    if(timerBox) timerBox.style.display = 'none';
-    var stockLine = document.getElementById('stock-line');
-    if(stockLine) stockLine.style.display = hasCachedDiscount ? '' : 'none';
-    setText('stock', hasCachedDiscount ? '🔥 عرض لفترة محدودة' : '');
-    setText('ratingCount', cached.ratingCount ? '(' + cached.ratingCount + ' تقييم)' : '');
-    var stars = document.getElementById('stars');
-    if(stars && cached.rating){
-      var r = parseFloat(cached.rating) || 0;
-      stars.innerHTML = '<span style="color:#f59e0b;letter-spacing:1px">' + '★'.repeat(Math.floor(r)) + (r % 1 >= .5 ? '½' : '') + '☆'.repeat(5 - Math.ceil(r)) + '</span> <b>' + cached.rating + '</b>';
-    }
-  } catch(e) {}
-})();
-</script>
+<script src="/java/product-quick.js?v=20260803a"></script>
 
 <!-- ============ قسم التقييمات والتعليقات ============ -->
 <style>
@@ -597,53 +510,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   @media(max-width:700px){html:has(body.product-page-body),body.product-page-body{width:100%!important;max-width:100%!important;height:auto!important;min-height:100%!important;overflow-x:hidden!important;overflow-y:auto!important;touch-action:pan-y!important}body.product-page-body .page{height:auto!important;min-height:100dvh!important}body.product-page-body main#main,body.product-page-body main.main{margin-top:58px!important}body.product-page-body .page,body.product-page-body main.main,body.product-page-body .product-page{width:100%!important;max-width:100%!important;min-width:0!important;margin-left:0!important;margin-right:0!important;overflow:visible!important;box-sizing:border-box!important}body.product-page-body .gallery{display:flex!important;flex-direction:column!important;align-items:stretch!important;width:100%!important;max-width:100%!important;margin-left:0!important;margin-right:0!important;overflow:hidden!important}body.product-page-body .gallery #thumbs{display:none!important}body.product-page-body .main-image{width:100%!important;max-width:100%!important;margin-left:0!important;margin-right:0!important;overflow:hidden!important}body.product-page-body #prodCarousel{touch-action:pan-x pan-y!important}body.product-page-body .main-image .product-media-controls{position:absolute;left:0;right:0;bottom:3px!important;z-index:12;width:100%;min-height:0;margin:0;pointer-events:none}.product-media-controls .pmc-dots{pointer-events:auto}.product-title-line{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin:7px 10px 6px;direction:ltr;width:auto;max-width:100%;box-sizing:border-box}.gallery>.pmc-actions{display:none}.product-title-line .pmc-actions{display:flex;gap:8px;flex:0 0 auto;margin:0}.pmc-btn{width:26px;height:26px}.pmc-btn svg{width:18px;height:18px}.pmc-wishlist svg{width:21px;height:21px}.pmc-dots{gap:9px;min-height:10px}.pmc-dots:empty{display:none}.pmc-dot{width:5px;height:5px;background:rgba(0,0,0,.35)}.pmc-dot.active{width:6px;height:6px;background:#000;transform:none}body.product-page-body .info h1#name{font-size:clamp(17px,4.8vw,20px)!important;line-height:1.25!important;font-weight:500!important;display:-webkit-box!important;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;text-align:right;flex:1;min-width:0;margin:0!important;direction:rtl}}
   @media(max-width:700px){body.product-page-body main#main,body.product-page-body main.main{margin-top:76px!important}body.product-page-body .gallery{width:calc(100% - 20px)!important;max-width:calc(100% - 20px)!important;margin-left:10px!important;margin-right:10px!important}body.product-page-body .main-image{height:min(94vw,350px)!important;min-height:0!important;max-height:none!important;aspect-ratio:auto!important}body.product-page-body .main-image #prodCarousel img,body.product-page-body .main-image #prodCarousel video,body.product-page-body .main-image>#mainImage{object-fit:cover!important;object-position:center center!important}body.product-page-body .main-image .product-media-controls{bottom:8px!important}}
   @media(max-width:700px){body.product-page-body .pmc-share svg{width:21px!important;height:21px!important;stroke-width:1.8!important}}
+  @media(max-width:700px){html:has(body.product-page-body.product-page-body){height:100vh!important;min-height:100vh!important;overflow-x:hidden!important;overflow-y:auto!important}html:has(body.product-page-body.product-page-body) body.product-page-body{height:auto!important;min-height:100vh!important;overflow:visible!important}}
+  @media(max-width:700px){html:has(body.product-page-body.product-page-body) body.product-page-body .gallery,html:has(body.product-page-body.product-page-body) body.product-page-body .main-image{overflow:clip!important}}
 </style>
 
-<script>
-(function(){
-  function ready(fn){ document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', fn, {once:true}) : fn(); }
-  function bindProductCustomization(root){
-    root = root || document;
-    var input = root.querySelector ? root.querySelector('#customImages') : document.getElementById('customImages');
-    var list = root.querySelector ? root.querySelector('#customImageList') : document.getElementById('customImageList');
-    if(input && list){
-      input.addEventListener('change', function(){
-        list.innerHTML = '';
-        Array.prototype.slice.call(input.files || [], 0, 8).forEach(function(file){
-          var pill = document.createElement('span');
-          pill.className = 'pc-image-pill';
-          var img = document.createElement('img');
-          img.alt = '';
-          img.src = URL.createObjectURL(file);
-          img.onload = function(){ URL.revokeObjectURL(img.src); };
-          var name = document.createElement('span');
-          name.textContent = file.name;
-          pill.appendChild(img);
-          pill.appendChild(name);
-          list.appendChild(pill);
-        });
-      });
-    }
-  }
-  ready(function(){
-    bindProductCustomization(document);
-    window.getProductCustomizationSummary = function(){
-      var notes = (document.getElementById('customNotes') || {}).value || '';
-      var input = document.getElementById('customImages');
-      var files = input && input.files ? Array.prototype.slice.call(input.files).map(function(file){ return file.name; }) : [];
-      var lines = [];
-      if(notes.trim()) lines.push('ملاحظات التخصيص: ' + notes.trim());
-      if(files.length) lines.push('صور التخصيص: ' + files.join('، '));
-      return lines;
-    };
-    window.getProductCustomizationFiles = function(){
-      var input = document.getElementById('customImages');
-      return input && input.files ? Array.prototype.slice.call(input.files, 0, 8) : [];
-    };
-    window.initProductCustomization = bindProductCustomization;
-  });
-})();
-</script>
+<script src="/java/product-customization.js?v=20260803a"></script>
 
 <section class="reviews-section" id="reviewsSection">
   <div class="rv-head">
@@ -666,132 +537,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </section>
 
-<script>
-(function(){
-  function getProductIdFromUrl(){
-    const fromQuery = new URLSearchParams(location.search).get('id');
-    if(fromQuery) return fromQuery;
-    const parts = location.pathname.split('/').filter(Boolean);
-    const productIndex = parts.findIndex(p => p.toLowerCase() === 'product' || p.toLowerCase() === 'product.html');
-    return productIndex >= 0 && parts[productIndex + 1] ? decodeURIComponent(parts[productIndex + 1]) : '';
-  }
-
-  const pid = getProductIdFromUrl();
-  if(!pid) return;
-  const SB_URL = 'https://knleehjjejfeobcmpwnw.supabase.co';
-  const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
-  let picked = 5;
-  const SHOW = 3;
-  const lang = (localStorage.getItem('lang') || document.documentElement.lang || 'ar') === 'en' ? 'en' : 'ar';
-  const i18n = {
-    ar: { empty: 'لا توجد تعليقات بعد.', visitor: 'زائر', showAll: 'إظهار الكل', allReviews: 'كل التقييمات', writeFirst: 'اكتب تعليقك أولاً', sending: '...جارٍ الإرسال', sendError: 'خطأ في الإرسال، حاول مجدداً', submit: 'إرسال التقييم' },
-    en: { empty: 'No comments yet.', visitor: 'Guest', showAll: 'Show All', allReviews: 'All Reviews', writeFirst: 'Write your comment first', sending: 'Sending...', sendError: 'Could not submit, please try again', submit: 'Submit Review' }
-  };
-  const tr = key => (i18n[lang] && i18n[lang][key]) || i18n.ar[key] || key;
-
-  const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-
-  async function sbReviews(method, body){
-    const headers = {apikey: SB_KEY, Authorization: 'Bearer '+SB_KEY, 'Content-Type': 'application/json'};
-    if(method==='POST') headers['Prefer'] = 'return=minimal';
-    const res = await fetch(SB_URL+'/rest/v1/reviews?product_id=eq.'+encodeURIComponent(pid)+'&order=date.desc',
-      {method, headers, body: body ? JSON.stringify(body) : undefined});
-    if(method==='GET' && res.ok) return res.json();
-    return null;
-  }
-
-  function starsStr(n){ n=Math.round(n)||0; return '★'.repeat(n)+'☆'.repeat(5-n); }
-
-  function rvItemHtml(r){
-    const dt = r.date ? new Date(r.date).toLocaleDateString(lang === 'en' ? 'en' : 'ar') : '';
-    return `<div class="rv-item">
-      <div class="top">
-        <span class="meta"><span class="who">${esc(r.name)||tr('visitor')}</span><span class="dt">${dt}</span></span>
-        <span class="st">${starsStr(r.rating)}</span>
-      </div>
-      <div class="txt">${esc(r.text)}</div>
-    </div>`;
-  }
-
-  let allReviews = [];
-
-  function updateProductStars(){
-    if(!allReviews.length) return;
-    const avg = allReviews.reduce((s,r)=>s+(Number(r.rating)||0),0)/allReviews.length;
-    const starsEl = document.getElementById('stars');
-    const countEl = document.getElementById('ratingCount');
-    if(starsEl) starsEl.innerHTML = `<span style="color:#f59e0b;letter-spacing:1px">${starsStr(Math.round(avg))}</span><span style="color:#888;font-size:.8rem;margin-right:3px">${avg.toFixed(1)}</span>`;
-    if(countEl) countEl.textContent = '('+allReviews.length+')';
-  }
-
-  function renderList(){
-    const list = document.getElementById('rvList');
-    const btn = document.getElementById('rvShowMore');
-    if(!allReviews.length){ list.innerHTML='<div class="rv-empty">'+tr('empty')+'</div>'; btn.style.display='none'; return; }
-    list.innerHTML = allReviews.slice(0,SHOW).map(rvItemHtml).join('');
-    btn.style.display = allReviews.length > SHOW ? 'block' : 'none';
-    btn.textContent = '⬇ ' + tr('showAll') + ' (' + allReviews.length + ')';
-  }
-
-  document.getElementById('rvShowMore').addEventListener('click',function(){
-    const bg = document.createElement('div'); bg.className='rv-modal-bg';
-    bg.innerHTML = `<div class="rv-modal">
-      <div class="rv-modal-head"><h4>${tr('allReviews')} (${allReviews.length})</h4><button class="rv-modal-close">✕</button></div>
-      <div class="rv-modal-body">${allReviews.map(rvItemHtml).join('')}</div>
-    </div>`;
-    document.body.appendChild(bg);
-    document.body.style.overflow = 'hidden';
-    const close = () => { bg.remove(); document.body.style.overflow = ''; };
-    bg.querySelector('.rv-modal-close').onclick = close;
-    bg.addEventListener('click', e => { if(e.target===bg) close(); });
-    bg.addEventListener('touchmove', function(e){
-      const body = bg.querySelector('.rv-modal-body');
-      if(body && body.contains(e.target)) e.stopPropagation();
-      else e.preventDefault();
-    }, {passive:false});
-  });
-
-  async function render(){
-    const avgBox = document.getElementById('rvAvg');
-    try{
-      const data = await sbReviews('GET');
-      allReviews = Array.isArray(data) ? data : [];
-    } catch(e){ allReviews = []; }
-    if(allReviews.length){
-      const avg = allReviews.reduce((s,r)=>s+(Number(r.rating)||0),0)/allReviews.length;
-      avgBox.innerHTML = `<span class="num">${avg.toFixed(1)}</span><span class="stars">${starsStr(avg)}</span>`;
-    } else avgBox.innerHTML='';
-    renderList();
-    updateProductStars();
-  }
-
-  const starsEl = document.getElementById('rvStars');
-  function paint(){ starsEl.querySelectorAll('span').forEach(s=>s.classList.toggle('on',Number(s.dataset.v)<=picked)); }
-  starsEl.querySelectorAll('span').forEach(s=>s.addEventListener('click',()=>{ picked=Number(s.dataset.v); paint(); }));
-  picked=5; paint();
-
-  document.getElementById('rvSubmit').addEventListener('click', async ()=>{
-    const text=document.getElementById('rvText').value.trim();
-    if(!text){ alert(tr('writeFirst')); return; }
-    let name=tr('visitor'); try{ const p=JSON.parse(localStorage.getItem('x2_profile')||'{}'); if(p.name) name=p.name; }catch(e){}
-    const btn = document.getElementById('rvSubmit');
-    btn.disabled = true; btn.textContent = tr('sending');
-    try{
-      const res = await fetch(SB_URL+'/rest/v1/reviews', {
-        method:'POST',
-        headers:{apikey:SB_KEY, Authorization:'Bearer '+SB_KEY, 'Content-Type':'application/json', Prefer:'return=minimal'},
-        body: JSON.stringify({product_id:pid, name, rating:picked, text})
-      });
-      if(!res.ok) throw new Error(await res.text());
-      document.getElementById('rvText').value=''; picked=5; paint();
-      await render();
-    } catch(e){ alert(tr('sendError')); }
-    btn.disabled = false; btn.textContent = tr('submit');
-  });
-
-  render();
-})();
-</script>
+<script src="/java/product-reviews.js?v=20260803a"></script>
 
 <!-- صور ووصف وتخصيص المنتج - تُعبأ بواسطة Products.js -->
 <div id="rv-product-imgs" class="product-extra-section"></div>
@@ -930,7 +676,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="/java/push-welcome.js?v=push-welcome-20260728d" defer></script>
 <script src="/java/notifications.min.js?v=notifications-20260801a" defer></script>
 <script src="/java/abandoned-cart.js?v=abandoned-cart-20260730a" defer></script>
-<script type="module" src="/java/Products.js?v=products-20260731c"></script> <!-- ده يفضل يفضل في الآخر -->
+<script type="module" src="/java/Products.js?v=products-20260803-scrollfix"></script> <!-- ده يفضل يفضل في الآخر -->
 </body>
 </html>
 

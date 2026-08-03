@@ -1,14 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
-<script>(function(){try{var p=new URLSearchParams(location.search),u=p.get('lang'),s=localStorage.getItem('lang'),l=(u==='en'||u==='ar')?u:(s==='en'?'en':'ar');localStorage.setItem('lang',l);document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';if(l==='en')document.documentElement.classList.add('x2-i18n-pending');setTimeout(function(){document.documentElement.classList.remove('x2-i18n-pending')},1600)}catch(e){}})();</script>
-<!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-PR8J7RM7');</script>
-<!-- End Google Tag Manager -->
+<script src="/java/checkout-head.js?v=20260803a"></script>
   <meta charset="UTF-8" />
   <script src="/java/auth-reset.js"></script>
   <title data-i18n="صفحة الدفع - Bariq">صفحة الدفع - Bariq</title>
@@ -20,20 +13,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script>
-  (function(){
-    var vp=document.querySelector('meta[name="viewport"]');
-    if(!vp||!/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))return;
-    var base=vp.content;
-    document.addEventListener('focusin',function(e){
-      if(['INPUT','SELECT','TEXTAREA'].indexOf(e.target.tagName)>=0)
-        vp.content=base.replace(/,?\s*maximum-scale=[^,]*/i,'')+', maximum-scale=1';
-    });
-    document.addEventListener('focusout',function(){
-      setTimeout(function(){vp.content=base;},300);
-    });
-  })();
-  </script>
   <meta name="description" content="بريق للهدايا - متجر هدايا مخصصة وتوزيعات للمناسبات في الإمارات: تخرج، قرقيعان، يوم الأم، اليوم الوطني، أكريليك، خشب، جلد وورق. تصاميم راقية وشحن سريع.">
   <meta name="description-en" content="Bariq - A comprehensive online store offering thousands of products at the best prices. Shop now for clothing, electronics, home essentials, beauty products, and more. Fast shipping, secure payment, and quality assurance with easy returns. Discover a world of exceptional shopping with us!">
   <meta name="keywords" content="بريق للهدايا، هدايا مخصصة، توزيعات مناسبات، قرقيعان، اليوم الوطني، حق الليلة، يوم الأم، تخرج، مواليد، أكريليك، خشب، جلد، ورق، هدايا الإمارات">
@@ -238,7 +217,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   data-i18n-placeholder="ابحث في Bariq">
   <input type="file" id="imageSearchInput" accept="image/*" style="display:none;">
 </div>
-  <span class="icon search search-icon" onclick="performTextSearch()" style="cursor:pointer;display:flex;align-items:center;">
+  <span class="icon search search-icon" data-checkout-search style="cursor:pointer;display:flex;align-items:center;">
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
   </span>  <label class="icon camera camera-icon" for="imageSearchInput" style="cursor:pointer;display:flex;align-items:center;margin-right:0;">
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
@@ -691,7 +670,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       <div id="co-address-saved" style="display:none">
         <div class="co-address-display" id="co-address-preview"></div>
-        <span class="co-change-link" onclick="document.getElementById('co-address-saved').style.display='none';document.getElementById('co-address-form').style.display='grid'">
+        <span class="co-change-link" data-checkout-change-address>
           ✏️ تغيير العنوان
         </span>
       </div>
@@ -776,7 +755,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
         <!-- Tabby -->
         <label class="co-payment-option">
-          <input type="radio" name="payment" value="tabby" onchange="toggleInstall('tabby')">
+          <input type="radio" name="payment" value="tabby" data-installment="tabby">
           <div class="co-payment-label">
             تابي — 4 دفعات بدون فوائد
             <small>قسّم على 4 أشهر مجاناً</small>
@@ -795,7 +774,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
         <!-- Tamara -->
         <label class="co-payment-option">
-          <input type="radio" name="payment" value="tamara" onchange="toggleInstall('tamara')">
+          <input type="radio" name="payment" value="tamara" data-installment="tamara">
           <div class="co-payment-label">
             تمارا — 3 دفعات بدون فوائد
             <small>قسّم على 3 أشهر مجاناً</small>
@@ -855,217 +834,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div>
 
     <!-- زر الطلب -->
-    <button class="co-place-order" onclick="placeOrder()">
+    <button class="co-place-order" data-place-order>
       ✅ إتمام الطلب الآن
     </button>
-    <button class="co-back-cart" onclick="window.location.href='/Cart'">
+    <button class="co-back-cart" data-back-cart>
       ← الإعادة إلى عربة التسوق
     </button>
 
   </div><!-- end co-form -->
 </div><!-- end checkout-page -->
 
-<script>
-(function() {
-  const CART_KEY = 'x2_cart';
-  const lang = document.documentElement.lang || 'ar';
-
-  function getCurrSym() {
-    const code = localStorage.getItem('currency') || 'AED';
-    const map = { AED:'د.إ', USD:'$', EUR:'€', SAR:'ر.س', EGP:'ج.م', KWD:'د.ك', JOD:'د.أ', GBP:'£' };
-    return map[code] || code;
-  }
-
-  function fmt(n) { return (parseFloat(n)||0).toFixed(2) + ' ' + getCurrSym(); }
-
-  function loadCart() {
-    try { return JSON.parse(localStorage.getItem(CART_KEY) || '[]'); } catch(e) { return []; }
-  }
-
-  let cartItems = loadCart();
-  let totalPrice = 0;
-  let totalOld = 0;
-
-  function renderItems() {
-    const container = document.getElementById('co-items');
-    if (!cartItems.length) {
-      container.innerHTML = '<p style="color:#aaa;font-size:0.85rem;text-align:center;padding:20px 0">السلة فارغة</p>';
-      return;
-    }
-    let html = '';
-    cartItems.forEach(item => {
-      const price = parseFloat(item.priceCurrent) || 0;
-      const old = parseFloat(item.priceOld) || 0;
-      const qty = parseInt(item.qty) || 1;
-      totalPrice += price * qty;
-      if (old > price) totalOld += old * qty;
-      html += `
-        <div class="co-item">
-          <img src="${item.img || ''}" alt="${item.title || ''}" onerror="this.src='/assets/logo.png'">
-          <div class="co-item-details">
-            <div class="co-item-name">${item.title || 'منتج'}</div>
-            <div>
-              ${old > price ? `<span class="co-item-old">${fmt(old)}</span>` : ''}
-              <span class="co-item-price">${fmt(price)}</span>
-            </div>
-            <div class="co-item-qty">الكمية: <b>${qty}</b></div>
-          </div>
-        </div>`;
-    });
-    container.innerHTML = html;
-    updateTotals();
-  }
-
-  function updateTotals() {
-    const sym = getCurrSym();
-    document.getElementById('co-subtotal').textContent = fmt(totalOld || totalPrice);
-    const discount = totalOld > totalPrice ? (totalOld - totalPrice) : 0;
-    const discEl = document.getElementById('co-discount');
-    const badgeEl = document.getElementById('co-discount-badge');
-    if (discount > 0) {
-      discEl.textContent = '- ' + fmt(discount);
-      const pct = Math.round(discount / totalOld * 100);
-      badgeEl.textContent = pct + '% خصم';
-    } else {
-      discEl.textContent = '0 ' + sym;
-      badgeEl.style.display = 'none';
-    }
-    document.getElementById('co-total').textContent = fmt(totalPrice);
-    updateInstallments(totalPrice);
-  }
-
-  function updateInstallments(total) {
-    const sym = getCurrSym();
-    const q4 = (total / 4).toFixed(2);
-    const q3 = (total / 3).toFixed(2);
-    ['t1','t2','t3','t4'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = q4 + ' ' + sym;
-    });
-    ['tm1','tm2','tm3'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = q3 + ' ' + sym;
-    });
-  }
-
-  async function notifyAdminNewOrder(order) {
-    try {
-      const ANON_PUSH = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
-      const itemsCount = (order.items || []).reduce((sum, item) => sum + (Number(item.qty) || 1), 0);
-      const title = 'طلب جديد من Bariq';
-      const totalText = (Number(order.total) || 0).toLocaleString('en-US', { maximumFractionDigits: 2 }) + ' AED';
-      const body = `طلب #${order.id} - ${totalText}\nالعميل: ${order.customerName || 'عميل'}\nاضغط لفتح الطلب`;
-      const payload = {
-        title,
-        body,
-        url: '/admin-reports?order=' + encodeURIComponent(order.id),
-        type: 'admin_new_order',
-        orderId: order.id,
-        order_id: order.id,
-        iconText: '📦',
-        emoji: '📦',
-        user_email: '__bariq_admin_orders__@bariq.local'
-      };
-      const endpoint = 'https://knleehjjejfeobcmpwnw.supabase.co/functions/v1/hyper-api';
-      const send = fetch(endpoint, {
-        method: 'POST',
-        keepalive: true,
-        headers: { 'Content-Type': 'application/json', apikey: ANON_PUSH, Authorization: 'Bearer ' + ANON_PUSH },
-        body: JSON.stringify(payload)
-      }).catch(() => {});
-      await Promise.race([send, new Promise(resolve => setTimeout(resolve, 1800))]);
-    } catch(e) {}
-  }
-
-  renderItems();
-
-  // toggle installment details
-  window.toggleInstall = function(type) {
-    document.getElementById('tabby-detail').classList.remove('show');
-    document.getElementById('tamara-detail').classList.remove('show');
-    document.getElementById(type + '-detail').classList.add('show');
-  };
-
-  // إتمام الطلب
-  window.placeOrder = async function() {
-    const fname = document.getElementById('co-first-name').value.trim();
-    const lname = document.getElementById('co-last-name').value.trim();
-    const email = document.getElementById('co-email').value.trim();
-    const country = document.getElementById('co-country').value;
-    const phone = document.getElementById('co-phone').value.trim();
-    const city = document.getElementById('co-city').value.trim();
-    const address = document.getElementById('co-address').value.trim();
-    const payment = document.querySelector('input[name="payment"]:checked')?.value;
-
-    if (!fname) { alert('من فضلك أدخل اسمك'); return; }
-    if (!phone) { alert('من فضلك أدخل رقم هاتفك'); return; }
-    if (!city) { alert('من فضلك أدخل المدينة'); return; }
-    if (!address) { alert('من فضلك أدخل العنوان'); return; }
-
-    const order = {
-      id: 'ORD-' + Date.now(),
-      date: new Date().toISOString(),
-      cashback: 5,
-      cashbackStatus: 'pending',
-      cashbackAvailableAt: '',
-      cashbackExpiresAt: '',
-      items: cartItems,
-      total: totalPrice,
-      shipping: { name: (fname + ' ' + lname).trim(), phone, email, country, city, address },
-      customerName: (fname + ' ' + lname).trim(),
-      customerPhone: phone,
-      customerEmail: email,
-      address: { country, city, street: address, building: '' },
-      status: 'processing',
-      payment
-    };
-
-    try {
-      const orders = JSON.parse(localStorage.getItem('x2_orders') || '[]');
-      orders.unshift(order);
-      localStorage.setItem('x2_orders', JSON.stringify(orders));
-      const profile = JSON.parse(localStorage.getItem('x2_profile') || '{}');
-      if (!profile.name) profile.name = order.customerName;
-      if (!profile.phone) profile.phone = phone;
-      if (!profile.email && email) profile.email = email;
-      if (!profile.address) profile.address = address;
-      if (!profile.address_full) profile.address_full = { country, city, area: '', street: address, building: '', zip: '', notes: '' };
-      localStorage.setItem('x2_profile', JSON.stringify(profile));
-      localStorage.removeItem(CART_KEY);
-    } catch(e) {}
-
-    try {
-      if (window.Supabase && window.Supabase.Orders) {
-        window.Supabase.Orders.insert(order).catch(err => console.warn('Supabase order save failed:', err));
-      }
-    } catch(e) {}
-
-    await notifyAdminNewOrder(order);
-
-    const itemsText = cartItems.map(it => `- ${it.name || it.title || 'Product'} x${Number(it.qty || 1)}`).join('\n');
-    const msg = encodeURIComponent([
-      'مرحباً، أريد تأكيد الطلب',
-      '',
-      'رقم الطلب: ' + order.id,
-      '',
-      'بيانات العميل:',
-      'الاسم: ' + order.customerName,
-      'الهاتف: ' + phone,
-      'البريد: ' + (email || 'غير متوفر'),
-      'العنوان: ' + address,
-      '',
-      'محتويات السلة:',
-      itemsText,
-      '',
-      'المدينة: ' + city,
-      'الإجمالي: ' + fmt(totalPrice)
-    ].join('\n'));
-    alert('✅ تم تأكيد طلبك!\nرقم الطلب: ' + order.id);
-    window.open('https://wa.me/971554423151?text=' + msg, '_blank', 'noopener');
-    window.location.href = 'account.html';
-  };
-})();
-</script>
+<script src="/java/checkout.js?v=20260803a"></script>
 
 
   <!-- محتوى الموقع هنا -->
