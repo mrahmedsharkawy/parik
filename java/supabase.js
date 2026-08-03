@@ -43,10 +43,11 @@ async function sbFetch(path, opts) {
     adminSession = hasAdminSession();
   let storedToken = getStoredAuthToken();
   !storedToken &&
+    !opts.forceAnon &&
     adminSession &&
     "function" == typeof refreshAdminToken &&
     (storedToken = (await refreshAdminToken()) || "");
-  const authToken = storedToken || SUPABASE_ANON,
+  const authToken = opts.forceAnon ? SUPABASE_ANON : storedToken || SUPABASE_ANON,
     res = await fetch(
       SUPABASE_URL + "/rest/v1/" + path,
       Object.assign({}, opts, {
@@ -242,7 +243,7 @@ const SupaCustomers = {
   },
   SupaSettings = {
     get: async function () {
-      var r = await sbFetch("settings?limit=1").catch(function () {
+      var r = await sbFetch("settings?limit=1", { forceAnon: true }).catch(function () {
         return [];
       });
       return r && r[0] ? r[0] : {};
