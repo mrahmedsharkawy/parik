@@ -97,21 +97,10 @@
   <style>.mobile-nav{display:none}</style>
   <link rel="preload" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260803-pill-ready" as="style" media="(max-width: 899px)" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260803-pill-ready" media="(max-width: 899px)"></noscript>
-  <style>html,body{background:#fff!important}.page,main.main{background:#fff!important}@media(min-width:900px){.mobile-nav{display:none!important}}html.x2-home-booting #home-category-products,html.x2-home-booting #category-products{visibility:hidden!important}.categories a{font-family:"Segoe UI Emoji","Segoe UI Symbol","Apple Color Emoji","Noto Color Emoji",Arial,Tahoma,sans-serif!important}</style>
-  <!-- Preload LCP image -->
-  <script>
-  (function(){
-    var l = document.createElement('link');
-    l.rel = 'preload';
-    l.href = matchMedia('(min-width: 900px)').matches ? '/assets/home/1.webp' : '/assets/home/صور الغلاف/1-618.webp?v=home-mobile-banner-20260729a';
-    l.imageSrcset = matchMedia('(min-width: 900px)').matches ? '/assets/home/1.webp 1000w' : '/assets/home/صور الغلاف/1-412.webp?v=home-mobile-banner-20260729a 412w, /assets/home/صور الغلاف/1-618.webp?v=home-mobile-banner-20260729a 618w';
-    l.as = 'image';
-    l.type = 'image/webp';
-    l.fetchPriority = 'high';
-    l.imageSizes = matchMedia('(min-width: 900px)').matches ? '70vw' : '412px';
-    document.head.appendChild(l);
-  })();
-  </script>
+  <style>html,body{background:#fff!important}.page,main.main{background:#fff!important}@media(min-width:900px){.mobile-nav{display:none!important}}@media(max-width:899px){html.x2-home-booting #home-category-products,html.x2-home-booting #category-products{visibility:hidden!important}}.categories a{font-family:"Segoe UI Emoji","Segoe UI Symbol","Apple Color Emoji","Noto Color Emoji",Arial,Tahoma,sans-serif!important}</style>
+  <link rel="preload" href="/assets/home/1.webp" as="image" type="image/webp" media="(min-width: 900px)" fetchpriority="high">
+  <link rel="preload" href="/assets/home/صور الغلاف/small-tmp/2-360.webp" as="image" type="image/webp" media="(max-width: 899px)" fetchpriority="high">
+  <link rel="preload" href="/assets/home/صور الغلاف/small-tmp/1-360.webp" as="image" type="image/webp" media="(max-width: 899px)" fetchpriority="high">
   <!-- Critical above-fold CSS (prevents FOUC while style.css loads) -->
   <style>
     *{box-sizing:border-box;margin:0}
@@ -265,6 +254,19 @@
   .mh-cats-strip{display:none}
   .home-offer-cards{display:none}
   #home-category-products{display:none}
+  @media(min-width:900px){
+    #home-category-products{display:block!important;visibility:visible!important;overflow:hidden!important;min-height:520px!important;margin-bottom:30px!important}
+    body.home-immersive-header #home-category-products{display:block!important;visibility:visible!important;overflow:hidden!important;min-height:520px!important;margin-bottom:30px!important}
+    #category-products{display:none!important}
+    body.home-immersive-header #category-products{display:none!important}
+    #home-category-products .home-product-slider{width:100%;overflow:hidden;direction:ltr}
+    #home-category-products .home-products-track{display:flex;width:300%;transform:translateX(-33.3333%);direction:ltr}
+    #home-category-products .home-products-pane{width:33.3333%;flex:0 0 33.3333%;padding:0 4px;box-sizing:border-box;direction:rtl}
+    #home-category-products .products-row.products-masonry{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:16px!important;align-items:start!important}
+    #home-category-products .products-column{display:flex!important;flex-direction:column!important;gap:16px!important;min-width:0!important}
+    #home-category-products .product-card{width:100%!important;max-width:none!important;margin:0!important;display:flex!important;flex-direction:column!important;box-sizing:border-box!important}
+    #home-category-products .product-img{width:100%!important;height:auto!important;aspect-ratio:1/1!important;object-fit:cover!important;display:block!important}
+  }
   @media(max-width:899px){
     .main-header{position:fixed!important;top:0;left:0;right:0;z-index:10000!important;background:#152546!important;box-shadow:0 1px 4px rgba(0,0,0,.18)!important;padding:7px 0!important;overflow:visible!important}
     .main-header .logo{display:flex!important;align-items:center;flex-shrink:0}
@@ -551,12 +553,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <main class="main" id="main">
   <section class="animated-promo-banner desktop-promo-banner" aria-label="عروض بريق" data-i18n-aria-label="عروض بريق">
     <div class="banner-inner">
-      <img class="banner-bg-animated" src="assets/home/1.webp" alt="عروض بريق" width="1000" height="320" loading="eager" decoding="async">
+      <picture>
+        <source media="(min-width: 900px)" srcset="assets/home/1.webp">
+        <img class="banner-bg-animated" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" alt="عروض بريق" width="1000" height="320" loading="eager" fetchpriority="high" decoding="async">
+      </picture>
     </div>
   </section>
   <section class="home-offer-cards" aria-label="عروض بريق السريعة" data-i18n-aria-label="عروض بريق السريعة">
     <a href="/offers" class="home-offer-card flash" aria-label="عروض خاطفة" data-i18n-aria-label="عروض خاطفة">
-      <img class="home-offer-card-img" src="assets/home/صور الغلاف/small-tmp/2-360.webp" alt="عروض خاطفة" width="360" height="330" loading="eager" decoding="async">
+      <img class="home-offer-card-img" src="assets/home/صور الغلاف/small-tmp/2-360.webp" alt="عروض خاطفة" width="360" height="330" loading="eager" fetchpriority="high" decoding="async">
       <div class="home-image-countdown" aria-label="الوقت المتبقي للعرض">
         <span class="home-count-box" id="homeFlashHours">00</span>
         <span class="home-count-box" id="homeFlashMinutes">00</span>
@@ -570,7 +575,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <span class="home-offer-btn" data-i18n="تسوق الآن">تسوق الآن</span>
     </a>
     <a href="/monthly-offers.html" class="home-offer-card month" aria-label="عروض الشهر" data-i18n-aria-label="عروض الشهر">
-      <img class="home-offer-card-img" src="assets/home/صور الغلاف/small-tmp/1-360.webp" alt="عروض الشهر" width="360" height="338" loading="eager" decoding="async">
+      <img class="home-offer-card-img" src="assets/home/صور الغلاف/small-tmp/1-360.webp" alt="عروض الشهر" width="360" height="338" loading="eager" fetchpriority="high" decoding="async">
       <div class="home-offer-top"><span data-i18n="عروض الشهر">عروض الشهر</span><span class="home-offer-icon" aria-hidden="true">🎁</span></div>
       <div class="home-offer-meta">
         <span class="home-offer-discount" data-i18n="خصم حتى 70%">خصم حتى 70%</span>
