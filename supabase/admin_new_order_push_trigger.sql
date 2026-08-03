@@ -34,8 +34,8 @@ begin
       'Authorization', 'Bearer ' || anon_key
     ),
     body := jsonb_build_object(
-      'title', 'طلب جديد من Bariq',
-      'body', 'طلب #' || order_ref || ' - ' || total_text || E'\nالعميل: ' || customer || E'\nاضغط لفتح الطلب',
+      'title', U&'\0637\0644\0628 \062C\062F\064A\062F \0645\0646 Bariq',
+      'body', U&'\0637\0644\0628 #' || order_ref || ' - ' || total_text || E'\n' || U&'\0627\0644\0639\0645\064A\0644: ' || customer || E'\n' || U&'\0627\0636\063A\0637 \0644\0641\062A\062D \0627\0644\0637\0644\0628',
       'url', '/admin-reports?order=' || order_ref,
       'type', 'admin_new_order',
       'orderId', order_ref,

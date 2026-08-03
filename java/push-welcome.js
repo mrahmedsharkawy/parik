@@ -57,7 +57,7 @@
         return false;
       }
       var reg=await navigator.serviceWorker.getRegistration('/');
-      if(!reg)reg=await navigator.serviceWorker.register('/sw.js?v=320',{updateViaCache:'none'});
+      if(!reg)reg=await navigator.serviceWorker.register('/sw.js?v=324',{updateViaCache:'none'});
       if(reg&&reg.update)reg.update().catch(function(){});
       await navigator.serviceWorker.ready;
       sendPushLanguageToServiceWorker();

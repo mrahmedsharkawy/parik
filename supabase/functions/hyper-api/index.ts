@@ -52,6 +52,43 @@ function normalizeLang(value: unknown) {
   return String(value || '').toLowerCase().startsWith('en') ? 'en' : 'ar';
 }
 
+function hasMojibakeText(value: unknown) {
+  return /(?:Ø|Ù|Ð|Ñ|Ã|Â|ðŸ|â|œ|™)/.test(String(value || ''));
+}
+
+const WINDOWS_1252_BYTES: Record<string, number> = {
+  '€': 0x80, '‚': 0x82, 'ƒ': 0x83, '„': 0x84, '…': 0x85, '†': 0x86, '‡': 0x87,
+  'ˆ': 0x88, '‰': 0x89, 'Š': 0x8A, '‹': 0x8B, 'Œ': 0x8C, 'Ž': 0x8E,
+  '‘': 0x91, '’': 0x92, '“': 0x93, '”': 0x94, '•': 0x95, '–': 0x96, '—': 0x97,
+  '˜': 0x98, '™': 0x99, 'š': 0x9A, '›': 0x9B, 'œ': 0x9C, 'ž': 0x9E, 'Ÿ': 0x9F,
+};
+
+function mojibakeBytes(text: string) {
+  const bytes = new Uint8Array(text.length);
+  for (let j = 0; j < text.length; j++) {
+    const ch = text[j];
+    bytes[j] = Object.prototype.hasOwnProperty.call(WINDOWS_1252_BYTES, ch) ? WINDOWS_1252_BYTES[ch] : (text.charCodeAt(j) & 255);
+  }
+  return bytes;
+}
+
+function repairMojibakeText(value: unknown) {
+  let text = String(value || '');
+  if (!text) return text;
+  for (let i = 0; i < 4; i++) {
+    if (!hasMojibakeText(text)) break;
+    try {
+      const bytes = mojibakeBytes(text);
+      const fixed = new TextDecoder('utf-8', { fatal: false }).decode(bytes);
+      if (!fixed || fixed === text) break;
+      text = fixed;
+    } catch (_err) {
+      break;
+    }
+  }
+  return text;
+}
+
 function localizedOrderStatus(status: unknown, orderId: unknown, langValue: unknown) {
   const lang = normalizeLang(langValue);
   const cleanStatus = String(status || 'processing').toLowerCase();
@@ -173,8 +210,8 @@ Deno.serve(async (req) => {
         const orderStatusText = type === 'order_status' || status
           ? localizedOrderStatus(status, orderId || order_id, targetLang)
           : null;
-        const localizedTitle = orderStatusText ? orderStatusText.title : (targetLang === 'en' && title_en ? title_en : title);
-        const localizedBody = orderStatusText ? orderStatusText.body : (targetLang === 'en' && body_en ? body_en : body);
+        const localizedTitle = repairMojibakeText(orderStatusText ? orderStatusText.title : (targetLang === 'en' && title_en ? title_en : title));
+        const localizedBody = repairMojibakeText(orderStatusText ? orderStatusText.body : (targetLang === 'en' && body_en ? body_en : body));
         const localizedIcon = orderStatusText ? orderStatusText.icon : (iconText || emoji || null);
         const payloadStr = JSON.stringify({
           title: localizedTitle,
