@@ -9,6 +9,9 @@ body .product-card:not(.product-card-cart) .product-name,body .dp-card .dp-title
 .daily-picks-section{height:165px!important;min-height:165px!important;padding-bottom:0!important;overflow:hidden!important}
 .daily-picks-section .daily-picks-grid{padding-bottom:0!important}
 .daily-picks-section+.trust-bar{margin-top:0px!important}
+.daily-picks-all{color:#111!important;font-weight:800!important}
+body .dp-card .dp-badge{background:#152546!important;color:#fff!important;min-width:36px!important;width:36px!important;height:18px!important;min-height:18px!important;padding:0!important;border-radius:999px!important;font-size:.72rem!important;font-weight:900!important;line-height:18px!important;text-align:center!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;box-sizing:border-box!important}
+.footer-info-bar .footer-pay-icons img,.footer-info-bar .footer-security-icons img{width:auto!important;height:auto!important;max-width:43px!important;max-height:24px!important;aspect-ratio:auto!important;object-fit:contain!important;padding:0!important}
 /* Cairo font - self-hosted for performance (no Google Fonts dependency) */
 @font-face{font-family:'Cairo';font-style:normal;font-weight:400 700;font-display:optional;src:url('../assets/cairo-arabic.woff2') format('woff2');unicode-range:U+0600-06FF,U+0750-077F,U+FB50-FDFF,U+FE70-FEFC}
 @font-face{font-family:'Cairo';font-style:normal;font-weight:400 700;font-display:optional;src:url('../assets/cairo-latin.woff2') format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+FEFF,U+FFFD}

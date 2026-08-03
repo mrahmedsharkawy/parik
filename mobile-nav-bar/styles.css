@@ -500,9 +500,13 @@ body{
   }
   .footer-info-bar .footer-pay-icons img,
   .footer-info-bar .footer-security-icons img {
-    width: 36px;
-    height: 24px;
-    padding: 1px;
+    width: auto;
+    height: auto;
+    max-width: 43px;
+    max-height: 24px;
+    aspect-ratio: auto;
+    object-fit: contain;
+    padding: 0;
     margin-bottom: -5px;
     margin-top: 7px;
   }
