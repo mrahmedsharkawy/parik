@@ -121,20 +121,37 @@ function localizedOrderStatus(status: unknown, orderId: unknown, langValue: unkn
   return { lang, status: cleanStatus, icon: item.icon, title: `${item.icon} ${item.title}`, body: item.body };
 }
 
-function localizedAdminNewOrder(orderId: unknown, langValue: unknown) {
+function localizedAdminNewOrder(orderId: unknown, langValue: unknown, details: any = {}) {
   const lang = normalizeLang(langValue);
   const cleanOrderId = String(orderId || '').replace(/^#/, '').trim();
+  const customer = repairMojibakeText(details.customerName || details.customer_name || details.customer || '').trim();
+  const product = repairMojibakeText(details.productName || details.product_name || details.product || '').trim();
+  const total = repairMojibakeText(details.totalText || details.total_text || details.orderTotal || details.total || '').trim();
+  const enLines = [
+    cleanOrderId ? `New order #${cleanOrderId}` : 'New order received',
+    customer ? `Customer: ${customer}` : '',
+    product ? `Product: ${product}` : '',
+    total ? `Total: ${total}` : '',
+    'Tap to open the order'
+  ].filter(Boolean);
+  const arLines = [
+    cleanOrderId ? `\u0637\u0644\u0628 \u062c\u062f\u064a\u062f #${cleanOrderId}` : '\u0648\u0635\u0644 \u0637\u0644\u0628 \u062c\u062f\u064a\u062f',
+    customer ? `\u0627\u0644\u0639\u0645\u064a\u0644: ${customer}` : '',
+    product ? `\u0627\u0644\u0645\u0646\u062a\u062c: ${product}` : '',
+    total ? `\u0627\u0644\u0645\u0628\u0644\u063a: ${total}` : '',
+    '\u0627\u0636\u063a\u0637 \u0644\u0641\u062a\u062d \u0627\u0644\u0637\u0644\u0628'
+  ].filter(Boolean);
   if (lang === 'en') {
     return {
       icon: '📦',
       title: '📦 New order from Bariq',
-      body: cleanOrderId ? `New order #${cleanOrderId}\nTap to open the order` : 'New order received\nTap to open the order',
+      body: enLines.join('\n'),
     };
   }
   return {
     icon: '📦',
     title: '📦 طلب جديد من بريق',
-    body: cleanOrderId ? `طلب جديد #${cleanOrderId}\nاضغط لفتح الطلب` : 'وصل طلب جديد\nاضغط لفتح الطلب',
+    body: arLines.join('\n'),
   };
 }
 
@@ -233,7 +250,7 @@ Deno.serve(async (req) => {
         const repairedTitle = repairMojibakeText(sourceTitle);
         const repairedBody = repairMojibakeText(sourceBody);
         const adminNewOrderText = type === 'admin_new_order'
-          ? localizedAdminNewOrder(orderId || order_id, targetLang)
+          ? localizedAdminNewOrder(orderId || order_id, targetLang, payload)
           : null;
         const localizedTitle = adminNewOrderText ? adminNewOrderText.title : (orderStatusText ? orderStatusText.title : repairedTitle);
         const localizedBody = adminNewOrderText ? adminNewOrderText.body : (orderStatusText ? orderStatusText.body : repairedBody);

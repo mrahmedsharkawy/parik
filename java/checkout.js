@@ -96,12 +96,15 @@
   async function notifyAdminNewOrder(order) {
     try {
       const ANON_PUSH = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
-      const title = '\u0637\u0644\u0628 \u062c\u062f\u064a\u062f \u0645\u0646 Bariq';
       const totalText = (Number(order.total) || 0).toLocaleString('en-US', { maximumFractionDigits: 2 }) + ' AED';
-      const body = `\u0637\u0644\u0628 #${order.id} - ${totalText}\n\u0627\u0644\u0639\u0645\u064a\u0644: ${order.customerName || '\u0639\u0645\u064a\u0644'}\n\u0627\u0636\u063a\u0637 \u0644\u0641\u062a\u062d \u0627\u0644\u0637\u0644\u0628`;
+      const firstItem = order.items && order.items[0] || {};
+      const productName = firstItem.name || firstItem.title || firstItem.productName || 'Product';
       const payload = {
-        title,
-        body,
+        title: 'admin_new_order',
+        body: `order #${order.id} - ${totalText}`,
+        customerName: order.customerName || '',
+        productName,
+        totalText,
         url: '/admin-reports?order=' + encodeURIComponent(order.id),
         type: 'admin_new_order',
         orderId: order.id,

@@ -17,13 +17,19 @@ declare
   anon_key text := 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
   order_ref text := coalesce(new.order_number, new.id::text);
   item_count int := 1;
-  customer text := coalesce(nullif(new.customer_name, ''), 'عميل');
+  customer text := coalesce(nullif(new.customer_name, ''), 'Customer');
+  product_name text := 'Product';
   total_text text := trim(to_char(coalesce(new.total, 0), 'FM999999999990.00')) || ' AED';
 begin
   if jsonb_typeof(new.items) = 'array' then
     select greatest(1, coalesce(sum(coalesce((item->>'qty')::int, (item->>'quantity')::int, 1)), 0))
       into item_count
       from jsonb_array_elements(new.items) as item;
+
+    select coalesce(nullif(item->>'name', ''), nullif(item->>'title', ''), nullif(item->>'productName', ''), nullif(item->>'product_name', ''), 'Product')
+      into product_name
+      from jsonb_array_elements(new.items) as item
+      limit 1;
   end if;
 
   perform net.http_post(
@@ -34,8 +40,11 @@ begin
       'Authorization', 'Bearer ' || anon_key
     ),
     body := jsonb_build_object(
-      'title', U&'\0637\0644\0628 \062C\062F\064A\062F \0645\0646 Bariq',
-      'body', U&'\0637\0644\0628 #' || order_ref || ' - ' || total_text || E'\n' || U&'\0627\0644\0639\0645\064A\0644: ' || customer || E'\n' || U&'\0627\0636\063A\0637 \0644\0641\062A\062D \0627\0644\0637\0644\0628',
+      'title', 'admin_new_order',
+      'body', 'order #' || order_ref || ' - ' || total_text,
+      'customerName', customer,
+      'productName', product_name,
+      'totalText', total_text,
       'url', '/admin-reports?order=' || order_ref,
       'type', 'admin_new_order',
       'orderId', order_ref,
