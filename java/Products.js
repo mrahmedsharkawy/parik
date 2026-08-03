@@ -517,10 +517,19 @@ function saveProductReturnTarget(card) {
         const rect = card.getBoundingClientRect();
         sessionStorage.setItem("x2_product_return_target", JSON.stringify({
             url: x2PageKey(location.href),
+            section: card.closest("#dailyPicksGrid") ? "daily-picks" : card.closest("#home-category-products") ? "home-products" : card.closest("#category-products") ? "category-products" : "products",
             productId: card.dataset.productId,
             offset: Math.max(8, Math.round(rect.top))
         }));
     } catch (e) {}
+}
+
+function productReturnTargetSelector(target) {
+    const productId = CSS.escape(String(target.productId));
+    if (target.section === "daily-picks") return `#dailyPicksGrid .dp-card[data-product-id="${productId}"]`;
+    if (target.section === "home-products") return `#home-category-products .product-card[data-product-id="${productId}"]`;
+    if (target.section === "category-products") return `#category-products .product-card[data-product-id="${productId}"]`;
+    return `.product-card[data-product-id="${productId}"]`;
 }
 
 function restoreProductReturnTarget() {
@@ -528,7 +537,7 @@ function restoreProductReturnTarget() {
         if (window.__x2ProductReturnRestored) return true;
         const target = JSON.parse(sessionStorage.getItem("x2_product_return_target") || "null");
         if (!target || target.url !== x2PageKey(location.href) || !target.productId) return false;
-        const selector = `.product-card[data-product-id="${CSS.escape(String(target.productId))}"]`;
+        const selector = productReturnTargetSelector(target);
         const card = document.querySelector(selector);
         if (!card) return false;
         const y = Math.max(0, Math.round((window.scrollY || window.pageYOffset || 0) + card.getBoundingClientRect().top - (Number(target.offset) || 8)));
@@ -546,7 +555,7 @@ function restoreProductReturnScrollPosition() {
     try {
         if (sessionStorage.getItem("x2_return_to_scroll_url") !== x2PageKey(location.href)) return;
         if (restoreProductReturnTarget()) return;
-        const container = document.getElementById("category-products") || document.body;
+        const container = targetContainerForProductReturn() || document.body;
         if (!container || !container.nodeType) return;
         const observer = new MutationObserver(() => {
             if (restoreProductReturnTarget()) observer.disconnect();
@@ -557,6 +566,16 @@ function restoreProductReturnScrollPosition() {
             if (!window.__x2ProductReturnRestored) sessionStorage.removeItem("x2_return_to_scroll_url");
         }, 6000);
     } catch (e) {}
+}
+
+function targetContainerForProductReturn() {
+    try {
+        const target = JSON.parse(sessionStorage.getItem("x2_product_return_target") || "null");
+        if (target && target.section === "daily-picks") return document.getElementById("dailyPicksGrid") || document.body;
+        if (target && target.section === "home-products") return document.getElementById("home-category-products") || document.body;
+        if (target && target.section === "category-products") return document.getElementById("category-products") || document.body;
+    } catch (e) {}
+    return document.getElementById("category-products") || document.body;
 }
 
 if (typeof window !== "undefined") {
@@ -988,7 +1007,7 @@ document.addEventListener("DOMContentLoaded", async function() {
         let restoreTargetIndex = -1;
         try {
             const target = JSON.parse(sessionStorage.getItem("x2_product_return_target") || "null");
-            if (target && target.url === x2PageKey(location.href) && target.productId) {
+            if (target && target.url === x2PageKey(location.href) && target.productId && target.section !== "daily-picks") {
                 restoreTargetIndex = sortedList.findIndex(product => String(product.id || product.productId || "") === String(target.productId));
             }
         } catch (e) {}

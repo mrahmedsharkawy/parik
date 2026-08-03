@@ -97,7 +97,7 @@
   <style>.mobile-nav{display:none}</style>
   <link rel="preload" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260803-pill-ready" as="style" media="(max-width: 899px)" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="/mobile-nav-bar/styles.css?v=apple-liquid-20260803-pill-ready" media="(max-width: 899px)"></noscript>
-  <style>html,body{background:#fff!important}.page,main.main{background:#fff!important}@media(min-width:900px){.mobile-nav{display:none!important}}html.x2-home-booting main.main,html.x2-home-booting footer.site-footer,html.x2-home-booting .footer-info-bar,html.x2-home-booting #home-category-products,html.x2-home-booting #category-products{visibility:hidden!important}html.x2-restoring-scroll main.main,html.x2-restoring-scroll footer.site-footer,html.x2-restoring-scroll .footer-info-bar{visibility:hidden!important}.categories a{font-family:"Segoe UI Emoji","Segoe UI Symbol","Apple Color Emoji","Noto Color Emoji",Arial,Tahoma,sans-serif!important}</style>
+  <style>html,body{background:#fff!important}.page,main.main{background:#fff!important}@media(min-width:900px){.mobile-nav{display:none!important}}html.x2-home-booting #home-category-products,html.x2-home-booting #category-products{visibility:hidden!important}.categories a{font-family:"Segoe UI Emoji","Segoe UI Symbol","Apple Color Emoji","Noto Color Emoji",Arial,Tahoma,sans-serif!important}</style>
   <!-- Preload LCP image -->
   <script>
   (function(){
@@ -847,7 +847,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </footer>
 <script src="/java/supabase.min.js?v=supabase-20260725a" defer></script>
 <script src="/java/main.min.js?v=294" defer></script>
-<script src="/java/sw-refresh.js?v=sw-refresh-20260803-pwa301" defer></script>
+<script src="/java/sw-refresh.js?v=sw-refresh-20260803-pwa304" defer></script>
 <script src="/java/instant-nav.js?v=instant-nav-20260728e" defer></script>
 <script src="/translations/translation.min.js?v=translation-20260726c" defer></script>
 <script src="/java/footer-pages.min.js?v=footer-pages-20260723" defer></script>
@@ -855,7 +855,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="/java/push-welcome.js?v=push-welcome-20260728d" defer></script>
 <script src="/java/notifications.min.js?v=notifications-20260801a" defer></script>
 <script src="/java/abandoned-cart.js?v=abandoned-cart-20260730a" defer></script>
-<script type="module" src="/java/Products.min.js?v=products-20260801l" defer></script>
+<script type="module" src="/java/Products.min.js?v=products-20260803-daily-return" defer></script>
 
 <style>
 .campaign-popup-backdrop{position:fixed;inset:0;z-index:100200;background:rgba(7,16,32,.52);display:flex;align-items:center;justify-content:center;padding:18px;opacity:0;pointer-events:none;transition:opacity .22s ease}.campaign-popup-backdrop.show{opacity:1;pointer-events:auto}.campaign-popup{width:min(92vw,460px);overflow:hidden;border-radius:18px;background:#fff;box-shadow:0 28px 70px rgba(10,22,40,.32);transform:translateY(18px) scale(.96);transition:transform .28s cubic-bezier(.18,1.16,.36,1)}.campaign-popup-backdrop.show .campaign-popup{transform:translateY(0) scale(1)}.campaign-popup-media{position:relative;min-height:170px;background:linear-gradient(135deg,#152546,#2d405f)}.campaign-popup-media img{width:100%;height:230px;object-fit:cover;display:block;border-radius:0}.campaign-popup-media.no-image{display:flex;align-items:center;justify-content:center;color:#fff}.campaign-popup-badge{position:absolute;top:14px;inset-inline-start:14px;background:#D4AF37;color:#152546;border-radius:999px;padding:6px 12px;font-weight:900;font-size:.82rem}.campaign-popup-close{position:absolute;top:12px;inset-inline-end:12px;width:34px;height:34px;border:0;border-radius:50%;background:rgba(255,255,255,.92);color:#152546;font-size:20px;line-height:1;cursor:pointer}.campaign-popup-body{padding:20px;text-align:start}.campaign-popup-title{margin:0 0 8px;color:#152546;font-size:1.35rem;font-weight:900}.campaign-popup-desc{margin:0;color:#516078;line-height:1.7;font-size:.96rem}.campaign-popup-actions{display:flex;gap:10px;margin-top:18px}.campaign-popup-primary{flex:1;text-align:center;text-decoration:none;border-radius:999px;background:#152546;color:#fff;padding:12px 16px;font-weight:800}.campaign-popup-secondary{border:1px solid #d9e0ec;background:#fff;color:#152546;border-radius:999px;padding:12px 16px;font-weight:800;cursor:pointer}@media(max-width:520px){.campaign-popup{border-radius:16px}.campaign-popup-media img{height:190px}.campaign-popup-actions{flex-direction:column}.campaign-popup-title{font-size:1.18rem}}
@@ -1236,6 +1236,7 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin:18px 0 6px!imp
   let dragStartY = 0;
   let dragMode = null;
   let suppressClickUntil = 0;
+  const dailyPicksById = {};
 
   function resetDrag() {
     dragMode = null;
@@ -1287,8 +1288,12 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin:18px 0 6px!imp
     try {
       const y = window.scrollY || window.pageYOffset || 0;
       const pageKey = (function(url){ try { var u = new URL(url || location.href, location.href); var path = u.pathname.replace(/\/index\.html$/i, '/').replace(/\/+$/, ''); if (!path) path = '/'; return path + (u.search || ''); } catch(err) { return String(url || location.href || ''); } })(location.href);
-      const card = link.closest && link.closest('.product-card[data-product-id]');
+      const card = link.closest && link.closest('.dp-card[data-product-id],.product-card[data-product-id]');
       const rect = card && card.getBoundingClientRect ? card.getBoundingClientRect() : null;
+      const productId = card && card.getAttribute('data-product-id');
+      const product = productId && dailyPicksById[String(productId)];
+      const imgEl = card && card.querySelector && card.querySelector('img');
+      const fastImg = imgEl && (imgEl.currentSrc || imgEl.src) || (product && (Array.isArray(product.img) ? product.img[0] : product.img));
       const positions = JSON.parse(sessionStorage.getItem('x2_scroll_positions') || '{}');
       positions[pageKey] = y;
       sessionStorage.setItem('x2_scroll_positions', JSON.stringify(positions));
@@ -1296,11 +1301,28 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin:18px 0 6px!imp
       productReturnPositions[pageKey] = y;
       sessionStorage.setItem('x2_product_return_positions', JSON.stringify(productReturnPositions));
       sessionStorage.setItem('x2_return_to_scroll_url', pageKey);
-      if (card && card.getAttribute('data-product-id')) {
+      if (productId) {
         sessionStorage.setItem('x2_product_return_target', JSON.stringify({
           url: pageKey,
-          productId: card.getAttribute('data-product-id'),
+          section: 'daily-picks',
+          productId: productId,
           offset: Math.max(8, Math.round(rect ? rect.top : 8))
+        }));
+      }
+      if (productId || product) {
+        sessionStorage.setItem('x2_quick_product', JSON.stringify({
+          id: product && (product.id || product.productId) || productId,
+          name: product && product.name || (imgEl && imgEl.alt) || '',
+          category: product && product.category,
+          img: fastImg,
+          rawImg: product && (Array.isArray(product.img) ? product.img[0] : product.img) || fastImg,
+          price: product && product.price,
+          oldPrice: product && product.oldPrice,
+          rating: product && product.rating,
+          ratingCount: product && product.ratingCount,
+          stock: product && product.stock,
+          timerEnd: product && product.timerEnd,
+          currency: product && product.currency
         }));
       }
     } catch(e) {}
@@ -1341,7 +1363,7 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin:18px 0 6px!imp
     const imgLoad = isPriority ? 'eager' : 'lazy';
     const imgPriority = isPriority ? ' fetchpriority="high"' : '';
     return `
-      <a class="dp-card" href="${link}">
+      <a class="dp-card" href="${link}" data-product-id="${p.id || p.productId || ''}">
         <img class="dp-img" src="${img}" alt="${name}" width="150" height="150" loading="${imgLoad}"${imgPriority} decoding="async" onerror="this.src='/assets/logo.png'">
         ${disc > 0 ? `<span class="dp-badge">-${disc}%</span>` : ''}
       </a>`;
@@ -1441,6 +1463,8 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin:18px 0 6px!imp
       const chosen = dailyPickList.map(id => byId[String(id)]).filter(Boolean);
 
       if (!chosen.length) { grid.innerHTML = ''; return; }
+      Object.keys(dailyPicksById).forEach(id => { delete dailyPicksById[id]; });
+      chosen.forEach(p => { dailyPicksById[String(p.id || p.productId || '')] = p; });
       grid.innerHTML = chosen.map(renderCard).join('');
       try { localStorage.setItem('x2_dp_cache', JSON.stringify({ chosen, ts: Date.now() })); } catch(e) {}
     } catch(e) {
@@ -1460,6 +1484,8 @@ body.home-immersive-header .daily-picks-section+.trust-bar{margin:18px 0 6px!imp
       if (dpCache) {
         const { chosen, ts } = JSON.parse(dpCache);
         if (Date.now() - ts < 10 * 60 * 1000 && Array.isArray(chosen) && chosen.some(p => savedDailyPicks.map(String).includes(String(p && p.id)))) {
+          Object.keys(dailyPicksById).forEach(id => { delete dailyPicksById[id]; });
+          chosen.forEach(p => { dailyPicksById[String(p.id || p.productId || '')] = p; });
           grid.innerHTML = chosen.map(renderCard).join('');
         }
       }
