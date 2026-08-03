@@ -1,13 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-PR8J7RM7');</script>
-<!-- End Google Tag Manager --><meta charset="UTF-8"><title>Generate Icon</title></head>
+<meta charset="UTF-8"><title>Generate Icon</title></head>
 <body>
 <!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PR8J7RM7"
@@ -16,58 +10,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <canvas id="c" width="512" height="512"></canvas>
 <br>
 <a id="dl" download="icon-512.png">⬇️ تحميل الأيقونة</a>
-<script>
-const c = document.getElementById('c');
-const ctx = c.getContext('2d');
-
-// خلفية كحلية مدوّرة
-ctx.beginPath();
-ctx.roundRect(0, 0, 512, 512, 80);
-ctx.fillStyle = '#152546';
-ctx.fill();
-
-// دائرة ذهبية شفافة
-ctx.beginPath();
-ctx.arc(256, 220, 150, 0, Math.PI * 2);
-ctx.fillStyle = 'rgba(212, 175, 55, 0.12)';
-ctx.fill();
-
-// نجمة بريق ذهبية
-ctx.fillStyle = '#D4AF37';
-ctx.beginPath();
-const cx = 256, cy = 210, r1 = 110, r2 = 48, pts = 8;
-for (let i = 0; i < pts * 2; i++) {
-  const angle = (i * Math.PI) / pts - Math.PI / 2;
-  const r = i % 2 === 0 ? r1 : r2;
-  const x = cx + Math.cos(angle) * r;
-  const y = cy + Math.sin(angle) * r;
-  i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-}
-ctx.closePath();
-ctx.fill();
-
-// دائرة بيضاء في المنتصف
-ctx.beginPath();
-ctx.arc(256, 210, 28, 0, Math.PI * 2);
-ctx.fillStyle = '#152546';
-ctx.fill();
-
-// كلمة "بريق" باللون الأبيض
-ctx.fillStyle = '#FFFFFF';
-ctx.font = 'bold 88px Arial, sans-serif';
-ctx.textAlign = 'center';
-ctx.textBaseline = 'middle';
-ctx.fillText('بريق', 256, 380);
-
-// خط ذهبي تحت الاسم
-ctx.fillStyle = '#D4AF37';
-ctx.beginPath();
-ctx.roundRect(156, 418, 200, 6, 3);
-ctx.fill();
-
-// تحديث رابط التحميل
-const dl = document.getElementById('dl');
-dl.href = c.toDataURL('image/png');
-</script>
+<script src="/java/generate-icon.js?v=20260803a" defer></script>
 </body>
 </html>
