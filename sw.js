@@ -1,5 +1,5 @@
 /* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v324';
+const CACHE = 'bariq-v325';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -450,6 +450,17 @@ function normalizePushNotificationData(data) {
   const rawLower = raw.toLowerCase();
   const tag = data.tag || data.id || '';
   const orderId = data.orderId || data.order_id || extractOrderIdFromNotification(raw, tag);
+  if (data.type === 'admin_new_order' || /admin_new_order|new order|طلب جديد/i.test(String(data.type || '') + ' ' + raw)) {
+    const cleanOrderId = String(orderId || '').replace(/^#/, '').trim();
+    return Object.assign({}, data, {
+      title: data.lang === 'en' ? '📦 New order from Bariq' : '📦 طلب جديد من بريق',
+      body: data.lang === 'en'
+        ? (cleanOrderId ? `New order #${cleanOrderId}\nTap to open the order` : 'New order received\nTap to open the order')
+        : (cleanOrderId ? `طلب جديد #${cleanOrderId}\nاضغط لفتح الطلب` : 'وصل طلب جديد\nاضغط لفتح الطلب'),
+      iconText: '📦',
+      emoji: '📦'
+    });
+  }
   const inferredStatus = data.status || data.orderStatus || data.order_status ||
     (/delivered|تم التوصيل|وصل بنجاح/.test(rawLower) ? 'delivered' :
     /shipped|تم شحن|في الطريق/.test(rawLower) ? 'shipped' :

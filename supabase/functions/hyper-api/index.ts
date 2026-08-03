@@ -121,6 +121,23 @@ function localizedOrderStatus(status: unknown, orderId: unknown, langValue: unkn
   return { lang, status: cleanStatus, icon: item.icon, title: `${item.icon} ${item.title}`, body: item.body };
 }
 
+function localizedAdminNewOrder(orderId: unknown, langValue: unknown) {
+  const lang = normalizeLang(langValue);
+  const cleanOrderId = String(orderId || '').replace(/^#/, '').trim();
+  if (lang === 'en') {
+    return {
+      icon: '📦',
+      title: '📦 New order from Bariq',
+      body: cleanOrderId ? `New order #${cleanOrderId}\nTap to open the order` : 'New order received\nTap to open the order',
+    };
+  }
+  return {
+    icon: '📦',
+    title: '📦 طلب جديد من بريق',
+    body: cleanOrderId ? `طلب جديد #${cleanOrderId}\nاضغط لفتح الطلب` : 'وصل طلب جديد\nاضغط لفتح الطلب',
+  };
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
@@ -210,9 +227,12 @@ Deno.serve(async (req) => {
         const orderStatusText = type === 'order_status' || status
           ? localizedOrderStatus(status, orderId || order_id, targetLang)
           : null;
-        const localizedTitle = repairMojibakeText(orderStatusText ? orderStatusText.title : (targetLang === 'en' && title_en ? title_en : title));
-        const localizedBody = repairMojibakeText(orderStatusText ? orderStatusText.body : (targetLang === 'en' && body_en ? body_en : body));
-        const localizedIcon = orderStatusText ? orderStatusText.icon : (iconText || emoji || null);
+        const adminNewOrderText = type === 'admin_new_order'
+          ? localizedAdminNewOrder(orderId || order_id, targetLang)
+          : null;
+        const localizedTitle = repairMojibakeText(adminNewOrderText ? adminNewOrderText.title : (orderStatusText ? orderStatusText.title : (targetLang === 'en' && title_en ? title_en : title)));
+        const localizedBody = repairMojibakeText(adminNewOrderText ? adminNewOrderText.body : (orderStatusText ? orderStatusText.body : (targetLang === 'en' && body_en ? body_en : body)));
+        const localizedIcon = adminNewOrderText ? adminNewOrderText.icon : (orderStatusText ? orderStatusText.icon : (iconText || emoji || null));
         const payloadStr = JSON.stringify({
           title: localizedTitle,
           body: localizedBody,
