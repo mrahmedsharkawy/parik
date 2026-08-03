@@ -4078,8 +4078,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (cached.instagram || cached.facebook || cached.tiktok || cached.wa) buildSocialBar(cached);
   } catch(e) {}
   // دايماً اجلب من Supabase عشان تاخد أحدث إعدادات
+  var sbAnon = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
   fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/settings?limit=1', {
-    headers: { apikey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E' }
+    headers: { apikey: sbAnon, Authorization: 'Bearer ' + sbAnon }
   }).then(function(r){return r.json()}).then(function(rows){
     if (rows && rows[0]) {
       var s = rows[0];

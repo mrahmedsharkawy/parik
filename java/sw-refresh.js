@@ -61,7 +61,7 @@
     if (!markRefreshed()) window.location.reload();
   });
 
-  navigator.serviceWorker.register('/sw.js?v=304', { updateViaCache: 'none' }).then(function (reg) {
+  navigator.serviceWorker.register('/sw.js?v=305', { updateViaCache: 'none' }).then(function (reg) {
     clearOldCaches();
     requestActivation(reg);
     sendPushLanguage(reg);
