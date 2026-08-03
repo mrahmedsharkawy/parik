@@ -2708,12 +2708,12 @@ async function changeOrderStatus(id, status){
           // العميل تحديداً (وليس بثاً عاماً) — استثناء الجهاز كان يمنع وصول الإشعار
           // عندما يكون الأدمن يختبر الحساب بنفس رقمه/جهازه.
           const pushPayload = {
-            title:            notif.title,
-            body:             notif.body,
+            title:            'Bariq order update',
+            body:             `${status} - #${cleanOrderNum}`,
             url:              '/account.html?section=orders',
-            type:             'order_status',
-            status:           status,
-            orderId:          orderNum,
+            type:             'order_status_' + status,
+            orderStatus:      status,
+            orderId:          cleanOrderNum,
             iconText:         notif.icon,
             emoji:            notif.icon
           };
@@ -4770,7 +4770,7 @@ async function enableAdminOrderPush() {
       adminPushSetStatus('لم يتم منح إذن الإشعارات.', false);
       return;
     }
-    const reg = await navigator.serviceWorker.register('/sw.js?v=325', { updateViaCache: 'none' });
+    const reg = await navigator.serviceWorker.register('/sw.js?v=326', { updateViaCache: 'none' });
     if (reg.update) reg.update().catch(() => {});
     await navigator.serviceWorker.ready;
     let sub = await reg.pushManager.getSubscription();

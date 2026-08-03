@@ -1,5 +1,5 @@
 /* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v325';
+const CACHE = 'bariq-v326';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -461,7 +461,8 @@ function normalizePushNotificationData(data) {
       emoji: '📦'
     });
   }
-  const inferredStatus = data.status || data.orderStatus || data.order_status ||
+  const statusFromType = String(data.type || '').match(/^order_status_([a-z_]+)$/i)?.[1] || '';
+  const inferredStatus = data.status || data.orderStatus || data.order_status || statusFromType ||
     (/delivered|تم التوصيل|وصل بنجاح/.test(rawLower) ? 'delivered' :
     /shipped|تم شحن|في الطريق/.test(rawLower) ? 'shipped' :
     /ready|جاهز/.test(rawLower) ? 'ready' :

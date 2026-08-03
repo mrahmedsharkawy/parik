@@ -1,14 +1,14 @@
 (function () {
   if (!('serviceWorker' in navigator)) return;
 
-  var REFRESH_KEY = 'sw-v325-admin-order-push-text';
+  var REFRESH_KEY = 'sw-v326-order-status-safe-payload';
   var refreshed = false;
 
   function clearOldCaches() {
     if (!('caches' in window)) return;
     caches.keys().then(function (keys) {
       keys.forEach(function (key) {
-        if (key !== 'bariq-v325') caches.delete(key).catch(function () {});
+        if (key !== 'bariq-v326') caches.delete(key).catch(function () {});
       });
     }).catch(function () {});
   }
@@ -61,7 +61,7 @@
     if (!markRefreshed()) window.location.reload();
   });
 
-  navigator.serviceWorker.register('/sw.js?v=325', { updateViaCache: 'none' }).then(function (reg) {
+  navigator.serviceWorker.register('/sw.js?v=326', { updateViaCache: 'none' }).then(function (reg) {
     clearOldCaches();
     requestActivation(reg);
     sendPushLanguage(reg);

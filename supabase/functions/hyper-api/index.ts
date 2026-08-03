@@ -224,8 +224,9 @@ Deno.serve(async (req) => {
     const results = await Promise.allSettled(
       filteredSubs.map((sub: any) => {
         const targetLang = normalizeLang(sub.user_lang || user_lang || lang);
-        const orderStatusText = type === 'order_status' || status
-          ? localizedOrderStatus(status, orderId || order_id, targetLang)
+        const statusFromType = String(type || '').match(/^order_status_([a-z_]+)$/i)?.[1] || '';
+        const orderStatusText = type === 'order_status' || status || statusFromType
+          ? localizedOrderStatus(status || statusFromType, orderId || order_id, targetLang)
           : null;
         const adminNewOrderText = type === 'admin_new_order'
           ? localizedAdminNewOrder(orderId || order_id, targetLang)
