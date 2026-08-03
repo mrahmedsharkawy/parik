@@ -126,20 +126,32 @@ function localizedAdminNewOrder(orderId: unknown, langValue: unknown, details: a
   const lang = normalizeLang(langValue);
   const cleanOrderId = String(orderId || '').replace(/^#/, '').trim();
   const customer = repairMojibakeText(details.customerName || details.customer_name || details.customer || '').trim();
+  const phone = repairMojibakeText(details.customerPhone || details.customer_phone || details.phone || '').trim();
   const product = repairMojibakeText(details.productName || details.product_name || details.product || '').trim();
   const total = repairMojibakeText(details.totalText || details.total_text || details.orderTotal || details.total || '').trim();
+  const city = repairMojibakeText(details.city || details.customerCity || details.customer_city || '').trim();
+  const payment = repairMojibakeText(details.payment || details.paymentMethod || details.payment_method || '').trim();
+  const itemCount = Number(details.itemCount || details.item_count || 0) || 0;
   const enLines = [
     cleanOrderId ? `New order #${cleanOrderId}` : 'New order received',
     customer ? `Customer: ${customer}` : '',
+    phone ? `Phone: ${phone}` : '',
     product ? `Product: ${product}` : '',
+    itemCount > 1 ? `Items: ${itemCount}` : '',
     total ? `Total: ${total}` : '',
+    city ? `City: ${city}` : '',
+    payment ? `Payment: ${payment}` : '',
     'Tap to open the order'
   ].filter(Boolean);
   const arLines = [
     cleanOrderId ? `\u0637\u0644\u0628 \u062c\u062f\u064a\u062f #${cleanOrderId}` : '\u0648\u0635\u0644 \u0637\u0644\u0628 \u062c\u062f\u064a\u062f',
     customer ? `\u0627\u0644\u0639\u0645\u064a\u0644: ${customer}` : '',
+    phone ? `\u0627\u0644\u0647\u0627\u062a\u0641: ${phone}` : '',
     product ? `\u0627\u0644\u0645\u0646\u062a\u062c: ${product}` : '',
+    itemCount > 1 ? `\u0639\u062f\u062f \u0627\u0644\u0645\u0646\u062a\u062c\u0627\u062a: ${itemCount}` : '',
     total ? `\u0627\u0644\u0645\u0628\u0644\u063a: ${total}` : '',
+    city ? `\u0627\u0644\u0645\u062f\u064a\u0646\u0629: ${city}` : '',
+    payment ? `\u0627\u0644\u062f\u0641\u0639: ${payment}` : '',
     '\u0627\u0636\u063a\u0637 \u0644\u0641\u062a\u062d \u0627\u0644\u0637\u0644\u0628'
   ].filter(Boolean);
   if (lang === 'en') {
@@ -267,15 +279,22 @@ Deno.serve(async (req) => {
           emoji: localizedIcon,
           orderId: orderId || order_id || null,
           order_id: order_id || orderId || null,
+          customerName: payload.customerName || payload.customer_name || payload.customer || null,
+          customerPhone: payload.customerPhone || payload.customer_phone || payload.phone || null,
+          productName: payload.productName || payload.product_name || payload.product || null,
+          totalText: payload.totalText || payload.total_text || payload.orderTotal || payload.total || null,
+          itemCount: payload.itemCount || payload.item_count || null,
+          city: payload.city || payload.customerCity || payload.customer_city || null,
+          payment: payload.payment || payload.paymentMethod || payload.payment_method || null,
           lang: targetLang
         });
-        const payload = new TextEncoder().encode(payloadStr);
+        const encodedPayload = new TextEncoder().encode(payloadStr);
         return webpush.sendNotification(
           {
             endpoint: sub.endpoint,
             keys: { p256dh: sub.p256dh, auth: sub.auth }
           },
-          payload,
+          encodedPayload,
           {
             // TTL طويل (24 ساعة) بدلاً من 60 ثانية — عشان لو الهاتف كان
             // غير متصل بالإنترنت أو في وضع توفير الطاقة لحظة الإرسال، تحتفظ

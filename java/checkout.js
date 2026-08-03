@@ -99,12 +99,17 @@
       const totalText = (Number(order.total) || 0).toLocaleString('en-US', { maximumFractionDigits: 2 }) + ' AED';
       const firstItem = order.items && order.items[0] || {};
       const productName = firstItem.name || firstItem.title || firstItem.productName || 'Product';
+      const itemCount = Array.isArray(order.items) ? order.items.reduce((sum, item) => sum + (Number(item.qty || item.quantity || 1) || 1), 0) : 0;
       const payload = {
         title: 'admin_new_order',
         body: `order #${order.id} - ${totalText}`,
         customerName: order.customerName || '',
+        customerPhone: order.customerPhone || (order.shipping && order.shipping.phone) || '',
         productName,
+        itemCount,
         totalText,
+        city: order.shipping && order.shipping.city || order.address && order.address.city || '',
+        payment: order.payment || '',
         url: '/admin-reports?order=' + encodeURIComponent(order.id),
         type: 'admin_new_order',
         orderId: order.id,

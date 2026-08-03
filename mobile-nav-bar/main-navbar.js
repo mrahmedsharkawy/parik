@@ -250,13 +250,20 @@ async function initMobileNav() {
         return targetUrl.origin === location.origin && normalizePath(targetUrl.pathname) === normalizePath(location.pathname);
       };
 
+      const markHomeTopLaunch = () => {
+        try {
+          sessionStorage.setItem('x2_home_nav_reload_top', '1');
+          sessionStorage.removeItem('x2_return_to_scroll_url');
+          sessionStorage.removeItem('x2_product_return_target');
+        } catch(e) {}
+      };
+
       const reloadSamePage = (link = activeLink) => {
         const url = new URL(location.href);
         url.searchParams.set('__nav_reload', String(Date.now()));
         if (link && link.getAttribute('data-key') === 'home') {
-          try {
-            sessionStorage.setItem('x2_home_nav_reload_top', '1');
-          } catch(e) {}
+          markHomeTopLaunch();
+          url.searchParams.set('__home_top', '1');
         }
         location.assign(url.href);
       };
@@ -416,6 +423,7 @@ async function initMobileNav() {
             reloadSamePage(link);
             return;
           }
+          if (link.getAttribute('data-key') === 'home') markHomeTopLaunch();
           setActiveLink(link);
           scheduleMovePillToLink(link, true);
         });

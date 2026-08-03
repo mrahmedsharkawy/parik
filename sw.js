@@ -1,5 +1,5 @@
 /* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v333';
+const CACHE = 'bariq-v334';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -453,11 +453,13 @@ function normalizePushNotificationData(data) {
   const orderId = data.orderId || data.order_id || extractOrderIdFromNotification(raw, tag);
   if (data.type === 'admin_new_order' || /admin_new_order|new order|طلب جديد/i.test(String(data.type || '') + ' ' + raw)) {
     const cleanOrderId = String(orderId || '').replace(/^#/, '').trim();
+    const fallbackBody = data.lang === 'en'
+      ? (cleanOrderId ? `New order #${cleanOrderId}\nTap to open the order` : 'New order received\nTap to open the order')
+      : (cleanOrderId ? `طلب جديد #${cleanOrderId}\nاضغط لفتح الطلب` : 'وصل طلب جديد\nاضغط لفتح الطلب');
+    const hasUsefulBody = data.body && !hasBrokenNotificationText(data.body) && !hasMojibakeText(data.body) && !/^\s*(?:order\s*#?\S+\s*-\s*[^\n]+|admin_new_order)\s*$/i.test(String(data.body));
     return Object.assign({}, data, {
       title: data.lang === 'en' ? '📦 New order from Bariq' : '📦 طلب جديد من بريق',
-      body: data.lang === 'en'
-        ? (cleanOrderId ? `New order #${cleanOrderId}\nTap to open the order` : 'New order received\nTap to open the order')
-        : (cleanOrderId ? `طلب جديد #${cleanOrderId}\nاضغط لفتح الطلب` : 'وصل طلب جديد\nاضغط لفتح الطلب'),
+      body: hasUsefulBody ? data.body : fallbackBody,
       iconText: '📦',
       emoji: '📦'
     });
