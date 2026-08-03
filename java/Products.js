@@ -972,6 +972,8 @@ function getProductRenderKey(list) {
 
 document.addEventListener("DOMContentLoaded", async function() {
     const titleEl = document.getElementById("selected-category-title"), productsContainer = document.getElementById("category-products");
+    if (/^(\/|\/index\.html)$/i.test(location.pathname) && document.getElementById("home-category-products") && document.getElementById("mhCatsStrip")) return;
+    if ((/\/categories(?:\.html)?$/i.test(location.pathname) || document.documentElement.classList.contains("occasions-category-page")) && document.getElementById("catSubGrid")) return;
     sideMenu = document.querySelector(".dropdown-content.categories-menu"), subDisplay = document.getElementById("subcategories-display");
     const categoriesContainer = document.querySelector(".categories"), filtersScroll = document.querySelector(".filters-scroll-container");
     let isNavigating = !1;

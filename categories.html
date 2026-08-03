@@ -1169,8 +1169,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     const row = createProductsRow();
     const orderedProducts = (window.sortProductsForStore || sortProductsForStore)(products);
-    const FIRST_CHUNK = 60;
-    const NEXT_CHUNK = 40;
+    const FIRST_CHUNK = 24;
+    const NEXT_CHUNK = 24;
     let shown = 0;
     let activeRow = row;
     let activeRenderer = renderCard;
@@ -1190,6 +1190,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     appendChunk(row, renderCard);
     container.appendChild(row);
     let loadingMoreProducts = false;
+    let productsUserScrolled = false;
+    let productsCanLoadMore = false;
     let lastLoadScrollY = -1;
     let lastLoadAt = 0;
     let loadMoreObserver = null;
@@ -1200,7 +1202,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     function isNearProductsEnd() {
       const rect = container.getBoundingClientRect();
       const scrollY = window.scrollY || window.pageYOffset || 0;
-      return rect.bottom <= window.innerHeight + 1200 || window.innerHeight + scrollY >= document.documentElement.scrollHeight - 1200;
+      return rect.bottom <= window.innerHeight + 700 || window.innerHeight + scrollY >= document.documentElement.scrollHeight - 700;
     }
     function observeLoadMoreSentinel() {
       if (shown >= orderedProducts.length) {
@@ -1212,19 +1214,25 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       if (!('IntersectionObserver' in window)) return;
       if (loadMoreObserver) loadMoreObserver.disconnect();
       loadMoreObserver = new IntersectionObserver(entries => {
-        if (entries[0] && entries[0].isIntersecting) loadMoreProducts(true);
-      }, { root: null, rootMargin: '0px 0px 900px 0px', threshold: 0 });
+        if (entries[0] && entries[0].isIntersecting && productsUserScrolled && productsCanLoadMore) loadMoreProducts(true);
+      }, { root: null, rootMargin: '0px 0px 700px 0px', threshold: 0 });
       loadMoreObserver.observe(loadMoreSentinel);
     }
     function loadMoreProducts(force) {
       if (loadingMoreProducts || shown >= orderedProducts.length) return;
       const scrollY = window.scrollY || window.pageYOffset || 0;
+      if (scrollY > 80) {
+        productsUserScrolled = true;
+        productsCanLoadMore = true;
+      }
+      if (!productsUserScrolled || !productsCanLoadMore) return;
       const now = Date.now();
-      if (!force && lastLoadAt && now - lastLoadAt < 1200) return;
-      if (!force && lastLoadScrollY >= 0 && Math.abs(scrollY - lastLoadScrollY) < 80) return;
+      if (lastLoadAt && now - lastLoadAt < 900) return;
+      if (lastLoadScrollY >= 0 && Math.abs(scrollY - lastLoadScrollY) < 160) return;
       if (!isNearProductsEnd()) return;
       lastLoadScrollY = scrollY;
       lastLoadAt = now;
+      productsCanLoadMore = false;
       loadingMoreProducts = true;
       requestAnimationFrame(() => {
         appendChunk(activeRow, activeRenderer);
@@ -1232,7 +1240,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         loadingMoreProducts = false;
         observeLoadMoreSentinel();
         if (shown >= orderedProducts.length) window.removeEventListener('scroll', loadMoreProducts);
-        else if (isNearProductsEnd()) requestAnimationFrame(() => loadMoreProducts(true));
       });
     }
     window.addEventListener('scroll', loadMoreProducts, { passive: true });
