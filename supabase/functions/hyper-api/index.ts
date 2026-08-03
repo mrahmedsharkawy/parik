@@ -134,23 +134,17 @@ function localizedAdminNewOrder(orderId: unknown, langValue: unknown, details: a
   const itemCount = Number(details.itemCount || details.item_count || 0) || 0;
   const enLines = [
     cleanOrderId ? `New order #${cleanOrderId}` : 'New order received',
-    customer ? `Customer: ${customer}` : '',
-    phone ? `Phone: ${phone}` : '',
-    product ? `Product: ${product}` : '',
+    `Customer: ${customer || 'Not provided'} | Product: ${product || 'Product'} | Price: ${total || 'Not provided'}`,
+    phone || city ? `Phone: ${phone || 'Not provided'}${city ? ` | City: ${city}` : ''}` : '',
     itemCount > 1 ? `Items: ${itemCount}` : '',
-    total ? `Total: ${total}` : '',
-    city ? `City: ${city}` : '',
     payment ? `Payment: ${payment}` : '',
     'Tap to open the order'
   ].filter(Boolean);
   const arLines = [
     cleanOrderId ? `\u0637\u0644\u0628 \u062c\u062f\u064a\u062f #${cleanOrderId}` : '\u0648\u0635\u0644 \u0637\u0644\u0628 \u062c\u062f\u064a\u062f',
-    customer ? `\u0627\u0644\u0639\u0645\u064a\u0644: ${customer}` : '',
-    phone ? `\u0627\u0644\u0647\u0627\u062a\u0641: ${phone}` : '',
-    product ? `\u0627\u0644\u0645\u0646\u062a\u062c: ${product}` : '',
+    `\u0627\u0644\u0639\u0645\u064a\u0644: ${customer || '\u063a\u064a\u0631 \u0645\u062a\u0648\u0641\u0631'} | \u0627\u0644\u0645\u0646\u062a\u062c: ${product || '\u0645\u0646\u062a\u062c'} | \u0627\u0644\u0633\u0639\u0631: ${total || '\u063a\u064a\u0631 \u0645\u062a\u0648\u0641\u0631'}`,
+    phone || city ? `\u0627\u0644\u0647\u0627\u062a\u0641: ${phone || '\u063a\u064a\u0631 \u0645\u062a\u0648\u0641\u0631'}${city ? ` | \u0627\u0644\u0645\u062f\u064a\u0646\u0629: ${city}` : ''}` : '',
     itemCount > 1 ? `\u0639\u062f\u062f \u0627\u0644\u0645\u0646\u062a\u062c\u0627\u062a: ${itemCount}` : '',
-    total ? `\u0627\u0644\u0645\u0628\u0644\u063a: ${total}` : '',
-    city ? `\u0627\u0644\u0645\u062f\u064a\u0646\u0629: ${city}` : '',
     payment ? `\u0627\u0644\u062f\u0641\u0639: ${payment}` : '',
     '\u0627\u0636\u063a\u0637 \u0644\u0641\u062a\u062d \u0627\u0644\u0637\u0644\u0628'
   ].filter(Boolean);

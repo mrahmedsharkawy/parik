@@ -4770,7 +4770,7 @@ async function enableAdminOrderPush() {
       adminPushSetStatus('لم يتم منح إذن الإشعارات.', false);
       return;
     }
-    const reg = await navigator.serviceWorker.register('/sw.js?v=334', { updateViaCache: 'none' });
+    const reg = await navigator.serviceWorker.register('/sw.js?v=335', { updateViaCache: 'none' });
     if (reg.update) reg.update().catch(() => {});
     await navigator.serviceWorker.ready;
     let sub = await reg.pushManager.getSubscription();
@@ -4799,12 +4799,19 @@ async function sendAdminOrderPushTest() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', apikey: ANON, Authorization: 'Bearer ' + ANON },
       body: JSON.stringify({
-        title: 'اختبار إشعارات الأدمن',
-        body: 'إذا وصل هذا الإشعار فالهاتف جاهز لاستقبال الطلبات الجديدة.',
+        title: 'admin_new_order',
+        body: 'طلب جديد #TEST-1001\nالعميل: عميل تجريبي | المنتج: هدية مخصصة | السعر: 150 AED\nاضغط لفتح الطلب',
         url: '/admin.html?tab=orders',
-        type: 'admin_push_test',
-        iconText: '📲',
-        emoji: '📲',
+        type: 'admin_new_order',
+        orderId: 'TEST-1001',
+        order_id: 'TEST-1001',
+        customerName: 'عميل تجريبي',
+        customerPhone: '+971500000000',
+        productName: 'هدية مخصصة',
+        totalText: '150 AED',
+        city: 'Dubai',
+        iconText: '📦',
+        emoji: '📦',
         user_email: ADMIN_PUSH_EMAIL
       })
     });

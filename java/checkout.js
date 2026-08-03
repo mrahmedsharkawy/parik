@@ -100,15 +100,24 @@
       const firstItem = order.items && order.items[0] || {};
       const productName = firstItem.name || firstItem.title || firstItem.productName || 'Product';
       const itemCount = Array.isArray(order.items) ? order.items.reduce((sum, item) => sum + (Number(item.qty || item.quantity || 1) || 1), 0) : 0;
+      const customerName = order.customerName || '';
+      const customerPhone = order.customerPhone || (order.shipping && order.shipping.phone) || '';
+      const city = order.shipping && order.shipping.city || order.address && order.address.city || '';
+      const adminBody = [
+        `طلب جديد #${order.id}`,
+        `العميل: ${customerName || 'غير متوفر'} | المنتج: ${productName || 'منتج'} | السعر: ${totalText}`,
+        customerPhone || city ? `الهاتف: ${customerPhone || 'غير متوفر'}${city ? ' | المدينة: ' + city : ''}` : '',
+        'اضغط لفتح الطلب'
+      ].filter(Boolean).join('\n');
       const payload = {
         title: 'admin_new_order',
-        body: `order #${order.id} - ${totalText}`,
-        customerName: order.customerName || '',
-        customerPhone: order.customerPhone || (order.shipping && order.shipping.phone) || '',
+        body: adminBody,
+        customerName,
+        customerPhone,
         productName,
         itemCount,
         totalText,
-        city: order.shipping && order.shipping.city || order.address && order.address.city || '',
+        city,
         payment: order.payment || '',
         url: '/admin-reports?order=' + encodeURIComponent(order.id),
         type: 'admin_new_order',

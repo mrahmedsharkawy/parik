@@ -1,5 +1,5 @@
 /* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v334';
+const CACHE = 'bariq-v335';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -453,13 +453,32 @@ function normalizePushNotificationData(data) {
   const orderId = data.orderId || data.order_id || extractOrderIdFromNotification(raw, tag);
   if (data.type === 'admin_new_order' || /admin_new_order|new order|طلب جديد/i.test(String(data.type || '') + ' ' + raw)) {
     const cleanOrderId = String(orderId || '').replace(/^#/, '').trim();
+    const customer = repairMojibakeText(data.customerName || data.customer_name || data.customer || '').trim();
+    const product = repairMojibakeText(data.productName || data.product_name || data.product || '').trim();
+    const total = repairMojibakeText(data.totalText || data.total_text || data.orderTotal || data.total || '').trim();
+    const phone = repairMojibakeText(data.customerPhone || data.customer_phone || data.phone || '').trim();
+    const city = repairMojibakeText(data.city || data.customerCity || data.customer_city || '').trim();
+    const detailedFallbackBody = data.lang === 'en'
+      ? [
+          cleanOrderId ? `New order #${cleanOrderId}` : 'New order received',
+          `Customer: ${customer || 'Not provided'} | Product: ${product || 'Product'} | Price: ${total || 'Not provided'}`,
+          phone || city ? `Phone: ${phone || 'Not provided'}${city ? ` | City: ${city}` : ''}` : '',
+          'Tap to open the order'
+        ].filter(Boolean).join('\n')
+      : [
+          cleanOrderId ? `طلب جديد #${cleanOrderId}` : 'وصل طلب جديد',
+          `العميل: ${customer || 'غير متوفر'} | المنتج: ${product || 'منتج'} | السعر: ${total || 'غير متوفر'}`,
+          phone || city ? `الهاتف: ${phone || 'غير متوفر'}${city ? ` | المدينة: ${city}` : ''}` : '',
+          'اضغط لفتح الطلب'
+        ].filter(Boolean).join('\n');
     const fallbackBody = data.lang === 'en'
       ? (cleanOrderId ? `New order #${cleanOrderId}\nTap to open the order` : 'New order received\nTap to open the order')
       : (cleanOrderId ? `طلب جديد #${cleanOrderId}\nاضغط لفتح الطلب` : 'وصل طلب جديد\nاضغط لفتح الطلب');
     const hasUsefulBody = data.body && !hasBrokenNotificationText(data.body) && !hasMojibakeText(data.body) && !/^\s*(?:order\s*#?\S+\s*-\s*[^\n]+|admin_new_order)\s*$/i.test(String(data.body));
+    const bodyWithDetails = customer || product || total ? detailedFallbackBody : fallbackBody;
     return Object.assign({}, data, {
       title: data.lang === 'en' ? '📦 New order from Bariq' : '📦 طلب جديد من بريق',
-      body: hasUsefulBody ? data.body : fallbackBody,
+      body: hasUsefulBody ? data.body : bodyWithDetails,
       iconText: '📦',
       emoji: '📦'
     });
