@@ -1,5 +1,5 @@
 /* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v328';
+const CACHE = 'bariq-v329';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -382,7 +382,7 @@ function extractOrderIdFromNotification(text, tag) {
 
 function hasMojibakeText(value) {
   const s = String(value || '');
-  return /(?:Ø|Ù|Ð|Ñ|Ã|Â|ðŸ|â|œ|™)/.test(s);
+  return /(?:Ø|Ù|Ð|Ñ|Ã|Â|ƒ|ðŸ|â|œ|™|€|¢|£|¤|¥|¦|§|©|«|¬|®|¯|³|µ|¼|½|¾)/.test(s);
 }
 
 const WINDOWS_1252_BYTES = {

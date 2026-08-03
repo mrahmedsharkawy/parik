@@ -53,7 +53,7 @@ function normalizeLang(value: unknown) {
 }
 
 function hasMojibakeText(value: unknown) {
-  return /(?:Ø|Ù|Ð|Ñ|Ã|Â|ðŸ|â|œ|™)/.test(String(value || ''));
+  return /(?:Ø|Ù|Ð|Ñ|Ã|Â|ƒ|ðŸ|â|œ|™|€|¢|£|¤|¥|¦|§|©|«|¬|®|¯|³|µ|¼|½|¾)/.test(String(value || ''));
 }
 
 const WINDOWS_1252_BYTES: Record<string, number> = {
