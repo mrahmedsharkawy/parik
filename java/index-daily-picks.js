@@ -7,7 +7,40 @@
   let dragStartY = 0;
   let dragMode = null;
   let suppressClickUntil = 0;
+  let autoScrollTimer = null;
+  let autoScrollDirection = 1;
+  let autoScrollPausedUntil = 0;
   const dailyPicksById = {};
+
+  function pauseAutoScroll(delay) {
+    autoScrollPausedUntil = Date.now() + (delay || 2200);
+  }
+
+  function startAutoScroll() {
+    if (autoScrollTimer) clearInterval(autoScrollTimer);
+    const isRtl = getComputedStyle(grid).direction === 'rtl';
+    autoScrollDirection = isRtl ? -1 : 1;
+    autoScrollTimer = setInterval(function() {
+      if (Date.now() < autoScrollPausedUntil || dragMode === 'x' || grid.scrollWidth <= grid.clientWidth + 2) {
+        return;
+      }
+      const maxScroll = Math.max(0, grid.scrollWidth - grid.clientWidth);
+      const next = grid.scrollLeft + autoScrollDirection;
+      if (isRtl) {
+        if (next <= -maxScroll) {
+          grid.scrollLeft = 0;
+        } else {
+          grid.scrollLeft = next;
+        }
+      } else if (next <= 0) {
+        grid.scrollLeft = maxScroll;
+      } else if (next >= maxScroll) {
+        grid.scrollLeft = 0;
+      } else {
+        grid.scrollLeft = next;
+      }
+    }, 70);
+  }
 
   function resetDrag() {
     dragMode = null;
@@ -15,6 +48,7 @@
   }
 
   grid.addEventListener('touchstart', function(e) {
+    pauseAutoScroll(2600);
     if (!e.touches || e.touches.length !== 1) return;
     dragStartX = e.touches[0].clientX;
     dragStartY = e.touches[0].clientY;
@@ -38,12 +72,40 @@
     }
   }, { passive: true });
 
-  grid.addEventListener('touchend', resetDrag, { passive: true });
-  grid.addEventListener('touchcancel', resetDrag, { passive: true });
+  grid.addEventListener('touchend', function(e) { resetDrag(e); pauseAutoScroll(1400); }, { passive: true });
+  grid.addEventListener('touchcancel', function(e) { resetDrag(e); pauseAutoScroll(1400); }, { passive: true });
+  grid.addEventListener('pointerdown', function(){ pauseAutoScroll(2600); }, { passive: true });
+  grid.addEventListener('wheel', function(){ pauseAutoScroll(1800); }, { passive: true });
 
   let lastDailyNavHref = '';
   let lastDailyNavAt = 0;
   grid.addEventListener('click', function(e) {
+    const addButton = e.target.closest && e.target.closest('.dp-add-cart');
+    if (addButton && grid.contains(addButton)) {
+      e.preventDefault();
+      e.stopPropagation();
+      const card = addButton.closest('.dp-card[data-product-id]');
+      const product = card && dailyPicksById[String(card.getAttribute('data-product-id'))];
+      try {
+        const cart = JSON.parse(localStorage.getItem('x2_cart') || '[]');
+        const productId = String(product?.id || product?.productId || card?.getAttribute('data-product-id') || '');
+        if (!productId) return;
+        const productImage = Array.isArray(product?.img) ? product.img[0] : product?.img || card?.querySelector('.dp-img')?.currentSrc || card?.querySelector('.dp-img')?.src || 'assets/logo.png';
+        const productTitle = product?.name?.ar || product?.name?.en || card?.querySelector('.dp-img')?.alt || '';
+        const productPrice = parseFloat(product?.price ?? addButton.getAttribute('data-price')) || 0;
+        const productOldPrice = parseFloat(product?.oldPrice ?? addButton.getAttribute('data-old-price')) || 0;
+        const existing = cart.find(item => String(item.id) === productId);
+        if (existing) existing.qty = (Number(existing.qty) || 1) + 1;
+        else cart.unshift({ id: productId, title: productTitle, img: productImage, priceCurrent: productPrice, priceOld: productOldPrice, qty: 1 });
+        localStorage.setItem('x2_cart', JSON.stringify(cart));
+        localStorage.setItem('x2_cart_ts', String(Date.now()));
+        const count = cart.reduce((sum, item) => sum + (Number(item.qty) || 1), 0);
+        document.querySelectorAll('.cart-count').forEach(el => { el.textContent = count; el.style.display = count ? 'flex' : 'none'; });
+        addButton.classList.add('is-added');
+        setTimeout(() => addButton.classList.remove('is-added'), 700);
+      } catch(err) {}
+      return;
+    }
     const link = e.target.closest && e.target.closest('a[href*="product.html?id="],a[href*="/product/"]');
     if (!link || !grid.contains(link)) return;
     if (Date.now() < suppressClickUntil) {
@@ -98,7 +160,7 @@
       }
     } catch(e) {}
     window.location.assign(href);
-  });
+  }, true);
 
   function renderStars(r) {
     r = parseFloat(r) || 0;
@@ -133,11 +195,21 @@
     const isPriority = idx < 4;
     const imgLoad = isPriority ? 'eager' : 'lazy';
     const imgPriority = isPriority ? ' fetchpriority="high"' : '';
+    const money = lang === 'en' ? `AED ${pr.toFixed(2)}` : `${pr.toFixed(2)} د.إ`;
+    const oldMoney = lang === 'en' ? `AED ${old.toFixed(2)}` : `${old.toFixed(2)} د.إ`;
     return `
-      <a class="dp-card" href="${link}" data-product-id="${p.id || p.productId || ''}">
-        <img class="dp-img" src="${img}" alt="${name}" width="150" height="150" loading="${imgLoad}"${imgPriority} decoding="async" data-daily-pick-img>
-        ${disc > 0 ? `<span class="dp-badge">-${disc}%</span>` : ''}
-      </a>`;
+      <article class="dp-card" data-product-id="${p.id || p.productId || ''}">
+        <a class="dp-product-link" href="${link}" aria-label="${name}">
+          <div class="dp-media">
+          <img class="dp-img" src="${img}" alt="${name}" width="180" height="180" loading="${imgLoad}"${imgPriority} decoding="async" data-daily-pick-img>
+          </div>
+          <div class="dp-pricing">
+            ${disc > 0 ? `<span class="dp-badge">-${disc}%</span>` : ''}
+            <div class="dp-price-wrap"><strong class="dp-price">${money}</strong>${disc > 0 ? `<del class="dp-old-price">${oldMoney}</del>` : ''}</div>
+          </div>
+        </a>
+        <button class="dp-add-cart" type="button" data-price="${Number.isFinite(pr) ? pr : 0}" data-old-price="${Number.isFinite(old) ? old : 0}" aria-label="${lang === 'en' ? 'Add to cart' : 'أضف للسلة'}"><span>+</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2 11h10l2-7H7M9 19a1 1 0 1 0 0 2 1 1 0 0 0 0-2m8 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2"/></svg></button>
+      </article>`;
   }
 
   async function loadDailyPicks() {
@@ -237,6 +309,7 @@
       Object.keys(dailyPicksById).forEach(id => { delete dailyPicksById[id]; });
       chosen.forEach(p => { dailyPicksById[String(p.id || p.productId || '')] = p; });
       grid.innerHTML = chosen.map(renderCard).join('');
+      startAutoScroll();
       try { localStorage.setItem('x2_dp_cache', JSON.stringify({ chosen, ts: Date.now() })); } catch(e) {}
     } catch(e) {
       if (!grid.children.length) grid.innerHTML = '';
@@ -258,6 +331,7 @@
           Object.keys(dailyPicksById).forEach(id => { delete dailyPicksById[id]; });
           chosen.forEach(p => { dailyPicksById[String(p.id || p.productId || '')] = p; });
           grid.innerHTML = chosen.map(renderCard).join('');
+          startAutoScroll();
         }
       }
     } catch(e) {}
