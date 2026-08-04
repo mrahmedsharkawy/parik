@@ -21,6 +21,15 @@
     return false;
   }
 
+  function isGtmDebugSession() {
+    try {
+      var params = new URLSearchParams(location.search);
+      return params.has('gtm_debug') || params.has('gtm_preview') || params.has('gtm_auth');
+    } catch (e) {
+      return false;
+    }
+  }
+
   function requestActivation(reg) {
     if (!reg) return;
     function skipWaitingWhenInstalled(worker) {
@@ -58,7 +67,7 @@
   navigator.serviceWorker.addEventListener('controllerchange', function () {
     if (refreshed) return;
     refreshed = true;
-    if (!markRefreshed()) window.location.reload();
+    if (!isGtmDebugSession() && !markRefreshed()) window.location.reload();
   });
 
   navigator.serviceWorker.register('/sw.js?v=335', { updateViaCache: 'none' }).then(function (reg) {
