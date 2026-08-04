@@ -100,7 +100,9 @@
         localStorage.setItem('x2_cart', JSON.stringify(cart));
         localStorage.setItem('x2_cart_ts', String(Date.now()));
         const count = cart.reduce((sum, item) => sum + (Number(item.qty) || 1), 0);
-        document.querySelectorAll('.cart-count').forEach(el => { el.textContent = count; el.style.display = count ? 'flex' : 'none'; });
+        document.querySelectorAll('.cart-count, #checkout-count').forEach(el => { el.textContent = count; el.style.display = count ? 'flex' : 'none'; });
+        document.querySelectorAll('.cart-badge').forEach(el => el.setAttribute('data-count', count ? String(count) : '0'));
+        window.dispatchEvent(new CustomEvent('x2:cart-updated', { detail: { count } }));
         addButton.classList.add('is-added');
         setTimeout(() => addButton.classList.remove('is-added'), 700);
       } catch(err) {}
