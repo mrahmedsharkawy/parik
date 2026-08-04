@@ -13,19 +13,6 @@
 
 (function(){try{var p=new URLSearchParams(location.search),u=p.get('lang'),s=localStorage.getItem('lang'),l=(u==='en'||u==='ar')?u:(s==='en'?'en':'ar'),r=(function(){try{var x=new URL(location.href),path=x.pathname.replace(/\/index\.html$/i,'/').replace(/\/+$/,'');if(!path)path='/';return sessionStorage.getItem('x2_return_to_scroll_url')===path+(x.search||'')}catch(e){return sessionStorage.getItem('x2_return_to_scroll_url')===location.href}})();localStorage.setItem('lang',l);document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';document.documentElement.classList.add('x2-home-booting');if(l==='en'&&!r)document.documentElement.classList.add('x2-i18n-pending');setTimeout(function(){document.documentElement.classList.remove('x2-i18n-pending')},1600);setTimeout(function(){document.documentElement.classList.remove('x2-home-booting')},3200)}catch(e){}})();
 
-(function(w,d,s,l,i){
-  w[l]=w[l]||[];
-  function loadGtm(){
-    if(loadGtm.done) return;
-    loadGtm.done = true;
-    w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});
-    var f=d.getElementsByTagName(s)[0], j=d.createElement(s), dl=l!='dataLayer'?'&l='+l:'';
-    j.async=true; j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
-    f.parentNode.insertBefore(j,f);
-  }
-  loadGtm();
-})(window,document,'script','dataLayer','GTM-PR8J7RM7');
-
 (function(){
   function pageKey(url){
     try {
