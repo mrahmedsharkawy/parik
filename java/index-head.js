@@ -23,9 +23,7 @@
     j.async=true; j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
     f.parentNode.insertBefore(j,f);
   }
-  ['pointerdown','keydown','touchstart'].forEach(function(evt){
-    w.addEventListener(evt, loadGtm, {once:true, passive:true});
-  });
+  loadGtm();
 })(window,document,'script','dataLayer','GTM-PR8J7RM7');
 
 (function(){
