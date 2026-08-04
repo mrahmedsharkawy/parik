@@ -36,6 +36,26 @@
     if (end && day(end) < today) return false;
     return true;
   }
+  function activeCoupon(c){
+    if (!c || c.active === false || !String(c.code || '').trim()) return false;
+    if (c.expiry && new Date(c.expiry).getTime() < Date.now()) return false;
+    const maxUse = parseInt(c.max_use, 10) || 0;
+    return !maxUse || (parseInt(c.used_count, 10) || 0) < maxUse;
+  }
+  function couponCampaign(c){
+    const code = String(c.code || '').trim().toUpperCase();
+    const discount = parseFloat(c.value) || 0;
+    const percentage = String(c.type || 'percent') === 'percent';
+    return {
+      id: 'coupon-' + (c.id || code),
+      coupon_code: code,
+      name: tr('كود خصم خاص', 'Special Discount Code'),
+      description: percentage ? tr('استخدم الكود للحصول على خصم ' + discount + '% على طلبك.', 'Use this code to get ' + discount + '% off your order.') : tr('استخدم الكود للحصول على خصم بقيمة ' + discount + ' د.إ.', 'Use this code to get ' + discount + ' AED off your order.'),
+      discount: percentage ? discount : 0,
+      end_date: c.expiry || null,
+      active: true
+    };
+  }
   function showCampaignPopup(c){
     const code = campaignCode(c);
     if (!code) return;
@@ -100,8 +120,12 @@
     try {
       if (!window.Supabase || !window.Supabase.Campaigns) return;
       const campaigns = await window.Supabase.Campaigns.getAll();
-      const campaign = (Array.isArray(campaigns) ? campaigns : []).filter(activeCampaign)[0];
-      if (campaign) showCampaignPopup(campaign);
+      const campaign = (Array.isArray(campaigns) ? campaigns : []).filter(activeCampaign).find(function(item){ return !!campaignCode(item); });
+      if (campaign) { showCampaignPopup(campaign); return; }
+      if (!window.Supabase.Coupons || typeof window.Supabase.Coupons.getActive !== 'function') return;
+      const coupons = await window.Supabase.Coupons.getActive();
+      const coupon = (Array.isArray(coupons) ? coupons : []).find(activeCoupon);
+      if (coupon) showCampaignPopup(couponCampaign(coupon));
     } catch(e) {}
   }
   function shouldSkipCampaignPopupForAudit(){
