@@ -7,39 +7,12 @@
   let dragStartY = 0;
   let dragMode = null;
   let suppressClickUntil = 0;
-  let autoScrollTimer = null;
-  let autoScrollDirection = 1;
-  let autoScrollPausedUntil = 0;
   const dailyPicksById = {};
 
-  function pauseAutoScroll(delay) {
-    autoScrollPausedUntil = Date.now() + (delay || 2200);
-  }
+  function pauseAutoScroll() {}
 
   function startAutoScroll() {
-    if (autoScrollTimer) clearInterval(autoScrollTimer);
-    const isRtl = getComputedStyle(grid).direction === 'rtl';
-    autoScrollDirection = isRtl ? -1 : 1;
-    autoScrollTimer = setInterval(function() {
-      if (Date.now() < autoScrollPausedUntil || dragMode === 'x' || grid.scrollWidth <= grid.clientWidth + 2) {
-        return;
-      }
-      const maxScroll = Math.max(0, grid.scrollWidth - grid.clientWidth);
-      const next = grid.scrollLeft + autoScrollDirection;
-      if (isRtl) {
-        if (next <= -maxScroll) {
-          grid.scrollLeft = 0;
-        } else {
-          grid.scrollLeft = next;
-        }
-      } else if (next <= 0) {
-        grid.scrollLeft = maxScroll;
-      } else if (next >= maxScroll) {
-        grid.scrollLeft = 0;
-      } else {
-        grid.scrollLeft = next;
-      }
-    }, 70);
+    // Auto-scroll intentionally disabled: strip should move by user drag only.
   }
 
   function resetDrag() {
