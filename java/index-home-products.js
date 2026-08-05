@@ -96,6 +96,19 @@
     wireSlider();
     container.addEventListener('error', function(ev){var img=ev.target;if(img&&img.matches&&img.matches('[data-home-product-img]'))img.src='/assets/logo.png'}, true);
     loadStoreSort();
+    try {
+      var immediateProducts = readFastProductsCache();
+      if (Array.isArray(immediateProducts) && immediateProducts.length) {
+        products = sortProducts(immediateProducts);
+        byId = {};
+        products.forEach(function(p){ byId[String(p.id||p.productId||'')] = p; });
+        updateAvailableTabs();
+        if (window.__x2PendingHomeCategoryLabel && !isAllLabel(window.__x2PendingHomeCategoryLabel)) selectMiddleCategory(window.__x2PendingHomeCategoryLabel);
+        else buildTrack();
+        window.__x2HomeCategorySliderRendered = true;
+        requestAnimationFrame(function(){requestAnimationFrame(releaseHomeBooting)});
+      }
+    } catch(e) {}
     function scheduleHomeTimerTick(){updateDiscountTimers();setTimeout(scheduleHomeTimerTick,Math.max(250,1020-Date.now()%1000))}
     loadProducts().then(function(list){products=sortProducts(Array.isArray(list)?list:[]);products.forEach(function(p){byId[String(p.id||p.productId||'')]=p});return loadCategoriesData()}).then(function(list){categoriesData=Array.isArray(list)?list:[];window.categoriesData=categoriesData;addNewHomeCategoryLinks(categoriesData);addNewMobileCategoryTabs(categoriesData);updateAvailableTabs();if(window.__x2PendingHomeCategoryLabel&&!isAllLabel(window.__x2PendingHomeCategoryLabel))selectMiddleCategory(window.__x2PendingHomeCategoryLabel);else buildTrack();scheduleHomeTimerTick();restoreHomeScrollPosition();window.__x2HomeCategorySliderRendered=true;requestAnimationFrame(function(){requestAnimationFrame(releaseHomeBooting)})}).catch(function(){container.innerHTML='<div class="home-products-empty">تعذر تحميل المنتجات الآن</div>';releaseHomeBooting()});
   })();
