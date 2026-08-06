@@ -234,17 +234,11 @@ async function initMobileNav() {
         const rect = navList.getBoundingClientRect();
         const navLeft = rect.left;
         const navWidth = rect.width || navList.clientWidth || 0;
+        const count = navLinks.length || 1;
+        const itemWidth = navWidth / count;
         const centers = new Map();
         navLinks.forEach((link, index) => {
-          const linkRect = link.getBoundingClientRect();
-          let centerX = linkRect.left - navLeft + (linkRect.width / 2);
-          if (!Number.isFinite(centerX) || centerX <= 0 || centerX >= navWidth) {
-            // Fallback keeps behavior stable if layout is transient during first paint.
-            const count = navLinks.length || 1;
-            const itemWidth = navWidth / count;
-            centerX = itemWidth * (index + 0.5);
-          }
-          centers.set(link, centerX);
+          centers.set(link, itemWidth * (index + 0.5));
         });
         linkMetricsCache = { centers, navLeft, navWidth };
         return linkMetricsCache;
