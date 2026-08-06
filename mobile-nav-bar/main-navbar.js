@@ -225,19 +225,23 @@ async function initMobileNav() {
       liquidPill.setAttribute('aria-hidden', 'true');
       navList.insertBefore(liquidPill, navList.firstChild);
 
-      let linkCenterCache = null;
+      let linkMetricsCache = null;
       function invalidateLinkCenters() {
-        linkCenterCache = null;
+        linkMetricsCache = null;
       }
-      function ensureLinkCenters() {
-        if (linkCenterCache) return linkCenterCache;
-        const map = new Map();
-        navLinks.forEach((link) => {
-          const item = link.closest('li') || link;
-          map.set(link, item.offsetLeft + item.offsetWidth / 2);
+      function ensureLinkMetrics() {
+        if (linkMetricsCache) return linkMetricsCache;
+        const rect = navList.getBoundingClientRect();
+        const navLeft = rect.left;
+        const navWidth = rect.width || navList.clientWidth || 0;
+        const count = navLinks.length || 1;
+        const itemWidth = navWidth / count;
+        const centers = new Map();
+        navLinks.forEach((link, index) => {
+          centers.set(link, itemWidth * (index + 0.5));
         });
-        linkCenterCache = map;
-        return map;
+        linkMetricsCache = { centers, navLeft, navWidth };
+        return linkMetricsCache;
       }
 
       let activeLink = nav.querySelector('a.active') || navLinks[0];
@@ -290,7 +294,7 @@ async function initMobileNav() {
 
       const getMetrics = (link) => {
         const pillWidth = getPillWidth();
-        const centers = ensureLinkCenters();
+        const centers = ensureLinkMetrics().centers;
         const centerX = centers.get(link);
         return {
           centerX: Number.isFinite(centerX) ? centerX : 0,
@@ -322,13 +326,15 @@ async function initMobileNav() {
       nav.__invalidateLiquidPillMetrics = invalidateLinkCenters;
 
       const findNearestLink = (clientX) => {
-        const centers = ensureLinkCenters();
+        const metrics = ensureLinkMetrics();
+        const centers = metrics.centers;
+        const localX = clientX - metrics.navLeft;
         let nearest = activeLink;
         let minDist = Infinity;
         navLinks.forEach((link) => {
           const center = centers.get(link);
           if (!Number.isFinite(center)) return;
-          const dist = Math.abs(clientX - center);
+          const dist = Math.abs(localX - center);
           if (dist < minDist) {
             minDist = dist;
             nearest = link;
@@ -403,7 +409,8 @@ async function initMobileNav() {
         const transform = liquidPill.style.transform || '';
         const match = transform.match(/translate3d\(([-\d.]+)px/);
         const isTouchLike = !!(event && (event.touches || (event.pointerType && event.pointerType !== 'mouse')));
-        const maxX = Math.max(0, navList.clientWidth - getPillWidth());
+        const metrics = ensureLinkMetrics();
+        const maxX = Math.max(0, metrics.navWidth - getPillWidth());
         dragState = {
           startX: clientX,
           startY: clientY || 0,
