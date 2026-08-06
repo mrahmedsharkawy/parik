@@ -42,8 +42,8 @@ function notificationText(row: any) {
     };
   }
   return {
-    title: 'Ø³Ù„ØªÙƒ Ù„Ø³Ù‡ Ù…Ø³ØªÙ†ÙŠØ§Ùƒ',
-    body: name ? `${name} Ù…Ø§ Ø²Ø§Ù„ ÙÙŠ Ø³Ù„ØªÙƒ. Ø£ÙƒÙ…Ù„ Ø§Ù„Ø·Ù„Ø¨ Ù‚Ø¨Ù„ Ù†ÙØ§Ø¯ Ø§Ù„ÙƒÙ…ÙŠØ©.` : `Ù„Ø¯ÙŠÙƒ ${count} Ù…Ù†ØªØ¬ ÙÙŠ Ø§Ù„Ø³Ù„Ø©. Ø£ÙƒÙ…Ù„ Ø§Ù„Ø·Ù„Ø¨ Ø§Ù„Ø¢Ù† Ù‚Ø¨Ù„ Ù†ÙØ§Ø¯ Ø§Ù„ÙƒÙ…ÙŠØ©.`,
+    title: 'سلتك لسه مستنياك',
+    body: name ? `${name} ما زال في سلتك. أكمل الطلب قبل نفاد الكمية.` : `لديك ${count} منتج في السلة. أكمل الطلب الآن قبل نفاد الكمية.`,
   };
 }
 
@@ -120,8 +120,8 @@ Deno.serve(async (req) => {
         url: '/Cart',
         image: row.first_product_image || null,
         type: 'abandoned_cart',
-        iconText: 'ðŸ›’',
-        emoji: 'ðŸ›’',
+        iconText: '🛒',
+        emoji: '🛒',
         lang,
       });
 

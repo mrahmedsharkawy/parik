@@ -1,5 +1,5 @@
 // Supabase Edge Function: send-push
-// ÙŠØ±Ø³Ù„ Web Push Notification Ù„Ø¬Ù…ÙŠØ¹ Ø§Ù„Ù…Ø´ØªØ±ÙƒÙŠÙ†
+// يرسل Web Push Notification لجميع المشتركين
 // Environment Variables needed in Supabase Dashboard:
 //   VAPID_PRIVATE_KEY
 //   VAPID_PUBLIC_KEY  = BPojY-23BXbIfa1IRkkQD3vAELjTn3nltgFBrlEIjZ3aEbphXAQvFY2E5B2R_mfikZLhGPo0lBeCedB8qoP5-SE
@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: getCorsHeaders(req) });
 
   try {
-    // Ø¬Ù„Ø¨ Ø§Ù„Ù…Ø´ØªØ±ÙƒÙŠÙ† Ù…Ù† Supabase
+    // جلب المشتركين من Supabase
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Ø¥Ø±Ø³Ø§Ù„ Ù„ÙƒÙ„ Ù…Ø´ØªØ±Ùƒ
+    // إرسال لكل مشترك
     const payload = JSON.stringify({ title, body, url: url || '/', image: image || null });
     const results = await Promise.allSettled(
       subs.map(sub =>
@@ -107,7 +107,7 @@ Deno.serve(async (req) => {
           },
           payload
         ).catch(async (err) => {
-          // Ø­Ø°Ù Ø§Ù„Ø§Ø´ØªØ±Ø§ÙƒØ§Øª Ø§Ù„Ù…Ù†ØªÙ‡ÙŠØ© (410 Gone)
+          // حذف الاشتراكات المنتهية (410 Gone)
           if (err.statusCode === 410 || err.statusCode === 404) {
             await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
           }
