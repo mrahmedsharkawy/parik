@@ -30,6 +30,18 @@
     }
   }
 
+  function disableServiceWorkerForGtmPreview() {
+    if (!isGtmDebugSession()) return false;
+    try {
+      navigator.serviceWorker.getRegistrations().then(function (regs) {
+        regs.forEach(function (reg) {
+          reg.unregister().catch(function () {});
+        });
+      }).catch(function () {});
+    } catch (e) {}
+    return true;
+  }
+
   function requestActivation(reg) {
     if (!reg) return;
     function skipWaitingWhenInstalled(worker) {
@@ -69,6 +81,9 @@
     refreshed = true;
     if (!isGtmDebugSession() && !markRefreshed()) window.location.reload();
   });
+
+  // Keep Tag Assistant preview sessions deterministic by disabling SW for debug URLs.
+  if (disableServiceWorkerForGtmPreview()) return;
 
   navigator.serviceWorker.register('/sw.js?v=335', { updateViaCache: 'none' }).then(function (reg) {
     clearOldCaches();
