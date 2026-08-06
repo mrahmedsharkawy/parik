@@ -50,14 +50,14 @@
   }
 
   if (d.readyState === 'complete' || d.readyState === 'interactive') {
-    setTimeout(boot, 1200);
+    boot();
   } else {
     d.addEventListener('DOMContentLoaded', function () {
-      setTimeout(boot, 1200);
+      boot();
     }, { once: true });
   }
 
   w.addEventListener('load', function () {
-    setTimeout(boot, 3000);
+    boot();
   }, { once: true });
 })(window, document, 'script', 'dataLayer', 'GTM-PR8J7RM7');

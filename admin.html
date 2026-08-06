@@ -5598,6 +5598,12 @@ async function saveSEO() {
     fb_pixel: $('seo-fbpixel').value || '',
     google_analytics: $('seo-ga').value || ''
   };
+  const gaId = String(seo.google_analytics || '').trim();
+  const fbId = String(seo.fb_pixel || '').trim();
+  if (gaId) localStorage.setItem('x2_ga_id', gaId);
+  else localStorage.removeItem('x2_ga_id');
+  if (fbId) localStorage.setItem('x2_fb_pixel_id', fbId);
+  else localStorage.removeItem('x2_fb_pixel_id');
   
   toast('⏳ جارٍ الحفظ...');
   try {
@@ -5613,6 +5619,8 @@ async function saveSEO() {
 async function loadSEO() {
   try {
     const settings = await window.Supabase.Settings.get();
+    if (settings.google_analytics) localStorage.setItem('x2_ga_id', String(settings.google_analytics).trim());
+    if (settings.fb_pixel) localStorage.setItem('x2_fb_pixel_id', String(settings.fb_pixel).trim());
     if ($('seo-title')) $('seo-title').value = settings.seo_title || '';
     if ($('seo-desc')) $('seo-desc').value = settings.seo_desc || '';
     if ($('seo-keywords')) $('seo-keywords').value = settings.seo_keywords || '';
@@ -5622,6 +5630,8 @@ async function loadSEO() {
   } catch(e) {
     // fallback to localStorage
     const seo = JSON.parse(localStorage.getItem('admin_seo')||'{}');
+    if (seo.google_analytics) localStorage.setItem('x2_ga_id', String(seo.google_analytics).trim());
+    if (seo.fb_pixel) localStorage.setItem('x2_fb_pixel_id', String(seo.fb_pixel).trim());
     if ($('seo-title')) $('seo-title').value = seo.seo_title || '';
     if ($('seo-desc')) $('seo-desc').value = seo.seo_desc || '';
     if ($('seo-keywords')) $('seo-keywords').value = seo.seo_keywords || '';
