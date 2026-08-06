@@ -167,7 +167,7 @@
     const link = p.id ? `product.html?id=${encodeURIComponent(p.id)}${langParam ? '&lang=en' : ''}` : 'product.html';
     const pr = parseFloat(p.price), old = parseFloat(p.oldPrice);
     const disc = (old > pr && pr > 0) ? Math.round(((old - pr) / old) * 100) : 0;
-    const isPriority = idx < 4;
+    const isPriority = idx < 1;
     const imgLoad = isPriority ? 'eager' : 'lazy';
     const imgPriority = isPriority ? ' fetchpriority="high"' : '';
     const money = lang === 'en' ? `AED ${pr.toFixed(2)}` : `${pr.toFixed(2)} د.إ`;
@@ -187,10 +187,26 @@
       </article>`;
   }
 
+  function renderDailyPicksFrom(products, dailyPickList) {
+    const byId = {};
+    (products || []).forEach(p => { byId[String(p.id)] = p; });
+    const chosen = (dailyPickList || []).map(id => byId[String(id)]).filter(Boolean);
+    if (!chosen.length) {
+      grid.innerHTML = '';
+      return false;
+    }
+    Object.keys(dailyPicksById).forEach(id => { delete dailyPicksById[id]; });
+    chosen.forEach(p => { dailyPicksById[String(p.id || p.productId || '')] = p; });
+    grid.innerHTML = chosen.map(renderCard).join('');
+    startAutoScroll();
+    try { localStorage.setItem('x2_dp_cache', JSON.stringify({ chosen, ts: Date.now() })); } catch(e) {}
+    return true;
+  }
+
   async function loadDailyPicks() {
     try {
-      // جلب المنتجات من Supabase أولاً حتى لا تظهر منتجات محذوفة من كاش قديم.
-      let products = null;
+      // ابدأ بسnapshot محلي سريع لتقليل زمن ظهور أول محتوى مرئي.
+      let products = [];
       const newestValue = p => {
         const raw = p && (p.created_at || p.createdAt || p.updated_at || p.updatedAt || p.date || p.timerEnd || '');
         const time = raw ? new Date(raw).getTime() : 0;
@@ -227,31 +243,26 @@
           else if (Date.now() - started > 1800) { clearInterval(timer); resolve(false); }
         }, 80);
       });
-      const settingsPromise = window.Supabase && window.Supabase.Settings ? window.Supabase.Settings.get().catch(function(){ return null; }) : Promise.resolve(null);
+      const hasSupabaseSettings = await new Promise(resolve => {
+        if (window.Supabase && window.Supabase.Settings) return resolve(true);
+        const started = Date.now();
+        const timer = setInterval(() => {
+          if (window.Supabase && window.Supabase.Settings) { clearInterval(timer); resolve(true); }
+          else if (Date.now() - started > 1800) { clearInterval(timer); resolve(false); }
+        }, 80);
+      });
 
-      if (hasSupabaseProducts) {
-        try {
-          const sb = await window.Supabase.Products.getAll(100000);
-          if (Array.isArray(sb)) {
-            products = sb.map(p => {
-              const imgs = [];
-              if (p.image) imgs.push(p.image);
-              if (Array.isArray(p.gallery)) p.gallery.forEach(g => { if(g && g !== p.image) imgs.push(g); });
-              return { id: p.id, name: { ar: p.name_ar||'', en: p.name_en||'' }, img: imgs, price: p.price, oldPrice: p.old_price, rating: p.rating, date: p.created_at || p.updated_at || '', created_at: p.created_at || '', updated_at: p.updated_at || '' };
-            });
-          }
-        } catch(e) {}
-      } else {
-        try {
-          const snapshot = await fetch('/java/Products.json', { cache: 'no-store' }).then(r => r.ok ? r.json() : []);
-          if (Array.isArray(snapshot) && snapshot.length) products = snapshot;
-        } catch(e) {}
-      }
+      const settingsPromise = hasSupabaseSettings ? window.Supabase.Settings.get().catch(function(){ return null; }) : Promise.resolve(null);
+
+      try {
+        const snapshot = await fetch('/java/Products.json', { cache: 'no-store' }).then(r => r.ok ? r.json() : []);
+        if (Array.isArray(snapshot) && snapshot.length) products = snapshot;
+      } catch(e) {}
 
       // إعدادات المتجر من Supabase: الترتيب + اختيارات اليوم
       let dailyPickList = [];
       try {
-        if (window.Supabase && window.Supabase.Settings) {
+        if (hasSupabaseSettings) {
           const settingsResult = await settingsPromise;
           const settings = Array.isArray(settingsResult) ? settingsResult[0] : settingsResult;
           if (settings && settings.product_sort) localStorage.setItem('x2_store_product_sort', settings.product_sort);
@@ -276,16 +287,25 @@
         return;
       }
 
-      const byId = {};
-      products.forEach(p => { byId[String(p.id)] = p; });
-      const chosen = dailyPickList.map(id => byId[String(id)]).filter(Boolean);
+      var rendered = renderDailyPicksFrom(products, dailyPickList);
+      if (!rendered) {
+        grid.innerHTML = '';
+        return;
+      }
 
-      if (!chosen.length) { grid.innerHTML = ''; return; }
-      Object.keys(dailyPicksById).forEach(id => { delete dailyPicksById[id]; });
-      chosen.forEach(p => { dailyPicksById[String(p.id || p.productId || '')] = p; });
-      grid.innerHTML = chosen.map(renderCard).join('');
-      startAutoScroll();
-      try { localStorage.setItem('x2_dp_cache', JSON.stringify({ chosen, ts: Date.now() })); } catch(e) {}
+      // تحديث صامت من Supabase بعد أول رسم حتى لا يؤخر LCP.
+      if (hasSupabaseProducts) {
+        window.Supabase.Products.getAll(100000).then(function(sb){
+          if (!Array.isArray(sb) || !sb.length) return;
+          var live = sb.map(function(p){
+            var imgs = [];
+            if (p.image) imgs.push(p.image);
+            if (Array.isArray(p.gallery)) p.gallery.forEach(function(g){ if (g && g !== p.image) imgs.push(g); });
+            return { id: p.id, name: { ar: p.name_ar||'', en: p.name_en||'' }, img: imgs, price: p.price, oldPrice: p.old_price, rating: p.rating, date: p.created_at || p.updated_at || '', created_at: p.created_at || '', updated_at: p.updated_at || '' };
+          });
+          renderDailyPicksFrom(storeSort(live), dailyPickList);
+        }).catch(function(){});
+      }
     } catch(e) {
       if (!grid.children.length) grid.innerHTML = '';
     }

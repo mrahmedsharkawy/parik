@@ -234,11 +234,17 @@ async function initMobileNav() {
         const rect = navList.getBoundingClientRect();
         const navLeft = rect.left;
         const navWidth = rect.width || navList.clientWidth || 0;
-        const count = navLinks.length || 1;
-        const itemWidth = navWidth / count;
         const centers = new Map();
         navLinks.forEach((link, index) => {
-          centers.set(link, itemWidth * (index + 0.5));
+          const linkRect = link.getBoundingClientRect();
+          let centerX = linkRect.left - navLeft + (linkRect.width / 2);
+          if (!Number.isFinite(centerX) || centerX <= 0 || centerX >= navWidth) {
+            // Fallback keeps behavior stable if layout is transient during first paint.
+            const count = navLinks.length || 1;
+            const itemWidth = navWidth / count;
+            centerX = itemWidth * (index + 0.5);
+          }
+          centers.set(link, centerX);
         });
         linkMetricsCache = { centers, navLeft, navWidth };
         return linkMetricsCache;
@@ -527,6 +533,7 @@ window.addEventListener('orientationchange', initMobileNav, { passive: true });
   let lastY = window.scrollY || window.pageYOffset || 0;
   let compact = false;
   let cssVars = null;
+  let interactionEnabled = false;
   const DELTA = 7;
   const TOP_RESET = 18;
 
@@ -603,6 +610,17 @@ window.addEventListener('orientationchange', initMobileNav, { passive: true });
     const nav = document.querySelector('.mobile-nav');
     if (!nav) return;
 
+    // Avoid automated scroll-induced layout churn (Lighthouse and passive page motion)
+    // until the user actually interacts with the page.
+    if (!interactionEnabled) {
+      if (compact) {
+        compact = false;
+        nav.classList.remove('is-compact');
+      }
+      applyCompactStyles(nav, false);
+      return;
+    }
+
     const y = window.scrollY || window.pageYOffset || 0;
     let nextCompact = compact;
 
@@ -645,9 +663,20 @@ window.addEventListener('orientationchange', initMobileNav, { passive: true });
     scheduleUpdate();
   }
 
+  function enableInteractionMode() {
+    if (interactionEnabled) return;
+    interactionEnabled = true;
+    lastY = window.scrollY || window.pageYOffset || 0;
+    scheduleUpdate();
+  }
+
   document.addEventListener('DOMContentLoaded', start, { once: true });
   window.addEventListener('load', start, { once: true });
   window.addEventListener('mobile-nav:ready', start);
+  window.addEventListener('pointerdown', enableInteractionMode, { passive: true });
+  window.addEventListener('touchstart', enableInteractionMode, { passive: true });
+  window.addEventListener('keydown', enableInteractionMode, { passive: true });
+  window.addEventListener('wheel', enableInteractionMode, { passive: true });
   window.addEventListener('scroll', scheduleUpdate, { passive: true });
   window.addEventListener('touchmove', scheduleUpdate, { passive: true });
   window.addEventListener('resize', () => { cssVars = null; scheduleUpdate(); }, { passive: true });
