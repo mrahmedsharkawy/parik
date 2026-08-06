@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Supabase Edge Function: send-push
 // يرسل Web Push Notification لجميع المشتركين
 // Environment Variables needed in Supabase Dashboard:
@@ -20,6 +21,7 @@ function getCorsHeaders(req: Request) {
   return {
     'Access-Control-Allow-Origin': ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0],
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Vary': 'Origin',
   };
 }
 

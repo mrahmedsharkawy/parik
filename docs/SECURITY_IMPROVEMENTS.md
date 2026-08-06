@@ -37,6 +37,7 @@ Replaced the static `corsHeaders` object with a dynamic `getCorsHeaders(req)` he
 - Reads the request `Origin` header.
 - Returns the origin if it is in the allow-list.
 - Falls back to `https://bariqgifts.com` for requests with no/preflight origin.
+- Adds `Vary: Origin` so caches do not serve a CORS response intended for one origin to another origin.
 
 ### Allowed Origins
 
@@ -74,6 +75,7 @@ function getCorsHeaders(req: Request) {
   return {
     'Access-Control-Allow-Origin': ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0],
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Vary': 'Origin',
   };
 }
 ```
