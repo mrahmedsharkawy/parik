@@ -234,11 +234,11 @@ async function initMobileNav() {
         const rect = navList.getBoundingClientRect();
         const navLeft = rect.left;
         const navWidth = rect.width || navList.clientWidth || 0;
-        const count = navLinks.length || 1;
-        const itemWidth = navWidth / count;
         const centers = new Map();
-        navLinks.forEach((link, index) => {
-          centers.set(link, itemWidth * (index + 0.5));
+        navLinks.forEach((link) => {
+          const linkRect = link.getBoundingClientRect();
+          const center = (linkRect.left - navLeft) + (linkRect.width / 2);
+          if (Number.isFinite(center)) centers.set(link, center);
         });
         linkMetricsCache = { centers, navLeft, navWidth };
         return linkMetricsCache;
