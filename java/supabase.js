@@ -92,6 +92,25 @@ async function sbFetch(path, opts) {
   const t = await res.text();
   return t ? JSON.parse(t) : null;
 }
+  function applyGoogleAnalyticsSetting(id) {
+    try {
+      id = String(id || localStorage.getItem("x2_ga_id") || "").trim();
+      if (!id || !/^(G|AW)-[A-Z0-9]+$/i.test(id)) return;
+      localStorage.setItem("x2_ga_id", id);
+      if (window.__x2GaInjected === id) return;
+      window.__x2GaInjected = id;
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+      if (!document.querySelector('script[src="https://www.googletagmanager.com/gtag/js?id=' + id + '"]')) {
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(id);
+        (document.head || document.documentElement).appendChild(script);
+      }
+      window.gtag('js', new Date());
+      window.gtag('config', id);
+    } catch (e) {}
+  }
 window.sbFetch = sbFetch;
 const SupaCustomers = {
     upsert: async function (c) {
@@ -246,7 +265,9 @@ const SupaCustomers = {
       var r = await sbFetch("settings?limit=1", { forceAnon: true }).catch(function () {
         return [];
       });
-      return r && r[0] ? r[0] : {};
+      var settings = r && r[0] ? r[0] : {};
+      applyGoogleAnalyticsSetting(settings.google_analytics);
+      return settings;
     },
     save: async function (obj) {
       var cur = await this.get();
@@ -485,6 +506,7 @@ const SupaCustomers = {
         return (
           s.whatsapp && localStorage.setItem("x2_wa_phone", s.whatsapp),
           s.currency && localStorage.setItem("currency", s.currency),
+          applyGoogleAnalyticsSetting(s.google_analytics),
           s
         );
       } catch (e) {

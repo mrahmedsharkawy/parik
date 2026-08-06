@@ -167,9 +167,9 @@
     const link = p.id ? `product.html?id=${encodeURIComponent(p.id)}${langParam ? '&lang=en' : ''}` : 'product.html';
     const pr = parseFloat(p.price), old = parseFloat(p.oldPrice);
     const disc = (old > pr && pr > 0) ? Math.round(((old - pr) / old) * 100) : 0;
-    const isPriority = idx < 4;
+    const isPriority = idx < 1;
     const imgLoad = isPriority ? 'eager' : 'lazy';
-    const imgPriority = isPriority ? ' fetchpriority="high"' : '';
+    const imgPriority = '';
     const money = lang === 'en' ? `AED ${pr.toFixed(2)}` : `${pr.toFixed(2)} د.إ`;
     const oldMoney = lang === 'en' ? `AED ${old.toFixed(2)}` : `${old.toFixed(2)} د.إ`;
     return `
