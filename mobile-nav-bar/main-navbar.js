@@ -225,6 +225,21 @@ async function initMobileNav() {
       liquidPill.setAttribute('aria-hidden', 'true');
       navList.insertBefore(liquidPill, navList.firstChild);
 
+      let linkCenterCache = null;
+      function invalidateLinkCenters() {
+        linkCenterCache = null;
+      }
+      function ensureLinkCenters() {
+        if (linkCenterCache) return linkCenterCache;
+        const map = new Map();
+        navLinks.forEach((link) => {
+          const item = link.closest('li') || link;
+          map.set(link, item.offsetLeft + item.offsetWidth / 2);
+        });
+        linkCenterCache = map;
+        return map;
+      }
+
       let activeLink = nav.querySelector('a.active') || navLinks[0];
       let dragState = null;
       let suppressPillClick = false;
@@ -275,9 +290,10 @@ async function initMobileNav() {
 
       const getMetrics = (link) => {
         const pillWidth = getPillWidth();
-        const item = link.closest('li') || link;
+        const centers = ensureLinkCenters();
+        const centerX = centers.get(link);
         return {
-          centerX: item.offsetLeft + item.offsetWidth / 2,
+          centerX: Number.isFinite(centerX) ? centerX : 0,
           width: pillWidth
         };
       };
@@ -303,13 +319,15 @@ async function initMobileNav() {
         if (dragState) return;
         scheduleMovePillToLink(activeLink, animate);
       };
+      nav.__invalidateLiquidPillMetrics = invalidateLinkCenters;
 
       const findNearestLink = (clientX) => {
+        const centers = ensureLinkCenters();
         let nearest = activeLink;
         let minDist = Infinity;
         navLinks.forEach((link) => {
-          const rect = link.getBoundingClientRect();
-          const center = rect.left + rect.width / 2;
+          const center = centers.get(link);
+          if (!Number.isFinite(center)) return;
           const dist = Math.abs(clientX - center);
           if (dist < minDist) {
             minDist = dist;
@@ -319,8 +337,7 @@ async function initMobileNav() {
         return nearest;
       };
 
-      const clampPillX = (x) => {
-        const max = Math.max(0, navList.clientWidth - getPillWidth());
+      const clampPillX = (x, max) => {
         return Math.min(Math.max(0, x), max);
       };
 
@@ -340,7 +357,7 @@ async function initMobileNav() {
           dragState.locked = true;
         }
 
-        const nextX = clampPillX(dragState.startTranslateX + dx);
+          const nextX = clampPillX(dragState.startTranslateX + dx, dragState.maxX);
   dragState.lastX = clientX;
         liquidPill.style.transition = 'none';
         const pull = Math.min(Math.abs(dx) / 220, 0.12);
@@ -386,11 +403,13 @@ async function initMobileNav() {
         const transform = liquidPill.style.transform || '';
         const match = transform.match(/translate3d\(([-\d.]+)px/);
         const isTouchLike = !!(event && (event.touches || (event.pointerType && event.pointerType !== 'mouse')));
+        const maxX = Math.max(0, navList.clientWidth - getPillWidth());
         dragState = {
           startX: clientX,
           startY: clientY || 0,
           lastX: clientX,
           startTranslateX: match ? Number(match[1]) : 0,
+          maxX,
           locked: false,
           moved: false,
           isTouchLike
@@ -430,7 +449,10 @@ async function initMobileNav() {
       });
 
       scheduleMovePillToLink(activeLink, false);
-      window.addEventListener('resize', () => scheduleMovePillToLink(activeLink, false), { passive: true });
+      window.addEventListener('resize', () => {
+        invalidateLinkCenters();
+        scheduleMovePillToLink(activeLink, false);
+      }, { passive: true });
     }
 
     // -- ???? ????? --------------------------------------------------
@@ -531,7 +553,7 @@ window.addEventListener('orientationchange', initMobileNav, { passive: true });
     const isSmall = window.innerWidth <= 420;
     if (!cssVars) cssVars = readCssVars();
 
-    if (cache.lastCompact === isCompact && cache.lastSmall === isSmall) return;
+    if (cache.lastCompact === isCompact && cache.lastSmall === isSmall) return false;
 
     const normal = isSmall
       ? { left: '12px', right: '12px', bottom: cssVars.normalBottom, height: '55px', radius: '31px', ulPadding: '3px 7px', ulGap: '5px', itemMin: '46px', icon: '23px' }
@@ -567,6 +589,7 @@ window.addEventListener('orientationchange', initMobileNav, { passive: true });
 
     cache.lastCompact = isCompact;
     cache.lastSmall = isSmall;
+    return true;
   }
 
   function updateCompact() {
@@ -589,9 +612,12 @@ window.addEventListener('orientationchange', initMobileNav, { passive: true });
       else nav.classList.remove('is-compact');
     }
 
-    applyCompactStyles(nav, compact);
-    if (typeof nav.__updateLiquidPillPosition === 'function') {
-      window.requestAnimationFrame(() => nav.__updateLiquidPillPosition(false));
+    const didChangeLayout = applyCompactStyles(nav, compact);
+    if (didChangeLayout) {
+      if (typeof nav.__invalidateLiquidPillMetrics === 'function') nav.__invalidateLiquidPillMetrics();
+      if (typeof nav.__updateLiquidPillPosition === 'function') {
+        window.requestAnimationFrame(() => nav.__updateLiquidPillPosition(false));
+      }
     }
 
     lastY = y;
