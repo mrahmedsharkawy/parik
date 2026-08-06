@@ -11,6 +11,17 @@
 
 (function(){
   try {
+    var params = new URLSearchParams(location.search);
+    var auth = params.get('gtm_auth');
+    if (auth !== 'testauth') return;
+    try { sessionStorage.removeItem('x2_gtm_preview_qs'); } catch (e) {}
+    ['gtm_debug', 'gtm_preview', 'gtm_auth', 'gtm_cookies_win'].forEach(function(key){ params.delete(key); });
+    history.replaceState(history.state, '', location.pathname + (params.toString() ? ('?' + params.toString()) : '') + location.hash);
+  } catch (e) {}
+})();
+
+(function(){
+  try {
     function pageKey(url){
       try {
         var u = new URL(url || location.href, location.href);
@@ -151,6 +162,48 @@
     }
     return nativeFetch(input, init);
   };
+})();
+
+(function(){
+  function imageUrl(src){
+    try {
+      if (!src) return '';
+      var value = String(src);
+      if (/\/storage\/v1\/object\/public\/products\//.test(value) && !/\/storage\/v1\/render\/image\//.test(value)) {
+        var u = new URL(value, location.origin);
+        u.pathname = u.pathname.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/');
+        u.searchParams.set('width', '750');
+        u.searchParams.set('height', '750');
+        u.searchParams.set('resize', 'cover');
+        u.searchParams.set('quality', '70');
+        return u.href;
+      }
+      return new URL(value, location.origin).href;
+    } catch (e) {
+      return '';
+    }
+  }
+  try {
+    var raw = sessionStorage.getItem('x2_prods_ss_v4') || localStorage.getItem('x2_products_cache_v3');
+    if (!raw) return;
+    var parsed = JSON.parse(raw);
+    var list = parsed && Array.isArray(parsed.data) ? parsed.data : [];
+    if (!list.length) return;
+    var seen = {};
+    for (var i = 0; i < list.length && i < 4; i++) {
+      var item = list[i] || {};
+      var img = Array.isArray(item.img) ? item.img[0] : item.img;
+      var href = imageUrl(img);
+      if (!href || seen[href]) continue;
+      seen[href] = true;
+      var link = document.createElement('link');
+      link.rel = 'preload';
+      link.as = 'image';
+      link.href = href;
+      if (i === 0) link.setAttribute('fetchpriority', 'high');
+      document.head.appendChild(link);
+    }
+  } catch (e) {}
 })();
 
 (function(){

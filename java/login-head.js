@@ -14,17 +14,6 @@
   } catch (e) {}
 })();
 
-(function (w, d, s, l, i) {
-  w[l] = w[l] || [];
-  w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
-  var firstScript = d.getElementsByTagName(s)[0];
-  var tag = d.createElement(s);
-  var dataLayer = l !== 'dataLayer' ? '&l=' + l : '';
-  tag.async = true;
-  tag.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dataLayer;
-  firstScript.parentNode.insertBefore(tag, firstScript);
-})(window, document, 'script', 'dataLayer', 'GTM-PR8J7RM7');
-
 document.addEventListener('DOMContentLoaded', function () {
   document.addEventListener('click', function (event) {
     var mobileSearch = event.target.closest('[data-login-mobile-search]');
