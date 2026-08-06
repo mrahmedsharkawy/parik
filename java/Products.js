@@ -383,24 +383,26 @@ export async function fetchProducts(forceFresh) {
     try {
         invalidateTs = parseInt(localStorage.getItem("x2_products_updated") || "0", 10);
     } catch (e) {}
-    if (!forceFresh) {
-        const instant = readImmediateProductsCache(invalidateTs);
-        if (instant && Array.isArray(instant.data) && instant.data.length) {
-            _productsCache = sortProductsForStore(instant.data), _productsCacheTs = instant.ts;
-            refreshProductsInBackground();
-            ensureStoreProductSortLoaded(false);
-            return _productsCache;
-        }
-    }
     await ensureStoreProductSortLoaded(forceFresh);
-    const canUseSupabaseProducts = await waitForSupabaseProducts(forceFresh ? 1800 : 350);
-    if (!forceFresh) {
-        if (!canUseSupabaseProducts) {
-            const instant = readImmediateProductsCache(invalidateTs);
-            if (instant && Array.isArray(instant.data) && instant.data.length) return _productsCache = sortProductsForStore(instant.data), _productsCacheTs = instant.ts, _productsCache;
+    const canUseSupabaseProducts = await waitForSupabaseProducts(2500);
+    let staleCache = null;
+    if (canUseSupabaseProducts) {
+        try {
+            const sbProds = await window.Supabase.Products.getAll(100000);
+            if (Array.isArray(sbProds)) {
+                const liveProducts = mapSupabaseProducts(sbProds);
+                if (_productsCache = sortProductsForStore(liveProducts), _productsCache.length > 0) {
+                    _productsCacheTs = Date.now();
+                    saveProductsCache(_productsCache, _productsCacheTs);
+                } else try {
+                    sessionStorage.removeItem(PRODUCTS_SESSION_CACHE_KEY), localStorage.removeItem(PRODUCTS_LOCAL_CACHE_KEY);
+                } catch (e) {}
+                return _productsCache;
+            }
+        } catch (e) {
+            if (forceFresh) return [];
         }
     }
-    let staleCache = null;
     if (!forceFresh && !canUseSupabaseProducts) {
         try {
             const obj = readProductsCache(sessionStorage, PRODUCTS_SESSION_CACHE_KEY, invalidateTs, 6e5);
@@ -419,24 +421,8 @@ export async function fetchProducts(forceFresh) {
     } catch (e) {}
     const snapshot = canUseSupabaseProducts ? [] : await fetchProductsSnapshot();
     try {
-        if (canUseSupabaseProducts) {
-            const sbProds = await window.Supabase.Products.getAll(100000);
-            if (Array.isArray(sbProds)) {
-                const liveProducts = mapSupabaseProducts(sbProds);
-                if (_productsCache = sortProductsForStore(liveProducts), _productsCache.length > 0) {
-                    _productsCacheTs = Date.now();
-                    saveProductsCache(_productsCache, _productsCacheTs);
-                } else try {
-                    sessionStorage.removeItem(PRODUCTS_SESSION_CACHE_KEY), localStorage.removeItem(PRODUCTS_LOCAL_CACHE_KEY);
-                } catch (e) {}
-                return _productsCache;
-            }
-        }
-    } catch (e) {
         if (canUseSupabaseProducts) return [];
-        if (snapshot.length) return _productsCache = snapshot, _productsCacheTs = Date.now(), saveProductsCache(_productsCache, _productsCacheTs), refreshProductsInBackground(), _productsCache;
-        if (staleCache && staleCache.length > 0) return _productsCache = sortProductsForStore(staleCache), _productsCache;
-    }
+    } catch (e) {}
     if (snapshot.length) return _productsCache = snapshot, _productsCacheTs = Date.now(), saveProductsCache(_productsCache, _productsCacheTs), refreshProductsInBackground(), _productsCache;
     if (!canUseSupabaseProducts && staleCache && staleCache.length > 0) return _productsCache = sortProductsForStore(staleCache), _productsCache;
     return [];
