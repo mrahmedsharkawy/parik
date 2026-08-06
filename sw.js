@@ -235,6 +235,10 @@ self.addEventListener('activate', function(e) {
 
 self.addEventListener('fetch', function(e) {
   const url = e.request.url;
+  const requestUrl = new URL(url);
+  if (requestUrl.searchParams.has('gtm_debug') || requestUrl.searchParams.has('gtm_preview') || requestUrl.searchParams.has('gtm_auth') || requestUrl.searchParams.has('gtm_cookies_win')) {
+    return;
+  }
   if (url.includes('ipapi.co/json')) {
     e.respondWith(new Response(JSON.stringify({}), {
       status: 200,
