@@ -1,6 +1,6 @@
 // @ts-nocheck
 // Supabase Edge Function: send-push
-// يرسل Web Push Notification لجميع المشتركين
+// ÙŠØ±Ø³Ù„ Web Push Notification Ù„Ø¬Ù…ÙŠØ¹ Ø§Ù„Ù…Ø´ØªØ±ÙƒÙŠÙ†
 // Environment Variables needed in Supabase Dashboard:
 //   VAPID_PRIVATE_KEY
 //   VAPID_PUBLIC_KEY  = BPojY-23BXbIfa1IRkkQD3vAELjTn3nltgFBrlEIjZ3aEbphXAQvFY2E5B2R_mfikZLhGPo0lBeCedB8qoP5-SE
@@ -9,10 +9,20 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import webpush from 'npm:web-push@3.6.7';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+// Security improvement: restrict CORS to bariqgifts.com domains only
+const ALLOWED_ORIGINS = [
+  'https://bariqgifts.com',
+  'https://www.bariqgifts.com',
+  'https://admin.bariqgifts.com',
+];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get('origin') || '';
+  return {
+    'Access-Control-Allow-Origin': ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0],
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  };
+}
 
 function bearerToken(req: Request) {
   const header = req.headers.get('authorization') || '';
@@ -97,26 +107,26 @@ function localizedOrderStatus(status: unknown, orderId: unknown, langValue: unkn
   const orderAr = cleanOrderId ? ` \u0631\u0642\u0645 ${cleanOrderId}` : '';
   const orderEn = cleanOrderId ? ` #${cleanOrderId.replace(/^#/, '')}` : '';
   const ar: Record<string, { icon: string; title: string; body: string }> = {
-    pending:       { icon: '⏳', title: '\u0637\u0644\u0628\u0643 \u0642\u064a\u062f \u0627\u0644\u0645\u0631\u0627\u062c\u0639\u0629',      body: `\u0637\u0644\u0628\u0643${orderAr} \u064a\u064f\u0631\u0627\u062c\u064e\u0639 \u0627\u0644\u0622\u0646` },
-    processing:    { icon: '🔄', title: '\u0637\u0644\u0628\u0643 \u0642\u064a\u062f \u0627\u0644\u0645\u0639\u0627\u0644\u062c\u0629',      body: `\u062c\u0627\u0631\u064d \u062a\u062c\u0647\u064a\u0632 \u0637\u0644\u0628\u0643${orderAr}` },
-    confirmed:     { icon: '✅', title: '\u062a\u0645 \u062a\u0623\u0643\u064a\u062f \u0637\u0644\u0628\u0643',           body: `\u0637\u0644\u0628\u0643${orderAr} \u062a\u0645 \u062a\u0623\u0643\u064a\u062f\u0647 \u0648\u0633\u064a\u064f\u062c\u0647\u0651\u0632 \u0642\u0631\u064a\u0628\u0627\u064b 🎉` },
-    manufacturing: { icon: '🔨', title: '\u0637\u0644\u0628\u0643 \u0641\u064a \u0645\u0631\u062d\u0644\u0629 \u0627\u0644\u062a\u0635\u0646\u064a\u0639',  body: `\u0637\u0644\u0628\u0643${orderAr} \u064a\u064f\u0635\u0646\u0651\u0639 \u0627\u0644\u0622\u0646 \u0628\u0639\u0646\u0627\u064a\u0629 ✨` },
-    ready:         { icon: '🎁', title: '\u0637\u0644\u0628\u0643 \u062c\u0627\u0647\u0632 \u0644\u0644\u0627\u0633\u062a\u0644\u0627\u0645',     body: `\u0637\u0644\u0628\u0643${orderAr} \u062c\u0627\u0647\u0632 \u0648\u0628\u0627\u0646\u062a\u0638\u0627\u0631\u0643 🎉` },
-    shipped:       { icon: '🚚', title: '\u062a\u0645 \u0634\u062d\u0646 \u0637\u0644\u0628\u0643',            body: `\u0637\u0644\u0628\u0643${orderAr} \u0641\u064a \u0627\u0644\u0637\u0631\u064a\u0642 \u0625\u0644\u064a\u0643` },
-    delivered:     { icon: '✅', title: '\u062a\u0645 \u062a\u0648\u0635\u064a\u0644 \u0637\u0644\u0628\u0643',          body: `\u0637\u0644\u0628\u0643${orderAr} \u0648\u0635\u0644 \u0628\u0646\u062c\u0627\u062d 🎉` },
-    cancelled:     { icon: '❌', title: '\u062a\u0645 \u0625\u0644\u063a\u0627\u0621 \u0637\u0644\u0628\u0643',          body: `\u0637\u0644\u0628\u0643${orderAr} \u062a\u0645 \u0625\u0644\u063a\u0627\u0624\u0647` },
-    returned:      { icon: '↩️', title: '\u062a\u0645\u062a \u0639\u0645\u0644\u064a\u0629 \u0627\u0644\u0625\u0631\u062c\u0627\u0639',       body: `\u062a\u0645\u062a \u0645\u0639\u0627\u0644\u062c\u0629 \u0625\u0631\u062c\u0627\u0639 \u0637\u0644\u0628\u0643${orderAr}` },
+    pending:       { icon: 'â³', title: '\u0637\u0644\u0628\u0643 \u0642\u064a\u062f \u0627\u0644\u0645\u0631\u0627\u062c\u0639\u0629',      body: `\u0637\u0644\u0628\u0643${orderAr} \u064a\u064f\u0631\u0627\u062c\u064e\u0639 \u0627\u0644\u0622\u0646` },
+    processing:    { icon: 'ðŸ”„', title: '\u0637\u0644\u0628\u0643 \u0642\u064a\u062f \u0627\u0644\u0645\u0639\u0627\u0644\u062c\u0629',      body: `\u062c\u0627\u0631\u064d \u062a\u062c\u0647\u064a\u0632 \u0637\u0644\u0628\u0643${orderAr}` },
+    confirmed:     { icon: 'âœ…', title: '\u062a\u0645 \u062a\u0623\u0643\u064a\u062f \u0637\u0644\u0628\u0643',           body: `\u0637\u0644\u0628\u0643${orderAr} \u062a\u0645 \u062a\u0623\u0643\u064a\u062f\u0647 \u0648\u0633\u064a\u064f\u062c\u0647\u0651\u0632 \u0642\u0631\u064a\u0628\u0627\u064b ðŸŽ‰` },
+    manufacturing: { icon: 'ðŸ”¨', title: '\u0637\u0644\u0628\u0643 \u0641\u064a \u0645\u0631\u062d\u0644\u0629 \u0627\u0644\u062a\u0635\u0646\u064a\u0639',  body: `\u0637\u0644\u0628\u0643${orderAr} \u064a\u064f\u0635\u0646\u0651\u0639 \u0627\u0644\u0622\u0646 \u0628\u0639\u0646\u0627\u064a\u0629 âœ¨` },
+    ready:         { icon: 'ðŸŽ', title: '\u0637\u0644\u0628\u0643 \u062c\u0627\u0647\u0632 \u0644\u0644\u0627\u0633\u062a\u0644\u0627\u0645',     body: `\u0637\u0644\u0628\u0643${orderAr} \u062c\u0627\u0647\u0632 \u0648\u0628\u0627\u0646\u062a\u0638\u0627\u0631\u0643 ðŸŽ‰` },
+    shipped:       { icon: 'ðŸšš', title: '\u062a\u0645 \u0634\u062d\u0646 \u0637\u0644\u0628\u0643',            body: `\u0637\u0644\u0628\u0643${orderAr} \u0641\u064a \u0627\u0644\u0637\u0631\u064a\u0642 \u0625\u0644\u064a\u0643` },
+    delivered:     { icon: 'âœ…', title: '\u062a\u0645 \u062a\u0648\u0635\u064a\u0644 \u0637\u0644\u0628\u0643',          body: `\u0637\u0644\u0628\u0643${orderAr} \u0648\u0635\u0644 \u0628\u0646\u062c\u0627\u062d ðŸŽ‰` },
+    cancelled:     { icon: 'âŒ', title: '\u062a\u0645 \u0625\u0644\u063a\u0627\u0621 \u0637\u0644\u0628\u0643',          body: `\u0637\u0644\u0628\u0643${orderAr} \u062a\u0645 \u0625\u0644\u063a\u0627\u0624\u0647` },
+    returned:      { icon: 'â†©ï¸', title: '\u062a\u0645\u062a \u0639\u0645\u0644\u064a\u0629 \u0627\u0644\u0625\u0631\u062c\u0627\u0639',       body: `\u062a\u0645\u062a \u0645\u0639\u0627\u0644\u062c\u0629 \u0625\u0631\u062c\u0627\u0639 \u0637\u0644\u0628\u0643${orderAr}` },
   };
   const en: Record<string, { icon: string; title: string; body: string }> = {
-    pending:       { icon: '⏳', title: 'Your order is under review',    body: `Your order${orderEn} is being reviewed` },
-    processing:    { icon: '🔄', title: 'Your order is being processed', body: `We are preparing your order${orderEn}` },
-    confirmed:     { icon: '✅', title: 'Your order is confirmed',       body: `Your order${orderEn} has been confirmed and will be prepared soon 🎉` },
-    manufacturing: { icon: '🔨', title: 'Your order is in production',   body: `Your order${orderEn} is being carefully made ✨` },
-    ready:         { icon: '🎁', title: 'Your order is ready',           body: `Your order${orderEn} is ready and waiting for you 🎉` },
-    shipped:       { icon: '🚚', title: 'Your order has shipped',        body: `Your order${orderEn} is on its way to you` },
-    delivered:     { icon: '✅', title: 'Your order was delivered',      body: `Your order${orderEn} was delivered successfully 🎉` },
-    cancelled:     { icon: '❌', title: 'Your order was cancelled',      body: `Your order${orderEn} was cancelled` },
-    returned:      { icon: '↩️', title: 'Return processed',              body: `The return for your order${orderEn} has been processed` },
+    pending:       { icon: 'â³', title: 'Your order is under review',    body: `Your order${orderEn} is being reviewed` },
+    processing:    { icon: 'ðŸ”„', title: 'Your order is being processed', body: `We are preparing your order${orderEn}` },
+    confirmed:     { icon: 'âœ…', title: 'Your order is confirmed',       body: `Your order${orderEn} has been confirmed and will be prepared soon ðŸŽ‰` },
+    manufacturing: { icon: 'ðŸ”¨', title: 'Your order is in production',   body: `Your order${orderEn} is being carefully made âœ¨` },
+    ready:         { icon: 'ðŸŽ', title: 'Your order is ready',           body: `Your order${orderEn} is ready and waiting for you ðŸŽ‰` },
+    shipped:       { icon: 'ðŸšš', title: 'Your order has shipped',        body: `Your order${orderEn} is on its way to you` },
+    delivered:     { icon: 'âœ…', title: 'Your order was delivered',      body: `Your order${orderEn} was delivered successfully ðŸŽ‰` },
+    cancelled:     { icon: 'âŒ', title: 'Your order was cancelled',      body: `Your order${orderEn} was cancelled` },
+    returned:      { icon: 'â†©ï¸', title: 'Return processed',              body: `The return for your order${orderEn} has been processed` },
   };
   const item = (lang === 'en' ? en : ar)[cleanStatus] || (lang === 'en' ? en.processing : ar.processing);
   return { lang, status: cleanStatus, icon: item.icon, title: `${item.icon} ${item.title}`, body: item.body };
@@ -150,27 +160,27 @@ function localizedAdminNewOrder(orderId: unknown, langValue: unknown, details: a
   ].filter(Boolean);
   if (lang === 'en') {
     return {
-      icon: '📦',
-      title: '📦 New order from Bariq',
+      icon: 'ðŸ“¦',
+      title: 'ðŸ“¦ New order from Bariq',
       body: enLines.join('\n'),
     };
   }
   return {
-    icon: '📦',
-    title: '📦 طلب جديد من بريق',
+    icon: 'ðŸ“¦',
+    title: 'ðŸ“¦ Ø·Ù„Ø¨ Ø¬Ø¯ÙŠØ¯ Ù…Ù† Ø¨Ø±ÙŠÙ‚',
     body: arLines.join('\n'),
   };
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: getCorsHeaders(req) });
 
   try {
     const payload = await req.json();
     const { title, body, title_en, body_en, url, image, user_phone, user_email, exclude_endpoint, type, status, iconText, emoji, orderId, order_id, lang, user_lang } = payload;
     if (!title || !body) {
       return new Response(JSON.stringify({ error: 'title and body required' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        status: 400, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
       });
     }
 
@@ -179,13 +189,13 @@ Deno.serve(async (req) => {
     const VAPID_EMAIL   = Deno.env.get('VAPID_EMAIL')       || 'mailto:admin@bariq.store';
     if (!VAPID_PRIVATE) {
       return new Response(JSON.stringify({ error: 'Missing VAPID_PRIVATE_KEY' }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        status: 500, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
       });
     }
 
     webpush.setVapidDetails(VAPID_EMAIL, VAPID_PUBLIC, VAPID_PRIVATE);
 
-    // جلب المشتركين من Supabase
+    // Ø¬Ù„Ø¨ Ø§Ù„Ù…Ø´ØªØ±ÙƒÙŠÙ† Ù…Ù† Supabase
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -194,11 +204,11 @@ Deno.serve(async (req) => {
     const publicNewOrder = isAllowedPublicNewOrder(payload);
     if (!publicNewOrder && !(await requireAdmin(req, supabase))) {
       return new Response(JSON.stringify({ error: 'Admin authorization required' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        status: 401, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
       });
     }
 
-    // إذا تم تمرير هوية عميل، نجمع الاشتراكات بالهاتف + الإيميل معاً لزيادة احتمال الوصول
+    // Ø¥Ø°Ø§ ØªÙ… ØªÙ…Ø±ÙŠØ± Ù‡ÙˆÙŠØ© Ø¹Ù…ÙŠÙ„ØŒ Ù†Ø¬Ù…Ø¹ Ø§Ù„Ø§Ø´ØªØ±Ø§ÙƒØ§Øª Ø¨Ø§Ù„Ù‡Ø§ØªÙ + Ø§Ù„Ø¥ÙŠÙ…ÙŠÙ„ Ù…Ø¹Ø§Ù‹ Ù„Ø²ÙŠØ§Ø¯Ø© Ø§Ø­ØªÙ…Ø§Ù„ Ø§Ù„ÙˆØµÙˆÙ„
     const pickByIdentity = Boolean(user_phone || user_email);
     let subs: any[] = [];
     if (pickByIdentity) {
@@ -230,18 +240,18 @@ Deno.serve(async (req) => {
     }
     if (!subs || subs.length === 0) {
       return new Response(JSON.stringify({ sent: 0, message: pickByIdentity ? 'No subscribers for this customer' : 'No subscribers' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
       });
     }
 
-    // إرسال لكل مشترك (مع استبعاد جهاز الأدمن لو أُرسل)
+    // Ø¥Ø±Ø³Ø§Ù„ Ù„ÙƒÙ„ Ù…Ø´ØªØ±Ùƒ (Ù…Ø¹ Ø§Ø³ØªØ¨Ø¹Ø§Ø¯ Ø¬Ù‡Ø§Ø² Ø§Ù„Ø£Ø¯Ù…Ù† Ù„Ùˆ Ø£ÙØ±Ø³Ù„)
     const filteredSubs = exclude_endpoint
       ? subs.filter((s: any) => s.endpoint !== exclude_endpoint)
       : subs;
 
     if (!filteredSubs.length) {
       return new Response(JSON.stringify({ sent: 0, message: 'No subscribers after exclusion' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
       });
     }
 
@@ -290,15 +300,15 @@ Deno.serve(async (req) => {
           },
           encodedPayload,
           {
-            // TTL طويل (24 ساعة) بدلاً من 60 ثانية — عشان لو الهاتف كان
-            // غير متصل بالإنترنت أو في وضع توفير الطاقة لحظة الإرسال، تحتفظ
-            // خوادم Apple/Google بالإشعار وتُعيد تسليمه بمجرد اتصال الجهاز،
-            // بدلاً من حذفه فوراً بصمت بعد دقيقة واحدة.
+            // TTL Ø·ÙˆÙŠÙ„ (24 Ø³Ø§Ø¹Ø©) Ø¨Ø¯Ù„Ø§Ù‹ Ù…Ù† 60 Ø«Ø§Ù†ÙŠØ© â€” Ø¹Ø´Ø§Ù† Ù„Ùˆ Ø§Ù„Ù‡Ø§ØªÙ ÙƒØ§Ù†
+            // ØºÙŠØ± Ù…ØªØµÙ„ Ø¨Ø§Ù„Ø¥Ù†ØªØ±Ù†Øª Ø£Ùˆ ÙÙŠ ÙˆØ¶Ø¹ ØªÙˆÙÙŠØ± Ø§Ù„Ø·Ø§Ù‚Ø© Ù„Ø­Ø¸Ø© Ø§Ù„Ø¥Ø±Ø³Ø§Ù„ØŒ ØªØ­ØªÙØ¸
+            // Ø®ÙˆØ§Ø¯Ù… Apple/Google Ø¨Ø§Ù„Ø¥Ø´Ø¹Ø§Ø± ÙˆØªÙØ¹ÙŠØ¯ ØªØ³Ù„ÙŠÙ…Ù‡ Ø¨Ù…Ø¬Ø±Ø¯ Ø§ØªØµØ§Ù„ Ø§Ù„Ø¬Ù‡Ø§Ø²ØŒ
+            // Ø¨Ø¯Ù„Ø§Ù‹ Ù…Ù† Ø­Ø°ÙÙ‡ ÙÙˆØ±Ø§Ù‹ Ø¨ØµÙ…Øª Ø¨Ø¹Ø¯ Ø¯Ù‚ÙŠÙ‚Ø© ÙˆØ§Ø­Ø¯Ø©.
             TTL: 86400,
             urgency: 'high'
           }
         ).catch(async (err) => {
-          // حذف الاشتراكات المنتهية (410 Gone)
+          // Ø­Ø°Ù Ø§Ù„Ø§Ø´ØªØ±Ø§ÙƒØ§Øª Ø§Ù„Ù…Ù†ØªÙ‡ÙŠØ© (410 Gone)
           if (err.statusCode === 410 || err.statusCode === 404) {
             await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
           }
@@ -311,12 +321,12 @@ Deno.serve(async (req) => {
     const failed = results.filter(r => r.status === 'rejected').length;
 
     return new Response(JSON.stringify({ sent, failed, total: subs.length }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
     });
 
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      status: 500, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
     });
   }
 });

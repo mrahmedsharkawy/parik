@@ -1,5 +1,5 @@
 // Supabase Edge Function: send-push
-// يرسل Web Push Notification لجميع المشتركين
+// ÙŠØ±Ø³Ù„ Web Push Notification Ù„Ø¬Ù…ÙŠØ¹ Ø§Ù„Ù…Ø´ØªØ±ÙƒÙŠÙ†
 // Environment Variables needed in Supabase Dashboard:
 //   VAPID_PRIVATE_KEY
 //   VAPID_PUBLIC_KEY  = BPojY-23BXbIfa1IRkkQD3vAELjTn3nltgFBrlEIjZ3aEbphXAQvFY2E5B2R_mfikZLhGPo0lBeCedB8qoP5-SE
@@ -8,10 +8,20 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import webpush from 'npm:web-push@3.6.7';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+// Security improvement: restrict CORS to bariqgifts.com domains only
+const ALLOWED_ORIGINS = [
+  'https://bariqgifts.com',
+  'https://www.bariqgifts.com',
+  'https://admin.bariqgifts.com',
+];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get('origin') || '';
+  return {
+    'Access-Control-Allow-Origin': ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0],
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  };
+}
 
 function bearerToken(req: Request) {
   const header = req.headers.get('authorization') || '';
@@ -42,10 +52,10 @@ async function requireAdmin(req: Request, supabase: any) {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: getCorsHeaders(req) });
 
   try {
-    // جلب المشتركين من Supabase
+    // Ø¬Ù„Ø¨ Ø§Ù„Ù…Ø´ØªØ±ÙƒÙŠÙ† Ù…Ù† Supabase
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -53,14 +63,14 @@ Deno.serve(async (req) => {
 
     if (!(await requireAdmin(req, supabase))) {
       return new Response(JSON.stringify({ error: 'Admin authorization required' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        status: 401, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
       });
     }
 
     const { title, body, url, image } = await req.json();
     if (!title || !body) {
       return new Response(JSON.stringify({ error: 'title and body required' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        status: 400, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
       });
     }
 
@@ -69,7 +79,7 @@ Deno.serve(async (req) => {
     const VAPID_EMAIL   = Deno.env.get('VAPID_EMAIL')       || 'mailto:admin@bariq.store';
     if (!VAPID_PRIVATE) {
       return new Response(JSON.stringify({ error: 'Missing VAPID_PRIVATE_KEY' }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        status: 500, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
       });
     }
 
@@ -82,11 +92,11 @@ Deno.serve(async (req) => {
     if (error) throw error;
     if (!subs || subs.length === 0) {
       return new Response(JSON.stringify({ sent: 0, message: 'No subscribers' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
       });
     }
 
-    // إرسال لكل مشترك
+    // Ø¥Ø±Ø³Ø§Ù„ Ù„ÙƒÙ„ Ù…Ø´ØªØ±Ùƒ
     const payload = JSON.stringify({ title, body, url: url || '/', image: image || null });
     const results = await Promise.allSettled(
       subs.map(sub =>
@@ -97,7 +107,7 @@ Deno.serve(async (req) => {
           },
           payload
         ).catch(async (err) => {
-          // حذف الاشتراكات المنتهية (410 Gone)
+          // Ø­Ø°Ù Ø§Ù„Ø§Ø´ØªØ±Ø§ÙƒØ§Øª Ø§Ù„Ù…Ù†ØªÙ‡ÙŠØ© (410 Gone)
           if (err.statusCode === 410 || err.statusCode === 404) {
             await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
           }
@@ -110,12 +120,12 @@ Deno.serve(async (req) => {
     const failed = results.filter(r => r.status === 'rejected').length;
 
     return new Response(JSON.stringify({ sent, failed, total: subs.length }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
     });
 
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      status: 500, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
     });
   }
 });

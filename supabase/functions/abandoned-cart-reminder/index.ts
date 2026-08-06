@@ -5,10 +5,20 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import webpush from 'npm:web-push@3.6.7';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+// Security improvement: restrict CORS to bariqgifts.com domains only
+const ALLOWED_ORIGINS = [
+  'https://bariqgifts.com',
+  'https://www.bariqgifts.com',
+  'https://admin.bariqgifts.com',
+];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get('origin') || '';
+  return {
+    'Access-Control-Allow-Origin': ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0],
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  };
+}
 
 function hasCronAccess(req: Request) {
   const secret = Deno.env.get('ABANDONED_CART_CRON_SECRET') || '';
@@ -32,19 +42,19 @@ function notificationText(row: any) {
     };
   }
   return {
-    title: 'سلتك لسه مستنياك',
-    body: name ? `${name} ما زال في سلتك. أكمل الطلب قبل نفاد الكمية.` : `لديك ${count} منتج في السلة. أكمل الطلب الآن قبل نفاد الكمية.`,
+    title: 'Ø³Ù„ØªÙƒ Ù„Ø³Ù‡ Ù…Ø³ØªÙ†ÙŠØ§Ùƒ',
+    body: name ? `${name} Ù…Ø§ Ø²Ø§Ù„ ÙÙŠ Ø³Ù„ØªÙƒ. Ø£ÙƒÙ…Ù„ Ø§Ù„Ø·Ù„Ø¨ Ù‚Ø¨Ù„ Ù†ÙØ§Ø¯ Ø§Ù„ÙƒÙ…ÙŠØ©.` : `Ù„Ø¯ÙŠÙƒ ${count} Ù…Ù†ØªØ¬ ÙÙŠ Ø§Ù„Ø³Ù„Ø©. Ø£ÙƒÙ…Ù„ Ø§Ù„Ø·Ù„Ø¨ Ø§Ù„Ø¢Ù† Ù‚Ø¨Ù„ Ù†ÙØ§Ø¯ Ø§Ù„ÙƒÙ…ÙŠØ©.`,
   };
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: getCorsHeaders(req) });
 
   try {
     if (!hasCronAccess(req)) {
       return new Response(JSON.stringify({ error: 'Scheduler authorization required' }), {
         status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
       });
     }
 
@@ -59,7 +69,7 @@ Deno.serve(async (req) => {
     if (!VAPID_PRIVATE) {
       return new Response(JSON.stringify({ error: 'Missing VAPID_PRIVATE_KEY' }), {
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
       });
     }
     webpush.setVapidDetails(VAPID_EMAIL, VAPID_PUBLIC, VAPID_PRIVATE);
@@ -77,7 +87,7 @@ Deno.serve(async (req) => {
     if (error) throw error;
     if (!rows || rows.length === 0) {
       return new Response(JSON.stringify({ sent: 0, failed: 0, due: 0 }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
       });
     }
 
@@ -110,8 +120,8 @@ Deno.serve(async (req) => {
         url: '/Cart',
         image: row.first_product_image || null,
         type: 'abandoned_cart',
-        iconText: '🛒',
-        emoji: '🛒',
+        iconText: 'ðŸ›’',
+        emoji: 'ðŸ›’',
         lang,
       });
 
@@ -152,12 +162,12 @@ Deno.serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ sent, failed, cleared, due: rows.length }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
     });
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message || String(err) }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
     });
   }
 });
