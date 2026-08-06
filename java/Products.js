@@ -176,7 +176,7 @@ async function loadSupabaseCategories(base) {
 }
 
 let _productsCache = null, _productsCacheTs = 0, _productsRefreshPromise = null;
-const PRODUCTS_SESSION_CACHE_KEY = "x2_prods_ss_v4", PRODUCTS_LOCAL_CACHE_KEY = "x2_products_cache_v3", PRODUCTS_LOCAL_CACHE_TTL = 18e5;
+const PRODUCTS_SESSION_CACHE_KEY = "x2_prods_ss_v4", PRODUCTS_LOCAL_CACHE_KEY = "x2_products_cache_v3", PRODUCTS_LOCAL_CACHE_TTL = 6e4;
 
 function clearLegacyProductsCache() {
     try {
