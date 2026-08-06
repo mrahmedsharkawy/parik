@@ -12,7 +12,7 @@
 |---|---|---|---|
 | 1 | CORS | `Access-Control-Allow-Origin: *` → restricted to `https://bariqgifts.com`, `https://www.bariqgifts.com`, and `https://admin.bariqgifts.com` | `supabase/functions/*/index.ts` |
 | 2 | Cache-Control | Static assets (CSS, JS, fonts, images, translations, mobile-nav-bar) now use long-term immutable caching | `vercel.json` |
-| 3 | Optional headers | Added `Cross-Origin-Embedder-Policy: require-corp` and `Cross-Origin-Resource-Policy: same-site` globally | `vercel.json` |
+| 3 | Optional headers | Added `Cross-Origin-Resource-Policy: same-site` globally. `Cross-Origin-Embedder-Policy: require-corp` was added, tested, and removed because it blocked Supabase storage images that do not send `Cross-Origin-Resource-Policy`. | `vercel.json` |
 
 ---
 
@@ -133,27 +133,27 @@ Cache-Control: no-cache, no-store, must-revalidate
 
 ## 3. Optional Cross-Origin Isolation Headers
 
-Added globally to all routes in `vercel.json`:
+### What was added
+
+`Cross-Origin-Resource-Policy: same-site` was added globally to all routes in `vercel.json`:
 
 ```http
-Cross-Origin-Embedder-Policy: require-corp
 Cross-Origin-Resource-Policy: same-site
 ```
 
 ### Why
 
-- `Cross-Origin-Embedder-Policy: require-corp` blocks cross-origin resources that do not explicitly allow being embedded.
-- `Cross-Origin-Resource-Policy: same-site` ensures browsers only load these resources from same-site contexts.
+`Cross-Origin-Resource-Policy: same-site` tells browsers to only load these resources from same-site contexts. This reduces the risk of our assets being embedded by cross-origin pages.
 
-### Monitoring
+### Why `Cross-Origin-Embedder-Policy: require-corp` was removed
 
-These headers can break embedded cross-origin content (for example images from a CDN or third-party iframes). After deployment, verify:
+`Cross-Origin-Embedder-Policy: require-corp` was initially added, but it blocks any cross-origin resource that does not explicitly allow being embedded with a matching `Cross-Origin-Resource-Policy` header. Product images served from Supabase storage do not send that header, so the browser blocked them with:
 
-1. Product images load correctly.
-2. Google Tag Manager / Google Analytics scripts still execute.
-3. Cloudinary images and Supabase storage assets still display.
+```text
+net::ERR_BLOCKED_BY_RESPONSE.NotSameOriginAfterDefaultedToSameOriginByCoep
+```
 
-If anything breaks, revert this single commit or remove the two headers from the `/(.*)` block in `vercel.json`.
+Because images are essential to the site, `require-corp` was removed. `same-site` CORP remains on our own static responses only.
 
 ---
 
@@ -163,7 +163,7 @@ If anything breaks, revert this single commit or remove the two headers from the
 backup-before-headers-optimization
 fix: restrict CORS in Supabase Edge Functions to bariqgifts.com domains
 perf: use long-term immutable caching for static assets
-feat: add COEP require-corp and CORP same-site headers (monitor for CDN breakage)
+feat: add CORP same-site header; remove COEP require-corp after Supabase image breakage
 ```
 
 ## Validation Checklist
@@ -174,4 +174,4 @@ feat: add COEP require-corp and CORP same-site headers (monitor for CDN breakage
 - [ ] Admin push/notification endpoints respond with the correct `Access-Control-Allow-Origin` (not `*`).
 - [ ] Static JS/CSS files return `Cache-Control: public, max-age=31536000, immutable`.
 - [ ] HTML pages still return `Cache-Control: no-cache, must-revalidate`.
-- [ ] No CDN or third-party resources are blocked after adding COEP/CORP.
+- [x] No CDN or third-party resources are blocked after adding COEP/CORP (COEP removed after Supabase image blockage was detected).
