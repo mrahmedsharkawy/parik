@@ -36,7 +36,4 @@ DROP POLICY IF EXISTS "Service role can update abandoned carts" ON public.abando
 CREATE POLICY "Anyone can upsert own abandoned cart" ON public.abandoned_carts
   FOR INSERT WITH CHECK (true);
 
-CREATE POLICY "Anyone can update own abandoned cart" ON public.abandoned_carts
-  FOR UPDATE USING (true) WITH CHECK (true);
-
 -- The Edge Function uses SUPABASE_SERVICE_ROLE_KEY, which bypasses RLS for SELECT/UPDATE.

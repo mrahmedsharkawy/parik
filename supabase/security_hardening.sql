@@ -123,13 +123,6 @@ for insert
 to anon, authenticated
 with check (true);
 
-create policy "Anyone can refresh subscription"
-on public.push_subscriptions
-for update
-to anon, authenticated
-using (true)
-with check (true);
-
 create policy "Active admins can read push subscriptions"
 on public.push_subscriptions
 for select
@@ -144,7 +137,7 @@ using (
 
 -- Deletes are performed by Edge Functions using the service role key, which bypasses RLS.
 
--- 4) Abandoned carts: storefront can create/update its queue row; public read is not allowed.
+-- 4) Abandoned carts: storefront can create queue rows; updates are performed by the Edge Function using the service role.
 alter table if exists public.abandoned_carts enable row level security;
 
 drop policy if exists "Anyone can upsert own abandoned cart" on public.abandoned_carts;
@@ -156,13 +149,6 @@ create policy "Anyone can create abandoned cart reminder"
 on public.abandoned_carts
 for insert
 to anon, authenticated
-with check (true);
-
-create policy "Anyone can refresh abandoned cart reminder"
-on public.abandoned_carts
-for update
-to anon, authenticated
-using (true)
 with check (true);
 
 -- 5) Orders: active admins can read/update orders. Storefront order creation should remain covered

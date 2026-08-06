@@ -28,9 +28,6 @@ DROP POLICY IF EXISTS "Active admins can read push subscriptions" ON push_subscr
 CREATE POLICY "Anyone can subscribe" ON push_subscriptions
   FOR INSERT TO anon, authenticated WITH CHECK (true);
 
-CREATE POLICY "Anyone can refresh subscription" ON push_subscriptions
-  FOR UPDATE TO anon, authenticated USING (true) WITH CHECK (true);
-
 CREATE POLICY "Active admins can read push subscriptions" ON push_subscriptions
   FOR SELECT TO authenticated
   USING (

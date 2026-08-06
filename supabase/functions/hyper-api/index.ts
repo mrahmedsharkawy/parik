@@ -16,6 +16,13 @@ const ALLOWED_ORIGINS = [
   'https://admin.bariqgifts.com',
 ];
 
+function getRequestOrigin(req: Request) {
+  const origin = req.headers.get('origin') || '';
+  if (ALLOWED_ORIGINS.includes(origin)) return origin;
+  const referer = req.headers.get('referer') || '';
+  return ALLOWED_ORIGINS.find((allowed) => referer.startsWith(allowed + '/')) || '';
+}
+
 function getCorsHeaders(req: Request) {
   const origin = req.headers.get('origin') || '';
   return {
@@ -203,6 +210,11 @@ Deno.serve(async (req) => {
     );
 
     const publicNewOrder = isAllowedPublicNewOrder(payload);
+    if (publicNewOrder && !getRequestOrigin(req)) {
+      return new Response(JSON.stringify({ error: 'Trusted origin required' }), {
+        status: 403, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
+      });
+    }
     if (!publicNewOrder && !(await requireAdmin(req, supabase))) {
       return new Response(JSON.stringify({ error: 'Admin authorization required' }), {
         status: 401, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }

@@ -58,11 +58,12 @@ ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
 
--- السماح للعموم بالقراءة والكتابة (يمكن تضييقها لاحقاً)
-CREATE POLICY "public_orders" ON orders FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "public_customers" ON customers FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "public_notifications" ON notifications FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "public_settings" ON settings FOR ALL USING (true) WITH CHECK (true);
+-- Legacy snapshot only: do not copy these permissive policies into production.
+-- Public access is defined in supabase/security_hardening.sql instead.
+-- CREATE POLICY "public_orders" ON orders FOR ALL USING (true) WITH CHECK (true);
+-- CREATE POLICY "public_customers" ON customers FOR ALL USING (true) WITH CHECK (true);
+-- CREATE POLICY "public_notifications" ON notifications FOR ALL USING (true) WITH CHECK (true);
+-- CREATE POLICY "public_settings" ON settings FOR ALL USING (true) WITH CHECK (true);
 
 -- جدول التقييمات
 CREATE TABLE IF NOT EXISTS reviews (
@@ -74,7 +75,7 @@ CREATE TABLE IF NOT EXISTS reviews (
   date       TIMESTAMPTZ DEFAULT NOW()
 );
 ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "public_reviews" ON reviews FOR ALL USING (true) WITH CHECK (true);
+-- CREATE POLICY "public_reviews" ON reviews FOR ALL USING (true) WITH CHECK (true);
 CREATE INDEX IF NOT EXISTS idx_reviews_product ON reviews(product_id);
 
 -- Index للبحث السريع

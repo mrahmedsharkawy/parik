@@ -36,6 +36,7 @@ begin
     url := 'https://knleehjjejfeobcmpwnw.supabase.co/functions/v1/hyper-api',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
+      'Origin', 'https://bariqgifts.com',
       'apikey', anon_key,
       'Authorization', 'Bearer ' || anon_key
     ),

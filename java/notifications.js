@@ -104,15 +104,7 @@ async function saveSubscriptionToSupabase(e) {
             },
             body: JSON.stringify(s)
         });
-        if (n.ok) return !0;
-        return (await fetch("https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/push_subscriptions?endpoint=eq." + encodeURIComponent(e.endpoint), {
-            method: "PATCH",
-            headers: {
-                ...o,
-                Prefer: "return=minimal"
-            },
-            body: JSON.stringify(s)
-        })).ok;
+        return !!n.ok;
     } catch (e) {
         return console.warn("Failed to save subscription:", e), !1;
     }
