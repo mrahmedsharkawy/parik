@@ -494,51 +494,79 @@ window.addEventListener('orientationchange', initMobileNav, { passive: true });
 })();
 
 (function initMobileNavCompactWatcher() {
-  let intervalId = 0;
+  let frameId = 0;
   let lastY = window.scrollY || window.pageYOffset || 0;
   let compact = false;
+  let cssVars = null;
   const DELTA = 7;
   const TOP_RESET = 18;
 
-  function cssVar(name) {
-    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  function readCssVars() {
+    const styles = getComputedStyle(document.documentElement);
+    return {
+      normalBottom: styles.getPropertyValue('--nav-bottom-normal').trim() || '8px',
+      compactBottom: styles.getPropertyValue('--nav-bottom-compact').trim() || '6px'
+    };
+  }
+
+  function setStyleIfChanged(el, key, value) {
+    if (!el || el.style[key] === value) return;
+    el.style[key] = value;
+  }
+
+  function ensureNavCache(nav) {
+    if (nav.__compactCache) return nav.__compactCache;
+    nav.__compactCache = {
+      list: nav.querySelector('ul'),
+      items: Array.from(nav.querySelectorAll('a, button')),
+      icons: Array.from(nav.querySelectorAll('svg.icon, img.icon, img.nav-icon')),
+      lastCompact: null,
+      lastSmall: null
+    };
+    return nav.__compactCache;
   }
 
   function applyCompactStyles(nav, isCompact) {
+    const cache = ensureNavCache(nav);
     const isSmall = window.innerWidth <= 420;
-    const normalBottom = cssVar('--nav-bottom-normal') || '8px';
-    const compactBottom = cssVar('--nav-bottom-compact') || '6px';
+    if (!cssVars) cssVars = readCssVars();
+
+    if (cache.lastCompact === isCompact && cache.lastSmall === isSmall) return;
+
     const normal = isSmall
-      ? { left: '12px', right: '12px', bottom: normalBottom, height: '55px', radius: '31px', ulPadding: '3px 7px', ulGap: '5px', itemMin: '46px', icon: '23px' }
-      : { left: '16px', right: '16px', bottom: normalBottom, height: '58px', radius: '35px', ulPadding: '3px 9px', ulGap: '7px', itemMin: '46px', icon: '25px' };
+      ? { left: '12px', right: '12px', bottom: cssVars.normalBottom, height: '55px', radius: '31px', ulPadding: '3px 7px', ulGap: '5px', itemMin: '46px', icon: '23px' }
+      : { left: '16px', right: '16px', bottom: cssVars.normalBottom, height: '58px', radius: '35px', ulPadding: '3px 9px', ulGap: '7px', itemMin: '46px', icon: '25px' };
     const mini = isSmall
-      ? { left: '58px', right: '58px', bottom: compactBottom, height: '44px', radius: '26px', ulPadding: '1px 7px', ulGap: '4px', itemMin: '31px', icon: '21px' }
-      : { left: '64px', right: '64px', bottom: compactBottom, height: '44px', radius: '26px', ulPadding: '1px 7px', ulGap: '4px', itemMin: '31px', icon: '21px' };
+      ? { left: '58px', right: '58px', bottom: cssVars.compactBottom, height: '44px', radius: '26px', ulPadding: '1px 7px', ulGap: '4px', itemMin: '31px', icon: '21px' }
+      : { left: '64px', right: '64px', bottom: cssVars.compactBottom, height: '44px', radius: '26px', ulPadding: '1px 7px', ulGap: '4px', itemMin: '31px', icon: '21px' };
     const activeSet = isCompact ? mini : normal;
 
-    nav.style.left = activeSet.left;
-    nav.style.right = activeSet.right;
-    nav.style.bottom = activeSet.bottom;
-    nav.style.height = activeSet.height;
-    nav.style.borderRadius = activeSet.radius;
-    nav.style.transformOrigin = 'center bottom';
-    nav.style.transform = 'translateY(0)';
+    setStyleIfChanged(nav, 'left', activeSet.left);
+    setStyleIfChanged(nav, 'right', activeSet.right);
+    setStyleIfChanged(nav, 'bottom', activeSet.bottom);
+    setStyleIfChanged(nav, 'height', activeSet.height);
+    setStyleIfChanged(nav, 'borderRadius', activeSet.radius);
+    setStyleIfChanged(nav, 'transformOrigin', 'center bottom');
+    setStyleIfChanged(nav, 'transform', 'translateY(0)');
 
-    const list = nav.querySelector('ul');
+    const list = cache.list;
     if (list) {
-      list.style.padding = activeSet.ulPadding;
-      list.style.gap = activeSet.ulGap;
+      setStyleIfChanged(list, 'padding', activeSet.ulPadding);
+      setStyleIfChanged(list, 'gap', activeSet.ulGap);
     }
 
-    nav.querySelectorAll('a, button').forEach((item) => {
-      item.style.minHeight = activeSet.itemMin;
-      item.style.borderRadius = isCompact ? '20px' : '26px';
+    cache.items.forEach((item) => {
+      setStyleIfChanged(item, 'minHeight', activeSet.itemMin);
+      setStyleIfChanged(item, 'borderRadius', isCompact ? '20px' : '26px');
     });
 
-    nav.querySelectorAll('svg.icon, img.icon, img.nav-icon').forEach((icon) => {
-      icon.style.width = activeSet.icon;
-      icon.style.height = activeSet.icon;
+    cache.icons.forEach((icon) => {
+      setStyleIfChanged(icon, 'width', activeSet.icon);
+      setStyleIfChanged(icon, 'height', activeSet.icon);
     });
+
+    cache.lastCompact = isCompact;
+    cache.lastSmall = isSmall;
   }
 
   function updateCompact() {
@@ -569,20 +597,32 @@ window.addEventListener('orientationchange', initMobileNav, { passive: true });
     lastY = y;
   }
 
+  function scheduleUpdate() {
+    if (frameId) return;
+    frameId = window.requestAnimationFrame(() => {
+      frameId = 0;
+      updateCompact();
+    });
+  }
+
   function start() {
-    if (intervalId) return;
+    if (frameId) return;
+    cssVars = readCssVars();
     lastY = window.scrollY || window.pageYOffset || 0;
-    intervalId = window.setInterval(updateCompact, 120);
-    updateCompact();
+    scheduleUpdate();
   }
 
   document.addEventListener('DOMContentLoaded', start, { once: true });
   window.addEventListener('load', start, { once: true });
   window.addEventListener('mobile-nav:ready', start);
+  window.addEventListener('scroll', scheduleUpdate, { passive: true });
+  window.addEventListener('touchmove', scheduleUpdate, { passive: true });
+  window.addEventListener('resize', () => { cssVars = null; scheduleUpdate(); }, { passive: true });
+  window.addEventListener('orientationchange', () => { cssVars = null; scheduleUpdate(); }, { passive: true });
   window.addEventListener('pagehide', () => {
-    if (!intervalId) return;
-    window.clearInterval(intervalId);
-    intervalId = 0;
+    if (!frameId) return;
+    window.cancelAnimationFrame(frameId);
+    frameId = 0;
   }, { once: true });
 })();
 
