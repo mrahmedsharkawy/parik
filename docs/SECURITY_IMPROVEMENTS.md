@@ -13,6 +13,7 @@
 | 1 | CORS | `Access-Control-Allow-Origin: *` → restricted to `https://bariqgifts.com`, `https://www.bariqgifts.com`, and `https://admin.bariqgifts.com` | `supabase/functions/*/index.ts` |
 | 2 | Cache-Control | Static assets (CSS, JS, fonts, images, translations, mobile-nav-bar) now use long-term immutable caching | `vercel.json` |
 | 3 | Optional headers | Added `Cross-Origin-Resource-Policy: same-site` globally. `Cross-Origin-Embedder-Policy: require-corp` was added, tested, and removed because it blocked Supabase storage images that do not send `Cross-Origin-Resource-Policy`. | `vercel.json` |
+| 4 | HTTPS redirect | Added an explicit HTTP-to-HTTPS redirect for the apex domain so Lighthouse does not see `http://bariqgifts.com` as an allowed insecure URL. | `vercel.json` |
 
 ---
 
@@ -154,6 +155,12 @@ net::ERR_BLOCKED_BY_RESPONSE.NotSameOriginAfterDefaultedToSameOriginByCoep
 ```
 
 Because images are essential to the site, `require-corp` was removed. `same-site` CORP remains on our own static responses only.
+
+## 4. HTTPS Redirect
+
+Added an explicit redirect in `vercel.json` that sends any request arriving with `x-forwarded-proto: http` to the same path on `https://bariqgifts.com`.
+
+This closes the remaining mixed-content finding where Lighthouse could still see the apex domain over plain HTTP.
 
 ---
 
