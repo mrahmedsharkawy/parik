@@ -118,6 +118,15 @@ async function unsubscribeFromPush() {
 
 function updateBadge(e) {
     "setAppBadge" in navigator && (e > 0 ? navigator.setAppBadge(e).catch(() => {}) : navigator.clearAppBadge().catch(() => {}));
+    const badge = document.getElementById('mobNotifBadge');
+    if (badge) {
+        if (e > 0) {
+            badge.textContent = e > 99 ? '99+' : e;
+            badge.style.display = '';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
 }
 
 function clearBadge() {
