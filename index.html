@@ -999,7 +999,7 @@ body.home-immersive-header .daily-picks-section+.categories{margin-top:6px!impor
   body.home-immersive-header .mh-cats-strip{margin-top:54px!important}
   body.home-immersive-header main.main{width:97%!important;max-width:97%!important;margin:96px auto 50px!important;background:transparent!important}
   body.home-immersive-header .desktop-promo-banner{display:none!important}
-  body.home-immersive-header .mobile-promo-banner{display:block!important;width:100%!important;max-width:100%!important;height:160px!important;min-height:160px!important;margin:10px auto 8px!important;border-radius:16px!important;box-shadow:none!important;background:#fff!important;position:relative;right:auto!important;left:auto!important;transform:none!important;overflow:hidden}
+  body.home-immersive-header .mobile-promo-banner{display:none!important}
   html[dir="ltr"] body.home-immersive-header .mobile-promo-banner{right:auto!important;left:auto!important;transform:none!important}
   body.home-immersive-header .mobile-promo-banner::before{display:none!important}
   body.home-immersive-header .mobile-promo-banner .fsh-inner{position:relative;z-index:1;max-width:none!important;width:100%!important;height:100%;margin:0 auto;padding:0!important;display:block!important;text-align:center;box-sizing:border-box}
@@ -1119,32 +1119,37 @@ body.home-immersive-header .daily-picks-section+.categories{margin-top:6px!impor
 <script src="/java/index-daily-picks.js?v=daily-picks-lcp-20260806i" defer></script>
 <script>
 (function(){
-  if(window.innerWidth>899)return;
-  var sentinel=document.getElementById('hdrSentinel');
-  function getScroll(){
-    return Math.max(
-      window.scrollY||0,
-      window.pageYOffset||0,
-      document.documentElement.scrollTop||0,
-      document.body.scrollTop||0,
-      (document.querySelector('.page')||{}).scrollTop||0
-    );
+  function initCompact(){
+    if(window.innerWidth>899)return;
+    var sentinel=document.getElementById('hdrSentinel');
+    function getScroll(){
+      return Math.max(
+        window.scrollY||0,
+        window.pageYOffset||0,
+        document.documentElement.scrollTop||0,
+        document.body.scrollTop||0,
+        (document.querySelector('.page')||{}).scrollTop||0
+      );
+    }
+    function update(){
+      document.body.classList.toggle('mobile-header-compact', getScroll()>50);
+    }
+    [window, document, document.documentElement, document.body, document.querySelector('.page'), document.querySelector('main')].forEach(function(el){
+      if(el) el.addEventListener('scroll', update, {passive:true,capture:true});
+    });
+    if(sentinel && 'IntersectionObserver' in window){
+      new IntersectionObserver(function(e){
+        document.body.classList.toggle('mobile-header-compact',!e[0].isIntersecting);
+      },{rootMargin:'-54px 0px 0px 0px'}).observe(sentinel);
+    }
+    setInterval(update, 200);
+    update();
   }
-  function update(){
-    document.body.classList.toggle('mobile-header-compact', getScroll()>50);
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',initCompact);
+  } else {
+    initCompact();
   }
-  // Listen on every possible scroll target
-  [window, document, document.documentElement, document.body, document.querySelector('.page'), document.querySelector('main')].forEach(function(el){
-    if(el) el.addEventListener('scroll', update, {passive:true,capture:true});
-  });
-  if(sentinel && 'IntersectionObserver' in window){
-    new IntersectionObserver(function(e){
-      document.body.classList.toggle('mobile-header-compact',!e[0].isIntersecting);
-    },{rootMargin:'-54px 0px 0px 0px'}).observe(sentinel);
-  }
-  // Interval fallback every 200ms
-  setInterval(update, 200);
-  update();
 })();
 
 (function(){
