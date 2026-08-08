@@ -1119,10 +1119,16 @@ body.home-immersive-header .daily-picks-section+.categories{margin-top:6px!impor
 (function(){
   if(window.innerWidth>899)return;
   var compactAfter=100;
+  function getScrollY(){
+    var pageEl=document.querySelector('.page');
+    return pageEl&&pageEl.scrollTop>0?pageEl.scrollTop:(window.scrollY||window.pageYOffset||0);
+  }
   function updateMobileHeader(){
-    document.body.classList.toggle('mobile-header-compact',window.scrollY>compactAfter);
+    document.body.classList.toggle('mobile-header-compact',getScrollY()>compactAfter);
   }
   window.addEventListener('scroll',updateMobileHeader,{passive:true});
+  var pageEl=document.querySelector('.page');
+  if(pageEl)pageEl.addEventListener('scroll',updateMobileHeader,{passive:true});
   updateMobileHeader();
 })();
 
