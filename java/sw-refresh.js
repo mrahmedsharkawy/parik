@@ -1,14 +1,14 @@
 (function () {
   if (!('serviceWorker' in navigator)) return;
 
-  var REFRESH_KEY = 'sw-v335-admin-order-visible-details';
+  var REFRESH_KEY = 'sw-v336-admin-order-visible-details';
   var refreshed = false;
 
   function clearOldCaches() {
     if (!('caches' in window)) return;
     caches.keys().then(function (keys) {
       keys.forEach(function (key) {
-        if (key !== 'bariq-v335') caches.delete(key).catch(function () {});
+        if (key !== 'bariq-v336') caches.delete(key).catch(function () {});
       });
     }).catch(function () {});
   }
@@ -85,7 +85,7 @@
   // Keep Tag Assistant preview sessions deterministic by disabling SW for debug URLs.
   if (disableServiceWorkerForGtmPreview()) return;
 
-  navigator.serviceWorker.register('/sw.js?v=335', { updateViaCache: 'none' }).then(function (reg) {
+  navigator.serviceWorker.register('/sw.js?v=336', { updateViaCache: 'none' }).then(function (reg) {
     clearOldCaches();
     requestActivation(reg);
     sendPushLanguage(reg);
