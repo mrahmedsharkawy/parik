@@ -719,6 +719,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </a>
   </section>
 
+  <!-- compact header scroll sentinel -->
+  <div id="hdrSentinel" style="height:1px;margin-top:-1px;pointer-events:none;visibility:hidden"></div>
   <!-- شريط الثقة الاحترافي -->
   <div class="trust-bar">
     <div class="trust-item">
@@ -1118,23 +1120,31 @@ body.home-immersive-header .daily-picks-section+.categories{margin-top:6px!impor
 <script>
 (function(){
   if(window.innerWidth>899)return;
-  var sentinel=document.createElement('div');
-  sentinel.style.cssText='position:absolute;top:110px;left:0;width:1px;height:1px;pointer-events:none';
-  document.body.appendChild(sentinel);
-  if('IntersectionObserver' in window){
-    new IntersectionObserver(function(entries){
-      document.body.classList.toggle('mobile-header-compact',!entries[0].isIntersecting);
-    },{threshold:0,rootMargin:'0px'}).observe(sentinel);
-  } else {
-    function checkScroll(){
-      var s=window.scrollY||window.pageYOffset||(document.querySelector('.page')||{}).scrollTop||0;
-      document.body.classList.toggle('mobile-header-compact',s>100);
-    }
-    window.addEventListener('scroll',checkScroll,{passive:true});
-    document.addEventListener('scroll',checkScroll,{passive:true,capture:true});
-    (document.querySelector('.page')||document.documentElement).addEventListener('scroll',checkScroll,{passive:true});
-    checkScroll();
+  var sentinel=document.getElementById('hdrSentinel');
+  function getScroll(){
+    return Math.max(
+      window.scrollY||0,
+      window.pageYOffset||0,
+      document.documentElement.scrollTop||0,
+      document.body.scrollTop||0,
+      (document.querySelector('.page')||{}).scrollTop||0
+    );
   }
+  function update(){
+    document.body.classList.toggle('mobile-header-compact', getScroll()>50);
+  }
+  // Listen on every possible scroll target
+  [window, document, document.documentElement, document.body, document.querySelector('.page'), document.querySelector('main')].forEach(function(el){
+    if(el) el.addEventListener('scroll', update, {passive:true,capture:true});
+  });
+  if(sentinel && 'IntersectionObserver' in window){
+    new IntersectionObserver(function(e){
+      document.body.classList.toggle('mobile-header-compact',!e[0].isIntersecting);
+    },{rootMargin:'-54px 0px 0px 0px'}).observe(sentinel);
+  }
+  // Interval fallback every 200ms
+  setInterval(update, 200);
+  update();
 })();
 
 (function(){
