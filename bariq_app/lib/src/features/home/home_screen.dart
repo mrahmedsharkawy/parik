@@ -49,10 +49,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _ImmersiveHomeHero(categories: _categories),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(12, 10, 12, 8),
-                    child: _FlashStrip(),
-                  ),
                 ],
               ),
             ),
@@ -219,26 +215,104 @@ class _HorizontalProductRail extends StatelessWidget {
       children: [
         _SectionHeader(title: title, action: 'المزيد'),
         SizedBox(
-          height: 232,
+          height: 198,
           child: ListView.separated(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 10),
             scrollDirection: Axis.horizontal,
             itemBuilder: (context, index) {
               final product = products[index];
-              return SizedBox(
-                width: 148,
-                child: ProductCard(
-                  product: product,
-                  isInCart: cartIds.contains(product.id),
-                  onAdd: () => onAdd(product),
-                ),
+              return _DailyPickCard(
+                product: product,
+                isInCart: cartIds.contains(product.id),
+                onAdd: () => onAdd(product),
               );
             },
-            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            separatorBuilder: (_, __) => const SizedBox(width: 9),
             itemCount: products.length,
           ),
         ),
       ],
+    );
+  }
+}
+
+class _DailyPickCard extends StatelessWidget {
+  const _DailyPickCard({required this.product, required this.isInCart, required this.onAdd});
+
+  final Product product;
+  final bool isInCart;
+  final VoidCallback onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    final currency = NumberFormat.currency(locale: 'ar_AE', symbol: 'د.إ', decimalDigits: 0);
+    final disc = product.discountPercent;
+    return SizedBox(
+      width: 116,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: const Color(0xFFE3E7EC)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AspectRatio(
+              aspectRatio: 1,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  _ProductImage(url: product.imageUrl),
+                  Positioned(
+                    left: 7,
+                    top: 76,
+                    child: GestureDetector(
+                      onTap: onAdd,
+                      child: Container(
+                        width: 34,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: isInCart ? AppTheme.gold : Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          boxShadow: const [BoxShadow(color: Color(0x2E152546), blurRadius: 8, offset: Offset(0, 3))],
+                        ),
+                        child: Icon(isInCart ? Icons.check : Icons.shopping_cart_outlined, size: 18, color: isInCart ? Colors.white : AppTheme.ink),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(1, 6, 1, 0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (disc > 0)
+                    Container(
+                      width: 35,
+                      height: 31,
+                      alignment: Alignment.center,
+                      decoration: const BoxDecoration(color: AppTheme.navy),
+                      child: Text('-$disc%', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900)),
+                    ),
+                  const SizedBox(width: 3),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(currency.format(product.price), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: Color(0xFF111111), fontWeight: FontWeight.w400)),
+                        if (disc > 0)
+                          Text(currency.format(product.oldPrice), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10, color: Color(0xFF6B7280), fontWeight: FontWeight.w700, decoration: TextDecoration.lineThrough)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -257,7 +331,6 @@ class _ImmersiveHomeHeroState extends State<_ImmersiveHomeHero> {
   int _index = 0;
 
   static const _images = [
-    'https://bariqgifts.com/assets/home/%D8%B5%D9%88%D8%B1%20%D8%A7%D9%84%D8%BA%D9%84%D8%A7%D9%81/1-618.webp?v=hero-mobile-1',
     'https://bariqgifts.com/assets/home/%D8%B5%D9%88%D8%B1%20%D8%A7%D9%84%D8%BA%D9%84%D8%A7%D9%81/2.webp?v=hero-mobile-2',
     'https://bariqgifts.com/assets/home/%D8%B5%D9%88%D8%B1%20%D8%A7%D9%84%D8%BA%D9%84%D8%A7%D9%81/3.webp?v=hero-mobile-3',
     'https://bariqgifts.com/assets/home/%D8%B5%D9%88%D8%B1%20%D8%A7%D9%84%D8%BA%D9%84%D8%A7%D9%81/4.webp?v=hero-mobile-4',
@@ -271,8 +344,10 @@ class _ImmersiveHomeHeroState extends State<_ImmersiveHomeHero> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final heroHeight = size.width < 380 ? 260.0 : (size.width < 420 ? 280.0 : 310.0);
     return SizedBox(
-      height: 310,
+      height: heroHeight,
       child: Stack(
         fit: StackFit.expand,
         children: [
