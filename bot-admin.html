@@ -183,13 +183,14 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:9px;
   <div class="card">
     <h2>🧠 كيف يفكر البوت؟</h2>
     <div class="hint">
-      <b>1.</b> يطبع النص العربي ويزيل الاختلافات الإملائية.<br>
-      <b>2.</b> يطابق كلمات السؤال والكلمات المرتبطة.<br>
-      <b>3.</b> يعطي وزنًا أعلى للكلمات المفتاحية والتطابق الكامل.<br>
-      <b>4.</b> يفهم الميزانية بالأرقام العربية والإنجليزية.<br>
-      <b>5.</b> يحاول استخراج الشخص والمناسبة من الرسالة.<br>
-      <b>6.</b> عند عدم وجود إجابة، يبحث في المنتجات بدل تكرار نفس الرد.<br>
-      <b>7.</b> يسجل السؤال غير المعروف مرة واحدة ويزيد عداده عند التكرار.
+      <b>1.</b> يفحص أولًا هل الرسالة استفسار عن حالة طلب (رقم طلب/تتبع) أو طلب تحويل لموظف.<br>
+      <b>2.</b> يطبع النص العربي ويزيل الاختلافات الإملائية.<br>
+      <b>3.</b> يستخرج الشخص/المناسبة/الستايل/الاهتمام من الرسالة بقاموس موسّع (أخت، زوجة، أم، أب، جد، جدة، زميل، معلم... إلخ).<br>
+      <b>4.</b> يطابق كلمات السؤال والكلمات المرتبطة، ويعطي وزنًا أعلى للكلمات المفتاحية والتطابق الكامل.<br>
+      <b>5.</b> يفهم الميزانية بالأرقام العربية والإنجليزية.<br>
+      <b>6.</b> لو مفيش تطابق قوي، يجرب: الرسالة بدون سياق المحادثة ← عتبة أقل قليلًا ← اقتراح منتجات ← تحويل لموظف.<br>
+      <b>7.</b> يسجل السؤال غير المعروف مرة واحدة ويزيد عداده عند التكرار بدل تكراره في القاعدة.<br>
+      <b>8.</b> تتبع الطلبات يحتاج جدول <code>orders</code> في Supabase بأعمدة: order_number, phone, status, updated_at.
     </div>
   </div>
 </div>
@@ -452,7 +453,6 @@ function rank(msg){
     .map(x=>({...x,score:score(msg,x)}))
     .filter(x=>x.score>0).sort((a,b)=>b.score-a.score);
 }
-function rank(msg){return questions.filter(x=>x.active&&x.answer).map(x=>({...x,score:score(msg,x)})).filter(x=>x.score>0).sort((a,b)=>b.score-a.score)}
 function renderKnowledge(){
   updateCategories();
   const q=normalize($('search').value),cat=$('catFilter').value,af=$('activeFilter').value;
@@ -616,38 +616,80 @@ function parseBudget(text){
   const all=t.match(/\b(\d{2,5}(?:\.\d+)?)\b/g);
   return all&&all.length?Number(all[all.length-1]):null;
 }
+/* قاموس موسّع: مستلم / مناسبة / ستايل / اهتمام — كل مصفوفة regex واحد يغطي أكبر عدد صياغات */
+const RECIPIENT_MAP=[
+  [/اخت[يهى]?|اخوات/,'أخت'],
+  [/زوج[تيهى]?|مرات[يهى]?|حبيب[تيهى]?|خطيب[تيهى]?|عريس|عروس[هة]?|شريك[تيهى]?/,'زوجة/حبيبة'],
+  [/ام[يى]|والدت[يهى]|ماما|اماه/,'الأم'],
+  [/اب[وي]ي?ا?|والد[يهى]|بابا/,'الأب'],
+  [/جد[يهى]|جدو|سيدو/,'جد'],
+  [/جدت[يهى]|تيتا|ست[يهى]/,'جدة'],
+  [/ولد[يهى]?|ابن[يهى]?|اخو[يهى]?/,'ولد/أخ'],
+  [/بنت[يهى]?/,'بنت'],
+  [/صديق[تيهى]?|صاحب[تيهى]?|رفيق[تيهى]?/,'صديق/صديقة'],
+  [/زميل[تيهى]?|مدير[تيهى]?|رئيس[يهى]?|كولي[جك]|شغل|عمل/,'زميل/مدير'],
+  [/معلم[تيهى]?|مدرس[تيهى]?|استاذ[هة]?/,'معلم/معلمة'],
+  [/نفسي|لنفسي|لروحي/,'نفسي']
+];
+const OCCASION_MAP=[
+  [/ميلاد/,'عيد ميلاد'],
+  [/خطوب[هة]|خطبه/,'خطوبة'],
+  [/زواج|جواز|عرس|فرح/,'زواج'],
+  [/تخرج|جامع[هة]/,'تخرج'],
+  [/ترقي[هة]/,'ترقية'],
+  [/مولود|بيبي|استقبال مولود/,'مولود جديد'],
+  [/فالنتين|حب|رومانسي/,'رومانسي'],
+  [/رمضان|فطار/,'رمضان'],
+  [/عيد الفطر|عيد الاضحي/,'عيد'],
+  [/شكر|تقدير/,'شكر وتقدير'],
+  [/اعتذار|سوري/,'اعتذار'],
+  [/تهنئه|مبروك|تهنئة/,'تهنئة'],
+  [/افتتاح|مشروع جديد/,'افتتاح'],
+  [/سفر|وداع|هديه سفر/,'سفر/وداع'],
+  [/يوم الام/,'يوم الأم'],
+  [/انجاز|نجاح/,'إنجاز'],
+  [/عيد/,'عيد']
+];
+const STYLE_MAP=[
+  [/فخم|فاخر|راقي|فاخره|premium|luxury/,'فاخر'],
+  [/رخيص|اقتصادي|اقتصاد|بسيط|بسيطه/,'اقتصادي'],
+  [/كلاسيك|كلاسيكي/,'كلاسيك'],
+  [/مودرن|عصري/,'مودرن'],
+  [/شخصي|بالاسم|منقوش|مطبوع عليه اسم/,'شخصي بالاسم']
+];
+const INTEREST_MAP=[
+  [/قهو[هة]|كوفي|coffee/,'قهوة'],
+  [/شوكولات[هة]|چوكليت|chocolate/,'شوكولاتة'],
+  [/عطر|برفان|perfume/,'عطور'],
+  [/اكسسوار|اكسسوارات/,'اكسسوارات'],
+  [/ديكور|ديكورات/,'ديكور'],
+  [/اكريليك/,'اكريليك'],
+  [/مج|كوب/,'مج'],
+  [/بوكيه|ورد|زهور|flowers/,'ورد'],
+  [/ساعه|ساعة|watch/,'ساعة'],
+  [/كتاب|قراءه/,'كتب'],
+  [/اطفال|بيبي|toys|لعب/,'أطفال']
+];
+function matchFirst(map,t){for(const[re,label]of map)if(re.test(t))return label;return ''}
 function extractIntent(text){
   const t=normalize(text);
-  let recipient='',occasion='',style='';
-  if(/اخت|اختي|اخته|اخوات/.test(t))recipient='أخت';
-  else if(/زوج|مرات|مراتي|زوجتي|حبيب|حبيبتي|خطيب/.test(t))recipient='زوجة/حبيبة';
-  else if(/امي|امى|والدتي|ماما/.test(t))recipient='الأم';
-  else if(/ابويا|والدي|بابا|ابوي/.test(t))recipient='الأب';
-  else if(/ولد|ابني|ابن|اخو/.test(t))recipient='ولد/أخ';
-  else if(/بنت|بنتي/.test(t))recipient='بنت';
-  else if(/صديق|صاحبي|صاحبتي|صديقه/.test(t))recipient='صديق/صديقة';
-
-  if(/ميلاد|عيد ميلاد/.test(t))occasion='عيد ميلاد';
-  else if(/زواج|جواز|عرس|فرح/.test(t))occasion='زواج';
-  else if(/تخرج|تخرجت|جامعه/.test(t))occasion='تخرج';
-  else if(/عيد/.test(t))occasion='عيد';
-  else if(/فالنتين|حب|رومانسي/.test(t))occasion='رومانسي';
-  else if(/مولود|بيبي/.test(t))occasion='مولود';
-  else if(/رمضان/.test(t))occasion='رمضان';
-
-  if(/فخم|فاخر|راقي|فاخرة|premium|luxury/.test(t))style='فاخر';
-  else if(/رخيص|اقتصادي|اقتصاد|بسيط/.test(t))style='اقتصادي';
-
-  return {recipient,occasion,budget:parseBudget(text),style};
+  return {
+    recipient:matchFirst(RECIPIENT_MAP,t),
+    occasion:matchFirst(OCCASION_MAP,t),
+    style:matchFirst(STYLE_MAP,t),
+    interest:matchFirst(INTEREST_MAP,t),
+    budget:parseBudget(text)
+  };
 }
 function mergeContext(intent){
-  const out={recipient:'',occasion:'',budget:null,style:''};
+  const out={recipient:'',occasion:'',budget:null,style:'',interest:''};
   conversation.filter(x=>x.role==='user').slice(-8)
     .map(x=>extractIntent(x.text)).concat([intent]).forEach(x=>{
       if(x.recipient)out.recipient=x.recipient;
       if(x.occasion)out.occasion=x.occasion;
       if(x.budget!=null)out.budget=x.budget;
       if(x.style)out.style=x.style;
+      if(x.interest)out.interest=x.interest;
     });
   return out;
 }
@@ -655,12 +697,24 @@ function contextPrompt(c){
   const p=[];
   if(c.recipient)p.push('للـ'+c.recipient);
   if(c.occasion)p.push('بمناسبة '+c.occasion);
+  if(c.interest)p.push(c.interest);
   if(c.budget!=null)p.push('ميزانية '+c.budget+' درهم');
   if(c.style)p.push(c.style);
   return p.join(' • ');
 }
 function giftIntent(text){
-  return /هديه|هدية|gift|بوكس|هدايا|اقتراح هدية/.test(normalize(text));
+  return /هديه|هدي[هة]|gift|بوكس|هدايا|اقتراح هديه|عايز حاج[هة]|محتار اجيب|اجيب اي[هة]/.test(normalize(text));
+}
+function humanHandoffIntent(text){
+  return /موظف|بشر|احد يرد|حد يكلمني|عايز اتكلم مع|كلمني|human|support|شكوي|مشكله في الطلب/.test(normalize(text));
+}
+function orderStatusIntent(text){
+  return /طلبي|حالة الطلب|وين طلبي|فين طلبي|رقم الطلب|تتبع|order status|track/.test(normalize(text));
+}
+function extractOrderRef(text){
+  const t=arabicDigits(text);
+  const m=t.match(/#?\s*(\d{3,10})/);
+  return m?m[1]:'';
 }
 function missingGiftInfo(ctx){
   if(!ctx.recipient)return 'recipient';
@@ -674,36 +728,6 @@ function conversationalGiftReply(ctx){
   if(ctx.budget==null)return 'جميل جدًا 🎁 آخر حاجة بس: الميزانية في حدود كام درهم؟ عشان أطلعلك اختيارات مناسبة فعلًا.';
   return '';
 }
-function extractIntent(text){
-  const t=normalize(text);
-  let recipient='';
-  if(/اخت|اختي|اخته|اخوات/.test(t))recipient='أخت';
-  else if(/زوج|مرات|مراتي|زوجتي|حبيب|حبيبتي/.test(t))recipient='زوجة/حبيبة';
-  else if(/امي|امى|والدتي|ماما/.test(t))recipient='الأم';
-  else if(/ابويا|والدي|بابا|ابوي/.test(t))recipient='الأب';
-  else if(/ولد|ابني|ابن/.test(t))recipient='ولد';
-  else if(/بنت|بنتي/.test(t))recipient='بنت';
-  else if(/صديق|صاحبي|صاحبتي|صديقه/.test(t))recipient='صديق/صديقة';
-  let occasion='';
-  if(/ميلاد|عيد ميلاد/.test(t))occasion='عيد ميلاد';
-  else if(/زواج|جواز|عرس|فرح/.test(t))occasion='زواج';
-  else if(/تخرج|تخرجت|جامعه/.test(t))occasion='تخرج';
-  else if(/عيد/.test(t))occasion='عيد';
-  else if(/فالنتين|حب|رومانسي/.test(t))occasion='رومانسي';
-  else if(/مولود|بيبي/.test(t))occasion='مولود';
-  return {recipient,occasion,budget:parseBudget(text)};
-}
-function mergeContext(intent){
-  const last=conversation.filter(x=>x.role==='user').slice(-4).map(x=>extractIntent(x.text));
-  const out={recipient:'',occasion:'',budget:null};
-  last.concat([intent]).forEach(x=>{if(x.recipient)out.recipient=x.recipient;if(x.occasion)out.occasion=x.occasion;if(x.budget!=null)out.budget=x.budget});
-  return out;
-}
-function contextPrompt(c){
-  const parts=[];if(c.recipient)parts.push('للـ'+c.recipient);if(c.occasion)parts.push('بمناسبة '+c.occasion);if(c.budget!=null)parts.push('ميزانية '+c.budget+' درهم');
-  return parts.join(' • ');
-}
-
 /* =========================================================
    اقتراح المنتجات
 ========================================================= */
@@ -726,30 +750,71 @@ function productImage(p){
   return '/assets/logo.png';
 }
 function productLink(p){return p.link||('product.html?id='+encodeURIComponent(p.id))}
+const RECIPIENT_TERMS={
+  'أخت':['اخت','بنات','نسائي','نساء','women','girl'],
+  'زوجة/حبيبة':['زوج','زوجه','رومانسي','حب','نساء','women','romantic'],
+  'الأم':['ام','والده','نساء','mother'],
+  'الأب':['اب','والد','رجال','father','men'],
+  'جد':['جد','رجال','men'],
+  'جدة':['جده','نساء','women'],
+  'ولد/أخ':['ولد','اطفال','kids','boy'],
+  'بنت':['بنت','اطفال','kids','girl'],
+  'صديق/صديقة':['صديق','صداقه','friend'],
+  'زميل/مدير':['شغل','مكتب','رسمي','office','corporate'],
+  'معلم/معلمة':['معلم','مدرس','teacher'],
+  'نفسي':['نفسي','self']
+};
+const OCCASION_TERMS={
+  'عيد ميلاد':['ميلاد','birthday'],
+  'خطوبة':['خطوبه','engagement'],
+  'زواج':['زواج','فرح','wedding'],
+  'تخرج':['تخرج','graduation'],
+  'ترقية':['ترقيه','نجاح'],
+  'مولود جديد':['مولود','بيبي','baby','newborn'],
+  'رومانسي':['حب','رومانسي','valentine'],
+  'رمضان':['رمضان','ramadan'],
+  'عيد':['عيد','eid'],
+  'شكر وتقدير':['شكر','تقدير'],
+  'اعتذار':['اعتذار','سوري'],
+  'تهنئة':['تهنئه','مبروك'],
+  'افتتاح':['افتتاح','مشروع'],
+  'سفر/وداع':['سفر','وداع'],
+  'يوم الأم':['يوم الام'],
+  'إنجاز':['انجاز','نجاح']
+};
+const INTEREST_TERMS={
+  'قهوة':['قهوه','كوفي','coffee'],
+  'شوكولاتة':['شوكولاته','chocolate'],
+  'عطور':['عطر','برفان','perfume'],
+  'اكسسوارات':['اكسسوار'],
+  'ديكور':['ديكور'],
+  'اكريليك':['اكريليك','acrylic'],
+  'مج':['مج','كوب','mug'],
+  'ورد':['ورد','بوكيه','زهور','flowers'],
+  'ساعة':['ساعه','watch'],
+  'كتب':['كتاب','book'],
+  'أطفال':['اطفال','toys','kids']
+};
 function recipientTerms(msg){
   const t=normalize(msg),out=[];
-  if(/اخت|اختي|اخته/.test(t))out.push('اخت','بنات','نسائي','نساء','women','girl');
-  if(/زوج|مرات|زوجتي|حبيب/.test(t))out.push('زوج','زوجه','رومانسي','حب','نساء','women','romantic');
-  if(/امي|والدتي|ماما/.test(t))out.push('ام','والده','نساء','mother');
-  if(/ابويا|والدي|بابا/.test(t))out.push('اب','والد','رجال','father');
-  if(/ولد|ابني|ابن/.test(t))out.push('ولد','اطفال','kids','boy');
-  if(/بنت|بنتي/.test(t))out.push('بنت','اطفال','kids','girl');
+  RECIPIENT_MAP.forEach(([re,label])=>{if(re.test(t)&&RECIPIENT_TERMS[label])out.push(...RECIPIENT_TERMS[label])});
   return out;
 }
 function occasionTerms(msg){
   const t=normalize(msg),out=[];
-  if(/ميلاد/.test(t))out.push('ميلاد','birthday');
-  if(/زواج|جواز|عرس|فرح/.test(t))out.push('زواج','فرح','wedding');
-  if(/تخرج/.test(t))out.push('تخرج','graduation');
-  if(/رومانسي|فالنتين|حب/.test(t))out.push('حب','رومانسي','valentine');
-  if(/مولود|بيبي/.test(t))out.push('مولود','بيبي','baby');
+  OCCASION_MAP.forEach(([re,label])=>{if(re.test(t)&&OCCASION_TERMS[label])out.push(...OCCASION_TERMS[label])});
+  return out;
+}
+function interestTerms(msg){
+  const t=normalize(msg),out=[];
+  INTEREST_MAP.forEach(([re,label])=>{if(re.test(t)&&INTEREST_TERMS[label])out.push(...INTEREST_TERMS[label])});
   return out;
 }
 async function recommendProducts(msg,ctx=null){
   if(!botProducts.length)await loadProductsForBot();
   const c=ctx||extractIntent(msg);
   const budget=c.budget??parseBudget(msg);
-  const terms=recipientTerms(msg),occ=occasionTerms(msg);
+  const terms=recipientTerms(msg),occ=occasionTerms(msg),intr=interestTerms(msg);
   const text=normalize([msg,contextPrompt(c)].join(' '));
 
   return botProducts.map(p=>{
@@ -760,16 +825,11 @@ async function recommendProducts(msg,ctx=null){
     text.split(' ').filter(w=>w.length>2).forEach(w=>{
       if(pt.includes(w))s+=1.3;
     });
-    terms.forEach(w=>{
-      if(pt.includes(normalize(w)))s+=5;
-    });
-    occ.forEach(w=>{
-      if(pt.includes(normalize(w)))s+=4;
-    });
+    terms.forEach(w=>{ if(pt.includes(normalize(w)))s+=5; });
+    occ.forEach(w=>{ if(pt.includes(normalize(w)))s+=4; });
+    intr.forEach(w=>{ if(pt.includes(normalize(w)))s+=6; });
 
-    if(c.recipient==='أخت'&&/نساء|نسائي|بنات|girl|women|اكريليك/.test(pt))s+=3;
-    if(c.recipient==='الأم'&&/ام|والده|mother/.test(pt))s+=3;
-    if(c.recipient==='الأب'&&/اب|والد|father|men|رجال/.test(pt))s+=3;
+    if(RECIPIENT_TERMS[c.recipient]&&RECIPIENT_TERMS[c.recipient].some(w=>pt.includes(normalize(w))))s+=3;
 
     if(budget!=null){
       if(price>0&&price<=budget){
@@ -782,7 +842,7 @@ async function recommendProducts(msg,ctx=null){
     if(c.style==='فاخر'&&Number(p.rating||0)>=4.5)s+=2;
     if(c.style==='فاخر'&&p.featured)s+=2;
     if(c.style==='اقتصادي'&&price>0)s+=Math.max(0,5-price/50);
-    if(/بوكس|هدية|gift/.test(text)&&/بوكس|box|gift|هدايا/.test(pt))s+=4;
+    if(/بوكس|هديه|gift/.test(text)&&/بوكس|box|gift|هدايا/.test(pt))s+=4;
 
     return {...p,_score:s};
   }).filter(p=>p._score>0).sort((a,b)=>b._score-a._score).slice(0,6);
@@ -796,6 +856,39 @@ async function recommendProductsUI(){
   const ctx=extractIntent(m),r=await recommendProducts(m,ctx);
   $('productResults').innerHTML=r.length?'<div class="hint">السياق: '+esc(contextPrompt(ctx)||'لم يتم تحديد سياق')+'</div><div class="product-grid" style="margin-top:10px">'+productCards(r)+'</div>':'<div class="hint">مش لاقي منتجات مناسبة بالبيانات الحالية.</div>';
   $('productQueryStatus').textContent='تم تحميل '+botProducts.length+' منتج.';
+}
+
+/* =========================================================
+   تتبع الطلبات — يحتاج جدول orders في Supabase
+   (order_number, phone, status, created_at)
+   القيم المقترحة لعمود status: جديد، تم التأكيد، جاري التجهيز، تم الشحن، تم التوصيل، ملغي
+========================================================= */
+async function lookupOrder(ref){
+  if(!ref)return null;
+  try{
+    const byNumber=await window.sbFetch('orders?order_number=eq.'+encodeURIComponent(ref)+'&limit=1');
+    if(Array.isArray(byNumber)&&byNumber[0])return byNumber[0];
+    const byPhone=await window.sbFetch('orders?phone=ilike.*'+encodeURIComponent(ref)+'*&order=created_at.desc&limit=1');
+    if(Array.isArray(byPhone)&&byPhone[0])return byPhone[0];
+    return null;
+  }catch(e){
+    return {_error:e.message};
+  }
+}
+async function handleOrderStatus(raw){
+  const ref=extractOrderRef(raw);
+  if(!ref){
+    return {type:'clarify',text:'تمام، ابعتلي رقم الطلب أو رقم الموبايل اللي طلبت بيه وأنا أشوفلك حالته 📦'};
+  }
+  const order=await lookupOrder(ref);
+  if(!order){
+    return {type:'fallback',text:'مش لاقي طلب بالرقم ده حاليًا 🤔 اتأكد من الرقم، أو لو حابب أحولك لموظف يتابعلك.'};
+  }
+  if(order._error){
+    return {type:'fallback',text:settings.human};
+  }
+  const statusText=order.status||'قيد المعالجة';
+  return {type:'answer',text:'📦 حالة طلبك رقم '+(order.order_number||ref)+': '+statusText+(order.updated_at?'\nآخر تحديث: '+new Date(order.updated_at).toLocaleDateString('ar-EG'):''),match:{question:'تتبع طلب',score:99}};
 }
 
 /* =========================================================
@@ -822,6 +915,15 @@ async function processBotMessage(msg){
   const ctx=settings.conversationMode?mergeContext(intent):intent;
   $('intentBox').innerHTML='<b>السياق المستخرج:</b> '+esc(contextPrompt(ctx)||'لم يتم تحديد شخص/مناسبة/ميزانية');
 
+  if(orderStatusIntent(raw)){
+    $('ranking').innerHTML='<div class="hint">📦 البوت في وضع تتبع الطلب.</div>';
+    return await handleOrderStatus(raw);
+  }
+  if(humanHandoffIntent(raw)){
+    $('ranking').innerHTML='<div class="hint">👤 تم تحويل الطلب لموظف بشري.</div>';
+    return {type:'answer',text:settings.human,ctx,match:{question:'تحويل لموظف',score:99}};
+  }
+
   const inGiftFlow=giftIntent(raw)||conversation.some(x=>x.role==='user'&&giftIntent(x.text));
   if(inGiftFlow){
     const missing=missingGiftInfo(ctx);
@@ -840,23 +942,45 @@ async function processBotMessage(msg){
     return {type:'fallback',text:'فهمت طلبك '+contextPrompt(ctx)+'، لكن مش لاقي منتج مناسب حاليًا. ممكن نجرب ميزانية مختلفة؟',ctx};
   }
 
-  const searchText=settings.conversationMode
+  const minScore=Number(settings.minScore)||4;
+  const contextText=settings.conversationMode
     ?[raw,...conversation.filter(x=>x.role==='user').slice(-3).map(x=>x.text)].join(' ')
     :raw;
-  const ranked=rank(searchText);
-  const best=ranked[0];
-  renderRanking(ranked);
 
-  if(best&&best.score>=(Number(settings.minScore)||4)){
+  /* المحاولة 1: الرسالة + سياق المحادثة */
+  let ranked=rank(contextText);
+  let best=ranked[0];
+  renderRanking(ranked);
+  if(best&&best.score>=minScore){
     await incrementUsage(best);
     return {type:'answer',text:best.answer,ctx,match:best};
   }
 
-  const products=settings.autoProducts!==false?await recommendProducts(searchText,ctx):[];
+  /* المحاولة 2: الرسالة الخام لوحدها (لو السياق شوش المطابقة) */
+  if(settings.conversationMode){
+    const rankedRaw=rank(raw);
+    const bestRaw=rankedRaw[0];
+    if(bestRaw&&bestRaw.score>=minScore){
+      renderRanking(rankedRaw);
+      await incrementUsage(bestRaw);
+      return {type:'answer',text:bestRaw.answer,ctx,match:bestRaw};
+    }
+  }
+
+  /* المحاولة 3: عتبة أقل قليلًا لو فيه مطابقة قريبة جدًا (نص العتبة كحد أدنى معقول) */
+  const relaxedMin=Math.max(2,minScore*0.6);
+  if(best&&best.score>=relaxedMin){
+    await incrementUsage(best);
+    return {type:'answer',text:best.answer+'\n\n(لو مش ده قصدك بالظبط قوللي أوضحلك أكتر 🙏)',ctx,match:best};
+  }
+
+  /* المحاولة 4: اقتراح منتجات */
+  const products=settings.autoProducts!==false?await recommendProducts(contextText,ctx):[];
   if(products.length)return {type:'products',text:'لقيتلك أقرب منتجات مناسبة لطلبك 👇',ctx,products};
 
+  /* مفيش حاجة اتفهمت: يتحفظ ويتحول لموظف لو الإعداد مفعل */
   await persistUnanswered(raw);
-  return {type:'fallback',text:settings.fallback,ctx};
+  return {type:'fallback',text:settings.fallback+'\n'+settings.human,ctx};
 }
 function addMsg(role,text){
   conversation.push({role,text});
