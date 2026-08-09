@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>مساعد بريق 🤖</title>
 
@@ -25,6 +25,7 @@
   --muted:#788398;
   --green:#218644;
   --red:#c62828;
+  --yellow:#fff7d9;
 }
 
 body{
@@ -42,10 +43,12 @@ select{
 
 button{
   border:0;
-  border-radius:10px;
-  padding:10px 15px;
   cursor:pointer;
   font-weight:bold;
+}
+
+button:active{
+  transform:scale(.98);
 }
 
 button:disabled{
@@ -56,7 +59,7 @@ button:disabled{
 .header{
   background:var(--navy);
   color:#fff;
-  padding:16px 22px;
+  padding:15px 22px;
   display:flex;
   align-items:center;
   justify-content:space-between;
@@ -67,15 +70,31 @@ button:disabled{
   box-shadow:0 3px 15px rgba(0,0,0,.15);
 }
 
-.header h1{
+.header-title{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.header-title h1{
   margin:0;
   font-size:20px;
 }
 
-.header-actions{
+.header-status{
   display:flex;
+  align-items:center;
   gap:8px;
-  flex-wrap:wrap;
+  font-size:12px;
+  opacity:.9;
+}
+
+.status-dot{
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  background:#4caf50;
+  box-shadow:0 0 8px rgba(76,175,80,.7);
 }
 
 .container{
@@ -84,40 +103,51 @@ button:disabled{
   padding:20px;
 }
 
-.tabs{
-  display:flex;
-  gap:8px;
-  overflow-x:auto;
-  margin-bottom:18px;
-  padding-bottom:3px;
+.top-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:14px;
+  margin-bottom:20px;
 }
 
-.tab{
+.stat{
   background:#fff;
+  border-radius:15px;
+  padding:17px;
+  box-shadow:0 3px 15px rgba(0,0,0,.05);
+  border:1px solid rgba(0,0,0,.03);
+}
+
+.stat-icon{
+  font-size:25px;
+}
+
+.stat-label{
+  color:var(--muted);
+  font-size:13px;
+  margin-top:7px;
+}
+
+.stat-value{
+  font-size:25px;
+  font-weight:bold;
+  margin-top:4px;
   color:var(--navy);
-  border:1px solid var(--border);
-  white-space:nowrap;
 }
 
-.tab.active{
-  background:var(--navy);
-  color:#fff;
-}
-
-.panel{
-  display:none;
-}
-
-.panel.active{
-  display:block;
+.main-grid{
+  display:grid;
+  grid-template-columns:440px 1fr;
+  gap:20px;
+  align-items:start;
 }
 
 .card{
   background:#fff;
-  border-radius:16px;
+  border-radius:17px;
   padding:20px;
-  box-shadow:0 3px 15px rgba(0,0,0,.06);
-  margin-bottom:18px;
+  box-shadow:0 3px 15px rgba(0,0,0,.05);
+  margin-bottom:20px;
 }
 
 .card-title{
@@ -125,8 +155,7 @@ button:disabled{
   justify-content:space-between;
   align-items:center;
   gap:10px;
-  flex-wrap:wrap;
-  margin-bottom:15px;
+  margin-bottom:16px;
 }
 
 .card-title h2{
@@ -135,43 +164,15 @@ button:disabled{
   font-size:18px;
 }
 
-.grid{
-  display:grid;
-  grid-template-columns:420px 1fr;
-  gap:18px;
-}
-
-.stats{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:12px;
-  margin-bottom:18px;
-}
-
-.stat{
-  background:#fff;
-  border-radius:15px;
-  padding:18px;
-  box-shadow:0 3px 15px rgba(0,0,0,.05);
-}
-
-.stat-label{
+.card-title small{
   color:var(--muted);
-  font-size:13px;
-}
-
-.stat-value{
-  font-size:27px;
-  font-weight:bold;
-  color:var(--navy);
-  margin-top:8px;
 }
 
 label{
   display:block;
+  font-size:13px;
   font-weight:bold;
   margin:12px 0 6px;
-  font-size:14px;
 }
 
 input,
@@ -179,12 +180,12 @@ textarea,
 select{
   width:100%;
   border:1px solid #dce1ea;
-  border-radius:10px;
+  border-radius:11px;
   padding:12px;
-  font-size:14px;
   outline:none;
   background:#fafbfd;
   color:var(--text);
+  font-size:14px;
 }
 
 input:focus,
@@ -192,6 +193,7 @@ textarea:focus,
 select:focus{
   border-color:var(--gold);
   background:#fff;
+  box-shadow:0 0 0 3px rgba(212,175,55,.08);
 }
 
 textarea{
@@ -199,17 +201,15 @@ textarea{
   resize:vertical;
 }
 
-.form-row{
+.row{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:10px;
 }
 
-.buttons{
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-  margin-top:14px;
+.btn{
+  border-radius:10px;
+  padding:10px 14px;
 }
 
 .btn-primary{
@@ -237,19 +237,15 @@ textarea{
   color:var(--green);
 }
 
-.checkbox-row{
+.buttons{
   display:flex;
-  align-items:center;
   gap:8px;
-  margin-top:13px;
+  flex-wrap:wrap;
+  margin-top:14px;
 }
 
-.checkbox-row input{
-  width:auto;
-}
-
-.test-box{
-  height:370px;
+.chat{
+  height:400px;
   overflow-y:auto;
   border:1px solid var(--border);
   border-radius:13px;
@@ -259,9 +255,9 @@ textarea{
 
 .message{
   padding:11px 13px;
-  border-radius:11px;
+  border-radius:12px;
   margin-bottom:9px;
-  line-height:1.7;
+  line-height:1.75;
   white-space:pre-wrap;
   word-break:break-word;
 }
@@ -271,8 +267,15 @@ textarea{
 }
 
 .bot{
-  background:#fff7d9;
+  background:var(--yellow);
   border:1px solid #eadca0;
+}
+
+.system{
+  background:#eef1f6;
+  color:#68748a;
+  text-align:center;
+  font-size:12px;
 }
 
 .test-input{
@@ -285,77 +288,10 @@ textarea{
   flex:1;
 }
 
-.empty{
-  text-align:center;
-  color:#929aaa;
-  padding:35px 15px;
-}
-
-.item{
-  border:1px solid var(--border);
-  border-radius:13px;
-  padding:15px;
-  margin-bottom:10px;
-  background:#fff;
-}
-
-.item.disabled{
-  opacity:.55;
-}
-
-.question{
-  font-weight:bold;
-  color:var(--navy);
-  font-size:15px;
-}
-
-.answer{
-  margin-top:7px;
-  color:#555;
-  line-height:1.7;
-  white-space:pre-wrap;
-}
-
-.meta{
-  margin-top:10px;
-  color:var(--muted);
-  font-size:12px;
-  line-height:1.7;
-}
-
-.badge{
-  display:inline-block;
-  background:#eef1f6;
-  padding:4px 8px;
-  border-radius:20px;
-  margin-left:4px;
-  margin-bottom:4px;
-}
-
-.active{
-  background:#e4f7ea;
-  color:var(--green);
-}
-
-.inactive{
-  background:#ffe9e9;
-  color:var(--red);
-}
-
-.search-row{
-  display:grid;
-  grid-template-columns:1fr 180px 180px;
-  gap:8px;
-  margin-bottom:15px;
-}
-
-.notice{
-  background:#f0f3f8;
-  border-radius:11px;
-  padding:12px;
-  color:#657087;
-  line-height:1.7;
+.status{
   font-size:13px;
+  margin-top:10px;
+  line-height:1.6;
 }
 
 .success{
@@ -366,155 +302,316 @@ textarea{
   color:var(--red);
 }
 
-.status{
-  margin-top:10px;
-  font-size:13px;
-  line-height:1.7;
+.warning{
+  color:#9b7a00;
 }
 
-.duplicate-box{
-  background:#fff7d9;
-  border:1px solid #eadca0;
-  border-radius:11px;
-  padding:12px;
-  margin-top:10px;
-  display:none;
+.knowledge-toolbar{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:14px;
 }
 
-.setting-row{
-  padding:15px 0;
-  border-bottom:1px solid var(--border);
+.search{
+  flex:1;
+  min-width:220px;
 }
 
-.setting-row:last-child{
-  border-bottom:0;
+.filter{
+  width:150px;
 }
 
-.setting-title{
+.item{
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:15px;
+  margin-bottom:11px;
+  background:#fff;
+}
+
+.item.disabled{
+  opacity:.58;
+}
+
+.item-top{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  align-items:flex-start;
+}
+
+.question{
   font-weight:bold;
   color:var(--navy);
-  margin-bottom:5px;
+  font-size:15px;
+  line-height:1.6;
 }
 
-.setting-desc{
-  color:var(--muted);
-  font-size:12px;
-  margin-bottom:9px;
+.answer{
+  color:#555;
+  line-height:1.75;
+  white-space:pre-wrap;
+  margin-top:7px;
 }
 
-.meta-status{
+.meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+  margin-top:10px;
+}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  border-radius:20px;
+  padding:5px 9px;
+  background:#eef1f6;
+  color:#68748a;
+  font-size:11px;
+}
+
+.badge.active{
+  background:#e4f7ea;
+  color:var(--green);
+}
+
+.badge.inactive{
+  background:#ffe9e9;
+  color:var(--red);
+}
+
+.badge.gold{
+  background:#fff7d9;
+  color:#8a6a00;
+}
+
+.empty{
+  padding:35px;
+  text-align:center;
+  color:#929aaa;
+}
+
+.checkbox{
   display:flex;
   align-items:center;
   gap:8px;
+  font-size:13px;
+  margin-top:13px;
+}
+
+.checkbox input{
+  width:auto;
+}
+
+.duplicate-box{
+  background:#fff8df;
+  border:1px solid #eadca0;
   padding:12px;
-  border-radius:10px;
-  background:#f0f3f8;
-  margin-bottom:15px;
+  border-radius:11px;
+  margin-top:12px;
+  display:none;
 }
 
-.dot{
-  width:10px;
-  height:10px;
-  border-radius:50%;
-  background:#aaa;
+.duplicate-box strong{
+  display:block;
+  margin-bottom:5px;
 }
 
-.dot.green{
-  background:#25a244;
-}
-
-.dot.red{
-  background:#d62828;
-}
-
-.table-wrap{
+.section-tabs{
+  display:flex;
+  gap:7px;
   overflow:auto;
+  margin-bottom:20px;
 }
 
-table{
-  width:100%;
-  border-collapse:collapse;
-  min-width:650px;
+.section-tab{
+  white-space:nowrap;
+  background:#fff;
+  color:var(--navy);
+  border:1px solid var(--border);
+  padding:10px 14px;
+  border-radius:10px;
 }
 
-th,
-td{
-  padding:11px;
-  border-bottom:1px solid var(--border);
-  text-align:right;
+.section-tab.active{
+  background:var(--navy);
+  color:#fff;
+}
+
+.panel{
+  display:none;
+}
+
+.panel.active{
+  display:block;
+}
+
+.integration{
+  background:#fafbfd;
+  border:1px solid var(--border);
+  border-radius:13px;
+  padding:15px;
+  margin-bottom:12px;
+}
+
+.integration-title{
+  font-weight:bold;
+  color:var(--navy);
+  margin-bottom:8px;
+}
+
+.integration-desc{
+  font-size:12px;
+  color:var(--muted);
+  line-height:1.7;
+  margin-bottom:12px;
+}
+
+.info{
+  background:#eef4ff;
+  border:1px solid #d6e3ff;
+  color:#31558f;
+  padding:12px;
+  border-radius:11px;
+  line-height:1.7;
   font-size:13px;
 }
 
-th{
-  background:#f5f7fa;
-  color:var(--navy);
+.login-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(11,23,45,.94);
+  z-index:1000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
 }
 
-.import-box{
-  border:2px dashed #dce1ea;
-  border-radius:12px;
+.login-box{
+  width:100%;
+  max-width:430px;
+  background:#fff;
+  border-radius:20px;
   padding:25px;
+  box-shadow:0 20px 70px rgba(0,0,0,.3);
+}
+
+.login-logo{
   text-align:center;
+  font-size:45px;
+}
+
+.login-box h2{
+  text-align:center;
+  color:var(--navy);
+  margin:10px 0 5px;
+}
+
+.login-box p{
+  text-align:center;
+  color:var(--muted);
+  font-size:13px;
 }
 
 .toast{
   position:fixed;
   bottom:20px;
-  left:20px;
+  right:20px;
+  z-index:2000;
   background:var(--navy);
   color:#fff;
-  padding:12px 18px;
-  border-radius:10px;
+  padding:12px 17px;
+  border-radius:11px;
+  box-shadow:0 8px 25px rgba(0,0,0,.2);
+  transform:translateY(100px);
   opacity:0;
-  pointer-events:none;
-  transform:translateY(10px);
   transition:.25s;
-  z-index:9999;
+  pointer-events:none;
 }
 
 .toast.show{
-  opacity:1;
   transform:translateY(0);
+  opacity:1;
+}
+
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.45);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:1500;
+  padding:20px;
+}
+
+.modal.show{
+  display:flex;
+}
+
+.modal-box{
+  width:100%;
+  max-width:600px;
+  background:#fff;
+  border-radius:18px;
+  padding:20px;
+  max-height:90vh;
+  overflow:auto;
 }
 
 @media(max-width:1000px){
-  .grid{
-    grid-template-columns:1fr;
+  .top-grid{
+    grid-template-columns:repeat(2,1fr);
   }
 
-  .stats{
-    grid-template-columns:repeat(2,1fr);
+  .main-grid{
+    grid-template-columns:1fr;
   }
 }
 
-@media(max-width:650px){
+@media(max-width:600px){
   .container{
     padding:12px;
+  }
+
+  .top-grid{
+    grid-template-columns:1fr 1fr;
+    gap:9px;
+  }
+
+  .stat{
+    padding:12px;
+  }
+
+  .stat-value{
+    font-size:20px;
   }
 
   .header{
     padding:13px;
   }
 
-  .header h1{
+  .header-title h1{
     font-size:16px;
-  }
-
-  .stats{
-    grid-template-columns:1fr 1fr;
-  }
-
-  .form-row,
-  .search-row{
-    grid-template-columns:1fr;
   }
 
   .card{
     padding:15px;
   }
 
+  .row{
+    grid-template-columns:1fr;
+  }
+
   .test-input{
     flex-direction:column;
+  }
+
+  .filter{
+    width:100%;
   }
 }
 </style>
@@ -522,102 +619,192 @@ th{
 
 <body>
 
-<header class="header">
+<!-- ================= LOGIN ================= -->
 
-  <h1>🤖 مساعد بريق</h1>
+<div id="loginOverlay" class="login-overlay">
 
-  <div class="header-actions">
+  <div class="login-box">
 
-    <button class="btn-gray" onclick="location.href='admin.html'">
-      لوحة التحكم
+    <div class="login-logo">🤖</div>
+
+    <h2>مساعد بريق</h2>
+
+    <p>تسجيل دخول الأدمن لإدارة قاعدة معرفة البوت</p>
+
+    <label>الإيميل</label>
+    <input id="loginEmail" type="email" autocomplete="username">
+
+    <label>كلمة المرور</label>
+    <input id="loginPassword" type="password" autocomplete="current-password">
+
+    <button
+      id="loginButton"
+      class="btn btn-gold"
+      style="width:100%;margin-top:15px"
+      onclick="loginAdmin()">
+
+      دخول
+
     </button>
 
-    <button class="btn-gold" onclick="loadAll()">
-      🔄 تحديث
+    <div id="loginStatus" class="status"></div>
+
+  </div>
+
+</div>
+
+
+<!-- ================= HEADER ================= -->
+
+<header class="header">
+
+  <div class="header-title">
+
+    <div style="font-size:28px">🤖</div>
+
+    <div>
+      <h1>مساعد بريق</h1>
+
+      <div class="header-status">
+
+        <span class="status-dot"></span>
+
+        قاعدة المعرفة متصلة
+
+      </div>
+    </div>
+
+  </div>
+
+  <div style="display:flex;gap:7px;flex-wrap:wrap">
+
+    <button
+      class="btn btn-gray"
+      onclick="location.href='admin.html'">
+
+      لوحة التحكم
+
+    </button>
+
+    <button
+      class="btn btn-danger"
+      onclick="logoutAdmin()">
+
+      خروج
+
     </button>
 
   </div>
 
 </header>
 
+
 <div class="container">
 
-  <!-- التبويبات -->
+  <!-- ================= STATS ================= -->
 
-  <div class="tabs">
+  <div class="top-grid">
 
-    <button class="tab active" data-tab="dashboard" onclick="switchTab('dashboard')">
-      📊 الرئيسية
-    </button>
+    <div class="stat">
+      <div class="stat-icon">📚</div>
+      <div class="stat-label">إجمالي الأسئلة</div>
+      <div id="statTotal" class="stat-value">0</div>
+    </div>
 
-    <button class="tab" data-tab="knowledge" onclick="switchTab('knowledge')">
+    <div class="stat">
+      <div class="stat-icon">🟢</div>
+      <div class="stat-label">الأسئلة الفعالة</div>
+      <div id="statActive" class="stat-value">0</div>
+    </div>
+
+    <div class="stat">
+      <div class="stat-icon">💬</div>
+      <div class="stat-label">إجمالي الاستخدام</div>
+      <div id="statUsage" class="stat-value">0</div>
+    </div>
+
+    <div class="stat">
+      <div class="stat-icon">🏷️</div>
+      <div class="stat-label">التصنيفات</div>
+      <div id="statCategories" class="stat-value">0</div>
+    </div>
+
+  </div>
+
+
+  <!-- ================= TABS ================= -->
+
+  <div class="section-tabs">
+
+    <button
+      class="section-tab active"
+      data-tab="knowledge"
+      onclick="switchPanel('knowledge')">
+
       📚 قاعدة المعرفة
+
     </button>
 
-    <button class="tab" data-tab="add" onclick="switchTab('add')">
-      ➕ سؤال جديد
+    <button
+      class="section-tab"
+      data-tab="unanswered"
+      onclick="switchPanel('unanswered')">
+
+      🧠 الأسئلة غير المعروفة
+
     </button>
 
-    <button class="tab" data-tab="settings" onclick="switchTab('settings')">
+    <button
+      class="section-tab"
+      data-tab="meta"
+      onclick="switchPanel('meta')">
+
+      🔵 ربط Meta
+
+    </button>
+
+    <button
+      class="section-tab"
+      data-tab="settings"
+      onclick="switchPanel('settings')">
+
       ⚙️ إعدادات البوت
-    </button>
 
-    <button class="tab" data-tab="meta" onclick="switchTab('meta')">
-      🔗 ربط Meta
-    </button>
-
-    <button class="tab" data-tab="backup" onclick="switchTab('backup')">
-      💾 النسخ والاستيراد
     </button>
 
   </div>
 
 
   <!-- ================================================= -->
-  <!-- الرئيسية -->
+  <!-- KNOWLEDGE -->
   <!-- ================================================= -->
 
-  <section id="panel-dashboard" class="panel active">
+  <div id="panel-knowledge" class="panel active">
 
-    <div class="stats">
+    <div class="main-grid">
 
-      <div class="stat">
-        <div class="stat-label">إجمالي الأسئلة</div>
-        <div class="stat-value" id="statTotal">0</div>
-      </div>
-
-      <div class="stat">
-        <div class="stat-label">الأسئلة الفعالة</div>
-        <div class="stat-value" id="statActive">0</div>
-      </div>
-
-      <div class="stat">
-        <div class="stat-label">إجمالي الاستخدام</div>
-        <div class="stat-value" id="statUsage">0</div>
-      </div>
-
-      <div class="stat">
-        <div class="stat-label">التصنيفات</div>
-        <div class="stat-value" id="statCategories">0</div>
-      </div>
-
-    </div>
-
-
-    <div class="grid">
+      <!-- ================= LEFT ================= -->
 
       <div>
+
+        <!-- TEST BOT -->
 
         <div class="card">
 
           <div class="card-title">
+
             <h2>🧪 اختبار البوت</h2>
+
+            <small id="testConfidence"></small>
+
           </div>
 
-          <div id="chat" class="test-box">
+          <div id="chat" class="chat">
 
-            <div class="empty">
+            <div class="message system">
+
               اكتب سؤال عميل لتجربة البوت 👇
+
             </div>
 
           </div>
@@ -627,15 +814,15 @@ th{
             <input
               id="testMessage"
               placeholder="مثال: بتوصلوا راس الخيمة؟"
-              autocomplete="off"
-            >
+              autocomplete="off">
 
             <button
               id="testButton"
-              class="btn-gold"
-              onclick="testBot()"
-            >
+              class="btn btn-gold"
+              onclick="testBot()">
+
               إرسال
+
             </button>
 
           </div>
@@ -645,282 +832,345 @@ th{
         </div>
 
 
+        <!-- ADD / EDIT -->
+
         <div class="card">
 
           <div class="card-title">
-            <h2>⚡ إجراءات سريعة</h2>
+
+            <h2 id="formTitle">➕ إضافة سؤال</h2>
+
+            <button
+              class="btn btn-gray"
+              onclick="resetForm()">
+
+              جديد
+
+            </button>
+
           </div>
+
+          <label>السؤال</label>
+
+          <input
+            id="question"
+            placeholder="مثال: هل عندكم توصيل؟">
+
+          <label>الإجابة</label>
+
+          <textarea
+            id="answer"
+            placeholder="اكتب الرد الذكي الذي سيقوله البوت للعميل"></textarea>
+
+          <div class="row">
+
+            <div>
+
+              <label>التصنيف</label>
+
+              <input
+                id="category"
+                placeholder="التوصيل">
+
+            </div>
+
+            <div>
+
+              <label>الكلمات المرتبطة</label>
+
+              <input
+                id="keywords"
+                placeholder="توصيل، دليفري، delivery">
+
+            </div>
+
+          </div>
+
+          <div class="info" style="margin-top:12px">
+
+            💡 <b>الحفظ الذكي:</b>
+            لو سيبت الكلمات المرتبطة فاضية، الصفحة هتستخرج كلمات مهمة من السؤال تلقائيًا.
+
+          </div>
+
+          <div id="duplicateBox" class="duplicate-box">
+
+            <strong>⚠️ يوجد سؤال مشابه</strong>
+
+            <span id="duplicateText"></span>
+
+          </div>
+
+          <label class="checkbox">
+
+            <input
+              id="active"
+              type="checkbox"
+              checked>
+
+            السؤال فعال ويستخدمه البوت
+
+          </label>
 
           <div class="buttons">
 
-            <button class="btn-gold" onclick="newQuestion()">
-              ➕ إضافة سؤال
+            <button
+              id="saveButton"
+              class="btn btn-gold"
+              onclick="saveQuestion()">
+
+              💾 حفظ السؤال
+
             </button>
 
-            <button class="btn-primary" onclick="switchTab('knowledge')">
-              📚 قاعدة المعرفة
-            </button>
+            <button
+              class="btn btn-gray"
+              onclick="resetForm()">
 
-            <button class="btn-gray" onclick="switchTab('meta')">
-              🔗 إعداد Meta
+              إلغاء
+
             </button>
 
           </div>
+
+          <div id="formStatus" class="status"></div>
 
         </div>
 
       </div>
 
 
-      <div>
+      <!-- ================= RIGHT ================= -->
 
-        <div class="card">
+      <div class="card">
 
-          <div class="card-title">
-            <h2>🔥 أكثر الأسئلة استخدامًا</h2>
+        <div class="card-title">
+
+          <div>
+
+            <h2>📚 قاعدة معرفة البوت</h2>
+
+            <small>
+              الأسئلة الموجودة هنا هي مصدر إجابات البوت
+            </small>
+
           </div>
 
-          <div id="topQuestions"></div>
+          <button
+            class="btn btn-primary"
+            onclick="loadQuestions()">
 
-        </div>
-
-
-        <div class="card">
-
-          <div class="card-title">
-            <h2>🏷️ التصنيفات</h2>
-          </div>
-
-          <div id="categories"></div>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </section>
-
-
-  <!-- ================================================= -->
-  <!-- قاعدة المعرفة -->
-  <!-- ================================================= -->
-
-  <section id="panel-knowledge" class="panel">
-
-    <div class="card">
-
-      <div class="card-title">
-
-        <h2>📚 قاعدة معرفة البوت</h2>
-
-        <div class="buttons" style="margin:0">
-
-          <button class="btn-gold" onclick="newQuestion()">
-            ➕ إضافة
-          </button>
-
-          <button class="btn-gray" onclick="loadQuestions()">
             🔄 تحديث
+
           </button>
 
         </div>
 
-      </div>
+
+        <div class="knowledge-toolbar">
+
+          <input
+            id="search"
+            class="search"
+            placeholder="🔍 ابحث في الأسئلة والإجابات والكلمات..."
+            oninput="renderQuestions()">
+
+          <select
+            id="categoryFilter"
+            class="filter"
+            onchange="renderQuestions()">
+
+            <option value="">كل التصنيفات</option>
+
+          </select>
+
+          <select
+            id="statusFilter"
+            class="filter"
+            onchange="renderQuestions()">
+
+            <option value="">الكل</option>
+            <option value="active">فعال</option>
+            <option value="inactive">متوقف</option>
+
+          </select>
+
+        </div>
 
 
-      <div class="notice">
+        <div id="questions">
 
-        💡 البوت يبحث في السؤال والكلمات المرتبطة والإجابة.
-        كلما أضفت كلمات مفتاحية مختلفة لصياغات العملاء، زادت قدرة البوت على فهم السؤال.
+          <div class="empty">
+            جاري تحميل قاعدة المعرفة...
+          </div>
 
-      </div>
-
-
-      <br>
-
-
-      <div class="search-row">
-
-        <input
-          id="search"
-          placeholder="🔍 ابحث عن سؤال أو إجابة أو كلمة..."
-          oninput="renderQuestions()"
-        >
-
-        <select id="filterActive" onchange="renderQuestions()">
-
-          <option value="">كل الحالات</option>
-          <option value="true">فعال</option>
-          <option value="false">متوقف</option>
-
-        </select>
-
-        <select id="filterCategory" onchange="renderQuestions()">
-
-          <option value="">كل التصنيفات</option>
-
-        </select>
-
-      </div>
-
-
-      <div id="questions">
-
-        <div class="empty">
-          جاري تحميل الأسئلة...
         </div>
 
       </div>
 
     </div>
 
-  </section>
+  </div>
 
 
   <!-- ================================================= -->
-  <!-- إضافة / تعديل -->
+  <!-- UNANSWERED -->
   <!-- ================================================= -->
 
-  <section id="panel-add" class="panel">
+  <div id="panel-unanswered" class="panel">
 
     <div class="card">
 
       <div class="card-title">
 
-        <h2 id="formTitle">
-          ➕ إضافة سؤال جديد
-        </h2>
+        <div>
 
-        <button class="btn-gray" onclick="resetForm()">
-          إعادة ضبط
+          <h2>🧠 الأسئلة التي لم يعرفها البوت</h2>
+
+          <small>
+            الأسئلة التي يفشل البوت في مطابقتها يتم حفظها محليًا للمراجعة.
+          </small>
+
+        </div>
+
+        <button
+          class="btn btn-danger"
+          onclick="clearUnanswered()">
+
+          🗑️ مسح الكل
+
         </button>
 
       </div>
 
+      <div id="unansweredList"></div>
 
-      <label>السؤال</label>
+    </div>
 
-      <input
-        id="question"
-        placeholder="مثال: هل عندكم توصيل لراس الخيمة؟"
-        oninput="checkDuplicateLive()"
-      >
+  </div>
 
 
-      <div id="duplicateBox" class="duplicate-box"></div>
+  <!-- ================================================= -->
+  <!-- META -->
+  <!-- ================================================= -->
 
+  <div id="panel-meta" class="panel">
 
-      <label>الإجابة</label>
+    <div class="card">
 
-      <textarea
-        id="answer"
-        placeholder="اكتب الإجابة التي سيقولها البوت للعميل..."
-      ></textarea>
-
-
-      <div class="form-row">
+      <div class="card-title">
 
         <div>
 
-          <label>التصنيف</label>
+          <h2>🔵 ربط Meta</h2>
 
-          <input
-            id="category"
-            placeholder="التوصيل"
-          >
-
-        </div>
-
-
-        <div>
-
-          <label>الكلمات المرتبطة</label>
-
-          <input
-            id="keywords"
-            placeholder="توصيل، دليفري، delivery، شحن"
-          >
+          <small>
+            تجهيز البوت للربط مع Facebook / Instagram / WhatsApp
+          </small>
 
         </div>
 
       </div>
 
+      <div class="info">
 
-      <label class="checkbox-row">
+        ⚠️ مهم: بيانات Meta الحساسة مثل Access Token لا أنصح بتخزينها في
+        <b>localStorage</b>.
+        الربط الفعلي الآمن لازم يتم من خلال Backend أو Supabase Edge Function.
+        الصفحة دي مجهزة لإدارة إعدادات الربط، بدون تعريض Token الأدمن في المتصفح.
 
-        <input
-          type="checkbox"
-          id="active"
-          checked
-        >
+      </div>
 
-        السؤال فعال ويستخدمه البوت
 
-      </label>
+      <div class="integration">
+
+        <div class="integration-title">
+          💬 WhatsApp Business
+        </div>
+
+        <div class="integration-desc">
+
+          بيانات الربط المطلوبة لتوصيل البوت بواتساب.
+
+        </div>
+
+        <label>WhatsApp Business Phone Number ID</label>
+
+        <input id="metaPhoneId" placeholder="مثال: 123456789">
+
+        <label>WhatsApp Business Account ID</label>
+
+        <input id="metaBusinessId" placeholder="Business Account ID">
+
+        <label>Webhook URL</label>
+
+        <input id="metaWebhook" placeholder="https://...">
+
+        <label>Verify Token</label>
+
+        <input id="metaVerify" placeholder="رمز التحقق">
+
+      </div>
+
+
+      <div class="integration">
+
+        <div class="integration-title">
+          📘 Facebook Page
+        </div>
+
+        <label>Page ID</label>
+
+        <input id="metaPageId" placeholder="Facebook Page ID">
+
+      </div>
+
+
+      <div class="integration">
+
+        <div class="integration-title">
+          📸 Instagram
+        </div>
+
+        <label>Instagram Business Account ID</label>
+
+        <input id="metaInstagramId" placeholder="Instagram Business Account ID">
+
+      </div>
 
 
       <div class="buttons">
 
         <button
-          id="saveButton"
-          class="btn-gold"
-          onclick="saveQuestion()"
-        >
-          حفظ السؤال
+          class="btn btn-gold"
+          onclick="saveMetaSettings()">
+
+          💾 حفظ إعدادات Meta
+
         </button>
 
         <button
-          class="btn-gray"
-          onclick="resetForm()"
-        >
-          إلغاء
+          class="btn btn-gray"
+          onclick="testMetaConnection()">
+
+          🔌 اختبار الاتصال
+
         </button>
 
       </div>
 
-
-      <div id="formStatus" class="status"></div>
-
-    </div>
-
-
-    <div class="card">
-
-      <div class="card-title">
-        <h2>🧠 طريقة عمل التطابق</h2>
-      </div>
-
-      <div class="notice">
-
-        البوت يقوم بتطبيع النص العربي ثم يبحث عن:
-
-        <br><br>
-
-        • كلمات من سؤال العميل.
-        <br>
-        • الكلمات المرتبطة بالسؤال.
-        <br>
-        • تطابق السؤال بالكامل.
-        <br>
-        • ثم يختار أعلى نتيجة.
-
-        <br><br>
-
-        لو لم يجد ثقة كافية، لا يخترع إجابة ويطلب تحويل العميل لموظف.
-
-      </div>
+      <div id="metaStatus" class="status"></div>
 
     </div>
 
-  </section>
+  </div>
 
 
   <!-- ================================================= -->
-  <!-- إعدادات البوت -->
+  <!-- SETTINGS -->
   <!-- ================================================= -->
 
-  <section id="panel-settings" class="panel">
+  <div id="panel-settings" class="panel">
 
     <div class="card">
 
@@ -928,436 +1178,81 @@ th{
 
         <h2>⚙️ إعدادات البوت</h2>
 
-        <button class="btn-gold" onclick="saveSettings()">
+      </div>
+
+      <label>اسم البوت</label>
+
+      <input id="botName" value="مساعد بريق">
+
+      <label>رسالة عدم معرفة الإجابة</label>
+
+      <textarea id="fallbackMessage">مش لاقي إجابة مؤكدة للسؤال ده حاليًا 🤔
+
+ممكن نحوله لموظف بريق.</textarea>
+
+      <label>الحد الأدنى للمطابقة</label>
+
+      <select id="minScore">
+
+        <option value="2">منخفض</option>
+        <option value="4" selected>متوسط</option>
+        <option value="6">مرتفع</option>
+        <option value="8">دقيق جدًا</option>
+
+      </select>
+
+      <label class="checkbox">
+
+        <input
+          id="autoKeywords"
+          type="checkbox"
+          checked>
+
+        استخراج الكلمات المفتاحية تلقائيًا
+
+      </label>
+
+      <label class="checkbox">
+
+        <input
+          id="saveUnknown"
+          type="checkbox"
+          checked>
+
+        حفظ الأسئلة غير المعروفة للمراجعة
+
+      </label>
+
+      <div class="buttons">
+
+        <button
+          class="btn btn-gold"
+          onclick="saveBotSettings()">
+
           💾 حفظ الإعدادات
+
+        </button>
+
+        <button
+          class="btn btn-gray"
+          onclick="resetBotSettings()">
+
+          ↩️ الإعدادات الافتراضية
+
         </button>
 
       </div>
-
-
-      <div class="setting-row">
-
-        <div class="setting-title">
-          اسم البوت
-        </div>
-
-        <div class="setting-desc">
-          الاسم الذي يظهر للعميل.
-        </div>
-
-        <input id="botName" value="مساعد بريق">
-
-      </div>
-
-
-      <div class="setting-row">
-
-        <div class="setting-title">
-          رسالة الترحيب
-        </div>
-
-        <div class="setting-desc">
-          الرسالة الأولى عند بدء المحادثة.
-        </div>
-
-        <textarea id="welcomeMessage">أهلًا بيك في بريق للهدايا والإبداع 🎁
-إزاي أقدر أساعدك؟</textarea>
-
-      </div>
-
-
-      <div class="setting-row">
-
-        <div class="setting-title">
-          رسالة عدم العثور على إجابة
-        </div>
-
-        <div class="setting-desc">
-          تظهر عندما لا يجد البوت إجابة مناسبة.
-        </div>
-
-        <textarea id="fallbackMessage">مش لاقي إجابة مؤكدة للسؤال ده حاليًا 🤔
-
-ممكن أحولك لموظف من فريق بريق يساعدك.</textarea>
-
-      </div>
-
-
-      <div class="setting-row">
-
-        <div class="setting-title">
-          رسالة تحويل الموظف
-        </div>
-
-        <div class="setting-desc">
-          تستخدم عندما يطلب العميل موظفًا.
-        </div>
-
-        <textarea id="humanMessage">تمام ❤️ هحولك لموظف من فريق بريق يساعدك.</textarea>
-
-      </div>
-
-
-      <div class="form-row">
-
-        <div>
-
-          <label>درجة الثقة المطلوبة</label>
-
-          <input
-            id="confidence"
-            type="number"
-            min="1"
-            max="20"
-            value="4"
-          >
-
-        </div>
-
-
-        <div>
-
-          <label>الحد الأقصى للنتائج</label>
-
-          <input
-            id="maxResults"
-            type="number"
-            min="1"
-            max="10"
-            value="5"
-          >
-
-        </div>
-
-      </div>
-
-
-      <label class="checkbox-row">
-
-        <input
-          type="checkbox"
-          id="enableBot"
-          checked
-        >
-
-        تشغيل البوت
-
-      </label>
-
-
-      <label class="checkbox-row">
-
-        <input
-          type="checkbox"
-          id="allowHuman"
-          checked
-        >
-
-        السماح بتحويل العميل لموظف
-
-      </label>
-
 
       <div id="settingsStatus" class="status"></div>
 
     </div>
 
-  </section>
-
-
-  <!-- ================================================= -->
-  <!-- Meta -->
-  <!-- ================================================= -->
-
-  <section id="panel-meta" class="panel">
-
-    <div class="card">
-
-      <div class="card-title">
-
-        <h2>🔗 ربط Meta</h2>
-
-        <button class="btn-gold" onclick="saveMetaSettings()">
-          💾 حفظ
-        </button>
-
-      </div>
-
-
-      <div class="notice">
-
-        ⚠️ هذه الصفحة تحفظ إعدادات الربط فقط.
-
-        <br><br>
-
-        الاتصال الفعلي بـ Messenger وInstagram يحتاج Webhook
-        على السيرفر وAccess Token آمن. لا تضع App Secret أو Page Token
-        الحساس داخل كود JavaScript الموجود على المتصفح.
-
-      </div>
-
-      <br>
-
-
-      <div id="metaStatus" class="meta-status">
-
-        <span id="metaDot" class="dot"></span>
-
-        <span id="metaStatusText">
-          لم يتم إعداد Meta
-        </span>
-
-      </div>
-
-
-      <label>Meta App ID</label>
-
-      <input
-        id="metaAppId"
-        placeholder="مثال: 123456789"
-      >
-
-
-      <label>Facebook Page ID</label>
-
-      <input
-        id="metaPageId"
-        placeholder="Page ID"
-      >
-
-
-      <label>Instagram Business Account ID</label>
-
-      <input
-        id="instagramId"
-        placeholder="Instagram Business Account ID"
-      >
-
-
-      <label>Webhook URL</label>
-
-      <input
-        id="webhookUrl"
-        placeholder="https://your-domain.com/api/meta/webhook"
-      >
-
-
-      <label>Webhook Verify Token</label>
-
-      <input
-        id="webhookVerifyToken"
-        type="password"
-        placeholder="ضع Verify Token الخاص بالـ Webhook"
-      >
-
-
-      <label>Environment</label>
-
-      <select id="metaEnvironment">
-
-        <option value="development">
-          Development
-        </option>
-
-        <option value="production">
-          Production
-        </option>
-
-      </select>
-
-
-      <label class="checkbox-row">
-
-        <input
-          type="checkbox"
-          id="metaMessenger"
-        >
-
-        تفعيل Messenger
-
-      </label>
-
-
-      <label class="checkbox-row">
-
-        <input
-          type="checkbox"
-          id="metaInstagram"
-        >
-
-        تفعيل Instagram
-
-      </label>
-
-
-      <div class="buttons">
-
-        <button
-          class="btn-primary"
-          onclick="testMetaConfig()"
-        >
-          🧪 فحص الإعدادات
-        </button>
-
-        <button
-          class="btn-gray"
-          onclick="clearMetaSettings()"
-        >
-          مسح الإعدادات
-        </button>
-
-      </div>
-
-
-      <div id="metaFormStatus" class="status"></div>
-
-    </div>
-
-
-    <div class="card">
-
-      <div class="card-title">
-        <h2>💬 القنوات</h2>
-      </div>
-
-
-      <div class="item">
-
-        <div class="question">
-          Facebook Messenger
-        </div>
-
-        <div class="answer">
-          استقبال رسائل العملاء وتشغيل قاعدة معرفة بريق عليها.
-        </div>
-
-        <div class="meta">
-          الحالة تعتمد على إعداد Webhook وMeta App.
-        </div>
-
-      </div>
-
-
-      <div class="item">
-
-        <div class="question">
-          Instagram Direct
-        </div>
-
-        <div class="answer">
-          تجهيز البوت للرد على رسائل Instagram.
-        </div>
-
-        <div class="meta">
-          يحتاج Instagram Business/Professional وربط Meta الصحيح.
-        </div>
-
-      </div>
-
-    </div>
-
-  </section>
-
-
-  <!-- ================================================= -->
-  <!-- النسخ والاستيراد -->
-  <!-- ================================================= -->
-
-  <section id="panel-backup" class="panel">
-
-    <div class="card">
-
-      <div class="card-title">
-
-        <h2>💾 النسخ الاحتياطي</h2>
-
-        <button
-          class="btn-gold"
-          onclick="exportKnowledge()"
-        >
-          📥 تصدير قاعدة المعرفة
-        </button>
-
-      </div>
-
-
-      <div class="notice">
-
-        يتم تنزيل نسخة JSON من الأسئلة والإجابات والكلمات والتصنيفات.
-        احتفظ بها كنسخة احتياطية قبل أي تعديلات كبيرة.
-
-      </div>
-
-    </div>
-
-
-    <div class="card">
-
-      <div class="card-title">
-
-        <h2>📤 استيراد قاعدة معرفة</h2>
-
-      </div>
-
-
-      <div class="import-box">
-
-        <p>
-          اختر ملف JSON تم تصديره من صفحة البوت.
-        </p>
-
-        <input
-          id="importFile"
-          type="file"
-          accept=".json,application/json"
-        >
-
-        <div class="buttons" style="justify-content:center">
-
-          <button
-            class="btn-primary"
-            onclick="importKnowledge()"
-          >
-            📤 استيراد
-          </button>
-
-        </div>
-
-        <div id="importStatus" class="status"></div>
-
-      </div>
-
-    </div>
-
-
-    <div class="card">
-
-      <div class="card-title">
-
-        <h2>🧹 أدوات الإدارة</h2>
-
-      </div>
-
-      <div class="buttons">
-
-        <button class="btn-gray" onclick="removeDuplicateQuestions()">
-          🧠 فحص التكرار
-        </button>
-
-        <button class="btn-danger" onclick="deleteInactiveQuestions()">
-          🗑️ حذف الأسئلة المتوقفة
-        </button>
-
-      </div>
-
-      <div id="maintenanceStatus" class="status"></div>
-
-    </div>
-
-  </section>
+  </div>
 
 </div>
 
+
+<!-- ================= TOAST ================= -->
 
 <div id="toast" class="toast"></div>
 
@@ -1365,83 +1260,671 @@ th{
 <script>
 
 /* =====================================================
-   المتغيرات
+   إعدادات Supabase
+   نفس المشروع الموجود في ملفات بريق
 ===================================================== */
+
+const SUPABASE_URL =
+  'https://knleehjjejfeobcmpwnw.supabase.co';
+
+const SUPABASE_ANON =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+
 
 let questions = [];
 let editingId = null;
+let isSaving = false;
 
 
 /* =====================================================
    أدوات
 ===================================================== */
 
-const $ = id => document.getElementById(id);
+const $ = id =>
+  document.getElementById(id);
+
 
 function toast(msg){
 
-  const t = $("toast");
+  const el = $('toast');
 
-  if(!t) return;
+  if(!el) return;
 
-  t.textContent = msg;
+  el.textContent = msg;
 
-  t.classList.add("show");
+  el.classList.add('show');
 
-  clearTimeout(window.__toastTimer);
+  setTimeout(
+    () => el.classList.remove('show'),
+    2500
+  );
 
-  window.__toastTimer =
-    setTimeout(
-      ()=>t.classList.remove("show"),
-      2400
-    );
 }
 
 
 function escapeHtml(value){
 
-  return String(value ?? "")
-    .replace(/[&<>"']/g,char=>({
-
-      "&":"&amp;",
-      "<":"&lt;",
-      ">":"&gt;",
-      '"':"&quot;",
-      "'":"&#039;"
-
+  return String(value ?? '')
+    .replace(/[&<>"']/g,char => ({
+      '&':'&amp;',
+      '<':'&lt;',
+      '>':'&gt;',
+      '"':'&quot;',
+      "'":'&#039;'
     }[char]));
 
 }
 
 
 /* =====================================================
-   التنقل
+   Session / Admin JWT
 ===================================================== */
 
-function switchTab(name){
+function getToken(){
 
-  document.querySelectorAll(".tab")
-    .forEach(t=>{
-      t.classList.toggle(
-        "active",
-        t.dataset.tab === name
+  return sessionStorage.getItem(
+    'admin_token'
+  ) || '';
+
+}
+
+
+function getRefreshToken(){
+
+  return sessionStorage.getItem(
+    'admin_refresh_token'
+  ) || '';
+
+}
+
+
+function tokenExpired(){
+
+  const exp =
+    parseInt(
+      sessionStorage.getItem(
+        'admin_token_exp'
+      ) || '0'
+    );
+
+  if(!exp) return true;
+
+  return Date.now() >= exp - 60000;
+
+}
+
+
+/* =====================================================
+   تجديد JWT
+===================================================== */
+
+async function refreshToken(){
+
+  const refresh =
+    getRefreshToken();
+
+  if(!refresh) return null;
+
+  try{
+
+    const res =
+      await fetch(
+        SUPABASE_URL +
+        '/auth/v1/token?grant_type=refresh_token',
+        {
+          method:'POST',
+
+          headers:{
+            apikey:SUPABASE_ANON,
+            'Content-Type':
+              'application/json'
+          },
+
+          body:JSON.stringify({
+            refresh_token:refresh
+          })
+        }
       );
-    });
 
-  document.querySelectorAll(".panel")
-    .forEach(p=>{
-      p.classList.remove("active");
-    });
 
-  const panel = $("panel-"+name);
+    const data =
+      await res.json();
 
-  if(panel)
-    panel.classList.add("active");
 
-  sessionStorage.setItem(
-    "bot_active_tab",
-    name
+    if(!res.ok ||
+       !data.access_token){
+
+      return null;
+
+    }
+
+
+    sessionStorage.setItem(
+      'admin_token',
+      data.access_token
+    );
+
+
+    sessionStorage.setItem(
+      'admin_refresh_token',
+      data.refresh_token ||
+      refresh
+    );
+
+
+    sessionStorage.setItem(
+      'admin_token_exp',
+      String(
+        Date.now() +
+        (data.expires_in || 3600) *
+        1000
+      )
+    );
+
+
+    return data.access_token;
+
+  }catch(e){
+
+    console.error(
+      'REFRESH ERROR',
+      e
+    );
+
+    return null;
+
+  }
+
+}
+
+
+/* =====================================================
+   الحصول على JWT صالح
+===================================================== */
+
+async function getValidToken(){
+
+  let token =
+    getToken();
+
+
+  if(
+    token &&
+    !tokenExpired()
+  ){
+
+    return token;
+
+  }
+
+
+  const refreshed =
+    await refreshToken();
+
+
+  if(refreshed)
+    return refreshed;
+
+
+  return null;
+
+}
+
+
+/* =====================================================
+   Supabase REST
+   مهم:
+   لا يتم fallback إلى anon في عمليات الأدمن
+   حتى لا نرجع لمشكلة 42501
+===================================================== */
+
+async function adminFetch(
+  path,
+  options={}
+){
+
+  const token =
+    await getValidToken();
+
+
+  if(!token){
+
+    throw new Error(
+      'انتهت جلسة الأدمن. سجّل الدخول مرة أخرى.'
+    );
+
+  }
+
+
+  const headers = {
+
+    apikey:
+      SUPABASE_ANON,
+
+    Authorization:
+      'Bearer ' + token,
+
+    'Content-Type':
+      'application/json',
+
+    Prefer:
+      options.prefer ||
+      'return=representation',
+
+    ...(options.headers || {})
+
+  };
+
+
+  const res =
+    await fetch(
+      SUPABASE_URL +
+      '/rest/v1/' +
+      path,
+      {
+        ...options,
+        headers
+      }
+    );
+
+
+  if(
+    res.status === 401 ||
+    res.status === 403
+  ){
+
+    const refreshed =
+      await refreshToken();
+
+
+    if(refreshed){
+
+      return adminFetch(
+        path,
+        {
+          ...options,
+          __retry:true
+        }
+      );
+
+    }
+
+  }
+
+
+  const text =
+    await res.text();
+
+
+  let data = null;
+
+  try{
+
+    data =
+      text
+        ? JSON.parse(text)
+        : null;
+
+  }catch(e){
+
+    data = text;
+
+  }
+
+
+  if(!res.ok){
+
+    if(res.status === 42501){
+
+      throw new Error(
+        '42501: صلاحيات قاعدة البيانات رفضت العملية. تأكد أن جلسة الأدمن صالحة وأن الحساب موجود في جدول admins ومفعّل.'
+      );
+
+    }
+
+
+    throw new Error(
+      'SB ' +
+      res.status +
+      ': ' +
+      (
+        typeof data === 'string'
+          ? data
+          : JSON.stringify(data)
+      )
+    );
+
+  }
+
+
+  return data;
+
+}
+
+
+/* =====================================================
+   Admin Login
+===================================================== */
+
+async function loginAdmin(){
+
+  const email =
+    $('loginEmail')
+      .value
+      .trim();
+
+  const password =
+    $('loginPassword')
+      .value
+      .trim();
+
+
+  if(!email || !password){
+
+    $('loginStatus').textContent =
+      '❌ اكتب الإيميل وكلمة المرور';
+
+    $('loginStatus').className =
+      'status error';
+
+    return;
+
+  }
+
+
+  const button =
+    $('loginButton');
+
+
+  button.disabled = true;
+
+  button.textContent =
+    '⏳ جاري الدخول...';
+
+
+  try{
+
+    let authData;
+
+
+    if(
+      window.Supabase &&
+      window.Supabase.Auth &&
+      window.Supabase.Auth.signIn
+    ){
+
+      authData =
+        await window.Supabase.Auth.signIn(
+          email,
+          password
+        );
+
+    }else{
+
+      const res =
+        await fetch(
+          SUPABASE_URL +
+          '/auth/v1/token?grant_type=password',
+          {
+            method:'POST',
+
+            headers:{
+              apikey:SUPABASE_ANON,
+              'Content-Type':
+                'application/json'
+            },
+
+            body:JSON.stringify({
+              email,
+              password
+            })
+          }
+        );
+
+
+      const data =
+        await res.json();
+
+
+      if(!res.ok){
+
+        throw new Error(
+          data.error_description ||
+          data.msg ||
+          'بيانات الدخول غير صحيحة'
+        );
+
+      }
+
+
+      authData = data;
+
+    }
+
+
+    if(
+      !authData ||
+      !authData.access_token ||
+      !authData.user
+    ){
+
+      throw new Error(
+        'لم يتم الحصول على جلسة الأدمن.'
+      );
+
+    }
+
+
+    /*
+      التحقق من جدول admins
+    */
+
+    const admin =
+      await fetchAdmin(
+        authData.user.id,
+        email,
+        authData.access_token
+      );
+
+
+    if(!admin){
+
+      throw new Error(
+        'هذا الحساب غير موجود في صلاحيات الأدمن أو غير فعال.'
+      );
+
+    }
+
+
+    sessionStorage.setItem(
+      'admin_ok',
+      '1'
+    );
+
+    sessionStorage.setItem(
+      'admin_token',
+      authData.access_token
+    );
+
+    sessionStorage.setItem(
+      'admin_refresh_token',
+      authData.refresh_token || ''
+    );
+
+    sessionStorage.setItem(
+      'admin_token_exp',
+      String(
+        Date.now() +
+        (authData.expires_in || 3600) *
+        1000
+      )
+    );
+
+    sessionStorage.setItem(
+      'admin_name',
+      admin.full_name ||
+      email.split('@')[0]
+    );
+
+
+    $('loginOverlay').style.display =
+      'none';
+
+
+    toast(
+      '✅ تم تسجيل الدخول بنجاح'
+    );
+
+
+    await loadQuestions();
+
+    loadSettings();
+
+    loadMetaSettings();
+
+  }catch(error){
+
+    console.error(
+      'LOGIN ERROR',
+      error
+    );
+
+
+    $('loginStatus').textContent =
+      '❌ ' +
+      error.message;
+
+    $('loginStatus').className =
+      'status error';
+
+  }finally{
+
+    button.disabled = false;
+
+    button.textContent =
+      'دخول';
+
+  }
+
+}
+
+
+/* =====================================================
+   التحقق من Admin
+===================================================== */
+
+async function fetchAdmin(
+  userId,
+  email,
+  token
+){
+
+  const headers = {
+
+    apikey:
+      SUPABASE_ANON,
+
+    Authorization:
+      'Bearer ' + token,
+
+    'Content-Type':
+      'application/json'
+
+  };
+
+
+  async function query(
+    condition
+  ){
+
+    const res =
+      await fetch(
+        SUPABASE_URL +
+        '/rest/v1/admins?' +
+        condition +
+        '&active=eq.true&limit=1',
+        {
+          headers
+        }
+      );
+
+
+    if(!res.ok)
+      return null;
+
+
+    const rows =
+      await res.json();
+
+
+    return rows &&
+      rows[0]
+      ? rows[0]
+      : null;
+
+  }
+
+
+  return (
+    await query(
+      'user_id=eq.' +
+      encodeURIComponent(userId)
+    )
+  ) || (
+    await query(
+      'email=eq.' +
+      encodeURIComponent(email)
+    )
   );
+
+}
+
+
+/* =====================================================
+   Logout
+===================================================== */
+
+async function logoutAdmin(){
+
+  try{
+
+    if(
+      window.Supabase &&
+      window.Supabase.Auth &&
+      window.Supabase.Auth.signOut
+    ){
+
+      await window.Supabase.Auth.signOut(
+        getToken()
+      );
+
+    }
+
+  }catch(e){}
+
+
+  sessionStorage.removeItem(
+    'admin_ok'
+  );
+
+  sessionStorage.removeItem(
+    'admin_token'
+  );
+
+  sessionStorage.removeItem(
+    'admin_refresh_token'
+  );
+
+  sessionStorage.removeItem(
+    'admin_token_exp'
+  );
+
+  sessionStorage.removeItem(
+    'admin_name'
+  );
+
+
+  location.reload();
 
 }
 
@@ -1452,65 +1935,217 @@ function switchTab(name){
 
 function normalizeArabic(text){
 
-  return String(text || "")
+  return String(text || '')
     .toLowerCase()
-    .replace(/[إأآا]/g,"ا")
-    .replace(/ة/g,"ه")
-    .replace(/ى/g,"ي")
-    .replace(/[ًٌٍَُِّْـ]/g,"")
+
+    .replace(/[إأآا]/g,'ا')
+
+    .replace(/ة/g,'ه')
+
+    .replace(/ى/g,'ي')
+
+    .replace(/ؤ/g,'و')
+
+    .replace(/ئ/g,'ي')
+
+    .replace(
+      /[ًٌٍَُِّْـ]/g,
+      ''
+    )
+
     .replace(
       /[^\u0600-\u06FFa-zA-Z0-9\s]/g,
-      " "
+      ' '
     )
-    .replace(/\s+/g," ")
+
+    .replace(
+      /\s+/g,
+      ' '
+    )
+
     .trim();
 
 }
 
 
 /* =====================================================
-   الكلمات
+   استخراج الكلمات تلقائيًا
 ===================================================== */
 
-function getKeywords(text){
+function generateKeywords(
+  question
+){
 
-  return String(text || "")
-    .split(/[,،\n]/)
-    .map(x=>x.trim())
-    .filter(Boolean);
+  const stopWords = new Set([
+
+    'هل',
+    'هو',
+    'هي',
+    'هم',
+    'من',
+    'في',
+    'على',
+    'الى',
+    'إلى',
+    'عن',
+    'مع',
+    'عند',
+    'عندكم',
+    'عندكو',
+    'هل',
+    'ممكن',
+    'عايز',
+    'عاوزه',
+    'اريد',
+    'لو',
+    'فيه',
+    'في',
+    'اي',
+    'ايه',
+    'ما',
+    'ماذا',
+    'كيف',
+    'فين',
+    'اين',
+    'انا',
+    'احنا',
+    'انت',
+    'انتم',
+    'بت',
+    'بي',
+    'ب',
+    'و',
+    'او',
+    'ولا',
+    'ده',
+    'دي',
+    'دا',
+    'ده',
+    'كم',
+    'قد',
+    'يكون'
+
+  ]);
+
+
+  const words =
+    normalizeArabic(question)
+      .split(' ')
+      .filter(
+        word =>
+          word.length >= 3 &&
+          !stopWords.has(word)
+      );
+
+
+  const unique =
+    [...new Set(words)];
+
+
+  return unique.slice(
+    0,
+    8
+  );
 
 }
 
 
 /* =====================================================
-   حساب التطابق
+   حساب التشابه
 ===================================================== */
 
-function calculateScore(message,item){
+function similarity(
+  a,
+  b
+){
+
+  const A =
+    new Set(
+      normalizeArabic(a)
+        .split(' ')
+        .filter(w => w.length > 2)
+    );
+
+
+  const B =
+    new Set(
+      normalizeArabic(b)
+        .split(' ')
+        .filter(w => w.length > 2)
+    );
+
+
+  if(!A.size || !B.size)
+    return 0;
+
+
+  let common = 0;
+
+
+  A.forEach(
+    word => {
+
+      if(B.has(word))
+        common++;
+
+    }
+  );
+
+
+  return (
+    common /
+    Math.max(
+      A.size,
+      B.size
+    )
+  );
+
+}
+
+
+/* =====================================================
+   حساب Score
+===================================================== */
+
+function calculateScore(
+  message,
+  item
+){
 
   const text =
     normalizeArabic(message);
 
+
   const words =
     new Set(
       text
-        .split(" ")
+        .split(' ')
         .filter(Boolean)
     );
 
+
   let score = 0;
 
+
   const questionWords =
-    normalizeArabic(item.question)
-      .split(" ")
-      .filter(w=>w.length>2);
+    normalizeArabic(
+      item.question
+    )
+      .split(' ')
+      .filter(
+        word =>
+          word.length > 2
+      );
 
-  questionWords.forEach(word=>{
 
-    if(words.has(word))
-      score += 2;
+  questionWords.forEach(
+    word => {
 
-  });
+      if(words.has(word))
+        score += 2;
+
+    }
+  );
 
 
   const keywords =
@@ -1519,31 +2154,62 @@ function calculateScore(message,item){
       : [];
 
 
-  keywords.forEach(keyword=>{
+  keywords.forEach(
+    keyword => {
 
-    const key =
-      normalizeArabic(keyword);
+      const key =
+        normalizeArabic(
+          keyword
+        );
 
-    if(
-      key &&
-      text.includes(key)
-    ){
-      score += 4;
+
+      if(
+        key &&
+        text.includes(key)
+      ){
+
+        score += 4;
+
+      }
+
     }
-
-  });
+  );
 
 
   const normalizedQuestion =
-    normalizeArabic(item.question);
+    normalizeArabic(
+      item.question
+    );
 
 
   if(
     normalizedQuestion &&
-    text.includes(normalizedQuestion)
+    text.includes(
+      normalizedQuestion
+    )
   ){
+
     score += 5;
+
   }
+
+
+  /*
+    تشابه إضافي
+  */
+
+  const sim =
+    similarity(
+      message,
+      item.question
+    );
+
+
+  if(sim >= .75)
+    score += 6;
+
+  else if(sim >= .5)
+    score += 3;
 
 
   return score;
@@ -1552,56 +2218,50 @@ function calculateScore(message,item){
 
 
 /* =====================================================
-   تحميل الأسئلة
+   Load Questions
 ===================================================== */
 
 async function loadQuestions(){
 
-  const container = $("questions");
+  $('questions').innerHTML =
+    '<div class="empty">⏳ جاري تحميل قاعدة المعرفة...</div>';
 
-  if(container){
-
-    container.innerHTML =
-      `<div class="empty">جاري التحميل...</div>`;
-
-  }
 
   try{
 
     const data =
-      await sbFetch(
-        "bot_knowledge?select=*&order=id.desc"
+      await adminFetch(
+        'bot_knowledge?select=*&order=id.desc'
       );
+
 
     questions =
       Array.isArray(data)
         ? data
         : [];
 
+
     renderQuestions();
 
     updateStats();
 
-    renderTopQuestions();
-
-    renderCategories();
-
-    updateCategoryFilter();
+    buildCategoryFilter();
 
   }catch(error){
 
-    console.error(error);
+    $('questions').innerHTML = `
 
-    if(container){
+      <div class="empty error">
 
-      container.innerHTML =
-        `<div class="empty error">
-          فشل تحميل قاعدة المعرفة
-          <br><br>
-          ${escapeHtml(error.message)}
-        </div>`;
+        ❌ فشل تحميل قاعدة المعرفة
 
-    }
+        <br><br>
+
+        ${escapeHtml(error.message)}
+
+      </div>
+
+    `;
 
   }
 
@@ -1609,83 +2269,83 @@ async function loadQuestions(){
 
 
 /* =====================================================
-   عرض الأسئلة
+   Render
 ===================================================== */
 
 function renderQuestions(){
 
   const container =
-    $("questions");
-
-  if(!container) return;
+    $('questions');
 
 
   const search =
-    ($("search")?.value || "")
-      .trim()
-      .toLowerCase();
+    normalizeArabic(
+      $('search').value
+    );
 
 
-  const activeFilter =
-    $("filterActive")?.value || "";
+  const category =
+    $('categoryFilter').value;
 
 
-  const categoryFilter =
-    $("filterCategory")?.value || "";
+  const status =
+    $('statusFilter').value;
 
 
   const filtered =
-    questions.filter(item=>{
+    questions.filter(
+      item => {
 
-      const keywords =
-        Array.isArray(item.keywords)
-          ? item.keywords.join(" ")
-          : "";
-
-
-      const text =
-        [
-          item.question,
-          item.answer,
-          item.category,
-          keywords
-        ]
-        .join(" ")
-        .toLowerCase();
+        const keywords =
+          Array.isArray(item.keywords)
+            ? item.keywords.join(' ')
+            : '';
 
 
-      if(
-        search &&
-        !text.includes(search)
-      )
-        return false;
+        const text =
+          normalizeArabic(
+            [
+              item.question,
+              item.answer,
+              item.category,
+              keywords
+            ].join(' ')
+          );
 
 
-      if(
-        activeFilter &&
-        String(!!item.active) !== activeFilter
-      )
-        return false;
+        const searchOk =
+          !search ||
+          text.includes(search);
 
 
-      if(
-        categoryFilter &&
-        (item.category || "") !== categoryFilter
-      )
-        return false;
+        const categoryOk =
+          !category ||
+          item.category === category;
 
 
-      return true;
+        const statusOk =
+          !status ||
+          (
+            status === 'active'
+              ? !!item.active
+              : !item.active
+          );
 
-    });
+
+        return (
+          searchOk &&
+          categoryOk &&
+          statusOk
+        );
+
+      }
+    );
 
 
   if(!filtered.length){
 
     container.innerHTML =
-      `<div class="empty">
-        لا توجد نتائج
-      </div>`;
+      '<div class="empty">لا توجد نتائج</div>';
 
     return;
 
@@ -1693,122 +2353,160 @@ function renderQuestions(){
 
 
   container.innerHTML =
-    filtered.map(item=>{
+    filtered.map(
+      item => {
 
-      const keywords =
-        Array.isArray(item.keywords)
-          ? item.keywords
-          : [];
+        const keywords =
+          Array.isArray(item.keywords)
+            ? item.keywords
+            : [];
 
 
-      return `
+        return `
 
-        <div class="item ${
-          item.active ? "" : "disabled"
-        }">
-
-          <div class="question">
-            ${escapeHtml(item.question)}
-          </div>
-
-          <div class="answer">
-            ${escapeHtml(item.answer)}
-          </div>
-
-          <div class="meta">
-
-            <span class="badge">
-              ${escapeHtml(
-                item.category || "بدون تصنيف"
-              )}
-            </span>
-
-            <span class="badge ${
+          <div
+            class="item ${
               item.active
-                ? "active"
-                : "inactive"
-            }">
+                ? ''
+                : 'disabled'
+            }"
+          >
+
+            <div class="item-top">
+
+              <div class="question">
+
+                ${escapeHtml(
+                  item.question
+                )}
+
+              </div>
+
+              <span class="badge ${
+                item.active
+                  ? 'active'
+                  : 'inactive'
+              }">
+
+                ${
+                  item.active
+                    ? '🟢 فعال'
+                    : '🔴 متوقف'
+                }
+
+              </span>
+
+            </div>
+
+
+            <div class="answer">
+
+              ${escapeHtml(
+                item.answer
+              )}
+
+            </div>
+
+
+            <div class="meta">
+
+              <span class="badge">
+
+                🏷️
+                ${escapeHtml(
+                  item.category ||
+                  'بدون تصنيف'
+                )}
+
+              </span>
+
+              <span class="badge gold">
+
+                💬
+                ${Number(
+                  item.usage_count || 0
+                )}
+                استخدام
+
+              </span>
 
               ${
-                item.active
-                  ? "فعال"
-                  : "متوقف"
+                keywords.length
+                  ? `
+                    <span class="badge">
+
+                      🔑
+                      ${escapeHtml(
+                        keywords.join('، ')
+                      )}
+
+                    </span>
+                  `
+                  : ''
               }
 
-            </span>
+            </div>
 
-            <span class="badge">
-              استخدم ${Number(item.usage_count || 0)} مرة
-            </span>
 
-            ${
-              keywords.length
-                ? `
-                  <span class="badge">
-                    ${escapeHtml(
-                      keywords.join("، ")
-                    )}
-                  </span>
-                `
-                : ""
-            }
+            <div class="buttons">
+
+              <button
+                class="btn btn-gray"
+                onclick="editQuestion(${item.id})">
+
+                ✏️ تعديل
+
+              </button>
+
+
+              <button
+                class="btn ${
+                  item.active
+                    ? 'btn-danger'
+                    : 'btn-green'
+                }"
+                onclick="
+                  toggleQuestion(
+                    ${item.id},
+                    ${!!item.active}
+                  )
+                ">
+
+                ${
+                  item.active
+                    ? '🔴 تعطيل'
+                    : '🟢 تفعيل'
+                }
+
+              </button>
+
+
+              <button
+                class="btn btn-danger"
+                onclick="
+                  deleteQuestion(
+                    ${item.id}
+                  )
+                ">
+
+                🗑️ حذف
+
+              </button>
+
+            </div>
 
           </div>
 
+        `;
 
-          <div class="buttons">
-
-            <button
-              class="btn-gray"
-              onclick="editQuestion(${item.id})"
-            >
-              ✏️ تعديل
-            </button>
-
-
-            <button
-              class="${
-                item.active
-                  ? "btn-danger"
-                  : "btn-primary"
-              }"
-              onclick="
-                toggleQuestion(
-                  ${item.id},
-                  ${!!item.active}
-                )
-              "
-            >
-
-              ${
-                item.active
-                  ? "🔴 تعطيل"
-                  : "🟢 تفعيل"
-              }
-
-            </button>
-
-
-            <button
-              class="btn-danger"
-              onclick="deleteQuestion(${item.id})"
-            >
-              🗑️ حذف
-            </button>
-
-          </div>
-
-        </div>
-
-      `;
-
-    }).join("");
+      }
+    ).join('');
 
 }
 
 
 /* =====================================================
-   الإحصائيات
+   Stats
 ===================================================== */
 
 function updateStats(){
@@ -1816,266 +2514,227 @@ function updateStats(){
   const total =
     questions.length;
 
+
   const active =
-    questions.filter(x=>x.active).length;
+    questions.filter(
+      q => q.active
+    ).length;
+
 
   const usage =
     questions.reduce(
-      (sum,x)=>
-        sum + Number(x.usage_count || 0),
+      (sum,q) =>
+        sum +
+        Number(
+          q.usage_count || 0
+        ),
       0
     );
+
 
   const categories =
     new Set(
       questions
-        .map(x=>x.category)
+        .map(q => q.category)
         .filter(Boolean)
-    ).size;
+    );
 
 
-  $("statTotal").textContent =
+  $('statTotal').textContent =
     total;
 
-  $("statActive").textContent =
+
+  $('statActive').textContent =
     active;
 
-  $("statUsage").textContent =
+
+  $('statUsage').textContent =
     usage;
 
-  $("statCategories").textContent =
-    categories;
+
+  $('statCategories').textContent =
+    categories.size;
 
 }
 
 
 /* =====================================================
-   الأكثر استخدامًا
+   Category Filter
 ===================================================== */
 
-function renderTopQuestions(){
-
-  const el =
-    $("topQuestions");
-
-  if(!el) return;
-
-
-  const list =
-    [...questions]
-      .sort(
-        (a,b)=>
-          Number(b.usage_count||0) -
-          Number(a.usage_count||0)
-      )
-      .slice(0,7);
-
-
-  if(!list.length){
-
-    el.innerHTML =
-      `<div class="empty">
-        لا توجد بيانات بعد
-      </div>`;
-
-    return;
-
-  }
-
-
-  el.innerHTML =
-    list.map((item,index)=>`
-
-      <div class="item">
-
-        <div class="question">
-          ${index+1}. ${escapeHtml(item.question)}
-        </div>
-
-        <div class="meta">
-          استخدمت الإجابة
-          <b>${Number(item.usage_count||0)}</b>
-          مرة
-        </div>
-
-      </div>
-
-    `).join("");
-
-}
-
-
-/* =====================================================
-   التصنيفات
-===================================================== */
-
-function renderCategories(){
-
-  const el =
-    $("categories");
-
-  if(!el) return;
-
-
-  const map = {};
-
-  questions.forEach(item=>{
-
-    const cat =
-      item.category || "بدون تصنيف";
-
-    map[cat] =
-      (map[cat] || 0) + 1;
-
-  });
-
-
-  const rows =
-    Object.entries(map)
-      .sort((a,b)=>b[1]-a[1]);
-
-
-  if(!rows.length){
-
-    el.innerHTML =
-      `<div class="empty">
-        لا توجد تصنيفات
-      </div>`;
-
-    return;
-
-  }
-
-
-  el.innerHTML =
-    rows.map(([cat,count])=>`
-
-      <span class="badge">
-        ${escapeHtml(cat)}
-        <b>${count}</b>
-      </span>
-
-    `).join("");
-
-}
-
-
-/* =====================================================
-   فلتر التصنيفات
-===================================================== */
-
-function updateCategoryFilter(){
+function buildCategoryFilter(){
 
   const select =
-    $("filterCategory");
-
-  if(!select) return;
+    $('categoryFilter');
 
 
   const current =
     select.value;
 
 
-  const cats =
-    [...new Set(
-      questions
-        .map(x=>x.category)
-        .filter(Boolean)
-    )]
-      .sort();
+  const categories =
+    [
+      ...new Set(
+        questions
+          .map(
+            q => q.category
+          )
+          .filter(Boolean)
+      )
+    ]
+    .sort();
 
 
   select.innerHTML =
-    `<option value="">
-      كل التصنيفات
-    </option>`;
+    '<option value="">كل التصنيفات</option>' +
+    categories
+      .map(
+        c =>
+          `<option value="${escapeHtml(c)}">
+            ${escapeHtml(c)}
+          </option>`
+      )
+      .join('');
 
 
-  cats.forEach(cat=>{
+  if(
+    categories.includes(current)
+  ){
 
-    const option =
-      document.createElement("option");
+    select.value =
+      current;
 
-    option.value = cat;
-
-    option.textContent = cat;
-
-    select.appendChild(option);
-
-  });
-
-
-  select.value =
-    current;
+  }
 
 }
 
 
 /* =====================================================
-   إضافة سؤال
+   Duplicate Detection
 ===================================================== */
 
-function newQuestion(){
+function findDuplicate(
+  question,
+  ignoreId=null
+){
 
-  resetForm();
+  const normalized =
+    normalizeArabic(
+      question
+    );
 
-  switchTab("add");
 
-  setTimeout(
-    ()=>$("question")?.focus(),
-    100
-  );
+  let best = null;
+
+
+  for(
+    const item of questions
+  ){
+
+    if(
+      ignoreId &&
+      Number(item.id) ===
+      Number(ignoreId)
+    )
+      continue;
+
+
+    const exact =
+      normalizeArabic(
+        item.question
+      ) === normalized;
+
+
+    const sim =
+      similarity(
+        question,
+        item.question
+      );
+
+
+    if(
+      exact ||
+      sim >= .65
+    ){
+
+      best = {
+        item,
+        similarity:sim,
+        exact
+      };
+
+      break;
+
+    }
+
+  }
+
+
+  return best;
 
 }
 
 
 /* =====================================================
-   تعديل
+   Edit
 ===================================================== */
 
 function editQuestion(id){
 
   const item =
-    questions.find(x=>x.id===id);
+    questions.find(
+      q =>
+        Number(q.id) ===
+        Number(id)
+    );
 
-  if(!item) return;
+
+  if(!item)
+    return;
 
 
-  editingId = id;
+  editingId =
+    id;
 
 
-  $("question").value =
-    item.question || "";
+  $('question').value =
+    item.question || '';
 
-  $("answer").value =
-    item.answer || "";
 
-  $("category").value =
-    item.category || "";
+  $('answer').value =
+    item.answer || '';
 
-  $("keywords").value =
+
+  $('category').value =
+    item.category || '';
+
+
+  $('keywords').value =
     Array.isArray(item.keywords)
-      ? item.keywords.join("، ")
-      : "";
+      ? item.keywords.join('، ')
+      : '';
 
-  $("active").checked =
+
+  $('active').checked =
     !!item.active;
 
 
-  $("formTitle").textContent =
-    "✏️ تعديل السؤال";
-
-  $("saveButton").textContent =
-    "حفظ التعديل";
+  $('formTitle').textContent =
+    '✏️ تعديل السؤال';
 
 
-  $("formStatus").textContent = "";
-
-  $("duplicateBox").style.display =
-    "none";
+  $('saveButton').textContent =
+    '💾 حفظ التعديل';
 
 
-  switchTab("add");
+  $('duplicateBox').style.display =
+    'none';
+
+
+  window.scrollTo({
+    top:0,
+    behavior:'smooth'
+  });
 
 }
 
@@ -2086,230 +2745,128 @@ function editQuestion(id){
 
 function resetForm(){
 
-  editingId = null;
+  editingId =
+    null;
 
-  $("question").value = "";
 
-  $("answer").value = "";
+  $('question').value =
+    '';
 
-  $("category").value = "";
 
-  $("keywords").value = "";
+  $('answer').value =
+    '';
 
-  $("active").checked = true;
 
-  $("formTitle").textContent =
-    "➕ إضافة سؤال جديد";
+  $('category').value =
+    '';
 
-  $("saveButton").textContent =
-    "حفظ السؤال";
 
-  $("formStatus").textContent = "";
+  $('keywords').value =
+    '';
 
-  $("duplicateBox").style.display =
-    "none";
+
+  $('active').checked =
+    true;
+
+
+  $('formTitle').textContent =
+    '➕ إضافة سؤال';
+
+
+  $('saveButton').textContent =
+    '💾 حفظ السؤال';
+
+
+  $('formStatus').textContent =
+    '';
+
+
+  $('duplicateBox').style.display =
+    'none';
 
 }
 
 
 /* =====================================================
-   اكتشاف التكرار
+   Keywords
 ===================================================== */
 
-function similarity(a,b){
+function getKeywords(){
 
-  const A =
-    new Set(
-      normalizeArabic(a)
-        .split(" ")
-        .filter(Boolean)
-    );
-
-  const B =
-    new Set(
-      normalizeArabic(b)
-        .split(" ")
-        .filter(Boolean)
-    );
+  const raw =
+    $('keywords')
+      .value
+      .trim();
 
 
-  if(!A.size || !B.size)
-    return 0;
+  if(raw){
 
+    return raw
+      .split(/[,،]/)
+      .map(
+        x => x.trim()
+      )
+      .filter(Boolean);
 
-  let common = 0;
-
-  A.forEach(word=>{
-    if(B.has(word))
-      common++;
-  });
-
-
-  return common /
-    Math.max(A.size,B.size);
-
-}
-
-
-function findDuplicateQuestion(text){
-
-  if(!text)
-    return null;
-
-
-  const normalized =
-    normalizeArabic(text);
-
-
-  let best = null;
-
-  let bestScore = 0;
-
-
-  questions.forEach(item=>{
-
-    if(
-      editingId &&
-      item.id === editingId
-    )
-      return;
-
-
-    const score =
-      similarity(
-        normalized,
-        item.question
-      );
-
-
-    if(score > bestScore){
-
-      bestScore = score;
-
-      best = item;
-
-    }
-
-  });
+  }
 
 
   if(
-    best &&
-    bestScore >= .65
+    $('autoKeywords').checked
   ){
 
-    return {
-      item:best,
-      score:bestScore
-    };
+    return generateKeywords(
+      $('question').value
+    );
 
   }
 
 
-  return null;
-
-}
-
-
-function checkDuplicateLive(){
-
-  const box =
-    $("duplicateBox");
-
-  if(!box) return;
-
-
-  const text =
-    $("question").value.trim();
-
-
-  if(!text){
-
-    box.style.display =
-      "none";
-
-    return;
-
-  }
-
-
-  const duplicate =
-    findDuplicateQuestion(text);
-
-
-  if(!duplicate){
-
-    box.style.display =
-      "none";
-
-    return;
-
-  }
-
-
-  box.style.display =
-    "block";
-
-
-  box.innerHTML = `
-
-    ⚠️ يوجد سؤال قريب جدًا من السؤال الحالي:
-
-    <br><br>
-
-    <b>
-      ${escapeHtml(
-        duplicate.item.question
-      )}
-    </b>
-
-    <br>
-
-    درجة التشابه:
-    ${Math.round(
-      duplicate.score * 100
-    )}%
-
-    <br><br>
-
-    يمكنك تعديل السؤال أو إضافة صياغة مختلفة إذا كانت تحتاج إجابة مختلفة.
-
-  `;
+  return [];
 
 }
 
 
 /* =====================================================
-   حفظ
+   Save Question
 ===================================================== */
 
 async function saveQuestion(){
 
+  if(isSaving)
+    return;
+
+
   const question =
-    $("question").value.trim();
+    $('question')
+      .value
+      .trim();
+
 
   const answer =
-    $("answer").value.trim();
+    $('answer')
+      .value
+      .trim();
+
 
   const category =
-    $("category").value.trim();
+    $('category')
+      .value
+      .trim();
 
-  const keywords =
-    getKeywords(
-      $("keywords").value
-    );
 
   const active =
-    $("active").checked;
+    $('active')
+      .checked;
 
 
   if(!question){
 
-    $("formStatus").textContent =
-      "اكتب السؤال أولًا.";
+    $('formStatus').textContent =
+      '❌ اكتب السؤال أولًا.';
 
-    $("formStatus").className =
-      "status error";
+    $('formStatus').className =
+      'status error';
 
     return;
 
@@ -2318,90 +2875,131 @@ async function saveQuestion(){
 
   if(!answer){
 
-    $("formStatus").textContent =
-      "اكتب الإجابة أولًا.";
+    $('formStatus').textContent =
+      '❌ اكتب الإجابة أولًا.';
 
-    $("formStatus").className =
-      "status error";
+    $('formStatus').className =
+      'status error';
 
     return;
 
   }
 
 
+  /*
+    كشف التكرار
+  */
+
   const duplicate =
-    findDuplicateQuestion(question);
+    findDuplicate(
+      question,
+      editingId
+    );
 
 
-  if(duplicate){
+  if(
+    duplicate &&
+    !confirm(
+      '⚠️ يوجد سؤال مشابه بالفعل:\n\n' +
+      duplicate.item.question +
+      '\n\nهل تريد الحفظ رغم ذلك؟'
+    )
+  ){
 
-    const proceed =
-      confirm(
-        "⚠️ يوجد سؤال مشابه جدًا:\n\n" +
-        duplicate.item.question +
-        "\n\n" +
-        "هل تريد الحفظ رغم وجود التشابه؟"
-      );
-
-
-    if(!proceed)
-      return;
+    return;
 
   }
+
+
+  const keywords =
+    getKeywords();
 
 
   const payload = {
 
     question,
+
     answer,
-    category:category || null,
+
+    category:
+      category || null,
+
     keywords,
+
     active,
-    updated_at:new Date().toISOString()
+
+    updated_at:
+      new Date().toISOString()
 
   };
 
 
+  isSaving =
+    true;
+
+
+  $('saveButton').disabled =
+    true;
+
+
+  $('saveButton').textContent =
+    '⏳ جاري الحفظ...';
+
+
   try{
 
-    $("saveButton").disabled = true;
-
+    /*
+      مهم:
+      adminFetch لا يستخدم anon كـ Authorization.
+      لذلك لا نرجع لمشكلة 42501.
+    */
 
     if(editingId){
 
-      await sbFetch(
-        "bot_knowledge?id=eq."+editingId,
+      await adminFetch(
+        'bot_knowledge?id=eq.' +
+        encodeURIComponent(
+          editingId
+        ),
         {
-          method:"PATCH",
-          body:JSON.stringify(payload)
+          method:'PATCH',
+          body:JSON.stringify(
+            payload
+          )
         }
       );
 
 
-      toast("تم تعديل السؤال ✅");
+      toast(
+        '✅ تم تعديل السؤال'
+      );
 
 
     }else{
 
-      await sbFetch(
-        "bot_knowledge",
+      await adminFetch(
+        'bot_knowledge',
         {
-          method:"POST",
-          body:JSON.stringify(payload)
+          method:'POST',
+          body:JSON.stringify(
+            payload
+          )
         }
       );
 
 
-      toast("تمت إضافة السؤال ✅");
+      toast(
+        '✅ تم حفظ السؤال والإجابة'
+      );
 
     }
 
 
-    $("formStatus").textContent =
-      "تم الحفظ بنجاح ✅";
+    $('formStatus').textContent =
+      '✅ تم الحفظ بنجاح';
 
-    $("formStatus").className =
-      "status success";
+    $('formStatus').className =
+      'status success';
 
 
     await loadQuestions();
@@ -2415,19 +3013,33 @@ async function saveQuestion(){
 
   }catch(error){
 
-    console.error(error);
+    console.error(
+      'SAVE QUESTION ERROR:',
+      error
+    );
 
-    $("formStatus").textContent =
-      "فشل الحفظ: " +
+
+    $('formStatus').textContent =
+      '❌ فشل الحفظ: ' +
       error.message;
 
-    $("formStatus").className =
-      "status error";
+    $('formStatus').className =
+      'status error';
 
   }finally{
 
-    $("saveButton").disabled =
+    isSaving =
       false;
+
+
+    $('saveButton').disabled =
+      false;
+
+
+    $('saveButton').textContent =
+      editingId
+        ? '💾 حفظ التعديل'
+        : '💾 حفظ السؤال';
 
   }
 
@@ -2435,20 +3047,25 @@ async function saveQuestion(){
 
 
 /* =====================================================
-   تفعيل / تعطيل
+   Toggle
 ===================================================== */
 
-async function toggleQuestion(id,currentActive){
+async function toggleQuestion(
+  id,
+  current
+){
 
   try{
 
-    await sbFetch(
-      "bot_knowledge?id=eq."+id,
+    await adminFetch(
+      'bot_knowledge?id=eq.' +
+      encodeURIComponent(id),
       {
-        method:"PATCH",
+        method:'PATCH',
         body:JSON.stringify({
 
-          active:!currentActive,
+          active:
+            !current,
 
           updated_at:
             new Date().toISOString()
@@ -2461,16 +3078,15 @@ async function toggleQuestion(id,currentActive){
     await loadQuestions();
 
     toast(
-      currentActive
-        ? "تم تعطيل السؤال"
-        : "تم تفعيل السؤال"
+      !current
+        ? '🟢 تم تفعيل السؤال'
+        : '🔴 تم تعطيل السؤال'
     );
-
 
   }catch(error){
 
     alert(
-      "حدث خطأ:\n"+
+      '❌ ' +
       error.message
     );
 
@@ -2480,45 +3096,55 @@ async function toggleQuestion(id,currentActive){
 
 
 /* =====================================================
-   حذف
+   Delete
 ===================================================== */
 
 async function deleteQuestion(id){
 
   const item =
-    questions.find(x=>x.id===id);
+    questions.find(
+      q =>
+        Number(q.id) ===
+        Number(id)
+    );
 
 
-  if(!confirm(
-    "هل تريد حذف السؤال؟\n\n"+
-    (item?.question || "")+
-    "\n\nلا يمكن التراجع."
-  ))
+  if(!item)
+    return;
+
+
+  if(
+    !confirm(
+      'هل تريد حذف السؤال؟\n\n' +
+      item.question +
+      '\n\nلا يمكن التراجع عن الحذف.'
+    )
+  )
     return;
 
 
   try{
 
-    await sbFetch(
-      "bot_knowledge?id=eq."+id,
+    await adminFetch(
+      'bot_knowledge?id=eq.' +
+      encodeURIComponent(id),
       {
-        method:"DELETE",
-        headers:{
-          Prefer:"return=minimal"
-        }
+        method:'DELETE',
+        prefer:'return=minimal'
       }
     );
 
 
     await loadQuestions();
 
-    toast("تم حذف السؤال 🗑️");
-
+    toast(
+      '🗑️ تم حذف السؤال'
+    );
 
   }catch(error){
 
     alert(
-      "حدث خطأ:\n"+
+      '❌ فشل الحذف:\n' +
       error.message
     );
 
@@ -2528,13 +3154,14 @@ async function deleteQuestion(id){
 
 
 /* =====================================================
-   اختبار البوت
+   Test Bot
 ===================================================== */
 
 async function testBot(){
 
   const input =
-    $("testMessage");
+    $('testMessage');
+
 
   const message =
     input.value.trim();
@@ -2542,8 +3169,11 @@ async function testBot(){
 
   if(!message){
 
-    $("testStatus").textContent =
-      "اكتب سؤال أولًا.";
+    $('testStatus').textContent =
+      'اكتب سؤال أولًا.';
+
+    $('testStatus').className =
+      'status error';
 
     return;
 
@@ -2551,19 +3181,22 @@ async function testBot(){
 
 
   const chat =
-    $("chat");
+    $('chat');
 
 
-  const empty =
-    chat.querySelector(".empty");
+  const first =
+    chat.querySelector(
+      '.system'
+    );
 
 
-  if(empty)
-    empty.remove();
+  if(first)
+    first.remove();
 
 
   chat.insertAdjacentHTML(
-    "beforeend",
+    'beforeend',
+
     `
       <div class="message customer">
         👤 ${escapeHtml(message)}
@@ -2572,50 +3205,52 @@ async function testBot(){
   );
 
 
-  input.value = "";
+  input.value =
+    '';
 
 
   const button =
-    $("testButton");
+    $('testButton');
 
 
-  button.disabled = true;
+  button.disabled =
+    true;
+
 
   button.textContent =
-    "جاري البحث...";
+    '⏳ جاري البحث...';
 
 
   try{
 
     const data =
-      await sbFetch(
-        "bot_knowledge?select=id,question,answer,keywords,category,active,usage_count&active=eq.true"
+      await adminFetch(
+        'bot_knowledge?select=id,question,answer,keywords,category,active,usage_count&active=eq.true'
       );
 
 
     if(!Array.isArray(data))
       throw new Error(
-        "تعذر تحميل قاعدة المعرفة."
+        'لم يتم تحميل قاعدة المعرفة.'
       );
 
 
     const ranked =
       data
-        .map(item=>({
-
-          ...item,
-
-          score:
-            calculateScore(
-              message,
-              item
-            )
-
-        }))
-        .filter(item=>item.score>0)
+        .map(
+          item => ({
+            ...item,
+            score:
+              calculateScore(
+                message,
+                item
+              )
+          })
+        )
         .sort(
-          (a,b)=>
-            b.score-a.score
+          (a,b) =>
+            b.score -
+            a.score
         );
 
 
@@ -2623,17 +3258,17 @@ async function testBot(){
       ranked[0];
 
 
-    const confidence =
+    const minScore =
       Number(
         localStorage.getItem(
-          "bot_confidence"
+          'bariq_bot_min_score'
         ) || 4
       );
 
 
     const confident =
-      best &&
-      best.score >= confidence;
+      !!best &&
+      best.score >= minScore;
 
 
     let answer;
@@ -2645,28 +3280,36 @@ async function testBot(){
         best.answer;
 
 
+      /*
+        زيادة الاستخدام
+      */
+
       try{
 
-        await sbFetch(
-          "bot_knowledge?id=eq."+best.id,
+        await adminFetch(
+          'bot_knowledge?id=eq.' +
+          encodeURIComponent(
+            best.id
+          ),
           {
-            method:"PATCH",
+            method:'PATCH',
             body:JSON.stringify({
 
               usage_count:
                 Number(
-                  best.usage_count||0
-                )+1
+                  best.usage_count ||
+                  0
+                ) + 1
 
             })
           }
         );
 
-      }catch(e){
+      }catch(counterError){
 
         console.warn(
-          "usage counter",
-          e
+          'Usage counter:',
+          counterError
         );
 
       }
@@ -2675,15 +3318,21 @@ async function testBot(){
 
       answer =
         localStorage.getItem(
-          "bot_fallback"
+          'bariq_bot_fallback'
         ) ||
-        "مش لاقي إجابة مؤكدة للسؤال ده حاليًا 🤔\n\nممكن أحولك لموظف بريق.";
+        'مش لاقي إجابة مؤكدة للسؤال ده حاليًا 🤔\n\nممكن نحوله لموظف بريق.';
+
+
+      saveUnanswered(
+        message,
+        best
+      );
 
     }
 
 
     chat.insertAdjacentHTML(
-      "beforeend",
+      'beforeend',
 
       `
         <div class="message bot">
@@ -2695,36 +3344,61 @@ async function testBot(){
             ${
               confident
 
-              ? `
-                السؤال المطابق:
-                <b>
-                  ${escapeHtml(
-                    best.question
-                  )}
-                </b>
+                ? `
+                  <span class="badge active">
+                    ✅ تطابق مؤكد
+                  </span>
 
-                <br>
+                  <br><br>
 
-                درجة المطابقة:
-                ${best.score}
+                  السؤال المطابق:
+                  <b>
+                    ${escapeHtml(
+                      best.question
+                    )}
+                  </b>
 
-                ${
-                  best.category
-                    ? `
-                      <br>
-                      التصنيف:
-                      ${escapeHtml(
-                        best.category
-                      )}
-                    `
-                    : ""
-                }
+                  <br>
 
-              `
+                  درجة المطابقة:
+                  ${best.score}
 
-              : `
-                ⚠️ لم يتم العثور على تطابق مؤكد.
-              `
+                  ${
+                    best.category
+                      ? `
+                        <br>
+                        التصنيف:
+                        ${escapeHtml(
+                          best.category
+                        )}
+                      `
+                      : ''
+                  }
+                `
+
+                : `
+                  <span class="badge inactive">
+                    ⚠️ لا توجد مطابقة مؤكدة
+                  </span>
+
+                  ${
+                    best
+                      ? `
+                        <br><br>
+                        أقرب سؤال:
+                        <b>
+                          ${escapeHtml(
+                            best.question
+                          )}
+                        </b>
+
+                        <br>
+                        الدرجة:
+                        ${best.score}
+                      `
+                      : ''
+                  }
+                `
             }
 
           </div>
@@ -2738,51 +3412,66 @@ async function testBot(){
       chat.scrollHeight;
 
 
-    $("testStatus").textContent =
+    $('testConfidence').textContent =
       confident
-        ? "تم العثور على إجابة ✅"
-        : "لا توجد مطابقة مؤكدة ⚠️";
+        ? '✅ إجابة مؤكدة'
+        : '⚠️ ثقة منخفضة';
 
 
-    $("testStatus").className =
-      "status "+
-      (
-        confident
-          ? "success"
-          : "error"
-      );
+    $('testStatus').textContent =
+      confident
+        ? 'تم العثور على أفضل إجابة ✅'
+        : 'لم يتم العثور على إجابة مؤكدة ⚠️';
 
 
-    await loadQuestions();
+    $('testStatus').className =
+      confident
+        ? 'status success'
+        : 'status warning';
 
 
   }catch(error){
 
-    console.error(error);
+    console.error(
+      'BOT ERROR',
+      error
+    );
 
 
     chat.insertAdjacentHTML(
-      "beforeend",
+      'beforeend',
 
       `
         <div class="message bot">
 
-          ❌ حدث خطأ.
+          ❌ حدث خطأ
 
           <div class="meta">
-            ${escapeHtml(error.message)}
+
+            ${escapeHtml(
+              error.message
+            )}
+
           </div>
 
         </div>
       `
     );
 
+
+    $('testStatus').textContent =
+      error.message;
+
+    $('testStatus').className =
+      'status error';
+
   }finally{
 
-    button.disabled = false;
+    button.disabled =
+      false;
 
     button.textContent =
-      "إرسال";
+      'إرسال';
 
   }
 
@@ -2790,161 +3479,477 @@ async function testBot(){
 
 
 /* =====================================================
-   إعدادات البوت
+   Unanswered Questions
 ===================================================== */
 
-async function loadSettings(){
+function getUnanswered(){
 
   try{
 
     const data =
-      await sbFetch(
-        "bot_settings?select=*&limit=1"
+      JSON.parse(
+        localStorage.getItem(
+          'bariq_bot_unanswered'
+        ) || '[]'
       );
 
 
-    if(!Array.isArray(data) || !data[0])
-      return;
+    return Array.isArray(data)
+      ? data
+      : [];
 
+  }catch(e){
 
-    const s = data[0];
-
-
-    $("botName").value =
-      s.bot_name || "مساعد بريق";
-
-    $("welcomeMessage").value =
-      s.welcome_message || "";
-
-    $("fallbackMessage").value =
-      s.fallback_message || "";
-
-    $("humanMessage").value =
-      s.human_message || "";
-
-    $("confidence").value =
-      s.confidence ?? 4;
-
-    $("maxResults").value =
-      s.max_results ?? 5;
-
-    $("enableBot").checked =
-      s.enabled !== false;
-
-    $("allowHuman").checked =
-      s.allow_human !== false;
-
-
-  }catch(error){
-
-    console.warn(
-      "settings load",
-      error
-    );
+    return [];
 
   }
 
 }
 
 
-async function saveSettings(){
+function saveUnanswered(
+  message,
+  best
+){
 
-  const payload = {
+  if(
+    localStorage.getItem(
+      'bariq_bot_save_unknown'
+    ) === '0'
+  )
+    return;
 
-    bot_name:
-      $("botName").value.trim(),
 
-    welcome_message:
-      $("welcomeMessage").value.trim(),
+  const list =
+    getUnanswered();
 
-    fallback_message:
-      $("fallbackMessage").value.trim(),
 
-    human_message:
-      $("humanMessage").value.trim(),
+  const normalized =
+    normalizeArabic(
+      message
+    );
 
-    confidence:
-      Number($("confidence").value || 4),
 
-    max_results:
-      Number($("maxResults").value || 5),
+  if(
+    list.some(
+      x =>
+        normalizeArabic(
+          x.question
+        ) === normalized
+    )
+  )
+    return;
 
-    enabled:
-      $("enableBot").checked,
 
-    allow_human:
-      $("allowHuman").checked,
+  list.unshift({
 
-    updated_at:
+    id:
+      Date.now(),
+
+    question:
+      message,
+
+    closest:
+      best
+        ? best.question
+        : '',
+
+    score:
+      best
+        ? best.score
+        : 0,
+
+    created_at:
       new Date().toISOString()
 
-  };
+  });
 
 
-  try{
-
-    const existing =
-      await sbFetch(
-        "bot_settings?select=id&limit=1"
-      );
-
-
-    if(
-      Array.isArray(existing) &&
-      existing[0]
-    ){
-
-      await sbFetch(
-        "bot_settings?id=eq."+existing[0].id,
-        {
-          method:"PATCH",
-          body:JSON.stringify(payload)
-        }
-      );
-
-    }else{
-
-      await sbFetch(
-        "bot_settings",
-        {
-          method:"POST",
-          body:JSON.stringify(payload)
-        }
-      );
-
-    }
+  localStorage.setItem(
+    'bariq_bot_unanswered',
+    JSON.stringify(
+      list.slice(0,200)
+    )
+  );
 
 
-    localStorage.setItem(
-      "bot_confidence",
-      String(payload.confidence)
-    );
+  renderUnanswered();
 
-    localStorage.setItem(
-      "bot_fallback",
-      payload.fallback_message
-    );
+}
 
 
-    $("settingsStatus").textContent =
-      "تم حفظ إعدادات البوت ✅";
+function renderUnanswered(){
 
-    $("settingsStatus").className =
-      "status success";
-
-
-    toast("تم حفظ الإعدادات ⚙️");
+  const container =
+    $('unansweredList');
 
 
-  }catch(error){
+  const list =
+    getUnanswered();
 
-    $("settingsStatus").textContent =
-      "فشل الحفظ: "+error.message;
 
-    $("settingsStatus").className =
-      "status error";
+  if(!list.length){
+
+    container.innerHTML =
+      '<div class="empty">🎉 مفيش أسئلة معلقة حاليًا</div>';
+
+    return;
 
   }
+
+
+  container.innerHTML =
+    list.map(
+      item => `
+
+        <div class="item">
+
+          <div class="question">
+
+            ${escapeHtml(
+              item.question
+            )}
+
+          </div>
+
+          ${
+            item.closest
+              ? `
+                <div class="answer">
+
+                  أقرب سؤال:
+                  ${escapeHtml(
+                    item.closest
+                  )}
+
+                  <br>
+
+                  درجة التشابه:
+                  ${item.score}
+
+                </div>
+              `
+              : ''
+          }
+
+          <div class="meta">
+
+            <span class="badge">
+
+              ${new Date(
+                item.created_at
+              ).toLocaleString('ar-AE')}
+
+            </span>
+
+          </div>
+
+          <div class="buttons">
+
+            <button
+              class="btn btn-gold"
+              onclick="
+                useUnanswered(
+                  ${item.id}
+                )
+              ">
+
+              🧠 تحويل لسؤال
+
+            </button>
+
+            <button
+              class="btn btn-danger"
+              onclick="
+                removeUnanswered(
+                  ${item.id}
+                )
+              ">
+
+              🗑️ حذف
+
+            </button>
+
+          </div>
+
+        </div>
+
+      `
+    ).join('');
+
+}
+
+
+function useUnanswered(id){
+
+  const item =
+    getUnanswered()
+      .find(
+        x =>
+          Number(x.id) ===
+          Number(id)
+      );
+
+
+  if(!item)
+    return;
+
+
+  $('question').value =
+    item.question;
+
+
+  $('answer').value =
+    '';
+
+
+  $('keywords').value =
+    generateKeywords(
+      item.question
+    ).join('، ');
+
+
+  switchPanel(
+    'knowledge'
+  );
+
+
+  window.scrollTo({
+    top:0,
+    behavior:'smooth'
+  });
+
+
+  toast(
+    '🧠 تم نقل السؤال للنموذج'
+  );
+
+}
+
+
+function removeUnanswered(id){
+
+  const list =
+    getUnanswered()
+      .filter(
+        x =>
+          Number(x.id) !==
+          Number(id)
+      );
+
+
+  localStorage.setItem(
+    'bariq_bot_unanswered',
+    JSON.stringify(list)
+  );
+
+
+  renderUnanswered();
+
+}
+
+
+function clearUnanswered(){
+
+  if(
+    !confirm(
+      'مسح كل الأسئلة غير المعروفة؟'
+    )
+  )
+    return;
+
+
+  localStorage.removeItem(
+    'bariq_bot_unanswered'
+  );
+
+
+  renderUnanswered();
+
+}
+
+
+/* =====================================================
+   Panels
+===================================================== */
+
+function switchPanel(name){
+
+  document
+    .querySelectorAll(
+      '.section-tab'
+    )
+    .forEach(
+      tab =>
+        tab.classList.toggle(
+          'active',
+          tab.dataset.tab === name
+        )
+    );
+
+
+  document
+    .querySelectorAll(
+      '.panel'
+    )
+    .forEach(
+      panel =>
+        panel.classList.remove(
+          'active'
+        )
+    );
+
+
+  const panel =
+    $('panel-' + name);
+
+
+  if(panel)
+    panel.classList.add(
+      'active'
+    );
+
+
+  if(name === 'unanswered')
+    renderUnanswered();
+
+}
+
+
+/* =====================================================
+   Bot Settings
+===================================================== */
+
+function loadSettings(){
+
+  const name =
+    localStorage.getItem(
+      'bariq_bot_name'
+    );
+
+
+  const fallback =
+    localStorage.getItem(
+      'bariq_bot_fallback'
+    );
+
+
+  const score =
+    localStorage.getItem(
+      'bariq_bot_min_score'
+    );
+
+
+  const auto =
+    localStorage.getItem(
+      'bariq_bot_auto_keywords'
+    );
+
+
+  const unknown =
+    localStorage.getItem(
+      'bariq_bot_save_unknown'
+    );
+
+
+  if(name)
+    $('botName').value =
+      name;
+
+
+  if(fallback)
+    $('fallbackMessage').value =
+      fallback;
+
+
+  if(score)
+    $('minScore').value =
+      score;
+
+
+  $('autoKeywords').checked =
+    auto !== '0';
+
+
+  $('saveUnknown').checked =
+    unknown !== '0';
+
+}
+
+
+function saveBotSettings(){
+
+  localStorage.setItem(
+    'bariq_bot_name',
+    $('botName').value.trim()
+  );
+
+
+  localStorage.setItem(
+    'bariq_bot_fallback',
+    $('fallbackMessage').value.trim()
+  );
+
+
+  localStorage.setItem(
+    'bariq_bot_min_score',
+    $('minScore').value
+  );
+
+
+  localStorage.setItem(
+    'bariq_bot_auto_keywords',
+    $('autoKeywords').checked
+      ? '1'
+      : '0'
+  );
+
+
+  localStorage.setItem(
+    'bariq_bot_save_unknown',
+    $('saveUnknown').checked
+      ? '1'
+      : '0'
+  );
+
+
+  $('settingsStatus').textContent =
+    '✅ تم حفظ إعدادات البوت';
+
+  $('settingsStatus').className =
+    'status success';
+
+
+  toast(
+    '⚙️ تم حفظ الإعدادات'
+  );
+
+}
+
+
+function resetBotSettings(){
+
+  $('botName').value =
+    'مساعد بريق';
+
+
+  $('fallbackMessage').value =
+    'مش لاقي إجابة مؤكدة للسؤال ده حاليًا 🤔\n\nممكن نحوله لموظف بريق.';
+
+
+  $('minScore').value =
+    '4';
+
+
+  $('autoKeywords').checked =
+    true;
+
+
+  $('saveUnknown').checked =
+    true;
+
+
+  saveBotSettings();
 
 }
 
@@ -2953,600 +3958,144 @@ async function saveSettings(){
    Meta Settings
 ===================================================== */
 
-function getMetaSettings(){
+function loadMetaSettings(){
 
   try{
 
-    return JSON.parse(
-      localStorage.getItem(
-        "bariq_meta_settings"
-      ) || "{}"
-    );
-
-  }catch(e){
-
-    return {};
-
-  }
-
-}
+    const data =
+      JSON.parse(
+        localStorage.getItem(
+          'bariq_meta_settings'
+        ) || '{}'
+      );
 
 
-function loadMetaSettings(){
-
-  const s =
-    getMetaSettings();
+    $('metaPhoneId').value =
+      data.phoneId || '';
 
 
-  $("metaAppId").value =
-    s.appId || "";
-
-  $("metaPageId").value =
-    s.pageId || "";
-
-  $("instagramId").value =
-    s.instagramId || "";
-
-  $("webhookUrl").value =
-    s.webhookUrl || "";
-
-  $("webhookVerifyToken").value =
-    s.webhookVerifyToken || "";
-
-  $("metaEnvironment").value =
-    s.environment || "development";
-
-  $("metaMessenger").checked =
-    !!s.messenger;
-
-  $("metaInstagram").checked =
-    !!s.instagram;
+    $('metaBusinessId').value =
+      data.businessId || '';
 
 
-  updateMetaStatus();
+    $('metaWebhook').value =
+      data.webhook || '';
+
+
+    $('metaVerify').value =
+      data.verify || '';
+
+
+    $('metaPageId').value =
+      data.pageId || '';
+
+
+    $('metaInstagramId').value =
+      data.instagramId || '';
+
+  }catch(e){}
 
 }
 
 
 function saveMetaSettings(){
 
-  const settings = {
+  const data = {
 
-    appId:
-      $("metaAppId").value.trim(),
+    phoneId:
+      $('metaPhoneId').value.trim(),
+
+    businessId:
+      $('metaBusinessId').value.trim(),
+
+    webhook:
+      $('metaWebhook').value.trim(),
+
+    verify:
+      $('metaVerify').value.trim(),
 
     pageId:
-      $("metaPageId").value.trim(),
+      $('metaPageId').value.trim(),
 
     instagramId:
-      $("instagramId").value.trim(),
-
-    webhookUrl:
-      $("webhookUrl").value.trim(),
-
-    webhookVerifyToken:
-      $("webhookVerifyToken").value.trim(),
-
-    environment:
-      $("metaEnvironment").value,
-
-    messenger:
-      $("metaMessenger").checked,
-
-    instagram:
-      $("metaInstagram").checked
+      $('metaInstagramId').value.trim()
 
   };
 
 
   localStorage.setItem(
-    "bariq_meta_settings",
-    JSON.stringify(settings)
+    'bariq_meta_settings',
+    JSON.stringify(data)
   );
 
 
-  updateMetaStatus();
+  $('metaStatus').textContent =
+    '✅ تم حفظ إعدادات Meta على هذا الجهاز. الربط الفعلي يحتاج Webhook/Edge Function آمن.';
 
-
-  $("metaFormStatus").textContent =
-    "تم حفظ إعدادات Meta على الجهاز ✅";
-
-  $("metaFormStatus").className =
-    "status success";
-
-
-  toast("تم حفظ إعدادات Meta 🔗");
+  $('metaStatus').className =
+    'status success';
 
 }
 
 
-function updateMetaStatus(){
-
-  const s =
-    getMetaSettings();
-
-
-  const configured =
-    !!(
-      s.appId &&
-      s.pageId &&
-      s.webhookUrl
-    );
-
-
-  $("metaDot")
-    .classList.toggle(
-      "green",
-      configured
-    );
-
-
-  $("metaDot")
-    .classList.toggle(
-      "red",
-      !configured
-    );
-
-
-  $("metaStatusText")
-    .textContent =
-      configured
-        ? "تم إدخال بيانات الربط الأساسية"
-        : "لم يتم إعداد Meta بالكامل";
-
-}
-
-
-function testMetaConfig(){
-
-  const appId =
-    $("metaAppId").value.trim();
-
-  const pageId =
-    $("metaPageId").value.trim();
+async function testMetaConnection(){
 
   const webhook =
-    $("webhookUrl").value.trim();
-
-
-  if(!appId){
-
-    $("metaFormStatus").textContent =
-      "أدخل Meta App ID.";
-
-    $("metaFormStatus").className =
-      "status error";
-
-    return;
-
-  }
-
-
-  if(!pageId){
-
-    $("metaFormStatus").textContent =
-      "أدخل Facebook Page ID.";
-
-    $("metaFormStatus").className =
-      "status error";
-
-    return;
-
-  }
+    $('metaWebhook')
+      .value
+      .trim();
 
 
   if(!webhook){
 
-    $("metaFormStatus").textContent =
-      "أدخل Webhook URL.";
+    $('metaStatus').textContent =
+      '⚠️ اكتب Webhook URL أولًا.';
 
-    $("metaFormStatus").className =
-      "status error";
-
-    return;
-
-  }
-
-
-  $("metaFormStatus").textContent =
-    "الإعدادات الأساسية تبدو مكتملة. الاتصال الفعلي يحتاج Webhook يعمل على السيرفر.";
-
-  $("metaFormStatus").className =
-    "status success";
-
-}
-
-
-function clearMetaSettings(){
-
-  if(!confirm(
-    "مسح إعدادات Meta من هذا الجهاز؟"
-  ))
-    return;
-
-
-  localStorage.removeItem(
-    "bariq_meta_settings"
-  );
-
-
-  loadMetaSettings();
-
-  toast("تم مسح إعدادات Meta");
-
-}
-
-
-/* =====================================================
-   تصدير
-===================================================== */
-
-function exportKnowledge(){
-
-  const data = {
-
-    exported_at:
-      new Date().toISOString(),
-
-    version:1,
-
-    questions
-
-  };
-
-
-  const blob =
-    new Blob(
-      [
-        JSON.stringify(
-          data,
-          null,
-          2
-        )
-      ],
-      {
-        type:"application/json"
-      }
-    );
-
-
-  const url =
-    URL.createObjectURL(blob);
-
-
-  const a =
-    document.createElement("a");
-
-
-  a.href = url;
-
-  a.download =
-    "bariq-bot-knowledge-"+
-
-    new Date()
-      .toISOString()
-      .slice(0,10)
-
-    +".json";
-
-
-  a.click();
-
-
-  URL.revokeObjectURL(url);
-
-
-  toast("تم تصدير قاعدة المعرفة 📥");
-
-}
-
-
-/* =====================================================
-   استيراد
-===================================================== */
-
-async function importKnowledge(){
-
-  const file =
-    $("importFile").files[0];
-
-
-  if(!file){
-
-    $("importStatus").textContent =
-      "اختر ملف JSON أولًا.";
-
-    $("importStatus").className =
-      "status error";
+    $('metaStatus').className =
+      'status warning';
 
     return;
 
   }
+
+
+  $('metaStatus').textContent =
+    '⏳ جاري اختبار الـ Webhook...';
+
+  $('metaStatus').className =
+    'status';
 
 
   try{
 
-    const text =
-      await file.text();
-
-
-    const data =
-      JSON.parse(text);
-
-
-    const list =
-      Array.isArray(data)
-        ? data
-        : data.questions;
-
-
-    if(!Array.isArray(list))
-      throw new Error(
-        "الملف غير صالح."
-      );
-
-
-    let added = 0;
-
-    let skipped = 0;
-
-
-    for(const item of list){
-
-      if(
-        !item.question ||
-        !item.answer
-      ){
-
-        skipped++;
-
-        continue;
-
-      }
-
-
-      const duplicate =
-        findDuplicateQuestion(
-          item.question
-        );
-
-
-      if(duplicate){
-
-        skipped++;
-
-        continue;
-
-      }
-
-
-      await sbFetch(
-        "bot_knowledge",
+    const res =
+      await fetch(
+        webhook,
         {
-          method:"POST",
-          body:JSON.stringify({
-
-            question:
-              item.question,
-
-            answer:
-              item.answer,
-
-            category:
-              item.category || null,
-
-            keywords:
-              Array.isArray(item.keywords)
-                ? item.keywords
-                : [],
-
-            active:
-              item.active !== false,
-
-            usage_count:
-              Number(
-                item.usage_count || 0
-              ),
-
-            updated_at:
-              new Date().toISOString()
-
-          })
+          method:'OPTIONS'
         }
       );
 
 
-      added++;
+    $('metaStatus').textContent =
+      res.ok
+        ? '✅ الـ Webhook يستجيب.'
+        : '⚠️ الـ Webhook موجود لكن رجع HTTP ' + res.status;
 
-    }
-
-
-    await loadQuestions();
-
-
-    $("importStatus").textContent =
-      `تم الاستيراد ✅ — تمت إضافة ${added} — تم تجاهل ${skipped}`;
-
-    $("importStatus").className =
-      "status success";
-
+    $('metaStatus').className =
+      res.ok
+        ? 'status success'
+        : 'status warning';
 
   }catch(error){
 
-    console.error(error);
+    $('metaStatus').textContent =
+      '⚠️ تعذر اختبار الـ Webhook من المتصفح.';
 
-    $("importStatus").textContent =
-      "فشل الاستيراد: "+
-      error.message;
-
-    $("importStatus").className =
-      "status error";
+    $('metaStatus').className =
+      'status warning';
 
   }
-
-}
-
-
-/* =====================================================
-   فحص التكرار
-===================================================== */
-
-function removeDuplicateQuestions(){
-
-  const duplicates = [];
-
-
-  questions.forEach((item,index)=>{
-
-    for(
-      let i=index+1;
-      i<questions.length;
-      i++
-    ){
-
-      const other =
-        questions[i];
-
-
-      const score =
-        similarity(
-          item.question,
-          other.question
-        );
-
-
-      if(score>=.80){
-
-        duplicates.push({
-
-          a:item,
-          b:other,
-          score
-
-        });
-
-      }
-
-    }
-
-  });
-
-
-  if(!duplicates.length){
-
-    $("maintenanceStatus").textContent =
-      "لم يتم العثور على أسئلة مكررة بشكل واضح ✅";
-
-    $("maintenanceStatus").className =
-      "status success";
-
-    return;
-
-  }
-
-
-  const preview =
-    duplicates
-      .slice(0,10)
-      .map(x=>
-        `• ${x.a.question}\n  ↔ ${x.b.question}`
-      )
-      .join("\n\n");
-
-
-  $("maintenanceStatus").textContent =
-    `تم العثور على ${duplicates.length} أزواج متشابهة:\n\n${preview}`;
-
-  $("maintenanceStatus").className =
-    "status error";
-
-}
-
-
-/* =====================================================
-   حذف المتوقف
-===================================================== */
-
-async function deleteInactiveQuestions(){
-
-  const inactive =
-    questions.filter(x=>!x.active);
-
-
-  if(!inactive.length){
-
-    toast("لا توجد أسئلة متوقفة");
-
-    return;
-
-  }
-
-
-  if(!confirm(
-    `سيتم حذف ${inactive.length} سؤال متوقف.\n\nهل أنت متأكد؟`
-  ))
-    return;
-
-
-  try{
-
-    for(const item of inactive){
-
-      await sbFetch(
-        "bot_knowledge?id=eq."+item.id,
-        {
-          method:"DELETE",
-          headers:{
-            Prefer:"return=minimal"
-          }
-        }
-      );
-
-    }
-
-
-    await loadQuestions();
-
-
-    $("maintenanceStatus").textContent =
-      `تم حذف ${inactive.length} سؤال متوقف ✅`;
-
-    $("maintenanceStatus").className =
-      "status success";
-
-
-  }catch(error){
-
-    $("maintenanceStatus").textContent =
-      "فشل الحذف: "+
-      error.message;
-
-    $("maintenanceStatus").className =
-      "status error";
-
-  }
-
-}
-
-
-/* =====================================================
-   تحميل الكل
-===================================================== */
-
-async function loadAll(){
-
-  await Promise.allSettled([
-
-    loadQuestions(),
-
-    loadSettings()
-
-  ]);
-
-
-  loadMetaSettings();
-
-  toast("تم تحديث البيانات 🔄");
 
 }
 
@@ -3555,12 +4104,39 @@ async function loadAll(){
    Enter
 ===================================================== */
 
-$("testMessage")
+$('loginPassword')
   .addEventListener(
-    "keydown",
-    e=>{
+    'keydown',
+    e => {
 
-      if(e.key==="Enter"){
+      if(e.key === 'Enter')
+        loginAdmin();
+
+    }
+  );
+
+
+$('loginEmail')
+  .addEventListener(
+    'keydown',
+    e => {
+
+      if(e.key === 'Enter')
+        $('loginPassword').focus();
+
+    }
+  );
+
+
+$('testMessage')
+  .addEventListener(
+    'keydown',
+    e => {
+
+      if(
+        e.key === 'Enter' &&
+        !e.shiftKey
+      ){
 
         e.preventDefault();
 
@@ -3573,27 +4149,116 @@ $("testMessage")
 
 
 /* =====================================================
-   بداية الصفحة
+   Duplicate live check
 ===================================================== */
 
-document.addEventListener(
-  "DOMContentLoaded",
-  ()=>{
+$('question')
+  .addEventListener(
+    'input',
+    () => {
 
-    const savedTab =
-      sessionStorage.getItem(
-        "bot_active_tab"
-      );
-
-
-    if(savedTab)
-      switchTab(savedTab);
+      const value =
+        $('question')
+          .value
+          .trim();
 
 
-    loadAll();
+      if(!value){
+
+        $('duplicateBox').style.display =
+          'none';
+
+        return;
+
+      }
+
+
+      const duplicate =
+        findDuplicate(
+          value,
+          editingId
+        );
+
+
+      if(duplicate){
+
+        $('duplicateText').textContent =
+          duplicate.item.question;
+
+
+        $('duplicateBox').style.display =
+          'block';
+
+      }else{
+
+        $('duplicateBox').style.display =
+          'none';
+
+      }
+
+    }
+  );
+
+
+/* =====================================================
+   Initial
+===================================================== */
+
+async function init(){
+
+  loadSettings();
+
+  loadMetaSettings();
+
+  renderUnanswered();
+
+
+  /*
+    لو عندنا Session صالحة
+  */
+
+  if(
+    sessionStorage.getItem(
+      'admin_ok'
+    ) === '1' &&
+    getToken()
+  ){
+
+    const token =
+      await getValidToken();
+
+
+    if(token){
+
+      $('loginOverlay').style.display =
+        'none';
+
+
+      try{
+
+        await loadQuestions();
+
+      }catch(e){
+
+        console.error(e);
+
+      }
+
+
+      return;
+
+    }
 
   }
-);
+
+
+  $('loginOverlay').style.display =
+    'flex';
+
+}
+
+
+init();
 
 </script>
 
