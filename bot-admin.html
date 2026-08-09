@@ -4,59 +4,46 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 
-<title>Bot Admin - بريق</title>
+<title>مساعد بريق - إدارة البوت</title>
 
-<!-- مهم: مصدر Supabase الوحيد -->
-<script src="java/supabase.js"></script>
+<script src="/java/supabase.js"></script>
 
 <style>
 *{
   box-sizing:border-box;
-  font-family:Arial,Tahoma,sans-serif;
+  font-family:Arial,Tahoma,sans-serif
 }
 
 :root{
   --navy:#152546;
-  --navy2:#1c3158;
+  --navy2:#1d3158;
   --gold:#d4af37;
   --bg:#f4f6fa;
   --card:#fff;
   --line:#e1e5ec;
-  --muted:#7b8495;
+  --text:#182846;
+  --muted:#70798c;
   --green:#218644;
   --red:#c62828;
-  --blue:#2878d8;
 }
 
 body{
   margin:0;
   background:var(--bg);
-  color:#182846;
-}
-
-button,
-input,
-textarea,
-select{
-  font:inherit;
-}
-
-button{
-  border:0;
-  cursor:pointer;
+  color:var(--text);
 }
 
 .header{
+  background:var(--navy);
+  color:#fff;
+  padding:16px 22px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:15px;
   position:sticky;
   top:0;
   z-index:100;
-  background:var(--navy);
-  color:#fff;
-  padding:15px 20px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:12px;
   box-shadow:0 2px 12px rgba(0,0,0,.15);
 }
 
@@ -71,83 +58,52 @@ button{
   font-size:20px;
 }
 
-.header-actions{
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
+.header-user{
+  font-size:13px;
+  opacity:.85;
 }
 
 .container{
-  max-width:1450px;
+  max-width:1400px;
   margin:auto;
   padding:20px;
 }
 
-.tabs{
-  display:flex;
-  gap:7px;
-  flex-wrap:wrap;
-  margin-bottom:20px;
-}
-
-.tab{
-  background:#fff;
-  color:var(--navy);
-  border:1px solid var(--line);
-  padding:10px 15px;
-  border-radius:10px;
-  font-weight:700;
-}
-
-.tab.active{
-  background:var(--navy);
-  color:#fff;
-  border-color:var(--navy);
-}
-
-.panel{
-  display:none;
-}
-
-.panel.active{
-  display:block;
-}
-
 .grid{
   display:grid;
-  grid-template-columns:390px 1fr;
+  grid-template-columns:430px 1fr;
   gap:20px;
 }
 
-.grid-2{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:20px;
+@media(max-width:950px){
+  .grid{
+    grid-template-columns:1fr;
+  }
 }
 
 .card{
   background:#fff;
   border-radius:16px;
   padding:20px;
-  box-shadow:0 3px 15px rgba(0,0,0,.05);
-  border:1px solid #edf0f5;
   margin-bottom:20px;
+  box-shadow:0 3px 15px rgba(0,0,0,.06);
 }
 
-.card h2{
+h2{
   margin:0 0 15px;
   color:var(--navy);
   font-size:18px;
 }
 
-.card h3{
+h3{
   margin:0 0 10px;
   color:var(--navy);
+  font-size:15px;
 }
 
 label{
   display:block;
-  font-weight:700;
+  font-weight:bold;
   margin:12px 0 6px;
   font-size:14px;
 }
@@ -158,10 +114,10 @@ select{
   width:100%;
   border:1px solid #dce1ea;
   border-radius:10px;
-  padding:11px 12px;
-  background:#fafbfd;
+  padding:12px;
+  font-size:14px;
   outline:none;
-  color:#182846;
+  background:#fafbfd;
 }
 
 input:focus,
@@ -172,27 +128,25 @@ select:focus{
 }
 
 textarea{
-  min-height:105px;
+  min-height:120px;
   resize:vertical;
 }
 
-.row{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-}
-
-.buttons{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  margin-top:14px;
-}
-
-.btn{
-  padding:10px 15px;
+button{
+  border:0;
   border-radius:10px;
-  font-weight:700;
+  padding:10px 15px;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+button:active{
+  transform:scale(.98)
+}
+
+button:disabled{
+  opacity:.55;
+  cursor:not-allowed;
 }
 
 .btn-primary{
@@ -205,44 +159,138 @@ textarea{
   color:var(--navy);
 }
 
-.btn-gray{
-  background:#eef1f6;
-  color:var(--navy);
-}
-
 .btn-danger{
   background:#ffe9e9;
   color:var(--red);
 }
 
-.btn-green{
-  background:#e4f7ea;
-  color:var(--green);
+.btn-gray{
+  background:#eef1f6;
+  color:var(--navy);
 }
 
-.btn-blue{
-  background:#e8f1ff;
-  color:var(--blue);
+.buttons{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:14px;
 }
 
-.btn:disabled{
-  opacity:.5;
-  cursor:not-allowed;
+.form-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
 }
 
-.notice{
-  background:#f0f3f8;
+@media(max-width:600px){
+  .form-row{
+    grid-template-columns:1fr;
+  }
+
+  .container{
+    padding:12px;
+  }
+
+  .card{
+    padding:15px;
+  }
+
+  .header{
+    padding:13px;
+  }
+
+  .header-title h1{
+    font-size:16px;
+  }
+}
+
+/* ================= BOT LOGIN STATE ================= */
+
+#pageLoading{
+  position:fixed;
+  inset:0;
+  background:var(--navy);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  z-index:9999;
+}
+
+.loading-box{
+  text-align:center;
+  padding:30px;
+}
+
+.spinner{
+  width:38px;
+  height:38px;
+  border:4px solid rgba(255,255,255,.2);
+  border-top-color:var(--gold);
+  border-radius:50%;
+  animation:spin .8s linear infinite;
+  margin:auto auto 15px;
+}
+
+@keyframes spin{
+  to{transform:rotate(360deg)}
+}
+
+/* ================= TEST ================= */
+
+.test-box{
+  border:1px solid var(--line);
+  border-radius:12px;
   padding:12px;
-  border-radius:10px;
-  color:#657087;
-  font-size:13px;
+  height:360px;
+  overflow-y:auto;
+  background:#fafbfd;
+  margin-bottom:10px;
+}
+
+.message{
+  padding:11px 13px;
+  border-radius:11px;
+  margin-bottom:9px;
+  line-height:1.8;
+  white-space:pre-wrap;
+  word-break:break-word;
+}
+
+.customer{
+  background:#e9edf5;
+}
+
+.bot{
+  background:#fff7d9;
+  border:1px solid #eadca0;
+}
+
+.meta{
+  margin-top:9px;
+  font-size:12px;
+  color:#7b8495;
   line-height:1.7;
-  margin-bottom:15px;
+}
+
+.test-input{
+  display:flex;
+  gap:8px;
+}
+
+.test-input input{
+  flex:1;
+}
+
+.empty{
+  text-align:center;
+  color:#929aaa;
+  padding:30px;
 }
 
 .status{
-  font-size:13px;
   margin-top:10px;
+  font-size:13px;
   line-height:1.6;
 }
 
@@ -254,60 +302,7 @@ textarea{
   color:var(--red);
 }
 
-.empty{
-  text-align:center;
-  padding:35px;
-  color:#929aaa;
-}
-
-.badge{
-  display:inline-block;
-  padding:4px 8px;
-  border-radius:20px;
-  background:#eef1f6;
-  color:#5f687a;
-  font-size:12px;
-  margin:2px;
-}
-
-.badge.active{
-  background:#e4f7ea;
-  color:var(--green);
-}
-
-.badge.inactive{
-  background:#ffe9e9;
-  color:var(--red);
-}
-
-.stats{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:12px;
-  margin-bottom:20px;
-}
-
-.stat{
-  background:#fff;
-  border-radius:14px;
-  padding:17px;
-  border:1px solid var(--line);
-}
-
-.stat small{
-  color:var(--muted);
-}
-
-.stat strong{
-  display:block;
-  font-size:24px;
-  margin-top:5px;
-  color:var(--navy);
-}
-
-.search{
-  margin-bottom:15px;
-}
+/* ================= KNOWLEDGE ================= */
 
 .item{
   border:1px solid var(--line);
@@ -322,1060 +317,718 @@ textarea{
 }
 
 .question{
-  font-weight:800;
-  font-size:15px;
+  font-weight:bold;
   color:var(--navy);
-  margin-bottom:8px;
+  font-size:15px;
+  line-height:1.7;
 }
 
 .answer{
   color:#555;
-  line-height:1.7;
+  line-height:1.8;
+  margin-top:7px;
   white-space:pre-wrap;
 }
 
-.meta{
+.badges{
+  display:flex;
+  gap:5px;
+  flex-wrap:wrap;
   margin-top:10px;
+}
+
+.badge{
+  display:inline-block;
+  background:#eef1f6;
+  border-radius:20px;
+  padding:4px 9px;
+  font-size:12px;
+}
+
+.badge.active{
+  background:#e4f7ea;
+  color:var(--green);
+}
+
+.badge.inactive{
+  background:#ffe9e9;
+  color:var(--red);
+}
+
+.duplicate{
+  border-color:#f0c36e;
+  background:#fffaf0;
+}
+
+/* ================= STATS ================= */
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  margin-bottom:20px;
+}
+
+.stat{
+  background:#fff;
+  border-radius:13px;
+  padding:15px;
+  box-shadow:0 2px 10px rgba(0,0,0,.05);
+}
+
+.stat-title{
   color:var(--muted);
   font-size:12px;
 }
 
-.chat{
-  border:1px solid var(--line);
-  border-radius:13px;
-  height:410px;
-  overflow:auto;
-  padding:12px;
-  background:#fafbfd;
+.stat-number{
+  font-size:22px;
+  font-weight:800;
+  color:var(--navy);
+  margin-top:5px;
 }
 
-.message{
-  padding:11px 13px;
-  border-radius:12px;
-  margin-bottom:9px;
-  line-height:1.7;
-  white-space:pre-wrap;
-  word-break:break-word;
+@media(max-width:700px){
+  .stats{
+    grid-template-columns:1fr 1fr;
+  }
 }
 
-.customer{
-  background:#e9edf5;
-}
+/* ================= SETTINGS ================= */
 
-.bot{
-  background:#fff7d9;
-  border:1px solid #eadca0;
-}
-
-.chat-input{
+.feature{
   display:flex;
-  gap:8px;
-  margin-top:10px;
+  align-items:flex-start;
+  gap:10px;
+  padding:12px 0;
+  border-bottom:1px solid var(--line);
 }
 
-.chat-input input{
+.feature:last-child{
+  border-bottom:0;
+}
+
+.feature-icon{
+  font-size:21px;
+}
+
+.feature-text{
   flex:1;
 }
 
-.checkbox{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  margin-top:12px;
+.feature-title{
+  font-weight:bold;
 }
 
-.checkbox input{
-  width:auto;
-}
-
-.connection{
-  padding:15px;
-  border-radius:12px;
-  background:#f5f7fb;
-  border:1px solid var(--line);
-  line-height:1.8;
-}
-
-.connection.ok{
-  background:#e9f8ee;
-  border-color:#b8e3c5;
-}
-
-.connection.bad{
-  background:#fff0f0;
-  border-color:#f0c2c2;
-}
-
-.duplicate{
-  background:#fff8e5;
-  border:1px solid #eadca0;
-  padding:12px;
-  border-radius:10px;
-  margin-top:10px;
-}
-
-.integration{
-  border:1px solid var(--line);
-  border-radius:13px;
-  padding:15px;
-  margin-bottom:12px;
-}
-
-.integration-head{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
-}
-
-.integration-head strong{
-  color:var(--navy);
-}
-
-.log{
-  max-height:300px;
-  overflow:auto;
-  background:#111827;
-  color:#d1d5db;
-  border-radius:10px;
-  padding:12px;
-  font-family:monospace;
-  direction:ltr;
-  text-align:left;
-  white-space:pre-wrap;
-}
-
-.login-overlay{
-  position:fixed;
-  inset:0;
-  z-index:9999;
-  background:#f4f6fa;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:20px;
-}
-
-.login-card{
-  width:100%;
-  max-width:430px;
-  background:#fff;
-  border-radius:20px;
-  padding:28px;
-  box-shadow:0 10px 40px rgba(0,0,0,.12);
-}
-
-.login-logo{
-  text-align:center;
-  font-size:42px;
-  margin-bottom:5px;
-}
-
-.login-card h1{
-  text-align:center;
-  color:var(--navy);
-  margin:0 0 5px;
-}
-
-.login-card p{
-  text-align:center;
+.feature-desc{
   color:var(--muted);
-  font-size:13px;
+  font-size:12px;
+  margin-top:3px;
+  line-height:1.6;
 }
 
-.toast{
+/* ================= TOAST ================= */
+
+#toast{
   position:fixed;
-  bottom:25px;
-  left:50%;
-  transform:translateX(-50%) translateY(30px);
+  bottom:20px;
+  left:20px;
   background:var(--navy);
   color:#fff;
-  padding:11px 18px;
+  padding:12px 18px;
   border-radius:10px;
-  opacity:0;
-  pointer-events:none;
-  transition:.25s;
   z-index:10000;
+  opacity:0;
+  transform:translateY(15px);
+  pointer-events:none;
+  transition:.2s;
 }
 
-.toast.show{
+#toast.show{
   opacity:1;
-  transform:translateX(-50%) translateY(0);
+  transform:translateY(0);
 }
 
-@media(max-width:900px){
-  .grid,
-  .grid-2{
-    grid-template-columns:1fr;
-  }
+/* ================= INFO ================= */
 
-  .stats{
-    grid-template-columns:1fr 1fr;
-  }
+.info{
+  background:#f0f3f8;
+  padding:11px;
+  border-radius:10px;
+  color:#657087;
+  font-size:13px;
+  line-height:1.7;
+  margin:12px 0;
 }
 
-@media(max-width:600px){
-  .container{
-    padding:12px;
-  }
+.warning{
+  background:#fff8e5;
+  border:1px solid #f1d48a;
+  color:#725b19;
+}
 
-  .header{
-    padding:12px;
-  }
+.success-box{
+  background:#eaf8ef;
+  border:1px solid #b8e5c6;
+  color:#216b38;
+}
 
-  .header-title h1{
-    font-size:16px;
-  }
+.search-row{
+  display:flex;
+  gap:8px;
+  margin-bottom:15px;
+}
 
-  .row{
-    grid-template-columns:1fr;
-  }
+.search-row input{
+  flex:1;
+}
 
-  .stats{
-    grid-template-columns:1fr 1fr;
-  }
+.pagination{
+  display:flex;
+  justify-content:center;
+  gap:5px;
+  flex-wrap:wrap;
+  margin-top:15px;
+}
 
-  .stat strong{
-    font-size:19px;
-  }
+.pagination button{
+  min-width:38px;
+}
 
-  .chat-input{
-    flex-direction:column;
-  }
+.pagination button.active{
+  background:var(--gold);
+  color:var(--navy);
 }
 </style>
 </head>
 
 <body>
 
-<!-- =====================================================
-     LOGIN
-===================================================== -->
+<!-- ================= تحميل ================= -->
 
-<div id="loginOverlay" class="login-overlay">
-
-  <div class="login-card">
-
-    <div class="login-logo">🤖</div>
-
-    <h1>مساعد بريق</h1>
-
-    <p>لوحة إدارة الذكاء الاصطناعي وقاعدة المعرفة</p>
-
-    <label>البريد الإلكتروني</label>
-
-    <input
-      id="loginEmail"
-      type="email"
-      autocomplete="username"
-      placeholder="admin@example.com"
-    >
-
-    <label>كلمة المرور</label>
-
-    <input
-      id="loginPassword"
-      type="password"
-      autocomplete="current-password"
-      placeholder="••••••••"
-    >
-
-    <button
-      id="loginButton"
-      class="btn btn-primary"
-      style="width:100%;margin-top:15px"
-      onclick="loginAdmin()"
-    >
-      دخول
-    </button>
-
-    <div
-      id="loginStatus"
-      class="status error">
-    </div>
-
+<div id="pageLoading">
+  <div class="loading-box">
+    <div class="spinner"></div>
+    <div id="loadingText">جاري التحقق من جلسة الأدمن...</div>
   </div>
-
 </div>
-
-
-<!-- =====================================================
-     HEADER
-===================================================== -->
 
 <header class="header">
 
   <div class="header-title">
-
-    <span style="font-size:26px">🤖</span>
+    <div style="font-size:25px">🤖</div>
 
     <div>
       <h1>مساعد بريق</h1>
-      <small style="opacity:.7">
-        Bot Admin
-      </small>
+      <div class="header-user" id="adminName"></div>
     </div>
-
   </div>
 
-  <div class="header-actions">
-
-    <button
-      class="btn btn-gray"
-      onclick="checkConnection()"
-    >
-      🔌 فحص الاتصال
-    </button>
-
-    <button
-      class="btn btn-gray"
-      onclick="location.href='admin.html'"
-    >
-      لوحة التحكم
-    </button>
-
-    <button
-      class="btn btn-danger"
-      onclick="logoutAdmin()"
-    >
-      خروج
-    </button>
-
-  </div>
+  <button
+    class="btn-gray"
+    onclick="goAdmin()">
+    ↩️ لوحة التحكم
+  </button>
 
 </header>
 
-
 <div class="container">
 
-<!-- =====================================================
-     TABS
-===================================================== -->
-
-<div class="tabs">
-
-  <button class="tab active" data-tab="dashboard" onclick="switchTab('dashboard')">
-    📊 الرئيسية
-  </button>
-
-  <button class="tab" data-tab="knowledge" onclick="switchTab('knowledge')">
-    📚 قاعدة المعرفة
-  </button>
-
-  <button class="tab" data-tab="add" onclick="switchTab('add')">
-    ➕ إضافة سؤال
-  </button>
-
-  <button class="tab" data-tab="test" onclick="switchTab('test')">
-    🧪 اختبار البوت
-  </button>
-
-  <button class="tab" data-tab="duplicates" onclick="switchTab('duplicates')">
-    ♻️ المكرر
-  </button>
-
-  <button class="tab" data-tab="meta" onclick="switchTab('meta')">
-    📱 Meta
-  </button>
-
-  <button class="tab" data-tab="settings" onclick="switchTab('settings')">
-    ⚙️ الإعدادات
-  </button>
-
-  <button class="tab" data-tab="logs" onclick="switchTab('logs')">
-    🧾 السجل
-  </button>
-
-</div>
-
-
-<!-- =====================================================
-     DASHBOARD
-===================================================== -->
-
-<section id="panel-dashboard" class="panel active">
+  <!-- ================= STATS ================= -->
 
   <div class="stats">
 
     <div class="stat">
-      <small>إجمالي الأسئلة</small>
-      <strong id="statTotal">0</strong>
+      <div class="stat-title">إجمالي الأسئلة</div>
+      <div class="stat-number" id="totalQuestions">0</div>
     </div>
 
     <div class="stat">
-      <small>الأسئلة الفعالة</small>
-      <strong id="statActive">0</strong>
+      <div class="stat-title">الأسئلة الفعالة</div>
+      <div class="stat-number" id="activeQuestions">0</div>
     </div>
 
     <div class="stat">
-      <small>إجمالي الاستخدام</small>
-      <strong id="statUsage">0</strong>
+      <div class="stat-title">الاستخدامات</div>
+      <div class="stat-number" id="totalUsage">0</div>
     </div>
 
     <div class="stat">
-      <small>المكررات</small>
-      <strong id="statDuplicates">0</strong>
+      <div class="stat-title">التصنيفات</div>
+      <div class="stat-number" id="categoriesCount">0</div>
     </div>
 
   </div>
-
-
-  <div class="grid-2">
-
-    <div class="card">
-
-      <h2>🔌 حالة النظام</h2>
-
-      <div id="connectionBox" class="connection">
-        جاري فحص الاتصال...
-      </div>
-
-      <div class="buttons">
-
-        <button
-          class="btn btn-primary"
-          onclick="checkConnection()"
-        >
-          🔄 فحص مرة أخرى
-        </button>
-
-      </div>
-
-    </div>
-
-
-    <div class="card">
-
-      <h2>⚡ إجراءات سريعة</h2>
-
-      <div class="buttons">
-
-        <button
-          class="btn btn-gold"
-          onclick="switchTab('add')"
-        >
-          ➕ إضافة سؤال
-        </button>
-
-        <button
-          class="btn btn-blue"
-          onclick="switchTab('test')"
-        >
-          🧪 اختبار البوت
-        </button>
-
-        <button
-          class="btn btn-gray"
-          onclick="loadKnowledge()"
-        >
-          🔄 تحديث البيانات
-        </button>
-
-        <button
-          class="btn btn-gray"
-          onclick="findDuplicates()"
-        >
-          ♻️ فحص المكرر
-        </button>
-
-      </div>
-
-    </div>
-
-  </div>
-
-
-  <div class="card">
-
-    <h2>💡 طريقة عمل البوت</h2>
-
-    <div class="notice">
-
-      البوت يبحث في الأسئلة الفعالة، ويحسب درجة التطابق
-      بين رسالة العميل والسؤال والكلمات المرتبطة.
-      السؤال الذي يحصل على أعلى درجة يتم استخدام إجابته.
-
-      <br><br>
-
-      <b>نصيحة:</b>
-      أضف كلمات مختلفة لنفس السؤال مثل:
-      توصيل، دليفري، delivery، شحن.
-
-    </div>
-
-  </div>
-
-</section>
-
-
-<!-- =====================================================
-     KNOWLEDGE
-===================================================== -->
-
-<section id="panel-knowledge" class="panel">
-
-  <div class="card">
-
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-
-      <h2 style="margin:0">
-        📚 قاعدة معرفة البوت
-      </h2>
-
-      <button
-        class="btn btn-primary"
-        onclick="loadKnowledge()"
-      >
-        🔄 تحديث
-      </button>
-
-    </div>
-
-    <div class="notice" style="margin-top:15px">
-
-      أي تعديل هنا يتم حفظه مباشرة في جدول
-      <b>bot_knowledge</b>
-      في Supabase.
-
-    </div>
-
-    <input
-      id="knowledgeSearch"
-      class="search"
-      placeholder="🔍 ابحث في الأسئلة والإجابات والكلمات..."
-      oninput="renderKnowledge()"
-    >
-
-    <div id="knowledgeList">
-
-      <div class="empty">
-        جاري التحميل...
-      </div>
-
-    </div>
-
-  </div>
-
-</section>
-
-
-<!-- =====================================================
-     ADD / EDIT
-===================================================== -->
-
-<section id="panel-add" class="panel">
 
   <div class="grid">
 
-    <div class="card">
+    <!-- ================================================= -->
+    <!-- LEFT -->
+    <!-- ================================================= -->
 
-      <h2 id="formTitle">
-        ➕ إضافة سؤال جديد
-      </h2>
+    <div>
 
-      <label>السؤال</label>
+      <!-- ================= TEST ================= -->
 
-      <input
-        id="question"
-        placeholder="مثال: هل يوجد توصيل إلى رأس الخيمة؟"
-      >
+      <div class="card">
 
-      <label>الإجابة</label>
+        <h2>🧪 اختبار البوت</h2>
 
-      <textarea
-        id="answer"
-        placeholder="اكتب الإجابة التي سيعرضها البوت للعميل..."
-      ></textarea>
+        <div id="chat" class="test-box">
 
-      <div class="row">
+          <div class="empty">
+            اكتب سؤال عميل لتجربة البوت 👇
+          </div>
 
-        <div>
+        </div>
 
-          <label>التصنيف</label>
+        <div class="test-input">
 
           <input
-            id="category"
-            placeholder="التوصيل"
-          >
+            id="testMessage"
+            placeholder="مثال: بتوصلوا راس الخيمة؟"
+            autocomplete="off">
+
+          <button
+            id="testButton"
+            class="btn-gold"
+            onclick="testBot()">
+
+            إرسال
+
+          </button>
 
         </div>
 
-        <div>
+        <div id="testStatus" class="status"></div>
 
-          <label>الكلمات المرتبطة</label>
+      </div>
+
+      <!-- ================= FORM ================= -->
+
+      <div class="card">
+
+        <h2 id="formTitle">
+          ➕ إضافة سؤال جديد
+        </h2>
+
+        <label>السؤال</label>
+
+        <input
+          id="question"
+          placeholder="مثال: هل عندكم توصيل؟">
+
+        <label>الإجابة</label>
+
+        <textarea
+          id="answer"
+          placeholder="اكتب الرد الذي سيقوله البوت للعميل"></textarea>
+
+        <div class="form-row">
+
+          <div>
+
+            <label>التصنيف</label>
+
+            <input
+              id="category"
+              placeholder="التوصيل">
+
+          </div>
+
+          <div>
+
+            <label>الكلمات المرتبطة</label>
+
+            <input
+              id="keywords"
+              placeholder="توصيل، دليفري، delivery">
+
+          </div>
+
+        </div>
+
+        <label style="display:flex;align-items:center;gap:8px">
 
           <input
-            id="keywords"
-            placeholder="توصيل، دليفري، delivery، شحن"
-          >
+            type="checkbox"
+            id="active"
+            checked
+            style="width:auto">
+
+          السؤال فعال ويستخدمه البوت
+
+        </label>
+
+        <div class="buttons">
+
+          <button
+            id="saveButton"
+            class="btn-gold"
+            onclick="saveQuestion()">
+
+            💾 حفظ السؤال
+
+          </button>
+
+          <button
+            class="btn-gray"
+            onclick="resetForm()">
+
+            إلغاء
+
+          </button>
+
+        </div>
+
+        <div id="formStatus" class="status"></div>
+
+      </div>
+
+      <!-- ================= DUPLICATE CHECK ================= -->
+
+      <div class="card">
+
+        <h2>🧠 فحص الأسئلة المكررة</h2>
+
+        <div class="info">
+          البوت يفحص الأسئلة المتشابهة قبل الحفظ، عشان ما يبقاش عندك
+          أكتر من سؤال لنفس طلب العميل.
+        </div>
+
+        <button
+          class="btn-primary"
+          onclick="findDuplicates()">
+
+          🔎 فحص قاعدة المعرفة
+
+        </button>
+
+        <div id="duplicates" style="margin-top:15px"></div>
+
+      </div>
+
+      <!-- ================= FUTURE FEATURES ================= -->
+
+      <div class="card">
+
+        <h2>🚀 تجهيزات مستقبلية للبوت</h2>
+
+        <div class="feature">
+
+          <div class="feature-icon">💬</div>
+
+          <div class="feature-text">
+
+            <div class="feature-title">
+              ربط Meta / WhatsApp
+            </div>
+
+            <div class="feature-desc">
+              مكان إعدادات ربط Meta وWhatsApp Business API.
+            </div>
+
+          </div>
+
+          <button
+            class="btn-gray"
+            onclick="showMetaSettings()">
+
+            إعداد
+
+          </button>
+
+        </div>
+
+        <div class="feature">
+
+          <div class="feature-icon">🧠</div>
+
+          <div class="feature-text">
+
+            <div class="feature-title">
+              ذكاء المطابقة
+            </div>
+
+            <div class="feature-desc">
+              مطابقة الكلمات والأسئلة العربية مع الكلمات المرتبطة.
+            </div>
+
+          </div>
+
+          <span class="badge active">
+            مفعل
+          </span>
+
+        </div>
+
+        <div class="feature">
+
+          <div class="feature-icon">📊</div>
+
+          <div class="feature-text">
+
+            <div class="feature-title">
+              إحصائيات البوت
+            </div>
+
+            <div class="feature-desc">
+              عدد الاستخدامات والأسئلة الأكثر طلبًا.
+            </div>
+
+          </div>
+
+          <span class="badge active">
+            مفعل
+          </span>
+
+        </div>
+
+        <div class="feature">
+
+          <div class="feature-icon">👨‍💼</div>
+
+          <div class="feature-text">
+
+            <div class="feature-title">
+              تحويل لموظف
+            </div>
+
+            <div class="feature-desc">
+              الرد الافتراضي عندما لا يجد البوت إجابة مؤكدة.
+            </div>
+
+          </div>
+
+          <span class="badge active">
+            مفعل
+          </span>
 
         </div>
 
       </div>
 
-      <label class="checkbox">
-
-        <input
-          id="active"
-          type="checkbox"
-          checked
-        >
-
-        السؤال فعال ويستخدمه البوت
-
-      </label>
-
-      <div id="duplicateWarning"></div>
-
-      <div class="buttons">
-
-        <button
-          id="saveButton"
-          class="btn btn-gold"
-          onclick="saveQuestion()"
-        >
-          حفظ السؤال
-        </button>
-
-        <button
-          class="btn btn-gray"
-          onclick="resetForm()"
-        >
-          إلغاء
-        </button>
-
-      </div>
-
-      <div
-        id="formStatus"
-        class="status">
-      </div>
-
     </div>
 
+    <!-- ================================================= -->
+    <!-- RIGHT -->
+    <!-- ================================================= -->
 
-    <div class="card">
+    <div>
 
-      <h2>🧠 حفظ ذكي</h2>
+      <div class="card">
 
-      <div class="notice">
+        <div style="
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          gap:10px;
+          flex-wrap:wrap">
 
-        قبل الحفظ، الصفحة تفحص تلقائيًا إذا كان هناك سؤال
-        مشابه في قاعدة المعرفة.
+          <h2 style="margin:0">
+            📚 قاعدة معرفة البوت
+          </h2>
 
-        <br><br>
+          <button
+            class="btn-primary"
+            onclick="loadQuestions()">
 
-        لو وجدت سؤالًا مشابهًا، هتظهر لك المعلومة قبل الحفظ
-        عشان تمنع تكرار الأسئلة.
+            🔄 تحديث
 
-      </div>
+          </button>
 
-      <div id="smartSaveInfo" class="empty">
-        ابدأ بكتابة السؤال.
-      </div>
+        </div>
 
-    </div>
+        <div class="info success-box">
 
-  </div>
+          ✅ متصل بجلسة لوحة الأدمن الحالية.
+          لا يوجد تسجيل دخول مستقل لهذه الصفحة.
 
-</section>
+        </div>
 
+        <div class="search-row">
 
-<!-- =====================================================
-     TEST
-===================================================== -->
+          <input
+            id="search"
+            placeholder="🔍 ابحث عن سؤال أو إجابة أو تصنيف..."
+            oninput="renderQuestions()">
 
-<section id="panel-test" class="panel">
+          <select
+            id="filterActive"
+            onchange="renderQuestions()"
+            style="max-width:140px">
 
-  <div class="grid">
+            <option value="all">
+              الكل
+            </option>
 
-    <div class="card">
+            <option value="active">
+              فعال
+            </option>
 
-      <h2>🧪 اختبار البوت</h2>
+            <option value="inactive">
+              متوقف
+            </option>
 
-      <div
-        id="chat"
-        class="chat"
-      >
+          </select>
 
-        <div class="empty">
-          اكتب رسالة عميل لتجربة البوت 👇
+        </div>
+
+        <div id="questions">
+
+          <div class="empty">
+            جاري تحميل الأسئلة...
+          </div>
+
+        </div>
+
+        <div
+          id="pagination"
+          class="pagination">
         </div>
 
       </div>
 
-      <div class="chat-input">
+      <!-- ================= DEFAULT ANSWER ================= -->
 
-        <input
-          id="testMessage"
-          placeholder="مثال: بتوصلوا راس الخيمة؟"
-        >
+      <div class="card">
 
-        <button
-          id="testButton"
-          class="btn btn-gold"
-          onclick="testBot()"
-        >
-          إرسال
-        </button>
+        <h2>💬 الرد الافتراضي</h2>
+
+        <label>
+          عندما لا يجد البوت إجابة مؤكدة
+        </label>
+
+        <textarea
+          id="fallbackAnswer"
+          placeholder="اكتب الرد الافتراضي..."></textarea>
+
+        <div class="buttons">
+
+          <button
+            class="btn-gold"
+            onclick="saveFallback()">
+
+            💾 حفظ الرد
+
+          </button>
+
+          <button
+            class="btn-gray"
+            onclick="loadFallback()">
+
+            🔄 استعادة
+
+          </button>
+
+        </div>
+
+        <div
+          id="fallbackStatus"
+          class="status">
+        </div>
 
       </div>
+
+      <!-- ================= META ================= -->
 
       <div
-        id="testStatus"
-        class="status">
-      </div>
+        class="card"
+        id="metaCard"
+        style="display:none">
 
-    </div>
+        <h2>🔗 ربط Meta / WhatsApp</h2>
 
+        <div class="warning info">
 
-    <div class="card">
+          ⚠️ لا تضع Access Token أو App Secret داخل
+          JavaScript الموجود في المتصفح.
+          بيانات Meta الحساسة لازم تتخزن في Backend / Edge Function.
 
-      <h2>🎯 نتيجة المطابقة</h2>
+        </div>
 
-      <div id="matchResult" class="empty">
-        لم يتم الاختبار بعد.
-      </div>
+        <label>
+          نوع القناة
+        </label>
 
-    </div>
+        <select id="metaChannel">
 
-  </div>
+          <option value="whatsapp">
+            WhatsApp Business
+          </option>
 
-</section>
+          <option value="messenger">
+            Messenger
+          </option>
 
+          <option value="instagram">
+            Instagram
+          </option>
 
-<!-- =====================================================
-     DUPLICATES
-===================================================== -->
+        </select>
 
-<section id="panel-duplicates" class="panel">
-
-  <div class="card">
-
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
-
-      <h2 style="margin:0">
-        ♻️ الأسئلة المكررة أو المتشابهة
-      </h2>
-
-      <button
-        class="btn btn-primary"
-        onclick="findDuplicates()"
-      >
-        🔍 فحص الآن
-      </button>
-
-    </div>
-
-    <div class="notice" style="margin-top:15px">
-
-      النظام يقارن الأسئلة بعد تطبيع النص العربي،
-      ويعرض الأسئلة التي يمكن دمجها أو حذف أحدها.
-
-    </div>
-
-    <div id="duplicateList">
-
-      <div class="empty">
-        اضغط "فحص الآن".
-      </div>
-
-    </div>
-
-  </div>
-
-</section>
-
-
-<!-- =====================================================
-     META
-===================================================== -->
-
-<section id="panel-meta" class="panel">
-
-  <div class="card">
-
-    <h2>📱 ربط Meta</h2>
-
-    <div class="notice">
-
-      هنا بنحفظ إعدادات الربط الخاصة بـ Meta.
-      <br>
-      <b>مهم:</b> مجرد حفظ الـToken هنا لا يرسل رسائل تلقائيًا.
-      تشغيل Messenger / Instagram يحتاج Webhook وMeta App
-      بصلاحيات مناسبة.
-
-    </div>
-
-    <div class="integration">
-
-      <div class="integration-head">
-
-        <strong>💬 Facebook Messenger</strong>
-
-        <span id="metaFacebookStatus" class="badge inactive">
-          غير مفعل
-        </span>
-
-      </div>
-
-      <label>Page ID</label>
-
-      <input
-        id="metaPageId"
-        placeholder="Facebook Page ID"
-      >
-
-      <label>Page Access Token</label>
-
-      <input
-        id="metaPageToken"
-        type="password"
-        placeholder="Page Access Token"
-      >
-
-      <label>Webhook Verify Token</label>
-
-      <input
-        id="metaVerifyToken"
-        type="password"
-        placeholder="Webhook Verify Token"
-      >
-
-    </div>
-
-
-    <div class="integration">
-
-      <div class="integration-head">
-
-        <strong>📸 Instagram</strong>
-
-        <span id="metaInstagramStatus" class="badge inactive">
-          غير مفعل
-        </span>
-
-      </div>
-
-      <label>Instagram Account ID</label>
-
-      <input
-        id="metaInstagramId"
-        placeholder="Instagram Business Account ID"
-      >
-
-      <label>Access Token</label>
-
-      <input
-        id="metaInstagramToken"
-        type="password"
-        placeholder="Access Token"
-      >
-
-    </div>
-
-
-    <label class="checkbox">
-
-      <input
-        id="metaEnabled"
-        type="checkbox"
-      >
-
-      تفعيل إعدادات Meta
-
-    </label>
-
-
-    <div class="buttons">
-
-      <button
-        class="btn btn-gold"
-        onclick="saveMetaSettings()"
-      >
-        💾 حفظ إعدادات Meta
-      </button>
-
-      <button
-        class="btn btn-gray"
-        onclick="loadMetaSettings()"
-      >
-        🔄 تحميل
-      </button>
-
-    </div>
-
-    <div id="metaStatus" class="status"></div>
-
-  </div>
-
-</section>
-
-
-<!-- =====================================================
-     SETTINGS
-===================================================== -->
-
-<section id="panel-settings" class="panel">
-
-  <div class="grid-2">
-
-    <div class="card">
-
-      <h2>⚙️ إعدادات البوت</h2>
-
-      <label>الحد الأدنى لدرجة التطابق</label>
-
-      <input
-        id="minScore"
-        type="number"
-        min="1"
-        max="50"
-        value="4"
-      >
-
-      <label>رسالة عدم العثور على إجابة</label>
-
-      <textarea id="fallbackMessage">مش لاقي إجابة مؤكدة للسؤال ده حاليًا 🤔
-
-ممكن نحوله لموظف بريق.</textarea>
-
-      <label>رسالة البداية</label>
-
-      <textarea id="welcomeMessage">أهلًا بيك في بريق 🎁
-إزاي أقدر أساعدك؟</textarea>
-
-      <label class="checkbox">
+        <label>
+          رقم / معرف الصفحة
+        </label>
 
         <input
-          id="incrementUsage"
-          type="checkbox"
-          checked
-        >
+          id="metaPageId"
+          placeholder="Meta Page ID">
 
-        تسجيل عدد مرات استخدام كل إجابة
+        <label>
+          Webhook URL
+        </label>
 
-      </label>
+        <input
+          id="metaWebhook"
+          placeholder="https://...">
 
-      <div class="buttons">
+        <div class="buttons">
 
-        <button
-          class="btn btn-gold"
-          onclick="saveBotSettings()"
-        >
-          💾 حفظ الإعدادات
-        </button>
+          <button
+            class="btn-gold"
+            onclick="saveMetaSettings()">
 
-      </div>
+            💾 حفظ الإعدادات
 
-      <div id="settingsStatus" class="status"></div>
+          </button>
 
-    </div>
+        </div>
 
-
-    <div class="card">
-
-      <h2>🔒 معلومات الجلسة</h2>
-
-      <div class="connection">
-
-        <b>حالة الأدمن:</b>
-        <span id="sessionState">—</span>
-
-        <br>
-
-        <b>اسم الأدمن:</b>
-        <span id="adminName">—</span>
-
-        <br>
-
-        <b>Token:</b>
-        <span id="tokenState">—</span>
-
-      </div>
-
-      <div class="buttons">
-
-        <button
-          class="btn btn-gray"
-          onclick="clearBotCache()"
-        >
-          🧹 تنظيف كاش الصفحة
-        </button>
+        <div id="metaStatus" class="status"></div>
 
       </div>
 
     </div>
 
   </div>
-
-</section>
-
-
-<!-- =====================================================
-     LOGS
-===================================================== -->
-
-<section id="panel-logs" class="panel">
-
-  <div class="card">
-
-    <div style="display:flex;justify-content:space-between;align-items:center">
-
-      <h2 style="margin:0">
-        🧾 سجل البوت
-      </h2>
-
-      <button
-        class="btn btn-danger"
-        onclick="clearLogs()"
-      >
-        مسح السجل
-      </button>
-
-    </div>
-
-    <br>
-
-    <div id="logs" class="log">
-      لا توجد سجلات.
-    </div>
-
-  </div>
-
-</section>
 
 </div>
 
-
-<div id="toast" class="toast"></div>
-
+<div id="toast"></div>
 
 <script>
+/* ============================================================
+   BOT ADMIN
+   يستخدم جلسة admin.html الحالية
+   ولا يقوم بتسجيل دخول جديد.
+============================================================ */
 
-/* =====================================================
-   مهم جدًا
-   لا يوجد هنا SUPABASE_URL
-   ولا SUPABASE_ANON
-   لأنهما معرفان بالفعل داخل java/supabase.js
-===================================================== */
+const BOT_TABLE = 'bot_knowledge';
 
 let questions = [];
 let editingId = null;
-
-const LS_BOT_SETTINGS = 'bariq_bot_settings';
-const LS_META_SETTINGS = 'bariq_bot_meta';
-const LS_BOT_LOGS = 'bariq_bot_logs';
+let currentPage = 1;
+const PAGE_SIZE = 20;
 
 
-/* =====================================================
-   أدوات
-===================================================== */
+/* ============================================================
+   BASIC
+============================================================ */
 
 function $(id){
   return document.getElementById(id);
 }
-
 
 function toast(message){
 
@@ -1384,107 +1037,50 @@ function toast(message){
   if(!el) return;
 
   el.textContent = message;
-
   el.classList.add('show');
 
-  setTimeout(()=>{
-    el.classList.remove('show');
-  },2300);
+  clearTimeout(window.__toastTimer);
+
+  window.__toastTimer =
+    setTimeout(
+      () => el.classList.remove('show'),
+      2500
+    );
 }
 
 
 function escapeHtml(value){
 
   return String(value ?? '')
-    .replace(/[&<>"']/g,char=>({
-      '&':'&amp;',
-      '<':'&lt;',
-      '>':'&gt;',
-      '"':'&quot;',
-      "'":'&#039;'
-    }[char]));
+    .replace(/[&<>"']/g,function(char){
+
+      return {
+        '&':'&amp;',
+        '<':'&lt;',
+        '>':'&gt;',
+        '"':'&quot;',
+        "'":'&#039;'
+      }[char];
+
+    });
 
 }
 
 
-/* =====================================================
-   Logs
-===================================================== */
+/* ============================================================
+   SESSION
+============================================================ */
 
-function addLog(message){
+/*
+  admin.html عندك بالفعل يحفظ:
+  admin_ok
+  admin_token
+  admin_refresh_token
+  admin_token_exp
+  admin_name
 
-  const logs = getLogs();
-
-  logs.unshift({
-    time:new Date().toLocaleString('ar-AE'),
-    message:String(message)
-  });
-
-  localStorage.setItem(
-    LS_BOT_LOGS,
-    JSON.stringify(logs.slice(0,200))
-  );
-
-  renderLogs();
-
-}
-
-
-function getLogs(){
-
-  try{
-
-    return JSON.parse(
-      localStorage.getItem(LS_BOT_LOGS)||'[]'
-    );
-
-  }catch(e){
-
-    return [];
-
-  }
-
-}
-
-
-function renderLogs(){
-
-  const el = $('logs');
-
-  if(!el) return;
-
-  const logs = getLogs();
-
-  if(!logs.length){
-
-    el.textContent='لا توجد سجلات.';
-
-    return;
-
-  }
-
-  el.textContent =
-    logs.map(x=>
-      `[${x.time}] ${x.message}`
-    ).join('\n');
-
-}
-
-
-function clearLogs(){
-
-  localStorage.removeItem(LS_BOT_LOGS);
-
-  renderLogs();
-
-  toast('تم مسح السجل');
-
-}
-
-
-/* =====================================================
-   Session
-===================================================== */
+  وبالتالي صفحة البوت لا تعمل signIn جديد.
+*/
 
 function hasAdminSession(){
 
@@ -1496,580 +1092,456 @@ function hasAdminSession(){
 }
 
 
-function updateSessionInfo(){
+async function refreshAdminToken(){
 
-  $('sessionState').textContent =
-    hasAdminSession()
-      ? 'متصل ✅'
-      : 'غير متصل';
+  const refreshToken =
+    sessionStorage.getItem('admin_refresh_token');
 
-  $('adminName').textContent =
-    sessionStorage.getItem('admin_name') || '—';
-
-  $('tokenState').textContent =
-    sessionStorage.getItem('admin_token')
-      ? 'موجود ✅'
-      : 'غير موجود ❌';
-
-}
-
-
-/* =====================================================
-   LOGIN
-===================================================== */
-
-async function loginAdmin(){
-
-  const email =
-    $('loginEmail').value.trim();
-
-  const password =
-    $('loginPassword').value;
-
-  const status =
-    $('loginStatus');
-
-  const button =
-    $('loginButton');
-
-
-  status.textContent='';
-
-
-  if(!email || !password){
-
-    status.textContent =
-      '❌ أدخل البريد وكلمة المرور';
-
-    return;
-
-  }
-
-
-  button.disabled=true;
-
-  button.textContent='⏳ جارٍ تسجيل الدخول...';
-
-
-  try{
-
-    /*
-      نستخدم نظام Supabase الموجود بالفعل.
-      لا نعيد تعريف SUPABASE_URL.
-    */
-
-    if(
-      !window.Supabase ||
-      !window.Supabase.Auth
-    ){
-
-      throw new Error(
-        'ملف java/supabase.js لم يتم تحميله.'
-      );
-
-    }
-
-
-    const authData =
-      await window.Supabase.Auth.signIn(
-        email,
-        password
-      );
-
-
-    if(
-      !authData ||
-      !authData.access_token ||
-      !authData.user
-    ){
-
-      throw new Error(
-        'Supabase لم يرجع جلسة دخول صحيحة.'
-      );
-
-    }
-
-
-    /*
-      التحقق من جدول admins
-      باستخدام sbFetch الموجود بالفعل.
-    */
-
-    let admins = [];
-
-
-    try{
-
-      admins =
-        await sbFetch(
-          'admins?user_id=eq.' +
-          encodeURIComponent(authData.user.id) +
-          '&active=eq.true&limit=1',
-          {
-            forceAnon:false
-          }
-        );
-
-    }catch(e){
-
-      /*
-        fallback بالـfetch المباشر
-        بدون تعريف أي متغير Supabase جديد.
-      */
-
-      const res =
-        await fetch(
-          'https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/admins?user_id=eq.' +
-          encodeURIComponent(authData.user.id) +
-          '&active=eq.true&limit=1',
-          {
-            headers:{
-              apikey:
-                getAnonKeyFromExistingConfig(),
-              Authorization:
-                'Bearer ' +
-                authData.access_token
-            }
-          }
-        );
-
-
-      if(res.ok){
-
-        admins =
-          await res.json();
-
-      }
-
-    }
-
-
-    /*
-      لو لم نجد user_id
-      نجرب email.
-    */
-
-    if(!admins || !admins.length){
-
-      admins =
-        await sbFetch(
-          'admins?email=eq.' +
-          encodeURIComponent(email) +
-          '&active=eq.true&limit=1'
-        );
-
-    }
-
-
-    if(!admins || !admins.length){
-
-      await window.Supabase.Auth.signOut(
-        authData.access_token
-      ).catch(()=>{});
-
-
-      throw new Error(
-        'هذا الحساب صحيح في Supabase Auth، لكنه غير موجود أو غير فعال في جدول admins.'
-      );
-
-    }
-
-
-    const admin =
-      admins[0];
-
-
-    sessionStorage.setItem(
-      'admin_ok',
-      '1'
-    );
-
-    sessionStorage.setItem(
-      'admin_token',
-      authData.access_token
-    );
-
-    sessionStorage.setItem(
-      'admin_refresh_token',
-      authData.refresh_token || ''
-    );
-
-    sessionStorage.setItem(
-      'admin_token_exp',
-      String(
-        Date.now() +
-        (authData.expires_in || 3600) *
-        1000
-      )
-    );
-
-    sessionStorage.setItem(
-      'admin_name',
-      admin.full_name ||
-      email.split('@')[0]
-    );
-
-
-    $('loginOverlay').style.display='none';
-
-
-    updateSessionInfo();
-
-    addLog(
-      'تم تسجيل دخول الأدمن: ' +
-      (admin.full_name || email)
-    );
-
-
-    toast(
-      '✅ أهلاً ' +
-      (admin.full_name || 'بالأدمن')
-    );
-
-
-    await loadEverything();
-
-
-  }catch(error){
-
-    console.error(
-      'BOT ADMIN LOGIN ERROR:',
-      error
-    );
-
-    addLog(
-      'فشل تسجيل الدخول: ' +
-      error.message
-    );
-
-    status.textContent =
-      '❌ ' +
-      (error.message ||
-       'فشل تسجيل الدخول');
-
-
-  }finally{
-
-    button.disabled=false;
-
-    button.textContent='دخول';
-
-  }
-
-}
-
-
-/*
-  نحاول استخدام القيمة الموجودة بالفعل
-  في ملف supabase.js بدون إعادة تعريفها.
-*/
-
-function getAnonKeyFromExistingConfig(){
-
-  try{
-
-    if(
-      typeof SUPABASE_ANON !== 'undefined'
-    ){
-
-      return SUPABASE_ANON;
-
-    }
-
-  }catch(e){}
-
+  if(!refreshToken) return null;
 
   /*
-    fallback فقط لو الملف لا يعرّض المتغير.
-    ده لا يعمل const/let جديد باسم SUPABASE_ANON.
+    نستخدم نفس Supabase الموجود في المشروع.
+    لا نعيد تعريف SUPABASE_URL أو SUPABASE_ANON.
   */
-
-  return '';
-
-}
-
-
-/* =====================================================
-   LOGOUT
-===================================================== */
-
-async function logoutAdmin(){
-
-  const token =
-    sessionStorage.getItem(
-      'admin_token'
-    );
-
 
   try{
 
     if(
       window.Supabase &&
-      window.Supabase.Auth
+      window.Supabase.Auth &&
+      typeof window.Supabase.Auth.refreshToken === 'function'
     ){
 
-      await window.Supabase.Auth
-        .signOut(token)
-        .catch(()=>{});
+      const data =
+        await window.Supabase.Auth.refreshToken(
+          refreshToken
+        );
+
+      if(data && data.access_token){
+
+        sessionStorage.setItem(
+          'admin_token',
+          data.access_token
+        );
+
+        sessionStorage.setItem(
+          'admin_refresh_token',
+          data.refresh_token || refreshToken
+        );
+
+        sessionStorage.setItem(
+          'admin_token_exp',
+          String(
+            Date.now() +
+            (data.expires_in || 3600) * 1000
+          )
+        );
+
+        return data.access_token;
+
+      }
 
     }
-
-  }catch(e){}
-
-
-  sessionStorage.removeItem('admin_ok');
-  sessionStorage.removeItem('admin_token');
-  sessionStorage.removeItem('admin_refresh_token');
-  sessionStorage.removeItem('admin_token_exp');
-  sessionStorage.removeItem('admin_name');
-
-  location.reload();
-
-}
-
-
-/* =====================================================
-   TABS
-===================================================== */
-
-function switchTab(name){
-
-  document
-    .querySelectorAll('.tab')
-    .forEach(tab=>{
-
-      tab.classList.toggle(
-        'active',
-        tab.dataset.tab === name
-      );
-
-    });
-
-
-  document
-    .querySelectorAll('.panel')
-    .forEach(panel=>{
-
-      panel.classList.remove(
-        'active'
-      );
-
-    });
-
-
-  const panel =
-    $('panel-'+name);
-
-  if(panel){
-
-    panel.classList.add('active');
-
-  }
-
-
-  sessionStorage.setItem(
-    'bot_active_tab',
-    name
-  );
-
-
-  if(name === 'duplicates'){
-
-    findDuplicates();
-
-  }
-
-
-  if(name === 'meta'){
-
-    loadMetaSettings();
-
-  }
-
-
-  if(name === 'settings'){
-
-    loadBotSettings();
-
-  }
-
-
-  if(name === 'logs'){
-
-    renderLogs();
-
-  }
-
-}
-
-
-/* =====================================================
-   CONNECTION
-===================================================== */
-
-async function checkConnection(){
-
-  const box =
-    $('connectionBox');
-
-  box.className='connection';
-
-  box.innerHTML=
-    '⏳ جاري فحص الاتصال...';
-
-
-  try{
-
-    if(
-      typeof sbFetch !== 'function'
-    ){
-
-      throw new Error(
-        'sbFetch غير موجود. تأكد من java/supabase.js'
-      );
-
-    }
-
-
-    const data =
-      await sbFetch(
-        'bot_knowledge?select=id&limit=1'
-      );
-
-
-    box.className=
-      'connection ok';
-
-    box.innerHTML=
-      '🟢 الاتصال بـ Supabase يعمل بنجاح.<br>' +
-      'تم الوصول إلى جدول bot_knowledge.';
-
-
-    addLog(
-      'نجح فحص اتصال Supabase'
-    );
-
-
-    return true;
-
 
   }catch(error){
 
-    console.error(
+    console.warn(
+      'BOT TOKEN REFRESH:',
       error
     );
 
+  }
 
-    box.className=
-      'connection bad';
+  return null;
 
-    box.innerHTML=
-      '🔴 فشل الاتصال.<br><br>' +
-      escapeHtml(error.message);
+}
 
 
-    addLog(
-      'فشل اتصال Supabase: ' +
-      error.message
+async function getValidAdminToken(){
+
+  const token =
+    sessionStorage.getItem('admin_token');
+
+  const exp =
+    parseInt(
+      sessionStorage.getItem('admin_token_exp') || '0',
+      10
     );
 
+  if(
+    token &&
+    exp &&
+    (exp - Date.now()) < 5 * 60 * 1000
+  ){
+
+    const newToken =
+      await refreshAdminToken();
+
+    return newToken || token;
+
+  }
+
+  return token || null;
+
+}
+
+
+/* ============================================================
+   AUTH CHECK
+============================================================ */
+
+async function verifyAdminSession(){
+
+  const loading =
+    $('loadingText');
+
+  /*
+    أهم نقطة:
+    لا يوجد signIn هنا.
+  */
+
+  if(!hasAdminSession()){
+
+    if(loading){
+
+      loading.textContent =
+        'جلسة الأدمن غير موجودة، جاري الرجوع للوحة التحكم...';
+
+    }
+
+    setTimeout(
+      () => {
+        location.href = 'admin.html';
+      },
+      700
+    );
 
     return false;
 
   }
 
+  const token =
+    await getValidAdminToken();
+
+  if(!token){
+
+    sessionStorage.removeItem('admin_ok');
+
+    if(loading){
+
+      loading.textContent =
+        'انتهت جلسة الأدمن، جاري الرجوع...';
+
+    }
+
+    setTimeout(
+      () => {
+        location.href = 'admin.html';
+      },
+      700
+    );
+
+    return false;
+
+  }
+
+  $('adminName').textContent =
+    '👤 ' +
+    (
+      sessionStorage.getItem('admin_name') ||
+      'Admin'
+    );
+
+  return true;
+
 }
 
 
-/* =====================================================
-   LOAD KNOWLEDGE
-===================================================== */
+/* ============================================================
+   SUPABASE REQUEST
+============================================================ */
 
-async function loadKnowledge(){
+async function botFetch(path,options={}){
+
+  /*
+    نفضل sbFetch الموجودة في المشروع لأنها
+    مستخدمة بالفعل في لوحة الأدمن.
+  */
+
+  if(typeof window.sbFetch === 'function'){
+
+    return await window.sbFetch(
+      path,
+      options
+    );
+
+  }
+
+  /*
+    fallback آمن لو sbFetch غير موجودة.
+  */
+
+  const token =
+    await getValidAdminToken();
+
+  if(!token){
+
+    throw new Error(
+      'انتهت جلسة الأدمن'
+    );
+
+  }
+
+  const url =
+    window.SUPABASE_URL ||
+    '';
+
+  const anon =
+    window.SUPABASE_ANON ||
+    '';
+
+  if(!url){
+
+    throw new Error(
+      'SUPABASE_URL غير موجود'
+    );
+
+  }
+
+  const headers = {
+
+    apikey: anon,
+
+    Authorization:
+      'Bearer ' + token,
+
+    'Content-Type':
+      'application/json'
+
+  };
+
+  const response =
+    await fetch(
+      url + '/rest/v1/' + path,
+      {
+        ...options,
+        headers:{
+          ...headers,
+          ...(options.headers || {})
+        }
+      }
+    );
+
+  const text =
+    await response.text();
+
+  let data;
+
+  try{
+    data =
+      text
+        ? JSON.parse(text)
+        : null;
+  }catch{
+    data = text;
+  }
+
+  if(!response.ok){
+
+    throw new Error(
+      (
+        data &&
+        (
+          data.message ||
+          data.error_description ||
+          data.hint
+        )
+      ) ||
+      text ||
+      `HTTP ${response.status}`
+    );
+
+  }
+
+  return data;
+
+}
+
+
+/* ============================================================
+   NORMALIZE
+============================================================ */
+
+function normalizeArabic(text){
+
+  return String(text || '')
+    .toLowerCase()
+
+    .replace(/[إأآا]/g,'ا')
+
+    .replace(/ة/g,'ه')
+
+    .replace(/ى/g,'ي')
+
+    .replace(/[ًٌٍَُِّْـ]/g,'')
+
+    .replace(
+      /[^\u0600-\u06FFa-zA-Z0-9\s]/g,
+      ' '
+    )
+
+    .replace(/\s+/g,' ')
+
+    .trim();
+
+}
+
+
+function getKeywords(text){
+
+  return String(text || '')
+    .split(/[,،]/)
+    .map(
+      x => x.trim()
+    )
+    .filter(Boolean);
+
+}
+
+
+/* ============================================================
+   LOAD QUESTIONS
+============================================================ */
+
+async function loadQuestions(){
 
   const container =
-    $('knowledgeList');
+    $('questions');
 
-
-  container.innerHTML=
-    '<div class="empty">⏳ جاري تحميل قاعدة المعرفة...</div>';
-
+  container.innerHTML =
+    '<div class="empty">جاري تحميل قاعدة المعرفة...</div>';
 
   try{
 
     const data =
-      await sbFetch(
-        'bot_knowledge?select=*&order=id.desc'
+      await botFetch(
+        BOT_TABLE +
+        '?select=*&order=id.desc'
       );
-
 
     questions =
       Array.isArray(data)
         ? data
         : [];
 
-
-    renderKnowledge();
+    currentPage = 1;
 
     updateStats();
 
-    addLog(
-      'تم تحميل ' +
-      questions.length +
-      ' سؤال'
-    );
-
+    renderQuestions();
 
   }catch(error){
 
     console.error(
+      'LOAD BOT KNOWLEDGE:',
       error
     );
 
-
-    container.innerHTML=
-      '<div class="empty error">' +
-      '❌ فشل تحميل قاعدة المعرفة<br><br>' +
-      escapeHtml(error.message) +
-      '</div>';
-
-
-    addLog(
-      'فشل تحميل قاعدة المعرفة: ' +
-      error.message
-    );
+    container.innerHTML = `
+      <div class="empty error">
+        ❌ فشل تحميل قاعدة المعرفة
+        <br><br>
+        ${escapeHtml(error.message)}
+      </div>
+    `;
 
   }
 
 }
 
 
-/* =====================================================
-   RENDER
-===================================================== */
+/* ============================================================
+   STATS
+============================================================ */
 
-function renderKnowledge(){
+function updateStats(){
+
+  const total =
+    questions.length;
+
+  const active =
+    questions.filter(
+      x => !!x.active
+    ).length;
+
+  const usage =
+    questions.reduce(
+      (sum,x) =>
+        sum +
+        Number(x.usage_count || 0),
+      0
+    );
+
+  const categories =
+    new Set(
+      questions
+        .map(x => x.category)
+        .filter(Boolean)
+    ).size;
+
+  $('totalQuestions').textContent =
+    total;
+
+  $('activeQuestions').textContent =
+    active;
+
+  $('totalUsage').textContent =
+    usage;
+
+  $('categoriesCount').textContent =
+    categories;
+
+}
+
+
+/* ============================================================
+   RENDER
+============================================================ */
+
+function renderQuestions(){
 
   const container =
-    $('knowledgeList');
+    $('questions');
 
   const search =
-    (
-      $('knowledgeSearch').value ||
-      ''
-    )
-    .trim()
-    .toLowerCase();
+    ($('search').value || '')
+      .trim()
+      .toLowerCase();
 
+  const filter =
+    $('filterActive').value;
 
-  const filtered =
-    questions.filter(item=>{
+  let filtered =
+    questions.filter(function(item){
+
+      if(
+        filter === 'active' &&
+        !item.active
+      ){
+        return false;
+      }
+
+      if(
+        filter === 'inactive' &&
+        item.active
+      ){
+        return false;
+      }
 
       const keywords =
         Array.isArray(item.keywords)
           ? item.keywords.join(' ')
           : '';
-
 
       const text =
         [
@@ -2081,7 +1553,6 @@ function renderKnowledge(){
         .join(' ')
         .toLowerCase();
 
-
       return (
         !search ||
         text.includes(search)
@@ -2089,46 +1560,75 @@ function renderKnowledge(){
 
     });
 
-
   if(!filtered.length){
 
-    container.innerHTML=
-      '<div class="empty">لا توجد نتائج.</div>';
+    container.innerHTML =
+      '<div class="empty">لا توجد نتائج</div>';
+
+    $('pagination').innerHTML = '';
 
     return;
 
   }
 
+  const totalPages =
+    Math.ceil(
+      filtered.length / PAGE_SIZE
+    );
+
+  if(currentPage > totalPages){
+    currentPage = totalPages;
+  }
+
+  const start =
+    (currentPage - 1) * PAGE_SIZE;
+
+  const page =
+    filtered.slice(
+      start,
+      start + PAGE_SIZE
+    );
 
   container.innerHTML =
-    filtered.map(item=>{
+    page.map(function(item){
 
       const keywords =
         Array.isArray(item.keywords)
           ? item.keywords
           : [];
 
-
       return `
-        <div class="item ${
-          item.active ? '' : 'disabled'
-        }">
+
+        <div
+          class="item ${
+            item.active ? '' : 'disabled'
+          }">
 
           <div class="question">
-            ${escapeHtml(item.question)}
+
+            ${escapeHtml(
+              item.question
+            )}
+
           </div>
 
           <div class="answer">
-            ${escapeHtml(item.answer)}
+
+            ${escapeHtml(
+              item.answer
+            )}
+
           </div>
 
-          <div class="meta">
+          <div class="badges">
 
             <span class="badge">
+
               ${escapeHtml(
                 item.category ||
                 'بدون تصنيف'
               )}
+
             </span>
 
             <span class="badge ${
@@ -2136,16 +1636,23 @@ function renderKnowledge(){
                 ? 'active'
                 : 'inactive'
             }">
+
               ${
                 item.active
-                  ? 'فعال'
-                  : 'متوقف'
+                  ? '🟢 فعال'
+                  : '🔴 متوقف'
               }
+
             </span>
 
             <span class="badge">
-              الاستخدام:
-              ${Number(item.usage_count || 0)}
+
+              📊
+              ${Number(
+                item.usage_count || 0
+              )}
+              استخدام
+
             </span>
 
             ${
@@ -2165,367 +1672,385 @@ function renderKnowledge(){
           <div class="buttons">
 
             <button
-              class="btn btn-gray"
-              onclick="editQuestion(${Number(item.id)})"
-            >
+              class="btn-gray"
+              onclick="editQuestion(${Number(item.id)})">
+
               ✏️ تعديل
+
             </button>
 
             <button
-              class="btn ${
+              class="${
                 item.active
                   ? 'btn-danger'
-                  : 'btn-green'
+                  : 'btn-primary'
               }"
-              onclick="toggleQuestion(
-                ${Number(item.id)},
-                ${!!item.active}
-              )"
-            >
+              onclick="
+                toggleQuestion(
+                  ${Number(item.id)},
+                  ${!!item.active}
+                )
+              ">
+
               ${
                 item.active
                   ? '🔴 تعطيل'
                   : '🟢 تفعيل'
               }
+
             </button>
 
             <button
-              class="btn btn-danger"
-              onclick="deleteQuestion(${Number(item.id)})"
-            >
+              class="btn-danger"
+              onclick="
+                deleteQuestion(
+                  ${Number(item.id)}
+                )
+              ">
+
               🗑️ حذف
+
             </button>
 
           </div>
 
         </div>
+
       `;
 
-    }).join('');
+    })
+    .join('');
+
+  renderPagination(totalPages);
 
 }
 
 
-/* =====================================================
-   STATS
-===================================================== */
+function renderPagination(totalPages){
 
-function updateStats(){
+  const el =
+    $('pagination');
 
-  const total =
-    questions.length;
+  if(totalPages <= 1){
 
+    el.innerHTML = '';
 
-  const active =
-    questions.filter(
-      x=>x.active
-    ).length;
+    return;
 
+  }
 
-  const usage =
-    questions.reduce(
-      (sum,x)=>
-        sum +
-        Number(
-          x.usage_count || 0
-        ),
-      0
-    );
+  let html = '';
 
+  html += `
+    <button
+      class="btn-gray"
+      ${currentPage === 1 ? 'disabled' : ''}
+      onclick="changePage(${currentPage - 1})">
+      ‹
+    </button>
+  `;
 
-  $('statTotal').textContent =
-    total;
+  for(
+    let i = 1;
+    i <= totalPages;
+    i++
+  ){
 
-  $('statActive').textContent =
-    active;
+    if(
+      i === 1 ||
+      i === totalPages ||
+      Math.abs(i - currentPage) <= 1
+    ){
 
-  $('statUsage').textContent =
-    usage;
+      html += `
+        <button
+          class="${
+            i === currentPage
+              ? 'active'
+              : 'btn-gray'
+          }"
+          onclick="changePage(${i})">
 
-}
+          ${i}
 
+        </button>
+      `;
 
-/* =====================================================
-   NORMALIZE ARABIC
-===================================================== */
+    }
 
-function normalizeArabic(text){
+  }
 
-  return String(text || '')
-    .toLowerCase()
-    .replace(/[إأآا]/g,'ا')
-    .replace(/ة/g,'ه')
-    .replace(/ى/g,'ي')
-    .replace(/[ًٌٍَُِّْـ]/g,'')
-    .replace(/[^\u0600-\u06FFa-zA-Z0-9\s]/g,' ')
-    .replace(/\s+/g,' ')
-    .trim();
+  html += `
+    <button
+      class="btn-gray"
+      ${currentPage === totalPages ? 'disabled' : ''}
+      onclick="changePage(${currentPage + 1})">
+      ›
+    </button>
+  `;
 
-}
-
-
-/* =====================================================
-   KEYWORDS
-===================================================== */
-
-function getKeywords(text){
-
-  return String(text || '')
-    .split(/[,،]/)
-    .map(x=>x.trim())
-    .filter(Boolean);
+  el.innerHTML = html;
 
 }
 
 
-/* =====================================================
-   DUPLICATE SCORE
-===================================================== */
+function changePage(page){
 
-function similarity(a,b){
-
-  const A =
-    new Set(
-      normalizeArabic(a)
-        .split(' ')
-        .filter(x=>x.length>1)
-    );
-
-
-  const B =
-    new Set(
-      normalizeArabic(b)
-        .split(' ')
-        .filter(x=>x.length>1)
-    );
-
-
-  if(!A.size || !B.size)
-    return 0;
-
-
-  let common=0;
-
-  A.forEach(word=>{
-    if(B.has(word))
-      common++;
-  });
-
-
-  return common /
+  currentPage =
     Math.max(
-      A.size,
-      B.size
+      1,
+      Number(page)
     );
 
-}
-
-
-/* =====================================================
-   SMART DUPLICATE CHECK
-===================================================== */
-
-function checkDuplicateForQuestion(){
-
-  const question =
-    $('question').value.trim();
-
-
-  const warning =
-    $('duplicateWarning');
-
-  const info =
-    $('smartSaveInfo');
-
-
-  if(!question){
-
-    warning.innerHTML='';
-
-    info.innerHTML=
-      'اكتب السؤال عشان أفحص التكرار.';
-
-    return [];
-
-  }
-
-
-  const matches =
-    questions
-      .map(item=>({
-
-        item,
-
-        score:
-          similarity(
-            question,
-            item.question
-          )
-
-      }))
-      .filter(x=>
-        x.score >= .55 &&
-        (!editingId ||
-         x.item.id !== editingId)
-      )
-      .sort(
-        (a,b)=>
-          b.score-a.score
-      );
-
-
-  if(matches.length){
-
-    const best =
-      matches[0];
-
-
-    warning.innerHTML=`
-
-      <div class="duplicate">
-
-        ⚠️ يوجد سؤال مشابه بنسبة
-        <b>
-          ${Math.round(best.score*100)}%
-        </b>
-
-        <br><br>
-
-        <b>
-          ${escapeHtml(
-            best.item.question
-          )}
-        </b>
-
-        <br>
-
-        ${escapeHtml(
-          best.item.answer
-        )}
-
-      </div>
-
-    `;
-
-
-    info.innerHTML=
-      '⚠️ وجدت سؤالًا مشابهًا. راجع السؤال قبل الحفظ.';
-
-  }else{
-
-    warning.innerHTML='';
-
-    info.innerHTML=
-      '✅ لا يوجد سؤال مشابه بشكل واضح.';
-
-  }
-
-
-  return matches;
+  renderQuestions();
 
 }
 
 
-/* =====================================================
-   ADD / EDIT
-===================================================== */
+/* ============================================================
+   EDIT
+============================================================ */
 
 function editQuestion(id){
 
   const item =
     questions.find(
-      x=>Number(x.id) === Number(id)
+      x => Number(x.id) === Number(id)
     );
 
-
   if(!item) return;
-
 
   editingId =
     Number(id);
 
-
   $('question').value =
     item.question || '';
-
 
   $('answer').value =
     item.answer || '';
 
-
   $('category').value =
     item.category || '';
-
 
   $('keywords').value =
     Array.isArray(item.keywords)
       ? item.keywords.join('، ')
       : '';
 
-
   $('active').checked =
-    item.active !== false;
-
+    !!item.active;
 
   $('formTitle').textContent =
     '✏️ تعديل السؤال';
 
-
   $('saveButton').textContent =
-    'حفظ التعديل';
+    '💾 حفظ التعديل';
 
+  $('formStatus').textContent = '';
 
-  switchTab('add');
-
-  checkDuplicateForQuestion();
+  window.scrollTo({
+    top:0,
+    behavior:'smooth'
+  });
 
 }
 
+
+/* ============================================================
+   RESET
+============================================================ */
 
 function resetForm(){
 
-  editingId=null;
+  editingId = null;
 
-  $('question').value='';
+  $('question').value = '';
+  $('answer').value = '';
+  $('category').value = '';
+  $('keywords').value = '';
+  $('active').checked = true;
 
-  $('answer').value='';
-
-  $('category').value='';
-
-  $('keywords').value='';
-
-  $('active').checked=true;
-
-  $('formTitle').textContent=
+  $('formTitle').textContent =
     '➕ إضافة سؤال جديد';
 
-  $('saveButton').textContent=
-    'حفظ السؤال';
+  $('saveButton').textContent =
+    '💾 حفظ السؤال';
 
-  $('formStatus').textContent='';
-
-  $('duplicateWarning').innerHTML='';
-
-  $('smartSaveInfo').innerHTML=
-    'ابدأ بكتابة السؤال.';
+  $('formStatus').textContent = '';
 
 }
 
 
-/* =====================================================
-   SAVE QUESTION
-===================================================== */
+/* ============================================================
+   DUPLICATE DETECTION
+============================================================ */
+
+function similarity(a,b){
+
+  const wa =
+    new Set(
+      normalizeArabic(a)
+        .split(' ')
+        .filter(x => x.length > 1)
+    );
+
+  const wb =
+    new Set(
+      normalizeArabic(b)
+        .split(' ')
+        .filter(x => x.length > 1)
+    );
+
+  if(!wa.size || !wb.size)
+    return 0;
+
+  let common = 0;
+
+  wa.forEach(word => {
+
+    if(wb.has(word))
+      common++;
+
+  });
+
+  return common /
+    Math.max(
+      wa.size,
+      wb.size
+    );
+
+}
+
+
+function findDuplicates(){
+
+  const box =
+    $('duplicates');
+
+  const groups = [];
+
+  for(
+    let i = 0;
+    i < questions.length;
+    i++
+  ){
+
+    for(
+      let j = i + 1;
+      j < questions.length;
+      j++
+    ){
+
+      const score =
+        similarity(
+          questions[i].question,
+          questions[j].question
+        );
+
+      if(score >= .55){
+
+        groups.push({
+          a:questions[i],
+          b:questions[j],
+          score
+        });
+
+      }
+
+    }
+
+  }
+
+  if(!groups.length){
+
+    box.innerHTML = `
+      <div class="info success-box">
+        ✅ لم يتم العثور على أسئلة مكررة أو متشابهة بشكل كبير.
+      </div>
+    `;
+
+    return;
+
+  }
+
+  box.innerHTML =
+    groups
+      .slice(0,50)
+      .map(g => `
+
+        <div class="item duplicate">
+
+          <b>
+            تشابه
+            ${Math.round(g.score * 100)}%
+          </b>
+
+          <div style="margin-top:8px">
+
+            1️⃣
+            ${escapeHtml(
+              g.a.question
+            )}
+
+          </div>
+
+          <div style="margin-top:5px">
+
+            2️⃣
+            ${escapeHtml(
+              g.b.question
+            )}
+
+          </div>
+
+          <div class="buttons">
+
+            <button
+              class="btn-gray"
+              onclick="editQuestion(${Number(g.a.id)})">
+
+              تعديل الأول
+
+            </button>
+
+            <button
+              class="btn-gray"
+              onclick="editQuestion(${Number(g.b.id)})">
+
+              تعديل الثاني
+
+            </button>
+
+          </div>
+
+        </div>
+
+      `)
+      .join('');
+
+}
+
+
+/* ============================================================
+   SAVE
+============================================================ */
 
 async function saveQuestion(){
 
   const question =
-    $('question').value.trim();
+    $('question')
+      .value
+      .trim();
 
   const answer =
-    $('answer').value.trim();
+    $('answer')
+      .value
+      .trim();
 
   const category =
-    $('category').value.trim();
+    $('category')
+      .value
+      .trim();
 
   const keywords =
     getKeywords(
@@ -2535,48 +2060,64 @@ async function saveQuestion(){
   const active =
     $('active').checked;
 
-
   if(!question){
 
-    $('formStatus').className=
-      'status error';
-
-    $('formStatus').textContent=
-      '❌ اكتب السؤال أولًا.';
+    showFormStatus(
+      'اكتب السؤال أولًا.'
+    );
 
     return;
 
   }
-
 
   if(!answer){
 
-    $('formStatus').className=
-      'status error';
-
-    $('formStatus').textContent=
-      '❌ اكتب الإجابة أولًا.';
+    showFormStatus(
+      'اكتب الإجابة أولًا.'
+    );
 
     return;
 
   }
 
-
   /*
-    الفحص الذكي
+    فحص تكرار قبل الحفظ
   */
 
-  const duplicates =
-    checkDuplicateForQuestion();
+  const duplicate =
+    questions.find(function(item){
 
+      if(
+        editingId &&
+        Number(item.id) === Number(editingId)
+      ){
+        return false;
+      }
 
-  /*
-    لا نمنع المستخدم.
-    فقط نحذره.
-  */
+      return (
+        similarity(
+          item.question,
+          question
+        ) >= .75
+      );
 
+    });
 
-  const payload={
+  if(duplicate){
+
+    const ok =
+      confirm(
+        '⚠️ يوجد سؤال مشابه جدًا:\n\n' +
+        duplicate.question +
+        '\n\nهل تريد الحفظ رغم ذلك؟'
+      );
+
+    if(!ok)
+      return;
+
+  }
+
+  const payload = {
 
     question,
 
@@ -2594,159 +2135,159 @@ async function saveQuestion(){
 
   };
 
-
   const button =
     $('saveButton');
 
+  button.disabled = true;
 
-  button.disabled=true;
-
-  button.textContent=
+  button.textContent =
     '⏳ جاري الحفظ...';
-
 
   try{
 
     if(editingId){
 
-      await sbFetch(
-        'bot_knowledge?id=eq.' +
-        encodeURIComponent(editingId),
+      await botFetch(
+        BOT_TABLE +
+        '?id=eq.' +
+        encodeURIComponent(
+          editingId
+        ),
         {
           method:'PATCH',
           body:
-            JSON.stringify(payload)
+            JSON.stringify(
+              payload
+            )
         }
       );
 
-
-      $('formStatus').className=
-        'status success';
-
-      $('formStatus').textContent=
-        '✅ تم تعديل السؤال بنجاح';
-
-
-      addLog(
-        'تم تعديل السؤال #' +
-        editingId
+      showFormStatus(
+        'تم تعديل السؤال بنجاح ✅',
+        true
       );
-
 
     }else{
 
-      await sbFetch(
-        'bot_knowledge',
+      await botFetch(
+        BOT_TABLE,
         {
           method:'POST',
+          headers:{
+            Prefer:
+              'return=minimal'
+          },
           body:
-            JSON.stringify(payload)
+            JSON.stringify(
+              payload
+            )
         }
       );
 
-
-      $('formStatus').className=
-        'status success';
-
-      $('formStatus').textContent=
-        '✅ تمت إضافة السؤال بنجاح';
-
-
-      addLog(
-        'تمت إضافة سؤال جديد'
+      showFormStatus(
+        'تمت إضافة السؤال بنجاح ✅',
+        true
       );
 
     }
 
-
-    await loadKnowledge();
-
+    await loadQuestions();
 
     setTimeout(
       resetForm,
-      800
+      700
     );
-
 
   }catch(error){
 
     console.error(
-      'SAVE QUESTION ERROR:',
+      'SAVE BOT QUESTION:',
       error
     );
 
-
-    $('formStatus').className=
-      'status error';
-
-    $('formStatus').textContent=
+    showFormStatus(
       '❌ فشل الحفظ: ' +
-      error.message;
-
-
-    addLog(
-      'فشل حفظ السؤال: ' +
       error.message
     );
 
-
   }finally{
 
-    button.disabled=false;
+    button.disabled = false;
 
-    button.textContent=
+    button.textContent =
       editingId
-        ? 'حفظ التعديل'
-        : 'حفظ السؤال';
+        ? '💾 حفظ التعديل'
+        : '💾 حفظ السؤال';
 
   }
 
 }
 
 
-/* =====================================================
+function showFormStatus(
+  message,
+  success=false
+){
+
+  const el =
+    $('formStatus');
+
+  el.textContent =
+    message;
+
+  el.className =
+    'status ' +
+    (
+      success
+        ? 'success'
+        : 'error'
+    );
+
+}
+
+
+/* ============================================================
    TOGGLE
-===================================================== */
+============================================================ */
 
 async function toggleQuestion(
   id,
-  active
+  currentActive
 ){
 
   try{
 
-    await sbFetch(
-      'bot_knowledge?id=eq.' +
+    await botFetch(
+      BOT_TABLE +
+      '?id=eq.' +
       encodeURIComponent(id),
       {
         method:'PATCH',
         body:
           JSON.stringify({
-
             active:
-              !active,
+              !currentActive,
 
             updated_at:
               new Date().toISOString()
-
           })
       }
     );
 
-
-    await loadKnowledge();
+    await loadQuestions();
 
     toast(
-      active
+      currentActive
         ? 'تم تعطيل السؤال'
         : 'تم تفعيل السؤال'
     );
 
-
   }catch(error){
 
-    alert(
-      '❌ فشل التعديل:\n' +
+    console.error(error);
+
+    toast(
+      '❌ ' +
       error.message
     );
 
@@ -2755,40 +2296,47 @@ async function toggleQuestion(
 }
 
 
-/* =====================================================
+/* ============================================================
    DELETE
-===================================================== */
+============================================================ */
 
 async function deleteQuestion(id){
 
-  if(!confirm(
-    'هل أنت متأكد من حذف السؤال؟\n\nلا يمكن التراجع.'
-  )) return;
-
+  if(
+    !confirm(
+      'هل أنت متأكد من حذف السؤال؟\n\nلا يمكن التراجع عن الحذف.'
+    )
+  ){
+    return;
+  }
 
   try{
 
-    await sbFetch(
-      'bot_knowledge?id=eq.' +
+    await botFetch(
+      BOT_TABLE +
+      '?id=eq.' +
       encodeURIComponent(id),
       {
         method:'DELETE',
-        prefer:'return=minimal'
+        headers:{
+          Prefer:
+            'return=minimal'
+        }
       }
     );
 
-
-    await loadKnowledge();
+    await loadQuestions();
 
     toast(
       '🗑️ تم حذف السؤال'
     );
 
-
   }catch(error){
 
-    alert(
-      '❌ فشل الحذف:\n' +
+    console.error(error);
+
+    toast(
+      '❌ فشل الحذف: ' +
       error.message
     );
 
@@ -2797,122 +2345,9 @@ async function deleteQuestion(id){
 }
 
 
-/* =====================================================
-   DUPLICATES
-===================================================== */
-
-function findDuplicates(){
-
-  const container =
-    $('duplicateList');
-
-
-  const pairs=[];
-
-
-  for(let i=0;i<questions.length;i++){
-
-    for(let j=i+1;j<questions.length;j++){
-
-      const score =
-        similarity(
-          questions[i].question,
-          questions[j].question
-        );
-
-
-      if(score >= .55){
-
-        pairs.push({
-
-          a:questions[i],
-
-          b:questions[j],
-
-          score
-
-        });
-
-      }
-
-    }
-
-  }
-
-
-  $('statDuplicates').textContent =
-    pairs.length;
-
-
-  if(!pairs.length){
-
-    container.innerHTML=
-      '<div class="empty">✅ لا توجد أسئلة مكررة بشكل واضح.</div>';
-
-    return;
-
-  }
-
-
-  pairs.sort(
-    (a,b)=>
-      b.score-a.score
-  );
-
-
-  container.innerHTML =
-    pairs.map(pair=>`
-
-      <div class="item">
-
-        <div class="badge">
-          تشابه ${Math.round(pair.score*100)}%
-        </div>
-
-        <br><br>
-
-        <b>
-          1️⃣ ${escapeHtml(
-            pair.a.question
-          )}
-        </b>
-
-        <br><br>
-
-        <b>
-          2️⃣ ${escapeHtml(
-            pair.b.question
-          )}
-        </b>
-
-        <div class="buttons">
-
-          <button
-            class="btn btn-gray"
-            onclick="editQuestion(${Number(pair.a.id)})"
-          >
-            ✏️ تعديل الأول
-          </button>
-
-          <button
-            class="btn btn-gray"
-            onclick="editQuestion(${Number(pair.b.id)})"
-          >
-            ✏️ تعديل الثاني
-          </button>
-
-        </div>
-
-      </div>
-
-    `).join('');
-
-}
-
-
-/* =====================================================
+/* ============================================================
    BOT MATCHING
-===================================================== */
+============================================================ */
 
 function calculateScore(
   message,
@@ -2920,10 +2355,7 @@ function calculateScore(
 ){
 
   const text =
-    normalizeArabic(
-      message
-    );
-
+    normalizeArabic(message);
 
   const words =
     new Set(
@@ -2932,62 +2364,70 @@ function calculateScore(
         .filter(Boolean)
     );
 
+  let score = 0;
 
-  let score=0;
-
+  /*
+    كلمات السؤال
+  */
 
   const questionWords =
     normalizeArabic(
       item.question
     )
-    .split(' ')
-    .filter(
-      word=>word.length>2
-    );
+      .split(' ')
+      .filter(
+        word => word.length > 2
+      );
 
+  questionWords.forEach(
+    word => {
 
-  questionWords.forEach(word=>{
+      if(words.has(word)){
 
-    if(words.has(word)){
+        score += 2;
 
-      score += 2;
+      }
 
     }
+  );
 
-  });
-
+  /*
+    الكلمات المرتبطة
+  */
 
   const keywords =
     Array.isArray(item.keywords)
       ? item.keywords
       : [];
 
+  keywords.forEach(
+    keyword => {
 
-  keywords.forEach(keyword=>{
+      const key =
+        normalizeArabic(
+          keyword
+        );
 
-    const key =
-      normalizeArabic(
-        keyword
-      );
+      if(
+        key &&
+        text.includes(key)
+      ){
 
+        score += 4;
 
-    if(
-      key &&
-      text.includes(key)
-    ){
-
-      score += 4;
+      }
 
     }
+  );
 
-  });
-
+  /*
+    تطابق السؤال بالكامل
+  */
 
   const normalizedQuestion =
     normalizeArabic(
       item.question
     );
-
 
   if(
     normalizedQuestion &&
@@ -3000,15 +2440,14 @@ function calculateScore(
 
   }
 
-
   return score;
 
 }
 
 
-/* =====================================================
+/* ============================================================
    TEST BOT
-===================================================== */
+============================================================ */
 
 async function testBot(){
 
@@ -3018,37 +2457,29 @@ async function testBot(){
   const message =
     input.value.trim();
 
-
   if(!message){
 
-    $('testStatus').className=
-      'status error';
-
-    $('testStatus').textContent=
-      '❌ اكتب رسالة أولًا.';
+    showTestStatus(
+      'اكتب سؤال أولًا.'
+    );
 
     return;
 
   }
 
-
   const button =
     $('testButton');
 
-
   const chat =
     $('chat');
-
 
   const empty =
     chat.querySelector(
       '.empty'
     );
 
-
   if(empty)
     empty.remove();
-
 
   chat.insertAdjacentHTML(
     'beforeend',
@@ -3059,121 +2490,112 @@ async function testBot(){
     `
   );
 
+  input.value = '';
 
-  input.value='';
+  button.disabled = true;
 
-  button.disabled=true;
+  button.textContent =
+    'جاري البحث...';
 
-  button.textContent=
-    '⏳ جاري البحث...';
-
+  showTestStatus(
+    'جاري البحث في قاعدة المعرفة...',
+    true
+  );
 
   try{
 
     const data =
-      await sbFetch(
-        'bot_knowledge?select=id,question,answer,keywords,category,active,usage_count&active=eq.true'
+      await botFetch(
+        BOT_TABLE +
+        '?select=id,question,answer,keywords,category,active,usage_count' +
+        '&active=eq.true'
       );
-
 
     if(!Array.isArray(data)){
 
       throw new Error(
-        'لم يتم تحميل قاعدة المعرفة.'
+        'لم يتم تحميل قاعدة المعرفة'
       );
 
     }
 
-
     const ranked =
       data
-        .map(item=>({
-
-          ...item,
-
-          score:
-            calculateScore(
-              message,
-              item
-            )
-
-        }))
+        .map(
+          item => ({
+            ...item,
+            score:
+              calculateScore(
+                message,
+                item
+              )
+          })
+        )
         .filter(
-          item=>item.score>0
+          item => item.score > 0
         )
         .sort(
-          (a,b)=>
-            b.score-a.score
+          (a,b) =>
+            b.score - a.score
         );
-
 
     const best =
       ranked[0];
 
-
-    const minScore =
-      Number(
-        getBotSettings().minScore
-      ) || 4;
-
+    /*
+      مستوى الثقة
+    */
 
     const confident =
       !!best &&
-      best.score >= minScore;
-
+      best.score >= 4;
 
     let answer;
-
 
     if(confident){
 
       answer =
         best.answer;
 
+      /*
+        تحديث usage_count
+      */
 
-      if(
-        getBotSettings()
-          .incrementUsage !== false
-      ){
+      try{
 
-        try{
+        await botFetch(
+          BOT_TABLE +
+          '?id=eq.' +
+          encodeURIComponent(
+            best.id
+          ),
+          {
+            method:'PATCH',
+            body:
+              JSON.stringify({
+                usage_count:
+                  Number(
+                    best.usage_count || 0
+                  ) + 1
+              })
+          }
+        );
 
-          await sbFetch(
-            'bot_knowledge?id=eq.' +
-            encodeURIComponent(best.id),
-            {
-              method:'PATCH',
-              body:
-                JSON.stringify({
+      }catch(counterError){
 
-                  usage_count:
-                    Number(
-                      best.usage_count || 0
-                    ) + 1
-
-                })
-            }
-          );
-
-        }catch(counterError){
-
-          console.warn(
-            counterError
-          );
-
-        }
+        console.warn(
+          'Usage counter:',
+          counterError
+        );
 
       }
 
     }else{
 
       answer =
-        getBotSettings()
-          .fallbackMessage ||
-        'مش لاقي إجابة مؤكدة للسؤال ده حاليًا 🤔\n\nممكن نحوله لموظف بريق.';
+        getFallbackAnswer();
 
     }
-
 
     chat.insertAdjacentHTML(
       'beforeend',
@@ -3222,108 +2644,50 @@ async function testBot(){
       `
     );
 
-
-    $('matchResult').innerHTML =
-      confident
-        ? `
-          <div class="connection ok">
-
-            <b>✅ تم العثور على إجابة</b>
-
-            <br><br>
-
-            <b>السؤال:</b>
-            ${escapeHtml(
-              best.question
-            )}
-
-            <br>
-
-            <b>الدرجة:</b>
-            ${best.score}
-
-            <br>
-
-            <b>التصنيف:</b>
-            ${escapeHtml(
-              best.category || '—'
-            )}
-
-          </div>
-        `
-        : `
-          <div class="connection bad">
-
-            <b>⚠️ لا توجد مطابقة مؤكدة</b>
-
-            <br><br>
-
-            يمكنك إضافة السؤال إلى قاعدة المعرفة.
-
-          </div>
-        `;
-
-
     chat.scrollTop =
       chat.scrollHeight;
 
-
-    $('testStatus').className =
+    showTestStatus(
       confident
-        ? 'status success'
-        : 'status';
-
-    $('testStatus').textContent =
+        ? 'تم العثور على إجابة ✅'
+        : 'لا توجد إجابة مؤكدة ⚠️',
       confident
-        ? '✅ تم العثور على إجابة'
-        : '⚠️ لم يتم العثور على إجابة مؤكدة';
-
-
-    addLog(
-      'اختبار البوت: "' +
-      message +
-      '" → ' +
-      (
-        confident
-          ? 'إجابة #' + best.id
-          : 'بدون مطابقة'
-      )
     );
-
 
   }catch(error){
 
     console.error(
+      'BOT TEST:',
       error
     );
-
 
     chat.insertAdjacentHTML(
       'beforeend',
       `
         <div class="message bot">
-          ❌ حصل خطأ أثناء الاختبار.
+
+          ❌ حصل خطأ أثناء اختبار البوت.
+
           <div class="meta">
-            ${escapeHtml(error.message)}
+            ${escapeHtml(
+              error.message
+            )}
           </div>
+
         </div>
       `
     );
 
-
-    $('testStatus').className=
-      'status error';
-
-    $('testStatus').textContent=
+    showTestStatus(
       '❌ ' +
-      error.message;
-
+      error.message
+    );
 
   }finally{
 
-    button.disabled=false;
+    button.disabled = false;
 
-    button.textContent=
+    button.textContent =
       'إرسال';
 
   }
@@ -3331,347 +2695,195 @@ async function testBot(){
 }
 
 
-/* =====================================================
-   BOT SETTINGS
-===================================================== */
+function showTestStatus(
+  message,
+  success=false
+){
 
-function getBotSettings(){
+  const el =
+    $('testStatus');
 
-  try{
+  el.textContent =
+    message;
 
-    return JSON.parse(
-      localStorage.getItem(
-        LS_BOT_SETTINGS
-      ) || '{}'
+  el.className =
+    'status ' +
+    (
+      success
+        ? 'success'
+        : 'error'
     );
 
-  }catch(e){
+}
 
-    return {};
+
+/* ============================================================
+   FALLBACK
+============================================================ */
+
+const FALLBACK_KEY =
+  'bariq_bot_fallback_answer';
+
+
+function getFallbackAnswer(){
+
+  return (
+    localStorage.getItem(
+      FALLBACK_KEY
+    ) ||
+    'مش لاقي إجابة مؤكدة للسؤال ده حاليًا 🤔\n\nممكن نحوله لموظف بريق.'
+  );
+
+}
+
+
+function loadFallback(){
+
+  $('fallbackAnswer').value =
+    getFallbackAnswer();
+
+}
+
+
+function saveFallback(){
+
+  const value =
+    $('fallbackAnswer')
+      .value
+      .trim();
+
+  if(!value){
+
+    $('fallbackStatus').textContent =
+      'اكتب الرد أولًا.';
+
+    return;
 
   }
-
-}
-
-
-function loadBotSettings(){
-
-  const settings =
-    getBotSettings();
-
-
-  $('minScore').value =
-    settings.minScore || 4;
-
-
-  $('fallbackMessage').value =
-    settings.fallbackMessage ||
-    'مش لاقي إجابة مؤكدة للسؤال ده حاليًا 🤔\n\nممكن نحوله لموظف بريق.';
-
-
-  $('welcomeMessage').value =
-    settings.welcomeMessage ||
-    'أهلًا بيك في بريق 🎁\nإزاي أقدر أساعدك؟';
-
-
-  $('incrementUsage').checked =
-    settings.incrementUsage !== false;
-
-}
-
-
-function saveBotSettings(){
-
-  const settings={
-
-    minScore:
-      Math.max(
-        1,
-        Number(
-          $('minScore').value
-        ) || 4
-      ),
-
-    fallbackMessage:
-      $('fallbackMessage').value,
-
-    welcomeMessage:
-      $('welcomeMessage').value,
-
-    incrementUsage:
-      $('incrementUsage').checked
-
-  };
-
 
   localStorage.setItem(
-    LS_BOT_SETTINGS,
-    JSON.stringify(settings)
+    FALLBACK_KEY,
+    value
   );
 
+  $('fallbackStatus').textContent =
+    'تم حفظ الرد الافتراضي ✅';
 
-  $('settingsStatus').className=
+  $('fallbackStatus').className =
     'status success';
-
-  $('settingsStatus').textContent=
-    '✅ تم حفظ إعدادات البوت';
-
-
-  toast(
-    'تم حفظ إعدادات البوت'
-  );
 
 }
 
 
-/* =====================================================
-   META SETTINGS
-===================================================== */
+/* ============================================================
+   META
+============================================================ */
 
-function getMetaSettings(){
+function showMetaSettings(){
 
-  try{
+  const card =
+    $('metaCard');
 
-    return JSON.parse(
-      localStorage.getItem(
-        LS_META_SETTINGS
-      ) || '{}'
-    );
+  card.style.display =
+    card.style.display === 'none'
+      ? 'block'
+      : 'none';
 
-  }catch(e){
+  if(card.style.display !== 'none'){
 
-    return {};
+    card.scrollIntoView({
+      behavior:'smooth',
+      block:'center'
+    });
+
+    loadMetaSettings();
 
   }
 
 }
+
+
+const META_KEY =
+  'bariq_bot_meta_settings';
 
 
 function loadMetaSettings(){
 
-  const s =
-    getMetaSettings();
+  try{
 
+    const data =
+      JSON.parse(
+        localStorage.getItem(
+          META_KEY
+        ) || '{}'
+      );
 
-  $('metaPageId').value =
-    s.pageId || '';
+    $('metaChannel').value =
+      data.channel ||
+      'whatsapp';
 
+    $('metaPageId').value =
+      data.pageId ||
+      '';
 
-  $('metaPageToken').value =
-    s.pageToken || '';
+    $('metaWebhook').value =
+      data.webhook ||
+      '';
 
-
-  $('metaVerifyToken').value =
-    s.verifyToken || '';
-
-
-  $('metaInstagramId').value =
-    s.instagramId || '';
-
-
-  $('metaInstagramToken').value =
-    s.instagramToken || '';
-
-
-  $('metaEnabled').checked =
-    !!s.enabled;
-
-
-  updateMetaStatus();
+  }catch(e){}
 
 }
 
 
 function saveMetaSettings(){
 
-  const settings={
+  const data = {
 
-    enabled:
-      $('metaEnabled').checked,
+    channel:
+      $('metaChannel').value,
 
     pageId:
       $('metaPageId').value.trim(),
 
-    pageToken:
-      $('metaPageToken').value.trim(),
-
-    verifyToken:
-      $('metaVerifyToken').value.trim(),
-
-    instagramId:
-      $('metaInstagramId').value.trim(),
-
-    instagramToken:
-      $('metaInstagramToken').value.trim()
+    webhook:
+      $('metaWebhook').value.trim()
 
   };
 
-
   localStorage.setItem(
-    LS_META_SETTINGS,
-    JSON.stringify(settings)
+    META_KEY,
+    JSON.stringify(data)
   );
 
+  $('metaStatus').textContent =
+    'تم حفظ إعدادات Meta محليًا. ربط Webhook الفعلي يحتاج Backend / Edge Function.';
 
-  /*
-    لا ندّعي أن Meta متصلة.
-    هنا فقط نحفظ بيانات الإعداد.
-  */
-
-
-  updateMetaStatus();
-
-
-  $('metaStatus').className=
+  $('metaStatus').className =
     'status success';
 
-  $('metaStatus').textContent=
-    '✅ تم حفظ إعدادات Meta محليًا.';
+}
 
 
-  toast(
-    'تم حفظ إعدادات Meta'
-  );
+/* ============================================================
+   NAVIGATION
+============================================================ */
 
+function goAdmin(){
 
-  addLog(
-    'تم تعديل إعدادات Meta'
-  );
+  location.href =
+    'admin.html';
 
 }
 
 
-function updateMetaStatus(){
-
-  const s =
-    getMetaSettings();
-
-
-  const fb =
-    $('metaFacebookStatus');
-
-
-  const ig =
-    $('metaInstagramStatus');
-
-
-  if(
-    s.pageId &&
-    s.pageToken
-  ){
-
-    fb.textContent=
-      'بيانات موجودة';
-
-    fb.className=
-      'badge active';
-
-  }else{
-
-    fb.textContent=
-      'غير مكتمل';
-
-    fb.className=
-      'badge inactive';
-
-  }
-
-
-  if(
-    s.instagramId &&
-    s.instagramToken
-  ){
-
-    ig.textContent=
-      'بيانات موجودة';
-
-    ig.className=
-      'badge active';
-
-  }else{
-
-    ig.textContent=
-      'غير مكتمل';
-
-    ig.className=
-      'badge inactive';
-
-  }
-
-}
-
-
-/* =====================================================
-   CACHE
-===================================================== */
-
-function clearBotCache(){
-
-  try{
-
-    sessionStorage.removeItem(
-      'bot_active_tab'
-    );
-
-  }catch(e){}
-
-
-  toast(
-    'تم تنظيف بيانات جلسة صفحة البوت'
-  );
-
-}
-
-
-/* =====================================================
-   LOAD EVERYTHING
-===================================================== */
-
-async function loadEverything(){
-
-  updateSessionInfo();
-
-  loadBotSettings();
-
-  loadMetaSettings();
-
-  renderLogs();
-
-  await checkConnection();
-
-  await loadKnowledge();
-
-
-  const activeTab =
-    sessionStorage.getItem(
-      'bot_active_tab'
-    );
-
-
-  if(activeTab){
-
-    switchTab(activeTab);
-
-  }
-
-}
-
-
-/* =====================================================
-   EVENTS
-===================================================== */
-
-$('question')
-  .addEventListener(
-    'input',
-    checkDuplicateForQuestion
-  );
-
+/* ============================================================
+   ENTER
+============================================================ */
 
 $('testMessage')
   .addEventListener(
     'keydown',
-    event=>{
+    function(event){
 
       if(
         event.key === 'Enter'
@@ -3686,55 +2898,40 @@ $('testMessage')
     }
   );
 
-
-$('loginPassword')
+$('search')
   .addEventListener(
     'keydown',
-    event=>{
+    function(){
 
-      if(
-        event.key === 'Enter'
-      ){
-
-        loginAdmin();
-
-      }
+      currentPage = 1;
 
     }
   );
 
 
-/* =====================================================
-   INIT
-===================================================== */
+/* ============================================================
+   START
+============================================================ */
 
-(async function init(){
+async function boot(){
 
-  /*
-    لا نستخدم SUPABASE_URL هنا.
-    الملف الخارجي هو المسؤول عنه.
-  */
+  const ok =
+    await verifyAdminSession();
+
+  if(!ok)
+    return;
+
+  $('pageLoading').style.display =
+    'none';
+
+  loadFallback();
+
+  await loadQuestions();
+
+}
 
 
-  if(hasAdminSession()){
-
-    $('loginOverlay').style.display=
-      'none';
-
-
-    updateSessionInfo();
-
-    await loadEverything();
-
-
-  }else{
-
-    $('loginOverlay').style.display=
-      'flex';
-
-  }
-
-})();
+boot();
 
 </script>
 
