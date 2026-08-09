@@ -136,7 +136,7 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:9px;
 <div class="grid">
   <div class="card">
     <h2>🧠 محادثة اختبار ذكية</h2>
-    <div class="hint">البوت يحتفظ بسياق المحادثة في الاختبار: الشخص، المناسبة والميزانية، ثم يبحث عن إجابة أو منتجات مناسبة.</div>
+    <div class="hint">البوت يحتفظ بسياق المحادثة: «عايز هدية» ← يسأل لمين ← «لأختي» ← يسأل المناسبة ← «عيد ميلاد» ← يسأل الميزانية ← يقترح المنتجات، بدل ما يعيد نفس الرد.</div>
     <div id="chat" class="chat" style="margin-top:10px"></div>
     <div class="row" style="margin-top:8px">
       <input id="testMessage" placeholder="مثال: عايز هدية لأختي">
@@ -410,12 +410,47 @@ function questionSimilarity(a,b){
   let hit=0;A.forEach(x=>{if(B.has(x))hit++});
   return hit/Math.max(A.size,B.size);
 }
+function levenshtein(a,b){
+  a=String(a||''); b=String(b||'');
+  const prev=Array.from({length:b.length+1},(_,i)=>i);
+  for(let i=0;i<a.length;i++){
+    const cur=[i+1];
+    for(let j=0;j<b.length;j++){
+      cur[j+1]=Math.min(cur[j]+1,prev[j+1]+1,prev[j]+(a[i]===b[j]?0:1));
+    }
+    for(let j=0;j<cur.length;j++)prev[j]=cur[j];
+  }
+  return prev[b.length];
+}
+function fuzzyToken(a,b){
+  a=normalize(a); b=normalize(b);
+  if(!a||!b)return 0;
+  if(a===b)return 1;
+  if(a.length>=3&&(a.includes(b)||b.includes(a)))return .86;
+  return Math.max(0,1-levenshtein(a,b)/Math.max(a.length,b.length));
+}
 function score(msg,item){
-  const text=normalize(msg),words=new Set(text.split(' ').filter(Boolean));let s=0;
-  normalize(item.question).split(' ').filter(w=>w.length>2).forEach(w=>{if(words.has(w))s+=2});
-  kws(item.keywords).forEach(k=>{const z=normalize(k);if(z&&text.includes(z))s+=4});
-  const q=normalize(item.question);if(q&&text.includes(q))s+=6;
-  return s;
+  const words=normalize(msg).split(' ').filter(w=>w.length>1);
+  const qWords=normalize(item.question).split(' ').filter(w=>w.length>1);
+  const keyWords=kws(item.keywords).flatMap(k=>normalize(k).split(' ').filter(Boolean));
+  let s=0;
+  qWords.forEach(w=>{
+    const hit=Math.max(...words.map(x=>fuzzyToken(w,x)),0);
+    if(hit>=.9)s+=2.2; else if(hit>=.72)s+=1.25;
+  });
+  keyWords.forEach(w=>{
+    const hit=Math.max(...words.map(x=>fuzzyToken(w,x)),0);
+    if(hit>=.9)s+=4.5; else if(hit>=.72)s+=2.5;
+  });
+  const nq=normalize(item.question);
+  const nt=normalize(msg);
+  if(nq&&nt.includes(nq))s+=7;
+  return Math.round(s*10)/10;
+}
+function rank(msg){
+  return questions.filter(x=>x.active&&String(x.answer||'').trim())
+    .map(x=>({...x,score:score(msg,x)}))
+    .filter(x=>x.score>0).sort((a,b)=>b.score-a.score);
 }
 function rank(msg){return questions.filter(x=>x.active&&x.answer).map(x=>({...x,score:score(msg,x)})).filter(x=>x.score>0).sort((a,b)=>b.score-a.score)}
 function renderKnowledge(){
@@ -453,25 +488,46 @@ function editQuestion(id){
   $('formTitle').textContent='✏️ تعديل السؤال';$('duplicateBox').style.display='none';tab('knowledge');window.scrollTo({top:0,behavior:'smooth'});
 }
 async function saveQuestion(){
-  const question=$('question').value.trim(),answer=$('answer').value.trim(),category=$('category').value.trim(),keywords=kws($('keywords').value),active=$('active').checked,id=$('editId').value;
-  if(!question||!answer){$('formMsg').textContent='❌ لازم تكتب السؤال والإجابة';$('formMsg').className='error';return}
+  const question=$('question').value.trim(),answer=$('answer').value.trim();
+  const category=$('category').value.trim(),keywords=kws($('keywords').value);
+  const active=$('active').checked,id=$('editId').value;
+  if(!question||!answer){
+    $('formMsg').textContent='❌ لازم تكتب السؤال والإجابة';
+    $('formMsg').className='error'; return;
+  }
+
   const others=questions.filter(x=>String(x.id)!==String(id));
   const exact=others.find(x=>normalize(x.question)===normalize(question));
-  if(exact){
-    $('duplicateBox').style.display='block';$('duplicateBox').innerHTML='⚠️ السؤال موجود بالفعل:<br><b>'+esc(exact.question)+'</b><br>استخدم تعديل بدل إضافة نسخة جديدة.';
-    $('formMsg').textContent='❌ لم يتم الحفظ منعًا للتكرار';$('formMsg').className='error';return;
-  }
-  const near=others.map(x=>({x,s:questionSimilarity(question,x.question)})).sort((a,b)=>b.s-a.s)[0];
-  if(near&&near.s>=.65){
-    $('duplicateBox').style.display='block';$('duplicateBox').innerHTML='⚠️ يوجد سؤال قريب جدًا ('+Math.round(near.s*100)+'%):<br><b>'+esc(near.x.question)+'</b>';
-  }else $('duplicateBox').style.display='none';
-  const payload={question,answer,category:category||null,keywords,active,updated_at:new Date().toISOString()};
+  const near=others.map(x=>({x,s:questionSimilarity(question,x.question)}))
+                    .sort((a,b)=>b.s-a.s)[0];
+  const mergeTarget=exact||(near&&near.s>=.78?near.x:null);
+
+  const payload={
+    question:mergeTarget&&!id?mergeTarget.question:question,
+    answer,category:category||mergeTarget?.category||null,
+    keywords:[...new Set([...kws(mergeTarget?.keywords),...keywords])],
+    active,updated_at:new Date().toISOString()
+  };
+
   try{
-    if(id)await window.sbFetch('bot_knowledge?id=eq.'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify(payload)});
-    else await window.sbFetch('bot_knowledge',{method:'POST',body:JSON.stringify(payload)});
-    $('formMsg').textContent='✅ تم الحفظ بنجاح';$('formMsg').className='success';
-    await loadQuestions();renderAll();setTimeout(newQuestion,500);
-  }catch(e){$('formMsg').textContent='❌ فشل الحفظ: '+e.message;$('formMsg').className='error'}
+    if(id){
+      await window.sbFetch('bot_knowledge?id=eq.'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify(payload)});
+      $('formMsg').textContent='✅ تم تعديل السؤال والإجابة';
+    }else if(mergeTarget){
+      await window.sbFetch('bot_knowledge?id=eq.'+encodeURIComponent(mergeTarget.id),{method:'PATCH',body:JSON.stringify(payload)});
+      $('formMsg').textContent='♻️ السؤال مكرر/قريب — تم دمج الإجابة في نفس السجل بدون إنشاء نسخة';
+      $('duplicateBox').style.display='block';
+      $('duplicateBox').innerHTML='تم الدمج مع:<br><b>'+esc(mergeTarget.question)+'</b>';
+    }else{
+      await window.sbFetch('bot_knowledge',{method:'POST',body:JSON.stringify(payload)});
+      $('formMsg').textContent='✅ تم حفظ السؤال والإجابة';
+    }
+    $('formMsg').className='success';
+    await loadQuestions(); renderAll();
+  }catch(e){
+    $('formMsg').textContent='❌ فشل الحفظ: '+e.message;
+    $('formMsg').className='error';
+  }
 }
 async function saveUnansweredQuestion(){
   const q=$('question').value.trim();if(!q){$('formMsg').textContent='❌ اكتب السؤال أولًا';$('formMsg').className='error';return}
@@ -555,10 +611,68 @@ function clearUnanswered(){if(confirm('مسح قائمة الأسئلة غير �
 ========================================================= */
 function parseBudget(text){
   const t=arabicDigits(text);
-  const m=t.match(/(?:اقل|أقل|حدود|حد|ميزاني(?:ه|ة)|بحدود|لحد|تحت|اقل من|أقل من)\s*(?:من)?\s*(\d+(?:\.\d+)?)/i);
+  const m=t.match(/(?:اقل|أقل|حدود|حد|ميزاني(?:ه|ة)|بحدود|لحد|تحت|اقل من|أقل من|في حدود|حوالي)\s*(?:من)?\s*(\d+(?:\.\d+)?)/i);
   if(m)return Number(m[1]);
   const all=t.match(/\b(\d{2,5}(?:\.\d+)?)\b/g);
   return all&&all.length?Number(all[all.length-1]):null;
+}
+function extractIntent(text){
+  const t=normalize(text);
+  let recipient='',occasion='',style='';
+  if(/اخت|اختي|اخته|اخوات/.test(t))recipient='أخت';
+  else if(/زوج|مرات|مراتي|زوجتي|حبيب|حبيبتي|خطيب/.test(t))recipient='زوجة/حبيبة';
+  else if(/امي|امى|والدتي|ماما/.test(t))recipient='الأم';
+  else if(/ابويا|والدي|بابا|ابوي/.test(t))recipient='الأب';
+  else if(/ولد|ابني|ابن|اخو/.test(t))recipient='ولد/أخ';
+  else if(/بنت|بنتي/.test(t))recipient='بنت';
+  else if(/صديق|صاحبي|صاحبتي|صديقه/.test(t))recipient='صديق/صديقة';
+
+  if(/ميلاد|عيد ميلاد/.test(t))occasion='عيد ميلاد';
+  else if(/زواج|جواز|عرس|فرح/.test(t))occasion='زواج';
+  else if(/تخرج|تخرجت|جامعه/.test(t))occasion='تخرج';
+  else if(/عيد/.test(t))occasion='عيد';
+  else if(/فالنتين|حب|رومانسي/.test(t))occasion='رومانسي';
+  else if(/مولود|بيبي/.test(t))occasion='مولود';
+  else if(/رمضان/.test(t))occasion='رمضان';
+
+  if(/فخم|فاخر|راقي|فاخرة|premium|luxury/.test(t))style='فاخر';
+  else if(/رخيص|اقتصادي|اقتصاد|بسيط/.test(t))style='اقتصادي';
+
+  return {recipient,occasion,budget:parseBudget(text),style};
+}
+function mergeContext(intent){
+  const out={recipient:'',occasion:'',budget:null,style:''};
+  conversation.filter(x=>x.role==='user').slice(-8)
+    .map(x=>extractIntent(x.text)).concat([intent]).forEach(x=>{
+      if(x.recipient)out.recipient=x.recipient;
+      if(x.occasion)out.occasion=x.occasion;
+      if(x.budget!=null)out.budget=x.budget;
+      if(x.style)out.style=x.style;
+    });
+  return out;
+}
+function contextPrompt(c){
+  const p=[];
+  if(c.recipient)p.push('للـ'+c.recipient);
+  if(c.occasion)p.push('بمناسبة '+c.occasion);
+  if(c.budget!=null)p.push('ميزانية '+c.budget+' درهم');
+  if(c.style)p.push(c.style);
+  return p.join(' • ');
+}
+function giftIntent(text){
+  return /هديه|هدية|gift|بوكس|هدايا|اقتراح هدية/.test(normalize(text));
+}
+function missingGiftInfo(ctx){
+  if(!ctx.recipient)return 'recipient';
+  if(!ctx.occasion)return 'occasion';
+  if(ctx.budget==null)return 'budget';
+  return '';
+}
+function conversationalGiftReply(ctx){
+  if(!ctx.recipient)return 'أكيد 🎁 هساعدك تختار هدية مناسبة.\nالهديه لمين؟ أخت، أم، زوجة، صديق...؟';
+  if(!ctx.occasion)return 'تمام ❤️ لأ'+(ctx.recipient==='أخت'?'ختك':' '+ctx.recipient)+'، إيه المناسبة؟ عيد ميلاد، تخرج، زواج ولا مناسبة تانية؟';
+  if(ctx.budget==null)return 'جميل جدًا 🎁 آخر حاجة بس: الميزانية في حدود كام درهم؟ عشان أطلعلك اختيارات مناسبة فعلًا.';
+  return '';
 }
 function extractIntent(text){
   const t=normalize(text);
@@ -633,21 +747,43 @@ function occasionTerms(msg){
 }
 async function recommendProducts(msg,ctx=null){
   if(!botProducts.length)await loadProductsForBot();
-  const budget=ctx?.budget??parseBudget(msg),terms=recipientTerms(msg),occ=occasionTerms(msg),text=normalize([msg,contextPrompt(ctx||{})].join(' '));
+  const c=ctx||extractIntent(msg);
+  const budget=c.budget??parseBudget(msg);
+  const terms=recipientTerms(msg),occ=occasionTerms(msg);
+  const text=normalize([msg,contextPrompt(c)].join(' '));
+
   return botProducts.map(p=>{
     const price=Number(p.price)||0,stock=p.stock==null?1:Number(p.stock);
     if(stock<=0)return {...p,_score:-999};
-    const pt=productText(p);let s=0;
-    text.split(' ').filter(w=>w.length>2).forEach(w=>{if(pt.includes(w))s+=1.2});
-    terms.forEach(w=>{if(pt.includes(normalize(w)))s+=5});
-    occ.forEach(w=>{if(pt.includes(normalize(w)))s+=4});
+    const pt=productText(p); let s=0;
+
+    text.split(' ').filter(w=>w.length>2).forEach(w=>{
+      if(pt.includes(w))s+=1.3;
+    });
+    terms.forEach(w=>{
+      if(pt.includes(normalize(w)))s+=5;
+    });
+    occ.forEach(w=>{
+      if(pt.includes(normalize(w)))s+=4;
+    });
+
+    if(c.recipient==='أخت'&&/نساء|نسائي|بنات|girl|women|اكريليك/.test(pt))s+=3;
+    if(c.recipient==='الأم'&&/ام|والده|mother/.test(pt))s+=3;
+    if(c.recipient==='الأب'&&/اب|والد|father|men|رجال/.test(pt))s+=3;
+
     if(budget!=null){
-      if(price<=budget)s+=7+Math.max(0,1-Math.abs(budget-price)/Math.max(budget,1))*3;
-      else s-=Math.min(10,(price-budget)/Math.max(budget,1)*10);
+      if(price>0&&price<=budget){
+        s+=8+Math.max(0,1-Math.abs(budget-price)/Math.max(budget,1))*4;
+      }else if(price>budget){
+        s-=Math.min(12,(price-budget)/Math.max(budget,1)*12);
+      }
     }
-    if(/فخم|فاخر|راقي|premium|luxury/.test(text)){if(Number(p.rating||0)>=4.5)s+=2;if(p.featured)s+=2}
-    if(/رخيص|اقتصاد|اقتصادي|cheap/.test(text)&&price>0)s+=Math.max(0,5-price/50);
-    if(/بوكس|هدية|gift/.test(text)&&/بوكس|box|gift/.test(pt))s+=4;
+
+    if(c.style==='فاخر'&&Number(p.rating||0)>=4.5)s+=2;
+    if(c.style==='فاخر'&&p.featured)s+=2;
+    if(c.style==='اقتصادي'&&price>0)s+=Math.max(0,5-price/50);
+    if(/بوكس|هدية|gift/.test(text)&&/بوكس|box|gift|هدايا/.test(pt))s+=4;
+
     return {...p,_score:s};
   }).filter(p=>p._score>0).sort((a,b)=>b._score-a._score).slice(0,6);
 }
@@ -679,18 +815,46 @@ function renderRanking(arr){
   $('ranking').innerHTML=arr.slice(0,5).map(x=>'<div class="item"><b>'+esc(x.question)+'</b><div class="meta">الدرجة: '+x.score+' • الاستخدام: '+(Number(x.usage_count)||0)+'</div></div>').join('')||'<div class="hint">لا توجد مطابقة</div>';
 }
 async function processBotMessage(msg){
-  const raw=String(msg||'').trim();if(!raw)return null;
-  const intent=extractIntent(raw),ctx=settings.conversationMode?mergeContext(intent):intent;
-  const answer=answerFor(raw);
+  const raw=String(msg||'').trim();
+  if(!raw)return null;
+
+  const intent=extractIntent(raw);
+  const ctx=settings.conversationMode?mergeContext(intent):intent;
   $('intentBox').innerHTML='<b>السياق المستخرج:</b> '+esc(contextPrompt(ctx)||'لم يتم تحديد شخص/مناسبة/ميزانية');
-  renderRanking(answer.ranked);
-  if(answer.confident){
-    await incrementUsage(answer.best);
-    return {type:'answer',text:answer.best.answer,ctx,match:answer.best};
+
+  const inGiftFlow=giftIntent(raw)||conversation.some(x=>x.role==='user'&&giftIntent(x.text));
+  if(inGiftFlow){
+    const missing=missingGiftInfo(ctx);
+    if(missing){
+      $('ranking').innerHTML='<div class="hint">🧠 البوت ينتظر معلومة إضافية لإكمال اختيار الهدية.</div>';
+      return {type:'clarify',text:conversationalGiftReply(ctx),ctx};
+    }
+
+    const allGiftText=[raw,...conversation.filter(x=>x.role==='user').slice(-5).map(x=>x.text)].join(' ');
+    const products=await recommendProducts(allGiftText,ctx);
+    if(products.length){
+      $('ranking').innerHTML=products.slice(0,5).map(p=>'<div class="item"><b>'+esc(productName(p))+'</b><div class="meta">'+Number(p._score||0).toFixed(1)+' نقطة • '+Number(p.price||0).toFixed(2)+' AED</div></div>').join('');
+      return {type:'products',text:'تمام 🎁 فهمت طلبك: '+contextPrompt(ctx)+'\nدي أقرب اختيارات مناسبة، ورتبتها حسب المناسبة والميزانية.',ctx,products};
+    }
+    await persistUnanswered(raw);
+    return {type:'fallback',text:'فهمت طلبك '+contextPrompt(ctx)+'، لكن مش لاقي منتج مناسب حاليًا. ممكن نجرب ميزانية مختلفة؟',ctx};
   }
-  let products=[];
-  if(settings.autoProducts!==false)products=await recommendProducts(raw,ctx);
-  if(products.length)return {type:'products',text:(ctx.budget!=null?'لقيتلك اختيارات مناسبة لطلبك وميزانيتك 👇':'لقيتلك أقرب منتجات مناسبة لطلبك 👇'),ctx,products};
+
+  const searchText=settings.conversationMode
+    ?[raw,...conversation.filter(x=>x.role==='user').slice(-3).map(x=>x.text)].join(' ')
+    :raw;
+  const ranked=rank(searchText);
+  const best=ranked[0];
+  renderRanking(ranked);
+
+  if(best&&best.score>=(Number(settings.minScore)||4)){
+    await incrementUsage(best);
+    return {type:'answer',text:best.answer,ctx,match:best};
+  }
+
+  const products=settings.autoProducts!==false?await recommendProducts(searchText,ctx):[];
+  if(products.length)return {type:'products',text:'لقيتلك أقرب منتجات مناسبة لطلبك 👇',ctx,products};
+
   await persistUnanswered(raw);
   return {type:'fallback',text:settings.fallback,ctx};
 }
