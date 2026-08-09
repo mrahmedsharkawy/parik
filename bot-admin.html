@@ -6,7 +6,7 @@
 
   <title>مساعد بريق 🤖</title>
 
-  <!-- ملف Supabase الموجود عندك -->
+  <!-- ملف Supabase الموجود في مشروع بريق -->
   <script src="java/supabase.js"></script>
 
   <style>
@@ -23,12 +23,16 @@
 
     .header {
       background: #152546;
-      color: white;
+      color: #fff;
       padding: 18px 22px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 15px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      box-shadow: 0 2px 10px rgba(0,0,0,.12);
     }
 
     .header h1 {
@@ -48,14 +52,14 @@
       gap: 20px;
     }
 
-    @media(max-width: 850px) {
+    @media (max-width: 850px) {
       .grid {
         grid-template-columns: 1fr;
       }
     }
 
     .card {
-      background: white;
+      background: #fff;
       border-radius: 16px;
       padding: 20px;
       box-shadow: 0 3px 15px rgba(0,0,0,.06);
@@ -63,8 +67,9 @@
     }
 
     h2 {
-      margin-top: 0;
+      margin: 0 0 15px;
       font-size: 18px;
+      color: #152546;
     }
 
     label {
@@ -90,7 +95,7 @@
     textarea:focus,
     select:focus {
       border-color: #d4af37;
-      background: white;
+      background: #fff;
     }
 
     textarea {
@@ -106,9 +111,13 @@
       font-weight: bold;
     }
 
+    button:active {
+      transform: scale(.98);
+    }
+
     .btn-primary {
       background: #152546;
-      color: white;
+      color: #fff;
     }
 
     .btn-gold {
@@ -137,7 +146,7 @@
       border: 1px solid #e1e5ec;
       border-radius: 12px;
       padding: 12px;
-      height: 300px;
+      height: 320px;
       overflow-y: auto;
       background: #fafbfd;
       margin-bottom: 10px;
@@ -147,7 +156,9 @@
       padding: 10px 12px;
       border-radius: 10px;
       margin-bottom: 8px;
-      line-height: 1.6;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
 
     .customer {
@@ -164,7 +175,7 @@
       border-radius: 12px;
       padding: 14px;
       margin-bottom: 10px;
-      background: white;
+      background: #fff;
     }
 
     .item.disabled {
@@ -175,12 +186,14 @@
       font-weight: bold;
       font-size: 15px;
       margin-bottom: 7px;
+      color: #152546;
     }
 
     .answer {
       color: #555;
-      line-height: 1.6;
+      line-height: 1.7;
       white-space: pre-wrap;
+      word-break: break-word;
     }
 
     .meta {
@@ -195,6 +208,7 @@
       border-radius: 20px;
       padding: 4px 8px;
       margin-left: 4px;
+      margin-bottom: 4px;
     }
 
     .active {
@@ -210,6 +224,7 @@
     .status {
       margin-top: 10px;
       font-size: 13px;
+      line-height: 1.6;
     }
 
     .success {
@@ -225,19 +240,80 @@
       color: #929aaa;
       padding: 30px;
     }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    @media (max-width: 600px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .header {
+        padding: 14px;
+      }
+
+      .header h1 {
+        font-size: 16px;
+      }
+
+      .container {
+        padding: 12px;
+      }
+
+      .card {
+        padding: 15px;
+      }
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      font-size: 14px;
+    }
+
+    .checkbox-row input {
+      width: auto;
+      margin: 0;
+    }
+
+    .test-input {
+      display: flex;
+      gap: 8px;
+    }
+
+    .test-input input {
+      flex: 1;
+    }
+
+    .loading {
+      opacity: .6;
+      pointer-events: none;
+    }
   </style>
 </head>
 
 <body>
 
 <header class="header">
-  <h1>🤖 مساعد بريق</h1>
+
+  <h1>
+    🤖 مساعد بريق
+  </h1>
 
   <button
     class="btn-gray"
     onclick="location.href='admin.html'">
+
     العودة للوحة التحكم
+
   </button>
+
 </header>
 
 
@@ -245,39 +321,40 @@
 
   <div class="grid">
 
-    <!-- ===================== -->
-    <!-- اختبار البوت -->
-    <!-- ===================== -->
+    <!-- ========================================= -->
+    <!-- العمود الأول -->
+    <!-- ========================================= -->
 
     <div>
 
+      <!-- اختبار البوت -->
       <div class="card">
 
-        <h2>🧪 اختبار البوت</h2>
+        <h2>
+          🧪 اختبار البوت
+        </h2>
 
         <div
           id="chat"
           class="test-box">
 
           <div class="empty">
-            اكتب سؤال عميل لتجربة البوت
+            اكتب سؤال عميل لتجربة البوت 👇
           </div>
 
         </div>
 
-        <div style="display:flex;gap:8px">
+
+        <div class="test-input">
 
           <input
             id="testMessage"
             placeholder="مثال: بتوصلوا راس الخيمة؟"
-            onkeydown="
-              if(event.key === 'Enter') {
-                testBot();
-              }
-            "
+            autocomplete="off"
           >
 
           <button
+            id="testButton"
             class="btn-gold"
             onclick="testBot()">
 
@@ -287,15 +364,16 @@
 
         </div>
 
-        <div id="testStatus" class="status"></div>
+
+        <div
+          id="testStatus"
+          class="status">
+        </div>
 
       </div>
 
 
-      <!-- ===================== -->
-      <!-- إضافة / تعديل -->
-      <!-- ===================== -->
-
+      <!-- إضافة / تعديل سؤال -->
       <div class="card">
 
         <h2 id="formTitle">
@@ -319,39 +397,50 @@
 
         <textarea
           id="answer"
-          placeholder="اكتب الرد الذي سيقوله البوت للعميل">
-        </textarea>
+          placeholder="اكتب الرد الذي سيقوله البوت للعميل"></textarea>
 
 
-        <label>
-          التصنيف
-        </label>
+        <div class="form-row">
 
-        <input
-          id="category"
-          placeholder="التوصيل"
-        >
+          <div>
 
+            <label>
+              التصنيف
+            </label>
 
-        <label>
-          الكلمات المرتبطة
-        </label>
+            <input
+              id="category"
+              placeholder="التوصيل"
+            >
 
-        <input
-          id="keywords"
-          placeholder="توصيل، دليفري، delivery"
-        >
+          </div>
 
 
-        <label style="margin-top:15px">
+          <div>
+
+            <label>
+              الكلمات المرتبطة
+            </label>
+
+            <input
+              id="keywords"
+              placeholder="توصيل، دليفري، delivery"
+            >
+
+          </div>
+
+        </div>
+
+
+        <label class="checkbox-row">
 
           <input
             type="checkbox"
             id="active"
             checked
-            style="width:auto">
+          >
 
-          السؤال فعال
+          السؤال فعال ويستخدمه البوت
 
         </label>
 
@@ -379,30 +468,36 @@
         </div>
 
 
-        <div id="formStatus" class="status"></div>
+        <div
+          id="formStatus"
+          class="status">
+        </div>
 
       </div>
 
     </div>
 
 
-    <!-- ===================== -->
+    <!-- ========================================= -->
     <!-- قاعدة المعرفة -->
-    <!-- ===================== -->
+    <!-- ========================================= -->
 
     <div class="card">
 
-      <div style="
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        gap:10px;
-        flex-wrap:wrap;
-      ">
+      <div
+        style="
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          gap:10px;
+          flex-wrap:wrap;
+        "
+      >
 
-        <h2>
+        <h2 style="margin:0">
           📚 قاعدة معرفة البوت
         </h2>
+
 
         <button
           class="btn-primary"
@@ -415,9 +510,28 @@
       </div>
 
 
+      <div
+        style="
+          background:#f0f3f8;
+          padding:10px;
+          border-radius:10px;
+          margin:15px 0;
+          font-size:13px;
+          color:#657087;
+          line-height:1.6;
+        "
+      >
+
+        أي سؤال تضيفه أو تعدله هنا يتم حفظه مباشرة في
+        <b>Supabase</b>
+        ويصبح متاحًا للبوت.
+
+      </div>
+
+
       <input
         id="search"
-        placeholder="🔍 ابحث عن سؤال أو إجابة..."
+        placeholder="🔍 ابحث عن سؤال أو إجابة أو تصنيف..."
         oninput="renderQuestions()"
         style="margin-bottom:15px"
       >
@@ -440,51 +554,146 @@
 
 <script>
 
+/* =====================================================
+   متغيرات عامة
+===================================================== */
+
 let questions = [];
 
 let editingId = null;
 
 
-/* =====================================
-   تحميل الأسئلة
-===================================== */
+/* =====================================================
+   حماية النصوص
+===================================================== */
+
+function escapeHtml(value) {
+
+  return String(value ?? "")
+    .replace(/[&<>"']/g, function(char) {
+
+      return {
+
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+
+      }[char];
+
+    });
+
+}
+
+
+/* =====================================================
+   حالة النموذج
+===================================================== */
+
+function showFormStatus(message, success = false) {
+
+  const el =
+    document.getElementById("formStatus");
+
+  el.textContent = message;
+
+  el.className =
+    "status " +
+    (
+      success
+        ? "success"
+        : "error"
+    );
+
+}
+
+
+function showTestStatus(message, success = false) {
+
+  const el =
+    document.getElementById("testStatus");
+
+  el.textContent = message;
+
+  el.className =
+    "status " +
+    (
+      success
+        ? "success"
+        : "error"
+    );
+
+}
+
+
+/* =====================================================
+   تحميل قاعدة المعرفة
+===================================================== */
 
 async function loadQuestions() {
 
+  const container =
+    document.getElementById("questions");
+
+  container.innerHTML = `
+    <div class="empty">
+      جاري تحميل الأسئلة...
+    </div>
+  `;
+
+
   try {
 
-    const data = await sbFetch(
-      "bot_knowledge?select=*&order=id.desc"
-    );
+    const data =
+      await sbFetch(
+        "bot_knowledge?select=*&order=id.desc"
+      );
 
-    questions = data || [];
+
+    questions =
+      Array.isArray(data)
+        ? data
+        : [];
+
 
     renderQuestions();
 
+
   } catch(error) {
 
-    document.getElementById("questions").innerHTML =
-      `
+    console.error(
+      "LOAD KNOWLEDGE ERROR:",
+      error
+    );
+
+
+    container.innerHTML = `
       <div class="empty error">
+
         حدث خطأ أثناء تحميل قاعدة المعرفة
-        <br>
+
+        <br><br>
+
         ${escapeHtml(error.message)}
+
       </div>
-      `;
+    `;
 
   }
 
 }
 
 
-/* =====================================
+/* =====================================================
    عرض الأسئلة
-===================================== */
+===================================================== */
 
 function renderQuestions() {
 
   const container =
     document.getElementById("questions");
+
 
   const search =
     document.getElementById("search")
@@ -494,31 +703,40 @@ function renderQuestions() {
 
 
   const filtered =
-    questions.filter(item => {
+    questions.filter(function(item) {
+
+      const keywords =
+        Array.isArray(item.keywords)
+          ? item.keywords.join(" ")
+          : "";
+
 
       const text =
         [
           item.question,
           item.answer,
           item.category,
-          (item.keywords || []).join(" ")
+          keywords
         ]
         .join(" ")
         .toLowerCase();
 
-      return !search || text.includes(search);
+
+      return (
+        !search ||
+        text.includes(search)
+      );
 
     });
 
 
   if(!filtered.length) {
 
-    container.innerHTML =
-      `
+    container.innerHTML = `
       <div class="empty">
         لا توجد نتائج
       </div>
-      `;
+    `;
 
     return;
 
@@ -526,114 +744,301 @@ function renderQuestions() {
 
 
   container.innerHTML =
-    filtered.map(item => {
+    filtered
+      .map(function(item) {
 
-      return `
-
-      <div class="item ${item.active ? "" : "disabled"}">
-
-        <div class="question">
-
-          ${escapeHtml(item.question)}
-
-        </div>
+        const keywords =
+          Array.isArray(item.keywords)
+            ? item.keywords
+            : [];
 
 
-        <div class="answer">
+        return `
 
-          ${escapeHtml(item.answer)}
-
-        </div>
-
-
-        <div class="meta">
-
-          <span class="badge">
-
-            ${escapeHtml(item.category || "بدون تصنيف")}
-
-          </span>
-
-
-          <span class="badge ${
-            item.active
-              ? "active"
-              : "inactive"
-          }">
-
-            ${
+          <div
+            class="item ${
               item.active
-                ? "فعال"
-                : "متوقف"
-            }
-
-          </span>
-
-
-          <span class="badge">
-
-            استخدم ${item.usage_count || 0} مرة
-
-          </span>
-
-        </div>
-
-
-        <div class="buttons">
-
-          <button
-            class="btn-gray"
-            onclick="editQuestion(${item.id})">
-
-            ✏️ تعديل
-
-          </button>
-
-
-          <button
-            class="${
-              item.active
-                ? "btn-danger"
-                : "btn-primary"
+                ? ""
+                : "disabled"
             }"
-            onclick="
-              toggleQuestion(
-                ${item.id},
-                ${item.active}
-              )
-            ">
+          >
 
-            ${
-              item.active
-                ? "🔴 تعطيل"
-                : "🟢 تفعيل"
-            }
+            <div class="question">
 
-          </button>
+              ${escapeHtml(
+                item.question
+              )}
+
+            </div>
 
 
-          <button
-            class="btn-danger"
-            onclick="deleteQuestion(${item.id})">
+            <div class="answer">
 
-            🗑️ حذف
+              ${escapeHtml(
+                item.answer
+              )}
 
-          </button>
+            </div>
 
-        </div>
 
-      </div>
+            <div class="meta">
 
-      `;
+              <span class="badge">
 
-    }).join("");
+                ${escapeHtml(
+                  item.category ||
+                  "بدون تصنيف"
+                )}
+
+              </span>
+
+
+              <span
+                class="badge ${
+                  item.active
+                    ? "active"
+                    : "inactive"
+                }"
+              >
+
+                ${
+                  item.active
+                    ? "فعال"
+                    : "متوقف"
+                }
+
+              </span>
+
+
+              <span class="badge">
+
+                استخدم
+                ${Number(
+                  item.usage_count || 0
+                )}
+                مرة
+
+              </span>
+
+
+              ${
+                keywords.length
+
+                  ? `
+                    <span class="badge">
+
+                      ${escapeHtml(
+                        keywords.join("، ")
+                      )}
+
+                    </span>
+                  `
+
+                  : ""
+              }
+
+            </div>
+
+
+            <div class="buttons">
+
+              <button
+                class="btn-gray"
+                onclick="
+                  editQuestion(
+                    ${item.id}
+                  )
+                "
+              >
+
+                ✏️ تعديل
+
+              </button>
+
+
+              <button
+                class="${
+                  item.active
+                    ? "btn-danger"
+                    : "btn-primary"
+                }"
+                onclick="
+                  toggleQuestion(
+                    ${item.id},
+                    ${!!item.active}
+                  )
+                "
+              >
+
+                ${
+                  item.active
+                    ? "🔴 تعطيل"
+                    : "🟢 تفعيل"
+                }
+
+              </button>
+
+
+              <button
+                class="btn-danger"
+                onclick="
+                  deleteQuestion(
+                    ${item.id}
+                  )
+                "
+              >
+
+                🗑️ حذف
+
+              </button>
+
+            </div>
+
+          </div>
+
+        `;
+
+      })
+      .join("");
 
 }
 
 
-/* =====================================
-   إضافة / تعديل
-===================================== */
+/* =====================================================
+   تعديل سؤال
+===================================================== */
+
+function editQuestion(id) {
+
+  const item =
+    questions.find(
+      function(x) {
+        return x.id === id;
+      }
+    );
+
+
+  if(!item) return;
+
+
+  editingId = id;
+
+
+  document.getElementById("question")
+    .value =
+    item.question || "";
+
+
+  document.getElementById("answer")
+    .value =
+    item.answer || "";
+
+
+  document.getElementById("category")
+    .value =
+    item.category || "";
+
+
+  document.getElementById("keywords")
+    .value =
+    Array.isArray(item.keywords)
+      ? item.keywords.join("، ")
+      : "";
+
+
+  document.getElementById("active")
+    .checked =
+    !!item.active;
+
+
+  document.getElementById("formTitle")
+    .textContent =
+    "✏️ تعديل السؤال";
+
+
+  document.getElementById("saveButton")
+    .textContent =
+    "حفظ التعديل";
+
+
+  document.getElementById("formStatus")
+    .textContent =
+    "";
+
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+
+}
+
+
+/* =====================================================
+   إعادة النموذج
+===================================================== */
+
+function resetForm() {
+
+  editingId = null;
+
+
+  document.getElementById("question")
+    .value = "";
+
+
+  document.getElementById("answer")
+    .value = "";
+
+
+  document.getElementById("category")
+    .value = "";
+
+
+  document.getElementById("keywords")
+    .value = "";
+
+
+  document.getElementById("active")
+    .checked = true;
+
+
+  document.getElementById("formTitle")
+    .textContent =
+    "➕ إضافة سؤال جديد";
+
+
+  document.getElementById("saveButton")
+    .textContent =
+    "حفظ السؤال";
+
+
+  document.getElementById("formStatus")
+    .textContent =
+    "";
+
+}
+
+
+/* =====================================================
+   تحويل الكلمات إلى Array
+===================================================== */
+
+function getKeywords(text) {
+
+  return String(text || "")
+    .split(/[,،]/)
+    .map(function(item) {
+      return item.trim();
+    })
+    .filter(Boolean);
+
+}
+
+
+/* =====================================================
+   حفظ سؤال
+===================================================== */
 
 async function saveQuestion() {
 
@@ -642,31 +1047,35 @@ async function saveQuestion() {
       .value
       .trim();
 
+
   const answer =
     document.getElementById("answer")
       .value
       .trim();
+
 
   const category =
     document.getElementById("category")
       .value
       .trim();
 
-  const keywordsText =
-    document.getElementById("keywords")
-      .value
-      .trim();
+
+  const keywords =
+    getKeywords(
+      document.getElementById("keywords")
+        .value
+    );
+
 
   const active =
     document.getElementById("active")
       .checked;
 
 
-  if(!question || !answer) {
+  if(!question) {
 
     showFormStatus(
-      "اكتب السؤال والإجابة أولًا",
-      false
+      "اكتب السؤال أولًا."
     );
 
     return;
@@ -674,11 +1083,15 @@ async function saveQuestion() {
   }
 
 
-  const keywords =
-    keywordsText
-      .split(/[,،]/)
-      .map(x => x.trim())
-      .filter(Boolean);
+  if(!answer) {
+
+    showFormStatus(
+      "اكتب الإجابة أولًا."
+    );
+
+    return;
+
+  }
 
 
   const payload = {
@@ -709,7 +1122,8 @@ async function saveQuestion() {
         editingId,
         {
           method: "PATCH",
-          body: JSON.stringify(payload)
+          body:
+            JSON.stringify(payload)
         }
       );
 
@@ -719,13 +1133,15 @@ async function saveQuestion() {
         true
       );
 
+
     } else {
 
       await sbFetch(
         "bot_knowledge",
         {
           method: "POST",
-          body: JSON.stringify(payload)
+          body:
+            JSON.stringify(payload)
         }
       );
 
@@ -738,15 +1154,26 @@ async function saveQuestion() {
     }
 
 
-    resetForm();
-
     await loadQuestions();
+
+
+    setTimeout(
+      resetForm,
+      700
+    );
+
 
   } catch(error) {
 
+    console.error(
+      "SAVE ERROR:",
+      error
+    );
+
+
     showFormStatus(
-      "حدث خطأ: " + error.message,
-      false
+      "فشل الحفظ: " +
+      error.message
     );
 
   }
@@ -754,124 +1181,33 @@ async function saveQuestion() {
 }
 
 
-/* =====================================
-   تعديل
-===================================== */
-
-function editQuestion(id) {
-
-  const item =
-    questions.find(
-      x => x.id === id
-    );
-
-  if(!item) return;
-
-
-  editingId = id;
-
-
-  document.getElementById("question")
-    .value =
-    item.question || "";
-
-
-  document.getElementById("answer")
-    .value =
-    item.answer || "";
-
-
-  document.getElementById("category")
-    .value =
-    item.category || "";
-
-
-  document.getElementById("keywords")
-    .value =
-    (item.keywords || []).join("، ");
-
-
-  document.getElementById("active")
-    .checked =
-    !!item.active;
-
-
-  document.getElementById("formTitle")
-    .textContent =
-    "✏️ تعديل السؤال";
-
-
-  document.getElementById("saveButton")
-    .textContent =
-    "حفظ التعديل";
-
-
-  window.scrollTo({
-    top: 0,
-    behavior: "smooth"
-  });
-
-}
-
-
-/* =====================================
-   إلغاء التعديل
-===================================== */
-
-function resetForm() {
-
-  editingId = null;
-
-
-  document.getElementById("question")
-    .value = "";
-
-  document.getElementById("answer")
-    .value = "";
-
-  document.getElementById("category")
-    .value = "";
-
-  document.getElementById("keywords")
-    .value = "";
-
-  document.getElementById("active")
-    .checked = true;
-
-
-  document.getElementById("formTitle")
-    .textContent =
-    "➕ إضافة سؤال جديد";
-
-
-  document.getElementById("saveButton")
-    .textContent =
-    "حفظ السؤال";
-
-}
-
-
-/* =====================================
+/* =====================================================
    تشغيل / تعطيل
-===================================== */
+===================================================== */
 
-async function toggleQuestion(id, active) {
+async function toggleQuestion(
+  id,
+  currentActive
+) {
 
   try {
 
     await sbFetch(
-      "bot_knowledge?id=eq." + id,
+      "bot_knowledge?id=eq." +
+      id,
       {
         method: "PATCH",
 
-        body: JSON.stringify({
+        body:
+          JSON.stringify({
 
-          active: !active,
+            active:
+              !currentActive,
 
-          updated_at:
-            new Date().toISOString()
+            updated_at:
+              new Date().toISOString()
 
-        })
+          })
 
       }
     );
@@ -879,10 +1215,17 @@ async function toggleQuestion(id, active) {
 
     await loadQuestions();
 
+
   } catch(error) {
 
+    console.error(
+      "TOGGLE ERROR:",
+      error
+    );
+
+
     alert(
-      "حدث خطأ: " +
+      "حدث خطأ:\n" +
       error.message
     );
 
@@ -891,36 +1234,52 @@ async function toggleQuestion(id, active) {
 }
 
 
-/* =====================================
+/* =====================================================
    حذف
-===================================== */
+===================================================== */
 
 async function deleteQuestion(id) {
 
-  if(
-    !confirm(
-      "هل أنت متأكد من حذف هذا السؤال؟"
-    )
-  ) return;
+  const confirmed =
+    confirm(
+      "هل أنت متأكد من حذف السؤال؟\n\n" +
+      "لا يمكن التراجع عن الحذف."
+    );
+
+
+  if(!confirmed) return;
 
 
   try {
 
     await sbFetch(
-      "bot_knowledge?id=eq." + id,
+      "bot_knowledge?id=eq." +
+      id,
       {
         method: "DELETE",
-        prefer: "return=minimal"
+
+        headers: {
+          "Prefer":
+            "return=minimal"
+        }
+
       }
     );
 
 
     await loadQuestions();
 
+
   } catch(error) {
 
+    console.error(
+      "DELETE ERROR:",
+      error
+    );
+
+
     alert(
-      "حدث خطأ: " +
+      "حدث خطأ أثناء الحذف:\n" +
       error.message
     );
 
@@ -929,9 +1288,156 @@ async function deleteQuestion(id) {
 }
 
 
-/* =====================================
+/* =====================================================
+   تطبيع النص العربي
+===================================================== */
+
+function normalizeArabic(text) {
+
+  return String(text || "")
+    .toLowerCase()
+
+    .replace(/[إأآا]/g, "ا")
+
+    .replace(/ة/g, "ه")
+
+    .replace(/ى/g, "ي")
+
+    .replace(
+      /[ًٌٍَُِّْـ]/g,
+      ""
+    )
+
+    .replace(
+      /[^\u0600-\u06FFa-zA-Z0-9\s]/g,
+      " "
+    )
+
+    .replace(
+      /\s+/g,
+      " "
+    )
+
+    .trim();
+
+}
+
+
+/* =====================================================
+   حساب تطابق السؤال
+===================================================== */
+
+function calculateScore(
+  message,
+  item
+) {
+
+  const text =
+    normalizeArabic(message);
+
+
+  const words =
+    new Set(
+      text
+        .split(" ")
+        .filter(Boolean)
+    );
+
+
+  let score = 0;
+
+
+  /*
+    كلمات السؤال
+  */
+
+  const questionWords =
+    normalizeArabic(
+      item.question
+    )
+      .split(" ")
+      .filter(function(word) {
+
+        return word.length > 2;
+
+      });
+
+
+  questionWords.forEach(
+    function(word) {
+
+      if(words.has(word)) {
+
+        score += 2;
+
+      }
+
+    }
+  );
+
+
+  /*
+    الكلمات المرتبطة
+  */
+
+  const keywords =
+    Array.isArray(item.keywords)
+      ? item.keywords
+      : [];
+
+
+  keywords.forEach(
+    function(keyword) {
+
+      const key =
+        normalizeArabic(
+          keyword
+        );
+
+
+      if(
+        key &&
+        text.includes(key)
+      ) {
+
+        score += 4;
+
+      }
+
+    }
+  );
+
+
+  /*
+    تطابق السؤال كاملًا
+  */
+
+  const normalizedQuestion =
+    normalizeArabic(
+      item.question
+    );
+
+
+  if(
+    normalizedQuestion &&
+    text.includes(
+      normalizedQuestion
+    )
+  ) {
+
+    score += 5;
+
+  }
+
+
+  return score;
+
+}
+
+
+/* =====================================================
    اختبار البوت
-===================================== */
+===================================================== */
 
 async function testBot() {
 
@@ -940,35 +1446,64 @@ async function testBot() {
       "testMessage"
     );
 
+
   const message =
     input.value.trim();
 
 
-  if(!message) return;
+  if(!message) {
 
+    showTestStatus(
+      "اكتب سؤال أولًا."
+    );
 
-  const chat =
-    document.getElementById("chat");
-
-
-  if(
-    chat.querySelector(".empty")
-  ) {
-
-    chat.innerHTML = "";
+    return;
 
   }
 
+
+  const button =
+    document.getElementById(
+      "testButton"
+    );
+
+
+  const chat =
+    document.getElementById(
+      "chat"
+    );
+
+
+  /*
+    إزالة رسالة البداية
+  */
+
+  const empty =
+    chat.querySelector(
+      ".empty"
+    );
+
+
+  if(empty) {
+
+    empty.remove();
+
+  }
+
+
+  /*
+    إضافة رسالة العميل
+  */
 
   chat.insertAdjacentHTML(
     "beforeend",
 
     `
-    <div class="message customer">
+      <div class="message customer">
 
-      👤 ${escapeHtml(message)}
+        👤 ${escapeHtml(message)}
 
-    </div>
+      </div>
     `
   );
 
@@ -976,94 +1511,194 @@ async function testBot() {
   input.value = "";
 
 
+  button.disabled = true;
+
+  button.textContent =
+    "جاري البحث...";
+
+
   showTestStatus(
-    "جاري البحث عن الإجابة..."
+    "جاري البحث في قاعدة معرفة البوت...",
+    true
   );
 
 
   try {
 
     /*
-      البوت التجريبي الموجود في Supabase
+      قراءة الأسئلة الفعالة من Supabase
     */
 
-    const response =
-      await fetch(
-        "https://knleehjjejfeobcmpwnw.supabase.co/functions/v1/bot-test",
-        {
-          method: "POST",
-
-          headers: {
-
-            "Content-Type":
-              "application/json",
-
-            "Authorization":
-              "Bearer " +
-              getAuthToken()
-
-          },
-
-          body: JSON.stringify({
-            message
-          })
-
-        }
+    const data =
+      await sbFetch(
+        "bot_knowledge?select=id,question,answer,keywords,category,active,usage_count&active=eq.true"
       );
 
 
-    const result =
-      await response.json();
-
-
-    if(!response.ok) {
+    if(!Array.isArray(data)) {
 
       throw new Error(
-        result.error ||
-        "فشل اختبار البوت"
+        "لم يتم تحميل قاعدة معرفة البوت."
       );
 
     }
+
+
+    /*
+      حساب التطابق
+    */
+
+    const ranked =
+      data
+        .map(function(item) {
+
+          return {
+
+            ...item,
+
+            score:
+              calculateScore(
+                message,
+                item
+              )
+
+          };
+
+        })
+
+        .filter(function(item) {
+
+          return item.score > 0;
+
+        })
+
+        .sort(
+          function(a, b) {
+
+            return b.score - a.score;
+
+          }
+        );
+
+
+    const best =
+      ranked[0];
+
+
+    /*
+      الحد الأدنى للثقة
+    */
+
+    const confident =
+      best &&
+      best.score >= 4;
 
 
     let answer;
 
 
-    if(result.found) {
+    if(confident) {
 
       answer =
-        result.answer;
+        best.answer;
+
+
+      /*
+        زيادة عداد الاستخدام
+      */
+
+      try {
+
+        await sbFetch(
+          "bot_knowledge?id=eq." +
+          best.id,
+          {
+            method: "PATCH",
+
+            body:
+              JSON.stringify({
+
+                usage_count:
+                  Number(
+                    best.usage_count || 0
+                  ) + 1
+
+              })
+
+          }
+        );
+
+      } catch(counterError) {
+
+        console.warn(
+          "Usage counter error:",
+          counterError
+        );
+
+      }
 
     } else {
 
       answer =
-        "مش لاقي إجابة مؤكدة للسؤال ده حاليًا 🤔\n\nممكن نحوله لموظف بريق.";
+        "مش لاقي إجابة مؤكدة للسؤال ده حاليًا 🤔\n\n" +
+        "ممكن نحوله لموظف بريق.";
 
     }
 
+
+    /*
+      عرض رد البوت
+    */
 
     chat.insertAdjacentHTML(
       "beforeend",
 
       `
-      <div class="message bot">
+        <div class="message bot">
 
-        🤖 ${escapeHtml(answer)}
+          🤖 ${escapeHtml(answer)}
 
-        <div class="meta">
+          <div class="meta">
 
-          ${
-            result.found
-              ? "السؤال المطابق: " +
-                escapeHtml(
-                  result.matched_question
-                )
-              : "لم يتم العثور على مطابقة مؤكدة"
-          }
+            ${
+              confident
+
+                ? `
+                  السؤال المطابق:
+                  <b>
+                    ${escapeHtml(
+                      best.question
+                    )}
+                  </b>
+
+                  <br>
+
+                  درجة المطابقة:
+                  ${best.score}
+
+                  ${
+                    best.category
+                      ? `
+                        <br>
+                        التصنيف:
+                        ${escapeHtml(
+                          best.category
+                        )}
+                      `
+                      : ""
+                  }
+                `
+
+                : `
+                  لم يتم العثور على مطابقة مؤكدة.
+                  <br>
+                  يمكن إضافة هذا السؤال إلى قاعدة المعرفة.
+                `
+            }
+
+          </div>
 
         </div>
-
-      </div>
       `
     );
 
@@ -1073,138 +1708,89 @@ async function testBot() {
 
 
     showTestStatus(
-      "تم الاختبار بنجاح ✅",
-      true
+      confident
+        ? "تم العثور على إجابة ✅"
+        : "لم يتم العثور على إجابة مؤكدة ⚠️",
+      confident
     );
 
 
   } catch(error) {
 
-    showTestStatus(
-      "خطأ: " + error.message,
-      false
+    console.error(
+      "BOT TEST ERROR:",
+      error
     );
+
+
+    chat.insertAdjacentHTML(
+      "beforeend",
+
+      `
+        <div class="message bot">
+
+          ❌ حصل خطأ أثناء اختبار البوت.
+
+          <div class="meta">
+
+            ${escapeHtml(
+              error.message
+            )}
+
+          </div>
+
+        </div>
+      `
+    );
+
+
+    showTestStatus(
+      "فشل اختبار البوت: " +
+      error.message
+    );
+
+
+  } finally {
+
+    button.disabled = false;
+
+    button.textContent =
+      "إرسال";
 
   }
 
 }
 
 
-/* =====================================
-   الحصول على التوكن
-===================================== */
+/* =====================================================
+   Enter لإرسال السؤال
+===================================================== */
 
-function getAuthToken() {
+document
+  .getElementById(
+    "testMessage"
+  )
+  .addEventListener(
+    "keydown",
+    function(event) {
 
-  try {
+      if(
+        event.key === "Enter"
+      ) {
 
-    const adminToken =
-      sessionStorage.getItem(
-        "admin_token"
-      );
+        event.preventDefault();
 
-    if(adminToken)
-      return adminToken;
+        testBot();
 
+      }
 
-    const userToken =
-      localStorage.getItem(
-        "x2_token"
-      );
-
-    if(userToken)
-      return userToken;
-
-
-  } catch(e) {}
-
-
-  return "";
-
-}
-
-
-/* =====================================
-   الرسائل
-===================================== */
-
-function showFormStatus(
-  message,
-  success
-) {
-
-  const el =
-    document.getElementById(
-      "formStatus"
-    );
-
-  el.textContent =
-    message;
-
-  el.className =
-    "status " +
-    (
-      success
-        ? "success"
-        : "error"
-    );
-
-}
-
-
-function showTestStatus(
-  message,
-  success = false
-) {
-
-  const el =
-    document.getElementById(
-      "testStatus"
-    );
-
-  el.textContent =
-    message;
-
-  el.className =
-    "status " +
-    (
-      success
-        ? "success"
-        : "error"
-    );
-
-}
-
-
-/* =====================================
-   حماية HTML
-===================================== */
-
-function escapeHtml(value) {
-
-  return String(
-    value ?? ""
-  ).replace(
-    /[&<>"']/g,
-
-    char => ({
-
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#039;"
-
-    })[char]
-
+    }
   );
 
-}
 
-
-/* =====================================
-   تشغيل الصفحة
-===================================== */
+/* =====================================================
+   تحميل الصفحة
+===================================================== */
 
 loadQuestions();
 
