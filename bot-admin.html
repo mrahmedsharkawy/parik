@@ -717,7 +717,13 @@ function humanHandoffIntent(text){
   return /موظف|بشر|احد يرد|حد يكلمني|عايز اتكلم مع|كلمني|human|support|شكوي|مشكله في الطلب/.test(normalize(text));
 }
 function orderStatusIntent(text){
-  return /طلبي|حالة الطلب|وين طلبي|فين طلبي|رقم الطلب|تتبع|order status|track/.test(normalize(text));
+  const t=normalize(text);
+  if(/رقم\s*الطلب|الطلب\s*رقم|رقم\s*طلب|طلب\s*رقم|حاله\s*الطلب|وين\s*طلبي|فين\s*طلبي|طلبي|تتبع|order\s*status|track/.test(t))return true;
+  if(giftIntent(text))return false;
+  /* fallback: كلمة "طلب/الطلب" كتوكن مستقل (مش "اطلب"/"طلبات") + رقم — يغطي "طلب 1151" بدون كلمة رقم */
+  const words=t.split(' ');
+  const hasOrderWord=words.some(w=>w==='طلب'||w==='الطلب'||w==='طلبي');
+  return hasOrderWord&&/\d{3,10}/.test(arabicDigits(text));
 }
 function extractOrderRef(text){
   const t=arabicDigits(text);
@@ -867,17 +873,30 @@ async function recommendProductsUI(){
 }
 
 /* =========================================================
-   تتبع الطلبات — يحتاج جدول orders في Supabase
-   (order_number, phone, status, created_at)
-   القيم المقترحة لعمود status: جديد، تم التأكيد، جاري التجهيز، تم الشحن، تم التوصيل، ملغي
+   تتبع الطلبات — جدول orders الفعلي في Supabase (بريق):
+   id, created_at, order_number (شكله #1001), customer_id, total,
+   status (delivered/processing/manufacturing/confirmed/shipped/cancelled بالإنجليزي),
+   payment_method, payment_status
+   ملاحظة: مفيش عمود phone في الجدول، فالبحث بيتم برقم الطلب بس.
 ========================================================= */
+const ORDER_STATUS_LABELS={
+  new:'جديد',pending:'جديد',confirmed:'تم تأكيد الطلب ✅',
+  processing:'جاري تجهيز الطلب ⏳',manufacturing:'قيد التصنيع 🛠️',
+  shipped:'تم شحن الطلب 🚚',delivered:'تم توصيل الطلب 🎉',
+  cancelled:'تم إلغاء الطلب ❌',refunded:'تم استرجاع المبلغ'
+};
+function orderStatusLabel(s){
+  const key=String(s||'').trim().toLowerCase();
+  return ORDER_STATUS_LABELS[key]||s||'قيد المعالجة';
+}
 async function lookupOrder(ref){
   if(!ref)return null;
+  const withHash='#'+String(ref).replace(/^#/,'');
   try{
-    const byNumber=await window.sbFetch('orders?order_number=eq.'+encodeURIComponent(ref)+'&limit=1');
-    if(Array.isArray(byNumber)&&byNumber[0])return byNumber[0];
-    const byPhone=await window.sbFetch('orders?phone=ilike.*'+encodeURIComponent(ref)+'*&order=created_at.desc&limit=1');
-    if(Array.isArray(byPhone)&&byPhone[0])return byPhone[0];
+    const exact=await window.sbFetch('orders?order_number=eq.'+encodeURIComponent(withHash)+'&limit=1');
+    if(Array.isArray(exact)&&exact[0])return exact[0];
+    const loose=await window.sbFetch('orders?order_number=ilike.*'+encodeURIComponent(ref)+'*&order=created_at.desc&limit=1');
+    if(Array.isArray(loose)&&loose[0])return loose[0];
     return null;
   }catch(e){
     return {_error:e.message};
@@ -886,17 +905,18 @@ async function lookupOrder(ref){
 async function handleOrderStatus(raw){
   const ref=extractOrderRef(raw);
   if(!ref){
-    return {type:'clarify',text:'تمام، ابعتلي رقم الطلب أو رقم الموبايل اللي طلبت بيه وأنا أشوفلك حالته 📦'};
+    return {type:'clarify',text:'تمام، ابعتلي رقم الطلب (مثلًا 1001#) وأنا أشوفلك حالته 📦'};
   }
   const order=await lookupOrder(ref);
-  if(!order){
-    return {type:'fallback',text:'مش لاقي طلب بالرقم ده حاليًا 🤔 اتأكد من الرقم، أو لو حابب أحولك لموظف يتابعلك.'};
-  }
-  if(order._error){
+  if(order&&order._error){
     return {type:'fallback',text:settings.human};
   }
-  const statusText=order.status||'قيد المعالجة';
-  return {type:'answer',text:'📦 حالة طلبك رقم '+(order.order_number||ref)+': '+statusText+(order.updated_at?'\nآخر تحديث: '+new Date(order.updated_at).toLocaleDateString('ar-EG'):''),match:{question:'تتبع طلب',score:99}};
+  if(!order){
+    return {type:'fallback',text:'مش لاقي طلب بالرقم ده حاليًا 🤔 اتأكد من الرقم، أو لو حابب أحولك لموظف يتابعلك.\n'+settings.human};
+  }
+  const total=order.total!=null?'\nإجمالي الطلب: '+Number(order.total).toFixed(2)+' AED':'';
+  const date=order.created_at?'\nتاريخ الطلب: '+new Date(order.created_at).toLocaleDateString('ar-EG'):'';
+  return {type:'answer',text:'📦 حالة طلبك '+(order.order_number||('#'+ref))+':\n'+orderStatusLabel(order.status)+total+date,match:{question:'تتبع طلب',score:99}};
 }
 
 /* =========================================================
@@ -916,6 +936,16 @@ function renderRanking(arr){
   $('ranking').innerHTML=arr.slice(0,5).map(x=>'<div class="item"><b>'+esc(x.question)+'</b><div class="meta">الدرجة: '+x.score+' • الاستخدام: '+(Number(x.usage_count)||0)+'</div></div>').join('')||'<div class="hint">لا توجد مطابقة</div>';
 }
 async function processBotMessage(msg){
+  try{
+    const res=await processBotMessageCore(msg);
+    return res;
+  }catch(e){
+    console.error('processBotMessage crashed:',e);
+    try{await persistUnanswered(String(msg||''))}catch(e2){}
+    return {type:'fallback',text:(settings.fallback||'حصل عندي عارض بسيط 🙏')+'\n'+(settings.human||'هحولك لموظف من فريق بريق 👤')};
+  }
+}
+async function processBotMessageCore(msg){
   const raw=String(msg||'').trim();
   if(!raw)return null;
 
