@@ -249,6 +249,147 @@ let settings={
   conversationMode:true
 };
 
+/* =========================================================
+   ذاكرة وإدارة حالة المحادثة (Conversation State Machine)
+========================================================= */
+let conversationState={
+  topic:'idle',
+  subState:null,
+  lastBotQuestion:null,
+  lastResponseType:null,
+  consecutiveFallbacks:0,
+  giftContext:{},
+  orderContext:{}
+};
+
+const SMALL_TALK_PATTERNS=[
+  {pattern:/كيف(ك| حالك|ك عامل| الأحوال| صحتك|ك يا)/,replies:['أنا بوت بس شغال بكامل طاقتي 😄 وأنت؟','تمام الحمدلله، إزاي أقدر أساعدك؟','بخير والحمد لله، شرفني تواصلك!']},
+  {pattern:/(السلام عليكم|سلام|هلا|هاي|مرحبا|أهلا|أهلين|هلو)/,replies:['وعليكم السلام ورحمة الله 🌸','أهلاً وسهلاً! إزاي أقدر أساعدك؟','مرحبتين! 🎉']},
+  {pattern:/(شكرا|شكراً|تسلم|يسلمو|مشكور|جزاك الله خير|شكر)/,replies:['العفو! 😊 أي وقت','واجبنا نساعدك!','شكراً ليك، تواصل معانا وقت ما تحب 🌟']},
+  {pattern:/(مساء|صباح|صباحو|مسا|صباح الخير|مساء الخير|مساء النور)/,replies:['صباح الورد 🌹','مساء النور ✨','أهلاً بيك!']},
+  {pattern:/(باي|مع السلامة|سلامات|بسلامة|مع السلامه)/,replies:['مع السلامة! 👋','الله يسلمك، تواصل معانا وقت ما تحب!']},
+  {pattern:/(كويس|تمام|ماشي|حلو|عظمة|ممتاز|جميل|رايق)/,replies:['جميل! إزاي أقدر أساعدك؟','ممتاز! عايز حاجة تانية؟','كويس، نكمل؟ 😊']},
+  {pattern:/(عامل ايه|اخبارك|اخبار|شو الاخبار)/,replies:['الحمدلله تمام! إزاي أقدر أساعدك؟','كويس الحمدلله، وأنت عامل إيه؟']}
+];
+
+function detectTopic(text){
+  const t=normalize(text);
+  // Small talk: تحيات، استفسارات عن الحال، شكر، وداع
+  if(/كيف|شلون|عامل\s*ا[يهي]?|اخبار[كك]?|شو\s*الاخبار|شخبار[كك]?|وين[كك]?|صباح|مساء|سلام|هلا|هاي|مرحب|أهلا|أهلين|هلو|باي|مع\s*السلامة|شكرا|شكر|تسلم|يسلمو|مشكور|ميرسي|thanks|thank\s*you|كويس|تمام|ماشي|حلو|عظمة|ممتاز|جميل|رايق|الحمدلله|الحمد\s*لله/.test(t))return 'small_talk';
+  if(humanHandoffIntent(text))return 'human';
+  if(orderStatusIntent(text))return 'order';
+  if(giftIntent(text))return 'gift';
+  if(/منتج|ابحث|عندكم|عندك|فيه|موجود|عايز\s*اشتري|ابغي|ابغى|عايز|محتاج/.test(t))return 'product';
+  return 'general';
+}
+function isSmallTalk(text){
+  const t=normalize(text);
+  return SMALL_TALK_PATTERNS.some(item=>item.pattern.test(t));
+}
+function getSmallTalkReply(text){
+  const t=normalize(text);
+  for(const item of SMALL_TALK_PATTERNS){
+    if(item.pattern.test(t)){
+      const replies=item.replies;
+      return replies[Math.floor(Math.random()*replies.length)];
+    }
+  }
+  return 'أهلاً بيك! 😊 إزاي أقدر أساعدك؟';
+}
+function isTopicChange(newText,currentTopic){
+  const newTopic=detectTopic(newText);
+  if(newTopic==='general')return false;
+  if(newTopic===currentTopic)return false;
+  if(newTopic==='small_talk'&&(currentTopic==='gift'||currentTopic==='order'))return false;
+  return true;
+}
+function resetConversationState(newTopic){
+  conversationState={
+    topic:newTopic||'idle',
+    subState:null,
+    lastBotQuestion:null,
+    lastResponseType:null,
+    consecutiveFallbacks:0,
+    giftContext:{},
+    orderContext:{}
+  };
+}
+async function handleSubState(raw,ctx,intent){
+  const sub=conversationState.subState;
+  if(!sub)return null;
+  const detected=detectTopic(raw);
+  if(isSmallTalk(raw)&&sub!=='awaiting_order_number'){
+    const reply=getSmallTalkReply(raw);
+    return {type:'answer',text:reply+'\n\n'+conversationState.lastBotQuestion,ctx};
+  }
+  if(sub==='awaiting_order_number'){
+    const t=arabicDigits(raw);
+    if(/\d{3,10}/.test(t)){
+      conversationState.subState=null;
+      conversationState.orderContext.awaitingNumber=false;
+      const res=await handleOrderStatus(raw);
+      conversationState.lastResponseType=res.type;
+      return {...res,ctx};
+    }
+    if(detected!=='order'&&detected!=='general'&&detected!=='small_talk'){
+      resetConversationState(detected);
+      return null;
+    }
+    return {type:'clarify',text:'مش فاهم رقم الطلب من الكلام ده 😅\nممكن تبعتلي رقم الطلب بالأرقام؟ (مثلاً 1001#)',ctx};
+  }
+  if(sub==='awaiting_gift_recipient'){
+    if(intent.recipient){
+      conversationState.giftContext.recipient=intent.recipient;
+      conversationState.subState='awaiting_gift_occasion';
+      const newCtx={...ctx,recipient:intent.recipient};
+      const reply=conversationalGiftReply(newCtx);
+      conversationState.lastBotQuestion=reply;
+      return {type:'clarify',text:reply,ctx:newCtx};
+    }
+    if(detected!=='gift'&&detected!=='general'&&detected!=='small_talk'){
+      resetConversationState(detected);
+      return null;
+    }
+    return {type:'clarify',text:conversationState.lastBotQuestion,ctx};
+  }
+  if(sub==='awaiting_gift_occasion'){
+    if(intent.occasion){
+      conversationState.giftContext.occasion=intent.occasion;
+      conversationState.subState='awaiting_gift_budget';
+      const newCtx={...ctx,occasion:intent.occasion};
+      const reply=conversationalGiftReply(newCtx);
+      conversationState.lastBotQuestion=reply;
+      return {type:'clarify',text:reply,ctx:newCtx};
+    }
+    if(detected!=='gift'&&detected!=='general'&&detected!=='small_talk'){
+      resetConversationState(detected);
+      return null;
+    }
+    return {type:'clarify',text:conversationState.lastBotQuestion,ctx};
+  }
+  if(sub==='awaiting_gift_budget'){
+    const budget=parseBudget(raw,true);
+    if(budget!=null){
+      conversationState.giftContext.budget=budget;
+      conversationState.subState=null;
+      const newCtx={...ctx,budget};
+      const allGiftText=[raw,...conversation.filter(x=>x.role==='user').slice(-5).map(x=>x.text)].join(' ');
+      const products=await recommendProducts(allGiftText,newCtx);
+      if(products.length){
+        conversationState.lastResponseType='products';
+        return {type:'products',text:'تمام 🎁 فهمت طلبك: '+contextPrompt(newCtx)+'\nدي أقرب اختيارات مناسبة، ورتبتها حسب المناسبة والميزانية.',ctx:newCtx,products};
+      }
+      return {type:'fallback',text:'فهمت طلبك '+contextPrompt(newCtx)+'، لكن مش لاقي منتج مناسب حاليًا. ممكن نجرب ميزانية مختلفة؟',ctx:newCtx};
+    }
+    if(detected!=='gift'&&detected!=='general'&&detected!=='small_talk'){
+      resetConversationState(detected);
+      return null;
+    }
+    return {type:'clarify',text:conversationState.lastBotQuestion,ctx};
+  }
+  return null;
+}
+
 function toast(m){const t=$('toast');if(!t)return;t.textContent=m;t.style.opacity=1;clearTimeout(window.__toast);window.__toast=setTimeout(()=>t.style.opacity=0,2300)}
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
 function saveLocal(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
@@ -567,34 +708,51 @@ async function persistUnanswered(msg){
   const text=String(msg||'').trim();if(!text)return;
   const list=readLocal('bariq_bot_unanswered',[]),n=normalize(text);
   let found=list.find(x=>normalize(x.text)===n);
-  if(found)found.count=(found.count||1)+1;
-  else{found={text,count:1,date:new Date().toISOString(),savedToDb:false};list.unshift(found)}
+  if(found){
+    found.count=(found.count||1)+1;
+    found.date=new Date().toISOString();
+  }else{
+    found={text:text,count:1,date:new Date().toISOString(),savedToDb:false};
+    list.unshift(found);
+  }
   saveLocal('bariq_bot_unanswered',list.slice(0,500));
+
+  // ⭐ نحاول Supabase بس لو الإعداد مفعل
   if(settings.autoUnanswered!==false){
     try{
       const existing=questions.find(x=>normalize(x.question)===n);
       if(existing){
         const count=Math.max(Number(existing.usage_count)||0,found.count||1);
         await window.sbFetch('bot_knowledge?id=eq.'+existing.id,{method:'PATCH',body:JSON.stringify({usage_count:count,active:false,category:existing.category||'أسئلة تحتاج إجابة',updated_at:new Date().toISOString()})});
+        found.savedToDb=true;
       }else{
-        await window.sbFetch('bot_knowledge',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({
+        const res=await window.sbFetch('bot_knowledge',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({
           question:text,answer:'',category:'أسئلة تحتاج إجابة',keywords:[],active:false,usage_count:found.count||1,updated_at:new Date().toISOString()
         })});
-        found.savedToDb=true;saveLocal('bariq_bot_unanswered',list.slice(0,500));
-        await loadQuestions();
+        found.savedToDb=true;
+        // نحدّث الـ questions array لو فيه رد
+        if(Array.isArray(res)&&res[0]){
+          questions.unshift(res[0]);
+        }else{
+          await loadQuestions();
+        }
       }
-    }catch(e){console.warn('persistUnanswered:',e.message)}
+      saveLocal('bariq_bot_unanswered',list.slice(0,500));
+    }catch(e){
+      console.warn('persistUnanswered Supabase failed:',e.message);
+      // المحلي محفوظ بالفعل — مفيش مشكلة
+    }
   }
   renderUnanswered();renderDashboard();
 }
 function renderUnanswered(){
   const arr=unansweredLocal();
   $('unansweredList').innerHTML=arr.length?arr.map((x,i)=>
-    '<div class="unq"><b>'+esc(x.text)+'</b><div class="meta">تكرر '+(x.count||1)+' مرة '+(x.savedToDb?'• محفوظ في Supabase':'• محليًا')+'</div>'+
+    '<div class="unq"><b>'+esc(x.text)+'</b><div class="meta">تكرر '+(x.count||1)+' مرة • '+(x.savedToDb?'✅ محفوظ في Supabase':'📱 محفوظ محليًا فقط')+'</div>'+
     '<div class="tools"><button class="btn-gold" onclick="useUnanswered('+i+')">➕ اكتب الإجابة</button>'+
     (x.dbId?'<button class="btn-light" onclick="editQuestion('+Number(x.dbId)+')">✏️ فتح</button>':'')+
     '<button class="btn-light" onclick="removeUnanswered('+i+')">حذف من المحلي</button></div></div>'
-  ).join(''):'<div class="hint">مفيش أسئلة غير مجابة حاليًا.</div>';
+  ).join(''):'<div class="hint">مفيش أسئلة غير مجابة حاليًا. جرب تسأل البوت سؤال مش موجود في قاعدة المعرفة.</div>';
 }
 function useUnanswered(i){
   const arr=unansweredLocal(),x=arr[i];if(!x)return;
@@ -938,6 +1096,10 @@ function renderRanking(arr){
 async function processBotMessage(msg){
   try{
     const res=await processBotMessageCore(msg);
+    // ⭐ تأكد إننا بنرجع حاجة دايماً
+    if(!res){
+      return {type:'fallback',text:settings.fallback+'\n'+settings.human};
+    }
     return res;
   }catch(e){
     console.error('processBotMessage crashed:',e);
@@ -951,39 +1113,77 @@ async function processBotMessageCore(msg){
 
   const intent=extractIntent(raw);
   const ctx=settings.conversationMode?mergeContext(intent):intent;
-  $('intentBox').innerHTML='<b>السياق المستخرج:</b> '+esc(contextPrompt(ctx)||'لم يتم تحديد شخص/مناسبة/ميزانية');
 
-  if(humanHandoffIntent(raw)){
-    orderFlowPending=false;
+  // تحديث عرض السياق والحالة
+  const stateInfo='الموضوع: '+(conversationState.topic||'idle')+
+    (conversationState.subState?' | ينتظر: '+conversationState.subState:'')+
+    ' | السياق: '+(contextPrompt(ctx)||'لم يتم تحديد شخص/مناسبة/ميزانية');
+  $('intentBox').innerHTML='<b>حالة المحادثة:</b> '+esc(stateInfo);
+
+  const detectedTopic=detectTopic(raw);
+
+  // 1. لو فيه تغيير واضح في الموضوع، نعمل reset
+  if(isTopicChange(raw,conversationState.topic)){
+    resetConversationState(detectedTopic);
+  }
+
+  // 2. لو فيه subState pending، نعالج الرد في إطارها أولاً
+  if(conversationState.subState){
+    const subResult=await handleSubState(raw,ctx,intent);
+    if(subResult)return subResult;
+    // لو handleSubState رجع null يعني الموضوع اتغير واتعمل reset، نكمل المعالجة العادية
+  }
+
+  // 3. معالجة المواضيع الحرجة (human, order) — دي أولوية على قاعدة المعرفة
+  if(detectedTopic==='human'){
+    resetConversationState('human');
     $('ranking').innerHTML='<div class="hint">👤 تم تحويل الطلب لموظف بشري.</div>';
     return {type:'answer',text:settings.human,ctx,match:{question:'تحويل لموظف',score:99}};
   }
-  if(orderStatusIntent(raw)||(orderFlowPending&&/\d/.test(arabicDigits(raw)))){
-    $('ranking').innerHTML='<div class="hint">📦 البوت في وضع تتبع الطلب.</div>';
-    const res=await handleOrderStatus(raw);
-    orderFlowPending=(res.type==='clarify');
-    return res;
-  }
-  orderFlowPending=false;
 
-  const inGiftFlow=giftIntent(raw)||conversation.some(x=>x.role==='user'&&giftIntent(x.text));
+  if(detectedTopic==='order'){
+    conversationState.topic='order';
+    const res=await handleOrderStatus(raw);
+    if(res.type==='clarify'){
+      conversationState.subState='awaiting_order_number';
+      conversationState.lastBotQuestion=res.text;
+      conversationState.orderContext.awaitingNumber=true;
+    }else{
+      conversationState.subState=null;
+      conversationState.lastResponseType=res.type;
+    }
+    return {...res,ctx};
+  }
+
+  // 4. Gift flow — أولوية على قاعدة المعرفة لو المستخدم فعلاً عايز هدية
+  const inGiftFlow=giftIntent(raw)||conversationState.topic==='gift';
   if(inGiftFlow){
+    conversationState.topic='gift';
     const missing=missingGiftInfo(ctx);
     if(missing){
+      conversationState.subState='awaiting_gift_'+missing;
+      const reply=conversationalGiftReply(ctx);
+      conversationState.lastBotQuestion=reply;
+      conversationState.lastResponseType='clarify';
       $('ranking').innerHTML='<div class="hint">🧠 البوت ينتظر معلومة إضافية لإكمال اختيار الهدية.</div>';
-      return {type:'clarify',text:conversationalGiftReply(ctx),ctx};
+      return {type:'clarify',text:reply,ctx};
     }
 
+    // كل المعلومات موجودة
+    conversationState.subState=null;
     const allGiftText=[raw,...conversation.filter(x=>x.role==='user').slice(-5).map(x=>x.text)].join(' ');
     const products=await recommendProducts(allGiftText,ctx);
     if(products.length){
+      conversationState.lastResponseType='products';
       $('ranking').innerHTML=products.slice(0,5).map(p=>'<div class="item"><b>'+esc(productName(p))+'</b><div class="meta">'+Number(p._score||0).toFixed(1)+' نقطة • '+Number(p.price||0).toFixed(2)+' AED</div></div>').join('');
       return {type:'products',text:'تمام 🎁 فهمت طلبك: '+contextPrompt(ctx)+'\nدي أقرب اختيارات مناسبة، ورتبتها حسب المناسبة والميزانية.',ctx,products};
     }
     await persistUnanswered(raw);
+    conversationState.lastResponseType='fallback';
     return {type:'fallback',text:'فهمت طلبك '+contextPrompt(ctx)+'، لكن مش لاقي منتج مناسب حاليًا. ممكن نجرب ميزانية مختلفة؟',ctx};
   }
 
+  // 5. ⭐ أولوية قاعدة المعرفة — نشيك هل السؤال موجود في قاعدة المعرفة قبل أي حاجة تانية
   const minScore=Number(settings.minScore)||4;
   const contextText=settings.conversationMode
     ?[raw,...conversation.filter(x=>x.role==='user').slice(-3).map(x=>x.text)].join(' ')
@@ -993,8 +1193,13 @@ async function processBotMessageCore(msg){
   let ranked=rank(contextText);
   let best=ranked[0];
   renderRanking(ranked);
+
+  // لو فيه مطابقة قوية من قاعدة المعرفة — نستخدمها مباشرة (حتى لو small talk)
   if(best&&best.score>=minScore){
     await incrementUsage(best);
+    conversationState.topic='general';
+    conversationState.lastResponseType='answer';
+    conversationState.consecutiveFallbacks=0;
     return {type:'answer',text:best.answer,ctx,match:best};
   }
 
@@ -1005,24 +1210,65 @@ async function processBotMessageCore(msg){
     if(bestRaw&&bestRaw.score>=minScore){
       renderRanking(rankedRaw);
       await incrementUsage(bestRaw);
+      conversationState.topic='general';
+      conversationState.lastResponseType='answer';
+      conversationState.consecutiveFallbacks=0;
       return {type:'answer',text:bestRaw.answer,ctx,match:bestRaw};
     }
   }
 
-  /* المحاولة 3: عتبة أقل قليلًا لو فيه مطابقة قريبة جدًا (نص العتبة كحد أدنى معقول) */
+  /* المحاولة 3: عتبة أقل قليلًا لو فيه مطابقة قريبة جدًا */
   const relaxedMin=Math.max(2,minScore*0.6);
   if(best&&best.score>=relaxedMin){
     await incrementUsage(best);
+    conversationState.topic='general';
+    conversationState.lastResponseType='answer';
+    conversationState.consecutiveFallbacks=0;
     return {type:'answer',text:best.answer+'\n\n(لو مش ده قصدك بالظبط قوللي أوضحلك أكتر 🙏)',ctx,match:best};
   }
 
-  /* المحاولة 4: اقتراح منتجات */
-  const products=settings.autoProducts!==false?await recommendProducts(contextText,ctx):[];
-  if(products.length)return {type:'products',text:'لقيتلك أقرب منتجات مناسبة لطلبك 👇',ctx,products};
+  // 6. Small Talk — بس لو مفيش match في قاعدة المعرفة
+  if(detectedTopic==='small_talk'&&!conversationState.subState){
+    const reply=getSmallTalkReply(raw);
+    conversationState.topic='small_talk';
+    conversationState.lastResponseType='answer';
+    $('ranking').innerHTML='<div class="hint">💬 Small Talk / تحية</div>';
+    return {type:'answer',text:reply,ctx,match:{question:'تحية/small talk',score:99}};
+  }
 
-  /* مفيش حاجة اتفهمت: يتحفظ ويتحول لموظف لو الإعداد مفعل */
-  await persistUnanswered(raw);
-  return {type:'fallback',text:settings.fallback+'\n'+settings.human,ctx};
+  // 7. اقتراح منتجات
+  const products=settings.autoProducts!==false?await recommendProducts(contextText,ctx):[];
+  if(products.length){
+    conversationState.topic='product';
+    conversationState.lastResponseType='products';
+    return {type:'products',text:'لقيتلك أقرب منتجات مناسبة لطلبك 👇',ctx,products};
+  }
+
+  // 8. Fallback + تسجيل في unanswered
+  conversationState.consecutiveFallbacks++;
+  conversationState.lastResponseType='fallback';
+  let fallbackText=settings.fallback;
+  if(conversationState.consecutiveFallbacks>1){
+    fallbackText='لسه مش فاهم قصدك بالظبط 😅 ممكن تكتبلي بطريقة تانية؟ أو قوللي عايز:\n• هدية 🎁\n• تتبع طلب 📦\n• تكلم موظف 👤';
+  }
+  if(conversationState.consecutiveFallbacks>2){
+    fallbackText='عذراً، مش قادر أفهم قصدك. هحوّلك لموظف من فريقنا يساعدك.';
+  }
+
+  // ⭐ تسجيل السؤال غير المعروف — بنجرب المحلي أولاً حتى لو Supabase فشلت
+  try{
+    await persistUnanswered(raw);
+  }catch(e){
+    console.error('persistUnanswered failed:',e);
+    // نسجل محلي على الأقل
+    const list=readLocal('bariq_bot_unanswered',[]),n=normalize(raw);
+    let found=list.find(x=>normalize(x.text)===n);
+    if(found)found.count=(found.count||1)+1;
+    else{found={text:raw,count:1,date:new Date().toISOString(),savedToDb:false};list.unshift(found)}
+    saveLocal('bariq_bot_unanswered',list.slice(0,500));
+  }
+
+  return {type:'fallback',text:fallbackText+'\n'+settings.human,ctx};
 }
 function addMsg(role,text){
   conversation.push({role,text});
@@ -1037,7 +1283,11 @@ async function testBot(){
   const holder=document.createElement('div');holder.className='msg bot';holder.textContent='🤖 جاري التفكير والبحث...';$('chat').appendChild(holder);$('chat').scrollTop=$('chat').scrollHeight;
   try{
     const r=await processBotMessage(m);
-    if(r.type==='products'){
+    // ⭐ تأمين ضد null/undefined
+    if(!r||!r.text){
+      holder.textContent='🤖 '+settings.fallback;
+      conversation.push({role:'assistant',text:settings.fallback});
+    }else if(r.type==='products'){
       holder.remove();
       const el=document.createElement('div');el.className='msg bot';el.innerHTML='🤖 '+esc(r.text)+'<div class="product-grid" style="margin-top:8px">'+productCards(r.products)+'</div>';
       $('chat').appendChild(el);
@@ -1046,6 +1296,11 @@ async function testBot(){
       holder.textContent='🤖 '+r.text;
       conversation.push({role:'assistant',text:r.text});
     }
+    // تحديث عرض الstate بعد الرد
+    const stateHtml='<b>الحالة الحالية:</b> موضوع: '+esc(conversationState.topic||'idle')+
+      (conversationState.subState?' | ينتظر: '+esc(conversationState.subState):'')+
+      (conversationState.lastResponseType?' | آخر رد: '+esc(conversationState.lastResponseType):'');
+    $('intentBox').innerHTML=stateHtml;
   }catch(e){
     holder.textContent='🤖 حصل خطأ أثناء التفكير: '+e.message;
   }finally{
@@ -1053,7 +1308,17 @@ async function testBot(){
   }
 }
 function resetChat(){
-  conversation=[];orderFlowPending=false;$('chat').innerHTML='<div class="msg system">🤖 '+esc(settings.welcome)+'</div>';$('intentBox').textContent='لم تبدأ المحادثة بعد.';$('ranking').innerHTML='';
+  conversation=[];orderFlowPending=false;
+  conversationState={
+    topic:'idle',
+    subState:null,
+    lastBotQuestion:null,
+    lastResponseType:null,
+    consecutiveFallbacks:0,
+    giftContext:{},
+    orderContext:{}
+  };
+  $('chat').innerHTML='<div class="msg system">🤖 '+esc(settings.welcome)+'</div>';$('intentBox').textContent='لم تبدأ المحادثة بعد.';$('ranking').innerHTML='';
 }
 async function quickTest(){
   const m=$('quickMsg').value.trim();if(!m)return;
