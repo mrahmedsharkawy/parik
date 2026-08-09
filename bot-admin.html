@@ -255,8 +255,9 @@ function saveLocal(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}
 function readLocal(k,d){try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(d))}catch(e){return d}}
 function normalize(s){
   return String(s||'').toLowerCase()
-  .replace(/[إأآا]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي')
+  .replace(/[إأآٱ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').replace(/ؤ/g,'و').replace(/ئ/g,'ي')
   .replace(/[ًٌٍَُِّْـ]/g,'')
+  .replace(/[ـ]/g,'')
   .replace(/[^\u0600-\u06FFa-zA-Z0-9\s]/g,' ')
   .replace(/\s+/g,' ').trim()
 }
@@ -432,21 +433,25 @@ function fuzzyToken(a,b){
   return Math.max(0,1-levenshtein(a,b)/Math.max(a.length,b.length));
 }
 function score(msg,item){
-  const words=normalize(msg).split(' ').filter(w=>w.length>1);
-  const qWords=normalize(item.question).split(' ').filter(w=>w.length>1);
+  const words=[...new Set(normalize(msg).split(' ').filter(w=>w.length>1))];
+  const qWords=[...new Set(normalize(item.question).split(' ').filter(w=>w.length>1))];
   const keyWords=kws(item.keywords).flatMap(k=>normalize(k).split(' ').filter(Boolean));
-  let s=0;
-  qWords.forEach(w=>{
-    const hit=Math.max(...words.map(x=>fuzzyToken(w,x)),0);
-    if(hit>=.9)s+=2.2; else if(hit>=.72)s+=1.25;
-  });
-  keyWords.forEach(w=>{
-    const hit=Math.max(...words.map(x=>fuzzyToken(w,x)),0);
-    if(hit>=.9)s+=4.5; else if(hit>=.72)s+=2.5;
-  });
-  const nq=normalize(item.question);
-  const nt=normalize(msg);
-  if(nq&&nt.includes(nq))s+=7;
+  let s=0, hits=0;
+  for(const w of qWords){
+    const hit=Math.max(0,...words.map(x=>fuzzyToken(w,x)));
+    if(hit>=.90){s+=2.0;hits++;}
+    else if(hit>=.76){s+=1.0;hits++;}
+  }
+  for(const w of keyWords){
+    const hit=Math.max(0,...words.map(x=>fuzzyToken(w,x)));
+    if(hit>=.90){s+=4.0;hits++;}
+    else if(hit>=.76){s+=2.0;hits++;}
+  }
+  const nq=normalize(item.question),nt=normalize(msg);
+  if(nq&&nt.includes(nq)) s+=7;
+  const coverage=qWords.length?hits/qWords.length:0;
+  if(coverage>=.75)s+=3;
+  else if(coverage>=.5)s+=1.5;
   return Math.round(s*10)/10;
 }
 function rank(msg){
@@ -825,44 +830,60 @@ function interestTerms(msg){
   return out;
 }
 async function recommendProducts(msg,ctx=null){
-  if(!botProducts.length)await loadProductsForBot();
+  if(!botProducts.length) await loadProductsForBot();
   const c=ctx||extractIntent(msg);
   const budget=c.budget??parseBudget(msg,true);
-  const terms=recipientTerms(msg),occ=occasionTerms(msg),intr=interestTerms(msg);
   const text=normalize([msg,contextPrompt(c)].join(' '));
-
-  return botProducts.map(p=>{
-    const price=Number(p.price)||0,stock=p.stock==null?1:Number(p.stock);
-    if(stock<=0)return {...p,_score:-999};
+  const terms=[...(recipientTerms(msg)),...(occasionTerms(msg)),...(interestTerms(msg))].map(normalize).filter(Boolean);
+  const scored=botProducts.map(p=>{
+    const price=Number(p.price);
+    const stock=p.stock==null?1:Number(p.stock);
+    if(stock<=0 || !Number.isFinite(price) || price<=0) return {...p,_score:-999,_inBudget:false};
     const pt=productText(p); let s=0;
-
-    text.split(' ').filter(w=>w.length>2).forEach(w=>{
-      if(pt.includes(w))s+=1.3;
-    });
-    terms.forEach(w=>{ if(pt.includes(normalize(w)))s+=5; });
-    occ.forEach(w=>{ if(pt.includes(normalize(w)))s+=4; });
-    intr.forEach(w=>{ if(pt.includes(normalize(w)))s+=6; });
-
-    if(RECIPIENT_TERMS[c.recipient]&&RECIPIENT_TERMS[c.recipient].some(w=>pt.includes(normalize(w))))s+=3;
-
-    if(budget!=null){
-      if(price>0&&price<=budget){
-        s+=8+Math.max(0,1-Math.abs(budget-price)/Math.max(budget,1))*4;
-      }else if(price>budget){
-        s-=Math.min(12,(price-budget)/Math.max(budget,1)*12);
+    for(const w of [...new Set(text.split(' ').filter(w=>w.length>2))]){
+      const hit=Math.max(0,...pt.split(' ').map(x=>fuzzyToken(w,x)));
+      if(hit>=.90)s+=1.1; else if(hit>=.78)s+=.45;
+    }
+    for(const term of terms){
+      if(pt.includes(term))s+=5;
+      else if(pt.split(' ').some(x=>fuzzyToken(term,x)>=.78))s+=2;
+    }
+    if(c.recipient && RECIPIENT_TERMS[c.recipient]){
+      for(const term of RECIPIENT_TERMS[c.recipient].map(normalize)){
+        if(pt.includes(term)){s+=4;break;}
       }
     }
-
-    if(c.style==='فاخر'&&Number(p.rating||0)>=4.5)s+=2;
-    if(c.style==='فاخر'&&p.featured)s+=2;
-    if(c.style==='اقتصادي'&&price>0)s+=Math.max(0,5-price/50);
-    if(/بوكس|هديه|gift/.test(text)&&/بوكس|box|gift|هدايا/.test(pt))s+=4;
-
-    return {...p,_score:s};
-  }).filter(p=>p._score>0).sort((a,b)=>b._score-a._score).slice(0,6);
+    if(c.occasion && OCCASION_TERMS[c.occasion]){
+      for(const term of OCCASION_TERMS[c.occasion].map(normalize)){
+        if(pt.includes(term)){s+=3;break;}
+      }
+    }
+    let inBudget=true;
+    if(budget!=null){
+      inBudget=price<=budget;
+      if(inBudget){
+        const ratio=budget?price/budget:0;
+        s+=12+(ratio*5); // الأفضل قريب من الميزانية من غير ما يتخطاها
+      }else{
+        s-=18+Math.min(18,(price-budget)/Math.max(1,budget)*20);
+      }
+    }
+    if(c.style==='فاخر'&&(Number(p.rating)||0)>=4.5)s+=2;
+    if(c.style==='اقتصادي'&&inBudget)s+=2;
+    return {...p,_score:s,_inBudget:inBudget};
+  }).filter(p=>p._score>0);
+  if(budget!=null){
+    const within=scored.filter(p=>p._inBudget).sort((a,b)=>b._score-a._score);
+    if(within.length)return within.slice(0,6);
+  }
+  return scored.sort((a,b)=>b._score-a._score).slice(0,6);
 }
 function productCards(arr){
-  return arr.map(p=>'<div class="product-card"><img src="'+esc(productImage(p))+'" onerror="this.src=\'/assets/logo.png\'"><div class="pc-body"><div class="pc-name">'+esc(productName(p))+'</div><div class="pc-price">'+(Number(p.price||0).toFixed(2))+' AED</div><div class="pc-meta">'+(p.stock!=null?'المخزون: '+esc(p.stock):'')+(p.rating?' • ⭐ '+esc(p.rating):'')+'</div><a class="btn-navy" href="'+esc(productLink(p))+'" target="_blank">عرض المنتج</a></div></div>').join('');
+  return arr.map(p=>{
+    const price=Number(p.price);
+    const priceText=Number.isFinite(price)?price.toFixed(2)+' AED':'السعر غير متاح';
+    return '<div class="product-card"><img src="'+esc(productImage(p))+'" onerror="this.src=\'/assets/logo.png\'"><div class="pc-body"><div class="pc-name">'+esc(productName(p))+'</div><div class="pc-price">'+priceText+'</div><div class="pc-meta">'+(p.stock!=null?'المخزون: '+esc(p.stock):'')+(p.rating?' • ⭐ '+esc(p.rating):'')+'</div><a class="btn-navy" href="'+esc(productLink(p))+'" target="_blank" rel="noopener">عرض المنتج</a></div></div>';
+  }).join('');
 }
 async function recommendProductsUI(){
   const m=$('productQuery').value.trim();if(!m)return;
@@ -966,21 +987,17 @@ function greetingReply(text){
 
 // ===== مطابقة قاعدة المعرفة =====
 function findBestAnswer(msg){
-  const minScore=Number(settings.minScore)||4;
-  const contextMsgs=[msg,...conversation.filter(x=>x.role==='user').slice(-3).map(x=>x.text)];
-  const contextText=contextMsgs.join(' ');
+  const minScore=Math.max(4,Number(settings.minScore)||4);
+  const ranked=rank(msg);
+  const best=ranked[0];
+  if(!best) return {found:false,ranked};
 
-  let ranked=rank(contextText);
-  let best=ranked[0];
-  if(best&&best.score>=minScore) return {found:true,item:best,ranked};
-
-  ranked=rank(msg);
-  best=ranked[0];
-  if(best&&best.score>=minScore) return {found:true,item:best,ranked};
-
-  const relaxed=Math.max(2,minScore*0.6);
-  if(best&&best.score>=relaxed) return {found:true,item:best,ranked,relaxed:true};
-
+  // لا نستخدم إجابة قريبة لمجرد وجود كلمتين متشابهتين.
+  // لازم تكون هناك مطابقة قوية أو عدة إشارات مستقلة.
+  const second=ranked[1];
+  const strong=best.score>=minScore;
+  const clearlyBetter=!second || (best.score-second.score>=1.5) || best.score>=minScore+3;
+  if(strong && clearlyBetter) return {found:true,item:best,ranked};
   return {found:false,ranked};
 }
 
@@ -1156,25 +1173,35 @@ async function processBotMessageCore(msg){
 // ===== استخراج recipient/occasion من "لأختي" / "للتخرج" =====
 function extractRecipient(text){
   const t=normalize(text);
-  // "لأختي" → "أخت"
-  const m=t.match(/ل([أإا])?(\S{2,10})/);
-  if(m){
-    const word='ا'+m[2];
-    for(const[re,label]of RECIPIENT_MAP){
-      if(re.test(word)) return label;
+  const candidates=t.split(/\s+/).filter(Boolean);
+  const expanded=[];
+  for(const w of candidates){
+    expanded.push(w);
+    if(w.startsWith('ل')&&w.length>2) expanded.push(w.slice(1));
+    if(w.startsWith('لل')&&w.length>3) expanded.push(w.slice(2));
+  }
+  for(const w of expanded){
+    for(const[re,label] of RECIPIENT_MAP){
+      if(re.test(w)) return label;
     }
   }
+  // fuzzy common forms: اخت/اختي/أخت/أختي
+  if(expanded.some(w=>fuzzyToken(w,'اخت')>=.72||fuzzyToken(w,'اختي')>=.72)) return 'أخت';
   return '';
 }
 
 function extractOccasion(text){
   const t=normalize(text);
-  // "للتخرج" → "تخرج"
-  const m=t.match(/ل([أإا])?(\S{2,15})/);
-  if(m){
-    const word='ا'+m[2];
-    for(const[re,label]of OCCASION_MAP){
-      if(re.test(word)) return label;
+  const candidates=t.split(/\s+/).filter(Boolean);
+  const expanded=[];
+  for(const w of candidates){
+    expanded.push(w);
+    if(w.startsWith('ل')&&w.length>2) expanded.push(w.slice(1));
+    if(w.startsWith('لل')&&w.length>3) expanded.push(w.slice(2));
+  }
+  for(const w of expanded){
+    for(const[re,label] of OCCASION_MAP){
+      if(re.test(w)) return label;
     }
   }
   return '';
