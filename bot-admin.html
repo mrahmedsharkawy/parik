@@ -238,6 +238,7 @@ const ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 let questions=[];
 let botProducts=[];
 let conversation=[];
+let orderFlowPending=false;
 let settings={
   minScore:4,
   welcome:'أهلًا بيك في بريق 🎁 إزاي أقدر أساعدك؟',
@@ -609,12 +610,19 @@ function clearUnanswered(){if(confirm('مسح قائمة الأسئلة غير �
 /* =========================================================
    فهم النية والسياق
 ========================================================= */
-function parseBudget(text){
+function parseBudget(text,allowBare=false){
   const t=arabicDigits(text);
   const m=t.match(/(?:اقل|أقل|حدود|حد|ميزاني(?:ه|ة)|بحدود|لحد|تحت|اقل من|أقل من|في حدود|حوالي)\s*(?:من)?\s*(\d+(?:\.\d+)?)/i);
   if(m)return Number(m[1]);
-  const all=t.match(/\b(\d{2,5}(?:\.\d+)?)\b/g);
-  return all&&all.length?Number(all[all.length-1]):null;
+  /* رقم متبوع بكلمة عملة صريحة — مأمون حتى لو مفيش سياق هدية */
+  const withCurrency=t.match(/(\d+(?:\.\d+)?)\s*(?:درهم|دراهم|د\.إ|aed|dhs)/i);
+  if(withCurrency)return Number(withCurrency[1]);
+  /* رقم مجرد من غير عملة: يتحسب ميزانية بس لو إحنا فعلًا جوه مسار هدية، عشان منلخبطش رقم طلب/موبايل بيها */
+  if(allowBare){
+    const all=t.match(/\b(\d{2,5}(?:\.\d+)?)\b/g);
+    return all&&all.length?Number(all[all.length-1]):null;
+  }
+  return null;
 }
 /* قاموس موسّع: مستلم / مناسبة / ستايل / اهتمام — كل مصفوفة regex واحد يغطي أكبر عدد صياغات */
 const RECIPIENT_MAP=[
@@ -678,7 +686,7 @@ function extractIntent(text){
     occasion:matchFirst(OCCASION_MAP,t),
     style:matchFirst(STYLE_MAP,t),
     interest:matchFirst(INTEREST_MAP,t),
-    budget:parseBudget(text)
+    budget:parseBudget(text,giftIntent(text))
   };
 }
 function mergeContext(intent){
@@ -813,7 +821,7 @@ function interestTerms(msg){
 async function recommendProducts(msg,ctx=null){
   if(!botProducts.length)await loadProductsForBot();
   const c=ctx||extractIntent(msg);
-  const budget=c.budget??parseBudget(msg);
+  const budget=c.budget??parseBudget(msg,true);
   const terms=recipientTerms(msg),occ=occasionTerms(msg),intr=interestTerms(msg);
   const text=normalize([msg,contextPrompt(c)].join(' '));
 
@@ -915,14 +923,18 @@ async function processBotMessage(msg){
   const ctx=settings.conversationMode?mergeContext(intent):intent;
   $('intentBox').innerHTML='<b>السياق المستخرج:</b> '+esc(contextPrompt(ctx)||'لم يتم تحديد شخص/مناسبة/ميزانية');
 
-  if(orderStatusIntent(raw)){
-    $('ranking').innerHTML='<div class="hint">📦 البوت في وضع تتبع الطلب.</div>';
-    return await handleOrderStatus(raw);
-  }
   if(humanHandoffIntent(raw)){
+    orderFlowPending=false;
     $('ranking').innerHTML='<div class="hint">👤 تم تحويل الطلب لموظف بشري.</div>';
     return {type:'answer',text:settings.human,ctx,match:{question:'تحويل لموظف',score:99}};
   }
+  if(orderStatusIntent(raw)||(orderFlowPending&&/\d/.test(arabicDigits(raw)))){
+    $('ranking').innerHTML='<div class="hint">📦 البوت في وضع تتبع الطلب.</div>';
+    const res=await handleOrderStatus(raw);
+    orderFlowPending=(res.type==='clarify');
+    return res;
+  }
+  orderFlowPending=false;
 
   const inGiftFlow=giftIntent(raw)||conversation.some(x=>x.role==='user'&&giftIntent(x.text));
   if(inGiftFlow){
@@ -1011,7 +1023,7 @@ async function testBot(){
   }
 }
 function resetChat(){
-  conversation=[];$('chat').innerHTML='<div class="msg system">🤖 '+esc(settings.welcome)+'</div>';$('intentBox').textContent='لم تبدأ المحادثة بعد.';$('ranking').innerHTML='';
+  conversation=[];orderFlowPending=false;$('chat').innerHTML='<div class="msg system">🤖 '+esc(settings.welcome)+'</div>';$('intentBox').textContent='لم تبدأ المحادثة بعد.';$('ranking').innerHTML='';
 }
 async function quickTest(){
   const m=$('quickMsg').value.trim();if(!m)return;
