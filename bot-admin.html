@@ -309,149 +309,137 @@ async function saveQuestion(){
 async function toggleQuestion(id,on){try{await window.sbFetch('bot_knowledge?id=eq.'+id,{method:'PATCH',body:JSON.stringify({active:!on,updated_at:new Date().toISOString()})});await loadQuestions();renderAll()}catch(e){toast('❌ '+e.message)}}
 async function deleteQuestion(id){if(!confirm('حذف السؤال نهائيًا؟'))return;try{await window.sbFetch('bot_knowledge?id=eq.'+id,{method:'DELETE'});await loadQuestions();renderAll();toast('🗑 تم الحذف')}catch(e){toast('❌ '+e.message)}}
 
-function answerFor(msg){
- const ranked=rank(msg),best=ranked[0],min=Number(settings.minScore)||4;
- return {ranked,best,confident:!!best&&best.score>=min};
-}
-async function runBot(msg,where){
-  const r=answerFor(msg);
-  if(r.confident){
-    if(where){ const el=$(where); if(el) el.innerHTML=`<div class="msg bot">🤖 ${esc(r.best.answer)}<div class="meta">المطابقة: ${esc(r.best.question)} • الدرجة ${r.best.score}</div></div>`; }
-    try{await window.sbFetch('bot_knowledge?id=eq.'+r.best.id,{method:'PATCH',body:JSON.stringify({usage_count:(Number(r.best.usage_count)||0)+1})});const x=questions.find(a=>a.id===r.best.id);if(x)x.usage_count=(Number(x.usage_count)||0)+1}catch(e){}
-  }else{
-    if(where){ const el=$(where); if(el) el.innerHTML=`<div class="msg bot">🤖 ${esc(settings.fallback)}</div>`; }
-    await persistUnanswered(msg);
-  }
-  return r;
+/* ================= محرك المحادثة الذكي Stateful ================= */
+let recommendationSession = {
+  recipient:null, occasion:null, budget:null, gender:null, age:null,
+  interests:[], style:null, awaiting:null, lastProducts:[], lastUserMessage:''
+};
+
+function resetRecommendationSession(){
+  recommendationSession={recipient:null,occasion:null,budget:null,gender:null,age:null,interests:[],style:null,awaiting:null,lastProducts:[],lastUserMessage:''};
+  renderRecommendationState();
+  if($('productResults')) $('productResults').innerHTML='';
+  if($('productQuery')) $('productQuery').value='';
 }
 
-async function persistUnanswered(msg){
-  const text=String(msg||'').trim(); if(!text) return;
-  const local=readLocal('bariq_bot_unanswered',[]); const n=normalize(text);
-  const found=local.find(x=>normalize(x.text)===n);
-  if(found) found.count=(found.count||1)+1; else local.unshift({text,count:1,date:new Date().toISOString(),savedToDb:false});
-  saveLocal('bariq_bot_unanswered',local.slice(0,500));
-  try{
-    const existing=questions.find(x=>normalize(x.question)===n);
-    if(existing){
-      if(Number(existing.usage_count||0) < (found?.count||1)) await window.sbFetch('bot_knowledge?id=eq.'+existing.id,{method:'PATCH',body:JSON.stringify({usage_count:found?.count||1,active:false,updated_at:new Date().toISOString()})});
-    }else{
-      await window.sbFetch('bot_knowledge',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({question:text,answer:'',category:'أسئلة تحتاج إجابة',keywords:[],active:false,usage_count:1,updated_at:new Date().toISOString()})});
-      await loadQuestions();
-      const lx=readLocal('bariq_bot_unanswered',[]); const hit=lx.find(x=>normalize(x.text)===n); if(hit) hit.savedToDb=true; saveLocal('bariq_bot_unanswered',lx);
-    }
-  }catch(e){ console.warn('persist unanswered:',e.message); }
-  renderUnanswered(); renderDashboard();
-}
-
-async function quickTest(){
-  const m=$('quickMsg').value.trim(); if(!m)return;
-  const r=answerFor(m);
-  if(r.confident){
-    $('quickResult').innerHTML=`<div class="item"><b>🤖 ${esc(r.best.answer)}</b><div class="meta">أفضل تطابق: ${esc(r.best.question)} • ${r.best.score} نقطة</div></div>`;
-  }else{
-    await persistUnanswered(m);
-    $('quickResult').innerHTML=`<div class="item"><b>⚠️ مفيش إجابة مؤكدة</b><div class="meta">تم حفظ السؤال تلقائيًا في «بدون إجابة» كمسودة غير فعالة علشان تضيف له الرد.</div><button class="btn-gold" style="margin-top:8px" onclick="tab('unanswered')">فتح الأسئلة</button></div>`;
-  }
-}
-
-async function testBot(){
-  const input=$('testMessage'),m=input.value.trim(); if(!m)return;
-  const chat=$('chat');
-  chat.insertAdjacentHTML('beforeend',`<div class="msg me">👤 ${esc(m)}</div>`); input.value='';
-  const holder=document.createElement('div'); chat.appendChild(holder); holder.className='msg bot'; holder.textContent='🤖 جاري التفكير والبحث...';
-  const r=answerFor(m);
-  if(r.confident){
-    holder.innerHTML=`🤖 ${esc(r.best.answer)}<div class="meta">أفضل مطابقة: ${esc(r.best.question)} • ${r.best.score}</div>`;
-    try{await window.sbFetch('bot_knowledge?id=eq.'+r.best.id,{method:'PATCH',body:JSON.stringify({usage_count:(Number(r.best.usage_count)||0)+1})});const x=questions.find(a=>a.id===r.best.id);if(x)x.usage_count=(Number(x.usage_count)||0)+1}catch(e){}
-  }else{
-    const products=await recommendProducts(m);
-    if(products.length){
-      holder.remove();
-      chat.insertAdjacentHTML('beforeend',`<div class="msg bot">🤖 ${esc(productIntro(m))}<div class="product-grid" style="margin-top:8px">${productCards(products)}</div></div>`);
-    }else{
-      holder.textContent='🤖 '+settings.fallback+'\n\nتم حفظ السؤال تلقائيًا في «بدون إجابة». ';
-      await persistUnanswered(m);
-    }
-  }
-  chat.scrollTop=chat.scrollHeight; renderRanking(r.ranked);
-}
-
-function productIntro(msg){
-  const b=parseBudget(msg); return b?'لقيتلك شوية اختيارات مناسبة لطلبك وميزانيتك 👇':'لقيتلك أقرب منتجات مناسبة لطلبك 👇';
-}
-
+function normalizeDigits(s){return String(s||'').replace(/[٠-٩]/g,d=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)));}
 function parseBudget(text){
-  let t=String(text||'').replace(/[٠-٩]/g,d=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)));
-  const m=t.match(/(?:اقل|أقل|حدود|حد|ميزاني(?:ه|ة)|بحدود|لحد|تحت|اقل من|أقل من)\s*(?:من)?\s*(\d+(?:\.\d+)?)/i);
+  const t=normalizeDigits(text).replace(/,/g,'');
+  const m=t.match(/(?:اقل|أقل|حدود|حد|ميزاني(?:ه|ة)|بحدود|لحد|تحت|اقل من|أقل من|في حدود|حوالي|ميزانية)\s*(?:من)?\s*(\d+(?:\.\d+)?)/i);
   if(m)return Number(m[1]);
-  const all=t.match(/\b(\d{2,5}(?:\.\d+)?)\b/g); return all&&all.length?Number(all[all.length-1]):null;
+  const all=t.match(/\b(\d{2,5}(?:\.\d+)?)\b/g);
+  return all&&all.length?Number(all[all.length-1]):null;
+}
+function detectRecipient(text){
+  const t=normalize(text);
+  const maps=[
+    [/اختي|اخت|اخوات|اختها|sister/, 'أخت'],[/زوجتي|مراتي|زوج|حبيبتي|خطيبتي|زوجة/, 'زوجة/حبيبة'],
+    [/امي|امى|والدتي|ماما|mother/, 'أم'],[/ابويا|والدي|بابا|ابوي|father/, 'أب'],
+    [/اخويا|اخي|اخو|brother/, 'أخ'],[/ابني|ابن|ولدي|boy/, 'ابن'],[/بنتي|بنت|girl/, 'بنت'],
+    [/مدير|رئيس|boss/, 'مدير'],[/صديقي|صاحبي|صاحبتي|صديقتي|friend/, 'صديق/ة'],[/طفل|طفلة|اطفال|kids/, 'طفل']
+  ];
+  return maps.find(x=>x[0].test(t))?.[1]||null;
+}
+function detectOccasion(text){
+  const t=normalize(text);
+  const maps=[[/عيد ميلاد|ميلاد|birthday/,'عيد ميلاد'],[/زواج|فرح|عرس|wedding/,'زواج'],[/ذكرى|انيفرساري|anniversary/,'ذكرى'],[/تخرج|graduation/,'تخرج'],[/مولود|بيبي|ولاده|ولادة|baby/,'مولود'],[/رمضان|عيد الفطر|عيد الاضحى|eid/,'مناسبة دينية'],[/عيد الام|يوم الام|mother day/,'عيد الأم'],[/عيد الحب|فالنتين|valentine/,'عيد الحب'],[/شكر|شكرا|امتنان/,'شكر وتقدير'],[/مباركه|مبروك|تهنئة|تهنئه/,'تهنئة']];
+  return maps.find(x=>x[0].test(t))?.[1]||null;
+}
+function detectStyle(text){
+  const t=normalize(text); const maps=[[/فخم|فاخر|راقي|luxury|premium/,'فاخر'],[/عملي|عملية|مفيد|useful/,'عملي'],[/رومانسي|رومانسيه|romantic/,'رومانسي'],[/بسيط|ناعم|minimal/,'بسيط'],[/اقتصادي|رخيص|موفر|cheap/,'اقتصادي']];
+  return maps.find(x=>x[0].test(t))?.[1]||null;
+}
+function detectAge(text){
+  const t=normalizeDigits(text); const m=t.match(/(?:عمره|عمرها|سن(?:ه|ها)?|عمر)\s*(\d{1,3})/); return m?Number(m[1]):null;
+}
+function extractInterests(text){
+  const t=normalize(text), out=[];
+  const terms=['عطور','عطر','ورد','زهور','شوكولاته','شكولاتة','اكسسوارات','إكسسوارات','مجوهرات','ساعات','كوب','مج','مكتب','ديكور','اكريليك','أكريليك','خشب','بوكس','كوزمتك','تجميل','قهوة','شاي','سيارة','سيارات','رياضة','تصوير','رسم','قراءة','قران','قرآن'];
+  terms.forEach(x=>{if(t.includes(normalize(x)))out.push(x)}); return [...new Set(out)];
+}
+function updateSessionFromMessage(msg){
+  const s=recommendationSession; const b=parseBudget(msg); const r=detectRecipient(msg); const o=detectOccasion(msg); const st=detectStyle(msg); const a=detectAge(msg); const ints=extractInterests(msg);
+  if(r)s.recipient=r; if(o)s.occasion=o; if(b!=null)s.budget=b; if(st)s.style=st; if(a)s.age=a; if(ints.length)s.interests=[...new Set([...s.interests,...ints])];
+  s.lastUserMessage=msg;
+  if(s.awaiting==='recipient' && r)s.awaiting=null;
+  if(s.awaiting==='occasion' && o)s.awaiting=null;
+  if(s.awaiting==='budget' && b!=null)s.awaiting=null;
+  if(s.awaiting==='interest' && (ints.length||st))s.awaiting=null;
+  return s;
+}
+function nextQuestion(){
+  const s=recommendationSession;
+  if(!s.recipient)return {key:'recipient',text:'أكيد ❤️ الهدية لمين؟ أختك، والدتك، زوجتك، صديقك ولا حد تاني؟'};
+  if(!s.occasion)return {key:'occasion',text:`جميل ❤️ هدية لـ${s.recipient}. المناسبة إيه؟ عيد ميلاد، تخرج، ذكرى، زواج ولا مناسبة تانية؟`};
+  if(s.budget==null)return {key:'budget',text:'تمام 🎁 وميزانيتك تقريبًا كام درهم؟ حتى لو رقم تقريبي.'};
+  if(!s.interests.length && !s.style)return {key:'interest',text:'حلو جدًا 👌 تحب الهدية تكون عملية، فخمة، رومانسية ولا عندها اهتمام معين زي العطور أو الورد أو الإكسسوارات؟'};
+  return null;
+}
+function sessionSummary(){
+  const s=recommendationSession, rows=[];
+  if(s.recipient)rows.push('👤 '+s.recipient); if(s.occasion)rows.push('🎉 '+s.occasion); if(s.budget!=null)rows.push('💰 '+s.budget+' AED'); if(s.style)rows.push('✨ '+s.style); if(s.interests.length)rows.push('❤️ '+s.interests.join('، ')); return rows.join(' • ')||'لسه بنجمع التفاصيل...';
+}
+function renderRecommendationState(){
+  const html='<b>الجلسة الحالية:</b><br>'+esc(sessionSummary())+(recommendationSession.awaiting?`<br><span class="chip gold">في انتظار: ${esc(recommendationSession.awaiting)}</span>`:'');
+  if($('recommendState'))$('recommendState').innerHTML=html;
+  if($('productSession'))$('productSession').innerHTML=html;
 }
 
-function productText(p){
-  const name=p.name_ar||p.name_en||p.name||''; const desc=p.description_ar||p.description_en||p.desc||''; const cats=Array.isArray(p.categories)?p.categories.join(' '):(p.categories||''); return normalize([name,desc,cats].join(' '));
-}
+function productText(p){const name=p.name_ar||p.name_en||p.name||'';const desc=p.description_ar||p.description_en||p.desc||'';const cats=Array.isArray(p.categories)?p.categories.join(' '):(p.categories||'');return normalize([name,desc,cats].join(' '));}
 function productName(p){return p.name_ar||p.name_en||(typeof p.name==='object'?p.name.ar||p.name.en:p.name)||'منتج';}
 function productImage(p){return p.image||(Array.isArray(p.gallery)&&p.gallery[0])||'/assets/logo.png';}
 function productLink(p){return p.link||('product.html?id='+encodeURIComponent(p.id));}
-function recipientTerms(msg){
-  const t=normalize(msg); const map=[
-    [/اخت|اخوات|اختي|اخته|sister/,['اخت','بنات','نسائي','نسائيه','women','girl']],
-    [/زوج|مرات|مراتي|زوجتي|حبيب|رومانسي/,['زوج','زوجة','رومانسي','حب','نساء','women','romantic']],
-    [/مدير|رئيس|boss|موظف/,['مدير','مكتب','office','formal']],
-    [/ولد|ابني|ابن|boy/,['ولد','اطفال','kids','boy']],
-    [/بنت|بنتي|girl/,['بنت','اطفال','kids','girl']],
-    [/امي|امى|والدتي|ماما|mother/,['ام','والده','نساء','mother']],
-    [/ابويا|والدي|بابا|ابوي|father/,['اب','والد','رجال','father']]
-  ]; return map.find(([re])=>re.test(t))?.[1]||[];
-}
-async function loadProductsForBot(){
-  try{
-    if(window.Supabase?.Products?.getAll){ botProducts=await window.Supabase.Products.getAll(100000); }
-    else { botProducts=await window.sbFetch('products?active=eq.true&order=sort_order.asc&limit=10000'); }
-    botProducts=Array.isArray(botProducts)?botProducts.filter(p=>p.active!==false):[];
-    $('productQueryStatus').textContent='تم تحميل '+botProducts.length+' منتج.';
-  }catch(e){ $('productQueryStatus').textContent='⚠️ تعذر تحميل المنتجات: '+e.message; botProducts=[]; }
-}
-let botProducts=[];
-async function recommendProducts(msg){
-  if(!botProducts.length) await loadProductsForBot();
-  const budget=parseBudget(msg), terms=recipientTerms(msg), text=normalize(msg);
-  return botProducts.map(p=>{
-    const price=Number(p.price)||0, stock=Number(p.stock);
-    if(stock<=0)return {...p,_score:-999};
-    let s=0, pt=productText(p);
-    text.split(' ').filter(w=>w.length>2).forEach(w=>{if(pt.includes(w))s+=1.2});
-    terms.forEach(w=>{if(pt.includes(normalize(w)))s+=5});
-    if(budget!=null){ if(price<=budget)s+=7+Math.max(0,1-Math.abs(budget-price)/Math.max(budget,1))*3; else s-=Math.min(8,(price-budget)/Math.max(budget,1)*8); }
-    if(/فخم|فاخر|راقي|premium|luxury/.test(text)){if(Number(p.rating||0)>=4.5)s+=2;if(p.featured)s+=2;}
-    if(/رخيص|اقتصاد|اقتصادي|cheap/.test(text)&&price>0)s+=Math.max(0,5-price/50);
-    if(/بوكس|gift box|هدية/.test(text)&&/بوكس|box|gift/.test(pt))s+=4;
-    return {...p,_score:s};
-  }).filter(p=>p._score>0).sort((a,b)=>b._score-a._score).slice(0,6);
+function recipientTerms(rec){const map={'أخت':['اخت','بنات','نسائي','women','girl'],'زوجة/حبيبة':['زوج','زوجة','رومانسي','حب','نساء','women','romantic'],'أم':['ام','والده','نساء','mother'],'أب':['اب','والد','رجال','father'],'أخ':['اخ','رجال','men','brother'],'ابن':['ولد','اطفال','kids','boy'],'بنت':['بنت','اطفال','kids','girl'],'مدير':['مدير','مكتب','office','formal'],'صديق/ة':['صديق','هدايا','friend']};return map[rec]||[];}
+function occasionTerms(o){const m={'عيد ميلاد':['ميلاد','birthday','هدية'],'زواج':['زواج','فرح','wedding'],'ذكرى':['ذكرى','anniversary'],'تخرج':['تخرج','graduation'],'مولود':['مولود','بيبي','baby'],'مناسبة دينية':['رمضان','عيد'],'عيد الأم':['ام','mother'],'عيد الحب':['حب','رومانسي','valentine'],'شكر وتقدير':['شكر','تقدير']};return m[o]||[];}
+async function recommendProductsForSession(){
+  if(!botProducts.length)await loadProductsForBot(); const s=recommendationSession; const text=normalize([s.recipient,s.occasion,s.style,...s.interests].join(' '));
+  const rt=recipientTerms(s.recipient),ot=occasionTerms(s.occasion);
+  return botProducts.map(p=>{const price=Number(p.price)||0,stock=Number(p.stock);if(stock<=0)return {...p,_score:-999};let score=0,pt=productText(p);
+    text.split(' ').filter(w=>w.length>2).forEach(w=>{if(pt.includes(w))score+=1});
+    [...rt,...ot].forEach(w=>{if(pt.includes(normalize(w)))score+=4});
+    s.interests.forEach(w=>{if(pt.includes(normalize(w)))score+=5});
+    if(s.budget!=null){if(price<=s.budget)score+=10+Math.max(0,1-Math.abs(s.budget-price)/Math.max(s.budget,1))*4;else score-=Math.min(12,(price-s.budget)/Math.max(s.budget,1)*10)}
+    if(s.style==='فاخر'){if(Number(p.rating||0)>=4.5)score+=2;if(p.featured)score+=3} if(s.style==='اقتصادي'&&price)score+=Math.max(0,5-price/50); if(s.style==='رومانسي'&&/حب|رومان|ورد|عطر|هدية/.test(pt))score+=4; if(s.style==='عملي'&&/مكتب|كوب|عملي|استخدام/.test(pt))score+=3;
+    return {...p,_score:score};}).filter(p=>p._score>0).sort((a,b)=>b._score-a._score).slice(0,6);
 }
 function productCards(arr){return arr.map(p=>`<div class="product-card"><img src="${esc(productImage(p))}" onerror="this.src='/assets/logo.png'"><div class="pc-body"><div class="pc-name">${esc(productName(p))}</div><div class="pc-price">${Number(p.price||0).toFixed(2)} AED</div><div class="pc-meta">${p.stock!=null?'المخزون: '+esc(p.stock):''}${p.rating?' • ⭐ '+esc(p.rating):''}</div><a class="btn-navy" href="${esc(productLink(p))}" target="_blank">عرض المنتج</a></div></div>`).join('');}
-async function recommendProductsUI(){const m=$('productQuery').value.trim();if(!m)return;const r=await recommendProducts(m);$('productResults').innerHTML=r.length?`<div class="product-grid">${productCards(r)}</div>`:'<div class="hint">مش لاقي منتجات مناسبة بالبيانات الحالية. جرّب ميزانية أو وصف مختلف.</div>';}
+function productIntro(){const s=recommendationSession;return `تمام ❤️ بناءً على إن الهدية لـ${s.recipient} بمناسبة ${s.occasion} وميزانية ${s.budget} درهم${s.style?' وبستايل '+s.style:''}${s.interests.length?' واهتمام '+s.interests.join('، '):''}، دي أقرب الاختيارات:`;}
 
-async function saveUnansweredQuestion(){
-  const q=$('question').value.trim(); if(!q){$('formMsg').textContent='❌ اكتب السؤال أولًا';$('formMsg').className='error';return;}
-  const payload={question:q,answer:'',category:$('category').value.trim()||'أسئلة تحتاج إجابة',keywords:kws($('keywords').value),active:false,updated_at:new Date().toISOString()};
-  try{await window.sbFetch('bot_knowledge',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(payload)});$('formMsg').textContent='✅ تم حفظ السؤال بدون إجابة كمسودة غير فعالة';$('formMsg').className='success';await loadQuestions();renderAll();}catch(e){$('formMsg').textContent='❌ فشل الحفظ: '+e.message;$('formMsg').className='error';}
+function answerFor(msg){const ranked=rank(msg),best=ranked[0],min=Number(settings.minScore)||4;return {ranked,best,confident:!!best&&best.score>=min};}
+async function runBot(msg,where){
+  const r=answerFor(msg); if(r.confident){if(where){const el=$(where);if(el)el.innerHTML=`<div class="msg bot">🤖 ${esc(r.best.answer)}<div class="meta">المطابقة: ${esc(r.best.question)} • الدرجة ${r.best.score}</div></div>`;}try{await window.sbFetch('bot_knowledge?id=eq.'+r.best.id,{method:'PATCH',body:JSON.stringify({usage_count:(Number(r.best.usage_count)||0)+1})});}catch(e){}return r;}
+  return r;
 }
 
-function renderRanking(arr){$('ranking').innerHTML=arr.slice(0,5).map(x=>`<div class="item"><b>${esc(x.question)}</b><div class="meta">الدرجة: ${x.score} • الاستخدام: ${Number(x.usage_count)||0}</div></div>`).join('')||'<div class="hint">لا توجد مطابقة</div>'}
-$('testMessage').addEventListener('keydown',e=>{if(e.key==='Enter')testBot()});
-$('quickMsg').addEventListener('keydown',e=>{if(e.key==='Enter')quickTest()});
+async function processConversation(msg){
+  updateSessionFromMessage(msg); renderRecommendationState();
+  const next=nextQuestion();
+  if(next){recommendationSession.awaiting=next.key;renderRecommendationState();return {type:'question',text:next.text,ranking:[]};}
+  const products=await recommendProductsForSession(); recommendationSession.lastProducts=products;
+  renderRecommendationState(); return {type:'products',products,ranking:products};
+}
 
-function renderUnanswered(){const arr=readLocal('bariq_bot_unanswered',[]);$('unansweredList').innerHTML=arr.length?arr.map((x,i)=>`<div class="unq"><b>${esc(x.text)}</b><div class="meta">تكرر ${x.count||1} مرة</div><div class="tools"><button class="btn-gold" onclick="useUnanswered(${i})">➕ إضافة كإجابة</button><button class="btn-light" onclick="removeUnanswered(${i})">حذف</button></div></div>`).join(''):'<div class="hint">مفيش أسئلة غير مجابة حاليًا.</div>'}
+async function testBot(){
+  const input=$('testMessage'),m=input.value.trim();if(!m)return;const chat=$('chat');chat.insertAdjacentHTML('beforeend',`<div class="msg me">👤 ${esc(m)}</div>`);input.value='';const holder=document.createElement('div');holder.className='msg bot';holder.textContent='🤖 بفكر في طلبك...';chat.appendChild(holder);
+  try{
+    const exact=answerFor(m);
+    const stateBefore={...recommendationSession};
+    const result=await processConversation(m);
+    if(result.type==='question'){holder.textContent='🤖 '+result.text;}
+    else if(result.products.length){holder.innerHTML=`🤖 ${esc(productIntro())}<div class="product-grid" style="margin-top:8px">${productCards(result.products)}</div>`;}
+    else {holder.textContent='🤖 مش لاقي منتج مناسب بكل المواصفات دي 😔\nممكن توسع الميزانية شوية أو تقولي تفضيل مختلف.';await persistUnanswered(m);}
+    renderRanking(exact.ranked); chat.scrollTop=chat.scrollHeight;
+  }catch(e){holder.textContent='🤖 حصل خطأ أثناء البحث: '+e.message;console.error(e);}
+}
+async function recommendProductsUI(){const m=$('productQuery').value.trim();if(!m)return;updateSessionFromMessage(m);renderRecommendationState();const next=nextQuestion();if(next){recommendationSession.awaiting=next.key;renderRecommendationState();$('productResults').innerHTML=`<div class="item"><b>🤖 ${esc(next.text)}</b></div>`;return;}const r=await recommendProductsForSession();$('productResults').innerHTML=r.length?`<div class="product-grid">${productCards(r)}</div>`:'<div class="hint">مش لاقي منتجات مناسبة. جرّب تغيير الميزانية أو الاهتمام.</div>';recommendationSession.lastProducts=r;}
+
+async function persistUnanswered(msg){const text=String(msg||'').trim();if(!text)return;const local=readLocal('bariq_bot_unanswered',[]),n=normalize(text);const found=local.find(x=>normalize(x.text)===n);if(found)found.count=(found.count||1)+1;else local.unshift({text,count:1,date:new Date().toISOString(),savedToDb:false});saveLocal('bariq_bot_unanswered',local.slice(0,500));try{const existing=questions.find(x=>normalize(x.question)===n);if(existing){await window.sbFetch('bot_knowledge?id=eq.'+existing.id,{method:'PATCH',body:JSON.stringify({usage_count:(found?.count||1),active:false,updated_at:new Date().toISOString()})});}else{await window.sbFetch('bot_knowledge',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({question:text,answer:'',category:'أسئلة تحتاج إجابة',keywords:[],active:false,usage_count:1,updated_at:new Date().toISOString()})});await loadQuestions();}}catch(e){console.warn('persist unanswered:',e.message)}renderUnanswered();renderDashboard();}
+function renderRanking(arr){$('ranking').innerHTML=arr.slice(0,5).map(x=>`<div class="item"><b>${esc(x.question||productName(x))}</b><div class="meta">الدرجة: ${Number(x.score||x._score||0).toFixed(1)} • الاستخدام: ${Number(x.usage_count)||0}</div></div>`).join('')||'<div class="hint">لا توجد مطابقة</div>';}
+$('testMessage').addEventListener('keydown',e=>{if(e.key==='Enter')testBot()});$('quickMsg').addEventListener('keydown',e=>{if(e.key==='Enter')quickTest()});$('productQuery').addEventListener('keydown',e=>{if(e.key==='Enter')recommendProductsUI()});
+function renderUnanswered(){const arr=readLocal('bariq_bot_unanswered',[]);$('unansweredList').innerHTML=arr.length?arr.map((x,i)=>`<div class="unq"><b>${esc(x.text)}</b><div class="meta">تكرر ${x.count||1} مرة ${x.savedToDb?'• محفوظ في Supabase':''}</div><div class="tools"><button class="btn-gold" onclick="useUnanswered(${i})">➕ إضافة كإجابة</button><button class="btn-light" onclick="removeUnanswered(${i})">حذف</button></div></div>`).join(''):'<div class="hint">مفيش أسئلة غير مجابة حاليًا.</div>'}
 function useUnanswered(i){const a=readLocal('bariq_bot_unanswered',[])[i];if(!a)return;newQuestion();$('question').value=a.text;tab('knowledge')}
 function removeUnanswered(i){const a=readLocal('bariq_bot_unanswered',[]);a.splice(i,1);saveLocal('bariq_bot_unanswered',a);renderUnanswered();renderDashboard()}
 function clearUnanswered(){if(confirm('مسح كل الأسئلة غير المجابة؟')){localStorage.removeItem('bariq_bot_unanswered');renderUnanswered();renderDashboard()}}
-
-function loadSettings(){const s=readLocal('bariq_bot_settings',settings);settings={...settings,...s};$('minScore').value=settings.minScore;$('welcome').value=settings.welcome;$('fallback').value=settings.fallback;$('human').value=settings.human}
-function saveSettings(){settings={minScore:Number($('minScore').value)||4,welcome:$('welcome').value,fallback:$('fallback').value,human:$('human').value};saveLocal('bariq_bot_settings',settings);$('settingsMsg').textContent='✅ تم حفظ إعدادات البوت';$('settingsMsg').className='success'}
-function loadMeta(){const m=readLocal('bariq_meta',{});$('metaPageId').value=m.pageId||'';$('waPhoneId').value=m.phoneId||'';$('webhookVerify').value=m.verify||'';$('webhookUrl').value=m.url||'';$('humanPhone').value=m.humanPhone||'';$('metaEnabled').checked=!!m.enabled;$('metaStatus').innerHTML=m.enabled?'🟢 التكامل مفعّل في الإعدادات':'⚪ التكامل غير مفعّل'}
-function saveMeta(){const m={pageId:$('metaPageId').value.trim(),phoneId:$('waPhoneId').value.trim(),verify:$('webhookVerify').value.trim(),url:$('webhookUrl').value.trim(),humanPhone:$('humanPhone').value.trim(),enabled:$('metaEnabled').checked};saveLocal('bariq_meta',m);loadMeta();$('metaMsg').textContent='✅ تم حفظ إعدادات Meta';$('metaMsg').className='success'}
 
 loadSettings();loadQuestions().then(async()=>{await loadProductsForBot();renderAll();});
 </script>
