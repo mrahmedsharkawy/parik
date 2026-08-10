@@ -177,6 +177,7 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:9px;
     <label class="toggle"><input id="autoUnanswered" type="checkbox" checked> حفظ الأسئلة غير المعروفة تلقائيًا</label>
     <label class="toggle"><input id="autoProducts" type="checkbox" checked> اقتراح المنتجات تلقائيًا عند عدم وجود إجابة</label>
     <label class="toggle"><input id="conversationMode" type="checkbox" checked> تفعيل فهم سياق المحادثة</label>
+    <label class="toggle"><input id="useLLM" type="checkbox" checked> تفعيل LLM لفهم المعنى والأسئلة غير المطابقة</label>
     <button class="btn-gold" onclick="saveSettings()">💾 حفظ الإعدادات</button>
     <div id="settingsMsg" style="margin-top:8px"></div>
   </div>
@@ -238,7 +239,6 @@ const ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 let questions=[];
 let botProducts=[];
 let conversation=[];
-let orderFlowPending=false;
 let settings={
   minScore:4,
   welcome:'أهلًا بيك في بريق 🎁 إزاي أقدر أساعدك؟',
@@ -246,11 +246,13 @@ let settings={
   human:'تمام، هحوّلك لموظف من فريق بريق 👤',
   autoUnanswered:true,
   autoProducts:true,
-  conversationMode:true
+  conversationMode:true,
+  useLLM:true
 };
 
 function toast(m){const t=$('toast');if(!t)return;t.textContent=m;t.style.opacity=1;clearTimeout(window.__toast);window.__toast=setTimeout(()=>t.style.opacity=0,2300)}
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
+function escAttr(v){return String(v??'').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}
 function saveLocal(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 function readLocal(k,d){try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(d))}catch(e){return d}}
 function normalize(s){
@@ -733,18 +735,6 @@ function contextPrompt(c){
 function giftIntent(text){
   return /هديه|هدي[هة]|gift|بوكس|هدايا|اقتراح هديه|عايز حاج[هة]|محتار اجيب|اجيب اي[هة]/.test(normalize(text));
 }
-function humanHandoffIntent(text){
-  return /موظف|بشر|احد يرد|حد يكلمني|عايز اتكلم مع|كلمني|human|support|شكوي|مشكله في الطلب/.test(normalize(text));
-}
-function orderStatusIntent(text){
-  const t=normalize(text);
-  if(/رقم\s*الطلب|الطلب\s*رقم|رقم\s*طلب|طلب\s*رقم|حاله\s*الطلب|وين\s*طلبي|فين\s*طلبي|طلبي|تتبع|order\s*status|track/.test(t))return true;
-  if(giftIntent(text))return false;
-  /* fallback: كلمة "طلب/الطلب" كتوكن مستقل (مش "اطلب"/"طلبات") + رقم — يغطي "طلب 1151" بدون كلمة رقم */
-  const words=t.split(' ');
-  const hasOrderWord=words.some(w=>w==='طلب'||w==='الطلب'||w==='طلبي');
-  return hasOrderWord&&/\d{3,10}/.test(arabicDigits(text));
-}
 function extractOrderRef(text){
   const t=arabicDigits(text);
   const m=t.match(/#?\s*(\d{3,10})/);
@@ -756,12 +746,7 @@ function missingGiftInfo(ctx){
   if(ctx.budget==null)return 'budget';
   return '';
 }
-function conversationalGiftReply(ctx){
-  if(!ctx.recipient)return 'أكيد 🎁 هساعدك تختار هدية مناسبة.\nالهديه لمين؟ أخت، أم، زوجة، صديق...؟';
-  if(!ctx.occasion)return 'تمام ❤️ لأ'+(ctx.recipient==='أخت'?'ختك':' '+ctx.recipient)+'، إيه المناسبة؟ عيد ميلاد، تخرج، زواج ولا مناسبة تانية؟';
-  if(ctx.budget==null)return 'جميل جدًا 🎁 آخر حاجة بس: الميزانية في حدود كام درهم؟ عشان أطلعلك اختيارات مناسبة فعلًا.';
-  return '';
-}
+
 /* =========================================================
    اقتراح المنتجات
 ========================================================= */
@@ -873,7 +858,7 @@ async function recommendProducts(msg,ctx=null){
   }).slice(0,6);
 }
 function productCards(arr){
-  return arr.map(p=>'<div class="product-card"><img src="'+esc(productImage(p))+'" onerror="this.src=\'/assets/logo.png\'"><div class="pc-body"><div class="pc-name">'+esc(productName(p))+'</div><div class="pc-price">'+(Number(p.price||0).toFixed(2))+' AED</div><div class="pc-meta">'+(p.stock!=null?'المخزون: '+esc(p.stock):'')+(p.rating?' • ⭐ '+esc(p.rating):'')+'</div><a class="btn-navy" href="'+esc(productLink(p))+'" target="_blank">عرض المنتج</a></div></div>').join('');
+  return arr.map(p=>'<div class="product-card"><img src="'+escAttr(productImage(p))+'" onerror="this.src=\'/assets/logo.png\'"><div class="pc-body"><div class="pc-name">'+esc(productName(p))+'</div><div class="pc-price">'+(Number(p.price||0).toFixed(2))+' AED</div><div class="pc-meta">'+(p.stock!=null?'المخزون: '+esc(p.stock):'')+(p.rating?' • ⭐ '+esc(p.rating):'')+'</div><a class="btn-navy" href="'+escAttr(productLink(p))+'" target="_blank">عرض المنتج</a></div></div>').join('');
 }
 async function recommendProductsUI(){
   const m=$('productQuery').value.trim();if(!m)return;
@@ -912,22 +897,6 @@ async function lookupOrder(ref){
   }catch(e){
     return {_error:e.message};
   }
-}
-async function handleOrderStatus(raw){
-  const ref=extractOrderRef(raw);
-  if(!ref){
-    return {type:'clarify',text:'تمام، ابعتلي رقم الطلب (مثلًا 1001#) وأنا أشوفلك حالته 📦'};
-  }
-  const order=await lookupOrder(ref);
-  if(order&&order._error){
-    return {type:'fallback',text:settings.human};
-  }
-  if(!order){
-    return {type:'fallback',text:'مش لاقي طلب بالرقم ده حاليًا 🤔 اتأكد من الرقم، أو لو حابب أحولك لموظف يتابعلك.\n'+settings.human};
-  }
-  const total=order.total!=null?'\nإجمالي الطلب: '+Number(order.total).toFixed(2)+' AED':'';
-  const date=order.created_at?'\nتاريخ الطلب: '+new Date(order.created_at).toLocaleDateString('ar-EG'):'';
-  return {type:'answer',text:'📦 حالة طلبك '+(order.order_number||('#'+ref))+':\n'+orderStatusLabel(order.status)+total+date,match:{question:'تتبع طلب',score:99}};
 }
 
 /* =========================================================
@@ -1033,7 +1002,42 @@ async function handleGiftQuery(raw,ctx){
 }
 
 // ===== الرد على السؤال الواحد =====
-async function handleSingleMessage(raw){
+
+/* =========================================================
+   LLM — فهم المعنى فقط، بدون اختراع إجابات
+   المفتاح السري موجود في Supabase Edge Function bot-llm
+========================================================= */
+async function callBotLLM(message, context){
+  const token=await getValidAdminToken();
+  if(!token) return null;
+  const ranked=rank(message).slice(0,30).map(x=>({
+    id:x.id,question:x.question,answer:x.answer,category:x.category,keywords:kws(x.keywords),score:x.score
+  }));
+  try{
+    const res=await fetch(SB+'/functions/v1/bot-llm',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'apikey':ANON_KEY,
+        'Authorization':'Bearer '+token
+      },
+      body:JSON.stringify({
+        message,
+        context:context||{},
+        conversation:conversation.slice(-10),
+        knowledge:ranked
+      })
+    });
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok) throw new Error(data.error||('LLM HTTP '+res.status));
+    return data;
+  }catch(e){
+    console.warn('bot-llm:',e.message);
+    return null;
+  }
+}
+
+async function handleSingleMessage(raw, ctx){
   const topic=detectTopic(raw);
 
   if(topic==='human'){
@@ -1050,8 +1054,6 @@ async function handleSingleMessage(raw){
   // الهدية/المنتجات وظيفة مستقلة وتعتمد على المنتجات الفعلية.
   if(topic==='gift'){
     resetBotState('gift');
-    const intent=extractIntent(raw);
-    const ctx=settings.conversationMode?mergeContext(intent):intent;
     return await handleGiftQuery(raw,ctx);
   }
 
@@ -1065,13 +1067,29 @@ async function handleSingleMessage(raw){
     return {type:'answer',text:match.item.answer,match:match.item};
   }
 
-  const intent=extractIntent(raw);
-  const isProductIntent=giftIntent(raw)||intent.recipient||intent.occasion||intent.interest||intent.budget!=null;
+  const isProductIntent=giftIntent(raw)||ctx.recipient||ctx.occasion||ctx.interest||ctx.budget!=null;
 
   // المنتجات فقط لو الرسالة فعلاً طلب منتج/هدية.
   if(settings.autoProducts!==false && isProductIntent){
-    const products=await recommendProducts(raw,settings.conversationMode?mergeContext(intent):intent);
+    const products=await recommendProducts(raw,ctx);
     if(products.length)return {type:'products',text:'لقيتلك أقرب منتجات مناسبة لطلبك 👇',products};
+  }
+
+  // مفيش تطابق قوي: نستعين بالـ LLM لفهم المعنى، لكن الرد النهائي يظل مقيدًا بقاعدة المعرفة.
+  if(settings.useLLM!==false){
+    const llm=await callBotLLM(raw,ctx);
+    if(llm){
+      if(llm.action==='answer' && llm.reply){
+        const item=questions.find(x=>Number(x.id)===Number(llm.knowledge_id));
+        if(item && String(item.answer||'').trim()){
+          await incrementUsage(item);
+          return {type:'answer',text:item.answer,match:{...item,score:llm.confidence*100},llm:true};
+        }
+      }
+      if(llm.action==='chat' && llm.reply) return {type:'answer',text:llm.reply,llm:true};
+      if(llm.action==='clarify' && llm.reply) return {type:'clarify',text:llm.reply,llm:true};
+      if(llm.action==='human') return {type:'answer',text:settings.human,llm:true};
+    }
   }
 
   // مفيش إجابة مؤكدة: لا نخترع. نسجل السؤال ثم نطلب توضيح/موظف.
@@ -1101,7 +1119,7 @@ async function processBotMessageCore(msg){
     const newTopic=detectTopic(raw);
     if(newTopic!=='general'&&newTopic!=='greeting'&&newTopic!==botState.topic){
       resetBotState(newTopic);
-      return await handleSingleMessage(raw);
+      return await handleSingleMessage(raw, ctx);
     }
 
     // استكمال الflow
@@ -1152,35 +1170,10 @@ async function processBotMessageCore(msg){
     }
   }
 
-  return await handleSingleMessage(raw);
+  return await handleSingleMessage(raw, ctx);
 }
 
 // ===== استخراج recipient/occasion من "لأختي" / "للتخرج" =====
-function extractRecipient(text){
-  const t=normalize(text);
-  // "لأختي" → "أخت"
-  const m=t.match(/ل([أإا])?(\S{2,10})/);
-  if(m){
-    const word='ا'+m[2];
-    for(const[re,label]of RECIPIENT_MAP){
-      if(re.test(word)) return label;
-    }
-  }
-  return '';
-}
-
-function extractOccasion(text){
-  const t=normalize(text);
-  // "للتخرج" → "تخرج"
-  const m=t.match(/ل([أإا])?(\S{2,15})/);
-  if(m){
-    const word='ا'+m[2];
-    for(const[re,label]of OCCASION_MAP){
-      if(re.test(word)) return label;
-    }
-  }
-  return '';
-}
 
 function getReminderText(){
   if(botState.waitingFor==='order_number') return '📦 مازلت مستنّي رقم الطلب.';
@@ -1247,7 +1240,7 @@ async function testBot(){
 }
 
 function resetChat(){
-  conversation=[];orderFlowPending=false;resetBotState();
+  conversation=[];resetBotState();
   $('chat').innerHTML='<div class="msg system">🤖 '+esc(settings.welcome)+'</div>';
   $('intentBox').textContent='لم تبدأ المحادثة بعد.';
   $('ranking').innerHTML='';
@@ -1282,12 +1275,14 @@ function loadSettings(){
   settings={...settings,...readLocal('bariq_bot_settings',{})};
   $('minScore').value=settings.minScore;$('welcome').value=settings.welcome;$('fallback').value=settings.fallback;$('human').value=settings.human;
   $('autoUnanswered').checked=settings.autoUnanswered!==false;$('autoProducts').checked=settings.autoProducts!==false;$('conversationMode').checked=settings.conversationMode!==false;
+  if($('useLLM'))$('useLLM').checked=settings.useLLM!==false;
 }
 function saveSettings(){
   settings={
     minScore:Number($('minScore').value)||4,welcome:$('welcome').value||'أهلًا بيك في بريق 🎁 إزاي أقدر أساعدك؟',
     fallback:$('fallback').value||'مش لاقي إجابة مؤكدة للسؤال ده حاليًا 🤔',human:$('human').value||'تمام، هحوّلك لموظف من فريق بريق 👤',
-    autoUnanswered:$('autoUnanswered').checked,autoProducts:$('autoProducts').checked,conversationMode:$('conversationMode').checked
+    autoUnanswered:$('autoUnanswered').checked,autoProducts:$('autoProducts').checked,conversationMode:$('conversationMode').checked,
+    useLLM:$('useLLM')?$('useLLM').checked:true
   };
   saveLocal('bariq_bot_settings',settings);$('settingsMsg').textContent='✅ تم حفظ إعدادات البوت';$('settingsMsg').className='success';resetChat();
 }
