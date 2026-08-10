@@ -30,6 +30,17 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:9px;
 .toggle{display:flex;align-items:center;gap:8px}.toggle input{width:auto}
 @media(max-width:1050px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}.product-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:650px){.stats{grid-template-columns:repeat(2,1fr)}.searchbar{grid-template-columns:1fr}.row{flex-direction:column}.wrap{padding:10px}.card{padding:13px}.product-grid{grid-template-columns:1fr}.top{position:relative}}
+
+.param-row{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+.param-row input,.param-row select{flex:1}
+.param-row button{flex:0 0 auto;padding:6px 10px;font-size:.75rem}
+.param-box{background:#f8f9fc;border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:8px}
+.input-type-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:800;margin-right:6px}
+.badge-info{background:#e5f7eb;color:var(--ok)}
+.badge-action{background:#fff6d7;color:#8b6c08}
+.badge-param{background:#eef5ff;color:#2b6cb0}
+.action-select{width:100%}
+.param-list{max-height:200px;overflow:auto}
 </style>
 </head>
 <body>
@@ -96,8 +107,76 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:9px;
   <div class="card">
     <h2 id="formTitle">➕ إضافة سؤال وإجابة</h2>
     <input type="hidden" id="editId">
-    <label>السؤال</label><input id="question" placeholder="هل عندكم توصيل؟">
-    <label>الإجابة</label><textarea id="answer" placeholder="اكتب الرد الذي سيقوله البوت"></textarea>
+    <label>نوع الإدخال</label>
+    <select id="inputType" onchange="onInputTypeChange()">
+      <option value="رد معلوماتي">📖 رد معلوماتي</option>
+      <option value="إجراء">⚡ إجراء</option>
+      <option value="بيانات مطلوبة">📋 بيانات مطلوبة</option>
+    </select>
+
+    <div id="infoFields">
+      <label>السؤال</label><input id="question" placeholder="هل عندكم توصيل؟">
+      <label>الإجابة</label><textarea id="answer" placeholder="اكتب الرد الذي سيقوله البوت"></textarea>
+    </div>
+
+    <div id="actionFields" style="display:none">
+      <label>السؤال / Intent</label><input id="actionQuestion" placeholder="عايز أعرف حالة طلبي">
+      <label>اسم الإجراء (Action)</label>
+      <select id="actionName" class="action-select">
+        <option value="">-- اختر الإجراء --</option>
+        <option value="GET_ORDER_STATUS">GET_ORDER_STATUS — معرفة حالة الطلب</option>
+        <option value="GET_ORDER_DETAILS">GET_ORDER_DETAILS — تفاصيل الطلب</option>
+        <option value="GET_CUSTOMER_ORDERS">GET_CUSTOMER_ORDERS — طلبات العميل</option>
+        <option value="SEARCH_PRODUCT">SEARCH_PRODUCT — بحث منتج</option>
+        <option value="GET_PRODUCT_DETAILS">GET_PRODUCT_DETAILS — تفاصيل منتج</option>
+        <option value="CHECK_PRODUCT_AVAILABILITY">CHECK_PRODUCT_AVAILABILITY — التحقق من توفر منتج</option>
+        <option value="CREATE_ORDER">CREATE_ORDER — إنشاء طلب</option>
+        <option value="ADD_TO_CART">ADD_TO_CART — إضافة للسلة</option>
+        <option value="UPDATE_CART">UPDATE_CART — تحديث السلة</option>
+        <option value="CANCEL_ORDER">CANCEL_ORDER — إلغاء طلب</option>
+        <option value="UPDATE_ORDER">UPDATE_ORDER — تحديث طلب</option>
+        <option value="GET_CUSTOMER_INFO">GET_CUSTOMER_INFO — بيانات العميل</option>
+      </select>
+      <label>رسالة توضيحية (اختياري — تُعرض عند نقص بيانات)</label>
+      <textarea id="actionClarify" placeholder="أكيد، ابعتلي رقم الطلب."></textarea>
+      <label>البيانات المطلوبة (Parameters)</label>
+      <div id="paramList" class="param-list"></div>
+      <button class="btn-light" onclick="addParamRow()" style="margin-top:6px">＋ إضافة Parameter</button>
+    </div>
+
+    <div id="paramFields" style="display:none">
+      <label>اسم الـ Parameter</label><input id="paramName" placeholder="order_number">
+      <label>نوع البيانات</label>
+      <select id="paramType">
+        <option value="string">نص (string)</option>
+        <option value="number">رقم (number)</option>
+        <option value="order_number">رقم طلب (order_number)</option>
+        <option value="phone">هاتف (phone)</option>
+        <option value="product_id">معرف منتج (product_id)</option>
+        <option value="product_name">اسم منتج (product_name)</option>
+        <option value="quantity">كمية (quantity)</option>
+        <option value="address">عنوان (address)</option>
+        <option value="email">بريد إلكتروني (email)</option>
+      </select>
+      <label>مثال للقيمة</label><input id="paramExample" placeholder="1151">
+      <label>الإجراء المرتبط</label>
+      <select id="paramAction">
+        <option value="">-- اختر الإجراء --</option>
+        <option value="GET_ORDER_STATUS">GET_ORDER_STATUS</option>
+        <option value="GET_ORDER_DETAILS">GET_ORDER_DETAILS</option>
+        <option value="GET_CUSTOMER_ORDERS">GET_CUSTOMER_ORDERS</option>
+        <option value="SEARCH_PRODUCT">SEARCH_PRODUCT</option>
+        <option value="GET_PRODUCT_DETAILS">GET_PRODUCT_DETAILS</option>
+        <option value="CHECK_PRODUCT_AVAILABILITY">CHECK_PRODUCT_AVAILABILITY</option>
+        <option value="CREATE_ORDER">CREATE_ORDER</option>
+        <option value="ADD_TO_CART">ADD_TO_CART</option>
+        <option value="UPDATE_CART">UPDATE_CART</option>
+        <option value="CANCEL_ORDER">CANCEL_ORDER</option>
+        <option value="UPDATE_ORDER">UPDATE_ORDER</option>
+        <option value="GET_CUSTOMER_INFO">GET_CUSTOMER_INFO</option>
+      </select>
+    </div>
+
     <div class="row">
       <div><label>التصنيف</label><input id="category" placeholder="التوصيل"></div>
       <div><label>الكلمات المرتبطة</label><input id="keywords" placeholder="توصيل، دليفري، delivery"></div>
@@ -239,6 +318,7 @@ const ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 let questions=[];
 let botProducts=[];
 let conversation=[];
+let orderFlowPending=false;
 let settings={
   minScore:4,
   welcome:'أهلًا بيك في بريق 🎁 إزاي أقدر أساعدك؟',
@@ -250,9 +330,95 @@ let settings={
   useLLM:true
 };
 
+/* =========================================================
+   ثوابت نظام Actions & Parameters
+========================================================= */
+const INPUT_TYPES={INFO:'رد معلوماتي',ACTION:'إجراء',PARAM:'بيانات مطلوبة'};
+const ACTIONS=['GET_ORDER_STATUS','GET_ORDER_DETAILS','GET_CUSTOMER_ORDERS','SEARCH_PRODUCT','GET_PRODUCT_DETAILS','CHECK_PRODUCT_AVAILABILITY','CREATE_ORDER','ADD_TO_CART','UPDATE_CART','CANCEL_ORDER','UPDATE_ORDER','GET_CUSTOMER_INFO'];
+const PARAM_TYPES=['string','number','order_number','phone','product_id','product_name','quantity','address','email'];
+const DANGEROUS_ACTIONS=new Set(['CANCEL_ORDER','UPDATE_ORDER','CREATE_ORDER','ADD_TO_CART','UPDATE_CART']);
+
+function onInputTypeChange(){
+  const t=$('inputType').value;
+  $('infoFields').style.display=(t===INPUT_TYPES.INFO)?'block':'none';
+  $('actionFields').style.display=(t===INPUT_TYPES.ACTION)?'block':'none';
+  $('paramFields').style.display=(t===INPUT_TYPES.PARAM)?'block':'none';
+}
+function addParamRow(name,type,example){
+  const list=$('paramList');if(!list)return;
+  const row=document.createElement('div');row.className='param-row';
+  row.innerHTML='<input placeholder="اسم Parameter" value="'+(name||'')+'"><select>'+PARAM_TYPES.map(t=>'<option value="'+t+'"'+(t===(type||'')?' selected':'')+'>'+t+'</option>').join('')+'</select><input placeholder="مثال" value="'+(example||'')+'"><button class="btn-danger" onclick="this.parentElement.remove()">🗑</button>';
+  list.appendChild(row);
+}
+function getParamRows(){
+  const rows=[];
+  document.querySelectorAll('#paramList .param-row').forEach(r=>{
+    const inputs=r.querySelectorAll('input');
+    const sel=r.querySelector('select');
+    if(inputs[0]&&inputs[0].value.trim()){
+      rows.push({name:inputs[0].value.trim(),type:sel?sel.value:'string',example:inputs[1]?inputs[1].value.trim():''});
+    }
+  });
+  return rows;
+}
+function setParamRows(arr){
+  const list=$('paramList');if(!list)return;list.innerHTML='';
+  if(Array.isArray(arr))arr.forEach(p=>addParamRow(p.name,p.type,p.example));
+}
+
+/* =========================================================
+   استخراج والتحقق من Parameters
+========================================================= */
+function extractParamValue(text,paramType,contextAction){
+  const t=arabicDigits(String(text||''));
+  switch(paramType){
+    case 'order_number':{
+      const m=t.match(/#?\s*(\d{3,10})/);
+      return m?m[1].replace(/^#/,''):null;
+    }
+    case 'phone':{
+      const ph=text.match(/(?:\+?\d{1,3}[-.\s]?)?\d{9,11}/);
+      return ph?ph[0]:null;
+    }
+    case 'quantity':{
+      const q=t.match(/(\d{1,4})/);
+      return q?Number(q[1]):null;
+    }
+    case 'email':{
+      const em=text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+      return em?em[0]:null;
+    }
+    case 'product_id':{
+      const pid=t.match(/([A-Z0-9]{3,20})/i);
+      return pid?pid[1]:null;
+    }
+    case 'product_name':
+    case 'string':
+    case 'address':
+      return String(text||'').trim();
+    case 'number':{
+      const n=t.match(/(\d+(?:\.\d+)?)/);
+      return n?Number(n[1]):null;
+    }
+    default:
+      return String(text||'').trim();
+  }
+}
+function validateParam(value,type){
+  if(value==null||value==='')return false;
+  switch(type){
+    case 'order_number':return /^\d{3,10}$/.test(String(value));
+    case 'phone':return /^\d{9,11}$/.test(String(value).replace(/[^\d]/g,''));
+    case 'quantity':return Number(value)>0;
+    case 'number':return!isNaN(Number(value));
+    case 'email':return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value));
+    default:return String(value).trim().length>0;
+  }
+}
+function paramTypeLabel(t){const map={string:'نص',number:'رقم',order_number:'رقم طلب',phone:'هاتف',product_id:'معرف منتج',product_name:'اسم منتج',quantity:'كمية',address:'عنوان',email:'بريد إلكتروني'};return map[t]||t;}
+
 function toast(m){const t=$('toast');if(!t)return;t.textContent=m;t.style.opacity=1;clearTimeout(window.__toast);window.__toast=setTimeout(()=>t.style.opacity=0,2300)}
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
-function escAttr(v){return String(v??'').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}
 function saveLocal(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 function readLocal(k,d){try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(d))}catch(e){return d}}
 function normalize(s){
@@ -391,6 +557,9 @@ function renderAll(){renderDashboard();renderKnowledge();renderUnanswered();upda
 function renderDashboard(){
   const total=questions.length;
   const active=questions.filter(x=>x.active).length;
+  const infoCount=questions.filter(x=>(x.input_type||INPUT_TYPES.INFO)===INPUT_TYPES.INFO).length;
+  const actionCount=questions.filter(x=>x.input_type===INPUT_TYPES.ACTION).length;
+  const paramCount=questions.filter(x=>x.input_type===INPUT_TYPES.PARAM).length;
   const use=questions.reduce((a,x)=>a+(Number(x.usage_count)||0),0);
   const local=readLocal('bariq_bot_unanswered',[]);
   const dbUn=questions.filter(x=>!x.answer||String(x.category||'')==='أسئلة تحتاج إجابة');
@@ -398,7 +567,7 @@ function renderDashboard(){
   $('sTotal').textContent=total;$('sActive').textContent=active;$('sUse').textContent=use;
   $('sUn').textContent=Math.max(local.length,dbUn.length);$('sCats').textContent=cats.size;$('sProducts').textContent=botProducts.length;
   const ratio=total?Math.round(active/total*100):0;
-  $('health').innerHTML='<div style="display:flex;justify-content:space-between"><b>نشاط قاعدة المعرفة</b><span>'+ratio+'%</span></div><div class="progress"><i style="width:'+ratio+'%"></i></div><p class="meta">الأسئلة الفعالة '+active+' من '+total+'</p>';
+  $('health').innerHTML='<div style="display:flex;justify-content:space-between"><b>نشاط قاعدة المعرفة</b><span>'+ratio+'%</span></div><div class="progress"><i style="width:'+ratio+'%"></i></div><p class="meta">الأسئلة الفعالة '+active+' من '+total+'</p><p class="meta">📖 معلوماتي: '+infoCount+' | ⚡ إجراءات: '+actionCount+' | 📋 بيانات: '+paramCount+'</p>';
   const top=[...questions].sort((a,b)=>(Number(b.usage_count)||0)-(Number(a.usage_count)||0)).slice(0,8);
   $('topQuestions').innerHTML=top.length?top.map((x,i)=>'<div class="item"><b>'+String(i+1)+'. '+esc(x.question)+'</b><div class="meta">استخدم '+(Number(x.usage_count)||0)+' مرة • '+esc(x.category||'بدون تصنيف')+'</div></div>').join(''):'<div class="hint">لا توجد بيانات</div>';
 }
@@ -470,24 +639,49 @@ function score(msg,item){
   if(exact>=2)s+=2;
   return Math.round(s*10)/10;
 }
-function rank(msg){
-  return questions.filter(x=>x.active&&String(x.answer||'').trim())
-    .map(x=>({...x,score:score(msg,x),similarity:questionSimilarity(msg,x.question)}))
+function rank(msg,onlyInfo){
+  const list=questions.filter(x=>{
+    if(!x.active)return false;
+    const it=x.input_type||INPUT_TYPES.INFO;
+    if(onlyInfo)return it===INPUT_TYPES.INFO&&String(x.answer||'').trim();
+    return true;
+  });
+  return list.map(x=>({...x,score:score(msg,x),similarity:questionSimilarity(msg,x.question)}))
     .filter(x=>x.score>0)
     .sort((a,b)=>b.score-a.score);
+}
+function findBestAction(msg){
+  const actionItems=questions.filter(x=>x.active&&x.input_type===INPUT_TYPES.ACTION&&x.action_name);
+  if(!actionItems.length)return null;
+  const scored=actionItems.map(x=>({...x,score:score(msg,x),similarity:questionSimilarity(msg,x.question)}))
+    .filter(x=>x.score>0).sort((a,b)=>b.score-a.score);
+  const best=scored[0];if(!best)return null;
+  const minActionScore=Math.max(3,Number(settings.minScore)||4);
+  if(best.score>=minActionScore||best.similarity>=.60)return best;
+  return null;
 }
 function renderKnowledge(){
   updateCategories();
   const q=normalize($('search').value),cat=$('catFilter').value,af=$('activeFilter').value;
   const arr=questions.filter(x=>
-    (!q||normalize([x.question,x.answer,x.category,...kws(x.keywords)].join(' ')).includes(q))&&
+    (!q||normalize([x.question,x.answer,x.action_name,x.category,...kws(x.keywords)].join(' ')).includes(q))&&
     (!cat||x.category===cat)&&(!af||String(!!x.active)===(af==='1'))
   );
   $('knowledgeList').innerHTML=arr.length?arr.map(x=>{
+    const it=x.input_type||INPUT_TYPES.INFO;
     const empty=!String(x.answer||'').trim();
+    let typeBadge='';
+    if(it===INPUT_TYPES.INFO)typeBadge='<span class="input-type-badge badge-info">📖 رد معلوماتي</span>';
+    else if(it===INPUT_TYPES.ACTION)typeBadge='<span class="input-type-badge badge-action">⚡ '+esc(x.action_name||'إجراء')+'</span>';
+    else if(it===INPUT_TYPES.PARAM)typeBadge='<span class="input-type-badge badge-param">📋 بيانات</span>';
+    let paramChips='';
+    if(Array.isArray(x.required_params)&&x.required_params.length){
+      paramChips='<div class="meta" style="margin-top:4px">'+x.required_params.map(p=>'<span class="chip">'+esc(p.name)+' ('+paramTypeLabel(p.type)+')</span>').join('')+'</div>';
+    }
     return '<div class="item '+(x.active?'':'off')+'">'+
-      '<div class="q">'+esc(x.question)+'</div>'+
+      '<div class="q">'+typeBadge+esc(x.question)+'</div>'+
       '<div class="a">'+(empty?'<span class="error">⚠️ بدون إجابة</span>':esc(x.answer))+'</div>'+
+      paramChips+
       '<div class="meta"><span class="chip">'+esc(x.category||'بدون تصنيف')+'</span>'+
       (x.active?'<span class="chip ok">فعال</span>':'<span class="chip bad">متوقف</span>')+
       '<span class="chip gold">استخدم '+(Number(x.usage_count)||0)+'</span>'+
@@ -501,22 +695,54 @@ function renderKnowledge(){
 }
 function newQuestion(){
   $('editId').value='';$('question').value='';$('answer').value='';$('category').value='';$('keywords').value='';$('active').checked=true;
+  $('inputType').value=INPUT_TYPES.INFO;onInputTypeChange();
+  $('actionQuestion').value='';$('actionName').value='';$('actionClarify').value='';setParamRows([]);
+  $('paramName').value='';$('paramType').value='string';$('paramExample').value='';$('paramAction').value='';
   $('formTitle').textContent='➕ إضافة سؤال وإجابة';$('formMsg').textContent='';$('duplicateBox').style.display='none';
   tab('knowledge');$('question').focus();
 }
 function editQuestion(id){
   const x=questions.find(a=>Number(a.id)===Number(id));if(!x)return;
-  $('editId').value=x.id;$('question').value=x.question||'';$('answer').value=x.answer||'';
+  $('editId').value=x.id;
+  const it=x.input_type||INPUT_TYPES.INFO;
+  $('inputType').value=it;onInputTypeChange();
+  if(it===INPUT_TYPES.INFO){
+    $('question').value=x.question||'';$('answer').value=x.answer||'';
+  }else if(it===INPUT_TYPES.ACTION){
+    $('actionQuestion').value=x.question||'';
+    $('actionName').value=x.action_name||'';
+    $('actionClarify').value=x.answer||'';
+    setParamRows(x.required_params||[]);
+  }else if(it===INPUT_TYPES.PARAM){
+    $('paramName').value=x.question||'';
+    const rp=Array.isArray(x.required_params)&&x.required_params[0]?x.required_params[0]:{};
+    $('paramType').value=rp.type||'string';$('paramExample').value=rp.example||'';
+    $('paramAction').value=x.action_name||'';
+  }
   $('category').value=x.category||'';$('keywords').value=kws(x.keywords).join('، ');$('active').checked=!!x.active;
   $('formTitle').textContent='✏️ تعديل السؤال';$('duplicateBox').style.display='none';tab('knowledge');window.scrollTo({top:0,behavior:'smooth'});
 }
 async function saveQuestion(){
-  const question=$('question').value.trim(),answer=$('answer').value.trim();
+  const it=$('inputType').value;
   const category=$('category').value.trim(),keywords=kws($('keywords').value);
   const active=$('active').checked,id=$('editId').value;
-  if(!question||!answer){
-    $('formMsg').textContent='❌ لازم تكتب السؤال والإجابة';
-    $('formMsg').className='error'; return;
+  let question='',answer='',actionName='',requiredParams=null;
+
+  if(it===INPUT_TYPES.INFO){
+    question=$('question').value.trim();answer=$('answer').value.trim();
+    if(!question){$('formMsg').textContent='❌ لازم تكتب السؤال';$('formMsg').className='error';return;}
+  }else if(it===INPUT_TYPES.ACTION){
+    question=$('actionQuestion').value.trim();answer=$('actionClarify').value.trim();
+    actionName=$('actionName').value.trim();
+    requiredParams=getParamRows();
+    if(!question){$('formMsg').textContent='❌ لازم تكتب السؤال / Intent';$('formMsg').className='error';return;}
+    if(!actionName){$('formMsg').textContent='❌ اختر الإجراء (Action)';$('formMsg').className='error';return;}
+  }else if(it===INPUT_TYPES.PARAM){
+    question=$('paramName').value.trim();
+    const pt=$('paramType').value,pe=$('paramExample').value.trim();
+    actionName=$('paramAction').value.trim();
+    if(!question){$('formMsg').textContent='❌ لازم تكتب اسم الـ Parameter';$('formMsg').className='error';return;}
+    requiredParams=[{name:question,type:pt,example:pe}];
   }
 
   const others=questions.filter(x=>String(x.id)!==String(id));
@@ -527,23 +753,28 @@ async function saveQuestion(){
 
   const payload={
     question:mergeTarget&&!id?mergeTarget.question:question,
-    answer,category:category||mergeTarget?.category||null,
+    answer:answer||null,
+    category:category||mergeTarget?.category||null,
     keywords:[...new Set([...kws(mergeTarget?.keywords),...keywords])],
-    active,updated_at:new Date().toISOString()
+    active,
+    input_type:it,
+    action_name:actionName||null,
+    required_params:requiredParams,
+    updated_at:new Date().toISOString()
   };
 
   try{
     if(id){
       await window.sbFetch('bot_knowledge?id=eq.'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify(payload)});
-      $('formMsg').textContent='✅ تم تعديل السؤال والإجابة';
+      $('formMsg').textContent='✅ تم تعديل السؤال';
     }else if(mergeTarget){
       await window.sbFetch('bot_knowledge?id=eq.'+encodeURIComponent(mergeTarget.id),{method:'PATCH',body:JSON.stringify(payload)});
-      $('formMsg').textContent='♻️ السؤال مكرر/قريب — تم دمج الإجابة في نفس السجل بدون إنشاء نسخة';
+      $('formMsg').textContent='♻️ تم الدمج في نفس السجل';
       $('duplicateBox').style.display='block';
       $('duplicateBox').innerHTML='تم الدمج مع:<br><b>'+esc(mergeTarget.question)+'</b>';
     }else{
       await window.sbFetch('bot_knowledge',{method:'POST',body:JSON.stringify(payload)});
-      $('formMsg').textContent='✅ تم حفظ السؤال والإجابة';
+      $('formMsg').textContent='✅ تم الحفظ';
     }
     $('formMsg').className='success';
     await loadQuestions(); renderAll();
@@ -553,13 +784,21 @@ async function saveQuestion(){
   }
 }
 async function saveUnansweredQuestion(){
-  const q=$('question').value.trim();if(!q){$('formMsg').textContent='❌ اكتب السؤال أولًا';$('formMsg').className='error';return}
+  const it=$('inputType').value;
+  let q='';
+  if(it===INPUT_TYPES.INFO)q=$('question').value.trim();
+  else if(it===INPUT_TYPES.ACTION)q=$('actionQuestion').value.trim();
+  else if(it===INPUT_TYPES.PARAM)q=$('paramName').value.trim();
+  if(!q){$('formMsg').textContent='❌ اكتب السؤال أولًا';$('formMsg').className='error';return}
   const existing=questions.find(x=>normalize(x.question)===normalize(q));
   if(existing){editQuestion(existing.id);$('formMsg').textContent='⚠️ السؤال موجود بالفعل';return}
   try{
     await window.sbFetch('bot_knowledge',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({
       question:q,answer:'',category:$('category').value.trim()||'أسئلة تحتاج إجابة',
-      keywords:kws($('keywords').value),active:false,usage_count:1,updated_at:new Date().toISOString()
+      keywords:kws($('keywords').value),active:false,usage_count:1,input_type:it,
+      action_name:it===INPUT_TYPES.ACTION?$('actionName').value.trim():null,
+      required_params:it===INPUT_TYPES.ACTION?getParamRows():null,
+      updated_at:new Date().toISOString()
     })});
     $('formMsg').textContent='✅ تم حفظ السؤال كمسودة بدون إجابة';$('formMsg').className='success';await loadQuestions();renderAll();
   }catch(e){$('formMsg').textContent='❌ فشل الحفظ: '+e.message;$('formMsg').className='error'}
@@ -735,6 +974,18 @@ function contextPrompt(c){
 function giftIntent(text){
   return /هديه|هدي[هة]|gift|بوكس|هدايا|اقتراح هديه|عايز حاج[هة]|محتار اجيب|اجيب اي[هة]/.test(normalize(text));
 }
+function humanHandoffIntent(text){
+  return /موظف|بشر|احد يرد|حد يكلمني|عايز اتكلم مع|كلمني|human|support|شكوي|مشكله في الطلب/.test(normalize(text));
+}
+function orderStatusIntent(text){
+  const t=normalize(text);
+  if(/رقم\s*الطلب|الطلب\s*رقم|رقم\s*طلب|طلب\s*رقم|حاله\s*الطلب|وين\s*طلبي|فين\s*طلبي|طلبي|تتبع|order\s*status|track/.test(t))return true;
+  if(giftIntent(text))return false;
+  /* fallback: كلمة "طلب/الطلب" كتوكن مستقل (مش "اطلب"/"طلبات") + رقم — يغطي "طلب 1151" بدون كلمة رقم */
+  const words=t.split(' ');
+  const hasOrderWord=words.some(w=>w==='طلب'||w==='الطلب'||w==='طلبي');
+  return hasOrderWord&&/\d{3,10}/.test(arabicDigits(text));
+}
 function extractOrderRef(text){
   const t=arabicDigits(text);
   const m=t.match(/#?\s*(\d{3,10})/);
@@ -746,7 +997,12 @@ function missingGiftInfo(ctx){
   if(ctx.budget==null)return 'budget';
   return '';
 }
-
+function conversationalGiftReply(ctx){
+  if(!ctx.recipient)return 'أكيد 🎁 هساعدك تختار هدية مناسبة.\nالهديه لمين؟ أخت، أم، زوجة، صديق...؟';
+  if(!ctx.occasion)return 'تمام ❤️ لأ'+(ctx.recipient==='أخت'?'ختك':' '+ctx.recipient)+'، إيه المناسبة؟ عيد ميلاد، تخرج، زواج ولا مناسبة تانية؟';
+  if(ctx.budget==null)return 'جميل جدًا 🎁 آخر حاجة بس: الميزانية في حدود كام درهم؟ عشان أطلعلك اختيارات مناسبة فعلًا.';
+  return '';
+}
 /* =========================================================
    اقتراح المنتجات
 ========================================================= */
@@ -858,7 +1114,7 @@ async function recommendProducts(msg,ctx=null){
   }).slice(0,6);
 }
 function productCards(arr){
-  return arr.map(p=>'<div class="product-card"><img src="'+escAttr(productImage(p))+'" onerror="this.src=\'/assets/logo.png\'"><div class="pc-body"><div class="pc-name">'+esc(productName(p))+'</div><div class="pc-price">'+(Number(p.price||0).toFixed(2))+' AED</div><div class="pc-meta">'+(p.stock!=null?'المخزون: '+esc(p.stock):'')+(p.rating?' • ⭐ '+esc(p.rating):'')+'</div><a class="btn-navy" href="'+escAttr(productLink(p))+'" target="_blank">عرض المنتج</a></div></div>').join('');
+  return arr.map(p=>'<div class="product-card"><img src="'+esc(productImage(p))+'" onerror="this.src=\'/assets/logo.png\'"><div class="pc-body"><div class="pc-name">'+esc(productName(p))+'</div><div class="pc-price">'+(Number(p.price||0).toFixed(2))+' AED</div><div class="pc-meta">'+(p.stock!=null?'المخزون: '+esc(p.stock):'')+(p.rating?' • ⭐ '+esc(p.rating):'')+'</div><a class="btn-navy" href="'+esc(productLink(p))+'" target="_blank">عرض المنتج</a></div></div>').join('');
 }
 async function recommendProductsUI(){
   const m=$('productQuery').value.trim();if(!m)return;
@@ -898,52 +1154,51 @@ async function lookupOrder(ref){
     return {_error:e.message};
   }
 }
+async function handleOrderStatus(raw){
+  const ref=extractOrderRef(raw);
+  if(!ref){
+    return {type:'clarify',text:'تمام، ابعتلي رقم الطلب (مثلًا 1001#) وأنا أشوفلك حالته 📦'};
+  }
+  const order=await lookupOrder(ref);
+  if(order&&order._error){
+    return {type:'fallback',text:settings.human};
+  }
+  if(!order){
+    return {type:'fallback',text:'مش لاقي طلب بالرقم ده حاليًا 🤔 اتأكد من الرقم، أو لو حابب أحولك لموظف يتابعلك.\n'+settings.human};
+  }
+  const total=order.total!=null?'\nإجمالي الطلب: '+Number(order.total).toFixed(2)+' AED':'';
+  const date=order.created_at?'\nتاريخ الطلب: '+new Date(order.created_at).toLocaleDateString('ar-EG'):'';
+  return {type:'answer',text:'📦 حالة طلبك '+(order.order_number||('#'+ref))+':\n'+orderStatusLabel(order.status)+total+date,match:{question:'تتبع طلب',score:99}};
+}
 
 /* =========================================================
    🤖 محرك البوت الذكي — النسخة النهائية المصححة
 ========================================================= */
 
 // ===== حالة المحادثة =====
-let botState={topic:'idle',waitingFor:null,giftData:{},orderRef:''};
+let botState={topic:'idle',currentAction:null,waitingFor:null,collectedParams:{},pendingAction:null,pendingParams:null,giftData:{},orderRef:''};
 
 function resetBotState(topic){
-  botState={topic:topic||'idle',waitingFor:null,giftData:{},orderRef:''};
+  botState={topic:topic||'idle',currentAction:null,waitingFor:null,collectedParams:{},pendingAction:null,pendingParams:null,giftData:{},orderRef:''};
 }
 
 // ===== فهم الموضوع (مصحح) =====
 function detectTopic(text){
   const t=normalize(text);
-  const hasNumber=/\d{3,}/.test(arabicDigits(text));
 
   // 1. تحويل لموظف (أولوية قصوى)
   if(/موظف|بشر|احد يرد|حد يكلمني|عايز اتكلم|human|support/.test(t)) return 'human';
 
-  // 2. تتبع طلب
-  if(/(?:وين|فين|حال[ةه]|تتبع|رقم)\s*طلب[يى]?/.test(t)) return 'order';
-  if(/\bطلب\s*#?\s*\d{3,}/.test(t)) return 'order';
-  if(/#\s*\d{3,}/.test(t)) return 'order';
-  if(/track|order\s*status/.test(t)) return 'order';
-  // ⭐ رقم مجرد لوحده (مثل 1150) — لو البوت مستني رقم طلب أو السياق واضح
-  if(hasNumber && (botState.waitingFor==='order_number' || /طلب|اوردر|order/.test(t))) return 'order';
+  // 2. تتبع طلب — كلمات محددة جداً
+  if(/رقم\s*الطلب|حال[ةه]\s*الطلب|وين\s*طلبي|فين\s*طلبي|طلبي\s*وين|طلبي\s*فين|تتبع|track|اوردر|order\s*status/.test(t)) return 'order';
 
-  // 3. صورة / صور
-  if(/صور[هة]?|image|pic|photo/.test(t)) return 'image';
-
-  // 4. هدية صريحة
+  // 3. هدية — لازم يكون فيه كلمات هدية صريحة
   if(/هدي[هة]|gift|بوكس|هدايا|بوكيه|اقتراح\s*هد/.test(t)) return 'gift';
 
-  // 5. مناسبة / فئة منتجات (بدون كلمة "هدية")
-  if(/(?:حاج[هة]|منتجات?|اشياء?|حاجات?)\s*(?:لل|لـ|ل)?\s*(?:تخرج|مولود|زواج|خطوب[هة]|ميلاد|رمضان|عيد|يوم\s*الام|سفر|ترقية|افتتاح)/.test(t)) return 'gift';
-  if(/(?:تخرج|مولود|زواج|خطوب[هة]|ميلاد|رمضان|عيد|يوم\s*الام)\s*(?:حاج[هة]|منتج|هدية|بوكس)/.test(t)) return 'gift';
+  // 4. طلب جديد
+  if(/اطلب|طلبية|عايز\s*اشتري|ابغي\s*اشتري|ابغى\s*اشتري|شراء|اشتري/.test(t)) return 'order_new';
 
-  // 6. طلب جديد
-  if(/(?:عايز|ابغي|ابغى|حابب|أريد|اريد|ممكن)\s*(?:اطلب|اعمل\s*اوردر|اسوي\s*طلب|اشتري)/.test(t)) return 'order_new';
-  if(/(?:اطلب|طلبية|شراء|اشتري)\s*(?:هدية|منتج|بوكس|حاجة|من|جديد)/.test(t)) return 'order_new';
-
-  // 7. عرض منتجات عام
-  if(/اعرض\s*(?:عليا|لي)\s*منتجات|وريني\s*منتجات|شو\s*عندكم|ايش\s*عندكم|عندكم\s*ايه/.test(t)) return 'browse';
-
-  // 8. تحية
+  // 5. تحية
   if(/كيف\s*(حال|حالك|ك|انت)|شلونك|شخبارك|عامل\s*ا[يهي]|اخبار[كك]|صباح|مساء|سلام|هلا\s*والله|هاي|مرحب|أهلا|أهلين|شكرا|شكر|تسلم|يسلمو|مشكور|باي|مع\s*السلامة/.test(t)) return 'greeting';
 
   return 'general';
@@ -964,31 +1219,16 @@ function greetingReply(text){
 // ===== مطابقة قاعدة المعرفة =====
 function findBestAnswer(msg){
   const minScore=Math.max(6,Number(settings.minScore)||6);
-  const ranked=rank(msg);
+  const ranked=rank(msg,true);
   const best=ranked[0], second=ranked[1];
   if(!best)return {found:false,ranked};
   const margin=second?best.score-second.score:best.score;
   const sim=best.similarity||0;
-  // إجابة قاعدة المعرفة لا تُستخدم إلا مع تطابق قوي مستقل، أو تشابه سؤال مرتفع جدًا.
   const strong=(best.score>=minScore && (sim>=.68 || margin>=3)) && !(second && second.score>=best.score*.94 && sim<.78);
   return strong?{found:true,item:best,ranked}:{found:false,ranked};
 }
 
 // ===== معالجة تتبع الطلب =====
-function estimateDelivery(order){
-  if(!order||!order.created_at)return'';
-  const created=new Date(order.created_at);
-  const status=String(order.status||'').trim().toLowerCase();
-  let minDays=3,maxDays=7;
-  if(status==='shipped'){minDays=1;maxDays=3;}
-  else if(status==='delivered')return'\n✅ الطلب تم توصيله بالفعل.';
-  else if(status==='cancelled')return'\n❌ الطلب تم إلغاؤه.';
-  const minDate=new Date(created);minDate.setDate(minDate.getDate()+minDays);
-  const maxDate=new Date(created);maxDate.setDate(maxDate.getDate()+maxDays);
-  const fmt=d=>d.toLocaleDateString('ar-EG',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  return'\n📆 التوصيل المتوقع: من '+fmt(minDate)+' إلى '+fmt(maxDate);
-}
-
 async function handleOrderQuery(raw){
   const ref=extractOrderRef(raw);
   if(!ref){
@@ -1001,34 +1241,12 @@ async function handleOrderQuery(raw){
   }
   const total=order.total!=null?'\n💰 إجمالي الطلب: '+Number(order.total).toFixed(2)+' AED':'';
   const date=order.created_at?'\n📅 تاريخ الطلب: '+new Date(order.created_at).toLocaleDateString('ar-EG'):'';
-  const delivery=estimateDelivery(order);
-  return {type:'answer',text:'📦 حالة طلبك '+(order.order_number||('#'+ref))+':\n'+orderStatusLabel(order.status)+total+date+delivery};
+  return {type:'answer',text:'📦 حالة طلبك '+(order.order_number||('#'+ref))+':\n'+orderStatusLabel(order.status)+total+date};
 }
 
 // ===== معالجة اختيار الهدية =====
 async function handleGiftQuery(raw,ctx){
-  // ادمج ctx مع botState.giftData عشان نحافظ على البيانات اللي اتجمعت
-  const merged={...botState.giftData,...ctx};
-
-  // ⭐ لو فيه مناسبة بس (من غير recipient ولا budget) → اعرض منتجات المناسبة مباشرة
-  if(merged.occasion && !merged.recipient && merged.budget==null){
-    const products=await recommendProducts(raw,merged);
-    if(products.length){
-      const catLinks={
-        'تخرج':'/category/graduation','عيد ميلاد':'/category/birthday',
-        'زواج':'/category/wedding','خطوبة':'/category/engagement',
-        'مولود جديد':'/category/newborn','رومانسي':'/category/valentine',
-        'رمضان':'/category/ramadan','عيد':'/category/eid',
-        'يوم الأم':'/category/mothers-day','سفر/وداع':'/category/travel'
-      };
-      const link=catLinks[merged.occasion]||'';
-      const linkHtml=link?'\n\n<a href="'+link+'" target="_blank" class="btn-gold" style="display:inline-block;margin-top:8px">🛒 تصفح كل منتجات '+merged.occasion+'</a>':'';
-      return {type:'products',text:'🎁 دي منتجاتنا لمناسبة '+merged.occasion+':',products,extraHtml:linkHtml};
-    }
-  }
-
-  const missing=missingGiftInfo(merged);
-
+  const missing=missingGiftInfo(ctx);
   if(missing==='recipient'){
     botState.waitingFor='gift_recipient';
     botState.giftData={};
@@ -1036,16 +1254,16 @@ async function handleGiftQuery(raw,ctx){
   }
   if(missing==='occasion'){
     botState.waitingFor='gift_occasion';
-    botState.giftData={...botState.giftData,recipient:merged.recipient,budget:merged.budget};
-    return {type:'clarify',text:'تمام ❤️ لـ'+merged.recipient+'، إيه المناسبة؟ عيد ميلاد، تخرج، زواج ولا مناسبة تانية؟'};
+    botState.giftData={...botState.giftData,recipient:ctx.recipient,budget:ctx.budget};
+    return {type:'clarify',text:'تمام ❤️ لـ'+ctx.recipient+'، إيه المناسبة؟ عيد ميلاد، تخرج، زواج ولا مناسبة تانية؟'};
   }
   if(missing==='budget'){
     botState.waitingFor='gift_budget';
-    botState.giftData={...botState.giftData,recipient:merged.recipient,occasion:merged.occasion};
-    return {type:'clarify',text:'جميل 🎁 آخر حاجة: الميزانية في حدود كام درهم؟ عشان أطلعلك اختيارات مناسبة فعلًا.'};
+    botState.giftData={...botState.giftData,recipient:ctx.recipient,occasion:ctx.occasion};
+    return {type:'clarify',text:'جميل 🎁 آخر حاجة: الميزانية في حدود كام درهم؟ عشان أطلعلك اختيارات فعلًا داخل ميزانيتك.'};
   }
   botState.waitingFor=null;
-  const fullCtx={...merged,...botState.giftData};
+  const fullCtx={...ctx,...botState.giftData};
   const allText=[raw,...conversation.filter(x=>x.role==='user').slice(-8).map(x=>x.text)].join(' ');
   const products=await recommendProducts(allText,fullCtx);
   if(products.length){
@@ -1054,8 +1272,43 @@ async function handleGiftQuery(raw,ctx){
   return {type:'fallback',text:'فهمت طلبك '+contextPrompt(fullCtx)+'، لكن مش لاقي منتج داخل الميزانية بالمواصفات دي حاليًا. ممكن نوسّع الميزانية شوية أو أديك اختيارات قريبة؟'};
 }
 
-async function handleSingleMessage(raw, ctx){
-  // ⭐ أولاً: حدد الموضوع (الـ flow مهم أكتر من قاعدة المعرفة)
+// ===== الرد على السؤال الواحد =====
+
+/* =========================================================
+   LLM — فهم المعنى فقط، بدون اختراع إجابات
+   المفتاح السري موجود في Supabase Edge Function bot-llm
+========================================================= */
+async function callBotLLM(message, context){
+  const token=await getValidAdminToken();
+  if(!token) return null;
+  const ranked=rank(message).slice(0,30).map(x=>({
+    id:x.id,question:x.question,answer:x.answer,category:x.category,keywords:kws(x.keywords),score:x.score
+  }));
+  try{
+    const res=await fetch(SB+'/functions/v1/bot-llm',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'apikey':ANON_KEY,
+        'Authorization':'Bearer '+token
+      },
+      body:JSON.stringify({
+        message,
+        context:context||{},
+        conversation:conversation.slice(-10),
+        knowledge:ranked
+      })
+    });
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok) throw new Error(data.error||('LLM HTTP '+res.status));
+    return data;
+  }catch(e){
+    console.warn('bot-llm:',e.message);
+    return null;
+  }
+}
+
+async function handleSingleMessage(raw){
   const topic=detectTopic(raw);
 
   if(topic==='human'){
@@ -1063,40 +1316,51 @@ async function handleSingleMessage(raw, ctx){
     return {type:'answer',text:settings.human};
   }
 
-  // تتبع طلب (مستقل تماماً)
-  if(topic==='order'){
+  // أولوية 1: فحص Actions من قاعدة المعرفة
+  const actionMatch=findBestAction(raw);
+  if(actionMatch){
+    resetBotState('action');
+    botState.currentAction=actionMatch.action_name;
+    botState.pendingAction=actionMatch;
+    botState.pendingParams=Array.isArray(actionMatch.required_params)?[...actionMatch.required_params]:[];
+    // استخراج Parameters من الرسالة الحالية
+    const collected={};
+    if(botState.pendingParams.length){
+      for(const p of botState.pendingParams){
+        const v=extractParamValue(raw,p.type,actionMatch.action_name);
+        if(v!=null&&validateParam(v,p.type))collected[p.name]=v;
+      }
+    }
+    botState.collectedParams=collected;
+    // تحقق من البيانات المطلوبة
+    const missing=botState.pendingParams.filter(p=>!validateParam(collected[p.name],p.type));
+    if(missing.length){
+      botState.waitingFor='action_param';
+      const paramNames=missing.map(p=>paramTypeLabel(p.type)).join('، ');
+      const clarify=actionMatch.answer?actionMatch.answer:'أكيد، ابعتلي '+paramNames+'.';
+      return {type:'clarify',text:clarify,action:actionMatch.action_name,missing:missing};
+    }
+    // بيانات مكتملة — تنفيذ Action
+    return await executeAction(actionMatch, collected);
+  }
+
+  // تتبع الطلب وظيفة مستقلة ولا يعتمد على bot_knowledge.
+  if(topic==='order'||topic==='order_new'){
     resetBotState('order');
     return await handleOrderQuery(raw);
   }
 
-  // طلب جديد
-  if(topic==='order_new'){
-    resetBotState('order_new');
-    return {type:'answer',text:'عشان تطلب منتج جديد 🛒 ممكن تزور موقعنا أو أقترحلك منتجات مناسبة. عايز إيه بالظبط؟'};
-  }
-
-  // صور
-  if(topic==='image'){
-    await persistUnanswered(raw);
-    return {type:'clarify',text:'مش قادر أشوف الصور حاليًا 🖼️ ممكن تكتبلى اسم المنتج أو وصفه؟ أو ابعتلي رابط المنتج لو عندك.'};
-  }
-
-  // هدية / مناسبة
+  // الهدية/المنتجات وظيفة مستقلة وتعتمد على المنتجات الفعلية.
   if(topic==='gift'){
     resetBotState('gift');
+    const intent=extractIntent(raw);
+    const ctx=settings.conversationMode?mergeContext(intent):intent;
     return await handleGiftQuery(raw,ctx);
-  }
-
-  // عرض منتجات عام
-  if(topic==='browse'){
-    const products=await recommendProducts(raw,ctx);
-    if(products.length)return {type:'products',text:'🛒 دي بعض منتجاتنا المتاحة:',products};
-    return {type:'clarify',text:'عايز تشوف منتجات إيه بالظبط؟ ممكن تقولي المناسبة أو نوع المنتج؟'};
   }
 
   if(topic==='greeting')return {type:'answer',text:greetingReply(raw)};
 
-  // ⭐ تاني: دور في قاعدة المعرفة للأسئلة العامة بس
+  // قاعدة المعرفة (رد معلوماتي فقط)
   const match=findBestAnswer(raw);
   renderRanking(match.ranked);
   if(match.found){
@@ -1104,33 +1368,16 @@ async function handleSingleMessage(raw, ctx){
     return {type:'answer',text:match.item.answer,match:match.item};
   }
 
-  // ⭐ تالت: مناسبة من السياق (بدون كلمة "هدية" صريحة)
-  if(ctx.occasion){
-    const products=await recommendProducts(raw,ctx);
-    if(products.length){
-      const catLinks={
-        'تخرج':'/category/graduation','عيد ميلاد':'/category/birthday',
-        'زواج':'/category/wedding','خطوبة':'/category/engagement',
-        'مولود جديد':'/category/newborn','رومانسي':'/category/valentine',
-        'رمضان':'/category/ramadan','عيد':'/category/eid',
-        'يوم الأم':'/category/mothers-day','سفر/وداع':'/category/travel'
-      };
-      const link=catLinks[ctx.occasion]||'';
-      const linkHtml=link?'\n\n<a href="'+link+'" target="_blank" class="btn-gold" style="display:inline-block;margin-top:8px">🛒 تصفح كل منتجات '+ctx.occasion+'</a>':'';
-      return {type:'products',text:'🎁 دي منتجاتنا لمناسبة '+ctx.occasion+':',products,extraHtml:linkHtml};
-    }
-  }
+  const intent=extractIntent(raw);
+  const isProductIntent=giftIntent(raw)||intent.recipient||intent.occasion||intent.interest||intent.budget!=null;
 
-  // منتجات عامة من السياق
-  const isProductIntent=giftIntent(raw)||ctx.recipient||ctx.occasion||ctx.interest||ctx.budget!=null;
   if(settings.autoProducts!==false && isProductIntent){
-    const products=await recommendProducts(raw,ctx);
+    const products=await recommendProducts(raw,settings.conversationMode?mergeContext(intent):intent);
     if(products.length)return {type:'products',text:'لقيتلك أقرب منتجات مناسبة لطلبك 👇',products};
   }
 
-  // LLM
   if(settings.useLLM!==false){
-    const llm=await callBotLLM(raw,ctx);
+    const llm=await callBotLLM(raw,intent);
     if(llm){
       if(llm.action==='answer' && llm.reply){
         const item=questions.find(x=>Number(x.id)===Number(llm.knowledge_id));
@@ -1142,242 +1389,1238 @@ async function handleSingleMessage(raw, ctx){
       if(llm.action==='chat' && llm.reply) return {type:'answer',text:llm.reply,llm:true};
       if(llm.action==='clarify' && llm.reply) return {type:'clarify',text:llm.reply,llm:true};
       if(llm.action==='human') return {type:'answer',text:settings.human,llm:true};
-      if(llm.action==='product_search'){
-        const products=await recommendProducts(raw,ctx);
-        if(products.length) return {type:'products',text:llm.reply||'لقيتلك أقرب منتجات 👇',products};
-      }
-      if(llm.action==='order_track'){
-        resetBotState('order');
-        return await handleOrderQuery(raw);
-      }
     }
   }
 
-  await persistUnanswered(raw);
-  return {type:'fallback',text:settings.fallback+'\n'+settings.human};
+await persistUnanswered(raw);
+return {
+  type: 'fallback',
+  text: settings.fallback + '\n' + settings.human
+};
 }
 
-// ===== الرد على الرسالة (مع مراعاة السياق) =====
-async function processBotMessageCore(msg){
-  const raw=String(msg||'').trim();
-  if(!raw) return {type:'fallback',text:settings.fallback};
+/* =========================================================
+   تنفيذ Actions
+========================================================= */
+async function executeAction(actionItem, params){
+  const action = actionItem.action_name;
+  const isDangerous = DANGEROUS_ACTIONS.has(action);
 
-  const intent=extractIntent(raw);
-  const ctx=settings.conversationMode?mergeContext(intent):intent;
-  $('intentBox').innerHTML='<b>السياق:</b> '+esc(contextPrompt(ctx)||'عام')+' | <b>الحالة:</b> '+esc(botState.waitingFor||'idle');
+  // Actions الخطيرة تحتاج تأكيد
+  if(isDangerous && !botState.confirmedDangerous){
+    botState.pendingAction = actionItem;
+    botState.collectedParams = params;
+    botState.waitingFor = 'confirm_dangerous';
 
-  // ⭐ لو البوت مستني حاجة — كمل الflow
-  if(botState.waitingFor){
-    const waiting=botState.waitingFor;
+    const paramText = Object.entries(params || {})
+      .map(([k,v]) => k + ' = ' + v)
+      .join('، ');
 
-    // ⭐ لو مستني رقم طلب → متدورش في قاعدة المعرفة، خد الرقم على طول
-    if(waiting==='order_number'){
-      const t=arabicDigits(raw);
-      if(/\d{3,10}/.test(t)){
-        botState.waitingFor=null;
-        return await handleOrderQuery(raw);
+    return {
+      type: 'clarify',
+      text:
+        '⚠️ هل تريد تنفيذ ' +
+        action +
+        '؟ (' +
+        paramText +
+        ')\n' +
+        'اكتب "نعم" للتأكيد أو "لا" للإلغاء.',
+      action,
+      dangerous: true
+    };
+  }
+
+  botState.confirmedDangerous = false;
+
+  switch(action){
+
+    /* =====================================================
+       حالة الطلب
+    ===================================================== */
+    case 'GET_ORDER_STATUS':{
+      const orderNum =
+        params.order_number ||
+        params['رقم الطلب'];
+
+      if(!orderNum){
+        return {
+          type: 'clarify',
+          text: 'أكيد، ابعتلي رقم الطلب.'
+        };
       }
-      return {type:'clarify',text:'مش فاهم رقم الطلب 😅\nابعتلي رقم الطلب بالأرقام (مثلاً 1001#)'};
-    }
 
-    // ⭐ لو العميل سأل سؤال عام واضح في قاعدة المعرفة، رد عليه الأول
-    const quickMatch=findBestAnswer(raw);
-    if(quickMatch.found && quickMatch.item.score>=(Number(settings.minScore)||6)+3){
-      await incrementUsage(quickMatch.item);
-      return {type:'answer',text:quickMatch.item.answer,match:quickMatch.item};
-    }
+      const order = await lookupOrder(orderNum);
 
-    // تحية في نص الflow
-    if(detectTopic(raw)==='greeting'){
-      return {type:'answer',text:greetingReply(raw)+'\n\n'+getReminderText()};
-    }
-
-    // تغيير الموضوع تماماً
-    const newTopic=detectTopic(raw);
-    if(newTopic!=='general'&&newTopic!=='greeting'&&newTopic!==botState.topic){
-      resetBotState(newTopic);
-      return await handleSingleMessage(raw, ctx);
-    }
-
-    // استكمال الflow
-
-    if(waiting==='gift_recipient'){
-      const rec=intent.recipient || matchFirst(RECIPIENT_MAP,normalize(raw));
-      if(rec){
-        botState.giftData.recipient=rec;
-        botState.waitingFor='gift_occasion';
-        return {type:'clarify',text:'تمام ❤️ لـ'+rec+'، إيه المناسبة؟ (عيد ميلاد، تخرج، زواج...)'};
+      if(!order || order._error){
+        return {
+          type: 'fallback',
+          text: 'مش لاقي طلب بالرقم ده 🤔 اتأكد من الرقم.'
+        };
       }
-      return {type:'clarify',text:'الهديه لمين؟ (أخت، أم، زوجة، صديق...)'};
+
+      const total =
+        order.total != null
+          ? '\n💰 إجمالي الطلب: ' +
+            Number(order.total).toFixed(2) +
+            ' AED'
+          : '';
+
+      const date =
+        order.created_at
+          ? '\n📅 تاريخ الطلب: ' +
+            new Date(order.created_at)
+              .toLocaleDateString('ar-EG')
+          : '';
+
+      return {
+        type: 'answer',
+        text:
+          '📦 حالة طلبك ' +
+          (order.order_number || ('#' + orderNum)) +
+          ':\n' +
+          orderStatusLabel(order.status) +
+          total +
+          date,
+        action
+      };
     }
 
-    if(waiting==='gift_occasion'){
-      const occ=intent.occasion || matchFirst(OCCASION_MAP,normalize(raw));
-      if(occ){
-        botState.giftData.occasion=occ;
-        botState.waitingFor='gift_budget';
-        return {type:'clarify',text:'جميل 🎁 الميزانية في حدود كام درهم؟'};
+    /* =====================================================
+       تفاصيل الطلب
+    ===================================================== */
+    case 'GET_ORDER_DETAILS':{
+      const orderNum =
+        params.order_number ||
+        params['رقم الطلب'];
+
+      if(!orderNum){
+        return {
+          type: 'clarify',
+          text: 'أكيد، ابعتلي رقم الطلب.'
+        };
       }
-      return {type:'clarify',text:'إيه المناسبة؟ (عيد ميلاد، تخرج، زواج...)'};
+
+      const order = await lookupOrder(orderNum);
+
+      if(!order || order._error){
+        return {
+          type: 'fallback',
+          text: 'مش لاقي طلب بالرقم ده 🤔'
+        };
+      }
+
+      let details =
+        '📋 تفاصيل طلبك ' +
+        (order.order_number || ('#' + orderNum)) +
+        ':\n';
+
+      details +=
+        'الحالة: ' +
+        orderStatusLabel(order.status) +
+        '\n';
+
+      if(order.total != null){
+        details +=
+          'الإجمالي: ' +
+          Number(order.total).toFixed(2) +
+          ' AED\n';
+      }
+
+      if(order.payment_method){
+        details +=
+          'طريقة الدفع: ' +
+          order.payment_method +
+          '\n';
+      }
+
+      if(order.payment_status){
+        details +=
+          'حالة الدفع: ' +
+          order.payment_status +
+          '\n';
+      }
+
+      if(order.created_at){
+        details +=
+          'التاريخ: ' +
+          new Date(order.created_at)
+            .toLocaleDateString('ar-EG');
+      }
+
+      return {
+        type: 'answer',
+        text: details,
+        action
+      };
     }
 
-    if(waiting==='gift_budget'){
-      const budget=parseBudget(raw,true);
-      if(budget!=null){
-        botState.giftData.budget=budget;
-        botState.waitingFor=null;
-        const fullCtx={...merged,...botState.giftData};
-        const allText=[raw,...conversation.filter(x=>x.role==='user').slice(-5).map(x=>x.text)].join(' ');
-        const products=await recommendProducts(allText,fullCtx);
-        if(products.length){
-          return {type:'products',text:'🎁 دي اقتراحاتي لـ'+fullCtx.recipient+' بمناسبة '+fullCtx.occasion+' (ميزانية ~'+budget+' درهم):',products};
+    /* =====================================================
+       البحث عن منتج
+    ===================================================== */
+    case 'SEARCH_PRODUCT':{
+      const query =
+        params.search_query ||
+        params.product_name ||
+        params['اسم المنتج'];
+
+      if(!query){
+        return {
+          type: 'clarify',
+          text:
+            'أكيد، ابعتلي اسم المنتج اللي بتدور عليه.'
+        };
+      }
+
+      const products = await recommendProducts(
+        query,
+        {
+          interest: query,
+          budget: null
         }
-        return {type:'fallback',text:'فهمت طلبك '+contextPrompt(fullCtx)+'، لكن مش لاقي منتج مناسب حاليًا.'};
+      );
+
+      if(products && products.length){
+        return {
+          type: 'products',
+          text:
+            '🔍 نتائج البحث عن "' +
+            query +
+            '":',
+          products,
+          action
+        };
       }
-      return {type:'clarify',text:'الميزانية في حدود كام درهم؟'};
+
+      return {
+        type: 'answer',
+        text:
+          'مش لاقي منتجات مطابقة لـ "' +
+          query +
+          '" حاليًا.',
+        action
+      };
+    }
+
+    /* =====================================================
+       تفاصيل المنتج
+    ===================================================== */
+    case 'GET_PRODUCT_DETAILS':{
+      const pid =
+        params.product_id ||
+        params.product_name;
+
+      if(!pid){
+        return {
+          type: 'clarify',
+          text:
+            'أكيد، ابعتلي اسم المنتج أو كوده.'
+        };
+      }
+
+      const p = botProducts.find(x =>
+        String(x.id) === String(pid) ||
+        normalize(productName(x))
+          .includes(normalize(pid))
+      );
+
+      if(!p){
+        return {
+          type: 'answer',
+          text: 'مش لاقي المنتج ده حاليًا.',
+          action
+        };
+      }
+
+      const price =
+        Number(p.price || 0).toFixed(2) +
+        ' AED';
+
+      const stock =
+        p.stock != null
+          ? ' • المخزون: ' + p.stock
+          : '';
+
+      return {
+        type: 'answer',
+        text:
+          '📦 ' +
+          esc(productName(p)) +
+          '\n💰 السعر: ' +
+          price +
+          stock +
+          '\n' +
+          esc(
+            p.description_ar ||
+            p.description_en ||
+            p.desc ||
+            ''
+          ),
+        action
+      };
+    }
+
+    /* =====================================================
+       توفر المنتج
+    ===================================================== */
+    case 'CHECK_PRODUCT_AVAILABILITY':{
+      const pid =
+        params.product_id ||
+        params.product_name;
+
+      if(!pid){
+        return {
+          type: 'clarify',
+          text:
+            'أكيد، ابعتلي اسم المنتج أو كوده.'
+        };
+      }
+
+      const p = botProducts.find(x =>
+        String(x.id) === String(pid) ||
+        normalize(productName(x))
+          .includes(normalize(pid))
+      );
+
+      if(!p){
+        return {
+          type: 'answer',
+          text: 'المنتج غير متوفر حاليًا.',
+          action
+        };
+      }
+
+      const available =
+        p.stock == null ||
+        Number(p.stock) > 0;
+
+      return {
+        type: 'answer',
+        text:
+          (available ? '✅' : '❌') +
+          ' ' +
+          esc(productName(p)) +
+          ' — ' +
+          (
+            available
+              ? 'متوفر (' +
+                p.stock +
+                ' قطعة)'
+              : 'غير متوفر حاليًا'
+          ),
+        action
+      };
+    }
+
+    /* =====================================================
+       طلبات العميل
+    ===================================================== */
+    case 'GET_CUSTOMER_ORDERS':{
+      const phone =
+        params.phone ||
+        params['رقم الهاتف'];
+
+      if(!phone){
+        return {
+          type: 'clarify',
+          text:
+            'أكيد، ابعتلي رقم الهاتف المسجل على الطلب.'
+        };
+      }
+
+      return {
+        type: 'answer',
+        text:
+          '⏳ جاري البحث عن طلبات العميل برقم ' +
+          phone +
+          '...\n' +
+          '(هذا الإجراء يحتاج ربط بـ API فعلي)',
+        action
+      };
+    }
+
+    /* =====================================================
+       بيانات العميل
+    ===================================================== */
+    case 'GET_CUSTOMER_INFO':{
+      const phone =
+        params.phone ||
+        params['رقم الهاتف'];
+
+      if(!phone){
+        return {
+          type: 'clarify',
+          text:
+            'أكيد، ابعتلي رقم الهاتف.'
+        };
+      }
+
+      return {
+        type: 'answer',
+        text:
+          '⏳ جاري جلب بيانات العميل برقم ' +
+          phone +
+          '...\n' +
+          '(هذا الإجراء يحتاج ربط بـ API فعلي)',
+        action
+      };
+    }
+
+    /* =====================================================
+       Actions أخرى
+    ===================================================== */
+    case 'CREATE_ORDER':
+    case 'ADD_TO_CART':
+    case 'UPDATE_CART':
+    case 'CANCEL_ORDER':
+    case 'UPDATE_ORDER':{
+      return {
+        type: 'answer',
+        text:
+          '⏳ الإجراء ' +
+          action +
+          ' جاهز للربط بـ API فعلي.\n' +
+          'البيانات المجمعة: ' +
+          JSON.stringify(params || {}),
+        action
+      };
+    }
+
+    /* =====================================================
+       Action غير معروف
+    ===================================================== */
+    default:{
+      return {
+        type: 'answer',
+        text:
+          '⏳ الإجراء ' +
+          action +
+          ' غير مربوط بمصدر بيانات حاليًا.\n' +
+          '(يحتاج implementation)',
+        action
+      };
+    }
+  }
+}
+
+
+/* =========================================================
+   معالجة رسالة البوت
+========================================================= */
+async function processBotMessageCore(msg){
+
+  const raw = String(msg || '').trim();
+
+  if(!raw){
+    return {
+      type: 'fallback',
+      text: settings.fallback
+    };
+  }
+
+  const intent = extractIntent(raw);
+
+  const ctx =
+    settings.conversationMode
+      ? mergeContext(intent)
+      : intent;
+
+  $('intentBox').innerHTML =
+    '<b>السياق:</b> ' +
+    esc(contextPrompt(ctx) || 'عام') +
+    ' | <b>الحالة:</b> ' +
+    esc(botState.waitingFor || 'idle') +
+    ' | <b>Action:</b> ' +
+    esc(botState.currentAction || '—');
+
+
+  /* =======================================================
+     لو البوت مستني حاجة — كمل الـ Flow
+  ======================================================= */
+  if(botState.waitingFor){
+
+    const waiting = botState.waitingFor;
+
+
+    /* -------------------------------------------------------
+       تحية أثناء الـ Flow
+    ------------------------------------------------------- */
+    if(detectTopic(raw) === 'greeting'){
+
+      return {
+        type: 'answer',
+        text:
+          greetingReply(raw) +
+          '\n\n' +
+          getReminderText()
+      };
+    }
+
+
+    /* -------------------------------------------------------
+       تغيير الموضوع تماماً
+    ------------------------------------------------------- */
+    const newTopic = detectTopic(raw);
+
+    if(
+      newTopic !== 'general' &&
+      newTopic !== 'greeting' &&
+      newTopic !== botState.topic
+    ){
+
+      resetBotState(newTopic);
+
+      return await handleSingleMessage(raw);
+    }
+
+
+    /* =======================================================
+       استكمال Action Parameter
+    ======================================================= */
+    if(
+      waiting === 'action_param' &&
+      botState.pendingAction
+    ){
+
+      const actionItem =
+        botState.pendingAction;
+
+      const missing =
+        botState.pendingParams.filter(
+          p =>
+            !validateParam(
+              botState.collectedParams[p.name],
+              p.type
+            )
+        );
+
+
+      /* محاولة استخراج القيمة الجديدة */
+      for(const p of missing){
+
+        const v =
+          extractParamValue(
+            raw,
+            p.type,
+            actionItem.action_name
+          );
+
+        if(
+          v != null &&
+          validateParam(v, p.type)
+        ){
+
+          botState.collectedParams[p.name] = v;
+        }
+      }
+
+
+      /* معرفة البيانات التي ما زالت ناقصة */
+      const stillMissing =
+        botState.pendingParams.filter(
+          p =>
+            !validateParam(
+              botState.collectedParams[p.name],
+              p.type
+            )
+        );
+
+
+      if(stillMissing.length){
+
+        const paramNames =
+          stillMissing
+            .map(p => paramTypeLabel(p.type))
+            .join('، ');
+
+        return {
+          type: 'clarify',
+          text:
+            actionItem.answer
+              ? actionItem.answer
+              : 'أكيد، ابعتلي ' +
+                paramNames +
+                '.',
+          action: actionItem.action_name,
+          missing: stillMissing
+        };
+      }
+
+
+      /* كل البيانات وصلت */
+      botState.waitingFor = null;
+
+      return await executeAction(
+        actionItem,
+        botState.collectedParams
+      );
+    }
+
+
+    /* =======================================================
+       تأكيد Action خطير
+    ======================================================= */
+    if(waiting === 'confirm_dangerous'){
+
+      const t = normalize(raw);
+
+      if(
+        /نعم|أيوة|ايوه|اه|أه|yes|ok|موافق|تمام/
+          .test(t)
+      ){
+
+        botState.confirmedDangerous = true;
+        botState.waitingFor = null;
+
+        return await executeAction(
+          botState.pendingAction,
+          botState.collectedParams
+        );
+      }
+
+
+      /* أي رد غير موافقة = إلغاء */
+      resetBotState();
+
+      return {
+        type: 'answer',
+        text: 'تم الإلغاء ✅'
+      };
+    }
+
+
+    /* =======================================================
+       استكمال طلب رقم الطلب
+    ======================================================= */
+    if(waiting === 'order_number'){
+
+      const t = arabicDigits(raw);
+
+      if(/\d{3,10}/.test(t)){
+
+        botState.waitingFor = null;
+
+        return await handleOrderQuery(raw);
+      }
+
+      return {
+        type: 'clarify',
+        text:
+          'مش فاهم رقم الطلب 😅\n' +
+          'ابعتلي رقم الطلب بالأرقام ' +
+          '(مثلاً 1001#)'
+      };
+    }
+
+
+    /* =======================================================
+       مستلم الهدية
+    ======================================================= */
+    if(waiting === 'gift_recipient'){
+
+      const rec =
+        intent.recipient ||
+        matchFirst(
+          RECIPIENT_MAP,
+          normalize(raw)
+        ) ||
+        extractRecipient(raw);
+
+      if(rec){
+
+        botState.giftData.recipient = rec;
+        botState.waitingFor = 'gift_occasion';
+
+        return {
+          type: 'clarify',
+          text:
+            'تمام ❤️ لـ' +
+            rec +
+            '، إيه المناسبة؟ ' +
+            '(عيد ميلاد، تخرج، زواج...)'
+        };
+      }
+
+      return {
+        type: 'clarify',
+        text:
+          'الهديه لمين؟ ' +
+          '(أخت، أم، زوجة، صديق...)'
+      };
+    }
+
+
+    /* =======================================================
+       مناسبة الهدية
+    ======================================================= */
+    if(waiting === 'gift_occasion'){
+
+      const occ =
+        intent.occasion ||
+        matchFirst(
+          OCCASION_MAP,
+          normalize(raw)
+        ) ||
+        extractOccasion(raw);
+
+      if(occ){
+
+        botState.giftData.occasion = occ;
+        botState.waitingFor = 'gift_budget';
+
+        return {
+          type: 'clarify',
+          text:
+            'جميل 🎁 الميزانية في حدود كام درهم؟'
+        };
+      }
+
+      return {
+        type: 'clarify',
+        text:
+          'إيه المناسبة؟ ' +
+          '(عيد ميلاد، تخرج، زواج...)'
+      };
+    }
+
+
+    /* =======================================================
+       ميزانية الهدية
+    ======================================================= */
+    if(waiting === 'gift_budget'){
+
+      const budget =
+        parseBudget(raw, true);
+
+      if(budget != null){
+
+        botState.giftData.budget = budget;
+        botState.waitingFor = null;
+
+        const fullCtx = {
+          ...ctx,
+          ...botState.giftData,
+          budget
+        };
+
+        const allText = [
+          raw,
+          ...conversation
+            .filter(x => x.role === 'user')
+            .slice(-5)
+            .map(x => x.text)
+        ].join(' ');
+
+        const products =
+          await recommendProducts(
+            allText,
+            fullCtx
+          );
+
+        if(products && products.length){
+
+          return {
+            type: 'products',
+            text:
+              '🎁 دي اقتراحاتي لـ' +
+              fullCtx.recipient +
+              ' بمناسبة ' +
+              fullCtx.occasion +
+              ' ' +
+              '(ميزانية ~' +
+              budget +
+              ' درهم):',
+            products
+          };
+        }
+
+        return {
+          type: 'fallback',
+          text:
+            'فهمت طلبك ' +
+            contextPrompt(fullCtx) +
+            '، لكن مش لاقي منتج مناسب حاليًا.'
+        };
+      }
+
+      return {
+        type: 'clarify',
+        text:
+          'الميزانية في حدود كام درهم؟'
+      };
     }
   }
 
-  return await handleSingleMessage(raw, ctx);
+
+  /* =========================================================
+     معالجة الرسالة بشكل طبيعي
+  ========================================================= */
+  return await handleSingleMessage(raw);
 }
 
-// ===== استخراج recipient/occasion من "لأختي" / "للتخرج" =====
 
+/* =========================================================
+   تذكير بحالة الـ Flow
+========================================================= */
 function getReminderText(){
-  if(botState.waitingFor==='order_number') return '📦 مازلت مستنّي رقم الطلب.';
-  if(botState.waitingFor && botState.waitingFor.startsWith('action_param_')){
-    const p=botState.waitingFor.replace('action_param_','');
-    return '⏳ مازلت مستنّي: '+p;
+
+  if(botState.waitingFor === 'action_param'){
+    return (
+      '⚡ مازلت مستنّي بيانات للإجراء ' +
+      botState.currentAction +
+      '.'
+    );
   }
-  if(botState.waitingFor==='gift_recipient') return '🎁 مازلت مستنّي تعرفني الهدية لمين.';
-  if(botState.waitingFor==='gift_occasion') return '🎁 مازلت مستنّي تعرفني المناسبة.';
-  if(botState.waitingFor==='gift_budget') return '🎁 مازلت مستنّي تعرفني الميزانية.';
+
+  if(botState.waitingFor === 'confirm_dangerous'){
+    return '⚠️ مازلت مستنّي تأكيد الإجراء.';
+  }
+
+  if(botState.waitingFor === 'order_number'){
+    return '📦 مازلت مستنّي رقم الطلب.';
+  }
+
+  if(botState.waitingFor === 'gift_recipient'){
+    return '🎁 مازلت مستنّي تعرفني الهدية لمين.';
+  }
+
+  if(botState.waitingFor === 'gift_occasion'){
+    return '🎁 مازلت مستنّي تعرفني المناسبة.';
+  }
+
+  if(botState.waitingFor === 'gift_budget'){
+    return '🎁 مازلت مستنّي تعرفني الميزانية.';
+  }
+
   return '';
 }
 
+
+/* =========================================================
+   Wrapper آمن لمعالجة الرسائل
+========================================================= */
 async function processBotMessage(msg){
+
   try{
-    const res=await processBotMessageCore(msg);
-    return res||{type:'fallback',text:settings.fallback+'\n'+settings.human};
+
+    const res =
+      await processBotMessageCore(msg);
+
+    return (
+      res || {
+        type: 'fallback',
+        text:
+          settings.fallback +
+          '\n' +
+          settings.human
+      }
+    );
+
   }catch(e){
-    console.error('Bot error:',e);
-    await persistUnanswered(String(msg||''));
-    return {type:'fallback',text:settings.fallback+'\n'+settings.human};
+
+    console.error('Bot error:', e);
+
+    await persistUnanswered(
+      String(msg || '')
+    );
+
+    return {
+      type: 'fallback',
+      text:
+        settings.fallback +
+        '\n' +
+        settings.human
+    };
   }
 }
 
+
+/* =========================================================
+   زيادة استخدام سؤال من قاعدة المعرفة
+========================================================= */
 async function incrementUsage(item){
+
   try{
-    await window.sbFetch('bot_knowledge?id=eq.'+item.id,{method:'PATCH',body:JSON.stringify({usage_count:(Number(item.usage_count)||0)+1})});
-    const x=questions.find(a=>Number(a.id)===Number(item.id));
-    if(x) x.usage_count=(Number(x.usage_count)||0)+1;
+
+    await window.sbFetch(
+      'bot_knowledge?id=eq.' + item.id,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({
+          usage_count:
+            (Number(item.usage_count) || 0) + 1
+        })
+      }
+    );
+
+    const x =
+      questions.find(
+        a => Number(a.id) === Number(item.id)
+      );
+
+    if(x){
+      x.usage_count =
+        (Number(x.usage_count) || 0) + 1;
+    }
+
   }catch(e){}
 }
 
+
+/* =========================================================
+   عرض ترتيب نتائج قاعدة المعرفة
+========================================================= */
 function renderRanking(arr){
-  $('ranking').innerHTML=arr.slice(0,5).map(x=>'<div class="item"><b>'+esc(x.question)+'</b><div class="meta">درجة: '+x.score+' • تشابه: '+Math.round((x.similarity||0)*100)+'% • استخدام: '+(Number(x.usage_count)||0)+'</div></div>').join('')||'<div class="hint">لا توجد مطابقة</div>';
+
+  $('ranking').innerHTML =
+    arr.slice(0,5)
+      .map(x =>
+        '<div class="item">' +
+          '<b>' +
+            esc(x.question) +
+          '</b>' +
+          '<div class="meta">' +
+            'درجة: ' +
+            x.score +
+            ' • تشابه: ' +
+            Math.round(
+              (x.similarity || 0) * 100
+            ) +
+            '% • استخدام: ' +
+            (Number(x.usage_count) || 0) +
+          '</div>' +
+        '</div>'
+      )
+      .join('') ||
+    '<div class="hint">لا توجد مطابقة</div>';
 }
 
+
+/* =========================================================
+   إضافة رسالة للشات
+========================================================= */
 function addMsg(role,text){
-  conversation.push({role,text});
-  const cls=role==='user'?'me':role==='system'?'system':'bot';
-  $('chat').insertAdjacentHTML('beforeend','<div class="msg '+cls+'">'+(role==='user'?'👤 ':'🤖 ')+esc(text)+'</div>');
-  $('chat').scrollTop=$('chat').scrollHeight;
+
+  conversation.push({
+    role,
+    text
+  });
+
+  const cls =
+    role === 'user'
+      ? 'me'
+      : role === 'system'
+        ? 'system'
+        : 'bot';
+
+  $('chat').insertAdjacentHTML(
+    'beforeend',
+    '<div class="msg ' +
+    cls +
+    '">' +
+    (role === 'user' ? '👤 ' : '🤖 ') +
+    esc(text) +
+    '</div>'
+  );
+
+  $('chat').scrollTop =
+    $('chat').scrollHeight;
 }
 
+
+/* =========================================================
+   اختبار البوت
+========================================================= */
 async function testBot(){
-  const input=$('testMessage'),m=input.value.trim();if(!m)return;
-  const btn=$('testBtn');btn.disabled=true;input.value='';
-  addMsg('user',m);
-  const holder=document.createElement('div');holder.className='msg bot';holder.textContent='🤖 جاري التفكير...';$('chat').appendChild(holder);$('chat').scrollTop=$('chat').scrollHeight;
+
+  const input = $('testMessage');
+  const m = input.value.trim();
+
+  if(!m) return;
+
+  const btn = $('testBtn');
+
+  btn.disabled = true;
+  input.value = '';
+
+  addMsg('user', m);
+
+  const holder =
+    document.createElement('div');
+
+  holder.className = 'msg bot';
+  holder.textContent = '🤖 جاري التفكير...';
+
+  $('chat').appendChild(holder);
+
+  $('chat').scrollTop =
+    $('chat').scrollHeight;
+
   try{
-    const r=await processBotMessage(m);
-    if(!r||!r.text){
-      holder.textContent='🤖 '+settings.fallback;
-      conversation.push({role:'assistant',text:settings.fallback});
-    }else if(r.type==='products'){
+
+    const r =
+      await processBotMessage(m);
+
+    if(!r || !r.text){
+
+      holder.textContent =
+        '🤖 ' +
+        settings.fallback;
+
+      conversation.push({
+        role: 'assistant',
+        text: settings.fallback
+      });
+
+    }else if(r.type === 'products'){
+
       holder.remove();
-      const el=document.createElement('div');el.className='msg bot';el.innerHTML='🤖 '+esc(r.text)+'<div class="product-grid" style="margin-top:8px">'+productCards(r.products)+'</div>'+(r.extraHtml||'');
+
+      const el =
+        document.createElement('div');
+
+      el.className = 'msg bot';
+
+      el.innerHTML =
+        '🤖 ' +
+        esc(r.text) +
+        '<div class="product-grid" style="margin-top:8px">' +
+        productCards(r.products) +
+        '</div>';
+
       $('chat').appendChild(el);
-      conversation.push({role:'assistant',text:r.text});
+
+      conversation.push({
+        role: 'assistant',
+        text: r.text
+      });
+
+    }else if(r.type === 'clarify'){
+
+      holder.textContent =
+        '🤖 ' +
+        r.text;
+
+      conversation.push({
+        role: 'assistant',
+        text: r.text
+      });
+
     }else{
-      holder.textContent='🤖 '+r.text;
-      conversation.push({role:'assistant',text:r.text});
+
+      holder.textContent =
+        '🤖 ' +
+        r.text;
+
+      conversation.push({
+        role: 'assistant',
+        text: r.text
+      });
     }
+
   }catch(e){
-    holder.textContent='🤖 حصل خطأ: '+e.message;
+
+    holder.textContent =
+      '🤖 حصل خطأ: ' +
+      e.message;
+
   }finally{
-    btn.disabled=false;$('chat').scrollTop=$('chat').scrollHeight;
+
+    btn.disabled = false;
+
+    $('chat').scrollTop =
+      $('chat').scrollHeight;
   }
 }
 
+
+/* =========================================================
+   إعادة ضبط الشات
+========================================================= */
 function resetChat(){
-  conversation=[];resetBotState();
-  $('chat').innerHTML='<div class="msg system">🤖 '+esc(settings.welcome)+'</div>';
-  $('intentBox').textContent='لم تبدأ المحادثة بعد.';
-  $('ranking').innerHTML='';
+
+  conversation = [];
+  orderFlowPending = false;
+
+  resetBotState();
+
+  $('chat').innerHTML =
+    '<div class="msg system">🤖 ' +
+    esc(settings.welcome) +
+    '</div>';
+
+  $('intentBox').textContent =
+    'لم تبدأ المحادثة بعد.';
+
+  $('ranking').innerHTML = '';
 }
 
+
+/* =========================================================
+   اختبار سريع
+========================================================= */
 async function quickTest(){
-  const m=$('quickMsg').value.trim();if(!m)return;
-  $('quickResult').innerHTML='<div class="hint">⏳ جاري البحث...</div>';
+
+  const m =
+    $('quickMsg').value.trim();
+
+  if(!m) return;
+
+  $('quickResult').innerHTML =
+    '<div class="hint">⏳ جاري البحث...</div>';
+
   try{
-    const r=await processBotMessage(m);
+
+    const r =
+      await processBotMessage(m);
+
     if(!r){
-      $('quickResult').innerHTML='<div class="item error">⚠️ لم يتم العثور على رد.</div>';
+
+      $('quickResult').innerHTML =
+        '<div class="item error">' +
+        '⚠️ لم يتم العثور على رد.' +
+        '</div>';
+
       return;
     }
-    if(r.type==='answer'){
-      const matchInfo=r.match?('<div class="meta">✅ مطابقة: '+esc(r.match.question)+' (درجة '+r.match.score+')</div>'):'';
-      $('quickResult').innerHTML='<div class="item"><b>🤖 '+esc(r.text)+'</b>'+matchInfo+'</div>';
+
+    if(r.type === 'answer'){
+
+      const matchInfo =
+        r.match
+          ? '<div class="meta">✅ مطابقة: ' +
+            esc(r.match.question) +
+            ' (درجة ' +
+            r.match.score +
+            ')</div>'
+          : '';
+
+      const actionInfo =
+        r.action
+          ? '<div class="meta">⚡ Action: ' +
+            esc(r.action) +
+            '</div>'
+          : '';
+
+      $('quickResult').innerHTML =
+        '<div class="item">' +
+          '<b>🤖 ' +
+          esc(r.text) +
+          '</b>' +
+          matchInfo +
+          actionInfo +
+        '</div>';
+
+    }else if(r.type === 'products'){
+
+      $('quickResult').innerHTML =
+        '<div class="item">' +
+          '<b>🤖 ' +
+          esc(r.text) +
+          '</b>' +
+          '<div class="product-grid" style="margin-top:8px">' +
+            productCards(r.products) +
+          '</div>' +
+        '</div>';
+
+    }else if(r.type === 'clarify'){
+
+      const actionInfo =
+        r.action
+          ? '<div class="meta">⚡ Action: ' +
+            esc(r.action) +
+            '</div>'
+          : '';
+
+      $('quickResult').innerHTML =
+        '<div class="item" style="border-color:var(--gold)">' +
+          '<b>🤖 ' +
+          esc(r.text) +
+          '</b>' +
+          '<div class="meta">' +
+            'البوت بيسأل سؤال توضيحي...' +
+          '</div>' +
+          actionInfo +
+        '</div>';
+
+    }else{
+
+      const saved =
+        readLocal(
+          'bariq_bot_unanswered',
+          []
+        ).some(
+          x =>
+            normalize(x.text) ===
+            normalize(m)
+        );
+
+      $('quickResult').innerHTML =
+        '<div class="item">' +
+          '<b>⚠️ ' +
+          esc(r.text) +
+          '</b>' +
+          '<div class="meta">' +
+            (
+              saved
+                ? '✅ تم حفظ السؤال في "بدون إجابة"'
+                : '⚠️ لم يتم الحفظ'
+            ) +
+          '</div>' +
+          '<button class="btn-gold" style="margin-top:8px" onclick="tab(\'unanswered\')">' +
+            'فتح الأسئلة' +
+          '</button>' +
+        '</div>';
     }
-    else if(r.type==='products') $('quickResult').innerHTML='<div class="item"><b>🤖 '+esc(r.text)+'</b><div class="product-grid" style="margin-top:8px">'+productCards(r.products)+'</div>'+(r.extraHtml||'')+'</div>';
-    else if(r.type==='clarify') $('quickResult').innerHTML='<div class="item" style="border-color:var(--gold)"><b>🤖 '+esc(r.text)+'</b><div class="meta">البوت بيسأل سؤال توضيحي...</div></div>';
-    else{
-      const saved=readLocal('bariq_bot_unanswered',[]).some(x=>normalize(x.text)===normalize(m));
-      $('quickResult').innerHTML='<div class="item"><b>⚠️ '+esc(r.text)+'</b><div class="meta">'+(saved?'✅ تم حفظ السؤال في "بدون إجابة"':'⚠️ لم يتم الحفظ')+'</div><button class="btn-gold" style="margin-top:8px" onclick="tab(\'unanswered\')">فتح الأسئلة</button></div>';
-    }
+
   }catch(e){
-    $('quickResult').innerHTML='<div class="item error">❌ خطأ: '+esc(e.message)+'</div>';
+
+    $('quickResult').innerHTML =
+      '<div class="item error">' +
+      '❌ خطأ: ' +
+      esc(e.message) +
+      '</div>';
   }
-}/* =========================================================
+}
+
+
+/* =========================================================
    الإعدادات و Meta
 ========================================================= */
-function loadSettings(){
-  settings={...settings,...readLocal('bariq_bot_settings',{})};
-  $('minScore').value=settings.minScore;$('welcome').value=settings.welcome;$('fallback').value=settings.fallback;$('human').value=settings.human;
-  $('autoUnanswered').checked=settings.autoUnanswered!==false;$('autoProducts').checked=settings.autoProducts!==false;$('conversationMode').checked=settings.conversationMode!==false;
-  if($('useLLM'))$('useLLM').checked=settings.useLLM!==false;
-}
-function saveSettings(){
-  settings={
-    minScore:Number($('minScore').value)||4,welcome:$('welcome').value||'أهلًا بيك في بريق 🎁 إزاي أقدر أساعدك؟',
-    fallback:$('fallback').value||'مش لاقي إجابة مؤكدة للسؤال ده حاليًا 🤔',human:$('human').value||'تمام، هحوّلك لموظف من فريق بريق 👤',
-    autoUnanswered:$('autoUnanswered').checked,autoProducts:$('autoProducts').checked,conversationMode:$('conversationMode').checked,
-    useLLM:$('useLLM')?$('useLLM').checked:true
-  };
-  saveLocal('bariq_bot_settings',settings);$('settingsMsg').textContent='✅ تم حفظ إعدادات البوت';$('settingsMsg').className='success';resetChat();
-}
-function loadMeta(){
-  const m=readLocal('bariq_meta',{});
-  $('metaPageId').value=m.pageId||'';$('waPhoneId').value=m.phoneId||'';$('webhookVerify').value=m.verify||'';
-  $('webhookUrl').value=m.url||'';$('humanPhone').value=m.humanPhone||'';$('metaEnabled').checked=!!m.enabled;
-  $('metaStatus').innerHTML=m.enabled?'🟢 التكامل مفعّل في الإعدادات':'⚪ التكامل غير مفعّل';
-}
-function saveMeta(){
-  const m={pageId:$('metaPageId').value.trim(),phoneId:$('waPhoneId').value.trim(),verify:$('webhookVerify').value.trim(),url:$('webhookUrl').value.trim(),humanPhone:$('humanPhone').value.trim(),enabled:$('metaEnabled').checked};
-  saveLocal('bariq_meta',m);loadMeta();$('metaMsg').textContent='✅ تم حفظ إعدادات Meta';$('metaMsg').className='success';
-}
+
 
 /* =========================================================
    تشغيل
 ========================================================= */
-$('testMessage').addEventListener('keydown',e=>{if(e.key==='Enter')testBot()});
-$('quickMsg').addEventListener('keydown',e=>{if(e.key==='Enter')quickTest()});
+
+$('testMessage').addEventListener(
+  'keydown',
+  e => {
+    if(e.key === 'Enter'){
+      testBot();
+    }
+  }
+);
+
+$('quickMsg').addEventListener(
+  'keydown',
+  e => {
+    if(e.key === 'Enter'){
+      quickTest();
+    }
+  }
+);
+
 loadSettings();
 resetChat();
-loadAll().catch(()=>{});
-const savedTab=sessionStorage.getItem('bot_tab');if(savedTab)tab(savedTab);
+
+loadAll().catch(() => {});
+
+const savedTab =
+  sessionStorage.getItem('bot_tab');
+
+if(savedTab){
+  tab(savedTab);
+}
 </script>
 </body>
 </html>
