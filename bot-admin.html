@@ -381,7 +381,7 @@ function extractParamValue(text,paramType,contextAction){
       return ph?ph[0]:null;
     }
     case 'quantity':{
-      const q=t.match(/(\d{1,4})/);
+      const q=t.match(/\b(\d{1,4})\b/);
       return q?Number(q[1]):null;
     }
     case 'email':{
@@ -389,7 +389,7 @@ function extractParamValue(text,paramType,contextAction){
       return em?em[0]:null;
     }
     case 'product_id':{
-      const pid=t.match(/([A-Z0-9]{3,20})/i);
+      const pid=t.match(/\b([A-Z0-9]{3,20})\b/i);
       return pid?pid[1]:null;
     }
     case 'product_name':
@@ -397,7 +397,7 @@ function extractParamValue(text,paramType,contextAction){
     case 'address':
       return String(text||'').trim();
     case 'number':{
-      const n=t.match(/(\d+(?:\.\d+)?)/);
+      const n=t.match(/\b(\d+(?:\.\d+)?)\b/);
       return n?Number(n[1]):null;
     }
     default:
@@ -643,7 +643,11 @@ function rank(msg,onlyInfo){
   const list=questions.filter(x=>{
     if(!x.active)return false;
     const it=x.input_type||INPUT_TYPES.INFO;
-    if(onlyInfo)return it===INPUT_TYPES.INFO&&String(x.answer||'').trim();
+    if(onlyInfo){
+      // للبيانات القديمة: لو مفيش input_type يبقى INFO
+      // ولو الإجابة فاضية ماتتعرضش في الردود المعلوماتية
+      return it===INPUT_TYPES.INFO;
+    }
     return true;
   });
   return list.map(x=>({...x,score:score(msg,x),similarity:questionSimilarity(msg,x.question)}))
@@ -656,8 +660,9 @@ function findBestAction(msg){
   const scored=actionItems.map(x=>({...x,score:score(msg,x),similarity:questionSimilarity(msg,x.question)}))
     .filter(x=>x.score>0).sort((a,b)=>b.score-a.score);
   const best=scored[0];if(!best)return null;
-  const minActionScore=Math.max(3,Number(settings.minScore)||4);
-  if(best.score>=minActionScore||best.similarity>=.60)return best;
+  const minActionScore=Math.max(2,Number(settings.minScore)||4);
+  // Action يتعرف بدرجة أقل شوية من الإجابة المعلوماتية
+  if(best.score>=minActionScore||best.similarity>=.55)return best;
   return null;
 }
 function renderKnowledge(){
@@ -753,7 +758,7 @@ async function saveQuestion(){
 
   const payload={
     question:mergeTarget&&!id?mergeTarget.question:question,
-    answer:answer||null,
+    answer:answer||'',
     category:category||mergeTarget?.category||null,
     keywords:[...new Set([...kws(mergeTarget?.keywords),...keywords])],
     active,
@@ -987,9 +992,11 @@ function orderStatusIntent(text){
   return hasOrderWord&&/\d{3,10}/.test(arabicDigits(text));
 }
 function extractOrderRef(text){
-  const t=arabicDigits(text);
+  const t=arabicDigits(String(text||''));
+  // يدور على رقم طلب في أي مكان في النص
   const m=t.match(/#?\s*(\d{3,10})/);
-  return m?m[1]:'';
+  if(m)return m[1].replace(/^#/,'');
+  return '';
 }
 function missingGiftInfo(ctx){
   if(!ctx.recipient)return 'recipient';
@@ -1141,1094 +1148,59 @@ function orderStatusLabel(s){
   const key=String(s||'').trim().toLowerCase();
   return ORDER_STATUS_LABELS[key]||s||'قيد المعالجة';
 }
-async function lookupOrder(ref){
-  if(!ref)return null;
-  const withHash='#'+String(ref).replace(/^#/,'');
-  try{
-    const exact=await window.sbFetch('orders?order_number=eq.'+encodeURIComponent(withHash)+'&limit=1');
-    if(Array.isArray(exact)&&exact[0])return exact[0];
-    const loose=await window.sbFetch('orders?order_number=ilike.*'+encodeURIComponent(ref)+'*&order=created_at.desc&limit=1');
-    if(Array.isArray(loose)&&loose[0])return loose[0];
-    return null;
-  }catch(e){
-    return {_error:e.message};
-  }
-}
-async function handleOrderStatus(raw){
-  const ref=extractOrderRef(raw);
-  if(!ref){
-    return {type:'clarify',text:'تمام، ابعتلي رقم الطلب (مثلًا 1001#) وأنا أشوفلك حالته 📦'};
-  }
-  const order=await lookupOrder(ref);
-  if(order&&order._error){
-    return {type:'fallback',text:settings.human};
-  }
-  if(!order){
-    return {type:'fallback',text:'مش لاقي طلب بالرقم ده حاليًا 🤔 اتأكد من الرقم، أو لو حابب أحولك لموظف يتابعلك.\n'+settings.human};
-  }
-  const total=order.total!=null?'\nإجمالي الطلب: '+Number(order.total).toFixed(2)+' AED':'';
-  const date=order.created_at?'\nتاريخ الطلب: '+new Date(order.created_at).toLocaleDateString('ar-EG'):'';
-  return {type:'answer',text:'📦 حالة طلبك '+(order.order_number||('#'+ref))+':\n'+orderStatusLabel(order.status)+total+date,match:{question:'تتبع طلب',score:99}};
-}
 
 /* =========================================================
-   🤖 محرك البوت الذكي — النسخة النهائية المصححة
+   حساب موعد التسليم المقدر
 ========================================================= */
+const MANUFACTURING_DAYS=7; // عدد أيام التصنيع الافتراضي
+const SHIPPING_DAYS=2; // عدد أيام الشحن الافتراضي
 
-// ===== حالة المحادثة =====
-let botState={topic:'idle',currentAction:null,waitingFor:null,collectedParams:{},pendingAction:null,pendingParams:null,giftData:{},orderRef:''};
+function calculateEstimatedDelivery(createdAt, status){
+  if(!createdAt)return null;
+  const created=new Date(createdAt);
+  if(isNaN(created.getTime()))return null;
 
-function resetBotState(topic){
-  botState={topic:topic||'idle',currentAction:null,waitingFor:null,collectedParams:{},pendingAction:null,pendingParams:null,giftData:{},orderRef:''};
+  const statusKey=String(status||'').trim().toLowerCase();
+
+  // لو الطلب اتسلم خلاص
+  if(statusKey==='delivered')return {delivered:true,date:created};
+  // لو الطلب ملغي
+  if(statusKey==='cancelled'||statusKey==='refunded')return null;
+  // لو الطلب اتشحن
+  if(statusKey==='shipped'){
+    const est=new Date(created);
+    est.setDate(est.getDate()+MANUFACTURING_DAYS+SHIPPING_DAYS);
+    return {shipped:true,date:est};
+  }
+
+  // الحالات التانية: جديد / قيد التجهيز / قيد التصنيع
+  const est=new Date(created);
+  est.setDate(est.getDate()+MANUFACTURING_DAYS+SHIPPING_DAYS);
+  return {estimated:true,date:est};
 }
 
-// ===== فهم الموضوع (مصحح) =====
-function detectTopic(text){
-  const t=normalize(text);
-
-  // 1. تحويل لموظف (أولوية قصوى)
-  if(/موظف|بشر|احد يرد|حد يكلمني|عايز اتكلم|human|support/.test(t)) return 'human';
-
-  // 2. تتبع طلب — كلمات محددة جداً
-  if(/رقم\s*الطلب|حال[ةه]\s*الطلب|وين\s*طلبي|فين\s*طلبي|طلبي\s*وين|طلبي\s*فين|تتبع|track|اوردر|order\s*status/.test(t)) return 'order';
-
-  // 3. هدية — لازم يكون فيه كلمات هدية صريحة
-  if(/هدي[هة]|gift|بوكس|هدايا|بوكيه|اقتراح\s*هد/.test(t)) return 'gift';
-
-  // 4. طلب جديد
-  if(/اطلب|طلبية|عايز\s*اشتري|ابغي\s*اشتري|ابغى\s*اشتري|شراء|اشتري/.test(t)) return 'order_new';
-
-  // 5. تحية
-  if(/كيف\s*(حال|حالك|ك|انت)|شلونك|شخبارك|عامل\s*ا[يهي]|اخبار[كك]|صباح|مساء|سلام|هلا\s*والله|هاي|مرحب|أهلا|أهلين|شكرا|شكر|تسلم|يسلمو|مشكور|باي|مع\s*السلامة/.test(t)) return 'greeting';
-
-  return 'general';
-}
-
-// ===== الرد على التحيات =====
-function greetingReply(text){
-  const t=normalize(text);
-  if(/سلام|هلا|هاي|مرحب|أهلا|أهلين/.test(t)) return 'وعليكم السلام ورحمة الله 🌸 أهلاً بيك في بريق! إزاي أقدر أساعدك؟';
-  if(/كيف|شلون|شخبار|عامل/.test(t)) return 'أنا بوت بس شغال بكامل طاقتي 😄 إزاي أقدر أساعدك اليوم؟';
-  if(/شكرا|شكر|تسلم|يسلمو|مشكور/.test(t)) return 'العفو! 😊 أي وقت، تواصل معانا لو احتجت حاجة.';
-  if(/صباح/.test(t)) return 'صباح الورد 🌹 إزاي أقدر أساعدك؟';
-  if(/مساء/.test(t)) return 'مساء النور ✨ إزاي أقدر أساعدك؟';
-  if(/باي|مع\s*السلامة/.test(t)) return 'مع السلامة! 👋 الله يسلمك.';
-  return 'أهلاً بيك في بريق 🎁 إزاي أقدر أساعدك؟';
-}
-
-// ===== مطابقة قاعدة المعرفة =====
-function findBestAnswer(msg){
-  const minScore=Math.max(6,Number(settings.minScore)||6);
-  const ranked=rank(msg,true);
-  const best=ranked[0], second=ranked[1];
-  if(!best)return {found:false,ranked};
-  const margin=second?best.score-second.score:best.score;
-  const sim=best.similarity||0;
-  const strong=(best.score>=minScore && (sim>=.68 || margin>=3)) && !(second && second.score>=best.score*.94 && sim<.78);
-  return strong?{found:true,item:best,ranked}:{found:false,ranked};
-}
-
-// ===== معالجة تتبع الطلب =====
-async function handleOrderQuery(raw){
-  const ref=extractOrderRef(raw);
-  if(!ref){
-    botState.waitingFor='order_number';
-    return {type:'clarify',text:'تمام 📦 ابعتلي رقم الطلب (مثلاً 1001#) وأنا أشوفلك حالته.'};
-  }
-  const order=await lookupOrder(ref);
-  if(!order||order._error){
-    return {type:'fallback',text:'مش لاقي طلب بالرقم ده 🤔 اتأكد من الرقم، أو قوللي عايز حاجة تانية.'};
-  }
-  const total=order.total!=null?'\n💰 إجمالي الطلب: '+Number(order.total).toFixed(2)+' AED':'';
-  const date=order.created_at?'\n📅 تاريخ الطلب: '+new Date(order.created_at).toLocaleDateString('ar-EG'):'';
-  return {type:'answer',text:'📦 حالة طلبك '+(order.order_number||('#'+ref))+':\n'+orderStatusLabel(order.status)+total+date};
-}
-
-// ===== معالجة اختيار الهدية =====
-async function handleGiftQuery(raw,ctx){
-  const missing=missingGiftInfo(ctx);
-  if(missing==='recipient'){
-    botState.waitingFor='gift_recipient';
-    botState.giftData={};
-    return {type:'clarify',text:'أكيد 🎁 هساعدك تختار هدية مناسبة.\nالهديه لمين؟ أخت، أم، زوجة، صديق...؟'};
-  }
-  if(missing==='occasion'){
-    botState.waitingFor='gift_occasion';
-    botState.giftData={...botState.giftData,recipient:ctx.recipient,budget:ctx.budget};
-    return {type:'clarify',text:'تمام ❤️ لـ'+ctx.recipient+'، إيه المناسبة؟ عيد ميلاد، تخرج، زواج ولا مناسبة تانية؟'};
-  }
-  if(missing==='budget'){
-    botState.waitingFor='gift_budget';
-    botState.giftData={...botState.giftData,recipient:ctx.recipient,occasion:ctx.occasion};
-    return {type:'clarify',text:'جميل 🎁 آخر حاجة: الميزانية في حدود كام درهم؟ عشان أطلعلك اختيارات فعلًا داخل ميزانيتك.'};
-  }
-  botState.waitingFor=null;
-  const fullCtx={...ctx,...botState.giftData};
-  const allText=[raw,...conversation.filter(x=>x.role==='user').slice(-8).map(x=>x.text)].join(' ');
-  const products=await recommendProducts(allText,fullCtx);
-  if(products.length){
-    return {type:'products',text:'🎁 دي أفضل اختيارات ل'+fullCtx.recipient+' بمناسبة '+fullCtx.occasion+' وفي حدود '+fullCtx.budget+' درهم:',products};
-  }
-  return {type:'fallback',text:'فهمت طلبك '+contextPrompt(fullCtx)+'، لكن مش لاقي منتج داخل الميزانية بالمواصفات دي حاليًا. ممكن نوسّع الميزانية شوية أو أديك اختيارات قريبة؟'};
-}
-
-// ===== الرد على السؤال الواحد =====
-
-/* =========================================================
-   LLM — فهم المعنى فقط، بدون اختراع إجابات
-   المفتاح السري موجود في Supabase Edge Function bot-llm
-========================================================= */
-async function callBotLLM(message, context){
-  const token=await getValidAdminToken();
-  if(!token) return null;
-  const ranked=rank(message).slice(0,30).map(x=>({
-    id:x.id,question:x.question,answer:x.answer,category:x.category,keywords:kws(x.keywords),score:x.score
-  }));
-  try{
-    const res=await fetch(SB+'/functions/v1/bot-llm',{
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'apikey':ANON_KEY,
-        'Authorization':'Bearer '+token
-      },
-      body:JSON.stringify({
-        message,
-        context:context||{},
-        conversation:conversation.slice(-10),
-        knowledge:ranked
-      })
-    });
-    const data=await res.json().catch(()=>({}));
-    if(!res.ok) throw new Error(data.error||('LLM HTTP '+res.status));
-    return data;
-  }catch(e){
-    console.warn('bot-llm:',e.message);
-    return null;
-  }
-}
-
-async function handleSingleMessage(raw){
-  const topic=detectTopic(raw);
-
-  if(topic==='human'){
-    resetBotState('human');
-    return {type:'answer',text:settings.human};
-  }
-
-  // أولوية 1: فحص Actions من قاعدة المعرفة
-  const actionMatch=findBestAction(raw);
-  if(actionMatch){
-    resetBotState('action');
-    botState.currentAction=actionMatch.action_name;
-    botState.pendingAction=actionMatch;
-    botState.pendingParams=Array.isArray(actionMatch.required_params)?[...actionMatch.required_params]:[];
-    // استخراج Parameters من الرسالة الحالية
-    const collected={};
-    if(botState.pendingParams.length){
-      for(const p of botState.pendingParams){
-        const v=extractParamValue(raw,p.type,actionMatch.action_name);
-        if(v!=null&&validateParam(v,p.type))collected[p.name]=v;
-      }
-    }
-    botState.collectedParams=collected;
-    // تحقق من البيانات المطلوبة
-    const missing=botState.pendingParams.filter(p=>!validateParam(collected[p.name],p.type));
-    if(missing.length){
-      botState.waitingFor='action_param';
-      const paramNames=missing.map(p=>paramTypeLabel(p.type)).join('، ');
-      const clarify=actionMatch.answer?actionMatch.answer:'أكيد، ابعتلي '+paramNames+'.';
-      return {type:'clarify',text:clarify,action:actionMatch.action_name,missing:missing};
-    }
-    // بيانات مكتملة — تنفيذ Action
-    return await executeAction(actionMatch, collected);
-  }
-
-  // تتبع الطلب وظيفة مستقلة ولا يعتمد على bot_knowledge.
-  if(topic==='order'||topic==='order_new'){
-    resetBotState('order');
-    return await handleOrderQuery(raw);
-  }
-
-  // الهدية/المنتجات وظيفة مستقلة وتعتمد على المنتجات الفعلية.
-  if(topic==='gift'){
-    resetBotState('gift');
-    const intent=extractIntent(raw);
-    const ctx=settings.conversationMode?mergeContext(intent):intent;
-    return await handleGiftQuery(raw,ctx);
-  }
-
-  if(topic==='greeting')return {type:'answer',text:greetingReply(raw)};
-
-  // قاعدة المعرفة (رد معلوماتي فقط)
-  const match=findBestAnswer(raw);
-  renderRanking(match.ranked);
-  if(match.found){
-    await incrementUsage(match.item);
-    return {type:'answer',text:match.item.answer,match:match.item};
-  }
-
-  const intent=extractIntent(raw);
-  const isProductIntent=giftIntent(raw)||intent.recipient||intent.occasion||intent.interest||intent.budget!=null;
-
-  if(settings.autoProducts!==false && isProductIntent){
-    const products=await recommendProducts(raw,settings.conversationMode?mergeContext(intent):intent);
-    if(products.length)return {type:'products',text:'لقيتلك أقرب منتجات مناسبة لطلبك 👇',products};
-  }
-
-  if(settings.useLLM!==false){
-    const llm=await callBotLLM(raw,intent);
-    if(llm){
-      if(llm.action==='answer' && llm.reply){
-        const item=questions.find(x=>Number(x.id)===Number(llm.knowledge_id));
-        if(item && String(item.answer||'').trim()){
-          await incrementUsage(item);
-          return {type:'answer',text:item.answer,match:{...item,score:llm.confidence*100},llm:true};
-        }
-      }
-      if(llm.action==='chat' && llm.reply) return {type:'answer',text:llm.reply,llm:true};
-      if(llm.action==='clarify' && llm.reply) return {type:'clarify',text:llm.reply,llm:true};
-      if(llm.action==='human') return {type:'answer',text:settings.human,llm:true};
-    }
-  }
-
-await persistUnanswered(raw);
-return {
-  type: 'fallback',
-  text: settings.fallback + '\n' + settings.human
-};
-}
-
-/* =========================================================
-   تنفيذ Actions
-========================================================= */
-async function executeAction(actionItem, params){
-  const action = actionItem.action_name;
-  const isDangerous = DANGEROUS_ACTIONS.has(action);
-
-  // Actions الخطيرة تحتاج تأكيد
-  if(isDangerous && !botState.confirmedDangerous){
-    botState.pendingAction = actionItem;
-    botState.collectedParams = params;
-    botState.waitingFor = 'confirm_dangerous';
-
-    const paramText = Object.entries(params || {})
-      .map(([k,v]) => k + ' = ' + v)
-      .join('، ');
-
-    return {
-      type: 'clarify',
-      text:
-        '⚠️ هل تريد تنفيذ ' +
-        action +
-        '؟ (' +
-        paramText +
-        ')\n' +
-        'اكتب "نعم" للتأكيد أو "لا" للإلغاء.',
-      action,
-      dangerous: true
-    };
-  }
-
-  botState.confirmedDangerous = false;
-
-  switch(action){
-
-    /* =====================================================
-       حالة الطلب
-    ===================================================== */
-    case 'GET_ORDER_STATUS':{
-      const orderNum =
-        params.order_number ||
-        params['رقم الطلب'];
-
-      if(!orderNum){
-        return {
-          type: 'clarify',
-          text: 'أكيد، ابعتلي رقم الطلب.'
-        };
-      }
-
-      const order = await lookupOrder(orderNum);
-
-      if(!order || order._error){
-        return {
-          type: 'fallback',
-          text: 'مش لاقي طلب بالرقم ده 🤔 اتأكد من الرقم.'
-        };
-      }
-
-      const total =
-        order.total != null
-          ? '\n💰 إجمالي الطلب: ' +
-            Number(order.total).toFixed(2) +
-            ' AED'
-          : '';
-
-      const date =
-        order.created_at
-          ? '\n📅 تاريخ الطلب: ' +
-            new Date(order.created_at)
-              .toLocaleDateString('ar-EG')
-          : '';
-
-      return {
-        type: 'answer',
-        text:
-          '📦 حالة طلبك ' +
-          (order.order_number || ('#' + orderNum)) +
-          ':\n' +
-          orderStatusLabel(order.status) +
-          total +
-          date,
-        action
-      };
-    }
-
-    /* =====================================================
-       تفاصيل الطلب
-    ===================================================== */
-    case 'GET_ORDER_DETAILS':{
-      const orderNum =
-        params.order_number ||
-        params['رقم الطلب'];
-
-      if(!orderNum){
-        return {
-          type: 'clarify',
-          text: 'أكيد، ابعتلي رقم الطلب.'
-        };
-      }
-
-      const order = await lookupOrder(orderNum);
-
-      if(!order || order._error){
-        return {
-          type: 'fallback',
-          text: 'مش لاقي طلب بالرقم ده 🤔'
-        };
-      }
-
-      let details =
-        '📋 تفاصيل طلبك ' +
-        (order.order_number || ('#' + orderNum)) +
-        ':\n';
-
-      details +=
-        'الحالة: ' +
-        orderStatusLabel(order.status) +
-        '\n';
-
-      if(order.total != null){
-        details +=
-          'الإجمالي: ' +
-          Number(order.total).toFixed(2) +
-          ' AED\n';
-      }
-
-      if(order.payment_method){
-        details +=
-          'طريقة الدفع: ' +
-          order.payment_method +
-          '\n';
-      }
-
-      if(order.payment_status){
-        details +=
-          'حالة الدفع: ' +
-          order.payment_status +
-          '\n';
-      }
-
-      if(order.created_at){
-        details +=
-          'التاريخ: ' +
-          new Date(order.created_at)
-            .toLocaleDateString('ar-EG');
-      }
-
-      return {
-        type: 'answer',
-        text: details,
-        action
-      };
-    }
-
-    /* =====================================================
-       البحث عن منتج
-    ===================================================== */
-    case 'SEARCH_PRODUCT':{
-      const query =
-        params.search_query ||
-        params.product_name ||
-        params['اسم المنتج'];
-
-      if(!query){
-        return {
-          type: 'clarify',
-          text:
-            'أكيد، ابعتلي اسم المنتج اللي بتدور عليه.'
-        };
-      }
-
-      const products = await recommendProducts(
-        query,
-        {
-          interest: query,
-          budget: null
-        }
-      );
-
-      if(products && products.length){
-        return {
-          type: 'products',
-          text:
-            '🔍 نتائج البحث عن "' +
-            query +
-            '":',
-          products,
-          action
-        };
-      }
-
-      return {
-        type: 'answer',
-        text:
-          'مش لاقي منتجات مطابقة لـ "' +
-          query +
-          '" حاليًا.',
-        action
-      };
-    }
-
-    /* =====================================================
-       تفاصيل المنتج
-    ===================================================== */
-    case 'GET_PRODUCT_DETAILS':{
-      const pid =
-        params.product_id ||
-        params.product_name;
-
-      if(!pid){
-        return {
-          type: 'clarify',
-          text:
-            'أكيد، ابعتلي اسم المنتج أو كوده.'
-        };
-      }
-
-      const p = botProducts.find(x =>
-        String(x.id) === String(pid) ||
-        normalize(productName(x))
-          .includes(normalize(pid))
-      );
-
-      if(!p){
-        return {
-          type: 'answer',
-          text: 'مش لاقي المنتج ده حاليًا.',
-          action
-        };
-      }
-
-      const price =
-        Number(p.price || 0).toFixed(2) +
-        ' AED';
-
-      const stock =
-        p.stock != null
-          ? ' • المخزون: ' + p.stock
-          : '';
-
-      return {
-        type: 'answer',
-        text:
-          '📦 ' +
-          esc(productName(p)) +
-          '\n💰 السعر: ' +
-          price +
-          stock +
-          '\n' +
-          esc(
-            p.description_ar ||
-            p.description_en ||
-            p.desc ||
-            ''
-          ),
-        action
-      };
-    }
-
-    /* =====================================================
-       توفر المنتج
-    ===================================================== */
-    case 'CHECK_PRODUCT_AVAILABILITY':{
-      const pid =
-        params.product_id ||
-        params.product_name;
-
-      if(!pid){
-        return {
-          type: 'clarify',
-          text:
-            'أكيد، ابعتلي اسم المنتج أو كوده.'
-        };
-      }
-
-      const p = botProducts.find(x =>
-        String(x.id) === String(pid) ||
-        normalize(productName(x))
-          .includes(normalize(pid))
-      );
-
-      if(!p){
-        return {
-          type: 'answer',
-          text: 'المنتج غير متوفر حاليًا.',
-          action
-        };
-      }
-
-      const available =
-        p.stock == null ||
-        Number(p.stock) > 0;
-
-      return {
-        type: 'answer',
-        text:
-          (available ? '✅' : '❌') +
-          ' ' +
-          esc(productName(p)) +
-          ' — ' +
-          (
-            available
-              ? 'متوفر (' +
-                p.stock +
-                ' قطعة)'
-              : 'غير متوفر حاليًا'
-          ),
-        action
-      };
-    }
-
-    /* =====================================================
-       طلبات العميل
-    ===================================================== */
-    case 'GET_CUSTOMER_ORDERS':{
-      const phone =
-        params.phone ||
-        params['رقم الهاتف'];
-
-      if(!phone){
-        return {
-          type: 'clarify',
-          text:
-            'أكيد، ابعتلي رقم الهاتف المسجل على الطلب.'
-        };
-      }
-
-      return {
-        type: 'answer',
-        text:
-          '⏳ جاري البحث عن طلبات العميل برقم ' +
-          phone +
-          '...\n' +
-          '(هذا الإجراء يحتاج ربط بـ API فعلي)',
-        action
-      };
-    }
-
-    /* =====================================================
-       بيانات العميل
-    ===================================================== */
-    case 'GET_CUSTOMER_INFO':{
-      const phone =
-        params.phone ||
-        params['رقم الهاتف'];
-
-      if(!phone){
-        return {
-          type: 'clarify',
-          text:
-            'أكيد، ابعتلي رقم الهاتف.'
-        };
-      }
-
-      return {
-        type: 'answer',
-        text:
-          '⏳ جاري جلب بيانات العميل برقم ' +
-          phone +
-          '...\n' +
-          '(هذا الإجراء يحتاج ربط بـ API فعلي)',
-        action
-      };
-    }
-
-    /* =====================================================
-       Actions أخرى
-    ===================================================== */
-    case 'CREATE_ORDER':
-    case 'ADD_TO_CART':
-    case 'UPDATE_CART':
-    case 'CANCEL_ORDER':
-    case 'UPDATE_ORDER':{
-      return {
-        type: 'answer',
-        text:
-          '⏳ الإجراء ' +
-          action +
-          ' جاهز للربط بـ API فعلي.\n' +
-          'البيانات المجمعة: ' +
-          JSON.stringify(params || {}),
-        action
-      };
-    }
-
-    /* =====================================================
-       Action غير معروف
-    ===================================================== */
-    default:{
-      return {
-        type: 'answer',
-        text:
-          '⏳ الإجراء ' +
-          action +
-          ' غير مربوط بمصدر بيانات حاليًا.\n' +
-          '(يحتاج implementation)',
-        action
-      };
-    }
-  }
-}
-
-
-/* =========================================================
-   معالجة رسالة البوت
-========================================================= */
-async function processBotMessageCore(msg){
-
-  const raw = String(msg || '').trim();
-
-  if(!raw){
-    return {
-      type: 'fallback',
-      text: settings.fallback
-    };
-  }
-
-  const intent = extractIntent(raw);
-
-  const ctx =
-    settings.conversationMode
-      ? mergeContext(intent)
-      : intent;
-
-  $('intentBox').innerHTML =
-    '<b>السياق:</b> ' +
-    esc(contextPrompt(ctx) || 'عام') +
-    ' | <b>الحالة:</b> ' +
-    esc(botState.waitingFor || 'idle') +
-    ' | <b>Action:</b> ' +
-    esc(botState.currentAction || '—');
-
-
-  /* =======================================================
-     لو البوت مستني حاجة — كمل الـ Flow
-  ======================================================= */
-  if(botState.waitingFor){
-
-    const waiting = botState.waitingFor;
-
-
-    /* -------------------------------------------------------
-       تحية أثناء الـ Flow
-    ------------------------------------------------------- */
-    if(detectTopic(raw) === 'greeting'){
-
-      return {
-        type: 'answer',
-        text:
-          greetingReply(raw) +
-          '\n\n' +
-          getReminderText()
-      };
-    }
-
-
-    /* -------------------------------------------------------
-       تغيير الموضوع تماماً
-    ------------------------------------------------------- */
-    const newTopic = detectTopic(raw);
-
-    if(
-      newTopic !== 'general' &&
-      newTopic !== 'greeting' &&
-      newTopic !== botState.topic
-    ){
-
-      resetBotState(newTopic);
-
-      return await handleSingleMessage(raw);
-    }
-
-
-    /* =======================================================
-       استكمال Action Parameter
-    ======================================================= */
-    if(
-      waiting === 'action_param' &&
-      botState.pendingAction
-    ){
-
-      const actionItem =
-        botState.pendingAction;
-
-      const missing =
-        botState.pendingParams.filter(
-          p =>
-            !validateParam(
-              botState.collectedParams[p.name],
-              p.type
-            )
-        );
-
-
-      /* محاولة استخراج القيمة الجديدة */
-      for(const p of missing){
-
-        const v =
-          extractParamValue(
-            raw,
-            p.type,
-            actionItem.action_name
-          );
-
-        if(
-          v != null &&
-          validateParam(v, p.type)
-        ){
-
-          botState.collectedParams[p.name] = v;
-        }
-      }
-
-
-      /* معرفة البيانات التي ما زالت ناقصة */
-      const stillMissing =
-        botState.pendingParams.filter(
-          p =>
-            !validateParam(
-              botState.collectedParams[p.name],
-              p.type
-            )
-        );
-
-
-      if(stillMissing.length){
-
-        const paramNames =
-          stillMissing
-            .map(p => paramTypeLabel(p.type))
-            .join('، ');
-
-        return {
-          type: 'clarify',
-          text:
-            actionItem.answer
-              ? actionItem.answer
-              : 'أكيد، ابعتلي ' +
-                paramNames +
-                '.',
-          action: actionItem.action_name,
-          missing: stillMissing
-        };
-      }
-
-
-      /* كل البيانات وصلت */
-      botState.waitingFor = null;
-
-      return await executeAction(
-        actionItem,
-        botState.collectedParams
-      );
-    }
-
-
-    /* =======================================================
-       تأكيد Action خطير
-    ======================================================= */
-    if(waiting === 'confirm_dangerous'){
-
-      const t = normalize(raw);
-
-      if(
-        /نعم|أيوة|ايوه|اه|أه|yes|ok|موافق|تمام/
-          .test(t)
-      ){
-
-        botState.confirmedDangerous = true;
-        botState.waitingFor = null;
-
-        return await executeAction(
-          botState.pendingAction,
-          botState.collectedParams
-        );
-      }
-
-
-      /* أي رد غير موافقة = إلغاء */
-      resetBotState();
-
-      return {
-        type: 'answer',
-        text: 'تم الإلغاء ✅'
-      };
-    }
-
-
-    /* =======================================================
-       استكمال طلب رقم الطلب
-    ======================================================= */
-    if(waiting === 'order_number'){
-
-      const t = arabicDigits(raw);
-
-      if(/\d{3,10}/.test(t)){
-
-        botState.waitingFor = null;
-
-        return await handleOrderQuery(raw);
-      }
-
-      return {
-        type: 'clarify',
-        text:
-          'مش فاهم رقم الطلب 😅\n' +
-          'ابعتلي رقم الطلب بالأرقام ' +
-          '(مثلاً 1001#)'
-      };
-    }
-
-
-    /* =======================================================
-       مستلم الهدية
-    ======================================================= */
-    if(waiting === 'gift_recipient'){
-
-      const rec =
-        intent.recipient ||
-        matchFirst(
-          RECIPIENT_MAP,
-          normalize(raw)
-        ) ||
-        extractRecipient(raw);
-
-      if(rec){
-
-        botState.giftData.recipient = rec;
-        botState.waitingFor = 'gift_occasion';
-
-        return {
-          type: 'clarify',
-          text:
-            'تمام ❤️ لـ' +
-            rec +
-            '، إيه المناسبة؟ ' +
-            '(عيد ميلاد، تخرج، زواج...)'
-        };
-      }
-
-      return {
-        type: 'clarify',
-        text:
-          'الهديه لمين؟ ' +
-          '(أخت، أم، زوجة، صديق...)'
-      };
-    }
-
-
-    /* =======================================================
-       مناسبة الهدية
-    ======================================================= */
-    if(waiting === 'gift_occasion'){
-
-      const occ =
-        intent.occasion ||
-        matchFirst(
-          OCCASION_MAP,
-          normalize(raw)
-        ) ||
-        extractOccasion(raw);
-
-      if(occ){
-
-        botState.giftData.occasion = occ;
-        botState.waitingFor = 'gift_budget';
-
-        return {
-          type: 'clarify',
-          text:
-            'جميل 🎁 الميزانية في حدود كام درهم؟'
-        };
-      }
-
-      return {
-        type: 'clarify',
-        text:
-          'إيه المناسبة؟ ' +
-          '(عيد ميلاد، تخرج، زواج...)'
-      };
-    }
-
-
-    /* =======================================================
-       ميزانية الهدية
-    ======================================================= */
-    if(waiting === 'gift_budget'){
-
-      const budget =
-        parseBudget(raw, true);
-
-      if(budget != null){
-
-        botState.giftData.budget = budget;
-        botState.waitingFor = null;
-
-        const fullCtx = {
-          ...ctx,
-          ...botState.giftData,
-          budget
-        };
-
-        const allText = [
-          raw,
-          ...conversation
-            .filter(x => x.role === 'user')
-            .slice(-5)
-            .map(x => x.text)
-        ].join(' ');
-
-        const products =
-          await recommendProducts(
-            allText,
-            fullCtx
-          );
-
-        if(products && products.length){
-
-          return {
-            type: 'products',
-            text:
-              '🎁 دي اقتراحاتي لـ' +
-              fullCtx.recipient +
-              ' بمناسبة ' +
-              fullCtx.occasion +
-              ' ' +
-              '(ميزانية ~' +
-              budget +
-              ' درهم):',
-            products
-          };
-        }
-
-        return {
-          type: 'fallback',
-          text:
-            'فهمت طلبك ' +
-            contextPrompt(fullCtx) +
-            '، لكن مش لاقي منتج مناسب حاليًا.'
-        };
-      }
-
-      return {
-        type: 'clarify',
-        text:
-          'الميزانية في حدود كام درهم؟'
-      };
-    }
-  }
-
-
-  /* =========================================================
-     معالجة الرسالة بشكل طبيعي
-  ========================================================= */
-  return await handleSingleMessage(raw);
-}
-
-
-/* =========================================================
-   تذكير بحالة الـ Flow
-========================================================= */
-function getReminderText(){
-
-  if(botState.waitingFor === 'action_param'){
-    return (
-      '⚡ مازلت مستنّي بيانات للإجراء ' +
-      botState.currentAction +
-      '.'
-    );
-  }
-
-  if(botState.waitingFor === 'confirm_dangerous'){
-    return '⚠️ مازلت مستنّي تأكيد الإجراء.';
-  }
-
-  if(botState.waitingFor === 'order_number'){
-    return '📦 مازلت مستنّي رقم الطلب.';
-  }
-
-  if(botState.waitingFor === 'gift_recipient'){
-    return '🎁 مازلت مستنّي تعرفني الهدية لمين.';
-  }
-
-  if(botState.waitingFor === 'gift_occasion'){
-    return '🎁 مازلت مستنّي تعرفني المناسبة.';
-  }
-
-  if(botState.waitingFor === 'gift_budget'){
-    return '🎁 مازلت مستنّي تعرفني الميزانية.';
-  }
-
-  return '';
-}
-
-
-/* =========================================================
-   Wrapper آمن لمعالجة الرسائل
-========================================================= */
 async function processBotMessage(msg){
-
   try{
+    const res = await processBotMessageCore(msg);
 
-    const res =
-      await processBotMessageCore(msg);
-
-    return (
-      res || {
-        type: 'fallback',
-        text:
-          settings.fallback +
-          '\n' +
-          settings.human
-      }
-    );
+    return res || {
+      type: 'fallback',
+      text: settings.fallback + '\n' + settings.human
+    };
 
   }catch(e){
 
     console.error('Bot error:', e);
 
-    await persistUnanswered(
-      String(msg || '')
-    );
+    try{
+      await persistUnanswered(String(msg || ''));
+    }catch(saveError){
+      console.error('persistUnanswered error:', saveError);
+    }
 
     return {
       type: 'fallback',
-      text:
-        settings.fallback +
-        '\n' +
-        settings.human
+      text: settings.fallback + '\n' + settings.human
     };
   }
 }
@@ -2238,7 +1210,6 @@ async function processBotMessage(msg){
    زيادة استخدام سؤال من قاعدة المعرفة
 ========================================================= */
 async function incrementUsage(item){
-
   try{
 
     await window.sbFetch(
@@ -2252,17 +1223,18 @@ async function incrementUsage(item){
       }
     );
 
-    const x =
-      questions.find(
-        a => Number(a.id) === Number(item.id)
-      );
+    const x = questions.find(
+      a => Number(a.id) === Number(item.id)
+    );
 
     if(x){
       x.usage_count =
         (Number(x.usage_count) || 0) + 1;
     }
 
-  }catch(e){}
+  }catch(e){
+    console.error('incrementUsage error:', e);
+  }
 }
 
 
@@ -2271,26 +1243,37 @@ async function incrementUsage(item){
 ========================================================= */
 function renderRanking(arr){
 
+  if(!Array.isArray(arr)){
+    arr = [];
+  }
+
   $('ranking').innerHTML =
-    arr.slice(0,5)
-      .map(x =>
+    arr.slice(0,5).map(x => {
+
+      return (
         '<div class="item">' +
           '<b>' +
-            esc(x.question) +
+            esc(x.question || '') +
           '</b>' +
+
           '<div class="meta">' +
             'درجة: ' +
-            x.score +
+            (x.score ?? 0) +
+
             ' • تشابه: ' +
             Math.round(
               (x.similarity || 0) * 100
             ) +
+
             '% • استخدام: ' +
             (Number(x.usage_count) || 0) +
+
           '</div>' +
         '</div>'
-      )
-      .join('') ||
+      );
+
+    }).join('') ||
+
     '<div class="hint">لا توجد مطابقة</div>';
 }
 
@@ -2301,8 +1284,8 @@ function renderRanking(arr){
 function addMsg(role,text){
 
   conversation.push({
-    role,
-    text
+    role: role,
+    text: text
   });
 
   const cls =
@@ -2314,11 +1297,17 @@ function addMsg(role,text){
 
   $('chat').insertAdjacentHTML(
     'beforeend',
+
     '<div class="msg ' +
-    cls +
+      cls +
     '">' +
-    (role === 'user' ? '👤 ' : '🤖 ') +
-    esc(text) +
+
+      (role === 'user'
+        ? '👤 '
+        : '🤖 ') +
+
+      esc(text) +
+
     '</div>'
   );
 
@@ -2328,7 +1317,7 @@ function addMsg(role,text){
 
 
 /* =========================================================
-   اختبار البوت
+   اختبار البوت الرئيسي
 ========================================================= */
 async function testBot(){
 
@@ -2348,7 +1337,8 @@ async function testBot(){
     document.createElement('div');
 
   holder.className = 'msg bot';
-  holder.textContent = '🤖 جاري التفكير...';
+  holder.textContent =
+    '🤖 جاري التفكير...';
 
   $('chat').appendChild(holder);
 
@@ -2371,7 +1361,9 @@ async function testBot(){
         text: settings.fallback
       });
 
-    }else if(r.type === 'products'){
+    }
+
+    else if(r.type === 'products'){
 
       holder.remove();
 
@@ -2383,8 +1375,9 @@ async function testBot(){
       el.innerHTML =
         '🤖 ' +
         esc(r.text) +
+
         '<div class="product-grid" style="margin-top:8px">' +
-        productCards(r.products) +
+          productCards(r.products || []) +
         '</div>';
 
       $('chat').appendChild(el);
@@ -2394,7 +1387,9 @@ async function testBot(){
         text: r.text
       });
 
-    }else if(r.type === 'clarify'){
+    }
+
+    else if(r.type === 'clarify'){
 
       holder.textContent =
         '🤖 ' +
@@ -2405,7 +1400,9 @@ async function testBot(){
         text: r.text
       });
 
-    }else{
+    }
+
+    else{
 
       holder.textContent =
         '🤖 ' +
@@ -2418,6 +1415,8 @@ async function testBot(){
     }
 
   }catch(e){
+
+    console.error('testBot error:', e);
 
     holder.textContent =
       '🤖 حصل خطأ: ' +
@@ -2444,8 +1443,9 @@ function resetChat(){
   resetBotState();
 
   $('chat').innerHTML =
-    '<div class="msg system">🤖 ' +
-    esc(settings.welcome) +
+    '<div class="msg system">' +
+      '🤖 ' +
+      esc(settings.welcome) +
     '</div>';
 
   $('intentBox').textContent =
@@ -2456,12 +1456,15 @@ function resetChat(){
 
 
 /* =========================================================
-   اختبار سريع
+   الاختبار السريع
 ========================================================= */
 async function quickTest(){
 
+  const input =
+    $('quickMsg');
+
   const m =
-    $('quickMsg').value.trim();
+    input.value.trim();
 
   if(!m) return;
 
@@ -2477,72 +1480,111 @@ async function quickTest(){
 
       $('quickResult').innerHTML =
         '<div class="item error">' +
-        '⚠️ لم يتم العثور على رد.' +
+          '⚠️ لم يتم العثور على رد.' +
         '</div>';
 
       return;
     }
 
+
+    /* -----------------------------------------
+       إجابة عادية
+    ----------------------------------------- */
     if(r.type === 'answer'){
 
       const matchInfo =
         r.match
-          ? '<div class="meta">✅ مطابقة: ' +
-            esc(r.match.question) +
-            ' (درجة ' +
-            r.match.score +
-            ')</div>'
+          ? (
+              '<div class="meta">' +
+                '✅ مطابقة: ' +
+                esc(r.match.question) +
+                ' (درجة ' +
+                r.match.score +
+                ')' +
+              '</div>'
+            )
           : '';
 
       const actionInfo =
         r.action
-          ? '<div class="meta">⚡ Action: ' +
-            esc(r.action) +
-            '</div>'
+          ? (
+              '<div class="meta">' +
+                '⚡ Action: ' +
+                esc(r.action) +
+              '</div>'
+            )
           : '';
 
       $('quickResult').innerHTML =
         '<div class="item">' +
+
           '<b>🤖 ' +
-          esc(r.text) +
+            esc(r.text) +
           '</b>' +
+
           matchInfo +
           actionInfo +
-        '</div>';
 
-    }else if(r.type === 'products'){
+        '</div>';
+    }
+
+
+    /* -----------------------------------------
+       منتجات
+    ----------------------------------------- */
+    else if(r.type === 'products'){
 
       $('quickResult').innerHTML =
         '<div class="item">' +
-          '<b>🤖 ' +
-          esc(r.text) +
-          '</b>' +
-          '<div class="product-grid" style="margin-top:8px">' +
-            productCards(r.products) +
-          '</div>' +
-        '</div>';
 
-    }else if(r.type === 'clarify'){
+          '<b>🤖 ' +
+            esc(r.text) +
+          '</b>' +
+
+          '<div class="product-grid" style="margin-top:8px">' +
+            productCards(r.products || []) +
+          '</div>' +
+
+        '</div>';
+    }
+
+
+    /* -----------------------------------------
+       سؤال توضيحي
+    ----------------------------------------- */
+    else if(r.type === 'clarify'){
 
       const actionInfo =
         r.action
-          ? '<div class="meta">⚡ Action: ' +
-            esc(r.action) +
-            '</div>'
+          ? (
+              '<div class="meta">' +
+                '⚡ Action: ' +
+                esc(r.action) +
+              '</div>'
+            )
           : '';
 
       $('quickResult').innerHTML =
         '<div class="item" style="border-color:var(--gold)">' +
+
           '<b>🤖 ' +
-          esc(r.text) +
+            esc(r.text) +
           '</b>' +
+
           '<div class="meta">' +
             'البوت بيسأل سؤال توضيحي...' +
           '</div>' +
-          actionInfo +
-        '</div>';
 
-    }else{
+          actionInfo +
+
+        '</div>';
+    }
+
+
+    /* -----------------------------------------
+       Fallback / بدون إجابة
+    ----------------------------------------- */
+    else{
 
       const saved =
         readLocal(
@@ -2556,9 +1598,11 @@ async function quickTest(){
 
       $('quickResult').innerHTML =
         '<div class="item">' +
+
           '<b>⚠️ ' +
-          esc(r.text) +
+            esc(r.text) +
           '</b>' +
+
           '<div class="meta">' +
             (
               saved
@@ -2566,18 +1610,25 @@ async function quickTest(){
                 : '⚠️ لم يتم الحفظ'
             ) +
           '</div>' +
-          '<button class="btn-gold" style="margin-top:8px" onclick="tab(\'unanswered\')">' +
+
+          '<button ' +
+            'class="btn-gold" ' +
+            'style="margin-top:8px" ' +
+            'onclick="tab(\'unanswered\')">' +
             'فتح الأسئلة' +
           '</button>' +
+
         '</div>';
     }
 
   }catch(e){
 
+    console.error('quickTest error:', e);
+
     $('quickResult').innerHTML =
       '<div class="item error">' +
-      '❌ خطأ: ' +
-      esc(e.message) +
+        '❌ خطأ: ' +
+        esc(e.message) +
       '</div>';
   }
 }
@@ -2587,40 +1638,71 @@ async function quickTest(){
    الإعدادات و Meta
 ========================================================= */
 
+/*
+   مهم:
+   سيب هنا كل كود الإعدادات الأصلي الموجود عندك.
+   لا تمسحه ولا تستبدله بدوال البوت.
+*/
+
 
 /* =========================================================
-   تشغيل
+   تشغيل البوت
 ========================================================= */
 
-$('testMessage').addEventListener(
-  'keydown',
-  e => {
-    if(e.key === 'Enter'){
-      testBot();
-    }
-  }
-);
+const testMessageEl =
+  $('testMessage');
 
-$('quickMsg').addEventListener(
-  'keydown',
-  e => {
-    if(e.key === 'Enter'){
-      quickTest();
+if(testMessageEl){
+
+  testMessageEl.addEventListener(
+    'keydown',
+    e => {
+
+      if(e.key === 'Enter'){
+        testBot();
+      }
+
     }
-  }
-);
+  );
+}
+
+
+const quickMsgEl =
+  $('quickMsg');
+
+if(quickMsgEl){
+
+  quickMsgEl.addEventListener(
+    'keydown',
+    e => {
+
+      if(e.key === 'Enter'){
+        quickTest();
+      }
+
+    }
+  );
+}
+
+
+/* =========================================================
+   تحميل الإعدادات وتشغيل البيانات
+========================================================= */
 
 loadSettings();
+
 resetChat();
 
-loadAll().catch(() => {});
+loadAll().catch(e => {
+  console.error('loadAll error:', e);
+});
+
 
 const savedTab =
   sessionStorage.getItem('bot_tab');
 
 if(savedTab){
   tab(savedTab);
-}
-</script>
+}</script>
 </body>
 </html>
