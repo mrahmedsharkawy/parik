@@ -177,7 +177,6 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:9px;
     <label class="toggle"><input id="autoUnanswered" type="checkbox" checked> حفظ الأسئلة غير المعروفة تلقائيًا</label>
     <label class="toggle"><input id="autoProducts" type="checkbox" checked> اقتراح المنتجات تلقائيًا عند عدم وجود إجابة</label>
     <label class="toggle"><input id="conversationMode" type="checkbox" checked> تفعيل فهم سياق المحادثة</label>
-    <label class="toggle"><input id="useLLM" type="checkbox" checked> تفعيل LLM لفهم المعنى والأسئلة غير المطابقة</label>
     <button class="btn-gold" onclick="saveSettings()">💾 حفظ الإعدادات</button>
     <div id="settingsMsg" style="margin-top:8px"></div>
   </div>
@@ -247,8 +246,7 @@ let settings={
   human:'تمام، هحوّلك لموظف من فريق بريق 👤',
   autoUnanswered:true,
   autoProducts:true,
-  conversationMode:true,
-  useLLM:true
+  conversationMode:true
 };
 
 function toast(m){const t=$('toast');if(!t)return;t.textContent=m;t.style.opacity=1;clearTimeout(window.__toast);window.__toast=setTimeout(()=>t.style.opacity=0,2300)}
@@ -1035,41 +1033,6 @@ async function handleGiftQuery(raw,ctx){
 }
 
 // ===== الرد على السؤال الواحد =====
-
-/* =========================================================
-   LLM — فهم المعنى فقط، بدون اختراع إجابات
-   المفتاح السري موجود في Supabase Edge Function bot-llm
-========================================================= */
-async function callBotLLM(message, context){
-  const token=await getValidAdminToken();
-  if(!token) return null;
-  const ranked=rank(message).slice(0,30).map(x=>({
-    id:x.id,question:x.question,answer:x.answer,category:x.category,keywords:kws(x.keywords),score:x.score
-  }));
-  try{
-    const res=await fetch(SB+'/functions/v1/bot-llm',{
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'apikey':ANON_KEY,
-        'Authorization':'Bearer '+token
-      },
-      body:JSON.stringify({
-        message,
-        context:context||{},
-        conversation:conversation.slice(-10),
-        knowledge:ranked
-      })
-    });
-    const data=await res.json().catch(()=>({}));
-    if(!res.ok) throw new Error(data.error||('LLM HTTP '+res.status));
-    return data;
-  }catch(e){
-    console.warn('bot-llm:',e.message);
-    return null;
-  }
-}
-
 async function handleSingleMessage(raw){
   const topic=detectTopic(raw);
 
@@ -1109,23 +1072,6 @@ async function handleSingleMessage(raw){
   if(settings.autoProducts!==false && isProductIntent){
     const products=await recommendProducts(raw,settings.conversationMode?mergeContext(intent):intent);
     if(products.length)return {type:'products',text:'لقيتلك أقرب منتجات مناسبة لطلبك 👇',products};
-  }
-
-  // مفيش تطابق قوي: نستعين بالـ LLM لفهم المعنى، لكن الرد النهائي يظل مقيدًا بقاعدة المعرفة.
-  if(settings.useLLM!==false){
-    const llm=await callBotLLM(raw,ctx);
-    if(llm){
-      if(llm.action==='answer' && llm.reply){
-        const item=questions.find(x=>Number(x.id)===Number(llm.knowledge_id));
-        if(item && String(item.answer||'').trim()){
-          await incrementUsage(item);
-          return {type:'answer',text:item.answer,match:{...item,score:llm.confidence*100},llm:true};
-        }
-      }
-      if(llm.action==='chat' && llm.reply) return {type:'answer',text:llm.reply,llm:true};
-      if(llm.action==='clarify' && llm.reply) return {type:'clarify',text:llm.reply,llm:true};
-      if(llm.action==='human') return {type:'answer',text:settings.human,llm:true};
-    }
   }
 
   // مفيش إجابة مؤكدة: لا نخترع. نسجل السؤال ثم نطلب توضيح/موظف.
@@ -1336,14 +1282,12 @@ function loadSettings(){
   settings={...settings,...readLocal('bariq_bot_settings',{})};
   $('minScore').value=settings.minScore;$('welcome').value=settings.welcome;$('fallback').value=settings.fallback;$('human').value=settings.human;
   $('autoUnanswered').checked=settings.autoUnanswered!==false;$('autoProducts').checked=settings.autoProducts!==false;$('conversationMode').checked=settings.conversationMode!==false;
-  if($('useLLM'))$('useLLM').checked=settings.useLLM!==false;
 }
 function saveSettings(){
   settings={
     minScore:Number($('minScore').value)||4,welcome:$('welcome').value||'أهلًا بيك في بريق 🎁 إزاي أقدر أساعدك؟',
     fallback:$('fallback').value||'مش لاقي إجابة مؤكدة للسؤال ده حاليًا 🤔',human:$('human').value||'تمام، هحوّلك لموظف من فريق بريق 👤',
-    autoUnanswered:$('autoUnanswered').checked,autoProducts:$('autoProducts').checked,conversationMode:$('conversationMode').checked,
-    useLLM:$('useLLM')?$('useLLM').checked:true
+    autoUnanswered:$('autoUnanswered').checked,autoProducts:$('autoProducts').checked,conversationMode:$('conversationMode').checked
   };
   saveLocal('bariq_bot_settings',settings);$('settingsMsg').textContent='✅ تم حفظ إعدادات البوت';$('settingsMsg').className='success';resetChat();
 }
