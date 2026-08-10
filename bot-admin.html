@@ -742,7 +742,7 @@ function parseBudget(text,allowBare=false){
 /* قاموس موسّع: مستلم / مناسبة / ستايل / اهتمام — كل مصفوفة regex واحد يغطي أكبر عدد صياغات */
 const RECIPIENT_MAP=[
   [/اخت[يهى]?|اخوات/,'أخت'],
-  [/زوج[تيهى]?|مرات[يهى]?|حبيب[تيهى]?|خطيب[تيهى]?|عريس|عروس[هة]?|شريك[تيهى]?/,'زوجة/حبيبة'],
+  [/زوج[تيهى]?|زوجتي|زوجتى|مرات[يهى]?|مراتي|مراتى|حبيب[تيهى]?|خطيب[تيهى]?|عريس|عروس[هة]?|شريك[تيهى]?/,'زوجة/حبيبة'],
   [/ام[يى]|والدت[يهى]|ماما|اماه/,'الأم'],
   [/اب[وي]ي?ا?|والد[يهى]|بابا/,'الأب'],
   [/جد[يهى]|جدو|سيدو/,'جد'],
@@ -760,7 +760,7 @@ const OCCASION_MAP=[
   [/زواج|جواز|عرس|فرح/,'زواج'],
   [/تخرج|جامع[هة]/,'تخرج'],
   [/ترقي[هة]/,'ترقية'],
-  [/مولود|بيبي|استقبال مولود/,'مولود جديد'],
+  [/مولود|مواليد|بيبي|بيبى|كام\s*سنه|كم\s*سنه|سنه|سنين|استقبال مولود/,'مولود جديد'],
   [/فالنتين|حب|رومانسي/,'رومانسي'],
   [/رمضان|فطار/,'رمضان'],
   [/عيد الفطر|عيد الاضحي/,'عيد'],
@@ -824,6 +824,10 @@ function contextPrompt(c){
   if(c.budget!=null)p.push('ميزانية '+c.budget+' درهم');
   if(c.style)p.push(c.style);
   return p.join(' • ');
+}
+function isShortFlowAnswer(text){
+  const t=normalize(text);
+  return t.split(' ').filter(Boolean).length<=4;
 }
 function corporateIntent(text){
   return /شركة|شركات|مؤسسة|موظف|موظفين|عملاء|عميل|عمل|مكتب|فعالية|معرض|افتتاح|اعلاني|إعلاني|براند|لوجو|شعار|corporate|company|business|employees|clients|event|promotional|logo|brand/.test(normalize(text));
@@ -1407,6 +1411,11 @@ async function processBotMessageCore(msg){
   const raw=String(msg||'').trim();
   if(!raw) return {type:'fallback',text:settings.fallback};
 
+  if(/^\s*#?\s*\d{3,10}\s*$/.test(arabicDigits(raw)) && !botState.waitingFor){
+    botState.waitingFor='order_number';
+    return {type:'clarify',text:'هل ده رقم طلب؟ لو نعم ابعته تاني أو اكتبه بالشكل ده: #'+extractOrderRef(raw)};
+  }
+
   const intent=extractIntent(raw);
   const ctx=settings.conversationMode?mergeContext(intent):intent;
   $('intentBox').innerHTML='<b>السياق:</b> '+esc(contextPrompt(ctx)||'عام')+' | <b>الحالة:</b> '+esc(botState.waitingFor||'idle');
@@ -1448,6 +1457,43 @@ async function processBotMessageCore(msg){
       return {type:'answer',text:actionReply(data.action,raw,data)};
     }
 
+    // إجابات قصيرة داخل مسار الهدية لازم تكمل الـ flow قبل أي بحث عام.
+    if(waiting==='gift_recipient'){
+      const rec=intent.recipient || matchFirst(RECIPIENT_MAP,normalize(raw));
+      if(rec || isShortFlowAnswer(raw)){
+        botState.giftData.recipient=rec||raw;
+        botState.waitingFor='gift_occasion';
+        return {type:'clarify',text:'تمام ❤️ لـ'+(rec||raw)+'، إيه المناسبة؟ عيد ميلاد، تخرج، مولود، عيد ولا مناسبة تانية؟'};
+      }
+      return {type:'clarify',text:'الهدية لمين؟ (زوجة، أخت، أم، صديق، طفل...)'};
+    }
+
+    if(waiting==='gift_occasion'){
+      const occ=intent.occasion || matchFirst(OCCASION_MAP,normalize(raw));
+      if(occ || isShortFlowAnswer(raw)){
+        botState.giftData.occasion=occ||raw;
+        botState.waitingFor='gift_budget';
+        return {type:'clarify',text:'جميل 🎁 الميزانية في حدود كام درهم؟'};
+      }
+      return {type:'clarify',text:'إيه المناسبة؟ (عيد ميلاد، تخرج، مولود، عيد...)'};
+    }
+
+    if(waiting==='gift_budget'){
+      const budget=parseBudget(raw,true);
+      if(budget!=null){
+        botState.giftData.budget=budget;
+        botState.waitingFor=null;
+        const fullCtx={...ctx,...botState.giftData};
+        const allText=[raw,...conversation.filter(x=>x.role==='user').slice(-5).map(x=>x.text)].join(' ');
+        const products=await recommendProducts(allText,fullCtx);
+        if(products.length){
+          return {type:'products',text:'🎁 دي اقتراحاتي لـ'+fullCtx.recipient+' بمناسبة '+fullCtx.occasion+' (ميزانية ~'+budget+' درهم):',products};
+        }
+        return {type:'fallback',text:'فهمت طلبك '+contextPrompt(fullCtx)+'، لكن مش لاقي منتج مناسب حاليًا. ممكن نوسّع الميزانية أو نغيّر نوع الهدية؟'};
+      }
+      return {type:'clarify',text:'الميزانية في حدود كام درهم؟'};
+    }
+
     // ⭐ لو العميل سأل سؤال عام واضح في قاعدة المعرفة، رد عليه الأول
     const quickMatch=findBestAnswer(raw);
     if(quickMatch.found && quickMatch.item.score>=(Number(settings.minScore)||6)+3){
@@ -1468,42 +1514,6 @@ async function processBotMessageCore(msg){
     }
 
     // استكمال الflow
-
-    if(waiting==='gift_recipient'){
-      const rec=intent.recipient || matchFirst(RECIPIENT_MAP,normalize(raw));
-      if(rec){
-        botState.giftData.recipient=rec;
-        botState.waitingFor='gift_occasion';
-        return {type:'clarify',text:'تمام ❤️ لـ'+rec+'، إيه المناسبة؟ (عيد ميلاد، تخرج، زواج...)'};
-      }
-      return {type:'clarify',text:'الهديه لمين؟ (أخت، أم، زوجة، صديق...)'};
-    }
-
-    if(waiting==='gift_occasion'){
-      const occ=intent.occasion || matchFirst(OCCASION_MAP,normalize(raw));
-      if(occ){
-        botState.giftData.occasion=occ;
-        botState.waitingFor='gift_budget';
-        return {type:'clarify',text:'جميل 🎁 الميزانية في حدود كام درهم؟'};
-      }
-      return {type:'clarify',text:'إيه المناسبة؟ (عيد ميلاد، تخرج، زواج...)'};
-    }
-
-    if(waiting==='gift_budget'){
-      const budget=parseBudget(raw,true);
-      if(budget!=null){
-        botState.giftData.budget=budget;
-        botState.waitingFor=null;
-        const fullCtx={...ctx,...botState.giftData};
-        const allText=[raw,...conversation.filter(x=>x.role==='user').slice(-5).map(x=>x.text)].join(' ');
-        const products=await recommendProducts(allText,fullCtx);
-        if(products.length){
-          return {type:'products',text:'🎁 دي اقتراحاتي لـ'+fullCtx.recipient+' بمناسبة '+fullCtx.occasion+' (ميزانية ~'+budget+' درهم):',products};
-        }
-        return {type:'fallback',text:'فهمت طلبك '+contextPrompt(fullCtx)+'، لكن مش لاقي منتج مناسب حاليًا.'};
-      }
-      return {type:'clarify',text:'الميزانية في حدود كام درهم؟'};
-    }
   }
 
   return await handleSingleMessage(raw, ctx);
