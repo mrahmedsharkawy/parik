@@ -3,26 +3,33 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="theme-color" content="#152546">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="مساعد بريق">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/assets/icon-96.png">
 <title>مساعد بريق — إدارة البوت</title>
 <script src="/java/supabase.js"></script>
 <style>
 :root{--navy:#152546;--navy2:#0d1c38;--gold:#d4af37;--bg:#f4f6fb;--line:#e2e7ef;--muted:#748097;--ok:#18894a;--danger:#c0392b;--warn:#b7791f}
 *{box-sizing:border-box;font-family:"Segoe UI","Cairo",Tahoma,Arial,sans-serif}
-body{margin:0;background:var(--bg);color:#202638}button,input,textarea,select{font:inherit}
+html{min-height:100%;background:var(--navy)}body{margin:0;min-height:100dvh;background:radial-gradient(circle at top,#233d70 0,#f4f6fb 34%);color:#202638}button,input,textarea,select{font:inherit}
 button{cursor:pointer;border:0;border-radius:10px;padding:10px 14px;font-weight:800}
 button:disabled{opacity:.55;cursor:not-allowed}
 .btn-gold{background:var(--gold);color:var(--navy)}.btn-navy{background:var(--navy);color:#fff}.btn-light{background:#fff;border:1px solid var(--line);color:var(--navy)}.btn-danger{background:#fdecec;color:var(--danger);border:1px solid #f1caca}.btn-ok{background:#e5f7eb;color:var(--ok)}
-.top{position:sticky;top:0;z-index:20;background:var(--navy);color:#fff;padding:13px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;box-shadow:0 2px 10px #0002}
-.top h1{font-size:1.08rem;margin:0}.actions,.tools{display:flex;gap:7px;flex-wrap:wrap}.wrap{max-width:1450px;margin:auto;padding:16px}
-.tabs{display:flex;gap:6px;overflow:auto;padding-bottom:12px}.tab{white-space:nowrap;background:#fff;border:1px solid var(--line);padding:10px 14px;border-radius:10px;color:#667085}.tab.active{background:var(--navy);color:#fff}
+.top{position:sticky;top:0;z-index:20;background:linear-gradient(135deg,var(--navy),#244a83);color:#fff;padding:calc(12px + env(safe-area-inset-top)) 18px 13px;display:flex;justify-content:center;align-items:center;gap:10px;box-shadow:0 8px 28px rgba(21,37,70,.22)}
+.top h1{font-size:1.04rem;margin:0;display:flex;align-items:center;gap:9px}.top h1:before{content:'';width:34px;height:34px;background:#fff url('/assets/logo.png') center/contain no-repeat;border-radius:10px;border:1px solid rgba(212,175,55,.55)}.actions,.tools{display:flex;gap:7px;flex-wrap:wrap}.wrap{max-width:1450px;margin:auto;padding:16px}
+.tabs{display:flex;gap:7px;overflow:auto;padding:2px 0 12px;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}.tab{white-space:nowrap;background:rgba(255,255,255,.92);border:1px solid rgba(226,231,239,.95);padding:10px 14px;border-radius:999px;color:#667085;box-shadow:0 5px 18px rgba(21,37,70,.05)}.tab.active{background:var(--navy);color:#fff;border-color:var(--navy)}
 .panel{display:none}.panel.active{display:block}.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:14px}
 .stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px}.stat b{font-size:1.45rem;color:var(--navy);display:block}.stat span{font-size:.78rem;color:var(--muted)}
-.grid{display:grid;grid-template-columns:430px 1fr;gap:15px}.card{background:#fff;border:1px solid var(--line);border-radius:15px;padding:17px;margin-bottom:15px}.card h2{font-size:1rem;color:var(--navy);margin:0 0 13px}
+.grid{display:grid;grid-template-columns:430px 1fr;gap:15px}.card{background:rgba(255,255,255,.96);border:1px solid rgba(226,231,239,.95);border-radius:15px;padding:17px;margin-bottom:15px;box-shadow:0 12px 34px rgba(21,37,70,.07)}.card h2{font-size:1rem;color:var(--navy);margin:0 0 13px}
 label{display:block;font-weight:800;font-size:.82rem;margin:11px 0 5px}
 input,textarea,select{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;background:#fbfcfe;outline:0}input:focus,textarea:focus,select:focus{border-color:var(--gold);background:#fff}textarea{min-height:100px;resize:vertical}
 .row{display:flex;gap:8px}.row>*{flex:1}.hint{background:#f2f5fa;border-radius:10px;padding:10px;font-size:.78rem;color:#657087;line-height:1.7}.success{color:var(--ok)}.error{color:var(--danger)}
 .searchbar{display:grid;grid-template-columns:1fr 170px 150px;gap:8px;margin-bottom:12px}.item{border:1px solid var(--line);border-radius:12px;padding:13px;margin-bottom:9px}.item.off{opacity:.55}.q{font-weight:900;color:var(--navy);font-size:.95rem}.a{margin-top:6px;line-height:1.7;white-space:pre-wrap}.meta{font-size:.72rem;color:var(--muted);margin-top:8px}.chip{display:inline-block;padding:3px 8px;background:#eef1f7;border-radius:20px;margin:2px}.chip.gold{background:#fff6d7;color:#8b6c08}.chip.ok{background:#e5f7eb;color:var(--ok)}.chip.bad{background:#fdecec;color:var(--danger)}
-.chat{height:440px;overflow:auto;background:#f8f9fc;border:1px solid var(--line);border-radius:12px;padding:12px}.msg{padding:10px;border-radius:10px;margin-bottom:8px;white-space:pre-wrap;line-height:1.65}.me{background:#e8edf6}.bot{background:#fff6d7;border:1px solid #eadca0}.system{background:#eef5ff;border:1px solid #d5e3fa}
+.chat{height:min(62dvh,560px);overflow:auto;background:linear-gradient(180deg,#f7f9fd,#eef3fb);border:1px solid var(--line);border-radius:18px;padding:14px;scroll-behavior:smooth}.msg{position:relative;display:flex;gap:9px;align-items:flex-start;margin-bottom:10px;white-space:pre-wrap;line-height:1.7}.msg .avatar{width:30px;height:30px;flex:0 0 30px;border-radius:50%;display:grid;place-items:center;font-size:.86rem;font-weight:900}.msg .bubble{max-width:min(78%,720px);padding:10px 12px;border-radius:16px;box-shadow:0 5px 18px rgba(21,37,70,.06)}.me{justify-content:flex-start;direction:ltr}.me .avatar{background:#152546;color:#fff}.me .bubble{background:#e8edf6;color:#17213a;border-bottom-left-radius:6px;direction:rtl;text-align:right}.bot .avatar,.system .avatar{background:#fff url('/assets/logo.png') center/80% no-repeat;border:1px solid #eadca0}.bot .bubble{background:#fff6d7;border:1px solid #eadca0;color:#3f3000;border-bottom-right-radius:6px}.system .bubble{background:#eef5ff;border:1px solid #d5e3fa;color:#29405f}
+.bot-profile{display:flex;align-items:center;gap:10px;margin:10px 0 8px;padding:10px 12px;border:1px solid #eadca0;border-radius:16px;background:linear-gradient(135deg,#fff,#fff8df)}.bot-profile img{width:44px;height:44px;object-fit:contain;border-radius:12px;background:#fff;border:1px solid #eee}.bot-profile b{display:block;color:var(--navy);font-size:.92rem}.bot-profile span{display:block;color:var(--muted);font-size:.74rem;margin-top:2px}
 .unanswered{max-height:600px;overflow:auto}.unq{padding:12px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px}
 .product-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.product-card{border:1px solid var(--line);border-radius:13px;overflow:hidden;background:#fff}.product-card img{width:100%;height:145px;object-fit:cover;background:#f1f3f7}.pc-body{padding:10px}.pc-name{font-weight:900;color:var(--navy);line-height:1.5}.pc-price{font-weight:900;color:#8b6c08;margin-top:5px}.pc-meta{font-size:.73rem;color:var(--muted);margin-top:4px}.product-card a{display:block;text-align:center;margin-top:8px;text-decoration:none}
 .bot-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px}.bot-fields .wide{grid-column:1/-1}.cfg-chip{background:#eef5ff;color:#175098}.cfg-chip.action{background:#fff6d7;color:#8b6c08}
@@ -30,7 +37,7 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:9px;
 #gate{position:fixed;inset:0;background:var(--navy);z-index:200;display:flex;align-items:center;justify-content:center}.gatebox{background:#fff;width:350px;max-width:92%;border-radius:16px;padding:28px;text-align:center}.gatebox h2{color:var(--navy)}
 .toggle{display:flex;align-items:center;gap:8px}.toggle input{width:auto}
 @media(max-width:1050px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}.product-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:650px){.stats{grid-template-columns:repeat(2,1fr)}.searchbar{grid-template-columns:1fr}.row{flex-direction:column}.wrap{padding:10px}.card{padding:13px}.product-grid{grid-template-columns:1fr}.bot-fields{grid-template-columns:1fr}.top{position:relative}}
+@media(max-width:650px){body{background:#eef3fb}.stats{grid-template-columns:repeat(2,1fr)}.searchbar{grid-template-columns:1fr}.row{flex-direction:column}.wrap{padding:10px 10px calc(14px + env(safe-area-inset-bottom))}.card{padding:13px;border-radius:16px;margin-bottom:10px}.product-grid{grid-template-columns:1fr}.bot-fields{grid-template-columns:1fr}.top{justify-content:flex-start;border-radius:0 0 18px 18px}.top h1 small{display:none}.tabs{position:sticky;top:65px;z-index:15;background:#eef3fbbb;margin:0 -10px 10px;padding:9px 10px;backdrop-filter:blur(12px)}#panel-test .grid{display:flex;flex-direction:column}#panel-test .card:first-child{min-height:calc(100dvh - 176px);display:flex;flex-direction:column}.chat{height:auto;min-height:48dvh;flex:1;border-radius:18px}.msg .bubble{max-width:84%}#testMessage{min-height:46px}#testBtn{min-height:46px}.panel.active{animation:panelIn .18s ease}@keyframes panelIn{from{opacity:.6;transform:translateY(6px)}to{opacity:1;transform:none}}}
 </style>
 </head>
 <body>
@@ -48,11 +55,6 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:9px;
 
 <header class="top">
   <h1>🤖 مساعد بريق <small style="opacity:.65">Bot Admin Pro</small></h1>
-  <div class="actions">
-    <button class="btn-light" onclick="location.href='admin.html'">← لوحة الأدمن</button>
-    <button class="btn-light" onclick="loadAll()">↻ تحديث</button>
-    <button class="btn-gold" onclick="newQuestion()">＋ سؤال جديد</button>
-  </div>
 </header>
 
 <main class="wrap">
@@ -182,6 +184,10 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:9px;
   <div class="card">
     <h2>🧠 محادثة اختبار ذكية</h2>
     <div class="hint">البوت يحتفظ بسياق المحادثة: «عايز هدية» ← يسأل لمين ← «لأختي» ← يسأل المناسبة ← «عيد ميلاد» ← يسأل الميزانية ← يقترح المنتجات، بدل ما يعيد نفس الرد.</div>
+    <div class="bot-profile">
+      <img src="/assets/logo.png" alt="Bariq">
+      <div><b>مندوب بريق الذكي</b><span>ذاكرة المحادثة محفوظة على هذا الجهاز</span></div>
+    </div>
     <div id="chat" class="chat" style="margin-top:10px"></div>
     <div class="row" style="margin-top:8px">
       <input id="testMessage" placeholder="مثال: عايز هدية لأختي">
@@ -284,6 +290,7 @@ const ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 let questions=[];
 let botProducts=[];
 let conversation=[];
+const CHAT_MEMORY_KEY='bariq_bot_chat_memory_v2';
 let settings={
   minScore:4,
   welcome:'أهلًا بيك في بريق 🎁 إزاي أقدر أساعدك؟',
@@ -1124,7 +1131,8 @@ function findBestAnswer(msg){
   const margin=second?best.score-second.score:best.score;
   const sim=best.similarity||0;
   // إجابة قاعدة المعرفة لا تُستخدم إلا مع تطابق قوي مستقل، أو تشابه سؤال مرتفع جدًا.
-  const strong=(best.score>=minScore && (sim>=.68 || margin>=3)) && !(second && second.score>=best.score*.94 && sim<.78);
+  const direct=normalize(msg)===normalize(best.question)||normalize(msg).includes(normalize(best.question))||normalize(best.question).includes(normalize(msg));
+  const strong=direct||(best.score>=minScore && (sim>=.68 || margin>=3)) && !(second && second.score>=best.score*.94 && sim<.78);
   return strong?{found:true,item:best,ranked}:{found:false,ranked};
 }
 
@@ -1297,6 +1305,14 @@ async function handleSingleMessage(raw, ctx){
   // ⭐ أولاً: حدد الموضوع (الـ flow مهم أكتر من قاعدة المعرفة)
   const topic=detectTopic(raw);
 
+  // قاعدة المعرفة أولاً: لو الأدمن ضاف سؤال + نوع إدخال/إجراء، ده ياخد الأولوية.
+  const knowledgeFirst=findBestAnswer(raw);
+  renderRanking(knowledgeFirst.ranked);
+  if(knowledgeFirst.found){
+    await incrementUsage(knowledgeFirst.item);
+    return await handleConfiguredKnowledge(knowledgeFirst.item);
+  }
+
   if(topic==='human'){
     resetBotState('human');
     return {type:'answer',text:settings.human};
@@ -1323,14 +1339,6 @@ async function handleSingleMessage(raw, ctx){
   }
 
   if(topic==='greeting')return {type:'answer',text:greetingReply(raw)};
-
-  // قاعدة المعرفة أولاً قبل مسارات الهدايا والمنتجات العامة.
-  const earlyMatch=findBestAnswer(raw);
-  renderRanking(earlyMatch.ranked);
-  if(earlyMatch.found){
-    await incrementUsage(earlyMatch.item);
-    return await handleConfiguredKnowledge(earlyMatch.item);
-  }
 
   // هدية / مناسبة
   if(topic==='gift'){
@@ -1556,34 +1564,62 @@ function renderRanking(arr){
   $('ranking').innerHTML=arr.slice(0,5).map(x=>'<div class="item"><b>'+esc(x.question)+'</b><div class="meta">درجة: '+x.score+' • تشابه: '+Math.round((x.similarity||0)*100)+'% • استخدام: '+(Number(x.usage_count)||0)+'</div></div>').join('')||'<div class="hint">لا توجد مطابقة</div>';
 }
 
+function saveChatMemory(){
+  saveLocal(CHAT_MEMORY_KEY,{conversation,botState,updatedAt:new Date().toISOString()});
+}
+function msgHtml(role,text){
+  const cls=role==='user'?'me':role==='system'?'system':'bot';
+  const icon=role==='user'?'👤':'';
+  return '<div class="msg '+cls+'"><div class="avatar">'+icon+'</div><div class="bubble">'+esc(text)+'</div></div>';
+}
+function renderChatFromMemory(){
+  $('chat').innerHTML=conversation.length
+    ? conversation.map(x=>msgHtml(x.role==='assistant'?'bot':x.role,x.text)).join('')
+    : msgHtml('system',settings.welcome);
+  $('chat').scrollTop=$('chat').scrollHeight;
+}
+function loadChatMemory(){
+  const saved=readLocal(CHAT_MEMORY_KEY,null);
+  if(saved&&Array.isArray(saved.conversation)){
+    conversation=saved.conversation.slice(-80);
+    if(saved.botState&&typeof saved.botState==='object')botState={...botState,...saved.botState};
+    renderChatFromMemory();
+    $('intentBox').innerHTML='<b>السياق محفوظ:</b> '+esc(contextPrompt(mergeContext({}))||'عام')+' | <b>الحالة:</b> '+esc(botState.waitingFor||'idle');
+    return true;
+  }
+  return false;
+}
 function addMsg(role,text){
   conversation.push({role,text});
-  const cls=role==='user'?'me':role==='system'?'system':'bot';
-  $('chat').insertAdjacentHTML('beforeend','<div class="msg '+cls+'">'+(role==='user'?'👤 ':'🤖 ')+esc(text)+'</div>');
+  $('chat').insertAdjacentHTML('beforeend',msgHtml(role,text));
   $('chat').scrollTop=$('chat').scrollHeight;
+  saveChatMemory();
 }
 
 async function testBot(){
   const input=$('testMessage'),m=input.value.trim();if(!m)return;
   const btn=$('testBtn');btn.disabled=true;input.value='';
   addMsg('user',m);
-  const holder=document.createElement('div');holder.className='msg bot';holder.textContent='🤖 جاري التفكير...';$('chat').appendChild(holder);$('chat').scrollTop=$('chat').scrollHeight;
+  const holder=document.createElement('div');holder.className='msg bot';holder.innerHTML='<div class="avatar"></div><div class="bubble">جاري التفكير...</div>';$('chat').appendChild(holder);$('chat').scrollTop=$('chat').scrollHeight;
   try{
     const r=await processBotMessage(m);
     if(!r||!r.text){
-      holder.textContent='🤖 '+settings.fallback;
+      holder.innerHTML='<div class="avatar"></div><div class="bubble">'+esc(settings.fallback)+'</div>';
       conversation.push({role:'assistant',text:settings.fallback});
+      saveChatMemory();
     }else if(r.type==='products'){
       holder.remove();
-      const el=document.createElement('div');el.className='msg bot';el.innerHTML='🤖 '+esc(r.text)+'<div class="product-grid" style="margin-top:8px">'+productCards(r.products)+'</div>'+(r.extraHtml||'');
+      const el=document.createElement('div');el.className='msg bot';el.innerHTML='<div class="avatar"></div><div class="bubble">'+esc(r.text)+'<div class="product-grid" style="margin-top:8px">'+productCards(r.products)+'</div>'+(r.extraHtml||'')+'</div>';
       $('chat').appendChild(el);
       conversation.push({role:'assistant',text:r.text});
+      saveChatMemory();
     }else{
-      holder.textContent='🤖 '+r.text;
+      holder.innerHTML='<div class="avatar"></div><div class="bubble">'+esc(r.text)+'</div>';
       conversation.push({role:'assistant',text:r.text});
+      saveChatMemory();
     }
   }catch(e){
-    holder.textContent='🤖 حصل خطأ: '+e.message;
+    holder.innerHTML='<div class="avatar"></div><div class="bubble">حصل خطأ: '+esc(e.message)+'</div>';
   }finally{
     btn.disabled=false;$('chat').scrollTop=$('chat').scrollHeight;
   }
@@ -1591,9 +1627,11 @@ async function testBot(){
 
 function resetChat(){
   conversation=[];resetBotState();
-  $('chat').innerHTML='<div class="msg system">🤖 '+esc(settings.welcome)+'</div>';
+  localStorage.removeItem(CHAT_MEMORY_KEY);
+  $('chat').innerHTML=msgHtml('system',settings.welcome);
   $('intentBox').textContent='لم تبدأ المحادثة بعد.';
   $('ranking').innerHTML='';
+  saveChatMemory();
 }
 
 async function quickTest(){
@@ -1654,7 +1692,7 @@ $('testMessage').addEventListener('keydown',e=>{if(e.key==='Enter')testBot()});
 $('quickMsg').addEventListener('keydown',e=>{if(e.key==='Enter')quickTest()});
 loadSettings();
 syncBotActionFields();
-resetChat();
+if(!loadChatMemory())resetChat();
 loadAll().catch(()=>{});
 const savedTab=sessionStorage.getItem('bot_tab');if(savedTab)tab(savedTab);
 </script>
