@@ -966,6 +966,20 @@ function findBestAnswer(msg){
 }
 
 // ===== معالجة تتبع الطلب =====
+function estimateDelivery(order){
+  if(!order||!order.created_at)return'';
+  const created=new Date(order.created_at);
+  const status=String(order.status||'').trim().toLowerCase();
+  let minDays=3,maxDays=7;
+  if(status==='shipped'){minDays=1;maxDays=3;}
+  else if(status==='delivered')return'\n✅ الطلب تم توصيله بالفعل.';
+  else if(status==='cancelled')return'\n❌ الطلب تم إلغاؤه.';
+  const minDate=new Date(created);minDate.setDate(minDate.getDate()+minDays);
+  const maxDate=new Date(created);maxDate.setDate(maxDate.getDate()+maxDays);
+  const fmt=d=>d.toLocaleDateString('ar-EG',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  return'\n📆 التوصيل المتوقع: من '+fmt(minDate)+' إلى '+fmt(maxDate);
+}
+
 async function handleOrderQuery(raw){
   const ref=extractOrderRef(raw);
   if(!ref){
@@ -978,7 +992,8 @@ async function handleOrderQuery(raw){
   }
   const total=order.total!=null?'\n💰 إجمالي الطلب: '+Number(order.total).toFixed(2)+' AED':'';
   const date=order.created_at?'\n📅 تاريخ الطلب: '+new Date(order.created_at).toLocaleDateString('ar-EG'):'';
-  return {type:'answer',text:'📦 حالة طلبك '+(order.order_number||('#'+ref))+':\n'+orderStatusLabel(order.status)+total+date};
+  const delivery=estimateDelivery(order);
+  return {type:'answer',text:'📦 حالة طلبك '+(order.order_number||('#'+ref))+':\n'+orderStatusLabel(order.status)+total+date+delivery};
 }
 
 // ===== معالجة اختيار الهدية =====
@@ -1087,6 +1102,23 @@ async function handleSingleMessage(raw, ctx){
   }
 
   if(topic==='greeting')return {type:'answer',text:greetingReply(raw)};
+
+  // ⭐ مناسبة عامة (تخرج، مولود، رمضان...) بدون "هدية" صريحة
+  if(ctx.occasion && !ctx.recipient){
+    const products=await recommendProducts(raw,ctx);
+    if(products.length){
+      const catLinks={
+        'تخرج':'/category/graduation','عيد ميلاد':'/category/birthday',
+        'زواج':'/category/wedding','خطوبة':'/category/engagement',
+        'مولود جديد':'/category/newborn','رومانسي':'/category/valentine',
+        'رمضان':'/category/ramadan','عيد':'/category/eid',
+        'يوم الأم':'/category/mothers-day','سفر/وداع':'/category/travel'
+      };
+      const link=catLinks[ctx.occasion]||'';
+      const linkHtml=link?'\n\n<a href="'+link+'" target="_blank" class="btn-gold" style="display:inline-block;margin-top:8px">🛒 تصفح كل منتجات '+ctx.occasion+'</a>':'';
+      return {type:'products',text:'🎁 دي منتجاتنا لمناسبة '+ctx.occasion+':',products,extraHtml:linkHtml};
+    }
+  }
 
   // منتجات عامة
   const isProductIntent=giftIntent(raw)||ctx.recipient||ctx.occasion||ctx.interest||ctx.budget!=null;
@@ -1259,7 +1291,7 @@ async function testBot(){
       conversation.push({role:'assistant',text:settings.fallback});
     }else if(r.type==='products'){
       holder.remove();
-      const el=document.createElement('div');el.className='msg bot';el.innerHTML='🤖 '+esc(r.text)+'<div class="product-grid" style="margin-top:8px">'+productCards(r.products)+'</div>';
+      const el=document.createElement('div');el.className='msg bot';el.innerHTML='🤖 '+esc(r.text)+'<div class="product-grid" style="margin-top:8px">'+productCards(r.products)+'</div>'+(r.extraHtml||'');
       $('chat').appendChild(el);
       conversation.push({role:'assistant',text:r.text});
     }else{
@@ -1293,7 +1325,7 @@ async function quickTest(){
       const matchInfo=r.match?('<div class="meta">✅ مطابقة: '+esc(r.match.question)+' (درجة '+r.match.score+')</div>'):'';
       $('quickResult').innerHTML='<div class="item"><b>🤖 '+esc(r.text)+'</b>'+matchInfo+'</div>';
     }
-    else if(r.type==='products') $('quickResult').innerHTML='<div class="item"><b>🤖 '+esc(r.text)+'</b><div class="product-grid" style="margin-top:8px">'+productCards(r.products)+'</div></div>';
+    else if(r.type==='products') $('quickResult').innerHTML='<div class="item"><b>🤖 '+esc(r.text)+'</b><div class="product-grid" style="margin-top:8px">'+productCards(r.products)+'</div>'+(r.extraHtml||'')+'</div>';
     else if(r.type==='clarify') $('quickResult').innerHTML='<div class="item" style="border-color:var(--gold)"><b>🤖 '+esc(r.text)+'</b><div class="meta">البوت بيسأل سؤال توضيحي...</div></div>';
     else{
       const saved=readLocal('bariq_bot_unanswered',[]).some(x=>normalize(x.text)===normalize(m));
