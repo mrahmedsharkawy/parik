@@ -917,16 +917,24 @@ function detectTopic(text){
   // 1. تحويل لموظف (أولوية قصوى)
   if(/موظف|بشر|احد يرد|حد يكلمني|عايز اتكلم|human|support/.test(t)) return 'human';
 
-  // 2. تتبع طلب — كلمات محددة جداً
-  if(/رقم\s*الطلب|حال[ةه]\s*الطلب|وين\s*طلبي|فين\s*طلبي|طلبي\s*وين|طلبي\s*فين|تتبع|track|اوردر|order\s*status/.test(t)) return 'order';
+  // 2. تتبع طلب — "طلبي" / "أين طلبي" / "فين طلبي" / "حالة طلبي" / "رقم الطلب" + رقم
+  if(/(?:وين|فين|حال[ةه]|تتبع|رقم)\s*طلب[يى]?/.test(t)) return 'order';
+  if(/\bطلب\s*#?\s*\d{3,}/.test(t)) return 'order';
+  if(/#\s*\d{3,}/.test(t)) return 'order';
+  if(/track|order\s*status/.test(t)) return 'order';
 
-  // 3. هدية — لازم يكون فيه كلمات هدية صريحة
+  // 3. صورة / صور
+  if(/صور[هة]?|image|pic|photo/.test(t)) return 'image';
+
+  // 4. هدية
   if(/هدي[هة]|gift|بوكس|هدايا|بوكيه|اقتراح\s*هد/.test(t)) return 'gift';
 
-  // 4. طلب جديد
-  if(/اطلب|طلبية|عايز\s*اشتري|ابغي\s*اشتري|ابغى\s*اشتري|شراء|اشتري/.test(t)) return 'order_new';
+  // 5. طلب جديد — "عايز أطلب" / "ابغى اشتري" / "اعمل اوردر"
+  //    لكن مش "طلبي" (ده تتبع)
+  if(/(?:عايز|ابغي|ابغى|حابب|أريد|اريد|ممكن)\s*(?:اطلب|اعمل\s*اوردر|اسوي\s*طلب|اشتري)/.test(t)) return 'order_new';
+  if(/(?:اطلب|طلبية|شراء|اشتري)\s*(?:هدية|منتج|بوكس|حاجة|من|جديد)/.test(t)) return 'order_new';
 
-  // 5. تحية
+  // 6. تحية
   if(/كيف\s*(حال|حالك|ك|انت)|شلونك|شخبارك|عامل\s*ا[يهي]|اخبار[كك]|صباح|مساء|سلام|هلا\s*والله|هاي|مرحب|أهلا|أهلين|شكرا|شكر|تسلم|يسلمو|مشكور|باي|مع\s*السلامة/.test(t)) return 'greeting';
 
   return 'general';
@@ -1037,7 +1045,30 @@ async function callBotLLM(message, context){
   }
 }
 
-async function handleSingleMessage(raw, ctx){
+async function handleSingleMessage(raw, ctx) {
+  // ⭐ أولاً: دور في قاعدة المعرفة
+  const match = findBestAnswer(raw);
+  renderRanking(match.ranked);
+
+  if (match.answer) {
+    return {
+      type: 'answer',
+      text: match.answer
+    };
+  }
+
+  await persistUnanswered(raw);
+
+  return {
+    type: 'fallback',
+    text: `${settings.fallback}\n${settings.human}`
+  };
+}  if(match.found){
+    await incrementUsage(match.item);
+    return {type:'answer',text:match.item.answer,match:match.item};
+  }
+
+  // ⭐ تاني: حدد الموضوع لو مفيش إجابة في قاعدة المعرفة
   const topic=detectTopic(raw);
 
   if(topic==='human'){
@@ -1045,13 +1076,25 @@ async function handleSingleMessage(raw, ctx){
     return {type:'answer',text:settings.human};
   }
 
-  // تتبع الطلب وظيفة مستقلة ولا يعتمد على bot_knowledge.
-  if(topic==='order'||topic==='order_new'){
+  // تتبع طلب (مستقل)
+  if(topic==='order'){
     resetBotState('order');
     return await handleOrderQuery(raw);
   }
 
-  // الهدية/المنتجات وظيفة مستقلة وتعتمد على المنتجات الفعلية.
+  // طلب جديد
+  if(topic==='order_new'){
+    resetBotState('order_new');
+    return {type:'answer',text:'عشان تطلب منتج جديد 🛒 ممكن تزور موقعنا أو أقترحلك منتجات مناسبة. عايز إيه بالظبط؟'};
+  }
+
+  // صور — البوت مش قادر يشوف صور حالياً
+  if(topic==='image'){
+    await persistUnanswered(raw);
+    return {type:'clarify',text:'مش قادر أشوف الصور حاليًا 🖼️ ممكن تكتبلى اسم المنتج أو وصفه؟ أو ابعتلي رابط المنتج لو عندك.'};
+  }
+
+  // هدية
   if(topic==='gift'){
     resetBotState('gift');
     return await handleGiftQuery(raw,ctx);
@@ -1059,23 +1102,14 @@ async function handleSingleMessage(raw, ctx){
 
   if(topic==='greeting')return {type:'answer',text:greetingReply(raw)};
 
-  // أولًا: قاعدة المعرفة القديمة والجديدة. لا نعيد صياغة إجابة من سؤال آخر.
-  const match=findBestAnswer(raw);
-  renderRanking(match.ranked);
-  if(match.found){
-    await incrementUsage(match.item);
-    return {type:'answer',text:match.item.answer,match:match.item};
-  }
-
+  // منتجات عامة
   const isProductIntent=giftIntent(raw)||ctx.recipient||ctx.occasion||ctx.interest||ctx.budget!=null;
-
-  // المنتجات فقط لو الرسالة فعلاً طلب منتج/هدية.
   if(settings.autoProducts!==false && isProductIntent){
     const products=await recommendProducts(raw,ctx);
     if(products.length)return {type:'products',text:'لقيتلك أقرب منتجات مناسبة لطلبك 👇',products};
   }
 
-  // مفيش تطابق قوي: نستعين بالـ LLM لفهم المعنى، لكن الرد النهائي يظل مقيدًا بقاعدة المعرفة.
+  // LLM
   if(settings.useLLM!==false){
     const llm=await callBotLLM(raw,ctx);
     if(llm){
@@ -1089,14 +1123,23 @@ async function handleSingleMessage(raw, ctx){
       if(llm.action==='chat' && llm.reply) return {type:'answer',text:llm.reply,llm:true};
       if(llm.action==='clarify' && llm.reply) return {type:'clarify',text:llm.reply,llm:true};
       if(llm.action==='human') return {type:'answer',text:settings.human,llm:true};
+      if(llm.action==='product_search'){
+        const products=await recommendProducts(raw,ctx);
+        if(products.length) return {type:'products',text:llm.reply||'لقيتلك أقرب منتجات 👇',products};
+      }
+      if(llm.action==='order_track'){
+        resetBotState('order');
+        return await handleOrderQuery(raw);
+      }
     }
   }
 
-  // مفيش إجابة مؤكدة: لا نخترع. نسجل السؤال ثم نطلب توضيح/موظف.
-  await persistUnanswered(raw);
-  return {type:'fallback',text:settings.fallback+'\n'+settings.human};
-}
+await persistUnanswered(raw);
 
+return {
+  type: 'fallback',
+  text: `${settings.fallback}\n${settings.human}`
+};
 // ===== الرد على الرسالة (مع مراعاة السياق) =====
 async function processBotMessageCore(msg){
   const raw=String(msg||'').trim();
@@ -1109,6 +1152,13 @@ async function processBotMessageCore(msg){
   // ⭐ لو البوت مستني حاجة — كمل الflow
   if(botState.waitingFor){
     const waiting=botState.waitingFor;
+
+    // ⭐ لو العميل سأل سؤال عام واضح في قاعدة المعرفة، رد عليه الأول
+    const quickMatch=findBestAnswer(raw);
+    if(quickMatch.found && quickMatch.item.score>=(Number(settings.minScore)||6)+3){
+      await incrementUsage(quickMatch.item);
+      return {type:'answer',text:quickMatch.item.answer,match:quickMatch.item};
+    }
 
     // تحية في نص الflow
     if(detectTopic(raw)==='greeting'){
@@ -1134,7 +1184,7 @@ async function processBotMessageCore(msg){
 
     if(waiting==='gift_recipient'){
       // دور على recipient حتى لو بصيغة "لأختي"
-      const rec=intent.recipient || matchFirst(RECIPIENT_MAP,normalize(raw)) || extractRecipient(raw);
+      const rec=intent.recipient || matchFirst(RECIPIENT_MAP,normalize(raw));
       if(rec){
         botState.giftData.recipient=rec;
         botState.waitingFor='gift_occasion';
@@ -1144,7 +1194,7 @@ async function processBotMessageCore(msg){
     }
 
     if(waiting==='gift_occasion'){
-      const occ=intent.occasion || matchFirst(OCCASION_MAP,normalize(raw)) || extractOccasion(raw);
+      const occ=intent.occasion || matchFirst(OCCASION_MAP,normalize(raw));
       if(occ){
         botState.giftData.occasion=occ;
         botState.waitingFor='gift_budget';
