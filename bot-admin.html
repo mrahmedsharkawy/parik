@@ -1245,6 +1245,10 @@ async function processBotMessageCore(msg){
 
 function getReminderText(){
   if(botState.waitingFor==='order_number') return '📦 مازلت مستنّي رقم الطلب.';
+  if(botState.waitingFor && botState.waitingFor.startsWith('action_param_')){
+    const p=botState.waitingFor.replace('action_param_','');
+    return '⏳ مازلت مستنّي: '+p;
+  }
   if(botState.waitingFor==='gift_recipient') return '🎁 مازلت مستنّي تعرفني الهدية لمين.';
   if(botState.waitingFor==='gift_occasion') return '🎁 مازلت مستنّي تعرفني المناسبة.';
   if(botState.waitingFor==='gift_budget') return '🎁 مازلت مستنّي تعرفني الميزانية.';
