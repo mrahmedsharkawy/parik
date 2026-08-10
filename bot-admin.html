@@ -913,6 +913,7 @@ function resetBotState(topic){
 // ===== فهم الموضوع (مصحح) =====
 function detectTopic(text){
   const t=normalize(text);
+  const hasNumber=/\d{3,}/.test(arabicDigits(text));
 
   // 1. تحويل لموظف (أولوية قصوى)
   if(/موظف|بشر|احد يرد|حد يكلمني|عايز اتكلم|human|support/.test(t)) return 'human';
@@ -922,6 +923,8 @@ function detectTopic(text){
   if(/\bطلب\s*#?\s*\d{3,}/.test(t)) return 'order';
   if(/#\s*\d{3,}/.test(t)) return 'order';
   if(/track|order\s*status/.test(t)) return 'order';
+  // ⭐ رقم مجرد لوحده (مثل 1150) — لو البوت مستني رقم طلب أو السياق واضح
+  if(hasNumber && (botState.waitingFor==='order_number' || /طلب|اوردر|order/.test(t))) return 'order';
 
   // 3. صورة / صور
   if(/صور[هة]?|image|pic|photo/.test(t)) return 'image';
@@ -1004,8 +1007,28 @@ async function handleOrderQuery(raw){
 
 // ===== معالجة اختيار الهدية =====
 async function handleGiftQuery(raw,ctx){
+  // ادمج ctx مع botState.giftData عشان نحافظ على البيانات اللي اتجمعت
   const merged={...botState.giftData,...ctx};
+
+  // ⭐ لو فيه مناسبة بس (من غير recipient ولا budget) → اعرض منتجات المناسبة مباشرة
+  if(merged.occasion && !merged.recipient && merged.budget==null){
+    const products=await recommendProducts(raw,merged);
+    if(products.length){
+      const catLinks={
+        'تخرج':'/category/graduation','عيد ميلاد':'/category/birthday',
+        'زواج':'/category/wedding','خطوبة':'/category/engagement',
+        'مولود جديد':'/category/newborn','رومانسي':'/category/valentine',
+        'رمضان':'/category/ramadan','عيد':'/category/eid',
+        'يوم الأم':'/category/mothers-day','سفر/وداع':'/category/travel'
+      };
+      const link=catLinks[merged.occasion]||'';
+      const linkHtml=link?'\n\n<a href="'+link+'" target="_blank" class="btn-gold" style="display:inline-block;margin-top:8px">🛒 تصفح كل منتجات '+merged.occasion+'</a>':'';
+      return {type:'products',text:'🎁 دي منتجاتنا لمناسبة '+merged.occasion+':',products,extraHtml:linkHtml};
+    }
+  }
+
   const missing=missingGiftInfo(merged);
+
   if(missing==='recipient'){
     botState.waitingFor='gift_recipient';
     botState.giftData={};
@@ -1014,12 +1037,12 @@ async function handleGiftQuery(raw,ctx){
   if(missing==='occasion'){
     botState.waitingFor='gift_occasion';
     botState.giftData={...botState.giftData,recipient:merged.recipient,budget:merged.budget};
-    return {type:'clarify',text:'تمام ❤️ لـ'+ctx.recipient+'، إيه المناسبة؟ عيد ميلاد، تخرج، زواج ولا مناسبة تانية؟'};
+    return {type:'clarify',text:'تمام ❤️ لـ'+merged.recipient+'، إيه المناسبة؟ عيد ميلاد، تخرج، زواج ولا مناسبة تانية؟'};
   }
   if(missing==='budget'){
     botState.waitingFor='gift_budget';
     botState.giftData={...botState.giftData,recipient:merged.recipient,occasion:merged.occasion};
-    return {type:'clarify',text:'جميل 🎁 آخر حاجة: الميزانية في حدود كام درهم؟ عشان أطلعلك اختيارات فعلًا داخل ميزانيتك.'};
+    return {type:'clarify',text:'جميل 🎁 آخر حاجة: الميزانية في حدود كام درهم؟ عشان أطلعلك اختيارات مناسبة فعلًا.'};
   }
   botState.waitingFor=null;
   const fullCtx={...merged,...botState.giftData};
@@ -1029,42 +1052,6 @@ async function handleGiftQuery(raw,ctx){
     return {type:'products',text:'🎁 دي أفضل اختيارات ل'+fullCtx.recipient+' بمناسبة '+fullCtx.occasion+' وفي حدود '+fullCtx.budget+' درهم:',products};
   }
   return {type:'fallback',text:'فهمت طلبك '+contextPrompt(fullCtx)+'، لكن مش لاقي منتج داخل الميزانية بالمواصفات دي حاليًا. ممكن نوسّع الميزانية شوية أو أديك اختيارات قريبة؟'};
-}
-
-// ===== الرد على السؤال الواحد =====
-
-/* =========================================================
-   LLM — فهم المعنى فقط، بدون اختراع إجابات
-   المفتاح السري موجود في Supabase Edge Function bot-llm
-========================================================= */
-async function callBotLLM(message, context){
-  const token=await getValidAdminToken();
-  if(!token) return null;
-  const ranked=rank(message).slice(0,30).map(x=>({
-    id:x.id,question:x.question,answer:x.answer,category:x.category,keywords:kws(x.keywords),score:x.score
-  }));
-  try{
-    const res=await fetch(SB+'/functions/v1/bot-llm',{
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'apikey':ANON_KEY,
-        'Authorization':'Bearer '+token
-      },
-      body:JSON.stringify({
-        message,
-        context:context||{},
-        conversation:conversation.slice(-10),
-        knowledge:ranked
-      })
-    });
-    const data=await res.json().catch(()=>({}));
-    if(!res.ok) throw new Error(data.error||('LLM HTTP '+res.status));
-    return data;
-  }catch(e){
-    console.warn('bot-llm:',e.message);
-    return null;
-  }
 }
 
 async function handleSingleMessage(raw, ctx){
