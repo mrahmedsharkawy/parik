@@ -521,7 +521,8 @@ function fuzzyToken(a,b){
   return Math.max(0,1-levenshtein(a,b)/Math.max(a.length,b.length));
 }
 const STOP_WORDS=new Set('عايز عايزه ابغي ابغى ممكن ممكنه لو سمحت من عندكم عندكو عندك ايه اي اى هو هي هل في فيه عند هاتلي هات لي اريد اريدها ابي ابا اجيب جيب لي ليا كده دي ده ده انا احنا هو هي في ب كام سعر سعره اسعار كم ايه'.split(' '));
-function meaningfulTokens(text){return [...tokenSet(text)].filter(w=>!STOP_WORDS.has(w));}
+const EN_STOP_WORDS=new Set('the a an and or to for from of in on at by with is are am be do does did you your we our i me my it this that there have has had can could would should need want please hello hi hey'.split(' '));
+function meaningfulTokens(text){return [...tokenSet(text)].filter(w=>!STOP_WORDS.has(w)&&!EN_STOP_WORDS.has(w));}
 function score(msg,item){
   const words=meaningfulTokens(msg);
   const qWords=meaningfulTokens(item.question);
@@ -817,6 +818,9 @@ function contextPrompt(c){
   if(c.style)p.push(c.style);
   return p.join(' • ');
 }
+function corporateIntent(text){
+  return /شركة|شركات|مؤسسة|موظف|موظفين|عملاء|عميل|عمل|مكتب|فعالية|معرض|افتتاح|اعلاني|إعلاني|براند|لوجو|شعار|corporate|company|business|employees|clients|event|promotional|logo|brand/.test(normalize(text));
+}
 function giftIntent(text){
   return /هديه|هدي[هة]|gift|بوكس|هدايا|اقتراح هديه|عايز حاج[هة]|محتار اجيب|اجيب اي[هة]/.test(normalize(text));
 }
@@ -1016,6 +1020,7 @@ function detectTopic(text){
 
   // 4. هدية صريحة
   if(/هدي[هة]|gift|بوكس|هدايا|بوكيه|اقتراح\s*هد/.test(t)) return 'gift';
+  if(corporateIntent(text) && /gift|هدي[هة]|هدايا|منتجات?|products?|promotional|quote|عرض\s*سعر/.test(t)) return 'gift';
 
   // 5. مناسبة / فئة منتجات (بدون كلمة "هدية")
   if(/(?:حاج[هة]|منتجات?|اشياء?|حاجات?)\s*(?:لل|لـ|ل)?\s*(?:تخرج|مولود|زواج|خطوب[هة]|ميلاد|رمضان|عيد|يوم\s*الام|سفر|ترقية|افتتاح)/.test(t)) return 'gift';
@@ -1029,7 +1034,7 @@ function detectTopic(text){
   if(/اعرض\s*(?:عليا|لي)\s*منتجات|وريني\s*منتجات|شو\s*عندكم|ايش\s*عندكم|عندكم\s*ايه/.test(t)) return 'browse';
 
   // 8. تحية
-  if(/كيف\s*(حال|حالك|ك|انت)|شلونك|شخبارك|عامل\s*ا[يهي]|اخبار[كك]|صباح|مساء|سلام|هلا\s*والله|هاي|مرحب|أهلا|أهلين|شكرا|شكر|تسلم|يسلمو|مشكور|باي|مع\s*السلامة/.test(t)) return 'greeting';
+  if(/كيف\s*(حال|حالك|ك|انت)|شلونك|شخبارك|عامل\s*ا[يهي]|اخبار[كك]|صباح|مساء|سلام|هلا\s*والله|هاي|مرحب|أهلا|أهلين|شكرا|شكر|تسلم|يسلمو|مشكور|باي|مع\s*السلامة|\b(?:hello|hi|hey|thanks?|thank you|good morning|good evening|bye)\b/.test(t)) return 'greeting';
 
   return 'general';
 }
@@ -1043,6 +1048,9 @@ function greetingReply(text){
   if(/صباح/.test(t)) return 'صباح الورد 🌹 إزاي أقدر أساعدك؟';
   if(/مساء/.test(t)) return 'مساء النور ✨ إزاي أقدر أساعدك؟';
   if(/باي|مع\s*السلامة/.test(t)) return 'مع السلامة! 👋 الله يسلمك.';
+  if(/\b(?:hello|hi|hey|good morning|good evening)\b/.test(t)) return 'Hello, welcome to Bariq 🎁 How can I help you today?';
+  if(/\b(?:thanks?|thank you)\b/.test(t)) return 'You are welcome. I am here whenever you need help with gifts or custom orders.';
+  if(/\bbye\b/.test(t)) return 'Goodbye. Happy to help anytime.';
   return 'أهلاً بيك في بريق 🎁 إزاي أقدر أساعدك؟';
 }
 
@@ -1142,6 +1150,14 @@ async function handleOrderQuery(raw){
 async function handleGiftQuery(raw,ctx){
   // ادمج ctx مع botState.giftData عشان نحافظ على البيانات اللي اتجمعت
   const merged={...botState.giftData,...ctx};
+  if(corporateIntent(raw)){
+    botState.waitingFor=null;
+    const products=await recommendProducts(raw,merged);
+    if(products.length){
+      return {type:'products',text:'تمام، دي اختيارات مناسبة للهدايا الإعلانية/طلبات الشركات. عشان أجهز عرض سعر مضبوط ابعتلي الكمية وموعد التسليم المطلوب:',products};
+    }
+    return {type:'clarify',text:'أكيد، نقدر نجهز هدايا إعلانية حسب الشعار والتصميم. محتاج أعرف المنتج أو الفئة، الكمية، الميزانية، وموعد التسليم المطلوب.'};
+  }
 
   // ⭐ لو فيه مناسبة بس (من غير recipient ولا budget) → اعرض منتجات المناسبة مباشرة
   if(merged.occasion && !merged.recipient && merged.budget==null){
@@ -1211,7 +1227,7 @@ async function handleSingleMessage(raw, ctx){
   // صور
   if(topic==='image'){
     await persistUnanswered(raw);
-    return {type:'clarify',text:'مش قادر أشوف الصور حاليًا 🖼️ ممكن تكتبلى اسم المنتج أو وصفه؟ أو ابعتلي رابط المنتج لو عندك.'};
+    return {type:'clarify',text:'تمام، لو دي صورة شعار أو تصميم ابعتها كرابط أو ارفعها مع الطلب، وكمان اكتبلي المنتج المطلوب والكمية وموعد التسليم. مثال: 500 مج حراري بشعار الشركة خلال أسبوع.'};
   }
 
   // هدية / مناسبة
