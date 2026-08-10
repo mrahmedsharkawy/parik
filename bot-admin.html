@@ -1045,25 +1045,11 @@ async function callBotLLM(message, context){
   }
 }
 
-async function handleSingleMessage(raw, ctx) {
-  // ⭐ أولاً: دور في قاعدة المعرفة
-  const match = findBestAnswer(raw);
+async function handleSingleMessage(raw, ctx){
+  // ⭐ أولاً: دور في قاعدة المعرفة (أولوية قصوى على كل حاجة)
+  const match=findBestAnswer(raw);
   renderRanking(match.ranked);
-
-  if (match.answer) {
-    return {
-      type: 'answer',
-      text: match.answer
-    };
-  }
-
-  await persistUnanswered(raw);
-
-  return {
-    type: 'fallback',
-    text: `${settings.fallback}\n${settings.human}`
-  };
-}  if(match.found){
+  if(match.found){
     await incrementUsage(match.item);
     return {type:'answer',text:match.item.answer,match:match.item};
   }
@@ -1134,12 +1120,10 @@ async function handleSingleMessage(raw, ctx) {
     }
   }
 
-await persistUnanswered(raw);
+  await persistUnanswered(raw);
+  return {type:'fallback',text:settings.fallback+'\n'+settings.human};
+}
 
-return {
-  type: 'fallback',
-  text: `${settings.fallback}\n${settings.human}`
-};
 // ===== الرد على الرسالة (مع مراعاة السياق) =====
 async function processBotMessageCore(msg){
   const raw=String(msg||'').trim();
