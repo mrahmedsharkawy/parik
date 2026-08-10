@@ -25,11 +25,12 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:9px;
 .chat{height:440px;overflow:auto;background:#f8f9fc;border:1px solid var(--line);border-radius:12px;padding:12px}.msg{padding:10px;border-radius:10px;margin-bottom:8px;white-space:pre-wrap;line-height:1.65}.me{background:#e8edf6}.bot{background:#fff6d7;border:1px solid #eadca0}.system{background:#eef5ff;border:1px solid #d5e3fa}
 .unanswered{max-height:600px;overflow:auto}.unq{padding:12px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px}
 .product-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.product-card{border:1px solid var(--line);border-radius:13px;overflow:hidden;background:#fff}.product-card img{width:100%;height:145px;object-fit:cover;background:#f1f3f7}.pc-body{padding:10px}.pc-name{font-weight:900;color:var(--navy);line-height:1.5}.pc-price{font-weight:900;color:#8b6c08;margin-top:5px}.pc-meta{font-size:.73rem;color:var(--muted);margin-top:4px}.product-card a{display:block;text-align:center;margin-top:8px;text-decoration:none}
+.bot-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px}.bot-fields .wide{grid-column:1/-1}.cfg-chip{background:#eef5ff;color:#175098}.cfg-chip.action{background:#fff6d7;color:#8b6c08}
 .progress{height:8px;background:#edf0f5;border-radius:20px;overflow:hidden}.progress i{display:block;height:100%;background:var(--gold)}
 #gate{position:fixed;inset:0;background:var(--navy);z-index:200;display:flex;align-items:center;justify-content:center}.gatebox{background:#fff;width:350px;max-width:92%;border-radius:16px;padding:28px;text-align:center}.gatebox h2{color:var(--navy)}
 .toggle{display:flex;align-items:center;gap:8px}.toggle input{width:auto}
 @media(max-width:1050px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}.product-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:650px){.stats{grid-template-columns:repeat(2,1fr)}.searchbar{grid-template-columns:1fr}.row{flex-direction:column}.wrap{padding:10px}.card{padding:13px}.product-grid{grid-template-columns:1fr}.top{position:relative}}
+@media(max-width:650px){.stats{grid-template-columns:repeat(2,1fr)}.searchbar{grid-template-columns:1fr}.row{flex-direction:column}.wrap{padding:10px}.card{padding:13px}.product-grid{grid-template-columns:1fr}.bot-fields{grid-template-columns:1fr}.top{position:relative}}
 </style>
 </head>
 <body>
@@ -101,6 +102,43 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:9px;
     <div class="row">
       <div><label>التصنيف</label><input id="category" placeholder="التوصيل"></div>
       <div><label>الكلمات المرتبطة</label><input id="keywords" placeholder="توصيل، دليفري، delivery"></div>
+    </div>
+    <div class="bot-fields">
+      <div class="wide">
+        <label>نوع الإدخال</label>
+        <select id="inputMode" onchange="syncBotActionFields()">
+          <option value="answer">📖 رد معلوماتي</option>
+          <option value="required_data">📋 بيانات مطلوبة</option>
+          <option value="action">⚡ إجراء</option>
+        </select>
+      </div>
+      <div>
+        <label>نوع البيانات</label>
+        <select id="fieldType">
+          <option value="text">نص (text)</option>
+          <option value="number">رقم (number)</option>
+          <option value="phone">رقم هاتف (phone)</option>
+          <option value="email">بريد إلكتروني (email)</option>
+          <option value="date">تاريخ (date)</option>
+          <option value="image">صورة/شعار (image)</option>
+        </select>
+      </div>
+      <div>
+        <label>مثال للقيمة</label>
+        <input id="fieldExample" placeholder="مثال: 500 أو 9715xxxxxxx">
+      </div>
+      <div class="wide">
+        <label>الإجراء المرتبط</label>
+        <select id="linkedAction">
+          <option value="">بدون إجراء</option>
+          <option value="CUSTOM_GIFT_ORDER">CUSTOM_GIFT_ORDER</option>
+          <option value="CREATE_QUOTE">CREATE_QUOTE</option>
+          <option value="UPDATE_ORDER">UPDATE_ORDER</option>
+          <option value="PRODUCT_SEARCH">PRODUCT_SEARCH</option>
+          <option value="COLLECT_LEAD">COLLECT_LEAD</option>
+          <option value="HANDOFF_HUMAN">HANDOFF_HUMAN</option>
+        </select>
+      </div>
     </div>
     <label class="toggle"><input id="active" type="checkbox" checked> السؤال فعال</label>
     <div class="hint" id="duplicateBox" style="display:none;margin-top:10px"></div>
@@ -267,6 +305,47 @@ function normalize(s){
   return t.replace(/\s+/g,' ').trim();
 }
 function kws(v){return Array.isArray(v)?v:String(v||'').split(/[,،]/).map(x=>x.trim()).filter(Boolean)}
+const BOT_CONFIG_PREFIX='__botcfg:';
+function encodeBotConfig(cfg){
+  try{return BOT_CONFIG_PREFIX+btoa(unescape(encodeURIComponent(JSON.stringify(cfg))))}catch(e){return ''}
+}
+function decodeBotConfig(token){
+  try{return JSON.parse(decodeURIComponent(escape(atob(String(token||'').replace(BOT_CONFIG_PREFIX,'')))))}catch(e){return null}
+}
+function getBotConfig(item){
+  const token=kws(item?.keywords).find(k=>String(k).startsWith(BOT_CONFIG_PREFIX));
+  return token?decodeBotConfig(token):{inputMode:'answer',fieldType:'text',fieldExample:'',linkedAction:''};
+}
+function visibleKeywords(v){return kws(v).filter(k=>!String(k).startsWith(BOT_CONFIG_PREFIX))}
+function readBotConfigForm(){
+  const inputMode=$('inputMode')?.value||'answer';
+  return {
+    inputMode,
+    fieldType:$('fieldType')?.value||'text',
+    fieldExample:$('fieldExample')?.value.trim()||'',
+    linkedAction:inputMode==='answer'?'':($('linkedAction')?.value||'')
+  };
+}
+function writeBotConfigForm(cfg){
+  cfg=cfg||{};
+  if($('inputMode'))$('inputMode').value=cfg.inputMode||'answer';
+  if($('fieldType'))$('fieldType').value=cfg.fieldType||'text';
+  if($('fieldExample'))$('fieldExample').value=cfg.fieldExample||'';
+  if($('linkedAction'))$('linkedAction').value=cfg.linkedAction||'';
+  syncBotActionFields();
+}
+function keywordsWithBotConfig(words,cfg){
+  const clean=visibleKeywords(words);
+  const token=encodeBotConfig(cfg||{});
+  return token?[...clean,token]:clean;
+}
+function syncBotActionFields(){
+  const mode=$('inputMode')?.value||'answer';
+  ['fieldType','fieldExample','linkedAction'].forEach(id=>{
+    const el=$(id); if(!el)return;
+    el.disabled=mode==='answer';
+  });
+}
 function arabicDigits(s){return String(s||'').replace(/[٠-٩]/g,d=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)))}
 
 /* =========================================================
@@ -446,7 +525,7 @@ function meaningfulTokens(text){return [...tokenSet(text)].filter(w=>!STOP_WORDS
 function score(msg,item){
   const words=meaningfulTokens(msg);
   const qWords=meaningfulTokens(item.question);
-  const keyWords=kws(item.keywords).flatMap(k=>meaningfulTokens(k));
+  const keyWords=visibleKeywords(item.keywords).flatMap(k=>meaningfulTokens(k));
   const all=[...qWords,...keyWords];
   if(!words.length||!all.length)return 0;
   let s=0, exact=0, fuzzy=0;
@@ -480,18 +559,22 @@ function renderKnowledge(){
   updateCategories();
   const q=normalize($('search').value),cat=$('catFilter').value,af=$('activeFilter').value;
   const arr=questions.filter(x=>
-    (!q||normalize([x.question,x.answer,x.category,...kws(x.keywords)].join(' ')).includes(q))&&
+    (!q||normalize([x.question,x.answer,x.category,...visibleKeywords(x.keywords)].join(' ')).includes(q))&&
     (!cat||x.category===cat)&&(!af||String(!!x.active)===(af==='1'))
   );
   $('knowledgeList').innerHTML=arr.length?arr.map(x=>{
     const empty=!String(x.answer||'').trim();
+    const cfg=getBotConfig(x)||{};
+    const modeLabel=cfg.inputMode==='required_data'?'بيانات مطلوبة':cfg.inputMode==='action'?'إجراء':'رد معلوماتي';
     return '<div class="item '+(x.active?'':'off')+'">'+
       '<div class="q">'+esc(x.question)+'</div>'+
       '<div class="a">'+(empty?'<span class="error">⚠️ بدون إجابة</span>':esc(x.answer))+'</div>'+
       '<div class="meta"><span class="chip">'+esc(x.category||'بدون تصنيف')+'</span>'+
       (x.active?'<span class="chip ok">فعال</span>':'<span class="chip bad">متوقف</span>')+
       '<span class="chip gold">استخدم '+(Number(x.usage_count)||0)+'</span>'+
-      kws(x.keywords).map(k=>'<span class="chip">'+esc(k)+'</span>').join('')+'</div>'+
+      '<span class="chip cfg-chip">'+esc(modeLabel)+'</span>'+
+      (cfg.linkedAction?'<span class="chip cfg-chip action">'+esc(cfg.linkedAction)+'</span>':'')+
+      visibleKeywords(x.keywords).map(k=>'<span class="chip">'+esc(k)+'</span>').join('')+'</div>'+
       '<div class="tools">'+
       '<button class="btn-light" onclick="editQuestion('+Number(x.id)+')">✏️ تعديل</button>'+
       '<button class="'+(x.active?'btn-danger':'btn-navy')+'" onclick="toggleQuestion('+Number(x.id)+','+!!x.active+')">'+(x.active?'تعطيل':'تفعيل')+'</button>'+
@@ -501,21 +584,23 @@ function renderKnowledge(){
 }
 function newQuestion(){
   $('editId').value='';$('question').value='';$('answer').value='';$('category').value='';$('keywords').value='';$('active').checked=true;
+  writeBotConfigForm({inputMode:'answer',fieldType:'text',fieldExample:'',linkedAction:''});
   $('formTitle').textContent='➕ إضافة سؤال وإجابة';$('formMsg').textContent='';$('duplicateBox').style.display='none';
   tab('knowledge');$('question').focus();
 }
 function editQuestion(id){
   const x=questions.find(a=>Number(a.id)===Number(id));if(!x)return;
   $('editId').value=x.id;$('question').value=x.question||'';$('answer').value=x.answer||'';
-  $('category').value=x.category||'';$('keywords').value=kws(x.keywords).join('، ');$('active').checked=!!x.active;
+  $('category').value=x.category||'';$('keywords').value=visibleKeywords(x.keywords).join('، ');$('active').checked=!!x.active;
+  writeBotConfigForm(getBotConfig(x));
   $('formTitle').textContent='✏️ تعديل السؤال';$('duplicateBox').style.display='none';tab('knowledge');window.scrollTo({top:0,behavior:'smooth'});
 }
 async function saveQuestion(){
   const question=$('question').value.trim(),answer=$('answer').value.trim();
-  const category=$('category').value.trim(),keywords=kws($('keywords').value);
+  const category=$('category').value.trim(),keywords=kws($('keywords').value),cfg=readBotConfigForm();
   const active=$('active').checked,id=$('editId').value;
-  if(!question||!answer){
-    $('formMsg').textContent='❌ لازم تكتب السؤال والإجابة';
+  if(!question || (cfg.inputMode==='answer'&&!answer)){
+    $('formMsg').textContent='❌ لازم تكتب السؤال والإجابة للرد المعلوماتي';
     $('formMsg').className='error'; return;
   }
 
@@ -528,7 +613,7 @@ async function saveQuestion(){
   const payload={
     question:mergeTarget&&!id?mergeTarget.question:question,
     answer,category:category||mergeTarget?.category||null,
-    keywords:[...new Set([...kws(mergeTarget?.keywords),...keywords])],
+    keywords:keywordsWithBotConfig([...new Set([...visibleKeywords(mergeTarget?.keywords),...keywords])],cfg),
     active,updated_at:new Date().toISOString()
   };
 
@@ -559,7 +644,7 @@ async function saveUnansweredQuestion(){
   try{
     await window.sbFetch('bot_knowledge',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({
       question:q,answer:'',category:$('category').value.trim()||'أسئلة تحتاج إجابة',
-      keywords:kws($('keywords').value),active:false,usage_count:1,updated_at:new Date().toISOString()
+      keywords:keywordsWithBotConfig(kws($('keywords').value),readBotConfigForm()),active:false,usage_count:1,updated_at:new Date().toISOString()
     })});
     $('formMsg').textContent='✅ تم حفظ السؤال كمسودة بدون إجابة';$('formMsg').className='success';await loadQuestions();renderAll();
   }catch(e){$('formMsg').textContent='❌ فشل الحفظ: '+e.message;$('formMsg').className='error'}
@@ -904,10 +989,10 @@ async function lookupOrder(ref){
 ========================================================= */
 
 // ===== حالة المحادثة =====
-let botState={topic:'idle',waitingFor:null,giftData:{},orderRef:''};
+let botState={topic:'idle',waitingFor:null,giftData:{},orderRef:'',actionData:null};
 
 function resetBotState(topic){
-  botState={topic:topic||'idle',waitingFor:null,giftData:{},orderRef:''};
+  botState={topic:topic||'idle',waitingFor:null,giftData:{},orderRef:'',actionData:null};
 }
 
 // ===== فهم الموضوع (مصحح) =====
@@ -972,6 +1057,54 @@ function findBestAnswer(msg){
   // إجابة قاعدة المعرفة لا تُستخدم إلا مع تطابق قوي مستقل، أو تشابه سؤال مرتفع جدًا.
   const strong=(best.score>=minScore && (sim>=.68 || margin>=3)) && !(second && second.score>=best.score*.94 && sim<.78);
   return strong?{found:true,item:best,ranked}:{found:false,ranked};
+}
+
+function validateBotValue(value,type){
+  const v=String(value||'').trim();
+  if(!v)return false;
+  if(type==='number')return /\d+/.test(arabicDigits(v));
+  if(type==='phone')return String(v).replace(/\D/g,'').length>=7;
+  if(type==='email')return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+  if(type==='date')return /\d{1,4}[\/\-\s]\d{1,2}|اليوم|بكره|غدا|غدًا|بعد/.test(arabicDigits(normalize(v)));
+  if(type==='image')return /https?:\/\/|صوره|صورة|شعار|ملف|png|jpg|jpeg|webp|pdf/i.test(v);
+  return v.length>=2;
+}
+function fieldTypeLabel(type){
+  return ({text:'نص',number:'رقم',phone:'رقم هاتف',email:'بريد إلكتروني',date:'تاريخ',image:'صورة/شعار'})[type]||'بيان';
+}
+function actionReply(action,value,cfg){
+  const example=cfg?.fieldExample?'\nمثال محفوظ: '+cfg.fieldExample:'';
+  if(action==='HANDOFF_HUMAN')return settings.human+'\nتم تسجيل البيانات: '+value;
+  if(action==='PRODUCT_SEARCH')return 'تمام، هستخدم البيانات دي في ترشيح المنتجات: '+value;
+  if(action==='CREATE_QUOTE')return 'تمام، سجلت البيانات دي لتجهيز عرض السعر: '+value+example;
+  if(action==='UPDATE_ORDER')return 'تمام، سجلت التحديث المطلوب على الطلب: '+value;
+  if(action==='CUSTOM_GIFT_ORDER')return 'تمام، ضفت البيانات دي لطلب الهدية المخصص: '+value;
+  if(action==='COLLECT_LEAD')return 'تمام، حفظت بيانات التواصل: '+value;
+  return 'تمام، سجلت البيانات: '+value;
+}
+async function handleConfiguredKnowledge(item){
+  const cfg=getBotConfig(item)||{};
+  if(cfg.inputMode==='required_data'){
+    botState.waitingFor='action_param_'+(cfg.fieldType||'text');
+    botState.actionData={knowledgeId:item.id,question:item.question,action:cfg.linkedAction||'',fieldType:cfg.fieldType||'text',fieldExample:cfg.fieldExample||''};
+    const prompt=String(item.answer||'').trim()||('محتاج '+fieldTypeLabel(cfg.fieldType)+' عشان أكمل.');
+    return {type:'clarify',text:prompt+(cfg.fieldExample?'\nمثال: '+cfg.fieldExample:'')};
+  }
+  if(cfg.inputMode==='action'){
+    if(cfg.linkedAction==='HANDOFF_HUMAN')return {type:'answer',text:settings.human};
+    if(cfg.linkedAction==='PRODUCT_SEARCH'){
+      const products=await recommendProducts(item.question,extractIntent(item.question));
+      if(products.length)return {type:'products',text:String(item.answer||'دي أقرب منتجات مناسبة:'),products};
+    }
+    return {type:'answer',text:String(item.answer||'تم تنفيذ الإجراء: '+(cfg.linkedAction||'إجراء'))};
+  }
+  return {type:'answer',text:item.answer,match:item};
+}
+
+async function callBotLLM(raw,ctx){
+  // Placeholder آمن: الربط الحقيقي بالذكاء الاصطناعي لازم يكون من Edge Function/Backend
+  // عشان مفاتيح API ما تتحطش داخل HTML.
+  return null;
 }
 
 // ===== معالجة تتبع الطلب =====
@@ -1101,7 +1234,7 @@ async function handleSingleMessage(raw, ctx){
   renderRanking(match.ranked);
   if(match.found){
     await incrementUsage(match.item);
-    return {type:'answer',text:match.item.answer,match:match.item};
+    return await handleConfiguredKnowledge(match.item);
   }
 
   // ⭐ تالت: مناسبة من السياق (بدون كلمة "هدية" صريحة)
@@ -1180,11 +1313,23 @@ async function processBotMessageCore(msg){
       return {type:'clarify',text:'مش فاهم رقم الطلب 😅\nابعتلي رقم الطلب بالأرقام (مثلاً 1001#)'};
     }
 
+    if(waiting.startsWith('action_param_')){
+      const data=botState.actionData||{};
+      const type=data.fieldType||waiting.replace('action_param_','')||'text';
+      if(!validateBotValue(raw,type)){
+        const ex=data.fieldExample?'\nمثال: '+data.fieldExample:'';
+        return {type:'clarify',text:'محتاج '+fieldTypeLabel(type)+' بشكل أوضح عشان أكمل.'+ex};
+      }
+      botState.waitingFor=null;
+      botState.actionData=null;
+      return {type:'answer',text:actionReply(data.action,raw,data)};
+    }
+
     // ⭐ لو العميل سأل سؤال عام واضح في قاعدة المعرفة، رد عليه الأول
     const quickMatch=findBestAnswer(raw);
     if(quickMatch.found && quickMatch.item.score>=(Number(settings.minScore)||6)+3){
       await incrementUsage(quickMatch.item);
-      return {type:'answer',text:quickMatch.item.answer,match:quickMatch.item};
+      return await handleConfiguredKnowledge(quickMatch.item);
     }
 
     // تحية في نص الflow
@@ -1226,7 +1371,7 @@ async function processBotMessageCore(msg){
       if(budget!=null){
         botState.giftData.budget=budget;
         botState.waitingFor=null;
-        const fullCtx={...merged,...botState.giftData};
+        const fullCtx={...ctx,...botState.giftData};
         const allText=[raw,...conversation.filter(x=>x.role==='user').slice(-5).map(x=>x.text)].join(' ');
         const products=await recommendProducts(allText,fullCtx);
         if(products.length){
@@ -1375,6 +1520,7 @@ function saveMeta(){
 $('testMessage').addEventListener('keydown',e=>{if(e.key==='Enter')testBot()});
 $('quickMsg').addEventListener('keydown',e=>{if(e.key==='Enter')quickTest()});
 loadSettings();
+syncBotActionFields();
 resetChat();
 loadAll().catch(()=>{});
 const savedTab=sessionStorage.getItem('bot_tab');if(savedTab)tab(savedTab);
