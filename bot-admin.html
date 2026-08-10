@@ -121,6 +121,9 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:9px;
           <option value="email">بريد إلكتروني (email)</option>
           <option value="date">تاريخ (date)</option>
           <option value="image">صورة/شعار (image)</option>
+          <option value="order_number">رقم طلب (order_number)</option>
+          <option value="category">فئة (category)</option>
+          <option value="product">منتج (product)</option>
         </select>
       </div>
       <div>
@@ -134,7 +137,11 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:9px;
           <option value="CUSTOM_GIFT_ORDER">CUSTOM_GIFT_ORDER</option>
           <option value="CREATE_QUOTE">CREATE_QUOTE</option>
           <option value="UPDATE_ORDER">UPDATE_ORDER</option>
+          <option value="TRACK_ORDER">TRACK_ORDER</option>
+          <option value="CATEGORY_PRODUCTS">CATEGORY_PRODUCTS</option>
           <option value="PRODUCT_SEARCH">PRODUCT_SEARCH</option>
+          <option value="PRODUCT_LOOKUP">PRODUCT_LOOKUP</option>
+          <option value="IMAGE_PRODUCT_SEARCH">IMAGE_PRODUCT_SEARCH</option>
           <option value="COLLECT_LEAD">COLLECT_LEAD</option>
           <option value="HANDOFF_HUMAN">HANDOFF_HUMAN</option>
         </select>
@@ -846,6 +853,11 @@ function productText(p){
   const sub=Array.isArray(p.subcategories)?p.subcategories.join(' '):(p.subcategories||'');
   return normalize([name,desc,cats,sub].join(' '));
 }
+function productCategoryText(p){
+  const cats=Array.isArray(p.categories)?p.categories.join(' '):(p.categories||'');
+  const sub=Array.isArray(p.subcategories)?p.subcategories.join(' '):(p.subcategories||'');
+  return normalize([cats,sub,p.category_name,p.subcategory_name,p.category_slug,p.subcategory_slug].join(' '));
+}
 function productName(p){
   if(p.name_ar||p.name_en)return p.name_ar||p.name_en;
   if(typeof p.name==='object')return p.name.ar||p.name.en||'منتج';
@@ -903,6 +915,51 @@ const INTEREST_TERMS={
   'كتب':['كتاب','book'],
   'أطفال':['اطفال','toys','kids']
 };
+const CATEGORY_TERMS={
+  newborn:['مولود','مواليد','بيبي','baby','newborn','اطفال','أطفال'],
+  graduation:['تخرج','graduation','graduate'],
+  eid:['عيد','eid','فطر','اضحى','أضحى'],
+  ramadan:['رمضان','ramadan'],
+  birthday:['ميلاد','birthday'],
+  wedding:['زواج','عرس','فرح','wedding'],
+  engagement:['خطوبة','engagement'],
+  corporate:['شركة','شركات','موظفين','عملاء','اعلاني','إعلاني','corporate','company','promotional','logo'],
+  acrylic:['اكريليك','أكريليك','acrylic'],
+  wood:['خشب','wood'],
+  sticker:['استيكر','ستيكر','sticker']
+};
+function categoryTermsFromText(text){
+  const t=normalize(text),out=[];
+  Object.keys(CATEGORY_TERMS).forEach(k=>{
+    if(CATEGORY_TERMS[k].some(w=>t.includes(normalize(w))))out.push(...CATEGORY_TERMS[k],k);
+  });
+  const occ=matchFirst(OCCASION_MAP,t);
+  if(occ&&OCCASION_TERMS[occ])out.push(...OCCASION_TERMS[occ]);
+  return [...new Set(out.map(normalize).filter(Boolean))];
+}
+async function recommendCategoryProducts(text,ctx=null){
+  if(!botProducts.length)await loadProductsForBot();
+  const terms=categoryTermsFromText([text,contextPrompt(ctx||{})].join(' '));
+  if(!terms.length)return recommendProducts(text,ctx);
+  return botProducts.map(p=>{
+    const pt=productText(p),ct=productCategoryText(p);let s=0;
+    terms.forEach(w=>{if(ct.includes(w))s+=10;else if(pt.includes(w))s+=4});
+    if(Number(p.stock)<=0)s-=999;
+    return {...p,_score:s};
+  }).filter(p=>p._score>0).sort((a,b)=>b._score-a._score||(Number(a.price)||0)-(Number(b.price)||0)).slice(0,6);
+}
+async function lookupProductByText(text){
+  if(!botProducts.length)await loadProductsForBot();
+  const q=normalize(text);
+  const words=meaningfulTokens(q);
+  return botProducts.map(p=>{
+    const pt=productText(p);let s=0;
+    words.forEach(w=>{if(pt.includes(w))s+=w.length>3?3:1});
+    const name=normalize(productName(p));
+    if(name&&q.includes(name))s+=20;
+    return {...p,_score:s};
+  }).filter(p=>p._score>0).sort((a,b)=>b._score-a._score).slice(0,6);
+}
 function recipientTerms(msg){
   const t=normalize(msg),out=[];
   RECIPIENT_MAP.forEach(([re,label])=>{if(re.test(t)&&RECIPIENT_TERMS[label])out.push(...RECIPIENT_TERMS[label])});
@@ -1008,12 +1065,12 @@ function detectTopic(text){
   if(/موظف|بشر|احد يرد|حد يكلمني|عايز اتكلم|human|support/.test(t)) return 'human';
 
   // 2. تتبع طلب
-  if(/(?:وين|فين|حال[ةه]|تتبع|رقم)\s*طلب[يى]?/.test(t)) return 'order';
-  if(/\bطلب\s*#?\s*\d{3,}/.test(t)) return 'order';
+  if(/(?:وين|فين|حال[ةه]|تتبع|رقم)\s*(?:طلب|اوردر|كلب)[يى]?/.test(t)) return 'order';
+  if(/\b(?:طلب|اوردر|كلب)\s*#?\s*\d{3,}/.test(t)) return 'order';
   if(/#\s*\d{3,}/.test(t)) return 'order';
   if(/track|order\s*status/.test(t)) return 'order';
   // ⭐ رقم مجرد لوحده (مثل 1150) — لو البوت مستني رقم طلب أو السياق واضح
-  if(hasNumber && (botState.waitingFor==='order_number' || /طلب|اوردر|order/.test(t))) return 'order';
+  if(hasNumber && (botState.waitingFor==='order_number' || /طلب|اوردر|كلب|order/.test(t))) return 'order';
 
   // 3. صورة / صور
   if(/صور[هة]?|image|pic|photo/.test(t)) return 'image';
@@ -1075,15 +1132,21 @@ function validateBotValue(value,type){
   if(type==='email')return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
   if(type==='date')return /\d{1,4}[\/\-\s]\d{1,2}|اليوم|بكره|غدا|غدًا|بعد/.test(arabicDigits(normalize(v)));
   if(type==='image')return /https?:\/\/|صوره|صورة|شعار|ملف|png|jpg|jpeg|webp|pdf/i.test(v);
+  if(type==='order_number')return /\d{3,10}/.test(arabicDigits(v));
+  if(type==='category'||type==='product')return v.length>=2;
   return v.length>=2;
 }
 function fieldTypeLabel(type){
-  return ({text:'نص',number:'رقم',phone:'رقم هاتف',email:'بريد إلكتروني',date:'تاريخ',image:'صورة/شعار'})[type]||'بيان';
+  return ({text:'نص',number:'رقم',phone:'رقم هاتف',email:'بريد إلكتروني',date:'تاريخ',image:'صورة/شعار',order_number:'رقم طلب',category:'فئة',product:'منتج'})[type]||'بيان';
 }
 function actionReply(action,value,cfg){
   const example=cfg?.fieldExample?'\nمثال محفوظ: '+cfg.fieldExample:'';
   if(action==='HANDOFF_HUMAN')return settings.human+'\nتم تسجيل البيانات: '+value;
   if(action==='PRODUCT_SEARCH')return 'تمام، هستخدم البيانات دي في ترشيح المنتجات: '+value;
+  if(action==='PRODUCT_LOOKUP')return 'تمام، هبحث عن المنتج ده في الموقع: '+value;
+  if(action==='CATEGORY_PRODUCTS')return 'تمام، هعرض منتجات الفئة المناسبة: '+value;
+  if(action==='IMAGE_PRODUCT_SEARCH')return 'تمام، هستخدم وصف الصورة/الرابط للبحث عن أقرب منتج: '+value;
+  if(action==='TRACK_ORDER')return 'تمام، هتبع الطلب رقم: '+value;
   if(action==='CREATE_QUOTE')return 'تمام، سجلت البيانات دي لتجهيز عرض السعر: '+value+example;
   if(action==='UPDATE_ORDER')return 'تمام، سجلت التحديث المطلوب على الطلب: '+value;
   if(action==='CUSTOM_GIFT_ORDER')return 'تمام، ضفت البيانات دي لطلب الهدية المخصص: '+value;
@@ -1100,9 +1163,23 @@ async function handleConfiguredKnowledge(item){
   }
   if(cfg.inputMode==='action'){
     if(cfg.linkedAction==='HANDOFF_HUMAN')return {type:'answer',text:settings.human};
+    if(cfg.linkedAction==='TRACK_ORDER'){
+      resetBotState('order');
+      return await handleOrderQuery(item.question+' '+(cfg.fieldExample||''));
+    }
+    if(cfg.linkedAction==='CATEGORY_PRODUCTS'){
+      const products=await recommendCategoryProducts([item.question,item.answer,cfg.fieldExample].join(' '),extractIntent(item.question));
+      if(products.length)return {type:'products',text:String(item.answer||'دي منتجات مناسبة للفئة المطلوبة:'),products};
+      return {type:'clarify',text:'مش لاقي منتجات واضحة للفئة دي حاليًا. اكتب اسم المناسبة أو الفئة بشكل أدق.'};
+    }
     if(cfg.linkedAction==='PRODUCT_SEARCH'){
       const products=await recommendProducts(item.question,extractIntent(item.question));
       if(products.length)return {type:'products',text:String(item.answer||'دي أقرب منتجات مناسبة:'),products};
+    }
+    if(cfg.linkedAction==='PRODUCT_LOOKUP'||cfg.linkedAction==='IMAGE_PRODUCT_SEARCH'){
+      const products=await lookupProductByText([item.question,item.answer,cfg.fieldExample].join(' '));
+      if(products.length)return {type:'products',text:String(item.answer||'لقيت أقرب منتجات مطابقة من الموقع:'),products};
+      return {type:'clarify',text:'محتاج اسم المنتج أو وصف أو رابط صورة أوضح عشان أبحث في منتجات الموقع.'};
     }
     return {type:'answer',text:String(item.answer||'تم تنفيذ الإجراء: '+(cfg.linkedAction||'إجراء'))};
   }
@@ -1113,6 +1190,15 @@ async function callBotLLM(raw,ctx){
   // Placeholder آمن: الربط الحقيقي بالذكاء الاصطناعي لازم يكون من Edge Function/Backend
   // عشان مفاتيح API ما تتحطش داخل HTML.
   return null;
+}
+
+function smartFallbackReply(raw,ctx){
+  const t=normalize(raw);
+  if(/سعر|بكام|كم|price|cost/.test(t))return 'أقدر أساعدك في السعر، بس محتاج اسم المنتج أو رابط المنتج أو وصف أوضح عشان أطلع السعر الصحيح من الموقع. سجلت سؤالك للمراجعة لو محتاج إضافة رد ثابت.';
+  if(/شحن|توصيل|delivery|shipping/.test(t))return 'أقدر أراجع لك التوصيل حسب المدينة ونوع الطلب. اكتب المدينة أو رقم الطلب لو عندك طلب قائم، وسجلت السؤال ضمن الأسئلة التي تحتاج إجابة.';
+  if(/شعار|لوجو|تصميم|طباعة|حفر|logo|print|engraving/.test(t))return 'نقدر ننفذ التخصيص حسب المنتج. ابعت اسم المنتج والكمية والشعار/التصميم أو رابط الصورة، وأنا أساعدك بالخطوة التالية. سجلت السؤال للمراجعة.';
+  if(ctx?.occasion||ctx?.recipient||ctx?.interest)return 'فهمت إنك تبحث عن هدية، لكن محتاج تفاصيل أكثر عشان أطلع اقتراح مضبوط: المناسبة، الكمية أو الميزانية، وموعد التسليم. سجلت السؤال لتحسين قاعدة المعرفة.';
+  return 'مش عندي إجابة مؤكدة للسؤال ده حاليًا، لكن سجلته للمراجعة عشان نضيف له رد ثابت. ممكن تكتب تفاصيل أكثر أو اسم المنتج/رقم الطلب لو سؤالك مرتبط بطلب معيّن.';
 }
 
 // ===== معالجة تتبع الطلب =====
@@ -1226,8 +1312,20 @@ async function handleSingleMessage(raw, ctx){
 
   // صور
   if(topic==='image'){
+    const products=await lookupProductByText(raw);
+    if(products.length)return {type:'products',text:'حاولت أبحث من الوصف/الرابط المرسل، ودي أقرب منتجات من الموقع:',products};
     await persistUnanswered(raw);
-    return {type:'clarify',text:'تمام، لو دي صورة شعار أو تصميم ابعتها كرابط أو ارفعها مع الطلب، وكمان اكتبلي المنتج المطلوب والكمية وموعد التسليم. مثال: 500 مج حراري بشعار الشركة خلال أسبوع.'};
+    return {type:'clarify',text:'تمام، لو دي صورة منتج أو شعار ابعتها كرابط أو اكتب وصفها، وأنا أبحث في منتجات الموقع عن أقرب منتج وسعره. لو شعار تنفيذ مخصص، اكتبلي المنتج والكمية وموعد التسليم. مثال: 500 مج حراري بشعار الشركة خلال أسبوع.'};
+  }
+
+  if(topic==='greeting')return {type:'answer',text:greetingReply(raw)};
+
+  // قاعدة المعرفة أولاً قبل مسارات الهدايا والمنتجات العامة.
+  const earlyMatch=findBestAnswer(raw);
+  renderRanking(earlyMatch.ranked);
+  if(earlyMatch.found){
+    await incrementUsage(earlyMatch.item);
+    return await handleConfiguredKnowledge(earlyMatch.item);
   }
 
   // هدية / مناسبة
@@ -1242,8 +1340,6 @@ async function handleSingleMessage(raw, ctx){
     if(products.length)return {type:'products',text:'🛒 دي بعض منتجاتنا المتاحة:',products};
     return {type:'clarify',text:'عايز تشوف منتجات إيه بالظبط؟ ممكن تقولي المناسبة أو نوع المنتج؟'};
   }
-
-  if(topic==='greeting')return {type:'answer',text:greetingReply(raw)};
 
   // ⭐ تاني: دور في قاعدة المعرفة للأسئلة العامة بس
   const match=findBestAnswer(raw);
@@ -1303,7 +1399,7 @@ async function handleSingleMessage(raw, ctx){
   }
 
   await persistUnanswered(raw);
-  return {type:'fallback',text:settings.fallback+'\n'+settings.human};
+  return {type:'fallback',text:smartFallbackReply(raw,ctx)+'\n'+settings.human};
 }
 
 // ===== الرد على الرسالة (مع مراعاة السياق) =====
@@ -1338,6 +1434,17 @@ async function processBotMessageCore(msg){
       }
       botState.waitingFor=null;
       botState.actionData=null;
+      if(data.action==='TRACK_ORDER') return await handleOrderQuery(raw);
+      if(data.action==='CATEGORY_PRODUCTS'){
+        const products=await recommendCategoryProducts(raw,extractIntent(raw));
+        if(products.length)return {type:'products',text:'دي منتجات مناسبة للفئة المطلوبة:',products};
+        return {type:'clarify',text:'مش لاقي منتجات واضحة للفئة دي حاليًا. جرّب تكتب المناسبة أو اسم الفئة بطريقة تانية.'};
+      }
+      if(data.action==='PRODUCT_LOOKUP'||data.action==='PRODUCT_SEARCH'||data.action==='IMAGE_PRODUCT_SEARCH'){
+        const products=data.action==='PRODUCT_SEARCH'?await recommendProducts(raw,extractIntent(raw)):await lookupProductByText(raw);
+        if(products.length)return {type:'products',text:'لقيت أقرب منتجات من الموقع:',products};
+        return {type:'clarify',text:'محتاج وصف أو اسم منتج أو رابط صورة أوضح عشان أبحث في منتجات الموقع.'};
+      }
       return {type:'answer',text:actionReply(data.action,raw,data)};
     }
 
