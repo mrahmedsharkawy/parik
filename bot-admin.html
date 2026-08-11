@@ -1431,7 +1431,6 @@ function productsFromCategoryPageValue(actionValue){
   const groups=categoryPageTermGroups(actionValue);
   if(!groups.length)return [];
   const requestedKeys=categoryKeysFromTerms(groups.flat());
-  const nameRequiredKeys=requestedKeys.filter(k=>['cups','paper','forex','wood','leather','sticker','box','trays','stand','tables','bags'].includes(k));
   return botProducts.map(p=>{
     const pt=productText(p),ct=productCategoryText(p);
     let score=0;
@@ -1441,8 +1440,6 @@ function productsFromCategoryPageValue(actionValue){
       return hit;
     });
     if(!ok)return {...p,_score:0};
-    if(hasConflictingCategorySignal(p,requestedKeys))return {...p,_score:0};
-    if(nameRequiredKeys.length&&!productNameHasCategoryKey(p,nameRequiredKeys))return {...p,_score:0};
     groups.flat().forEach(w=>{if(hasWholeTerm(pt,w))score+=2});
     return {...p,_score:score};
   }).filter(p=>p._score>0).sort((a,b)=>b._score-a._score||(Number(a.price)||0)-(Number(b.price)||0)).slice(0,BOT_PRODUCT_LIMIT);
