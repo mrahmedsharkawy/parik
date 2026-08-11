@@ -434,6 +434,17 @@ function canonicalAction(action){
   };
   return map[a]!==undefined?map[a]:a;
 }
+function actionValueLooksLikeCategory(value){
+  const raw=String(value||'').trim();
+  if(!raw)return false;
+  const n=normalize(decodeActionValuePart(raw));
+  return /categories\.html/i.test(raw)||/[?&]category=/i.test(raw)||/[?&]subcategory=/i.test(raw)||hasWholeTerm(n,'category')||hasWholeTerm(n,'subcategory');
+}
+function configuredAction(cfg){
+  const action=canonicalAction(cfg?.linkedAction);
+  if(action==='PRODUCT_LOOKUP'&&actionValueLooksLikeCategory(cfg?.actionValue||cfg?.fieldExample||''))return 'CATEGORY_PRODUCTS';
+  return action;
+}
 function writeBotConfigForm(cfg){
   cfg=cfg||{};
   if($('inputMode'))$('inputMode').value=cfg.inputMode||'answer';
@@ -1663,7 +1674,7 @@ function actionReply(action,value,cfg){
   return 'تمام، سجلت البيانات: '+value;
 }
 function requiredDataPrompt(item,cfg){
-  const action=canonicalAction(cfg.linkedAction);
+  const action=configuredAction(cfg);
   const answer=String(item.answer||'').trim();
   if(answer)return answer;
   if(action==='TRACK_ORDER')return 'تمام، ابعت رقم الطلب (مثلاً #1001) وأنا أقولك حالته وصل لفين.';
@@ -1678,7 +1689,7 @@ function requiredDataPrompt(item,cfg){
 async function handleConfiguredKnowledge(item){
   const cfg=getBotConfig(item)||{};
   if(cfg.inputMode==='required_data'){
-    const action=canonicalAction(cfg.linkedAction);
+    const action=configuredAction(cfg);
     const seed=[item.question,item.answer,cfg.actionValue,cfg.fieldExample].join(' ');
     if(action==='CATEGORY_PRODUCTS' && categoryBrowseIntent(seed)){
       const products=await recommendCategoryProductsForAction(cfg.actionValue||cfg.fieldExample||'',seed,extractIntent(seed));
@@ -1702,7 +1713,7 @@ async function handleConfiguredKnowledge(item){
     return {type:'clarify',text:prompt+(cfg.fieldExample?'\nمثال: '+cfg.fieldExample:'')};
   }
   if(cfg.inputMode==='action'){
-    const action=canonicalAction(cfg.linkedAction);
+    const action=configuredAction(cfg);
     const actionValue=cfg.actionValue||cfg.fieldExample||'';
     if(action==='HANDOFF_HUMAN')return {type:'answer',text:settings.human};
     if(action==='TRACK_ORDER'){
@@ -1902,7 +1913,7 @@ async function handleSingleMessage(raw, ctx){
   if(knowledgeFirst.found){
     await incrementUsage(knowledgeFirst.item);
     botState.lastKnowledgeId=knowledgeFirst.item.id;
-    renderBotDebug({knowledgeMatch:knowledgeFirst.item.question,confidence:knowledgeFirst.item.score,actionExecuted:canonicalAction(getBotConfig(knowledgeFirst.item).linkedAction)});
+    renderBotDebug({knowledgeMatch:knowledgeFirst.item.question,confidence:knowledgeFirst.item.score,actionExecuted:configuredAction(getBotConfig(knowledgeFirst.item))});
     return await handleConfiguredKnowledge(knowledgeFirst.item);
   }
 
@@ -1959,7 +1970,7 @@ async function handleSingleMessage(raw, ctx){
   if(match.found){
     await incrementUsage(match.item);
     botState.lastKnowledgeId=match.item.id;
-    renderBotDebug({knowledgeMatch:match.item.question,confidence:match.item.score,actionExecuted:canonicalAction(getBotConfig(match.item).linkedAction)});
+    renderBotDebug({knowledgeMatch:match.item.question,confidence:match.item.score,actionExecuted:configuredAction(getBotConfig(match.item))});
     return await handleConfiguredKnowledge(match.item);
   }
 
