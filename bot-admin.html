@@ -1372,6 +1372,10 @@ function categoryPageParams(value){
     subcategory:decodeActionValuePart(out.subcategory)
   };
 }
+function hasCategoryPageParams(value){
+  const params=categoryPageParams(value);
+  return !!(params.category||params.subcategory);
+}
 function sameCategoryValue(row,value){
   const n=normalize(value);
   if(!row||!n)return false;
@@ -1407,6 +1411,21 @@ function categoryPageTermGroups(value){
   if(params.category)groups.push(categoryPageTermGroup(params.category));
   if(params.subcategory)groups.push(categoryPageTermGroup(params.subcategory,cat&&cat.id));
   return groups.filter(g=>g.length);
+}
+function categoryPageLabel(value){
+  const params=categoryPageParams(value);
+  const cat=botCategories.find(c=>sameCategoryValue(c,params.category));
+  const sub=botSubcategories.find(s=>{
+    const sameParent=!cat||String(s.category_id||s.categoryId||'')===String(cat.id);
+    return sameParent&&sameCategoryValue(s,params.subcategory);
+  })||botSubcategories.find(s=>sameCategoryValue(s,params.subcategory));
+  const catName=cat?flatText(cat.name_ar||cat.name_en||cat.name):decodeActionValuePart(params.category);
+  const subName=sub?flatText(sub.name_ar||sub.name_en||sub.name):decodeActionValuePart(params.subcategory);
+  return [subName,catName].map(x=>String(x||'').trim()).filter(Boolean).join(' ');
+}
+function categoryProductsIntro(actionValue,fallback){
+  const label=categoryPageLabel(actionValue);
+  return label?'دي المنتجات المطابقة لفئة '+label+':':fallback;
 }
 function productsFromCategoryPageValue(actionValue){
   const groups=categoryPageTermGroups(actionValue);
@@ -1475,6 +1494,7 @@ async function recommendCategoryProductsForAction(actionValue,text,ctx=null){
   if(!botProducts.length)await loadProductsForBot();
   const pageProducts=productsFromCategoryPageValue(actionValue);
   if(pageProducts.length)return pageProducts;
+  if(hasCategoryPageParams(actionValue))return [];
   const terms=[...categoryTermsFromActionValue(actionValue),...categoryTermsFromText(text)];
   const cleanTerms=[...new Set(terms.map(normalize).filter(Boolean))];
   const requestedKeys=[...new Set([...categoryKeysFromTerms(cleanTerms),...requestedCategoryKeys(text)])];
@@ -1788,7 +1808,7 @@ async function handleConfiguredKnowledge(item){
     const seed=[item.question,item.answer,cfg.actionValue,cfg.fieldExample].join(' ');
     if(action==='CATEGORY_PRODUCTS' && categoryBrowseIntent(seed)){
       const products=await recommendCategoryProductsForAction(cfg.actionValue||cfg.fieldExample||'',seed,extractIntent(seed));
-      if(products.length)return {type:'products',text:String(item.answer||'دي منتجات مناسبة للفئة المطلوبة:'),products};
+      if(products.length)return {type:'products',text:categoryProductsIntro(cfg.actionValue||cfg.fieldExample||'',String(item.answer||'دي منتجات مناسبة للفئة المطلوبة:')),products};
     }
     if(action==='PRODUCT_SEARCH'){
       const products=await recommendProducts(seed,extractIntent(seed));
@@ -1817,8 +1837,9 @@ async function handleConfiguredKnowledge(item){
     }
     if(action==='CATEGORY_PRODUCTS'){
       const products=await recommendCategoryProductsForAction(actionValue,[item.question,item.answer].join(' '),extractIntent(item.question));
-      if(products.length)return {type:'products',text:String(item.answer||'دي منتجات مناسبة للفئة المطلوبة:'),products};
-      return {type:'clarify',text:'مش لاقي منتجات واضحة للفئة دي حاليًا. اكتب اسم المناسبة أو الفئة بشكل أدق.'};
+      if(products.length)return {type:'products',text:categoryProductsIntro(actionValue,String(item.answer||'دي منتجات مناسبة للفئة المطلوبة:')),products};
+      const label=categoryPageLabel(actionValue)||'الفئة دي';
+      return {type:'clarify',text:'مش لاقي منتجات مطابقة لـ '+label+' حاليًا. راجع ربط المنتجات تحت نفس الفئة في بيانات الموقع.'};
     }
     if(action==='PRODUCT_SEARCH'){
       const products=await recommendProducts([item.question,actionValue].join(' '),extractIntent(item.question));
@@ -1995,6 +2016,17 @@ async function handleSingleMessage(raw, ctx){
   }
 
   if(topic==='browse'){
+    const browseKnowledge=findBestAnswer(raw);
+    renderRanking(browseKnowledge.ranked);
+    if(browseKnowledge.found){
+      await incrementUsage(browseKnowledge.item);
+      botState.lastKnowledgeId=browseKnowledge.item.id;
+      renderBotDebug({knowledgeMatch:browseKnowledge.item.question,confidence:browseKnowledge.item.score,actionExecuted:configuredAction(getBotConfig(browseKnowledge.item))});
+      return await handleConfiguredKnowledge(browseKnowledge.item);
+    }
+  }
+
+  if(topic==='browse'){
     resetBotState('browse');
     const products=await recommendCategoryProducts(raw,ctx);
     const occ=categoryLabelFromText(raw);
@@ -2136,7 +2168,7 @@ async function processBotMessageCore(msg){
   botState.recipient=ctx.recipient||botState.recipient||'';
   botState.occasion=ctx.occasion||botState.occasion||'';
   botState.budget=ctx.budget??botState.budget;
-  renderBotDebug({intent:botState.lastIntent,actionExecuted:''});
+  renderBotDebug({lastMessage:raw,intent:botState.lastIntent,actionExecuted:''});
 
   if(/^\s*#?\s*\d{3,10}\s*$/.test(arabicDigits(raw)) && !botState.waitingFor){
     if(ctx.recipient||ctx.occasion||botState.topic==='gift'){
@@ -2305,6 +2337,7 @@ function renderRanking(arr){
 function renderBotDebug(extra={}){
   lastBotDebug={...lastBotDebug,...extra};
   const d={
+    'Last Message':lastBotDebug.lastMessage||'',
     'Detected Intent':lastBotDebug.intent||botState.lastIntent||'',
     'Knowledge Match':lastBotDebug.knowledgeMatch||'',
     'Confidence':lastBotDebug.confidence!=null?lastBotDebug.confidence:'',
