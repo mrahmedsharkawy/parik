@@ -35,11 +35,13 @@ document.addEventListener('DOMContentLoaded', function() {
   } catch(e) {}
   // دايماً اجلب من Supabase عشان تاخد أحدث إعدادات
   var sbAnon = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
-  fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/settings?limit=1', {
-    headers: { apikey: sbAnon, Authorization: 'Bearer ' + sbAnon }
-  }).then(function(r){return r.json()}).then(function(rows){
-    if (rows && rows[0]) {
-      var s = rows[0];
+  var load = window.Supabase && window.Supabase.Settings && window.Supabase.Settings.get
+    ? window.Supabase.Settings.get()
+    : fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/settings?limit=1', {
+      headers: { apikey: sbAnon, Authorization: 'Bearer ' + sbAnon }
+    }).then(function(r){return r.json()}).then(function(rows){ return rows && rows[0] || {}; });
+  Promise.resolve(load).then(function(s){
+    if (s && Object.keys(s).length) {
       var settings = { instagram:s.instagram, facebook:s.facebook, tiktok:s.tiktok, snapchat:s.snapchat, youtube:s.youtube, twitter:s.twitter, pinterest:s.pinterest, wa:s.whatsapp||s.wa };
       localStorage.setItem('x2_settings', JSON.stringify(settings));
       buildSocialBar(settings);

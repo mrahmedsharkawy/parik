@@ -36,6 +36,7 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:9px;
 .bot-profile{display:flex;align-items:center;gap:10px;margin:10px 0 8px;padding:10px 12px;border:1px solid #eadca0;border-radius:16px;background:linear-gradient(135deg,#fff,#fff8df)}.brain-logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#fff,#fff2ba);border:1px solid #eadca0;display:grid;place-items:center;font-size:1.55rem;box-shadow:inset 0 0 0 3px rgba(255,255,255,.65)}.bot-profile b{display:block;color:var(--navy);font-size:.92rem}.bot-profile span{display:block;color:var(--muted);font-size:.74rem;margin-top:2px}
 .chat-controls{display:grid;grid-template-columns:48px 1fr 92px 48px;gap:8px;align-items:center;margin-top:8px}
 .unanswered{max-height:600px;overflow:auto}.unq{padding:12px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px}
+#knowledgeList{max-height:640px;overflow:auto;padding-inline-end:4px}.list-more{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:12px;background:#f7f9fd}.list-more span{font-size:.78rem;color:var(--muted)}.bulkbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 10px;flex-wrap:wrap}.bulkbar span{font-size:.78rem;color:var(--muted)}.item-head{display:flex;align-items:flex-start;gap:8px}.item-head input{width:auto;margin-top:4px}.item-head .q{flex:1}
 .product-grid{display:grid;grid-template-columns:repeat(3,minmax(145px,1fr));gap:10px}.msg .product-grid{grid-template-columns:repeat(2,minmax(145px,1fr))}.product-card{border:1px solid #edf0f5;border-radius:18px;overflow:hidden;background:#fff;box-shadow:0 10px 26px rgba(21,37,70,.09);transition:.18s ease;min-width:0}.product-card:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(21,37,70,.14)}.product-card .pc-img{position:relative;background:linear-gradient(180deg,#f8fafc,#eef3fb);padding:8px}.product-card img{width:100%;height:130px;object-fit:cover;border-radius:14px;background:#f1f3f7}.pc-body{padding:10px}.pc-name{font-weight:900;color:var(--navy);line-height:1.45;font-size:.85rem;display:-webkit-box;line-clamp:2;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.45em}.pc-price{display:inline-flex;align-items:center;gap:4px;font-weight:950;color:#7a5d08;background:#fff6d7;border:1px solid #eadca0;border-radius:999px;padding:4px 8px;margin-top:8px;font-size:.78rem}.pc-meta{font-size:.7rem;color:var(--muted);margin-top:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.product-card a{display:block;text-align:center;margin-top:9px;text-decoration:none;border-radius:12px;padding:8px 10px;font-size:.78rem}
 .bot-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px}.bot-fields .wide{grid-column:1/-1}.cfg-chip{background:#eef5ff;color:#175098}.cfg-chip.action{background:#fff6d7;color:#8b6c08}
 .progress{height:8px;background:#edf0f5;border-radius:20px;overflow:hidden}.progress i{display:block;height:100%;background:var(--gold)}
@@ -187,11 +188,21 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:9px;
       <button class="btn-light" onclick="downloadKnowledgeTemplate()">📄 تحميل نموذج فارغ</button>
     </div>
     <div class="searchbar">
-      <input id="search" placeholder="🔍 ابحث في السؤال أو الإجابة أو الكلمات..." oninput="renderKnowledge()">
+      <input id="search" placeholder="🔍 ابحث في السؤال أو الإجابة أو الكلمات..." oninput="scheduleRenderKnowledge()">
       <select id="catFilter" onchange="renderKnowledge()"><option value="">كل التصنيفات</option></select>
       <select id="activeFilter" onchange="renderKnowledge()"><option value="">الكل</option><option value="1">فعال</option><option value="0">متوقف</option></select>
     </div>
-    <div id="knowledgeList"><div class="hint">جاري التحميل...</div></div>
+    <div class="bulkbar">
+      <span id="knowledgeCount">0 سؤال</span>
+      <div class="tools">
+        <button class="btn-light" onclick="selectVisibleKnowledge()">تحديد الظاهر</button>
+        <button class="btn-light" onclick="selectAllFilteredKnowledge()">تحديد الكل</button>
+        <button class="btn-light" onclick="clearKnowledgeSelection()">إلغاء التحديد</button>
+        <button class="btn-danger" onclick="deleteSelectedKnowledge()">حذف المحدد</button>
+        <button class="btn-danger" onclick="deleteAllFilteredKnowledge()">حذف الجميع</button>
+      </div>
+    </div>
+    <div id="knowledgeList" onscroll="handleKnowledgeScroll()"><div class="hint">جاري التحميل...</div></div>
   </div>
 </div>
 </section>
@@ -200,7 +211,7 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:9px;
 <div class="card">
   <h2>❓ أسئلة لم يجد لها البوت إجابة</h2>
   <div class="hint">كل سؤال غير معروف يتم تجميعه ومنع تكراره. لو كان موجودًا في Supabase كمسودة، يظهر هنا أيضًا.</div>
-  <div class="tools"><button class="btn-light" onclick="loadAll()">↻ تحديث</button><button class="btn-danger" onclick="clearUnanswered()">🗑 مسح المحلي</button></div>
+  <div class="tools"><button class="btn-light" onclick="loadAll()">↻ تحديث</button><button class="btn-danger" onclick="clearUnanswered()">🗑 مسح الكل</button></div>
   <div id="unansweredList" class="unanswered"></div>
 </div>
 </section>
@@ -361,10 +372,18 @@ let botCategories=[];
 let botSubcategories=[];
 let conversation=[];
 const BOT_PRODUCT_LIMIT=24;
+const BOT_KNOWLEDGE_PAGE_SIZE=1000;
+const BOT_KNOWLEDGE_RENDER_BATCH=5;
+const BOT_UNANSWERED_LOCAL_LIMIT=2000;
+const BOT_KNOWLEDGE_SELECT='id,question,answer,category,keywords,input_type,param_type,param_example,action_name,action_value,active,usage_count,created_at,updated_at';
+const BOT_PRODUCT_SELECT='id,name_ar,name_en,description_ar,description_en,category_id,subcategory_id,price,old_price,stock,image,gallery,categories,rating,featured,active,sort_order,timer_end,created_at';
 const CHAT_MEMORY_KEY='bariq_bot_chat_memory_v2';
 const BOT_SESSION_KEY='bariq_bot_session_id_v1';
 let botConversationId=null;
 let lastBotDebug={};
+let knowledgeVisibleCount=BOT_KNOWLEDGE_RENDER_BATCH;
+let knowledgeRenderTimer=null;
+const selectedKnowledgeIds=new Set();
 let settings={
   minScore:4,
   welcome:'أهلًا بيك في بريق 🎁 إزاي أقدر أساعدك؟',
@@ -425,6 +444,36 @@ const DIALECT_NORMALIZE_RULES=[
   [/\b(?:لوغو|لوجو|logo)\b/g,'شعار'],
   [/\b(?:براندنق|براندنج|branding)\b/g,'تخصيص الهويه التجاريه']
 ];
+const SYNONYMS={
+  want:['اريد','عايز','محتاج','ابغي','ابغى','ابي','ابا','بغيت','ودي','حاب','احتاج'],
+  order:['طلب','طلبي','اوردر','order','رقم الطلب','رقم اوردر'],
+  where:['فين','وين','اين','مكان','وصل لفين','شو صار'],
+  price:['سعر','بكم','كم السعر','بكام','تكلفه','cost','price'],
+  available:['متوفر','موجود','عندكم منه','available','stock'],
+  gift:['هديه','هدايا','gift','اقتراح','اختيار'],
+  show:['اعرض','وريني','خلني اشوف','شوف','هات','show'],
+  sister:['اخت','اختي','لاختي','حق اختي','sister'],
+  mother:['ام','امي','الوالده','حق الوالده','mother'],
+  wife:['زوجه','زوجتي','مرات','wife'],
+  graduation:['تخرج','تخريج','graduation'],
+  birthday:['عيد ميلاد','ميلاد','birthday'],
+  delivery:['توصيل','دليفري','توصلون','delivery','shipping'],
+  cancel:['الغاء','كنسل','cancel'],
+  logo:['شعار','لوجو','لوغو','logo'],
+  branding:['براندنق','براندنج','هوية','هويه','branding']
+};
+const SYNONYM_TOKEN_TO_KEY=new Map();
+Object.entries(SYNONYMS).forEach(([key,vals])=>{
+  vals.forEach(v=>normalizeBasic(v).split(' ').filter(Boolean).forEach(t=>SYNONYM_TOKEN_TO_KEY.set(t,key)));
+});
+let knowledgeIndex=[],knowledgeIndexById=new Map(),keywordIndex=new Map(),lastKnowledgeDebug={};
+function normalizeBasic(s){
+  return String(s||'').toLowerCase()
+    .replace(/[إأآٱ]/g,'ا').replace(/ؤ/g,'و').replace(/ئ/g,'ي')
+    .replace(/ة/g,'ه').replace(/ى/g,'ي').replace(/[ًٌٍَُِّْـ]/g,'')
+    .replace(/ـ/g,'').replace(/[^\u0600-\u06FFa-zA-Z0-9\s]/g,' ')
+    .replace(/\s+/g,' ').trim();
+}
 function normalize(s){
   let t=String(s||'').toLowerCase();
   DIALECT_NORMALIZE_RULES.forEach(([re,to])=>{t=t.replace(re,to)});
@@ -626,8 +675,22 @@ function tab(n){
 ========================================================= */
 async function loadQuestions(){
   try{
-    const data=await window.sbFetch('bot_knowledge?select=*&order=id.desc');
-    questions=Array.isArray(data)?data:[];
+    const rows=[];
+    for(let offset=0;;offset+=BOT_KNOWLEDGE_PAGE_SIZE){
+      const data=await window.sbFetch(
+        'bot_knowledge?select='+
+        encodeURIComponent(BOT_KNOWLEDGE_SELECT)+
+        '&order=id.desc&limit='+
+        BOT_KNOWLEDGE_PAGE_SIZE+
+        '&offset='+
+        offset
+      );
+      if(!Array.isArray(data)||!data.length)break;
+      rows.push(...data);
+      if(data.length<BOT_KNOWLEDGE_PAGE_SIZE)break;
+    }
+    questions=rows;
+    buildKnowledgeIndex();
   }catch(e){
     toast('❌ تعذر تحميل قاعدة المعرفة: '+e.message);
   }
@@ -647,9 +710,8 @@ async function loadProductsForBot(){
     }
     let liveProducts=[];
     const productUrls=[
-      'products?active=eq.true&order=updated_ta.desc.nullslast,created_at.desc.nullslast,sort_order.asc&limit=10000',
-      'products?active=eq.true&order=updated_at.desc.nullslast,created_at.desc.nullslast,sort_order.asc&limit=10000',
-      'products?active=eq.true&order=created_at.desc.nullslast,sort_order.asc&limit=10000',
+      'products?select='+encodeURIComponent(BOT_PRODUCT_SELECT)+'&active=eq.true&order=created_at.desc.nullslast,sort_order.asc&limit=10000',
+      'products?select='+encodeURIComponent(BOT_PRODUCT_SELECT)+'&active=eq.true&limit=10000',
       'products?active=eq.true&limit=10000'
     ];
     for(const url of productUrls){
@@ -658,15 +720,7 @@ async function loadProductsForBot(){
         if(Array.isArray(liveProducts))break;
       }catch(_){}
     }
-    const relationEndpoints=[
-      'product_categories?select=*&limit=10000',
-      'products_categories?select=*&limit=10000',
-      'product_category?select=*&limit=10000',
-      'product_subcategories?select=*&limit=10000',
-      'products_subcategories?select=*&limit=10000'
-    ];
-    const relationRows=(await Promise.all(relationEndpoints.map(url=>window.sbFetch(url).catch(()=>[]))))
-      .flat().filter(Boolean);
+    const relationRows=[];
     const categoryById=new Map(botCategories.map(c=>[String(c.id),c]));
     const subcategoryById=new Map(botSubcategories.map(s=>[String(s.id),s]));
     const relationTermsByProduct=new Map();
@@ -741,8 +795,10 @@ function renderDashboard(){
 ========================================================= */
 function updateCategories(){
   const el=$('catFilter');if(!el)return;
+  const current=el.value;
   const cats=[...new Set(questions.map(x=>x.category).filter(Boolean))].sort();
   el.innerHTML='<option value="">كل التصنيفات</option>'+cats.map(c=>'<option value="'+esc(c)+'">'+esc(c)+'</option>').join('');
+  if(current&&cats.includes(current))el.value=current;
 }
 function tokenSet(text){
   return new Set(normalize(text).split(' ').filter(w=>w.length>1));
@@ -777,10 +833,60 @@ function fuzzyToken(a,b){
 const STOP_WORDS=new Set('عايز عايزه ابغي ابغى ممكن ممكنه لو سمحت من عندكم عندكو عندك ايه اي اى هو هي هل في فيه عند هاتلي هات لي اريد اريدها ابي ابا اجيب جيب لي ليا كده دي ده ده انا احنا هو هي في ب كام سعر سعره اسعار كم ايه'.split(' '));
 const EN_STOP_WORDS=new Set('the a an and or to for from of in on at by with is are am be do does did you your we our i me my it this that there have has had can could would should need want please hello hi hey'.split(' '));
 function meaningfulTokens(text){return [...tokenSet(text)].filter(w=>!STOP_WORDS.has(w)&&!EN_STOP_WORDS.has(w));}
-function score(msg,item){
-  const words=meaningfulTokens(msg);
-  const qWords=meaningfulTokens(item.question);
-  const keyWords=visibleKeywords(item.keywords).flatMap(k=>meaningfulTokens(k));
+function expandedTokens(text){
+  const base=meaningfulTokens(text),out=new Set(base);
+  base.forEach(t=>{
+    const key=SYNONYM_TOKEN_TO_KEY.get(normalizeBasic(t));
+    if(key){
+      out.add(key);
+      (SYNONYMS[key]||[]).forEach(v=>normalize(v).split(' ').forEach(x=>x&&!STOP_WORDS.has(x)&&out.add(x)));
+    }
+  });
+  return [...out].filter(Boolean);
+}
+function buildKnowledgeIndex(){
+  keywordIndex=new Map();
+  knowledgeIndexById=new Map();
+  knowledgeIndex=questions.map(item=>{
+    const cfg=getBotConfig(item)||{};
+    const action=configuredAction(cfg);
+    const normalizedQuestion=normalize(item.question||'');
+    const normalizedKeywords=visibleKeywords(item.keywords).map(normalize).filter(Boolean);
+    const tokens=[...new Set([
+      ...expandedTokens(normalizedQuestion),
+      ...normalizedKeywords.flatMap(expandedTokens),
+      ...expandedTokens(item.category||''),
+      action.toLowerCase()
+    ].filter(Boolean))];
+    const row={id:String(item.id),item,normalizedQuestion,normalizedKeywords,tokens,category:normalize(item.category||''),action};
+    tokens.forEach(t=>{
+      if(!keywordIndex.has(t))keywordIndex.set(t,new Set());
+      keywordIndex.get(t).add(row.id);
+    });
+    knowledgeIndexById.set(row.id,row);
+    return row;
+  });
+}
+function candidateKnowledge(message,entities={}){
+  if(knowledgeIndex.length!==questions.length)buildKnowledgeIndex();
+  const msgTokens=expandedTokens(message);
+  const ids=new Set();
+  msgTokens.forEach(t=>{
+    const hit=keywordIndex.get(t);
+    if(hit)hit.forEach(id=>ids.add(id));
+  });
+  const topicAction={order:'TRACK_ORDER',browse:'CATEGORY_PRODUCTS',gift:'CUSTOM_GIFT_ORDER',human:'HANDOFF_HUMAN',image:'IMAGE_PRODUCT_SEARCH'}[detectTopic(message)];
+  if(topicAction)knowledgeIndex.filter(e=>e.action===topicAction).slice(0,80).forEach(e=>ids.add(e.id));
+  if(entities.occasion||entities.recipient||entities.budget!=null)knowledgeIndex.filter(e=>['CUSTOM_GIFT_ORDER','PRODUCT_SEARCH','CATEGORY_PRODUCTS'].includes(e.action)).slice(0,80).forEach(e=>ids.add(e.id));
+  let arr=[...ids].map(id=>knowledgeIndexById.get(id)).filter(Boolean);
+  if(!arr.length)arr=knowledgeIndex.filter(e=>e.item&&e.item.active).slice(0,120);
+  return arr.slice(0,160);
+}
+function score(msg,item,entry=null,entities={}){
+  entry=entry||knowledgeIndexById.get(String(item.id));
+  const words=expandedTokens(msg);
+  const qWords=entry?entry.tokens:expandedTokens(item.question);
+  const keyWords=entry?entry.normalizedKeywords.flatMap(expandedTokens):visibleKeywords(item.keywords).flatMap(k=>expandedTokens(k));
   const all=[...qWords,...keyWords];
   if(!words.length||!all.length)return 0;
   let s=0, exact=0, fuzzy=0;
@@ -796,37 +902,60 @@ function score(msg,item){
   }
   const nq=normalize(item.question),nt=normalize(msg);
   if(nq&&nt.includes(nq))s+=6;
+  if(nq&&nq===nt)s+=8;
   // لا تعتبر إجابة سؤال مختلفة صحيحة لمجرد كلمة عامة مشتركة.
   const sim=questionSimilarity(msg,item.question);
   if(sim>=.85)s+=5;
   else if(sim>=.70)s+=2;
   // تشابه المعنى عبر الكلمات المفتاحية فقط إذا كان هناك أكثر من إشارة قوية.
   if(exact>=2)s+=2;
+  const action=entry?entry.action:configuredAction(getBotConfig(item));
+  const topic=detectTopic(msg);
+  if(topic==='order'&&action==='TRACK_ORDER')s+=4;
+  if(topic==='browse'&&['CATEGORY_PRODUCTS','PRODUCT_SEARCH','SHOW_CATEGORY'].includes(action))s+=3;
+  if((topic==='gift'||entities.recipient||entities.occasion)&&['CUSTOM_GIFT_ORDER','PRODUCT_SEARCH','CATEGORY_PRODUCTS'].includes(action))s+=2;
+  if(entities.budget!=null&&/سعر|ميزانيه|budget|price|درهم/.test([item.question,item.answer,visibleKeywords(item.keywords).join(' ')].map(normalize).join(' ')))s+=1.5;
+  if(topic==='order'&&['PRODUCT_SEARCH','CATEGORY_PRODUCTS','CUSTOM_GIFT_ORDER'].includes(action))s-=4;
+  if(topic==='browse'&&action==='TRACK_ORDER')s-=5;
+  if(topic==='greeting'&&action&&action!=='HANDOFF_HUMAN')s-=5;
   return Math.round(s*10)/10;
 }
-function rank(msg){
-  return questions.filter(x=>{
+function rank(msg,entities={}){
+  const candidates=candidateKnowledge(msg,entities).map(e=>e.item);
+  const rows=(candidates.length?candidates:questions).filter(x=>{
       if(!x.active)return false;
       const cfg=getBotConfig(x)||{};
       return String(x.answer||'').trim() || cfg.inputMode!=='answer' || cfg.linkedAction;
     })
-    .map(x=>({...x,score:score(msg,x),similarity:questionSimilarity(msg,x.question)}))
+    .map(x=>{
+      const entry=knowledgeIndexById.get(String(x.id));
+      return {...x,score:score(msg,x,entry,entities),similarity:questionSimilarity(msg,x.question),_action:entry?.action||configuredAction(getBotConfig(x))};
+    })
     .filter(x=>x.score>0)
     .sort((a,b)=>b.score-a.score);
+  lastKnowledgeDebug={normalized:normalize(msg),entities,candidatesCount:candidates.length,top:rows.slice(0,5).map(x=>({id:x.id,question:x.question,score:x.score,action:x._action,similarity:x.similarity}))};
+  return rows;
 }
-function renderKnowledge(){
-  updateCategories();
+function filteredKnowledge(){
   const q=normalize($('search').value),cat=$('catFilter').value,af=$('activeFilter').value;
-  const arr=questions.filter(x=>
+  return questions.filter(x=>
     (!q||normalize([x.question,x.answer,x.category,...visibleKeywords(x.keywords)].join(' ')).includes(q))&&
     (!cat||x.category===cat)&&(!af||String(!!x.active)===(af==='1'))
   );
-  $('knowledgeList').innerHTML=arr.length?arr.map(x=>{
+}
+function renderKnowledge(reset=true){
+  updateCategories();
+  if(reset===true)knowledgeVisibleCount=BOT_KNOWLEDGE_RENDER_BATCH;
+  else if(reset===false)knowledgeVisibleCount+=BOT_KNOWLEDGE_RENDER_BATCH;
+  const arr=filteredKnowledge();
+  const visible=arr.slice(0,knowledgeVisibleCount);
+  if($('knowledgeCount'))$('knowledgeCount').textContent=arr.length+' سؤال' +(selectedKnowledgeIds.size?' • محدد '+selectedKnowledgeIds.size:'');
+  $('knowledgeList').innerHTML=arr.length?visible.map(x=>{
     const empty=!String(x.answer||'').trim();
     const cfg=getBotConfig(x)||{};
     const modeLabel=cfg.inputMode==='required_data'?'بيانات مطلوبة':cfg.inputMode==='action'?'إجراء':'رد معلوماتي';
     return '<div class="item '+(x.active?'':'off')+'">'+
-      '<div class="q">'+esc(x.question)+'</div>'+
+      '<div class="item-head"><input type="checkbox" '+(selectedKnowledgeIds.has(String(x.id))?'checked':'')+' onchange="toggleKnowledgeSelection('+Number(x.id)+',this.checked)"><div class="q">'+esc(x.question)+'</div></div>'+
       '<div class="a">'+(empty?'<span class="error">⚠️ بدون إجابة</span>':esc(x.answer))+'</div>'+
       '<div class="meta"><span class="chip">'+esc(x.category||'بدون تصنيف')+'</span>'+
       (x.active?'<span class="chip ok">فعال</span>':'<span class="chip bad">متوقف</span>')+
@@ -841,6 +970,40 @@ function renderKnowledge(){
       '<button class="btn-danger" onclick="deleteQuestion('+Number(x.id)+')">🗑 حذف</button>'+
       '</div></div>';
   }).join(''):'<div class="hint">لا توجد نتائج</div>';
+  if(arr.length>visible.length && $('knowledgeList')){
+    $('knowledgeList').insertAdjacentHTML('beforeend','<div class="list-more"><span>'+visible.length+' / '+arr.length+'</span><span>&#1610;&#1578;&#1605; &#1575;&#1604;&#1578;&#1581;&#1605;&#1610;&#1604; &#1578;&#1604;&#1602;&#1575;&#1574;&#1610;&#1611;&#1575; &#1593;&#1606;&#1583; &#1575;&#1604;&#1606;&#1586;&#1608;&#1604;</span></div>');
+  }
+}
+function scheduleRenderKnowledge(){
+  clearTimeout(knowledgeRenderTimer);
+  knowledgeRenderTimer=setTimeout(()=>renderKnowledge(true),180);
+}
+function handleKnowledgeScroll(){
+  const el=$('knowledgeList');if(!el)return;
+  if(el.scrollTop+el.clientHeight>=el.scrollHeight-120){
+    const total=filteredKnowledge().length;
+    if(knowledgeVisibleCount<total)renderKnowledge(false);
+  }
+}
+function toggleKnowledgeSelection(id,on){
+  const key=String(id);
+  if(on)selectedKnowledgeIds.add(key);else selectedKnowledgeIds.delete(key);
+  if($('knowledgeCount')){
+    const total=filteredKnowledge().length;
+    $('knowledgeCount').textContent=total+' سؤال' +(selectedKnowledgeIds.size?' • محدد '+selectedKnowledgeIds.size:'');
+  }
+}
+function selectVisibleKnowledge(){
+  filteredKnowledge().slice(0,knowledgeVisibleCount).forEach(x=>selectedKnowledgeIds.add(String(x.id)));
+  renderKnowledge(null);
+}
+function selectAllFilteredKnowledge(){
+  filteredKnowledge().forEach(x=>selectedKnowledgeIds.add(String(x.id)));
+  renderKnowledge(null);
+}
+function clearKnowledgeSelection(){
+  selectedKnowledgeIds.clear();
+  renderKnowledge(null);
 }
 function newQuestion(){
   $('editId').value='';$('question').value='';$('answer').value='';$('category').value='';$('keywords').value='';$('active').checked=true;
@@ -1076,6 +1239,14 @@ async function saveKnowledgePayload(path,method,payload){
     throw e;
   }
 }
+async function deleteKnowledgeRow(id){
+  const key=encodeURIComponent(id);
+  await window.sbFetch('bot_knowledge?id=eq.'+key,{method:'DELETE',headers:{Prefer:'return=minimal'}});
+  const still=await window.sbFetch('bot_knowledge?id=eq.'+key+'&select=id&limit=1').catch(()=>[]);
+  if(Array.isArray(still)&&still.length)throw new Error('لم يتم حذف الصف من Supabase. تحقق من صلاحيات الحذف/RLS لهذا الحساب.');
+  selectedKnowledgeIds.delete(String(id));
+  return true;
+}
 function editQuestion(id){
   const x=questions.find(a=>Number(a.id)===Number(id));if(!x)return;
   $('editId').value=x.id;$('question').value=x.question||'';$('answer').value=x.answer||'';
@@ -1162,8 +1333,30 @@ async function toggleQuestion(id,on){
 }
 async function deleteQuestion(id){
   if(!confirm('حذف السؤال نهائيًا؟'))return;
-  try{await window.sbFetch('bot_knowledge?id=eq.'+id,{method:'DELETE',headers:{Prefer:'return=minimal'}});await loadQuestions();renderAll();toast('🗑 تم الحذف')}
+  try{await deleteKnowledgeRow(id);await loadQuestions();renderAll();toast('🗑 تم الحذف')}
   catch(e){toast('❌ '+e.message)}
+}
+async function deleteKnowledgeIds(ids,label){
+  ids=[...new Set((ids||[]).map(x=>String(x)).filter(Boolean))];
+  if(!ids.length){toast('لا يوجد أسئلة محددة');return}
+  if(!confirm('حذف '+ids.length+' سؤال نهائيًا من '+label+'؟'))return;
+  let ok=0,fail=0;
+  for(const id of ids){
+    try{
+      await deleteKnowledgeRow(id);
+      ok++;
+    }catch(e){fail++}
+  }
+  await loadQuestions();
+  renderAll();
+  toast(fail?'تم حذف '+ok+' وفشل '+fail:'تم حذف '+ok+' سؤال');
+}
+async function deleteSelectedKnowledge(){
+  await deleteKnowledgeIds([...selectedKnowledgeIds],'المحدد');
+}
+async function deleteAllFilteredKnowledge(){
+  const ids=filteredKnowledge().map(x=>x.id);
+  await deleteKnowledgeIds(ids,'النتائج الحالية');
 }
 
 /* =========================================================
@@ -1195,7 +1388,7 @@ async function persistUnanswered(msg){
   let found=list.find(x=>normalize(x.text)===n);
   if(found)found.count=(found.count||1)+1;
   else{found={text,count:1,date:new Date().toISOString(),savedToDb:false};list.unshift(found)}
-  saveLocal('bariq_bot_unanswered',list.slice(0,500));
+  saveLocal('bariq_bot_unanswered',list.slice(0,BOT_UNANSWERED_LOCAL_LIMIT));
   if(settings.autoUnanswered!==false){
     try{
       if(window.sbFetch){
@@ -1216,7 +1409,7 @@ async function persistUnanswered(msg){
         await window.sbFetch('bot_knowledge',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({
           question:text,answer:'',category:'أسئلة تحتاج إجابة',keywords:[],active:false,usage_count:found.count||1,updated_at:new Date().toISOString()
         })});
-        found.savedToDb=true;saveLocal('bariq_bot_unanswered',list.slice(0,500));
+        found.savedToDb=true;saveLocal('bariq_bot_unanswered',list.slice(0,BOT_UNANSWERED_LOCAL_LIMIT));
         await loadQuestions();
       }
     }catch(e){console.warn('persistUnanswered:',e.message)}
@@ -1236,12 +1429,34 @@ function useUnanswered(i){
   const arr=unansweredLocal(),x=arr[i];if(!x)return;
   newQuestion();$('question').value=x.text;$('category').value='أسئلة تحتاج إجابة';tab('knowledge');
 }
-function removeUnanswered(i){
+async function removeUnanswered(i){
   const local=readLocal('bariq_bot_unanswered',[]),arr=unansweredLocal(),x=arr[i];if(!x)return;
   const n=normalize(x.text);const idx=local.findIndex(a=>normalize(a.text)===n);if(idx>=0)local.splice(idx,1);
-  saveLocal('bariq_bot_unanswered',local);renderUnanswered();renderDashboard();
+  saveLocal('bariq_bot_unanswered',local);
+  if(x.dbId&&window.sbFetch){
+    try{await deleteKnowledgeRow(x.dbId)}
+    catch(e){toast('تعذر حذف نسخة Supabase: '+e.message)}
+    await loadQuestions();
+  }
+  renderUnanswered();renderDashboard();
 }
-function clearUnanswered(){if(confirm('مسح قائمة الأسئلة غير المجابة المحلية؟')){localStorage.removeItem('bariq_bot_unanswered');renderUnanswered();renderDashboard()}}
+async function clearUnanswered(){
+  const arr=unansweredLocal();
+  if(!arr.length){toast('لا توجد أسئلة غير مجابة');return}
+  const dbIds=[...new Set(arr.map(x=>x.dbId).filter(Boolean))];
+  if(!confirm('مسح '+arr.length+' سؤال غير مجاب؟ سيتم حذف المحلي وحذف المسودات المحفوظة في Supabase.'))return;
+  localStorage.removeItem('bariq_bot_unanswered');
+  let fail=0;
+  if(window.sbFetch){
+    for(const id of dbIds){
+      try{await deleteKnowledgeRow(id)}
+      catch(e){fail++}
+    }
+    await loadQuestions();
+  }
+  renderUnanswered();renderDashboard();
+  toast(fail?'تم المسح مع فشل حذف '+fail+' من Supabase':'تم مسح الأسئلة غير المجابة');
+}
 
 /* =========================================================
    فهم النية والسياق
@@ -1315,6 +1530,28 @@ const INTEREST_MAP=[
   [/اطفال|بيبي|toys|لعب/,'أطفال']
 ];
 function matchFirst(map,t){for(const[re,label]of map)if(re.test(t))return label;return ''}
+function extractQuantity(text){
+  const t=arabicDigits(text);
+  const m=t.match(/(?:عدد|كميه|كمية|qty|quantity)\s*(\d{1,4})|(\d{1,4})\s*(?:قطعه|قطعة|حبه|حبة|pcs?)/i);
+  return m?Number(m[1]||m[2]):null;
+}
+function extractCity(text){
+  const t=normalize(text);
+  const cities=['دبي','ابوظبي','الشارقه','عجمان','العين','راس الخيمه','الفجيره','ام القيوين','الرياض','جده','الدمام'];
+  return cities.find(c=>hasWholeTerm(t,c))||'';
+}
+function categoryLabelFromTextSafe(text){
+  try{
+    const t=normalize(text);
+    if(typeof CATEGORY_TERMS==='object'){
+      for(const k of Object.keys(CATEGORY_TERMS)){
+        const hit=(CATEGORY_TERMS[k]||[]).find(w=>hasWholeTerm(t,w));
+        if(hit)return normalize(hit);
+      }
+    }
+  }catch(e){}
+  return '';
+}
 function extractIntent(text){
   const t=normalize(text);
   return {
@@ -1322,11 +1559,17 @@ function extractIntent(text){
     occasion:matchFirst(OCCASION_MAP,t),
     style:matchFirst(STYLE_MAP,t),
     interest:matchFirst(INTEREST_MAP,t),
-    budget:parseBudget(text,giftIntent(text))
+    budget:parseBudget(text,giftIntent(text)),
+    order_number:extractOrderRef(text)||'',
+    quantity:extractQuantity(text),
+    company:corporateIntent(text),
+    city:extractCity(text),
+    urgency:/مستعجل|ضروري|اليوم|بكره|باجر|عاجل|urgent|asap/.test(t),
+    category:categoryLabelFromTextSafe(text)
   };
 }
 function mergeContext(intent){
-  const out={recipient:'',occasion:'',budget:null,style:'',interest:''};
+  const out={recipient:'',occasion:'',budget:null,style:'',interest:'',order_number:'',quantity:null,company:false,city:'',urgency:false,category:''};
   conversation.filter(x=>x.role==='user').slice(-8)
     .map(x=>extractIntent(x.text)).concat([intent]).forEach(x=>{
       if(x.recipient)out.recipient=x.recipient;
@@ -1334,6 +1577,12 @@ function mergeContext(intent){
       if(x.budget!=null)out.budget=x.budget;
       if(x.style)out.style=x.style;
       if(x.interest)out.interest=x.interest;
+      if(x.order_number)out.order_number=x.order_number;
+      if(x.quantity!=null)out.quantity=x.quantity;
+      if(x.company)out.company=true;
+      if(x.city)out.city=x.city;
+      if(x.urgency)out.urgency=true;
+      if(x.category)out.category=x.category;
     });
   return out;
 }
@@ -1908,7 +2157,7 @@ async function lookupOrder(ref){
 ========================================================= */
 
 // ===== حالة المحادثة =====
-let botState={sessionId:getBotSessionId(),topic:'idle',currentTopic:'idle',pendingAction:null,waitingFor:null,giftData:{},orderRef:'',orderId:null,recipient:'',occasion:'',budget:null,categoryId:null,productId:null,lastIntent:null,lastKnowledgeId:null,actionData:null};
+let botState={sessionId:getBotSessionId(),topic:'idle',currentTopic:'idle',pendingAction:null,waitingFor:null,giftData:{},orderRef:'',orderId:null,recipient:'',occasion:'',budget:null,quantity:null,company:false,city:'',categoryId:null,category:'',productId:null,lastIntent:null,lastKnowledgeId:null,lastAction:null,actionData:null};
 
 function resetBotState(topic){
   botState={...botState,topic:topic||'idle',currentTopic:topic||'idle',pendingAction:null,waitingFor:null,giftData:{},orderRef:'',actionData:null};
@@ -1928,10 +2177,15 @@ function botStatePayload(){
     recipient:botState.recipient||botState.giftData?.recipient||null,
     occasion:botState.occasion||botState.giftData?.occasion||null,
     budget:botState.budget||botState.giftData?.budget||null,
+    quantity:botState.quantity||null,
+    company:botState.company||false,
+    city:botState.city||null,
     category_id:botState.categoryId||null,
+    category:botState.category||null,
     product_id:botState.productId||null,
     last_intent:botState.lastIntent||null,
     last_knowledge_id:botState.lastKnowledgeId||null,
+    last_action:botState.lastAction||null,
     state:botState,
     status:botState.status||'active',
     updated_at:new Date().toISOString()
@@ -2039,17 +2293,27 @@ function greetingReply(text){
 }
 
 // ===== مطابقة قاعدة المعرفة =====
-function findBestAnswer(msg){
+function findBestAnswer(msg,entities={}){
   const minScore=Math.max(6,Number(settings.minScore)||6);
-  const ranked=rank(msg);
+  const ranked=rank(msg,entities);
   const best=ranked[0], second=ranked[1];
-  if(!best)return {found:false,ranked};
+  if(!best)return {found:false,confidence:'low',ranked};
   const margin=second?best.score-second.score:best.score;
   const sim=best.similarity||0;
   // إجابة قاعدة المعرفة لا تُستخدم إلا مع تطابق قوي مستقل، أو تشابه سؤال مرتفع جدًا.
   const direct=normalize(msg)===normalize(best.question)||normalize(msg).includes(normalize(best.question))||normalize(best.question).includes(normalize(msg));
   const strong=direct||(best.score>=minScore && (sim>=.68 || margin>=3)) && !(second && second.score>=best.score*.94 && sim<.78);
-  return strong?{found:true,item:best,ranked}:{found:false,ranked};
+  const medium=!strong && best.score>=Math.max(4,minScore-2) && (!second || margin>=1);
+  return strong?{found:true,confidence:'high',item:best,ranked}:medium?{found:false,confidence:'medium',item:best,second,ranked}:{found:false,confidence:'low',ranked};
+}
+function mediumKnowledgeClarify(match){
+  const a=match?.item, b=match?.second;
+  if(!a)return 'محتاج أوضح طلبك بسؤال واحد عشان أرد من قاعدة المعرفة الصح.';
+  const act=configuredAction(getBotConfig(a));
+  if(act==='TRACK_ORDER')return 'تقصد تتبع طلب؟ لو آه ابعت رقم الطلب.';
+  if(['CATEGORY_PRODUCTS','PRODUCT_SEARCH','CUSTOM_GIFT_ORDER'].includes(act))return 'تقصد أعرض لك منتجات/فئة معينة؟ اكتب اسم الفئة أو المناسبة بشكل أوضح.';
+  if(b)return 'تقصد "'+a.question+'" ولا "'+b.question+'"?';
+  return 'تقصد: '+a.question+'؟ وضحلي بنعم أو اكتب سؤالك بتفصيل بسيط.';
 }
 
 function validateBotValue(value,type){
@@ -2094,8 +2358,44 @@ function requiredDataPrompt(item,cfg){
   if(action==='COLLECT_LEAD')return 'تمام. ابعت رقم التواصل أو البريد الإلكتروني عشان نكمل معاك.';
   return 'محتاج '+fieldTypeLabel(cfg.fieldType)+' عشان أكمل.';
 }
+async function executeBotAction(action,actionValue,context={},item=null){
+  action=canonicalAction(action);
+  const answer=String(item?.answer||'').trim();
+  const seed=[item?.question,answer,actionValue,context?.raw,contextPrompt(context||{})].filter(Boolean).join(' ');
+  if(!action||action==='NONE')return answer?{type:'answer',text:answer}:null;
+  if(action==='HANDOFF_HUMAN')return {type:'answer',text:settings.human};
+  if(action==='TRACK_ORDER'||action==='GET_ORDER_STATUS'||action==='GET_ORDER_DETAILS'){
+    resetBotState('order');
+    return await handleOrderQuery(seed);
+  }
+  if(action==='CATEGORY_PRODUCTS'||action==='SHOW_CATEGORY'){
+    const value=actionValue||'';
+    const products=await recommendCategoryProductsForAction(value,seed,context||{});
+    if(products.length)return {type:'products',text:categoryProductsIntro(value,answer||'دي منتجات مناسبة للفئة المطلوبة:'),products};
+    if(/^https?:\/\//i.test(value)||/categories\.html/i.test(value)){
+      return {type:'answer',text:(answer||'تقدر تشوف منتجات الفئة من الرابط ده:')+'\n\n<a href="'+escAttr(value)+'" target="_blank" class="btn-gold" style="display:inline-block;margin-top:8px">عرض المنتجات</a>'};
+    }
+    return {type:'clarify',text:'مش لاقي منتجات مرتبطة بالفئة دي حاليًا.'};
+  }
+  if(action==='PRODUCT_SEARCH'||action==='SEARCH_PRODUCT'||action==='CUSTOM_GIFT_ORDER'||action==='CREATE_QUOTE'){
+    const products=await recommendProducts(seed,context||{});
+    if(products.length)return {type:'products',text:answer||'دي أقرب منتجات مناسبة:',products};
+    return answer?{type:'answer',text:answer}:null;
+  }
+  if(action==='PRODUCT_LOOKUP'||action==='SHOW_PRODUCT'||action==='CHECK_PRODUCT_AVAILABILITY'||action==='IMAGE_PRODUCT_SEARCH'){
+    const products=await lookupProductByText(seed);
+    if(products.length)return {type:'products',text:answer||'لقيت أقرب منتج مطابق من الموقع:',products};
+    return answer?{type:'answer',text:answer}:{type:'clarify',text:'محتاج اسم المنتج أو وصف أو رابط صورة أوضح عشان أبحث في منتجات الموقع.'};
+  }
+  if(action==='UPDATE_ORDER')return answer?{type:'answer',text:answer}:{type:'clarify',text:'ابعت رقم الطلب والتعديل المطلوب عليه.'};
+  if(action==='GET_CUSTOMER_ORDERS'||action==='GET_CUSTOMER_INFO'||action==='COLLECT_LEAD'){
+    return answer?{type:'answer',text:answer}:{type:'clarify',text:'ابعت رقم التواصل أو البريد الإلكتروني عشان نكمل معاك.'};
+  }
+  return answer?{type:'answer',text:answer}:null;
+}
 async function handleConfiguredKnowledge(item){
   const cfg=getBotConfig(item)||{};
+  botState.lastAction=configuredAction(cfg)||botState.lastAction;
   if(cfg.inputMode==='required_data'){
     const action=configuredAction(cfg);
     const seed=[item.question,item.answer,cfg.actionValue,cfg.fieldExample].join(' ');
@@ -2123,6 +2423,8 @@ async function handleConfiguredKnowledge(item){
   if(cfg.inputMode==='action'){
     const action=configuredAction(cfg);
     const actionValue=cfg.actionValue||cfg.fieldExample||'';
+    const routed=await executeBotAction(action,actionValue,extractIntent([item.question,item.answer,actionValue].join(' ')),item);
+    if(routed)return routed;
     if(action==='HANDOFF_HUMAN')return {type:'answer',text:settings.human};
     if(action==='TRACK_ORDER'){
       resetBotState('order');
@@ -2172,16 +2474,20 @@ async function callBotLLM(raw,ctx,imageUrl=''){
         image_url:imageUrl||'',
         context:ctx||{},
         conversation:conversation.slice(-12),
-        knowledge:questions.filter(x=>x.active).slice(0,80).map(x=>({
-          id:x.id,question:x.question,answer:x.answer,category:x.category,
-          keywords:visibleKeywords(x.keywords),
-          input_type:x.input_type,action_name:x.action_name,action_value:x.action_value,param_type:x.param_type,param_example:x.param_example
-        }))
+        rpc:true
       })
     });
     if(!res.ok)return null;
     const data=await res.json().catch(()=>null);
     if(!data)return null;
+    if(data.entities||data.candidates){
+      lastKnowledgeDebug={
+        normalized:data.entities?.normalized||normalize(raw),
+        entities:data.entities||ctx||{},
+        candidatesCount:Array.isArray(data.candidates)?data.candidates.length:0,
+        top:(data.candidates||[]).slice(0,5).map(x=>({id:x.id,question:x.question,score:x.score,action:x.action_name,similarity:x.similarity}))
+      };
+    }
     if(typeof data==='string')return {action:'chat',reply:data};
     if(data.reply||data.action)return data;
     if(data.text)return {action:'chat',reply:data.text};
@@ -2193,6 +2499,54 @@ async function callBotLLM(raw,ctx,imageUrl=''){
   }finally{
     clearTimeout(timer);
   }
+}
+
+async function handleLLMDecision(llm,raw,ctx,opts={}){
+  if(!llm)return null;
+  const allowLow=!!opts.allowLow;
+  const confidenceLabel=String(llm.confidence_label||'').toLowerCase();
+  const isLow=llm.unanswered||confidenceLabel==='low'||Number(llm.confidence||0)<0.35;
+  if(isLow&&!allowLow)return null;
+  if(llm.action==='answer'&&llm.reply){
+    const item=questions.find(x=>Number(x.id)===Number(llm.knowledge_id));
+    if(item){
+      await incrementUsage(item);
+      botState.lastKnowledgeId=item.id;
+      const handled=await handleConfiguredKnowledge(item);
+      handled.match={...item,score:Number(llm.confidence||0)*100};
+      handled.llm=true;
+      return handled;
+    }
+    if(llm.action_name||llm.action_value){
+      const routed=await executeBotAction(llm.action_name,llm.action_value,{...(ctx||{}),raw}, {
+        id:llm.knowledge_id||null,
+        question:raw,
+        answer:llm.reply,
+        input_type:'action',
+        action_name:llm.action_name||'',
+        action_value:llm.action_value||''
+      });
+      if(routed){
+        routed.llm=true;
+        return routed;
+      }
+    }
+    return {type:'answer',text:llm.reply,llm:true};
+  }
+  if(llm.action==='clarify'&&llm.reply)return {type:'clarify',text:llm.reply,llm:true};
+  if(llm.action==='product_search'){
+    const products=categoryBrowseIntent(raw)?await recommendCategoryProducts(raw,ctx):await recommendProducts(raw,ctx);
+    if(products.length)return {type:'products',text:llm.reply||'لقيتلك أقرب منتجات 👇',products,llm:true};
+  }
+  if(llm.action==='order_track'){
+    resetBotState('order');
+    return await handleOrderQuery(raw);
+  }
+  if(llm.action==='human'){
+    if(llm.unanswered)await persistUnanswered(raw);
+    return {type:'answer',text:settings.human,llm:true};
+  }
+  return null;
 }
 
 async function fileToImageDataUrl(file,maxSide=1100,quality=.82){
@@ -2442,7 +2796,26 @@ async function handleSingleMessage(raw, ctx){
     return await handleOrderQuery(raw);
   }
 
-  const panelMatch=findBestAnswer(raw);
+  if(topic==='greeting'){
+    resetBotState('idle');
+    return {type:'answer',text:greetingReply(raw)};
+  }
+
+  let edgeDecision=null;
+  if(settings.useLLM!==false&&topic!=='general'){
+    edgeDecision=await callBotLLM(raw,ctx);
+    const edgeHandled=await handleLLMDecision(edgeDecision,raw,ctx,{allowLow:false});
+    if(edgeHandled){
+      renderBotDebug({
+        knowledgeMatch:edgeDecision.knowledge_id?('RPC #'+edgeDecision.knowledge_id):'RPC/Edge Function',
+        confidence:edgeDecision.confidence!=null?Math.round(Number(edgeDecision.confidence)*100):'',
+        actionExecuted:edgeDecision.action_name||edgeDecision.action||''
+      });
+      return edgeHandled;
+    }
+  }
+
+  const panelMatch=findBestAnswer(raw,ctx);
   renderRanking(panelMatch.ranked);
   if(panelMatch.found){
     await incrementUsage(panelMatch.item);
@@ -2450,6 +2823,7 @@ async function handleSingleMessage(raw, ctx){
     renderBotDebug({knowledgeMatch:panelMatch.item.question,confidence:panelMatch.item.score,actionExecuted:configuredAction(getBotConfig(panelMatch.item))});
     return await handleConfiguredKnowledge(panelMatch.item);
   }
+  if(panelMatch.confidence==='medium')return {type:'clarify',text:mediumKnowledgeClarify(panelMatch)};
 
   if(topic==='general'){
     resetBotState('idle');
@@ -2470,7 +2844,7 @@ async function handleSingleMessage(raw, ctx){
   }
 
   if(topic==='browse'){
-    const browseKnowledge=findBestAnswer(raw);
+    const browseKnowledge=findBestAnswer(raw,ctx);
     renderRanking(browseKnowledge.ranked);
     if(browseKnowledge.found){
       await incrementUsage(browseKnowledge.item);
@@ -2478,6 +2852,7 @@ async function handleSingleMessage(raw, ctx){
       renderBotDebug({knowledgeMatch:browseKnowledge.item.question,confidence:browseKnowledge.item.score,actionExecuted:configuredAction(getBotConfig(browseKnowledge.item))});
       return await handleConfiguredKnowledge(browseKnowledge.item);
     }
+    if(browseKnowledge.confidence==='medium')return {type:'clarify',text:mediumKnowledgeClarify(browseKnowledge)};
     await persistUnanswered(raw);
   }
 
@@ -2498,7 +2873,7 @@ async function handleSingleMessage(raw, ctx){
   }
 
   // قاعدة المعرفة أولاً: لو الأدمن ضاف سؤال + نوع إدخال/إجراء، ده ياخد الأولوية.
-  const knowledgeFirst=findBestAnswer(raw);
+  const knowledgeFirst=findBestAnswer(raw,ctx);
   renderRanking(knowledgeFirst.ranked);
   if(knowledgeFirst.found){
     await incrementUsage(knowledgeFirst.item);
@@ -2506,6 +2881,7 @@ async function handleSingleMessage(raw, ctx){
     renderBotDebug({knowledgeMatch:knowledgeFirst.item.question,confidence:knowledgeFirst.item.score,actionExecuted:configuredAction(getBotConfig(knowledgeFirst.item))});
     return await handleConfiguredKnowledge(knowledgeFirst.item);
   }
+  if(knowledgeFirst.confidence==='medium')return {type:'clarify',text:mediumKnowledgeClarify(knowledgeFirst)};
 
   if(topic==='human'){
     resetBotState('human');
@@ -2555,7 +2931,7 @@ async function handleSingleMessage(raw, ctx){
   }
 
   // ⭐ تاني: دور في قاعدة المعرفة للأسئلة العامة بس
-  const match=findBestAnswer(raw);
+  const match=findBestAnswer(raw,ctx);
   renderRanking(match.ranked);
   if(match.found){
     await incrementUsage(match.item);
@@ -2563,6 +2939,7 @@ async function handleSingleMessage(raw, ctx){
     renderBotDebug({knowledgeMatch:match.item.question,confidence:match.item.score,actionExecuted:configuredAction(getBotConfig(match.item))});
     return await handleConfiguredKnowledge(match.item);
   }
+  if(match.confidence==='medium')return {type:'clarify',text:mediumKnowledgeClarify(match)};
 
   // ⭐ تالت: مناسبة من السياق (بدون كلمة "هدية" صريحة)
   if(ctx.occasion){
@@ -2590,7 +2967,9 @@ async function handleSingleMessage(raw, ctx){
 
   // LLM
   if(settings.useLLM!==false){
-    const llm=await callBotLLM(raw,ctx);
+    const llm=edgeDecision||await callBotLLM(raw,ctx);
+    const llmHandled=await handleLLMDecision(llm,raw,ctx,{allowLow:true});
+    if(llmHandled)return llmHandled;
     if(llm){
       if(llm.action==='answer' && llm.reply){
         const item=questions.find(x=>Number(x.id)===Number(llm.knowledge_id));
@@ -2602,7 +2981,13 @@ async function handleSingleMessage(raw, ctx){
           return handled;
         }
       }
-      if(llm.action==='human') return {type:'answer',text:settings.human,llm:true};
+      if(llm.action==='human'){
+        if(llm.unanswered)await persistUnanswered(raw);
+        return {type:'answer',text:settings.human,llm:true};
+      }
+      if(llm.action==='clarify' && llm.reply){
+        return {type:'clarify',text:llm.reply,llm:true};
+      }
       if(llm.action==='product_search'){
         const products=categoryBrowseIntent(raw)?await recommendCategoryProducts(raw,ctx):await recommendProducts(raw,ctx);
         if(products.length) return {type:'products',text:llm.reply||'لقيتلك أقرب منتجات 👇',products};
@@ -2631,7 +3016,21 @@ async function processBotMessageCore(msg){
   botState.recipient=ctx.recipient||botState.recipient||'';
   botState.occasion=ctx.occasion||botState.occasion||'';
   botState.budget=ctx.budget??botState.budget;
+  botState.quantity=ctx.quantity??botState.quantity;
+  botState.company=ctx.company||botState.company||false;
+  botState.city=ctx.city||botState.city||'';
+  botState.category=ctx.category||botState.category||'';
+  if(ctx.order_number)botState.orderRef=ctx.order_number;
   renderBotDebug({lastMessage:raw,intent:botState.lastIntent,knowledgeMatch:'',confidence:'',actionExecuted:''});
+
+  const short=normalize(raw);
+  if(/^(?:بكم|كم السعر|بكام|سعره|السعر|price)$/.test(short) && botState.lastProduct){
+    const p=botState.lastProduct;
+    return {type:'answer',text:'سعر '+p.name+' هو '+Number(p.price||0).toFixed(2)+' AED.'+(p.link?'\n\n<a href="'+escAttr(p.link)+'" target="_blank" class="btn-gold" style="display:inline-block;margin-top:8px">عرض المنتج</a>':'')};
+  }
+  if(/^(?:اتشحن|انشحن|وصل|شو صار عليه|الحين وينه)$/.test(short) && botState.orderRef){
+    return await handleOrderQuery(botState.orderRef);
+  }
 
   if(/^\s*#?\s*\d{3,10}\s*$/.test(arabicDigits(raw)) && !botState.waitingFor){
     if(ctx.recipient||ctx.occasion||botState.topic==='gift'){
@@ -2739,7 +3138,7 @@ async function processBotMessageCore(msg){
     }
 
     // ⭐ لو العميل سأل سؤال عام واضح في قاعدة المعرفة، رد عليه الأول
-    const quickMatch=findBestAnswer(raw);
+    const quickMatch=findBestAnswer(raw,ctx);
     if(quickMatch.found && quickMatch.item.score>=(Number(settings.minScore)||6)+3){
       await incrementUsage(quickMatch.item);
       return await handleConfiguredKnowledge(quickMatch.item);
@@ -2780,6 +3179,12 @@ function getReminderText(){
 async function processBotMessage(msg){
   try{
     const res=await processBotMessageCore(msg);
+    if(res&&Array.isArray(res.products)&&res.products.length){
+      const p=res.products[0];
+      botState.productId=p.id||p.supabaseId||null;
+      botState.lastProduct={id:p.id||p.supabaseId||null,name:productName(p),price:Number(p.price)||0,link:productLink(p)};
+      saveChatMemory();
+    }
     return res||{type:'silent',text:''};
   }catch(e){
     console.error('Bot error:',e);
@@ -2797,14 +3202,18 @@ async function incrementUsage(item){
 }
 
 function renderRanking(arr){
-  $('ranking').innerHTML=arr.slice(0,5).map(x=>'<div class="item"><b>'+esc(x.question)+'</b><div class="meta">درجة: '+x.score+' • تشابه: '+Math.round((x.similarity||0)*100)+'% • استخدام: '+(Number(x.usage_count)||0)+'</div></div>').join('')||'<div class="hint">لا توجد مطابقة</div>';
+  $('ranking').innerHTML=(lastKnowledgeDebug.candidatesCount?'<div class="hint">Candidates: '+lastKnowledgeDebug.candidatesCount+'</div>':'')+(arr.slice(0,5).map(x=>'<div class="item"><b>'+esc(x.question)+'</b><div class="meta">درجة: '+x.score+' • تشابه: '+Math.round((x.similarity||0)*100)+'% • Action: '+esc(x._action||configuredAction(getBotConfig(x))||'-')+' • استخدام: '+(Number(x.usage_count)||0)+'</div></div>').join('')||'<div class="hint">لا توجد مطابقة</div>');
 }
 
 function renderBotDebug(extra={}){
   lastBotDebug={...lastBotDebug,...extra};
   const d={
     'Last Message':lastBotDebug.lastMessage||'',
+    'Normalized Message':lastKnowledgeDebug.normalized||normalize(lastBotDebug.lastMessage||''),
+    'Extracted Entities':JSON.stringify(lastKnowledgeDebug.entities||{}),
     'Detected Intent':lastBotDebug.intent||botState.lastIntent||'',
+    'Candidates Count':lastKnowledgeDebug.candidatesCount||0,
+    'Top 5 Matches':(lastKnowledgeDebug.top||[]).map(x=>x.question+' ('+x.score+')').join(' | '),
     'Knowledge Match':lastBotDebug.knowledgeMatch||'',
     'Confidence':lastBotDebug.confidence!=null?lastBotDebug.confidence:'',
     'Current Topic':botState.currentTopic||botState.topic||'idle',

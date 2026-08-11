@@ -38,6 +38,88 @@ function getStoredAuthToken() {
   } catch (_) {}
   return "";
 }
+const SB_CACHE_PREFIX = "bariq_sb_cache_v1:",
+  SB_TTL_SETTINGS = 10 * 60 * 1000,
+  SB_TTL_CATALOG = 10 * 60 * 1000,
+  SB_TTL_PRODUCTS = 2 * 60 * 1000,
+  sbMemoryCache = new Map(),
+  sbPendingRequests = new Map();
+function isNetworkDebugEnabled() {
+  try {
+    return (
+      location.search.includes("bariq_debug=1") ||
+      localStorage.getItem("x2_debug_network") === "1"
+    );
+  } catch (_) {
+    return !1;
+  }
+}
+function recordSbNetwork(path, status, bytes) {
+  if (!isNetworkDebugEnabled()) return;
+  try {
+    const stats =
+      window.__bariqNetworkStats ||
+      (window.__bariqNetworkStats = { total: 0, bytes: 0, endpoints: {} });
+    const item =
+      stats.endpoints[path] ||
+      (stats.endpoints[path] = { count: 0, bytes: 0, status: status });
+    stats.total += 1;
+    stats.bytes += bytes || 0;
+    item.count += 1;
+    item.bytes += bytes || 0;
+    item.status = status;
+  } catch (_) {}
+}
+function readSbCache(key, ttl) {
+  const now = Date.now(),
+    mem = sbMemoryCache.get(key);
+  if (mem && now - mem.ts < ttl) return mem.data;
+  try {
+    const raw = sessionStorage.getItem(SB_CACHE_PREFIX + key);
+    if (!raw) return null;
+    const row = JSON.parse(raw);
+    if (!row || now - Number(row.ts || 0) >= ttl) return null;
+    sbMemoryCache.set(key, { ts: row.ts, data: row.data });
+    return row.data;
+  } catch (_) {
+    return null;
+  }
+}
+function writeSbCache(key, data) {
+  const row = { ts: Date.now(), data: data };
+  sbMemoryCache.set(key, row);
+  try {
+    sessionStorage.setItem(SB_CACHE_PREFIX + key, JSON.stringify(row));
+  } catch (_) {}
+  return data;
+}
+function clearSbCache(prefix) {
+  sbMemoryCache.forEach(function (_, key) {
+    if (!prefix || key.indexOf(prefix) === 0) sbMemoryCache.delete(key);
+  });
+  try {
+    Object.keys(sessionStorage).forEach(function (key) {
+      if (
+        key.indexOf(SB_CACHE_PREFIX) === 0 &&
+        (!prefix || key.indexOf(SB_CACHE_PREFIX + prefix) === 0)
+      )
+        sessionStorage.removeItem(key);
+    });
+  } catch (_) {}
+}
+async function cachedSbFetch(path, ttl, opts) {
+  const key = path;
+  const cached = readSbCache(key, ttl);
+  if (cached !== null) return cached;
+  if (sbPendingRequests.has(key)) return sbPendingRequests.get(key);
+  const promise = sbFetch(path, opts).then(function (data) {
+    return writeSbCache(key, data);
+  }).finally(function () {
+    sbPendingRequests.delete(key);
+  });
+  sbPendingRequests.set(key, promise);
+  return promise;
+}
 async function sbFetch(path, opts) {
   const retry = !(opts = opts || {}).__retriedAuth,
     adminSession = hasAdminSession();
@@ -92,6 +174,7 @@ async function sbFetch(path, opts) {
     throw new Error("SB " + res.status + ": " + e);
   }
   const t = await res.text();
+  recordSbNetwork(path, res.status, t.length);
   return t ? JSON.parse(t) : null;
 }
   function applyGoogleAnalyticsSetting(id) {
@@ -264,7 +347,7 @@ const SupaCustomers = {
   },
   SupaSettings = {
     get: async function () {
-      var r = await sbFetch("settings?limit=1", { forceAnon: true }).catch(function () {
+      var r = await cachedSbFetch("settings?limit=1", SB_TTL_SETTINGS, { forceAnon: true }).catch(function () {
         return [];
       });
       var settings = r && r[0] ? r[0] : {};
@@ -273,6 +356,7 @@ const SupaCustomers = {
     },
     save: async function (obj) {
       var cur = await this.get();
+      clearSbCache("settings?");
       return cur.id
         ? sbFetch("settings?id=eq." + cur.id, {
             method: "PATCH",
@@ -291,9 +375,13 @@ const SupaCustomers = {
   },
   SupaCategories = {
     getAll: async function () {
-      return sbFetch("categories?active=eq.true&order=sort_order.asc");
+      return cachedSbFetch(
+        "categories?active=eq.true&order=sort_order.asc",
+        SB_TTL_CATALOG,
+      );
     },
     insert: async function (c) {
+      clearSbCache("categories?");
       return sbFetch("categories", {
         method: "POST",
         body: JSON.stringify({
@@ -307,12 +395,14 @@ const SupaCustomers = {
       });
     },
     update: async function (id, d) {
+      clearSbCache("categories?");
       return sbFetch("categories?id=eq." + id, {
         method: "PATCH",
         body: JSON.stringify(d),
       });
     },
     remove: async function (id) {
+      clearSbCache("categories?");
       return sbFetch("categories?id=eq." + id, {
         method: "PATCH",
         body: JSON.stringify({ active: !1 }),
@@ -321,16 +411,21 @@ const SupaCustomers = {
   },
   SupaSubcategories = {
     getAll: async function () {
-      return sbFetch("subcategories?active=eq.true&order=sort_order.asc");
+      return cachedSbFetch(
+        "subcategories?active=eq.true&order=sort_order.asc",
+        SB_TTL_CATALOG,
+      );
     },
     getByCategory: async function (catId) {
-      return sbFetch(
+      return cachedSbFetch(
         "subcategories?category_id=eq." +
           catId +
           "&active=eq.true&order=sort_order.asc",
+        SB_TTL_CATALOG,
       );
     },
     insert: async function (s) {
+      clearSbCache("subcategories?");
       return sbFetch("subcategories", {
         method: "POST",
         body: JSON.stringify({
@@ -344,6 +439,30 @@ const SupaCustomers = {
       });
     },
   },
+  PRODUCT_LIST_SELECT = [
+    "id",
+    "name_ar",
+    "name_en",
+    "description_ar",
+    "description_en",
+    "category_id",
+    "subcategory_id",
+    "price",
+    "old_price",
+    "stock",
+    "image",
+    "gallery",
+    "categories",
+    "rating",
+    "rating_count",
+    "featured",
+    "active",
+    "sort_order",
+    "timer_end",
+    "created_at",
+    "updated_at"
+  ].join(","),
+  productListCache = new Map(),
   SupaProducts = {
     getAll: async function (limit) {
       const max = Math.min(
@@ -351,38 +470,70 @@ const SupaCustomers = {
           100000,
         ),
         pageSize = 1000,
+        cacheKey = "active:" + max,
+        cached = productListCache.get(cacheKey),
         all = [];
-      for (let offset = 0; offset < max; offset += pageSize) {
-        const size = Math.min(pageSize, max - offset),
-          batch = await sbFetch(
-            "products?active=eq.true&order=sort_order.asc&limit=" +
+      if (cached && Date.now() - cached.ts < SB_TTL_PRODUCTS) {
+        return cached.promise || cached.data;
+      }
+      const promise = (async function () {
+        for (let offset = 0; offset < max; offset += pageSize) {
+          const size = Math.min(pageSize, max - offset),
+            baseQuery =
+              "active=eq.true&order=sort_order.asc&limit=" +
               size +
               "&offset=" +
-              offset,
-          );
-        if (!batch || !batch.length) break;
-        all.push(...batch);
-        if (batch.length < size) break;
-      }
-      return all;
+              offset;
+          let batch;
+          try {
+            batch = await sbFetch(
+              "products?select=" +
+                encodeURIComponent(PRODUCT_LIST_SELECT) +
+                "&" +
+                baseQuery,
+            );
+          } catch (err) {
+            if (offset > 0) throw err;
+            console.warn(
+              "[Supabase] Product slim select failed, using legacy product load:",
+              err.message,
+            );
+            batch = await sbFetch("products?" + baseQuery);
+          }
+          if (!batch || !batch.length) break;
+          all.push(...batch);
+          if (batch.length < size) break;
+        }
+        productListCache.set(cacheKey, { ts: Date.now(), data: all });
+        return all;
+      })();
+      productListCache.set(cacheKey, { ts: Date.now(), promise: promise });
+      return promise;
     },
     getFeatured: async function () {
-      return sbFetch(
+      return cachedSbFetch(
         "products?featured=eq.true&active=eq.true&order=sort_order.asc",
+        SB_TTL_PRODUCTS,
       );
     },
     getByCategory: async function (catId) {
-      return sbFetch(
+      return cachedSbFetch(
         "products?category_id=eq." +
           catId +
           "&active=eq.true&order=sort_order.asc",
+        SB_TTL_PRODUCTS,
       );
     },
     getById: async function (id) {
-      var r = await sbFetch("products?id=eq." + id + "&limit=1");
+      var r = await cachedSbFetch(
+        "products?id=eq." + id + "&limit=1",
+        SB_TTL_PRODUCTS,
+      );
       return r && r[0] ? r[0] : null;
     },
     insert: async function (p) {
+      productListCache.clear();
+      clearSbCache("products?");
       var name =
           p.name && "object" == typeof p.name
             ? p.name
@@ -426,12 +577,16 @@ const SupaCustomers = {
       });
     },
     update: async function (id, d) {
+      productListCache.clear();
+      clearSbCache("products?");
       return sbFetch("products?id=eq." + id, {
         method: "PATCH",
         body: JSON.stringify(d),
       });
     },
     remove: async function (id) {
+      productListCache.clear();
+      clearSbCache("products?");
       return sbFetch("products?id=eq." + id, {
         method: "PATCH",
         body: JSON.stringify({ active: !1 }),
@@ -878,6 +1033,9 @@ const SupaStorage = {
       return SupaStorage.upload(fakeFile, folder);
     },
   },
+  USER_SYNC_MIN_PULL_GAP = 30 * 1000,
+  userSyncLastPullAt = 0,
+  userSyncPullPromise = null,
   SupaUserSync = {
     _getEmail: function () {
       try {
@@ -917,8 +1075,13 @@ const SupaStorage = {
         } catch (e) {}
     },
     pull: async function () {
+      if ("hidden" === document.visibilityState) return null;
+      if (userSyncPullPromise) return userSyncPullPromise;
+      if (Date.now() - userSyncLastPullAt < USER_SYNC_MIN_PULL_GAP) return null;
       const email = this._getEmail();
-      if (email)
+      if (email) {
+        userSyncLastPullAt = Date.now();
+        userSyncPullPromise = (async function () {
         try {
           const rows = await sbFetch(
             "user_sync?user_email=eq." + encodeURIComponent(email),
@@ -974,11 +1137,20 @@ const SupaStorage = {
             }
           });
         } catch (e) {}
+        finally {
+          userSyncPullPromise = null;
+        }
+        })();
+        return userSyncPullPromise;
+      }
+      return null;
     },
     startPolling: function () {
       this._pollTimer ||
         (this._pollTimer = setInterval(() => {
-          "1" === localStorage.getItem("x2_logged") && this.pull();
+          "visible" === document.visibilityState &&
+            "1" === localStorage.getItem("x2_logged") &&
+            this.pull();
         }, 3e4));
     },
   },
