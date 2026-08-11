@@ -1358,6 +1358,14 @@ function rememberAdminReportsSession(name, authData) {
 }
 
 /* ================= تجديد التوكن تلقائياً ================= */
+function clearAdminAuthSession(){
+  sessionStorage.removeItem('admin_ok');
+  sessionStorage.removeItem('admin_token');
+  sessionStorage.removeItem('admin_refresh_token');
+  sessionStorage.removeItem('admin_token_exp');
+  sessionStorage.removeItem('x2_admin_reports_session');
+}
+
 async function refreshAdminToken() {
   const refreshToken = sessionStorage.getItem('admin_refresh_token');
   if (!refreshToken) return null;
@@ -1368,6 +1376,10 @@ async function refreshAdminToken() {
       body: JSON.stringify({ refresh_token: refreshToken })
     });
     const data = await res.json();
+    if (!res.ok) {
+      clearAdminAuthSession();
+      return null;
+    }
     if (data.access_token) {
       sessionStorage.setItem('admin_token', data.access_token);
       sessionStorage.setItem('admin_refresh_token', data.refresh_token || refreshToken);
@@ -1407,10 +1419,7 @@ async function requireAdminWriteToken(){
   restoreAdminReportsSession();
   const token=await getValidAdminToken();
   if(token)return token;
-  sessionStorage.removeItem('admin_ok');
-  sessionStorage.removeItem('admin_token');
-  sessionStorage.removeItem('admin_refresh_token');
-  sessionStorage.removeItem('admin_token_exp');
+  clearAdminAuthSession();
   if($('gate'))$('gate').style.display='flex';
   throw new Error('جلسة الأدمن منتهية. سجّل الدخول مرة أخرى لتحديث الطلبات.');
 }

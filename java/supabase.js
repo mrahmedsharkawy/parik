@@ -47,6 +47,8 @@ async function sbFetch(path, opts) {
     adminSession &&
     "function" == typeof refreshAdminToken &&
     (storedToken = (await refreshAdminToken()) || "");
+  if (!storedToken && opts.requireAuth && !opts.forceAnon)
+    throw new Error("جلسة الأدمن منتهية. سجّل الدخول مرة أخرى لتحديث الطلبات.");
   const authToken = opts.forceAnon ? SUPABASE_ANON : storedToken || SUPABASE_ANON,
     res = await fetch(
       SUPABASE_URL + "/rest/v1/" + path,
@@ -746,11 +748,12 @@ const SupaCustomers = {
 ((SupaOrders.update = async function (id, d) {
   return sbFetch("orders?id=eq." + id, {
     method: "PATCH",
+    requireAuth: !0,
     body: JSON.stringify(d),
   });
 }),
   (SupaOrders.remove = async function (id) {
-    return sbFetch("orders?id=eq." + id, { method: "DELETE" });
+    return sbFetch("orders?id=eq." + id, { method: "DELETE", requireAuth: !0 });
   }),
   (SupaOrders.getById = async function (id) {
     const r = await sbFetch("orders?id=eq." + id + "&limit=1");
