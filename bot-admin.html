@@ -362,11 +362,35 @@ function flatText(v){
   if(typeof v==='object')return Object.values(v).map(flatText).filter(Boolean).join(' ');
   return String(v);
 }
+const DIALECT_NORMALIZE_RULES=[
+  [/\b(?:ابغي|ابغى|ابي|ابا)\b/g,'اريد'],
+  [/\b(?:عايز|عاوزه|عاوز|محتاج|احتاج)\b/g,'اريد'],
+  [/\bشو\b/g,'ايه'],
+  [/\bوين\b/g,'فين'],
+  [/\b(?:مب|مو)\b/g,'مش'],
+  [/\bللحين\b/g,'لسه'],
+  [/\bحق\s+(?=اخت|اخ|امي|ام|الوالده|والده|ابوي|اب|زوج|مرات|بنت|ولد|صديق|صديقه|زميل|مدير)/g,'ل'],
+  [/\bالوالده\b/g,'ام'],
+  [/\bالوالد\b/g,'اب'],
+  [/\bبكم\b/g,'كم السعر'],
+  [/\bكم\s+ياخذ\b/g,'كم يستغرق'],
+  [/\bتوصلون\b/g,'توصيل'],
+  [/\bتسوون\b/g,'تعملون'],
+  [/\bعندكم\s+منه\b/g,'متوفر'],
+  [/\bورني\b/g,'اعرض'],
+  [/\bخلني\s+اشوف\b/g,'اعرض'],
+  [/\bشو\s+صار\s+عليه\b/g,'ما حالته'],
+  [/\bكنسل\b/g,'الغاء'],
+  [/\b(?:لوغو|لوجو|logo)\b/g,'شعار'],
+  [/\b(?:براندنق|براندنج|branding)\b/g,'تخصيص الهويه التجاريه']
+];
 function normalize(s){
   let t=String(s||'').toLowerCase();
+  DIALECT_NORMALIZE_RULES.forEach(([re,to])=>{t=t.replace(re,to)});
   t=t.replace(/[إأآٱ]/g,'ا').replace(/[ؤ]/g,'و').replace(/[ئ]/g,'ي')
    .replace(/ة/g,'ه').replace(/ى/g,'ي').replace(/[ًٌٍَُِّْـ]/g,'')
    .replace(/ـ/g,'').replace(/[^\u0600-\u06FFa-zA-Z0-9\s]/g,' ');
+  DIALECT_NORMALIZE_RULES.forEach(([re,to])=>{t=t.replace(re,to)});
   // تطبيع الكلمات المتصلة بحروف الجر والضمائر: لأختي = اخت، لاخت = اخت، اختي = اخت
   t=t.replace(/(^|\s)ل(?:ل)?(?=(اخت|اخ|ام|اب|زوج|مرات|صديق|صديقه|زميل|مدير|معلم|مدرس|بنت|ولد|جده|جد))/g,'$1');
   t=t.replace(/(^|\s)(اخت|اخ|ام|اب|زوج|مرات|صديق|صديقه|زميل|مدير|معلم|مدرس|بنت|ولد|جده|جد)(?:ي|ه|ها|هم|نا|كم)?(?=\s|$)/g,'$1$2');
@@ -805,7 +829,7 @@ function editQuestion(id){
 async function saveQuestion(){
   const question=$('question').value.trim(),answer=$('answer').value.trim();
   const category=$('category').value.trim(),keywords=kws($('keywords').value),cfg=readBotConfigForm();
-  const active=$('active').checked,id=$('editId').value;
+  let active=$('active').checked,id=$('editId').value;
   if(!question || (cfg.inputMode==='answer'&&!answer)){
     $('formMsg').textContent='❌ لازم تكتب السؤال والإجابة للرد المعلوماتي';
     $('formMsg').className='error'; return;
@@ -816,6 +840,9 @@ async function saveQuestion(){
   const near=others.map(x=>({x,s:questionSimilarity(question,x.question)}))
                     .sort((a,b)=>b.s-a.s)[0];
   const mergeTarget=exact||(near&&near.s>=.78?near.x:null);
+  const currentRow=id?questions.find(x=>String(x.id)===String(id)):null;
+  const answeringUnanswered=!!answer&&!!(currentRow||mergeTarget)&&!String((currentRow||mergeTarget).answer||'').trim();
+  if(answeringUnanswered)active=true;
 
   const payload={
     question:mergeTarget&&!id?mergeTarget.question:question,
@@ -844,6 +871,7 @@ async function saveQuestion(){
       await saveKnowledgePayload('bot_knowledge','POST',payload);
       $('formMsg').textContent='✅ تم حفظ السؤال والإجابة';
     }
+    await clearAnsweredUnanswered(question);
     $('formMsg').className='success';
     await loadQuestions(); renderAll();
   }catch(e){
@@ -886,11 +914,23 @@ async function deleteQuestion(id){
 ========================================================= */
 function unansweredLocal(){
   const local=readLocal('bariq_bot_unanswered',[]);
-  const db=questions.filter(x=>!String(x.answer||'').trim()||String(x.category||'')==='أسئلة تحتاج إجابة')
+  const db=questions.filter(x=>!String(x.answer||'').trim())
     .map(x=>({text:x.question,count:Number(x.usage_count)||1,date:x.updated_at||'',dbId:x.id,savedToDb:true}));
   const merged=[...local];
   db.forEach(d=>{const hit=merged.find(x=>normalize(x.text)===normalize(d.text));if(hit){hit.count=Math.max(hit.count||1,d.count||1);hit.dbId=d.dbId;hit.savedToDb=true}else merged.push(d)});
   return merged;
+}
+async function clearAnsweredUnanswered(text){
+  const n=normalize(text);
+  if(!n)return;
+  const local=readLocal('bariq_bot_unanswered',[]).filter(x=>normalize(x.text)!==n);
+  saveLocal('bariq_bot_unanswered',local);
+  if(window.sbFetch){
+    await window.sbFetch('bot_unanswered?normalized_text=eq.'+encodeURIComponent(n),{
+      method:'PATCH',
+      body:JSON.stringify({status:'answered',last_seen_at:new Date().toISOString()})
+    }).catch(()=>null);
+  }
 }
 async function persistUnanswered(msg){
   const text=String(msg||'').trim();if(!text)return;
@@ -2020,6 +2060,7 @@ async function handleSingleMessage(raw, ctx){
       renderBotDebug({knowledgeMatch:browseKnowledge.item.question,confidence:browseKnowledge.item.score,actionExecuted:configuredAction(getBotConfig(browseKnowledge.item))});
       return await handleConfiguredKnowledge(browseKnowledge.item);
     }
+    await persistUnanswered(raw);
   }
 
   if(topic==='browse'){
