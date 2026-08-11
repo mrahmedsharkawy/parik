@@ -2148,10 +2148,20 @@ async function handleConfiguredKnowledge(item){
   return {type:'answer',text:item.answer,match:item};
 }
 
+function withTimeout(promise,ms,fallback=null){
+  return Promise.race([
+    promise,
+    new Promise(resolve=>setTimeout(()=>resolve(fallback),ms))
+  ]);
+}
+
 async function callBotLLM(raw,ctx,imageUrl=''){
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),15000);
   try{
     const res=await fetch(SB+'/functions/v1/bot-llm',{
       method:'POST',
+      signal:controller.signal,
       headers:{
         'Content-Type':'application/json',
         'apikey':ANON_KEY,
@@ -2180,6 +2190,8 @@ async function callBotLLM(raw,ctx,imageUrl=''){
   }catch(e){
     console.warn('bot-llm unavailable:',e);
     return null;
+  }finally{
+    clearTimeout(timer);
   }
 }
 
@@ -2208,7 +2220,7 @@ async function fileToImageDataUrl(file,maxSide=1100,quality=.82){
 }
 async function uploadBotImage(file,dataUrl){
   if(window.Supabase&&window.Supabase.Storage&&typeof window.Supabase.Storage.uploadDataUrl==='function'){
-    try{return await window.Supabase.Storage.uploadDataUrl(dataUrl,'bot-images')}
+    try{return await withTimeout(window.Supabase.Storage.uploadDataUrl(dataUrl,'bot-images'),5000,dataUrl)}
     catch(e){console.warn('bot image upload failed; using data URL for vision:',e)}
   }
   return dataUrl;
@@ -2234,12 +2246,58 @@ function productsByExactImageUrl(imageUrl){
   if(!target||target.startsWith('data:')||target.startsWith('blob:'))return [];
   return botProducts.filter(p=>productImageSources(p).some(src=>normalizeImageUrl(src)===target)).slice(0,BOT_PRODUCT_LIMIT);
 }
-async function searchProductsByImage(imageUrl,caption=''){
+function loadImageForCompare(src){
+  return new Promise((resolve,reject)=>{
+    const img=new Image();
+    img.crossOrigin='anonymous';
+    img.onload=()=>resolve(img);
+    img.onerror=()=>reject(new Error('image load failed'));
+    img.src=src;
+  });
+}
+async function imageDescriptor(src,crop=.78){
+  const img=await withTimeout(loadImageForCompare(src),1800,null);
+  if(!img)return null;
+  const size=18,canvas=document.createElement('canvas'),ctx=canvas.getContext('2d',{willReadFrequently:true});
+  canvas.width=size;canvas.height=size;
+  const cw=img.width*crop,ch=img.height*crop,cx=(img.width-cw)/2,cy=(img.height-ch)/2;
+  ctx.drawImage(img,cx,cy,cw,ch,0,0,size,size);
+  try{
+    const data=ctx.getImageData(0,0,size,size).data,out=[];
+    for(let i=0;i<data.length;i+=4)out.push(data[i]/255,data[i+1]/255,data[i+2]/255);
+    return out;
+  }catch(e){return null}
+}
+function descriptorDistance(a,b){
+  if(!a||!b||a.length!==b.length)return Infinity;
+  let sum=0;
+  for(let i=0;i<a.length;i++){const d=a[i]-b[i];sum+=d*d}
+  return Math.sqrt(sum/a.length);
+}
+async function visualProductMatches(imageUrl){
+  const queries=(await Promise.all([imageDescriptor(imageUrl,1),imageDescriptor(imageUrl,.78),imageDescriptor(imageUrl,.56)])).filter(Boolean);
+  if(!queries.length)return [];
+  const products=botProducts.slice(0,160);
+  const scored=await Promise.all(products.map(async p=>{
+    const src=productImage(p);
+    const desc=await imageDescriptor(src,1);
+    if(!desc)return {...p,_score:0,_visualDistance:Infinity};
+    const dist=Math.min(...queries.map(q=>descriptorDistance(q,desc)));
+    return {...p,_score:Math.max(0,100-Math.round(dist*140)),_visualDistance:dist};
+  }));
+  return scored.filter(p=>p._score>=48).sort((a,b)=>b._score-a._score).slice(0,BOT_PRODUCT_LIMIT);
+}
+async function searchProductsByImage(imageUrl,caption='',visualUrl=imageUrl){
   await loadProductsForBot();
   const exact=productsByExactImageUrl(imageUrl);
   if(exact.length){
     renderBotDebug({lastMessage:caption||'صورة مرفقة',intent:'image_search',knowledgeMatch:'Exact product image URL',confidence:100,actionExecuted:'IMAGE_PRODUCT_SEARCH'});
     return {products:exact,imageDescription:'نفس رابط صورة المنتج',llm:null};
+  }
+  const visual=await visualProductMatches(visualUrl||imageUrl);
+  if(visual.length){
+    renderBotDebug({lastMessage:caption||'صورة مرفقة',intent:'image_search',knowledgeMatch:'Visual product image match',confidence:visual[0]._score,actionExecuted:'IMAGE_PRODUCT_SEARCH'});
+    return {products:visual,imageDescription:'مطابقة بصرية مع صور المنتجات',llm:null};
   }
   const llm=await callBotLLM(caption||'ابحث عن المنتج المطابق لهذه الصورة في منتجات الموقع',extractIntent(caption||''),imageUrl);
   const imageDescription=String((llm&&llm.image_description)||'').trim();
@@ -2806,7 +2864,7 @@ async function handleImageUpload(input){
     holder.innerHTML='<div class="avatar"></div><div class="bubble">جاري تحليل الصورة والبحث في منتجات الموقع...</div>';
     $('chat').appendChild(holder);$('chat').scrollTop=$('chat').scrollHeight;
     const imageUrl=await uploadBotImage(file,previewUrl);
-    const result=await searchProductsByImage(imageUrl,'الصورة المرفقة من العميل');
+    const result=await searchProductsByImage(imageUrl,'الصورة المرفقة من العميل',previewUrl);
     if(result.products&&result.products.length){
       holder.remove();
       const text='لقيت أقرب منتج مطابق للصورة من الموقع:';
