@@ -2429,12 +2429,29 @@ function isMissingSupabaseColumnError(error, column){
   return text.includes(column) && /schema cache|column|Could not find/i.test(text);
 }
 
-async function updateOrderInSupabaseSafe(id, data){
+async function updateOrderInSupabaseSafe(id, data, order=null){
   const optionalColumns = ['cashback_expires_at', 'updated_at'];
   const payload = Object.assign({}, data);
+  const candidates = [
+    { field:'id', value: order && order.srcId },
+    { field:'id', value: id },
+    { field:'order_number', value: order && order.orderNumber },
+    { field:'order_number', value: order && order.order_number }
+  ].filter(x=>x.value!==undefined&&x.value!==null&&String(x.value).trim()!=='');
+  const seen = new Set();
+  const uniqueCandidates = candidates.filter(x=>{
+    const key=x.field+'='+String(x.value);
+    if(seen.has(key))return false;
+    seen.add(key);
+    return true;
+  });
   for (let attempt = 0; attempt <= optionalColumns.length; attempt++) {
     try {
-      return await window.Supabase.Orders.update(id, payload);
+      for(const c of uniqueCandidates){
+        const result = await window.sbFetch('orders?'+c.field+'=eq.' + encodeURIComponent(c.value), { method: 'PATCH', prefer: 'return=representation', body: JSON.stringify(payload) });
+        if(Array.isArray(result)&&result.length)return result;
+      }
+      return [];
     } catch(e) {
       const missingColumn = optionalColumns.find(column => Object.prototype.hasOwnProperty.call(payload, column) && isMissingSupabaseColumnError(e, column));
       if (!missingColumn) throw e;
@@ -2443,7 +2460,7 @@ async function updateOrderInSupabaseSafe(id, data){
       toast('⚠️ عمود اختياري غير موجود في قاعدة البيانات، تم تحديث الحالة بدونه');
     }
   }
-  return await window.Supabase.Orders.update(id, payload);
+  return [];
 }
 
 // جلب الطلبات من Supabase
@@ -2593,7 +2610,7 @@ async function saveOrder(){
             updateData.cashback_expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
           }
           else if (order.cashbackStatus === 'earned' || order.cashback_status === 'earned') updateData.cashback_status = 'pending';
-          await updateOrderInSupabaseSafe(order.id, updateData);
+          await updateOrderInSupabaseSafe(order.id, updateData, orders[idx]);
         } catch(e) {
           console.error('فشل تحديث الطلب في Supabase:', e);
           toast('⚠️ تم الحفظ محلياً، فشل التحديث في قاعدة البيانات');
@@ -2650,7 +2667,7 @@ async function changeOrderStatus(id, status){
         updateData.cashback_expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
       }
       else if (o.cashbackStatus === 'earned' || o.cashback_status === 'earned') updateData.cashback_status = 'pending';
-      const result = await updateOrderInSupabaseSafe(id, updateData);
+      const result = await updateOrderInSupabaseSafe(id, updateData, o);
 
       // Prefer:return=representation يرجع الصفوف المحدَّثة فعلياً؛ لو رجعت فارغة يعني لم يتم تحديث أي صف
       if (!result || !Array.isArray(result) || result.length === 0) {
