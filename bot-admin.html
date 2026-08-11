@@ -502,6 +502,31 @@ async function loadQuestions(){
 }
 async function loadProductsForBot(){
   try{
+    const productKey=p=>String(p&&(
+      p.id||p.productId||p.supabaseId||flatText(p.name_ar||p.name_en||p.name)
+    )||'');
+    const hasCategoryData=p=>!!normalize([
+      flatText(p&&p.categories),flatText(p&&p.category),flatText(p&&p.subcategories),
+      flatText(p&&p.subcategory),flatText(p&&p.subCategory),
+      p&&p.category_name,p&&p.categoryName,p&&p.category_slug,p&&p.categorySlug,
+      p&&p.subcategory_name,p&&p.subcategoryName,p&&p.subcategory_slug,p&&p.subcategorySlug,
+      p&&p.category_id,p&&p.subcategory_id
+    ].join(' '));
+    const mergeProductData=(live,local)=>{
+      const out=Object.assign({},local||{},live||{});
+      if(!hasCategoryData(out)&&hasCategoryData(local)){
+        ['category','categories','subcategory','subCategory','subcategories','category_name','categoryName','category_slug','categorySlug','subcategory_name','subcategoryName','subcategory_slug','subcategorySlug'].forEach(k=>{
+          if(local&&local[k]!=null)out[k]=local[k];
+        });
+      }
+      return out;
+    };
+    const loadLocalProducts=async()=>{
+      try{
+        const rows=await fetch('/java/Products.json',{cache:'no-store'}).then(r=>r.ok?r.json():[]);
+        return Array.isArray(rows)?rows:[];
+      }catch(__){return []}
+    };
     const loadLocalCategoryTree=async()=>{
       try{
         const localCats=await fetch('/java/Categories.json',{cache:'no-store'}).then(r=>r.ok?r.json():[]);
@@ -525,8 +550,27 @@ async function loadProductsForBot(){
       botCategories=[];botSubcategories=[];
       await loadLocalCategoryTree();
     }
-    botProducts=await window.sbFetch('products?active=eq.true&order=updated_at.desc.nullslast,created_at.desc.nullslast,sort_order.asc&limit=10000');
-    botProducts=Array.isArray(botProducts)?botProducts.filter(p=>p.active!==false):[];
+    const [liveProducts,localProducts]=await Promise.all([
+      window.sbFetch('products?active=eq.true&order=updated_at.desc.nullslast,created_at.desc.nullslast,sort_order.asc&limit=10000').catch(()=>[]),
+      loadLocalProducts()
+    ]);
+    const localByKey=new Map((Array.isArray(localProducts)?localProducts:[]).map(p=>[productKey(p),p]).filter(x=>x[0]));
+    const seen=new Set();
+    botProducts=[];
+    (Array.isArray(liveProducts)?liveProducts:[]).forEach(p=>{
+      const key=productKey(p);
+      if(!key)return;
+      seen.add(key);
+      botProducts.push(mergeProductData(p,localByKey.get(key)));
+    });
+    (Array.isArray(localProducts)?localProducts:[]).forEach(p=>{
+      const key=productKey(p);
+      if(key&&!seen.has(key)){
+        seen.add(key);
+        botProducts.push(p);
+      }
+    });
+    botProducts=botProducts.filter(p=>p.active!==false);
     if($('productQueryStatus'))$('productQueryStatus').textContent='تم تحميل '+botProducts.length+' منتج.';
   }catch(e){
     botProducts=[];
@@ -1563,6 +1607,11 @@ async function handleSingleMessage(raw, ctx){
   // ⭐ أولاً: حدد الموضوع (الـ flow مهم أكتر من قاعدة المعرفة)
   const topic=detectTopic(raw);
 
+  if(topic==='order'){
+    resetBotState('order');
+    return await handleOrderQuery(raw);
+  }
+
   // لو حالة الانتظار ضاعت لكن السياق واضح، كمّل مسار الهدية بدل fallback.
   if(topic==='general' && ctx.recipient && !ctx.occasion){
     resetBotState('gift');
@@ -1594,12 +1643,6 @@ async function handleSingleMessage(raw, ctx){
   if(topic==='human'){
     resetBotState('human');
     return {type:'answer',text:settings.human};
-  }
-
-  // تتبع طلب (مستقل تماماً)
-  if(topic==='order'){
-    resetBotState('order');
-    return await handleOrderQuery(raw);
   }
 
   if(topic==='intro'){
