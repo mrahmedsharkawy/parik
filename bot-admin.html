@@ -505,36 +505,59 @@ async function loadProductsForBot(){
     const productKey=p=>String(p&&(
       p.id||p.productId||p.supabaseId||flatText(p.name_ar||p.name_en||p.name)
     )||'');
-    const loadLocalCategoryTree=async()=>{
-      try{
-        const localCats=await fetch('/java/Categories.json',{cache:'no-store'}).then(r=>r.ok?r.json():[]);
-        if(Array.isArray(localCats)){
-          localCats.forEach(c=>{
-            botCategories.push(c);
-            (Array.isArray(c.subcategories)?c.subcategories:[]).forEach(s=>{
-              botSubcategories.push(Object.assign({},s,{parentName:c.name,parentSlug:c.categorySlug||c.slug}));
-            });
-          });
-        }
-      }catch(__){}
-    };
     try{
       botCategories=await window.sbFetch('categories?active=eq.true&order=sort_order.asc');
       botSubcategories=await window.sbFetch('subcategories?active=eq.true&order=sort_order.asc');
       botCategories=Array.isArray(botCategories)?botCategories:[];
       botSubcategories=Array.isArray(botSubcategories)?botSubcategories:[];
-      await loadLocalCategoryTree();
     }catch(_){
       botCategories=[];botSubcategories=[];
-      await loadLocalCategoryTree();
     }
     const liveProducts=await window.sbFetch('products?active=eq.true&order=updated_at.desc.nullslast,created_at.desc.nullslast,sort_order.asc&limit=10000').catch(()=>[]);
+    const relationEndpoints=[
+      'product_categories?select=*&limit=10000',
+      'products_categories?select=*&limit=10000',
+      'product_category?select=*&limit=10000',
+      'product_subcategories?select=*&limit=10000',
+      'products_subcategories?select=*&limit=10000'
+    ];
+    const relationRows=(await Promise.all(relationEndpoints.map(url=>window.sbFetch(url).catch(()=>[]))))
+      .flat().filter(Boolean);
+    const categoryById=new Map(botCategories.map(c=>[String(c.id),c]));
+    const subcategoryById=new Map(botSubcategories.map(s=>[String(s.id),s]));
+    const relationTermsByProduct=new Map();
+    const relationProductId=r=>String(r.product_id||r.productId||r.product||r.item_id||r.itemId||r.id_product||'');
+    const relationCategoryIds=r=>[
+      r.category_id,r.categoryId,r.category,r.id_category,
+      r.subcategory_id,r.subcategoryId,r.subcategory,r.id_subcategory
+    ].filter(v=>v!=null&&String(v).trim()).map(v=>String(v));
+    relationRows.forEach(r=>{
+      const pid=relationProductId(r);
+      if(!pid)return;
+      const bits=[];
+      relationCategoryIds(r).forEach(id=>{
+        const cat=categoryById.get(id);
+        const sub=subcategoryById.get(id);
+        if(cat)bits.push(flatText(cat.name_ar),flatText(cat.name_en),flatText(cat.name),cat.slug,cat.categorySlug,cat.id);
+        if(sub){
+          bits.push(flatText(sub.name_ar),flatText(sub.name_en),flatText(sub.name),sub.slug,sub.categorySlug,sub.id);
+          const parent=categoryById.get(String(sub.category_id||sub.categoryId||''));
+          if(parent)bits.push(flatText(parent.name_ar),flatText(parent.name_en),flatText(parent.name),parent.slug,parent.categorySlug,parent.id);
+        }
+      });
+      if(r.category_name||r.categoryName||r.category_slug||r.categorySlug||r.subcategory_name||r.subcategoryName){
+        bits.push(r.category_name,r.categoryName,r.category_slug,r.categorySlug,r.subcategory_name,r.subcategoryName);
+      }
+      if(bits.length)relationTermsByProduct.set(pid,[relationTermsByProduct.get(pid)||'',...bits].join(' '));
+    });
     const seen=new Set();
     botProducts=[];
     (Array.isArray(liveProducts)?liveProducts:[]).forEach(p=>{
       const key=productKey(p);
       if(!key)return;
       seen.add(key);
+      const rel=relationTermsByProduct.get(String(p.id||p.productId||p.supabaseId||''));
+      if(rel)p=Object.assign({},p,{_bot_relation_categories:rel});
       botProducts.push(p);
     });
     botProducts=botProducts.filter(p=>p.active!==false);
@@ -991,6 +1014,7 @@ function productCategoryText(p){
   const parentCat=subcat&&botCategories.find(c=>String(c.id)===String(subcat.category_id||subcat.categoryId||''));
   return normalize([
     cats,sub,
+    p._bot_relation_categories,
     p.category_name,p.categoryName,p.mainCategory,p.subcategory_name,p.subcategoryName,p.category_slug,p.categorySlug,p.subcategory_slug,p.subcategorySlug,
     p.category_id,p.subcategory_id,
     cat&&[flatText(cat.name_ar),flatText(cat.name_en),flatText(cat.name),cat.slug,cat.categorySlug,cat.id].join(' '),
@@ -1146,14 +1170,40 @@ function categoryTermsFromText(text){
   if(occ&&OCCASION_TERMS[occ])out.push(...OCCASION_TERMS[occ]);
   return [...new Set(out.map(normalize).filter(Boolean))];
 }
+function requestedCategoryKeys(text){
+  const t=normalize(text),keys=[];
+  Object.keys(CATEGORY_TERMS).forEach(k=>{
+    if(CATEGORY_TERMS[k].some(w=>hasWholeTerm(t,w)))keys.push(k);
+  });
+  const occ=matchFirst(OCCASION_MAP,t);
+  if(occ){
+    Object.keys(CATEGORY_TERMS).forEach(k=>{
+      if(CATEGORY_TERMS[k].some(w=>(OCCASION_TERMS[occ]||[]).map(normalize).includes(normalize(w))))keys.push(k);
+    });
+  }
+  return [...new Set(keys)];
+}
+function hasConflictingCategorySignal(p,requestedKeys){
+  if(!requestedKeys.length)return false;
+  const occasionKeys=['newborn','graduation','eid','ramadan','birthday','wedding','engagement'];
+  const requestedOccasionKeys=requestedKeys.filter(k=>occasionKeys.includes(k));
+  if(!requestedOccasionKeys.length)return false;
+  const name=normalize(productName(p));
+  return occasionKeys.some(k=>{
+    if(requestedOccasionKeys.includes(k))return false;
+    return (CATEGORY_TERMS[k]||[]).some(w=>hasWholeTerm(name,w));
+  });
+}
 async function recommendCategoryProducts(text,ctx=null){
   if(!botProducts.length)await loadProductsForBot();
   const terms=categoryTermsFromText(text);
+  const requestedKeys=requestedCategoryKeys(text);
   if(!terms.length)return [];
   return botProducts.map(p=>{
     const pt=productText(p),ct=productCategoryText(p);let s=0;
     terms.forEach(w=>{if(hasWholeTerm(ct,w))s+=20});
     if(s<=0)return {...p,_score:0};
+    if(hasConflictingCategorySignal(p,requestedKeys))return {...p,_score:0};
     terms.forEach(w=>{if(hasWholeTerm(pt,w))s+=3});
     if(Number(p.stock)<=0)s-=999;
     return {...p,_score:s};
