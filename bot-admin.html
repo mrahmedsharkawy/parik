@@ -505,28 +505,6 @@ async function loadProductsForBot(){
     const productKey=p=>String(p&&(
       p.id||p.productId||p.supabaseId||flatText(p.name_ar||p.name_en||p.name)
     )||'');
-    const hasCategoryData=p=>!!normalize([
-      flatText(p&&p.categories),flatText(p&&p.category),flatText(p&&p.subcategories),
-      flatText(p&&p.subcategory),flatText(p&&p.subCategory),
-      p&&p.category_name,p&&p.categoryName,p&&p.category_slug,p&&p.categorySlug,
-      p&&p.subcategory_name,p&&p.subcategoryName,p&&p.subcategory_slug,p&&p.subcategorySlug,
-      p&&p.category_id,p&&p.subcategory_id
-    ].join(' '));
-    const mergeProductData=(live,local)=>{
-      const out=Object.assign({},local||{},live||{});
-      if(!hasCategoryData(out)&&hasCategoryData(local)){
-        ['category','categories','subcategory','subCategory','subcategories','category_name','categoryName','category_slug','categorySlug','subcategory_name','subcategoryName','subcategory_slug','subcategorySlug'].forEach(k=>{
-          if(local&&local[k]!=null)out[k]=local[k];
-        });
-      }
-      return out;
-    };
-    const loadLocalProducts=async()=>{
-      try{
-        const rows=await fetch('/java/Products.json',{cache:'no-store'}).then(r=>r.ok?r.json():[]);
-        return Array.isArray(rows)?rows:[];
-      }catch(__){return []}
-    };
     const loadLocalCategoryTree=async()=>{
       try{
         const localCats=await fetch('/java/Categories.json',{cache:'no-store'}).then(r=>r.ok?r.json():[]);
@@ -550,25 +528,14 @@ async function loadProductsForBot(){
       botCategories=[];botSubcategories=[];
       await loadLocalCategoryTree();
     }
-    const [liveProducts,localProducts]=await Promise.all([
-      window.sbFetch('products?active=eq.true&order=updated_at.desc.nullslast,created_at.desc.nullslast,sort_order.asc&limit=10000').catch(()=>[]),
-      loadLocalProducts()
-    ]);
-    const localByKey=new Map((Array.isArray(localProducts)?localProducts:[]).map(p=>[productKey(p),p]).filter(x=>x[0]));
+    const liveProducts=await window.sbFetch('products?active=eq.true&order=updated_at.desc.nullslast,created_at.desc.nullslast,sort_order.asc&limit=10000').catch(()=>[]);
     const seen=new Set();
     botProducts=[];
     (Array.isArray(liveProducts)?liveProducts:[]).forEach(p=>{
       const key=productKey(p);
       if(!key)return;
       seen.add(key);
-      botProducts.push(mergeProductData(p,localByKey.get(key)));
-    });
-    (Array.isArray(localProducts)?localProducts:[]).forEach(p=>{
-      const key=productKey(p);
-      if(key&&!seen.has(key)){
-        seen.add(key);
-        botProducts.push(p);
-      }
+      botProducts.push(p);
     });
     botProducts=botProducts.filter(p=>p.active!==false);
     if($('productQueryStatus'))$('productQueryStatus').textContent='تم تحميل '+botProducts.length+' منتج.';
@@ -1490,6 +1457,7 @@ async function callBotLLM(raw,ctx){
         conversation:conversation.slice(-12),
         knowledge:questions.filter(x=>x.active).slice(0,80).map(x=>({
           id:x.id,question:x.question,answer:x.answer,category:x.category,
+          keywords:visibleKeywords(x.keywords),
           input_type:x.input_type,action_name:x.action_name,param_type:x.param_type,param_example:x.param_example
         }))
       })
@@ -1725,16 +1693,19 @@ async function handleSingleMessage(raw, ctx){
     if(llm){
       if(llm.action==='answer' && llm.reply){
         const item=questions.find(x=>Number(x.id)===Number(llm.knowledge_id));
-        if(item && String(item.answer||'').trim()){
+        if(item){
           await incrementUsage(item);
-          return {type:'answer',text:item.answer,match:{...item,score:llm.confidence*100},llm:true};
+          const handled=await handleConfiguredKnowledge(item);
+          handled.match={...item,score:Number(llm.confidence||0)*100};
+          handled.llm=true;
+          return handled;
         }
       }
       if(llm.action==='chat' && llm.reply) return {type:'answer',text:llm.reply,llm:true};
       if(llm.action==='clarify' && llm.reply) return {type:'clarify',text:llm.reply,llm:true};
       if(llm.action==='human') return {type:'answer',text:settings.human,llm:true};
       if(llm.action==='product_search'){
-        const products=await recommendProducts(raw,ctx);
+        const products=categoryBrowseIntent(raw)?await recommendCategoryProducts(raw,ctx):await recommendProducts(raw,ctx);
         if(products.length) return {type:'products',text:llm.reply||'لقيتلك أقرب منتجات 👇',products};
       }
       if(llm.action==='order_track'){
