@@ -1382,11 +1382,37 @@ async function getValidAdminToken() {
   const token = sessionStorage.getItem('admin_token');
   const exp   = parseInt(sessionStorage.getItem('admin_token_exp') || '0');
   // تجديد لو باقي أقل من 5 دقائق
+  if (!token && sessionStorage.getItem('admin_refresh_token')) {
+    return await refreshAdminToken();
+  }
   if (token && exp && (exp - Date.now()) < 5 * 60 * 1000) {
     const newToken = await refreshAdminToken();
     return newToken || token;
   }
   return token || null;
+}
+function restoreAdminReportsSession(){
+  try{
+    const saved=JSON.parse(sessionStorage.getItem('x2_admin_reports_session')||'null');
+    if(!saved||!saved.ok||Date.now()>Number(saved.expires||0))return false;
+    if(saved.token)sessionStorage.setItem('admin_token',saved.token);
+    if(saved.refreshToken)sessionStorage.setItem('admin_refresh_token',saved.refreshToken);
+    if(saved.tokenExp)sessionStorage.setItem('admin_token_exp',String(saved.tokenExp));
+    sessionStorage.setItem('admin_ok','1');
+    if(saved.name)sessionStorage.setItem('admin_name',saved.name);
+    return !!(saved.token||saved.refreshToken);
+  }catch(e){return false}
+}
+async function requireAdminWriteToken(){
+  restoreAdminReportsSession();
+  const token=await getValidAdminToken();
+  if(token)return token;
+  sessionStorage.removeItem('admin_ok');
+  sessionStorage.removeItem('admin_token');
+  sessionStorage.removeItem('admin_refresh_token');
+  sessionStorage.removeItem('admin_token_exp');
+  if($('gate'))$('gate').style.display='flex';
+  throw new Error('جلسة الأدمن منتهية. سجّل الدخول مرة أخرى لتحديث الطلبات.');
 }
 
 async function getAdminAccount(userId, email, token) {
@@ -1445,7 +1471,8 @@ async function checkGate(){
   }
 }
 
-if(sessionStorage.getItem('admin_ok') === '1'){
+restoreAdminReportsSession();
+if(sessionStorage.getItem('admin_ok') === '1' && (sessionStorage.getItem('admin_token') || sessionStorage.getItem('admin_refresh_token'))){
   $('gate').style.display = 'none';
 }
 
@@ -2429,38 +2456,21 @@ function isMissingSupabaseColumnError(error, column){
   return text.includes(column) && /schema cache|column|Could not find/i.test(text);
 }
 
-async function updateOrderInSupabaseSafe(id, data, order=null){
-  const optionalColumns = ['updated_at'];
+async function updateOrderInSupabaseSafe(id, data){
+  const optionalColumns = ['cashback_expires_at', 'updated_at'];
   const payload = Object.assign({}, data);
-  delete payload.cashback_expires_at;
-  const candidates = [
-    { field:'id', value: order && order.srcId },
-    { field:'id', value: id },
-    { field:'order_number', value: order && order.orderNumber },
-    { field:'order_number', value: order && order.order_number }
-  ].filter(x=>x.value!==undefined&&x.value!==null&&String(x.value).trim()!=='');
-  const seen = new Set();
-  const uniqueCandidates = candidates.filter(x=>{
-    const key=x.field+'='+String(x.value);
-    if(seen.has(key))return false;
-    seen.add(key);
-    return true;
-  });
   for (let attempt = 0; attempt <= optionalColumns.length; attempt++) {
     try {
-      for(const c of uniqueCandidates){
-        const result = await window.sbFetch('orders?'+c.field+'=eq.' + encodeURIComponent(c.value), { method: 'PATCH', prefer: 'return=representation', body: JSON.stringify(payload) });
-        if(Array.isArray(result)&&result.length)return result;
-      }
-      return [];
+      return await window.Supabase.Orders.update(id, payload);
     } catch(e) {
       const missingColumn = optionalColumns.find(column => Object.prototype.hasOwnProperty.call(payload, column) && isMissingSupabaseColumnError(e, column));
       if (!missingColumn) throw e;
       delete payload[missingColumn];
       console.warn(missingColumn + ' غير موجود في Supabase؛ سيتم تحديث الحالة والكاش باك بدونه.', e);
+      toast('⚠️ عمود اختياري غير موجود في قاعدة البيانات، تم تحديث الحالة بدونه');
     }
   }
-  return [];
+  return await window.Supabase.Orders.update(id, payload);
 }
 
 // جلب الطلبات من Supabase
@@ -2607,9 +2617,11 @@ async function saveOrder(){
           };
           if (order.status === 'delivered') {
             updateData.cashback_status = 'earned';
+            updateData.cashback_expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
           }
           else if (order.cashbackStatus === 'earned' || order.cashback_status === 'earned') updateData.cashback_status = 'pending';
-          await updateOrderInSupabaseSafe(order.id, updateData, orders[idx]);
+          await requireAdminWriteToken();
+          await updateOrderInSupabaseSafe(order.id, updateData);
         } catch(e) {
           console.error('فشل تحديث الطلب في Supabase:', e);
           toast('⚠️ تم الحفظ محلياً، فشل التحديث في قاعدة البيانات');
@@ -2663,9 +2675,11 @@ async function changeOrderStatus(id, status){
       // عند التسليم: يضاف الكاش باك للعميل فوراً، وينتهي إذا لم يستخدمه خلال 30 يوم
       if (status === 'delivered') {
         updateData.cashback_status = 'earned';
+        updateData.cashback_expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
       }
       else if (o.cashbackStatus === 'earned' || o.cashback_status === 'earned') updateData.cashback_status = 'pending';
-      const result = await updateOrderInSupabaseSafe(id, updateData, o);
+      await requireAdminWriteToken();
+      const result = await updateOrderInSupabaseSafe(id, updateData);
 
       // Prefer:return=representation يرجع الصفوف المحدَّثة فعلياً؛ لو رجعت فارغة يعني لم يتم تحديث أي صف
       if (!result || !Array.isArray(result) || result.length === 0) {
@@ -2673,6 +2687,7 @@ async function changeOrderStatus(id, status){
       }
 
       if (updateData.cashback_status) o.cashbackStatus = updateData.cashback_status;
+      if (updateData.cashback_expires_at) o.cashbackExpiresAt = updateData.cashback_expires_at;
       toast('✅ تم تحديث الحالة في قاعدة البيانات');
 
       // ========== إشعار Push تلقائي للعميل ==========
