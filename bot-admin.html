@@ -904,7 +904,21 @@ function introReply(){
 }
 function categoryBrowseIntent(text){
   const t=normalize(text);
-  return /منتجات?|فئ[هة]|تصنيف|وريني|اعرض|هات|شوف|عندكم/.test(t) && categoryTermsFromText(t).length>0;
+  return /منتجات?|فئ[هة]|تصنيف|وريني|اعرض|هات|شوف|عندكم|حاج[هة]|حاجات|اشياء?|تخص|خاص[هة]?|لل|ل /.test(t) && categoryTermsFromText(t).length>0;
+}
+function categoryLabelFromText(text){
+  const t=normalize(text);
+  for(const group of availableCategoryTermGroups()){
+    const phrase=group.find(w=>w.includes(' ')&&hasWholeTerm(t,w));
+    if(phrase)return phrase;
+    const single=group.find(w=>hasWholeTerm(t,w));
+    if(single)return single;
+  }
+  for(const k of Object.keys(CATEGORY_TERMS)){
+    const hit=CATEGORY_TERMS[k].find(w=>hasWholeTerm(t,w));
+    if(hit)return normalize(hit);
+  }
+  return extractIntent(text).occasion||'الفئة المطلوبة';
 }
 function extractOrderRef(text){
   const t=arabicDigits(text);
@@ -1490,6 +1504,14 @@ async function handleSingleMessage(raw, ctx){
     return await handleGiftQuery(raw,ctx);
   }
 
+  if(topic==='browse'){
+    resetBotState('browse');
+    const products=await recommendCategoryProducts(raw,ctx);
+    const occ=categoryLabelFromText(raw);
+    if(products.length)return {type:'products',text:occasionProductsIntro(occ,'🎁 دي المنتجات المطابقة لفئة '+occ+':'),products};
+    return {type:'clarify',text:'مش لاقي منتجات مربوطة بفئة '+occ+' حالياً في الموقع. اتأكد إن المنتجات مضافة تحت نفس الفئة في بيانات الموقع.'};
+  }
+
   // قاعدة المعرفة أولاً: لو الأدمن ضاف سؤال + نوع إدخال/إجراء، ده ياخد الأولوية.
   const knowledgeFirst=findBestAnswer(raw);
   renderRanking(knowledgeFirst.ranked);
@@ -1540,7 +1562,7 @@ async function handleSingleMessage(raw, ctx){
   if(topic==='browse'){
     if(categoryBrowseIntent(raw)){
       const products=await recommendCategoryProducts(raw,ctx);
-      const occ=extractIntent(raw).occasion||'الفئة المطلوبة';
+      const occ=categoryLabelFromText(raw);
       if(products.length)return {type:'products',text:occasionProductsIntro(occ,'🎁 دي المنتجات المطابقة لفئة '+occ+':'),products};
       return {type:'clarify',text:'مش لاقي منتجات مربوطة بفئة '+occ+' حالياً في الموقع. عشان أعرضها هنا لازم المنتجات تكون مضافة تحت نفس الفئة في بيانات الموقع.'};
     }
@@ -1663,7 +1685,7 @@ async function processBotMessageCore(msg){
       botState.actionData=null;
       if(categoryBrowseIntent(raw)){
         const products=await recommendCategoryProducts(raw,extractIntent(raw));
-        const occ=extractIntent(raw).occasion||'الفئة المطلوبة';
+        const occ=categoryLabelFromText(raw);
         if(products.length)return {type:'products',text:occasionProductsIntro(occ,'🎁 دي المنتجات المطابقة لفئة '+occ+':'),products};
         return {type:'clarify',text:'مش لاقي منتجات مربوطة بفئة '+occ+' حالياً في الموقع. مش هعرض منتجات عامة عشان ما نلخبطش العميل.'};
       }
