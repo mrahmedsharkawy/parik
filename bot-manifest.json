@@ -1,0 +1,32 @@
+{
+  "name": "مساعد بريق الذكي",
+  "short_name": "بوت بريق",
+  "description": "مساعد مبيعات بريق للهدايا الدعائية وتتبع الطلبات",
+  "start_url": "/bot-admin",
+  "scope": "/",
+  "id": "https://bariqgifts.com/bot-admin",
+  "display": "standalone",
+  "background_color": "#eef3fb",
+  "theme_color": "#152546",
+  "orientation": "portrait-primary",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "/assets/icon-96.png?v=bot-20260811",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/icon.png?v=bot-20260811",
+      "sizes": "202x202",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "shopping", "productivity"],
+  "prefer_related_applications": false,
+  "display_override": ["standalone", "minimal-ui"],
+  "screenshots": []
+}

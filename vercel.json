@@ -69,6 +69,10 @@
       "destination": "/product.html"
     },
     {
+      "source": "/bot-admin",
+      "destination": "/bot-admin.html"
+    },
+    {
       "source": "/categories",
       "destination": "/categories.html"
     },

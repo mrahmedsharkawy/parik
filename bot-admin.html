@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="مساعد بريق">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="manifest" href="/manifest.json">
+<link rel="manifest" href="/bot-manifest.json">
 <link rel="apple-touch-icon" href="/assets/icon-96.png">
 <title>مساعد بريق — إدارة البوت</title>
 <script src="/java/supabase.js"></script>
@@ -31,17 +31,17 @@ label{display:block;font-weight:800;font-size:.82rem;margin:11px 0 5px}
 input,textarea,select{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;background:#fbfcfe;outline:0}input:focus,textarea:focus,select:focus{border-color:var(--gold);background:#fff}textarea{min-height:100px;resize:vertical}
 .row{display:flex;gap:8px}.row>*{flex:1}.hint{background:#f2f5fa;border-radius:10px;padding:10px;font-size:.78rem;color:#657087;line-height:1.7}.success{color:var(--ok)}.error{color:var(--danger)}
 .searchbar{display:grid;grid-template-columns:1fr 170px 150px;gap:8px;margin-bottom:12px}.item{border:1px solid var(--line);border-radius:12px;padding:13px;margin-bottom:9px}.item.off{opacity:.55}.q{font-weight:900;color:var(--navy);font-size:.95rem}.a{margin-top:6px;line-height:1.7;white-space:pre-wrap}.meta{font-size:.72rem;color:var(--muted);margin-top:8px}.chip{display:inline-block;padding:3px 8px;background:#eef1f7;border-radius:20px;margin:2px}.chip.gold{background:#fff6d7;color:#8b6c08}.chip.ok{background:#e5f7eb;color:var(--ok)}.chip.bad{background:#fdecec;color:var(--danger)}
-.chat{height:min(62dvh,560px);overflow:auto;background:linear-gradient(180deg,#f7f9fd,#eef3fb);border:1px solid var(--line);border-radius:18px;padding:14px;scroll-behavior:smooth}.msg{position:relative;display:flex;gap:9px;align-items:flex-start;margin-bottom:10px;white-space:pre-wrap;line-height:1.7}.msg .avatar{width:30px;height:30px;flex:0 0 30px;border-radius:50%;display:grid;place-items:center;font-size:.86rem;font-weight:900}.msg .bubble{max-width:min(78%,720px);padding:10px 12px;border-radius:16px;box-shadow:0 5px 18px rgba(21,37,70,.06)}.me{justify-content:flex-start;direction:ltr}.me .avatar{background:#152546;color:#fff}.me .bubble{background:#e8edf6;color:#17213a;border-bottom-left-radius:6px;direction:rtl;text-align:right}.bot .avatar,.system .avatar{background:linear-gradient(135deg,#fff,#fff5ca);border:1px solid #eadca0;color:#7b5b00}.bot .avatar:before,.system .avatar:before{content:'🧠';font-size:17px}.bot .bubble{background:#fff6d7;border:1px solid #eadca0;color:#3f3000;border-bottom-right-radius:6px}.system .bubble{background:#eef5ff;border:1px solid #d5e3fa;color:#29405f}
+.chat{height:min(62dvh,560px);overflow:auto;background:linear-gradient(180deg,#f7f9fd,#eef3fb);border:1px solid var(--line);border-radius:18px;padding:14px;scroll-behavior:smooth}.msg{position:relative;display:flex;gap:9px;align-items:flex-start;margin-bottom:10px;white-space:pre-wrap;line-height:1.7}.msg .avatar{width:30px;height:30px;flex:0 0 30px;border-radius:50%;display:grid;place-items:center;font-size:.86rem;font-weight:900}.msg .bubble{max-width:min(78%,720px);padding:10px 12px;border-radius:16px;box-shadow:0 5px 18px rgba(21,37,70,.06)}.msg .bubble:has(.product-grid){max-width:min(96%,860px);width:min(96%,860px)}.me{justify-content:flex-start;direction:ltr}.me .avatar{background:#152546;color:#fff}.me .bubble{background:#e8edf6;color:#17213a;border-bottom-left-radius:6px;direction:rtl;text-align:right}.bot .avatar,.system .avatar{background:linear-gradient(135deg,#fff,#fff5ca);border:1px solid #eadca0;color:#7b5b00}.bot .avatar:before,.system .avatar:before{content:'🧠';font-size:17px}.bot .bubble{background:#fff6d7;border:1px solid #eadca0;color:#3f3000;border-bottom-right-radius:6px}.system .bubble{background:#eef5ff;border:1px solid #d5e3fa;color:#29405f}
 .bot-profile{display:flex;align-items:center;gap:10px;margin:10px 0 8px;padding:10px 12px;border:1px solid #eadca0;border-radius:16px;background:linear-gradient(135deg,#fff,#fff8df)}.brain-logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#fff,#fff2ba);border:1px solid #eadca0;display:grid;place-items:center;font-size:1.55rem;box-shadow:inset 0 0 0 3px rgba(255,255,255,.65)}.bot-profile b{display:block;color:var(--navy);font-size:.92rem}.bot-profile span{display:block;color:var(--muted);font-size:.74rem;margin-top:2px}
 .chat-controls{display:grid;grid-template-columns:48px 1fr 92px 48px;gap:8px;align-items:center;margin-top:8px}
 .unanswered{max-height:600px;overflow:auto}.unq{padding:12px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px}
-.product-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.product-card{border:1px solid #edf0f5;border-radius:18px;overflow:hidden;background:#fff;box-shadow:0 10px 26px rgba(21,37,70,.09);transition:.18s ease}.product-card:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(21,37,70,.14)}.product-card .pc-img{position:relative;background:linear-gradient(180deg,#f8fafc,#eef3fb);padding:8px}.product-card img{width:100%;height:130px;object-fit:cover;border-radius:14px;background:#f1f3f7}.pc-body{padding:10px}.pc-name{font-weight:900;color:var(--navy);line-height:1.45;font-size:.85rem;display:-webkit-box;line-clamp:2;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.45em}.pc-price{display:inline-flex;align-items:center;gap:4px;font-weight:950;color:#7a5d08;background:#fff6d7;border:1px solid #eadca0;border-radius:999px;padding:4px 8px;margin-top:8px;font-size:.78rem}.pc-meta{font-size:.7rem;color:var(--muted);margin-top:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.product-card a{display:block;text-align:center;margin-top:9px;text-decoration:none;border-radius:12px;padding:8px 10px;font-size:.78rem}
+.product-grid{display:grid;grid-template-columns:repeat(3,minmax(145px,1fr));gap:10px}.msg .product-grid{grid-template-columns:repeat(2,minmax(145px,1fr))}.product-card{border:1px solid #edf0f5;border-radius:18px;overflow:hidden;background:#fff;box-shadow:0 10px 26px rgba(21,37,70,.09);transition:.18s ease;min-width:0}.product-card:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(21,37,70,.14)}.product-card .pc-img{position:relative;background:linear-gradient(180deg,#f8fafc,#eef3fb);padding:8px}.product-card img{width:100%;height:130px;object-fit:cover;border-radius:14px;background:#f1f3f7}.pc-body{padding:10px}.pc-name{font-weight:900;color:var(--navy);line-height:1.45;font-size:.85rem;display:-webkit-box;line-clamp:2;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.45em}.pc-price{display:inline-flex;align-items:center;gap:4px;font-weight:950;color:#7a5d08;background:#fff6d7;border:1px solid #eadca0;border-radius:999px;padding:4px 8px;margin-top:8px;font-size:.78rem}.pc-meta{font-size:.7rem;color:var(--muted);margin-top:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.product-card a{display:block;text-align:center;margin-top:9px;text-decoration:none;border-radius:12px;padding:8px 10px;font-size:.78rem}
 .bot-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px}.bot-fields .wide{grid-column:1/-1}.cfg-chip{background:#eef5ff;color:#175098}.cfg-chip.action{background:#fff6d7;color:#8b6c08}
 .progress{height:8px;background:#edf0f5;border-radius:20px;overflow:hidden}.progress i{display:block;height:100%;background:var(--gold)}
 #gate{position:fixed;inset:0;background:var(--navy);z-index:200;display:flex;align-items:center;justify-content:center}.gatebox{background:#fff;width:350px;max-width:92%;border-radius:16px;padding:28px;text-align:center}.gatebox h2{color:var(--navy)}
 .toggle{display:flex;align-items:center;gap:8px}.toggle input{width:auto}
 @media(max-width:1050px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}.product-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:650px){body{background:#eef3fb}.stats{grid-template-columns:repeat(2,1fr)}.searchbar{grid-template-columns:1fr}.row{flex-direction:column}.wrap{padding:10px 10px calc(14px + env(safe-area-inset-bottom))}.card{padding:13px;border-radius:16px;margin-bottom:10px}.product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.product-card img{height:112px}.bot-fields{grid-template-columns:1fr}.top{justify-content:flex-start;border-radius:0 0 18px 18px}.top h1 small{display:none}.tabs{position:sticky;top:65px;z-index:15;background:#eef3fbbb;margin:0 -10px 10px;padding:9px 10px;backdrop-filter:blur(12px)}#panel-test .grid{display:flex;flex-direction:column}#panel-test .card:first-child{min-height:calc(100dvh - 176px);display:flex;flex-direction:column}.chat{height:auto;min-height:48dvh;flex:1;border-radius:18px}.msg .bubble{max-width:84%}.chat-controls{grid-template-columns:46px 1fr 78px 46px}#testMessage,#testBtn{min-height:48px}.panel.active{animation:panelIn .18s ease}@keyframes panelIn{from{opacity:.6;transform:translateY(6px)}to{opacity:1;transform:none}}}
+@media(max-width:650px){body{background:#eef3fb}.stats{grid-template-columns:repeat(2,1fr)}.searchbar{grid-template-columns:1fr}.row{flex-direction:column}.wrap{padding:10px 10px calc(14px + env(safe-area-inset-bottom))}.card{padding:13px;border-radius:16px;margin-bottom:10px}.product-grid,.msg .product-grid{grid-template-columns:repeat(2,minmax(128px,1fr));gap:8px}.product-card img{height:112px}.bot-fields{grid-template-columns:1fr}.top{justify-content:flex-start;border-radius:0 0 18px 18px}.top h1 small{display:none}.tabs{position:sticky;top:65px;z-index:15;background:#eef3fbbb;margin:0 -10px 10px;padding:9px 10px;backdrop-filter:blur(12px)}#panel-test .grid{display:flex;flex-direction:column}#panel-test .card:first-child{min-height:calc(100dvh - 176px);display:flex;flex-direction:column}.chat{height:auto;min-height:48dvh;flex:1;border-radius:18px}.msg .bubble{max-width:86%}.msg .bubble:has(.product-grid){max-width:98%;width:98%}.chat-controls{grid-template-columns:46px 1fr 78px 46px}#testMessage,#testBtn{min-height:48px}.panel.active{animation:panelIn .18s ease}@keyframes panelIn{from{opacity:.6;transform:translateY(6px)}to{opacity:1;transform:none}}}
 </style>
 </head>
 <body>
@@ -292,6 +292,9 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:9px;
 const $=id=>document.getElementById(id);
 const SB='https://knleehjjejfeobcmpwnw.supabase.co';
 const ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+if(location.pathname==='/bot-admin.html'){
+  history.replaceState(null,'','/bot-admin'+location.search+location.hash);
+}
 
 let questions=[];
 let botProducts=[];
@@ -335,6 +338,16 @@ function decodeBotConfig(token){
   try{return JSON.parse(decodeURIComponent(escape(atob(String(token||'').replace(BOT_CONFIG_PREFIX,'')))))}catch(e){return null}
 }
 function getBotConfig(item){
+  const inputType=String(item?.input_type||'').trim();
+  if(inputType||item?.action_name||item?.param_type||item?.param_example){
+    const inputMap={info:'answer',answer:'answer',required_data:'required_data',action:'action'};
+    return {
+      inputMode:inputMap[inputType]||inputType||'answer',
+      fieldType:item?.param_type||'text',
+      fieldExample:item?.param_example||'',
+      linkedAction:item?.action_name||''
+    };
+  }
   const token=kws(item?.keywords).find(k=>String(k).startsWith(BOT_CONFIG_PREFIX));
   return token?decodeBotConfig(token):{inputMode:'answer',fieldType:'text',fieldExample:'',linkedAction:''};
 }
@@ -347,6 +360,9 @@ function readBotConfigForm(){
     fieldExample:$('fieldExample')?.value.trim()||'',
     linkedAction:inputMode==='answer'?'':($('linkedAction')?.value||'')
   };
+}
+function dbInputType(inputMode){
+  return inputMode==='answer'?'info':inputMode;
 }
 function writeBotConfigForm(cfg){
   cfg=cfg||{};
@@ -645,6 +661,12 @@ async function saveQuestion(){
     question:mergeTarget&&!id?mergeTarget.question:question,
     answer,category:category||mergeTarget?.category||null,
     keywords:keywordsWithBotConfig([...new Set([...visibleKeywords(mergeTarget?.keywords),...keywords])],cfg),
+    input_type:dbInputType(cfg.inputMode),
+    action_name:cfg.linkedAction||null,
+    required_params:cfg.inputMode==='required_data'?[cfg.fieldType||'text']:[],
+    param_name:cfg.inputMode==='answer'?null:fieldTypeLabel(cfg.fieldType),
+    param_type:cfg.inputMode==='answer'?null:(cfg.fieldType||'text'),
+    param_example:cfg.inputMode==='answer'?null:(cfg.fieldExample||null),
     active,updated_at:new Date().toISOString()
   };
 
@@ -673,9 +695,17 @@ async function saveUnansweredQuestion(){
   const existing=questions.find(x=>normalize(x.question)===normalize(q));
   if(existing){editQuestion(existing.id);$('formMsg').textContent='⚠️ السؤال موجود بالفعل';return}
   try{
+    const cfg=readBotConfigForm();
     await window.sbFetch('bot_knowledge',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({
       question:q,answer:'',category:$('category').value.trim()||'أسئلة تحتاج إجابة',
-      keywords:keywordsWithBotConfig(kws($('keywords').value),readBotConfigForm()),active:false,usage_count:1,updated_at:new Date().toISOString()
+      keywords:keywordsWithBotConfig(kws($('keywords').value),cfg),
+      input_type:dbInputType(cfg.inputMode),
+      action_name:cfg.linkedAction||null,
+      required_params:cfg.inputMode==='required_data'?[cfg.fieldType||'text']:[],
+      param_name:cfg.inputMode==='answer'?null:fieldTypeLabel(cfg.fieldType),
+      param_type:cfg.inputMode==='answer'?null:(cfg.fieldType||'text'),
+      param_example:cfg.inputMode==='answer'?null:(cfg.fieldExample||null),
+      active:false,usage_count:1,updated_at:new Date().toISOString()
     })});
     $('formMsg').textContent='✅ تم حفظ السؤال كمسودة بدون إجابة';$('formMsg').className='success';await loadQuestions();renderAll();
   }catch(e){$('formMsg').textContent='❌ فشل الحفظ: '+e.message;$('formMsg').className='error'}
@@ -857,6 +887,12 @@ function corporateIntent(text){
 }
 function giftIntent(text){
   return /هديه|هدي[هة]|gift|بوكس|هدايا|اقتراح هديه|عايز حاج[هة]|محتار اجيب|اجيب اي[هة]/.test(normalize(text));
+}
+function introIntent(text){
+  return /عرفني\s*بنفسك|عرف\s*نفسك|انت\s*مين|مين\s*انت|من\s*انت|ايه\s*انت|ما\s*هو\s*دورك|دورك\s*ايه|تقدر\s*تعمل\s*ايه|بتعمل\s*ايه|who\s*are\s*you|what\s*can\s*you\s*do/i.test(normalize(text));
+}
+function introReply(){
+  return 'أنا مندوب بريق الذكي 🧠\nأقدر أساعدك في اختيار الهدايا الدعائية والمخصصة، أعرض منتجات حسب المناسبة أو الفئة، أبحث عن منتج بالاسم أو الوصف، أجاوب من قاعدة المعرفة، وأتبع حالة طلبك برقم الطلب.\n\nاكتب مثلاً: وريني منتجات التخرج، أبي هدايا للشركات، أو طلبي وصل لفين؟';
 }
 function categoryBrowseIntent(text){
   const t=normalize(text);
@@ -1108,6 +1144,7 @@ function detectTopic(text){
   // 2. تتبع طلب
   if(/(?:وين|فين|حال[ةه]|تتبع|رقم)\s*(?:طلب|اوردر|كلب)[يى]?/.test(t)) return 'order';
   if(/وصل\s*(?:لفين|فين)|طلب[يى]?\s*(?:وصل|فين)|اوردر[يى]?\s*(?:وصل|فين)/.test(t)) return 'order';
+  if(/(?:متى|امتى|موعد|وقت).*(?:توصيل|استلام|يوصل).*(?:طلب|اوردر|كلب)|(?:طلب|اوردر|كلب).*(?:متى|امتى|موعد|وقت|توصيل|استلام|يوصل)|توصيل\s*(?:ال)?طلب/.test(t)) return 'order';
   if(/\b(?:طلب|اوردر|كلب)\s*#?\s*\d{3,}/.test(t)) return 'order';
   if(/#\s*\d{3,}/.test(t)) return 'order';
   if(/track|order\s*status/.test(t)) return 'order';
@@ -1116,6 +1153,9 @@ function detectTopic(text){
 
   // 3. صورة / صور
   if(/صور[هة]?|image|pic|photo/.test(t)) return 'image';
+
+  // تعريف البوت
+  if(introIntent(text)) return 'intro';
 
   // 4. طلب منتجات فئة/مناسبة محددة: لازم يبقى صارم على الفئة
   if(categoryBrowseIntent(text)) return 'browse';
@@ -1246,19 +1286,46 @@ async function handleConfiguredKnowledge(item){
 }
 
 async function callBotLLM(raw,ctx){
-  // Placeholder آمن: الربط الحقيقي بالذكاء الاصطناعي لازم يكون من Edge Function/Backend
-  // عشان مفاتيح API ما تتحطش داخل HTML.
-  return null;
+  try{
+    const res=await fetch(SB+'/functions/v1/bot-llm',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'apikey':ANON_KEY,
+        'Authorization':'Bearer '+ANON_KEY
+      },
+      body:JSON.stringify({
+        message:raw,
+        context:ctx||{},
+        conversation:conversation.slice(-12),
+        knowledge:questions.filter(x=>x.active).slice(0,80).map(x=>({
+          id:x.id,question:x.question,answer:x.answer,category:x.category,
+          input_type:x.input_type,action_name:x.action_name,param_type:x.param_type,param_example:x.param_example
+        }))
+      })
+    });
+    if(!res.ok)return null;
+    const data=await res.json().catch(()=>null);
+    if(!data)return null;
+    if(typeof data==='string')return {action:'chat',reply:data};
+    if(data.reply||data.action)return data;
+    if(data.text)return {action:'chat',reply:data.text};
+    if(data.answer)return {action:'chat',reply:data.answer};
+    return null;
+  }catch(e){
+    console.warn('bot-llm unavailable:',e);
+    return null;
+  }
 }
 
 function smartFallbackReply(raw,ctx){
   const t=normalize(raw);
   if(/منتج|منتجات|product|item/.test(t))return 'أكيد، اكتب اسم المنتج أو وصفه أو ارفع صورة من زر الكاميرا 📷، وأنا أبحث لك عن أقرب نتيجة وسعرها من الموقع.';
-  if(/سعر|بكام|كم|price|cost/.test(t))return 'أقدر أساعدك في السعر، بس محتاج اسم المنتج أو رابط المنتج أو وصف أوضح عشان أطلع السعر الصحيح من الموقع. سجلت سؤالك للمراجعة لو محتاج إضافة رد ثابت.';
-  if(/شحن|توصيل|delivery|shipping/.test(t))return 'أقدر أراجع لك التوصيل حسب المدينة ونوع الطلب. اكتب المدينة أو رقم الطلب لو عندك طلب قائم، وسجلت السؤال ضمن الأسئلة التي تحتاج إجابة.';
-  if(/شعار|لوجو|تصميم|طباعة|حفر|logo|print|engraving/.test(t))return 'نقدر ننفذ التخصيص حسب المنتج. ابعت اسم المنتج والكمية والشعار/التصميم أو رابط الصورة، وأنا أساعدك بالخطوة التالية. سجلت السؤال للمراجعة.';
-  if(ctx?.occasion||ctx?.recipient||ctx?.interest)return 'فهمت إنك تبحث عن هدية، لكن محتاج تفاصيل أكثر عشان أطلع اقتراح مضبوط: المناسبة، الكمية أو الميزانية، وموعد التسليم. سجلت السؤال لتحسين قاعدة المعرفة.';
-  return 'مش عندي إجابة مؤكدة للسؤال ده حاليًا، لكن سجلته للمراجعة عشان نضيف له رد ثابت. ممكن تكتب تفاصيل أكثر أو اسم المنتج/رقم الطلب لو سؤالك مرتبط بطلب معيّن.';
+  if(/سعر|بكام|كم|price|cost/.test(t))return 'أقدر أساعدك في السعر، اكتب اسم المنتج أو رابط المنتج أو وصفه عشان أطلع لك السعر الأقرب من الموقع.';
+  if(/شحن|توصيل|delivery|shipping/.test(t))return 'لو تقصد طلب قائم ابعت رقم الطلب، ولو تقصد توصيل طلب جديد اكتب المدينة ونوع المنتج والكمية عشان أقدر أوضح لك التوصيل.';
+  if(/شعار|لوجو|تصميم|طباعة|حفر|logo|print|engraving/.test(t))return 'نقدر ننفذ التخصيص حسب المنتج. ابعت اسم المنتج والكمية والشعار/التصميم أو ارفع صورة، وأنا أقولك الخطوة التالية.';
+  if(ctx?.occasion||ctx?.recipient||ctx?.interest)return 'تمام، عشان أطلع اقتراح مضبوط محتاج أعرف: المناسبة، الكمية أو الميزانية، وموعد التسليم.';
+  return 'محتاج تفاصيل أكثر عشان أرد بدقة. اكتب اسم المنتج، رقم الطلب، المناسبة، أو ارفع صورة لو بتسأل عن منتج معيّن.';
 }
 
 // ===== معالجة تتبع الطلب =====
@@ -1354,6 +1421,20 @@ async function handleSingleMessage(raw, ctx){
   // ⭐ أولاً: حدد الموضوع (الـ flow مهم أكتر من قاعدة المعرفة)
   const topic=detectTopic(raw);
 
+  // لو حالة الانتظار ضاعت لكن السياق واضح، كمّل مسار الهدية بدل fallback.
+  if(topic==='general' && ctx.recipient && !ctx.occasion){
+    resetBotState('gift');
+    botState.waitingFor='gift_occasion';
+    botState.giftData={recipient:ctx.recipient};
+    return {type:'clarify',text:'تمام ❤️ لـ'+ctx.recipient+'، إيه المناسبة؟ عيد ميلاد، تخرج، زواج ولا مناسبة تانية؟'};
+  }
+  if((topic==='general'||topic==='gift') && ctx.recipient && ctx.occasion && ctx.budget==null){
+    resetBotState('gift');
+    botState.waitingFor='gift_budget';
+    botState.giftData={recipient:ctx.recipient,occasion:ctx.occasion};
+    return {type:'clarify',text:'جميل 🎁 الميزانية في حدود كام درهم؟ عشان أطلعلك اختيارات مناسبة فعلًا.'};
+  }
+
   // قاعدة المعرفة أولاً: لو الأدمن ضاف سؤال + نوع إدخال/إجراء، ده ياخد الأولوية.
   const knowledgeFirst=findBestAnswer(raw);
   renderRanking(knowledgeFirst.ranked);
@@ -1371,6 +1452,11 @@ async function handleSingleMessage(raw, ctx){
   if(topic==='order'){
     resetBotState('order');
     return await handleOrderQuery(raw);
+  }
+
+  if(topic==='intro'){
+    resetBotState('intro');
+    return {type:'answer',text:introReply()};
   }
 
   // طلب جديد
@@ -1499,6 +1585,12 @@ async function processBotMessageCore(msg){
       return {type:'clarify',text:'مش فاهم رقم الطلب 😅\nابعتلي رقم الطلب بالأرقام (مثلاً 1001#)'};
     }
 
+    const interruptTopic=detectTopic(raw);
+    if(['order','intro','browse','human','image','order_new'].includes(interruptTopic) && interruptTopic!==botState.topic){
+      resetBotState(interruptTopic);
+      return await handleSingleMessage(raw, ctx);
+    }
+
     if(waiting.startsWith('action_param_')){
       const data=botState.actionData||{};
       const type=data.fieldType||waiting.replace('action_param_','')||'text';
@@ -1508,6 +1600,12 @@ async function processBotMessageCore(msg){
       }
       botState.waitingFor=null;
       botState.actionData=null;
+      if(categoryBrowseIntent(raw)){
+        const products=await recommendCategoryProducts(raw,extractIntent(raw));
+        const occ=extractIntent(raw).occasion||'الفئة المطلوبة';
+        if(products.length)return {type:'products',text:'🎁 دي المنتجات المطابقة لفئة '+occ+':',products};
+        return {type:'clarify',text:'مش لاقي منتجات مربوطة بفئة '+occ+' حالياً في الموقع. مش هعرض منتجات عامة عشان ما نلخبطش العميل.'};
+      }
       if(data.action==='TRACK_ORDER') return await handleOrderQuery(raw);
       if(data.action==='CATEGORY_PRODUCTS'){
         const products=await recommendCategoryProducts(raw,extractIntent(raw));
