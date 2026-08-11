@@ -319,6 +319,12 @@ function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
 function escAttr(v){return String(v??'').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}
 function saveLocal(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 function readLocal(k,d){try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(d))}catch(e){return d}}
+function flatText(v){
+  if(v==null)return '';
+  if(Array.isArray(v))return v.map(flatText).filter(Boolean).join(' ');
+  if(typeof v==='object')return Object.values(v).map(flatText).filter(Boolean).join(' ');
+  return String(v);
+}
 function normalize(s){
   let t=String(s||'').toLowerCase();
   t=t.replace(/[إأآٱ]/g,'ا').replace(/[ؤ]/g,'و').replace(/[ئ]/g,'ي')
@@ -350,8 +356,9 @@ function getBotConfig(item){
   const inputType=String(item?.input_type||'').trim();
   if(inputType||item?.action_name||item?.param_type||item?.param_example){
     const inputMap={info:'answer',answer:'answer',required_data:'required_data',action:'action'};
+    const inferredMode=inputType||(item?.action_name?'action':(item?.param_type||item?.param_example?'required_data':'answer'));
     return {
-      inputMode:inputMap[inputType]||inputType||'answer',
+      inputMode:inputMap[inferredMode]||inferredMode||'answer',
       fieldType:item?.param_type||'text',
       fieldExample:item?.param_example||'',
       linkedAction:item?.action_name||''
@@ -495,13 +502,28 @@ async function loadQuestions(){
 }
 async function loadProductsForBot(){
   try{
+    const loadLocalCategoryTree=async()=>{
+      try{
+        const localCats=await fetch('/java/Categories.json',{cache:'no-store'}).then(r=>r.ok?r.json():[]);
+        if(Array.isArray(localCats)){
+          localCats.forEach(c=>{
+            botCategories.push(c);
+            (Array.isArray(c.subcategories)?c.subcategories:[]).forEach(s=>{
+              botSubcategories.push(Object.assign({},s,{parentName:c.name,parentSlug:c.categorySlug||c.slug}));
+            });
+          });
+        }
+      }catch(__){}
+    };
     try{
       botCategories=await window.sbFetch('categories?active=eq.true&order=sort_order.asc');
       botSubcategories=await window.sbFetch('subcategories?active=eq.true&order=sort_order.asc');
       botCategories=Array.isArray(botCategories)?botCategories:[];
       botSubcategories=Array.isArray(botSubcategories)?botSubcategories:[];
+      await loadLocalCategoryTree();
     }catch(_){
       botCategories=[];botSubcategories=[];
+      await loadLocalCategoryTree();
     }
     botProducts=await window.sbFetch('products?active=eq.true&order=updated_at.desc.nullslast,created_at.desc.nullslast,sort_order.asc&limit=10000');
     botProducts=Array.isArray(botProducts)?botProducts.filter(p=>p.active!==false):[];
@@ -605,7 +627,11 @@ function score(msg,item){
   return Math.round(s*10)/10;
 }
 function rank(msg){
-  return questions.filter(x=>x.active&&String(x.answer||'').trim())
+  return questions.filter(x=>{
+      if(!x.active)return false;
+      const cfg=getBotConfig(x)||{};
+      return String(x.answer||'').trim() || cfg.inputMode!=='answer' || cfg.linkedAction;
+    })
     .map(x=>({...x,score:score(msg,x),similarity:questionSimilarity(msg,x.question)}))
     .filter(x=>x.score>0)
     .sort((a,b)=>b.score-a.score);
@@ -940,30 +966,33 @@ function occasionProductsIntro(occasion,fallback){
    اقتراح المنتجات
 ========================================================= */
 function productText(p){
-  const name=p.name_ar||p.name_en||p.name||'';
-  const desc=p.description_ar||p.description_en||p.desc||'';
-  const cats=Array.isArray(p.categories)?p.categories.join(' '):(p.categories||'');
-  const sub=Array.isArray(p.subcategories)?p.subcategories.join(' '):(p.subcategories||'');
+  const name=flatText(p.name_ar||p.name_en||p.name||'');
+  const desc=flatText(p.description_ar||p.description_en||p.desc||p.description||'');
+  const cats=flatText(p.categories||p.category||'');
+  const sub=flatText(p.subcategories||p.subCategory||p.subcategory||'');
   return normalize([name,desc,cats,sub].join(' '));
 }
 function productCategoryText(p){
-  const cats=Array.isArray(p.categories)?p.categories.join(' '):(p.categories||'');
-  const sub=Array.isArray(p.subcategories)?p.subcategories.join(' '):(p.subcategories||'');
+  const cats=flatText(p.categories||p.category||'');
+  const sub=flatText(p.subcategories||p.subCategory||p.subcategory||'');
   const cat=botCategories.find(c=>String(c.id)===String(p.category_id||p.categoryId||''));
   const subcat=botSubcategories.find(s=>String(s.id)===String(p.subcategory_id||p.subcategoryId||''));
+  const parentCat=subcat&&botCategories.find(c=>String(c.id)===String(subcat.category_id||subcat.categoryId||''));
   return normalize([
     cats,sub,
-    p.category_name,p.subcategory_name,p.category_slug,p.subcategory_slug,
+    p.category_name,p.categoryName,p.mainCategory,p.subcategory_name,p.subcategoryName,p.category_slug,p.categorySlug,p.subcategory_slug,p.subcategorySlug,
     p.category_id,p.subcategory_id,
-    cat&&[cat.name_ar,cat.name_en,cat.slug,cat.id].join(' '),
-    subcat&&[subcat.name_ar,subcat.name_en,subcat.slug,subcat.id].join(' ')
+    cat&&[flatText(cat.name_ar),flatText(cat.name_en),flatText(cat.name),cat.slug,cat.categorySlug,cat.id].join(' '),
+    subcat&&[flatText(subcat.name_ar),flatText(subcat.name_en),flatText(subcat.name),subcat.slug,subcat.categorySlug,subcat.id].join(' '),
+    parentCat&&[flatText(parentCat.name_ar),flatText(parentCat.name_en),flatText(parentCat.name),parentCat.slug,parentCat.categorySlug,parentCat.id].join(' ')
   ].join(' '));
 }
 function categoryRowTerms(row){
   if(!row)return [];
   const raw=[
-    row.name_ar,row.name_en,row.name,row.title_ar,row.title_en,row.title,
-    row.slug,row.code
+    flatText(row.name_ar),flatText(row.name_en),flatText(row.name),
+    flatText(row.title_ar),flatText(row.title_en),flatText(row.title),
+    row.slug,row.categorySlug,row.code
   ].filter(Boolean).join(' ');
   const normalized=normalize(raw);
   const parts=meaningfulTokens(normalized).filter(w=>w.length>1);
@@ -977,7 +1006,6 @@ function productCategoryTerms(p){
   };
   add(p.categories);add(p.subcategories);
   add(p.category_name);add(p.subcategory_name);add(p.category_slug);add(p.subcategory_slug);
-  add(p.category_id);add(p.subcategory_id);
   return categoryRowTerms({
     name:[...values].join(' ')
   });
@@ -998,6 +1026,19 @@ function availableCategoryTermGroups(){
       seen.add(key);
       return true;
     });
+}
+function childCategoryTermsFor(parent){
+  const parentId=String(parent.id||'');
+  const parentSlug=normalize(parent.categorySlug||parent.slug||'');
+  const parentName=normalize(flatText(parent.name_ar||parent.name_en||parent.name||''));
+  const out=[];
+  botSubcategories.forEach(s=>{
+    const sameParent=(parentId&&String(s.category_id||s.categoryId||'')===parentId)
+      || (parentSlug&&normalize(s.parentSlug||'')===parentSlug)
+      || (parentName&&normalize(flatText(s.parentName||''))===parentName);
+    if(sameParent)out.push(...categoryRowTerms(s));
+  });
+  return out;
 }
 function productName(p){
   if(p.name_ar||p.name_en)return p.name_ar||p.name_en;
@@ -1067,7 +1108,15 @@ const CATEGORY_TERMS={
   corporate:['شركة','شركات','موظفين','عملاء','اعلاني','إعلاني','corporate','company','promotional','logo'],
   acrylic:['اكريليك','أكريليك','acrylic'],
   forex:['فوركس','فوم','foam','foamboard','forex'],
+  paper:['ورق','ورقي','ورقية','paper'],
+  cups:['كوب','اكواب','أكواب','كاسات','مج','mug','cup','cups'],
+  bags:['شنط','شنطة','حقائب','اكياس','أكياس','bags','bag'],
+  box:['بوكس','بوكسات','علب','علبة','box','boxes'],
+  tables:['طولات','طاولة','طاولات','tables','table'],
+  trays:['صواني','صينية','tray','trays'],
+  stand:['استاند','استاندات','stand','stands'],
   wood:['خشب','wood'],
+  leather:['جلد','leather'],
   sticker:['استيكر','ستيكر','sticker']
 };
 function categoryTermsFromText(text){
@@ -1077,6 +1126,10 @@ function categoryTermsFromText(text){
   });
   availableCategoryTermGroups().forEach(group=>{
     if(group.some(w=>hasWholeTerm(t,w)))out.push(...group);
+  });
+  botCategories.forEach(c=>{
+    const terms=categoryRowTerms(c);
+    if(terms.some(w=>hasWholeTerm(t,w)))out.push(...terms,...childCategoryTermsFor(c));
   });
   const occ=matchFirst(OCCASION_MAP,t);
   if(occ&&OCCASION_TERMS[occ])out.push(...OCCASION_TERMS[occ]);
