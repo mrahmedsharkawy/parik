@@ -187,7 +187,7 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:9px;
 <div class="grid">
   <div class="card">
     <h2>🧠 محادثة اختبار ذكية</h2>
-    <div class="hint">البوت يحتفظ بسياق المحادثة: «عايز هدية» ← يسأل لمين ← «لأختي» ← يسأل المناسبة ← «عيد ميلاد» ← يسأل الميزانية ← يقترح المنتجات، بدل ما يعيد نفس الرد.</div>
+    <div class="hint">البوت يحتفظ بسياق المحادثة: «عايز هدية» ← يسأل لمين ← «لأختي» ← يسأل المناسبة ← «عيد ميلاد» ← يقترح المنتجات، بدل ما يعيد نفس الرد.</div>
     <div class="bot-profile">
       <div class="brain-logo" aria-hidden="true">🧠</div>
       <div><b>مندوب بريق الذكي</b><span>ذاكرة المحادثة محفوظة على هذا الجهاز</span></div>
@@ -213,9 +213,9 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:9px;
 <section id="panel-products" class="panel">
 <div class="card">
   <h2>🎁 محرك اقتراح المنتجات</h2>
-  <div class="hint">اكتب وصف العميل. المحرك يحاول فهم الشخص والمناسبة والميزانية ثم يطابق الكلمات مع اسم ووصف وتصنيفات المنتجات المتاحة.</div>
+  <div class="hint">اكتب وصف العميل. المحرك يحاول فهم الشخص والمناسبة وأي سعر اختياري ثم يطابق الكلمات مع اسم ووصف وتصنيفات المنتجات المتاحة.</div>
   <div class="row" style="margin-top:10px">
-    <input id="productQuery" placeholder="هدية لأختي عيد ميلاد بميزانية 150 درهم">
+    <input id="productQuery" placeholder="هدية لأختي عيد ميلاد حتى 150 درهم">
     <button class="btn-gold" onclick="recommendProductsUI()">ابحث</button>
   </div>
   <div id="productQueryStatus" class="meta"></div>
@@ -245,7 +245,7 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:9px;
       <b>2.</b> يطبع النص العربي ويزيل الاختلافات الإملائية.<br>
       <b>3.</b> يستخرج الشخص/المناسبة/الستايل/الاهتمام من الرسالة بقاموس موسّع (أخت، زوجة، أم، أب، جد، جدة، زميل، معلم... إلخ).<br>
       <b>4.</b> يطابق كلمات السؤال والكلمات المرتبطة، ويعطي وزنًا أعلى للكلمات المفتاحية والتطابق الكامل.<br>
-      <b>5.</b> يفهم الميزانية بالأرقام العربية والإنجليزية.<br>
+      <b>5.</b> يفهم السعر الاختياري بالأرقام العربية والإنجليزية.<br>
       <b>6.</b> لو مفيش تطابق قوي، يجرب: الرسالة بدون سياق المحادثة ← عتبة أقل قليلًا ← اقتراح منتجات ← تحويل لموظف.<br>
       <b>7.</b> يسجل السؤال غير المعروف مرة واحدة ويزيد عداده عند التكرار بدل تكراره في القاعدة.<br>
       <b>8.</b> تتبع الطلبات يحتاج جدول <code>orders</code> في Supabase بأعمدة: order_number, phone, status, updated_at.
@@ -874,7 +874,7 @@ function contextPrompt(c){
   if(c.recipient)p.push('للـ'+c.recipient);
   if(c.occasion)p.push('بمناسبة '+c.occasion);
   if(c.interest)p.push(c.interest);
-  if(c.budget!=null)p.push('ميزانية '+c.budget+' درهم');
+  if(c.budget!=null)p.push('حتى '+c.budget+' درهم');
   if(c.style)p.push(c.style);
   return p.join(' • ');
 }
@@ -906,8 +906,12 @@ function extractOrderRef(text){
 function missingGiftInfo(ctx){
   if(!ctx.recipient)return 'recipient';
   if(!ctx.occasion)return 'occasion';
-  if(ctx.budget==null)return 'budget';
   return '';
+}
+function occasionProductsIntro(occasion,fallback){
+  const occ=normalize(occasion||'');
+  if(/مولود|مواليد|بيبي|بيبى/.test(occ))return 'أه، عندنا كولكشن كبير للمواليد من منتجات مصنّعة بعناية. دي اختيارات مناسبة:';
+  return fallback;
 }
 
 /* =========================================================
@@ -1247,7 +1251,7 @@ function requiredDataPrompt(item,cfg){
   if(action==='CATEGORY_PRODUCTS')return 'أكيد. اكتب المناسبة أو الفئة اللي محتاجها، مثل: مواليد، تخرج، عيد، رمضان، شركات.';
   if(action==='PRODUCT_LOOKUP'||action==='PRODUCT_SEARCH')return 'تمام. اكتب اسم المنتج أو وصفه، ولو عندك صورة ارفعها من زر الكاميرا 📷.';
   if(action==='IMAGE_PRODUCT_SEARCH')return 'ارفع صورة المنتج من زر الكاميرا 📷، ولو الصورة مش واضحة اكتب معها وصف بسيط.';
-  if(action==='CREATE_QUOTE'||action==='CUSTOM_GIFT_ORDER')return 'تمام. ابعت المنتج المطلوب والكمية وطريقة التخصيص والميزانية التقريبية عشان أجهز لك اقتراح مضبوط.';
+  if(action==='CREATE_QUOTE'||action==='CUSTOM_GIFT_ORDER')return 'تمام. ابعت المنتج المطلوب وطريقة التخصيص، وأنا أجهز لك اقتراح واضح.';
   if(action==='UPDATE_ORDER')return 'تمام. ابعت رقم الطلب والتعديل المطلوب عليه.';
   if(action==='COLLECT_LEAD')return 'تمام. ابعت رقم التواصل أو البريد الإلكتروني عشان نكمل معاك.';
   return 'محتاج '+fieldTypeLabel(cfg.fieldType)+' عشان أكمل.';
@@ -1322,9 +1326,9 @@ function smartFallbackReply(raw,ctx){
   const t=normalize(raw);
   if(/منتج|منتجات|product|item/.test(t))return 'أكيد، اكتب اسم المنتج أو وصفه أو ارفع صورة من زر الكاميرا 📷، وأنا أبحث لك عن أقرب نتيجة وسعرها من الموقع.';
   if(/سعر|بكام|كم|price|cost/.test(t))return 'أقدر أساعدك في السعر، اكتب اسم المنتج أو رابط المنتج أو وصفه عشان أطلع لك السعر الأقرب من الموقع.';
-  if(/شحن|توصيل|delivery|shipping/.test(t))return 'لو تقصد طلب قائم ابعت رقم الطلب، ولو تقصد توصيل طلب جديد اكتب المدينة ونوع المنتج والكمية عشان أقدر أوضح لك التوصيل.';
-  if(/شعار|لوجو|تصميم|طباعة|حفر|logo|print|engraving/.test(t))return 'نقدر ننفذ التخصيص حسب المنتج. ابعت اسم المنتج والكمية والشعار/التصميم أو ارفع صورة، وأنا أقولك الخطوة التالية.';
-  if(ctx?.occasion||ctx?.recipient||ctx?.interest)return 'تمام، عشان أطلع اقتراح مضبوط محتاج أعرف: المناسبة، الكمية أو الميزانية، وموعد التسليم.';
+  if(/شحن|توصيل|delivery|shipping/.test(t))return 'لو تقصد طلب قائم ابعت رقم الطلب، ولو تقصد توصيل طلب جديد اكتب المدينة ونوع المنتج وأنا أوضح لك المتاح.';
+  if(/شعار|لوجو|تصميم|طباعة|حفر|logo|print|engraving/.test(t))return 'نقدر ننفذ التخصيص حسب المنتج. ابعت اسم المنتج والشعار/التصميم أو ارفع صورة، وأنا أقولك الخطوة التالية.';
+  if(ctx?.occasion||ctx?.recipient||ctx?.interest)return 'تمام، أقدر أطلع لك اقتراحات مناسبة من المنتجات المتاحة.';
   return 'محتاج تفاصيل أكثر عشان أرد بدقة. اكتب اسم المنتج، رقم الطلب، المناسبة، أو ارفع صورة لو بتسأل عن منتج معيّن.';
 }
 
@@ -1367,9 +1371,9 @@ async function handleGiftQuery(raw,ctx){
     botState.waitingFor=null;
     const products=await recommendProducts(raw,merged);
     if(products.length){
-      return {type:'products',text:'تمام، دي اختيارات مناسبة للهدايا الإعلانية/طلبات الشركات. عشان أجهز عرض سعر مضبوط ابعتلي الكمية وموعد التسليم المطلوب:',products};
+      return {type:'products',text:'تمام، دي اختيارات مناسبة للهدايا الإعلانية/طلبات الشركات:',products};
     }
-    return {type:'clarify',text:'أكيد، نقدر نجهز هدايا إعلانية حسب الشعار والتصميم. محتاج أعرف المنتج أو الفئة، الكمية، الميزانية، وموعد التسليم المطلوب.'};
+    return {type:'clarify',text:'أكيد، نقدر نجهز هدايا إعلانية حسب الشعار والتصميم. اكتب المنتج أو الفئة اللي محتاجها وأنا أعرض لك اختيارات مناسبة.'};
   }
 
   // ⭐ لو فيه مناسبة بس (من غير recipient ولا budget) → اعرض منتجات المناسبة مباشرة
@@ -1385,7 +1389,7 @@ async function handleGiftQuery(raw,ctx){
       };
       const link=catLinks[merged.occasion]||'';
       const linkHtml=link?'\n\n<a href="'+link+'" target="_blank" class="btn-gold" style="display:inline-block;margin-top:8px">🛒 تصفح كل منتجات '+merged.occasion+'</a>':'';
-      return {type:'products',text:'🎁 دي منتجاتنا لمناسبة '+merged.occasion+':',products,extraHtml:linkHtml};
+      return {type:'products',text:occasionProductsIntro(merged.occasion,'🎁 دي منتجاتنا لمناسبة '+merged.occasion+':'),products,extraHtml:linkHtml};
     }
     return {type:'clarify',text:'حالياً مش لاقي منتجات مربوطة بفئة '+merged.occasion+' في الموقع. ممكن تختار فئة تانية أو تضيف منتجات للفئة دي من لوحة المنتجات.'};
   }
@@ -1402,19 +1406,15 @@ async function handleGiftQuery(raw,ctx){
     botState.giftData={...botState.giftData,recipient:merged.recipient,budget:merged.budget};
     return {type:'clarify',text:'تمام ❤️ لـ'+merged.recipient+'، إيه المناسبة؟ عيد ميلاد، تخرج، زواج ولا مناسبة تانية؟'};
   }
-  if(missing==='budget'){
-    botState.waitingFor='gift_budget';
-    botState.giftData={...botState.giftData,recipient:merged.recipient,occasion:merged.occasion};
-    return {type:'clarify',text:'جميل 🎁 آخر حاجة: الميزانية في حدود كام درهم؟ عشان أطلعلك اختيارات مناسبة فعلًا.'};
-  }
   botState.waitingFor=null;
   const fullCtx={...merged,...botState.giftData};
   const allText=[raw,...conversation.filter(x=>x.role==='user').slice(-8).map(x=>x.text)].join(' ');
   const products=await recommendProducts(allText,fullCtx);
   if(products.length){
-    return {type:'products',text:'🎁 دي أفضل اختيارات ل'+fullCtx.recipient+' بمناسبة '+fullCtx.occasion+' وفي حدود '+fullCtx.budget+' درهم:',products};
+    const budgetText=fullCtx.budget!=null?' في حدود '+fullCtx.budget+' درهم':'';
+    return {type:'products',text:'🎁 دي أفضل اختيارات ل'+fullCtx.recipient+' بمناسبة '+fullCtx.occasion+budgetText+':',products};
   }
-  return {type:'fallback',text:'فهمت طلبك '+contextPrompt(fullCtx)+'، لكن مش لاقي منتج داخل الميزانية بالمواصفات دي حاليًا. ممكن نوسّع الميزانية شوية أو أديك اختيارات قريبة؟'};
+  return {type:'fallback',text:'فهمت طلبك '+contextPrompt(fullCtx)+'، لكن مش لاقي منتج مناسب بالمواصفات دي حاليًا. ممكن أديك اختيارات قريبة من نفس المناسبة؟'};
 }
 
 async function handleSingleMessage(raw, ctx){
@@ -1428,11 +1428,9 @@ async function handleSingleMessage(raw, ctx){
     botState.giftData={recipient:ctx.recipient};
     return {type:'clarify',text:'تمام ❤️ لـ'+ctx.recipient+'، إيه المناسبة؟ عيد ميلاد، تخرج، زواج ولا مناسبة تانية؟'};
   }
-  if((topic==='general'||topic==='gift') && ctx.recipient && ctx.occasion && ctx.budget==null){
+  if((topic==='general'||topic==='gift') && ctx.recipient && ctx.occasion){
     resetBotState('gift');
-    botState.waitingFor='gift_budget';
-    botState.giftData={recipient:ctx.recipient,occasion:ctx.occasion};
-    return {type:'clarify',text:'جميل 🎁 الميزانية في حدود كام درهم؟ عشان أطلعلك اختيارات مناسبة فعلًا.'};
+    return await handleGiftQuery(raw,ctx);
   }
 
   // قاعدة المعرفة أولاً: لو الأدمن ضاف سؤال + نوع إدخال/إجراء، ده ياخد الأولوية.
@@ -1470,7 +1468,7 @@ async function handleSingleMessage(raw, ctx){
     const products=await lookupProductByText(raw);
     if(products.length)return {type:'products',text:'حاولت أبحث من الوصف/الرابط المرسل، ودي أقرب منتجات من الموقع:',products};
     await persistUnanswered(raw);
-    return {type:'clarify',text:'تمام، لو دي صورة منتج أو شعار ابعتها كرابط أو اكتب وصفها، وأنا أبحث في منتجات الموقع عن أقرب منتج وسعره. لو شعار تنفيذ مخصص، اكتبلي المنتج والكمية وموعد التسليم. مثال: 500 مج حراري بشعار الشركة خلال أسبوع.'};
+    return {type:'clarify',text:'تمام، لو دي صورة منتج أو شعار ابعتها كرابط أو اكتب وصفها، وأنا أبحث في منتجات الموقع عن أقرب منتج وسعره. لو شعار تنفيذ مخصص، اكتبلي المنتج المطلوب مع وصف بسيط. مثال: مج حراري بشعار الشركة.'};
   }
 
   if(topic==='greeting')return {type:'answer',text:greetingReply(raw)};
@@ -1486,7 +1484,7 @@ async function handleSingleMessage(raw, ctx){
     if(categoryBrowseIntent(raw)){
       const products=await recommendCategoryProducts(raw,ctx);
       const occ=extractIntent(raw).occasion||'الفئة المطلوبة';
-      if(products.length)return {type:'products',text:'🎁 دي المنتجات المطابقة لفئة '+occ+':',products};
+      if(products.length)return {type:'products',text:occasionProductsIntro(occ,'🎁 دي المنتجات المطابقة لفئة '+occ+':'),products};
       return {type:'clarify',text:'مش لاقي منتجات مربوطة بفئة '+occ+' حالياً في الموقع. عشان أعرضها هنا لازم المنتجات تكون مضافة تحت نفس الفئة في بيانات الموقع.'};
     }
     const products=await recommendProducts(raw,ctx);
@@ -1517,7 +1515,7 @@ async function handleSingleMessage(raw, ctx){
       };
       const link=catLinks[ctx.occasion]||'';
       const linkHtml=link?'\n\n<a href="'+link+'" target="_blank" class="btn-gold" style="display:inline-block;margin-top:8px">🛒 تصفح كل منتجات '+ctx.occasion+'</a>':'';
-      return {type:'products',text:'🎁 دي منتجاتنا لمناسبة '+ctx.occasion+':',products,extraHtml:linkHtml};
+      return {type:'products',text:occasionProductsIntro(ctx.occasion,'🎁 دي منتجاتنا لمناسبة '+ctx.occasion+':'),products,extraHtml:linkHtml};
     }
   }
 
@@ -1562,14 +1560,20 @@ async function processBotMessageCore(msg){
   const raw=String(msg||'').trim();
   if(!raw) return {type:'fallback',text:settings.fallback};
 
-  if(/^\s*#?\s*\d{3,10}\s*$/.test(arabicDigits(raw)) && !botState.waitingFor){
-    botState.waitingFor='order_number';
-    return {type:'clarify',text:'هل ده رقم طلب؟ لو نعم ابعته تاني أو اكتبه بالشكل ده: #'+extractOrderRef(raw)};
-  }
-
   const intent=extractIntent(raw);
   const ctx=settings.conversationMode?mergeContext(intent):intent;
   $('intentBox').innerHTML='<b>السياق:</b> '+esc(contextPrompt(ctx)||'عام')+' | <b>الحالة:</b> '+esc(botState.waitingFor||'idle');
+
+  if(/^\s*#?\s*\d{3,10}\s*$/.test(arabicDigits(raw)) && !botState.waitingFor){
+    if(ctx.recipient||ctx.occasion||botState.topic==='gift'){
+      const budget=parseBudget(raw,true);
+      const fullCtx={...ctx,budget:budget};
+      const products=await recommendProducts([raw,contextPrompt(fullCtx)].join(' '),fullCtx);
+      if(products.length)return {type:'products',text:'تمام، دي اختيارات مناسبة من المنتجات المتاحة:',products};
+    }
+    botState.waitingFor='order_number';
+    return {type:'clarify',text:'لو بتتابع طلب، اكتبه بالشكل ده: #'+extractOrderRef(raw)+'. ولو بتسأل عن سعر منتج، اكتب اسم المنتج.'};
+  }
 
   // ⭐ لو البوت مستني حاجة — كمل الflow
   if(botState.waitingFor){
@@ -1603,7 +1607,7 @@ async function processBotMessageCore(msg){
       if(categoryBrowseIntent(raw)){
         const products=await recommendCategoryProducts(raw,extractIntent(raw));
         const occ=extractIntent(raw).occasion||'الفئة المطلوبة';
-        if(products.length)return {type:'products',text:'🎁 دي المنتجات المطابقة لفئة '+occ+':',products};
+        if(products.length)return {type:'products',text:occasionProductsIntro(occ,'🎁 دي المنتجات المطابقة لفئة '+occ+':'),products};
         return {type:'clarify',text:'مش لاقي منتجات مربوطة بفئة '+occ+' حالياً في الموقع. مش هعرض منتجات عامة عشان ما نلخبطش العميل.'};
       }
       if(data.action==='TRACK_ORDER') return await handleOrderQuery(raw);
@@ -1635,8 +1639,12 @@ async function processBotMessageCore(msg){
       const occ=intent.occasion || matchFirst(OCCASION_MAP,normalize(raw));
       if(occ || isShortFlowAnswer(raw)){
         botState.giftData.occasion=occ||raw;
-        botState.waitingFor='gift_budget';
-        return {type:'clarify',text:'جميل 🎁 الميزانية في حدود كام درهم؟'};
+        botState.waitingFor=null;
+        const fullCtx={...ctx,...botState.giftData};
+        const allText=[raw,...conversation.filter(x=>x.role==='user').slice(-5).map(x=>x.text)].join(' ');
+        const products=await recommendProducts(allText,fullCtx);
+        if(products.length)return {type:'products',text:'جميل 🎁 دي اختيارات مناسبة لـ'+fullCtx.recipient+' بمناسبة '+fullCtx.occasion+':',products};
+        return {type:'fallback',text:'فهمت المناسبة، لكن مش لاقي منتج مناسب حاليًا. جرّب تكتب الفئة المطلوبة بشكل أبسط.'};
       }
       return {type:'clarify',text:'إيه المناسبة؟ (عيد ميلاد، تخرج، مولود، عيد...)'};
     }
@@ -1650,11 +1658,12 @@ async function processBotMessageCore(msg){
         const allText=[raw,...conversation.filter(x=>x.role==='user').slice(-5).map(x=>x.text)].join(' ');
         const products=await recommendProducts(allText,fullCtx);
         if(products.length){
-          return {type:'products',text:'🎁 دي اقتراحاتي لـ'+fullCtx.recipient+' بمناسبة '+fullCtx.occasion+' (ميزانية ~'+budget+' درهم):',products};
+          return {type:'products',text:'🎁 دي اقتراحاتي لـ'+fullCtx.recipient+' بمناسبة '+fullCtx.occasion+' (حتى '+budget+' درهم):',products};
         }
-        return {type:'fallback',text:'فهمت طلبك '+contextPrompt(fullCtx)+'، لكن مش لاقي منتج مناسب حاليًا. ممكن نوسّع الميزانية أو نغيّر نوع الهدية؟'};
+        return {type:'fallback',text:'فهمت طلبك '+contextPrompt(fullCtx)+'، لكن مش لاقي منتج مناسب حاليًا. ممكن أديك اختيارات قريبة من نفس المناسبة؟'};
       }
-      return {type:'clarify',text:'الميزانية في حدود كام درهم؟'};
+      botState.waitingFor=null;
+      return await handleGiftQuery(raw,ctx);
     }
 
     // ⭐ لو العميل سأل سؤال عام واضح في قاعدة المعرفة، رد عليه الأول
@@ -1692,7 +1701,7 @@ function getReminderText(){
   }
   if(botState.waitingFor==='gift_recipient') return '🎁 مازلت مستنّي تعرفني الهدية لمين.';
   if(botState.waitingFor==='gift_occasion') return '🎁 مازلت مستنّي تعرفني المناسبة.';
-  if(botState.waitingFor==='gift_budget') return '🎁 مازلت مستنّي تعرفني الميزانية.';
+  if(botState.waitingFor==='gift_budget') return '🎁 أقدر أعرض لك المنتجات المناسبة مباشرة.';
   return '';
 }
 
