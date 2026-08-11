@@ -301,6 +301,7 @@ let botProducts=[];
 let botCategories=[];
 let botSubcategories=[];
 let conversation=[];
+const BOT_PRODUCT_LIMIT=24;
 const CHAT_MEMORY_KEY='bariq_bot_chat_memory_v2';
 let settings={
   minScore:4,
@@ -502,8 +503,7 @@ async function loadProductsForBot(){
     }catch(_){
       botCategories=[];botSubcategories=[];
     }
-    if(window.Supabase?.Products?.getAll)botProducts=await window.Supabase.Products.getAll(100000);
-    else botProducts=await window.sbFetch('products?active=eq.true&order=sort_order.asc&limit=10000');
+    botProducts=await window.sbFetch('products?active=eq.true&order=updated_at.desc.nullslast,created_at.desc.nullslast,sort_order.asc&limit=10000');
     botProducts=Array.isArray(botProducts)?botProducts.filter(p=>p.active!==false):[];
     if($('productQueryStatus'))$('productQueryStatus').textContent='تم تحميل '+botProducts.length+' منتج.';
   }catch(e){
@@ -1093,7 +1093,7 @@ async function recommendCategoryProducts(text,ctx=null){
     terms.forEach(w=>{if(hasWholeTerm(pt,w))s+=3});
     if(Number(p.stock)<=0)s-=999;
     return {...p,_score:s};
-  }).filter(p=>p._score>0).sort((a,b)=>b._score-a._score||(Number(a.price)||0)-(Number(b.price)||0)).slice(0,6);
+  }).filter(p=>p._score>0).sort((a,b)=>b._score-a._score||(Number(a.price)||0)-(Number(b.price)||0)).slice(0,BOT_PRODUCT_LIMIT);
 }
 async function lookupProductByText(text){
   if(!botProducts.length)await loadProductsForBot();
@@ -1110,7 +1110,7 @@ async function lookupProductByText(text){
     else if(allWordsInName)s+=25;
     else return {...p,_score:0};
     return {...p,_score:s};
-  }).filter(p=>p._score>0).sort((a,b)=>b._score-a._score).slice(0,6);
+  }).filter(p=>p._score>0).sort((a,b)=>b._score-a._score).slice(0,BOT_PRODUCT_LIMIT);
 }
 function recipientTerms(msg){
   const t=normalize(msg),out=[];
@@ -1153,7 +1153,7 @@ async function recommendProducts(msg,ctx=null){
   return candidates.sort((a,b)=>{
     if(b._score!==a._score)return b._score-a._score;
     return (Number(a.price)||0)-(Number(b.price)||0);
-  }).slice(0,6);
+  }).slice(0,BOT_PRODUCT_LIMIT);
 }
 function productCards(arr){
   return arr.map(p=>'<div class="product-card"><div class="pc-img"><img src="'+escAttr(productImage(p))+'" onerror="this.src=\'/assets/logo.png\'"></div><div class="pc-body"><div class="pc-name">'+esc(productName(p))+'</div><div class="pc-price">'+(Number(p.price||0).toFixed(2))+' AED</div><div class="pc-meta">'+(p.stock!=null?'المخزون: '+esc(p.stock):'متاح')+(p.rating?' • ⭐ '+esc(p.rating):'')+'</div><a class="btn-navy" href="'+escAttr(productLink(p))+'" target="_blank">عرض المنتج</a></div></div>').join('');
