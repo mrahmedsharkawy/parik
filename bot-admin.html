@@ -1373,7 +1373,6 @@ async function recommendCategoryProducts(text,ctx=null){
     if(s<=0)return {...p,_score:0};
     if(hasConflictingCategorySignal(p,requestedKeys))return {...p,_score:0};
     terms.forEach(w=>{if(hasWholeTerm(pt,w))s+=3});
-    if(Number(p.stock)<=0)s-=999;
     return {...p,_score:s};
   }).filter(p=>p._score>0).sort((a,b)=>b._score-a._score||(Number(a.price)||0)-(Number(b.price)||0)).slice(0,BOT_PRODUCT_LIMIT);
 }
@@ -1389,7 +1388,6 @@ async function recommendCategoryProductsForAction(actionValue,text,ctx=null){
     if(s<=0)return {...p,_score:0};
     if(hasConflictingCategorySignal(p,requestedKeys))return {...p,_score:0};
     cleanTerms.forEach(w=>{if(hasWholeTerm(pt,w))s+=2});
-    if(Number(p.stock)<=0)s-=999;
     return {...p,_score:s};
   }).filter(p=>p._score>0).sort((a,b)=>b._score-a._score||(Number(a.price)||0)-(Number(b.price)||0)).slice(0,BOT_PRODUCT_LIMIT);
 }
