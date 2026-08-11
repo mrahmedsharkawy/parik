@@ -2015,7 +2015,7 @@ function detectTopic(text){
   if(/(?:اطلب|طلبية|شراء|اشتري)\s*(?:هدية|منتج|بوكس|حاجة|من|جديد)/.test(t)) return 'order_new';
 
   // 7. عرض منتجات عام
-  if(/اعرض\s*(?:عليا|لي)\s*منتجات|وريني\s*منتجات|شو\s*عندكم|ايش\s*عندكم|عندكم\s*ايه|عايز\s*منتج|ابغى\s*منتج|اريد\s*منتج|محتاج\s*منتج/.test(t)) return 'browse';
+  if(/اعرض\s*(?:عليا|لي)\s*منتجات|وريني\s*(?:ايه\s*)?(?:عندكم|منتجات)|ايه\s*عندكم|شو\s*عندكم|ايش\s*عندكم|عندكم\s*ايه|عايز\s*منتج|ابغى\s*منتج|اريد\s*منتج|محتاج\s*منتج/.test(t)) return 'browse';
 
   // 8. تحية
   if(/كيف\s*(حال|حالك|ك|انت)|شلونك|شخبارك|عامل\s*ا[يهي]|اخبار[كك]|صباح|مساء|سلام|هلا\s*والله|هاي|مرحب|أهلا|أهلين|شكرا|شكر|تسلم|يسلمو|مشكور|باي|مع\s*السلامة|\b(?:hello|hi|hey|thanks?|thank you|good morning|good evening|bye)\b/.test(t)) return 'greeting';
@@ -2451,9 +2451,11 @@ async function handleSingleMessage(raw, ctx){
     return await handleConfiguredKnowledge(panelMatch.item);
   }
 
-  resetBotState('idle');
-  await persistUnanswered(raw);
-  return {type:'fallback',text:settings.fallback||'مش لاقي رد محفوظ للسؤال ده حاليًا. هسجله عندي عشان نضيف له رد من لوحة التحكم.'};
+  if(topic==='general'){
+    resetBotState('idle');
+    await persistUnanswered(raw);
+    return {type:'silent',text:''};
+  }
 
   // لو حالة الانتظار ضاعت لكن السياق واضح، كمّل مسار الهدية بدل fallback.
   if(topic==='general' && ctx.recipient && !ctx.occasion){
@@ -2481,10 +2483,18 @@ async function handleSingleMessage(raw, ctx){
 
   if(topic==='browse'){
     resetBotState('browse');
-    const products=await recommendCategoryProducts(raw,ctx);
-    const occ=categoryLabelFromText(raw);
-    if(products.length)return {type:'products',text:occasionProductsIntro(occ,'🎁 دي المنتجات المطابقة لفئة '+occ+':'),products};
-    return {type:'clarify',text:'مش لاقي منتجات مربوطة بفئة '+occ+' حالياً في الموقع. اتأكد إن المنتجات مضافة تحت نفس الفئة في بيانات الموقع.'};
+    if(categoryBrowseIntent(raw)){
+      const products=await recommendCategoryProducts(raw,ctx);
+      const occ=categoryLabelFromText(raw);
+      if(products.length)return {type:'products',text:occasionProductsIntro(occ,'🎁 دي المنتجات المطابقة لفئة '+occ+':'),products};
+      await persistUnanswered(raw);
+      return {type:'silent',text:''};
+    }
+    await loadProductsForBot();
+    const products=botProducts.slice(0,BOT_PRODUCT_LIMIT);
+    if(products.length)return {type:'products',text:'دي بعض المنتجات المتاحة عندنا:',products};
+    await persistUnanswered(raw);
+    return {type:'silent',text:''};
   }
 
   // قاعدة المعرفة أولاً: لو الأدمن ضاف سؤال + نوع إدخال/إجراء، ده ياخد الأولوية.
@@ -2605,7 +2615,7 @@ async function handleSingleMessage(raw, ctx){
   }
 
   await persistUnanswered(raw);
-  return {type:'fallback',text:settings.fallback||smartFallbackReply(raw,ctx)};
+  return {type:'silent',text:''};
 }
 
 // ===== الرد على الرسالة (مع مراعاة السياق) =====
@@ -2770,11 +2780,11 @@ function getReminderText(){
 async function processBotMessage(msg){
   try{
     const res=await processBotMessageCore(msg);
-    return res||{type:'fallback',text:settings.fallback};
+    return res||{type:'silent',text:''};
   }catch(e){
     console.error('Bot error:',e);
     await persistUnanswered(String(msg||''));
-    return {type:'fallback',text:settings.fallback};
+    return {type:'silent',text:''};
   }
 }
 
@@ -2902,7 +2912,11 @@ async function testBot(){
   const holder=document.createElement('div');holder.className='msg bot';holder.innerHTML='<div class="avatar"></div><div class="bubble">جاري التفكير...</div>';$('chat').appendChild(holder);$('chat').scrollTop=$('chat').scrollHeight;
   try{
     const r=await processBotMessage(m);
-    if(!r||!r.text){
+    if(r&&r.type==='silent'){
+      holder.remove();
+      saveChatMemory();
+      logBotMessage('assistant','',{result_type:'silent_unanswered'});
+    }else if(!r||!r.text){
       holder.innerHTML='<div class="avatar"></div><div class="bubble">'+esc(settings.fallback)+'</div>';
       conversation.push({role:'assistant',text:settings.fallback});
       saveChatMemory();
