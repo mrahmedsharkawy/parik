@@ -1383,8 +1383,26 @@ function requiredDataPrompt(item,cfg){
 async function handleConfiguredKnowledge(item){
   const cfg=getBotConfig(item)||{};
   if(cfg.inputMode==='required_data'){
+    const action=String(cfg.linkedAction||'').trim();
+    const seed=[item.question,item.answer,cfg.fieldExample].join(' ');
+    if(action==='CATEGORY_PRODUCTS' && categoryBrowseIntent(seed)){
+      const products=await recommendCategoryProducts(seed,extractIntent(seed));
+      if(products.length)return {type:'products',text:String(item.answer||'دي منتجات مناسبة للفئة المطلوبة:'),products};
+    }
+    if(action==='PRODUCT_SEARCH'){
+      const products=await recommendProducts(seed,extractIntent(seed));
+      if(products.length)return {type:'products',text:String(item.answer||'دي أقرب منتجات مناسبة:'),products};
+    }
+    if(action==='PRODUCT_LOOKUP'||action==='IMAGE_PRODUCT_SEARCH'){
+      const products=await lookupProductByText(seed);
+      if(products.length)return {type:'products',text:String(item.answer||'لقيت أقرب منتجات مطابقة من الموقع:'),products};
+    }
+    if(action==='TRACK_ORDER' && extractOrderRef(seed)){
+      resetBotState('order');
+      return await handleOrderQuery(seed);
+    }
     botState.waitingFor='action_param_'+(cfg.fieldType||'text');
-    botState.actionData={knowledgeId:item.id,question:item.question,action:cfg.linkedAction||'',fieldType:cfg.fieldType||'text',fieldExample:cfg.fieldExample||''};
+    botState.actionData={knowledgeId:item.id,question:item.question,action:action,fieldType:cfg.fieldType||'text',fieldExample:cfg.fieldExample||''};
     const prompt=requiredDataPrompt(item,cfg);
     return {type:'clarify',text:prompt+(cfg.fieldExample?'\nمثال: '+cfg.fieldExample:'')};
   }
