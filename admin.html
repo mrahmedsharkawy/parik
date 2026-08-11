@@ -2430,8 +2430,9 @@ function isMissingSupabaseColumnError(error, column){
 }
 
 async function updateOrderInSupabaseSafe(id, data, order=null){
-  const optionalColumns = ['cashback_expires_at', 'updated_at'];
+  const optionalColumns = ['updated_at'];
   const payload = Object.assign({}, data);
+  delete payload.cashback_expires_at;
   const candidates = [
     { field:'id', value: order && order.srcId },
     { field:'id', value: id },
@@ -2457,7 +2458,6 @@ async function updateOrderInSupabaseSafe(id, data, order=null){
       if (!missingColumn) throw e;
       delete payload[missingColumn];
       console.warn(missingColumn + ' غير موجود في Supabase؛ سيتم تحديث الحالة والكاش باك بدونه.', e);
-      toast('⚠️ عمود اختياري غير موجود في قاعدة البيانات، تم تحديث الحالة بدونه');
     }
   }
   return [];
@@ -2607,7 +2607,6 @@ async function saveOrder(){
           };
           if (order.status === 'delivered') {
             updateData.cashback_status = 'earned';
-            updateData.cashback_expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
           }
           else if (order.cashbackStatus === 'earned' || order.cashback_status === 'earned') updateData.cashback_status = 'pending';
           await updateOrderInSupabaseSafe(order.id, updateData, orders[idx]);
@@ -2664,7 +2663,6 @@ async function changeOrderStatus(id, status){
       // عند التسليم: يضاف الكاش باك للعميل فوراً، وينتهي إذا لم يستخدمه خلال 30 يوم
       if (status === 'delivered') {
         updateData.cashback_status = 'earned';
-        updateData.cashback_expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
       }
       else if (o.cashbackStatus === 'earned' || o.cashback_status === 'earned') updateData.cashback_status = 'pending';
       const result = await updateOrderInSupabaseSafe(id, updateData, o);
@@ -2675,7 +2673,6 @@ async function changeOrderStatus(id, status){
       }
 
       if (updateData.cashback_status) o.cashbackStatus = updateData.cashback_status;
-      if (updateData.cashback_expires_at) o.cashbackExpiresAt = updateData.cashback_expires_at;
       toast('✅ تم تحديث الحالة في قاعدة البيانات');
 
       // ========== إشعار Push تلقائي للعميل ==========
