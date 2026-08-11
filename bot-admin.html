@@ -580,7 +580,19 @@ async function loadProductsForBot(){
     }catch(_){
       botCategories=[];botSubcategories=[];
     }
-    const liveProducts=await window.sbFetch('products?active=eq.true&order=updated_at.desc.nullslast,created_at.desc.nullslast,sort_order.asc&limit=10000').catch(()=>[]);
+    let liveProducts=[];
+    const productUrls=[
+      'products?active=eq.true&order=updated_ta.desc.nullslast,created_at.desc.nullslast,sort_order.asc&limit=10000',
+      'products?active=eq.true&order=updated_at.desc.nullslast,created_at.desc.nullslast,sort_order.asc&limit=10000',
+      'products?active=eq.true&order=created_at.desc.nullslast,sort_order.asc&limit=10000',
+      'products?active=eq.true&limit=10000'
+    ];
+    for(const url of productUrls){
+      try{
+        liveProducts=await window.sbFetch(url);
+        if(Array.isArray(liveProducts))break;
+      }catch(_){}
+    }
     const relationEndpoints=[
       'product_categories?select=*&limit=10000',
       'products_categories?select=*&limit=10000',
@@ -2294,6 +2306,8 @@ function renderBotDebug(extra={}){
     'Recipient':botState.recipient||botState.giftData?.recipient||'',
     'Occasion':botState.occasion||botState.giftData?.occasion||'',
     'Budget':botState.budget||botState.giftData?.budget||'',
+    'Products Loaded':botProducts.length,
+    'Categories Loaded':botCategories.length+'/'+botSubcategories.length,
     'Action executed':lastBotDebug.actionExecuted||''
   };
   if($('intentBox'))$('intentBox').innerHTML=Object.entries(d).map(([k,v])=>'<b>'+esc(k)+':</b> '+esc(v||'-')).join('<br>');
