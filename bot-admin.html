@@ -2244,7 +2244,7 @@ function normalizeImageUrl(value){
 function productsByExactImageUrl(imageUrl){
   const target=normalizeImageUrl(imageUrl);
   if(!target||target.startsWith('data:')||target.startsWith('blob:'))return [];
-  return botProducts.filter(p=>productImageSources(p).some(src=>normalizeImageUrl(src)===target)).slice(0,BOT_PRODUCT_LIMIT);
+  return botProducts.filter(p=>productImageSources(p).some(src=>normalizeImageUrl(src)===target)).slice(0,1);
 }
 function loadImageForCompare(src){
   return new Promise((resolve,reject)=>{
@@ -2285,7 +2285,7 @@ async function visualProductMatches(imageUrl){
     const dist=Math.min(...queries.map(q=>descriptorDistance(q,desc)));
     return {...p,_score:Math.max(0,100-Math.round(dist*140)),_visualDistance:dist};
   }));
-  return scored.filter(p=>p._score>=48).sort((a,b)=>b._score-a._score).slice(0,BOT_PRODUCT_LIMIT);
+  return scored.filter(p=>p._score>=56).sort((a,b)=>b._score-a._score).slice(0,1);
 }
 async function searchProductsByImage(imageUrl,caption='',visualUrl=imageUrl){
   await loadProductsForBot();
@@ -2303,6 +2303,7 @@ async function searchProductsByImage(imageUrl,caption='',visualUrl=imageUrl){
   const imageDescription=String((llm&&llm.image_description)||'').trim();
   const searchText=[caption,imageDescription,llm&&llm.reply].filter(Boolean).join(' ');
   let products=await lookupProductByText(searchText);
+  products=products.slice(0,1);
   if(!products.length){
     const words=meaningfulTokens(normalize(searchText)).filter(w=>w.length>2);
     products=botProducts.map(p=>{
@@ -2314,9 +2315,9 @@ async function searchProductsByImage(imageUrl,caption='',visualUrl=imageUrl){
         else if(hasWholeTerm(pt,w))score+=3;
       });
       return {...p,_score:score};
-    }).filter(p=>p._score>=8).sort((a,b)=>b._score-a._score||(Number(a.price)||0)-(Number(b.price)||0)).slice(0,BOT_PRODUCT_LIMIT);
+    }).filter(p=>p._score>=8).sort((a,b)=>b._score-a._score||(Number(a.price)||0)-(Number(b.price)||0)).slice(0,1);
   }
-  if(!products.length)products=await recommendProducts(searchText,extractIntent(searchText));
+  if(!products.length)products=(await recommendProducts(searchText,extractIntent(searchText))).slice(0,1);
   renderBotDebug({
     lastMessage:caption||'صورة مرفقة',
     intent:'image_search',
