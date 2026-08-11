@@ -1474,7 +1474,7 @@ function productNameHasCategoryKey(p,keys){
   return (keys||[]).some(k=>(CATEGORY_TERMS[k]||[]).some(w=>hasWholeTerm(name,w)));
 }
 async function recommendCategoryProducts(text,ctx=null){
-  if(!botProducts.length)await loadProductsForBot();
+  await loadProductsForBot();
   const terms=categoryTermsFromText(text);
   const requestedKeys=requestedCategoryKeys(text);
   if(!terms.length)return [];
@@ -1482,13 +1482,12 @@ async function recommendCategoryProducts(text,ctx=null){
     const pt=productText(p),ct=productCategoryText(p);let s=0;
     terms.forEach(w=>{if(hasWholeTerm(ct,w))s+=20});
     if(s<=0)return {...p,_score:0};
-    if(hasConflictingCategorySignal(p,requestedKeys))return {...p,_score:0};
     terms.forEach(w=>{if(hasWholeTerm(pt,w))s+=3});
     return {...p,_score:s};
   }).filter(p=>p._score>0).sort((a,b)=>b._score-a._score||(Number(a.price)||0)-(Number(b.price)||0)).slice(0,BOT_PRODUCT_LIMIT);
 }
 async function recommendCategoryProductsForAction(actionValue,text,ctx=null){
-  if(!botProducts.length)await loadProductsForBot();
+  await loadProductsForBot();
   const pageProducts=productsFromCategoryPageValue(actionValue);
   if(pageProducts.length)return pageProducts;
   if(hasCategoryPageParams(actionValue))return [];
@@ -2165,7 +2164,7 @@ async function processBotMessageCore(msg){
   botState.recipient=ctx.recipient||botState.recipient||'';
   botState.occasion=ctx.occasion||botState.occasion||'';
   botState.budget=ctx.budget??botState.budget;
-  renderBotDebug({lastMessage:raw,intent:botState.lastIntent,actionExecuted:''});
+  renderBotDebug({lastMessage:raw,intent:botState.lastIntent,knowledgeMatch:'',confidence:'',actionExecuted:''});
 
   if(/^\s*#?\s*\d{3,10}\s*$/.test(arabicDigits(raw)) && !botState.waitingFor){
     if(ctx.recipient||ctx.occasion||botState.topic==='gift'){
