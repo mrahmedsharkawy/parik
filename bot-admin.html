@@ -983,8 +983,12 @@ function score(msg,item,entry=null,entities={}){
   if(exact>=2)s+=2;
   const action=entry?entry.action:configuredAction(getBotConfig(item));
   const topic=detectTopic(msg);
+  const sig=intentSignals(msg);
   if(topic==='order'&&action==='TRACK_ORDER')s+=4;
   if(topic==='browse'&&['CATEGORY_PRODUCTS','PRODUCT_SEARCH','SHOW_CATEGORY'].includes(action))s+=3;
+  if((sig.price_question||sig.minimum_quantity||sig.product_inquiry)&&['PRODUCT_SEARCH','PRODUCT_LOOKUP','CHECK_PRODUCT_AVAILABILITY','CREATE_QUOTE','CATEGORY_PRODUCTS','SHOW_PRODUCT'].includes(action))s+=5;
+  if(action==='TRACK_ORDER'&&!sig.order_tracking)s-=12;
+  if(action==='TRACK_ORDER'&&(sig.price_question||sig.minimum_quantity||sig.product_inquiry)&&!sig.order_number)s-=10;
   if((topic==='gift'||entities.recipient||entities.occasion)&&['CUSTOM_GIFT_ORDER','PRODUCT_SEARCH','CATEGORY_PRODUCTS'].includes(action))s+=2;
   if(entities.budget!=null&&/سعر|ميزانيه|budget|price|درهم/.test([item.question,item.answer,visibleKeywords(item.keywords).join(' ')].map(normalize).join(' ')))s+=1.5;
   if(topic==='order'&&['PRODUCT_SEARCH','CATEGORY_PRODUCTS','CUSTOM_GIFT_ORDER'].includes(action))s-=4;
@@ -1768,6 +1772,39 @@ function extractQuantity(text){
   const m=t.match(/(?:عدد|كميه|كمية|qty|quantity)\s*(\d{1,4})|(\d{1,4})\s*(?:قطعه|قطعة|حبه|حبة|pcs?)/i);
   return m?Number(m[1]||m[2]):null;
 }
+function priceQuestionIntent(text){
+  const t=normalize(text);
+  return /(?:سعر|اسعار|أسعار|بكم|بكام|كم\s+السعر|كم\s+سعر|كم\s+يكلف|تكلفه|تكلفة|cost|price)/i.test(t);
+}
+function minimumQuantityIntent(text){
+  const t=normalize(text);
+  return /(?:اقل\s+(?:عدد|كميه|كمية)|أقل\s+(?:عدد|كميه|كمية)|اقل\s+شي|اقل\s+حد|minimum|moq|كم\s+اقل\s+(?:عدد|كميه|كمية)|كم\s+قطعه|كم\s+قطعة|خصم\s+كميه|خصم\s+كمية)/i.test(t);
+}
+function productInquiryIntent(text){
+  const t=normalize(text);
+  return priceQuestionIntent(text)||minimumQuantityIntent(text)||/(?:عرض\s*سعر|منتج|منتجات|اكواب|أكواب|كوب|استاند|ستاند|قطعه|قطعة|quote)/i.test(t);
+}
+function hasStrictOrderTrackingSignal(text){
+  const t=normalize(text), raw=arabicDigits(text);
+  if(extractOrderRef(text))return true;
+  if(botState.waitingFor==='order_number' && /\d{3,10}/.test(raw))return true;
+  if(botState.currentTopic==='order_tracking'||botState.topic==='order'){
+    return /(?:وين|فين|حاله|حالة|تتبع|وصل|اتشحن|انشحن|تاخر|تأخر|جاهز|شو\s+صار|order\s*status|track)/i.test(t)||/\d{3,10}/.test(raw);
+  }
+  return /(?:وين|فين)\s+(?:طلب|طلبي|اوردر|اوردرى)|(?:حاله|حالة)\s+(?:طلب|طلبي|اوردر)|تتبع\s+(?:طلب|طلبي|اوردر)|(?:طلب|طلبي|اوردر).*(?:وين|فين|وصل|اتشحن|انشحن|تاخر|تأخر|جاهز)|شو\s+صار\s+(?:على|علي)\s+(?:طلبي|الطلب|الاوردر)|order\s*status|track\s*(?:my\s*)?order/i.test(t);
+}
+function intentSignals(text){
+  const price=priceQuestionIntent(text), minimum=minimumQuantityIntent(text);
+  const productInquiry=productInquiryIntent(text), hasOrder=hasStrictOrderTrackingSignal(text);
+  return {
+    price_question:price,
+    minimum_quantity:minimum,
+    product_inquiry:productInquiry,
+    order_tracking:hasOrder && !(productInquiry && !extractOrderRef(text) && botState.waitingFor!=='order_number'),
+    quantity:extractQuantity(text),
+    order_number:extractOrderRef(text)||''
+  };
+}
 function extractCity(text){
   const t=normalize(text);
   const cities=['دبي','ابوظبي','الشارقه','عجمان','العين','راس الخيمه','الفجيره','ام القيوين','الرياض','جده','الدمام'];
@@ -1787,14 +1824,19 @@ function categoryLabelFromTextSafe(text){
 }
 function extractIntent(text){
   const t=normalize(text);
+  const sig=intentSignals(text);
   return {
     recipient:matchFirst(RECIPIENT_MAP,t),
     occasion:matchFirst(OCCASION_MAP,t),
     style:matchFirst(STYLE_MAP,t),
     interest:matchFirst(INTEREST_MAP,t),
     budget:parseBudget(text,giftIntent(text)),
-    order_number:extractOrderRef(text)||'',
-    quantity:extractQuantity(text),
+    order_number:sig.order_number,
+    quantity:sig.quantity,
+    price_question:sig.price_question,
+    minimum_quantity:sig.minimum_quantity,
+    product_inquiry:sig.product_inquiry,
+    order_tracking:sig.order_tracking,
     company:corporateIntent(text),
     city:extractCity(text),
     urgency:/مستعجل|ضروري|اليوم|بكره|باجر|عاجل|urgent|asap/.test(t),
@@ -2522,6 +2564,9 @@ async function logBotMessage(role,message,meta={}){
 function detectTopic(text){
   const t=normalize(text);
   const hasNumber=/\d{3,}/.test(arabicDigits(text));
+  const sig=intentSignals(text);
+  if(/موظف|بشر|احد يرد|حد يكلمني|عايز اتكلم|human|support/i.test(t)) return 'human';
+  if((sig.price_question||sig.minimum_quantity||sig.product_inquiry) && !sig.order_tracking) return 'browse';
 
   // 1. تحويل لموظف (أولوية قصوى)
   if(/موظف|بشر|احد يرد|حد يكلمني|عايز اتكلم|human|support/.test(t)) return 'human';
@@ -2828,6 +2873,8 @@ async function handleLLMDecision(llm,raw,ctx,opts={}){
     if(products.length)return {type:'products',text:llm.reply||'لقيتلك أقرب منتجات 👇',products,llm:true};
   }
   if(llm.action==='order_track'){
+    const sig=intentSignals(raw);
+    if(!sig.order_tracking)return null;
     resetBotState('order');
     return await handleOrderQuery(raw);
   }
@@ -3297,6 +3344,7 @@ async function processBotMessageCore(msg){
   const raw=String(msg||'').trim();
   if(!raw) return {type:'fallback',text:settings.fallback};
 
+  const sig=intentSignals(raw);
   const intent=extractIntent(raw);
   const ctx=settings.conversationMode?mergeContext(intent):intent;
   $('intentBox').innerHTML='<b>السياق:</b> '+esc(contextPrompt(ctx)||'عام')+' | <b>الحالة:</b> '+esc(botState.waitingFor||'idle');
@@ -3333,6 +3381,12 @@ async function processBotMessageCore(msg){
   }
 
   // ⭐ لو البوت مستني حاجة — كمل الflow
+  if(botState.waitingFor==='order_number' && (sig.price_question||sig.minimum_quantity||sig.product_inquiry) && !sig.order_tracking){
+    botState.waitingFor=null;
+    botState.topic='browse';
+    botState.currentTopic='browse';
+  }
+
   if(botState.waitingFor && botState.waitingFor!=='order_number'){
     resetBotState('idle');
   }
@@ -3496,11 +3550,16 @@ function renderRanking(arr){
 
 function renderBotDebug(extra={}){
   lastBotDebug={...lastBotDebug,...extra};
+  const sig=intentSignals(lastBotDebug.lastMessage||'');
   const d={
     'Last Message':lastBotDebug.lastMessage||'',
     'Normalized Message':lastKnowledgeDebug.normalized||normalize(lastBotDebug.lastMessage||''),
     'Extracted Entities':JSON.stringify(lastKnowledgeDebug.entities||{}),
     'Detected Intent':lastBotDebug.intent||botState.lastIntent||'',
+    'Price Question':sig.price_question?'yes':'no',
+    'Minimum Quantity':sig.minimum_quantity?'yes':'no',
+    'Order Tracking Signal':sig.order_tracking?'yes':'no',
+    'Extracted Quantity':sig.quantity||'',
     'Candidates Count':lastKnowledgeDebug.candidatesCount||0,
     'Top 5 Matches':(lastKnowledgeDebug.top||[]).map(x=>x.question+' ('+x.score+')').join(' | '),
     'Knowledge Match':lastBotDebug.knowledgeMatch||'',
