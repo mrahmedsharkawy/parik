@@ -231,7 +231,7 @@
 
       if (hasSupabaseProducts) {
         try {
-          const sb = await window.Supabase.Products.getAll(100000);
+          const sb = await window.Supabase.Products.getAll(1000);
           if (Array.isArray(sb)) {
             products = sb.map(p => {
               const imgs = [];

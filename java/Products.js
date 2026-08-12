@@ -176,7 +176,7 @@ async function loadSupabaseCategories(base) {
 }
 
 let _productsCache = null, _productsCacheTs = 0, _productsRefreshPromise = null;
-const PRODUCTS_SESSION_CACHE_KEY = "x2_prods_ss_v4", PRODUCTS_LOCAL_CACHE_KEY = "x2_products_cache_v3", PRODUCTS_LOCAL_CACHE_TTL = 6e4;
+const PRODUCTS_SESSION_CACHE_KEY = "x2_prods_ss_v5", PRODUCTS_LOCAL_CACHE_KEY = "x2_products_cache_v4", PRODUCTS_LOCAL_CACHE_TTL = 6e4;
 
 function clearLegacyProductsCache() {
     try {
@@ -344,7 +344,7 @@ async function fetchProductsSnapshot() {
 
 function refreshProductsInBackground() {
     if (_productsRefreshPromise || !(window.Supabase && window.Supabase.Products)) return;
-    _productsRefreshPromise = window.Supabase.Products.getAll(100000).then(function(sbProds) {
+    _productsRefreshPromise = window.Supabase.Products.getAll(1000).then(function(sbProds) {
         if (!Array.isArray(sbProds) || !sbProds.length) return;
         const mapped = mapSupabaseProducts(sbProds), ts = Date.now();
         _productsCache = mapped, _productsCacheTs = ts, saveProductsCache(mapped, ts);
@@ -388,7 +388,7 @@ export async function fetchProducts(forceFresh) {
     let staleCache = null;
     if (canUseSupabaseProducts) {
         try {
-            const sbProds = await window.Supabase.Products.getAll(100000);
+            const sbProds = await window.Supabase.Products.getAll(1000);
             if (Array.isArray(sbProds)) {
                 const liveProducts = mapSupabaseProducts(sbProds);
                 if (_productsCache = sortProductsForStore(liveProducts), _productsCache.length > 0) {
@@ -707,9 +707,12 @@ export function createProductCard(prod) {
         }
         openProductFromCard();
     });
-    const lang = localStorage.getItem("lang") || document.documentElement.lang || document.documentElement.getAttribute("lang") || "ar";
-    const productCardLang = String(lang).toLowerCase().startsWith("en") ? "en" : "ar";
-    const productCardDir = "en" === productCardLang ? "ltr" : "rtl";
+    const docDir = document.documentElement.dir || document.documentElement.getAttribute("dir") || "";
+    const docLang = document.documentElement.lang || document.documentElement.getAttribute("lang") || "";
+    const storedLang = localStorage.getItem("lang") || "";
+    const lang = docLang || storedLang || "ar";
+    const productCardDir = docDir ? ("rtl" === String(docDir).toLowerCase() ? "rtl" : "ltr") : (String(lang).toLowerCase().startsWith("en") ? "ltr" : "rtl");
+    const productCardLang = "ltr" === productCardDir ? "en" : "ar";
     card.setAttribute("lang", productCardLang);
     card.setAttribute("dir", productCardDir);
     card.style.direction = productCardDir;
@@ -885,8 +888,8 @@ export function createProductCard(prod) {
     infoRow.style.alignItems = "ltr" === productCardDir ? "flex-start" : "flex-end", content.appendChild(infoRow), card.appendChild(content);
     const cartBtn = document.createElement("button");
     cartBtn.className = "product-cart-btn", cartBtn.title = "en" === lang ? "Add to Cart" : "إضافة للسلة", cartBtn.type = "button",
-    cartBtn.style.setProperty("right", "en" === lang ? "10px" : "auto", "important"),
-    cartBtn.style.setProperty("left", "en" === lang ? "auto" : "10px", "important"),
+    cartBtn.style.setProperty("right", "rtl" === productCardDir ? "auto" : "10px", "important"),
+    cartBtn.style.setProperty("left", "rtl" === productCardDir ? "10px" : "auto", "important"),
     cartBtn.innerHTML = '\n    <span style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;">\n      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="cart-svg-icon">\n        <path fill-rule="evenodd" clip-rule="evenodd" d="M2 1C1.44772 1 1 1.44772 1 2C1 2.55228 1.44772 3 2 3H3.21922L6.78345 17.2569C5.73276 17.7236 5 18.7762 5 20C5 21.6569 6.34315 23 8 23C9.65685 23 11 21.6569 11 20C11 19.6494 10.9398 19.3128 10.8293 19H15.1707C15.0602 19.3128 15 19.6494 15 20C15 21.6569 16.3431 23 18 23C19.6569 23 21 21.6569 21 20C21 18.3431 19.6569 17 18 17H8.78078L8.28078 15H18C20.0642 15 21.3019 13.6959 21.9887 12.2559C22.6599 10.8487 22.8935 9.16692 22.975 7.94368C23.0884 6.24014 21.6803 5 20.1211 5H5.78078L5.15951 2.51493C4.93692 1.62459 4.13696 1 3.21922 1H2ZM18 13H7.78078L6.28078 7H20.1211C20.6742 7 21.0063 7.40675 20.9794 7.81078C20.9034 8.9522 20.6906 10.3318 20.1836 11.3949C19.6922 12.4251 19.0201 13 18 13ZM18 20.9938C17.4511 20.9938 17.0062 20.5489 17.0062 20C17.0062 19.4511 17.4511 19.0062 18 19.0062C18.5489 19.0062 18.9938 19.4511 18.9938 20C18.9938 20.5489 18.5489 20.9938 18 20.9938ZM7.00617 20C7.00617 20.5489 7.45112 20.9938 8 20.9938C8.54888 20.9938 8.99383 20.5489 8.99383 20C8.99383 19.4511 8.54888 19.0062 8 19.0062C7.45112 19.0062 7.00617 19.4511 7.00617 20Z" fill="currentColor"/>\n      </svg>\n    </span>\n  ';
     let lastAddTapTs = 0, cartTouchStartX = 0, cartTouchStartY = 0, cartTouchStartAt = 0, suppressCartAddUntil = 0, suppressCartClickUntil = 0;
     function handleCardAdd(ev) {
@@ -2057,7 +2060,7 @@ document.addEventListener("DOMContentLoaded", async function() {
             }, profile = readJson("x2_profile", {}), expiresAt = new Date(Date.now() + 2592e6).toISOString();
             let orderId;
             try {
-                const existing = await window.Supabase.Orders.getAll();
+                const existing = await window.Supabase.Orders.getAll(500);
                 if (existing && existing.length > 0) {
                     orderId = "#" + (existing.reduce((max, o) => {
                         const n = parseInt((o.order_number || "").replace("#", "")) || 0;

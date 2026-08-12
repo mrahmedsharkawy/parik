@@ -5,6 +5,7 @@
   let allProducts = [];
   let activeMainSlug = null;
   let activeSubSlug = null;
+  let categoryProductsRequestSeq = 0;
   const lang = (localStorage.getItem('lang') || document.documentElement.lang || 'ar') === 'en' ? 'en' : 'ar';
   const t = {
     all: lang === 'en' ? 'All' : 'الكل',
@@ -138,7 +139,7 @@
     // جلب المنتجات من Supabase أولاً
     if (hasSupabaseProducts) {
       try {
-        const sb = await window.Supabase.Products.getAll(100000);
+        const sb = await window.Supabase.Products.getAll(1000);
         if (Array.isArray(sb)) prods = sb.map(mapSbProduct);
       } catch(e) {}
     }
@@ -366,7 +367,24 @@
 
     const filtered = filterProducts(subSlug, subName);
     showProducts(filtered, subName);
+    loadSupabaseProductsForSubcategory(subMeta, subName);
     updateUrl(activeMainSlug, subSlug);
+  }
+
+  async function loadSupabaseProductsForSubcategory(subMeta, title) {
+    if (!subMeta || !subMeta.id || !window.Supabase || !window.Supabase.Products || typeof window.Supabase.Products.getByCategoryPage !== 'function') return;
+    const seq = ++categoryProductsRequestSeq;
+    try {
+      const result = await window.Supabase.Products.getByCategoryPage({
+        subcategoryId: subMeta.id,
+        page: 1,
+        pageSize: 60,
+        sort: localStorage.getItem('x2_store_product_sort') === 'newest' ? 'created_at.desc' : 'sort_order.asc'
+      });
+      if (seq !== categoryProductsRequestSeq) return;
+      const rows = result && Array.isArray(result.data) ? result.data : [];
+      if (rows.length) showProducts(rows.map(mapSbProduct), title);
+    } catch(e) {}
   }
 
   // تصفية المنتجات

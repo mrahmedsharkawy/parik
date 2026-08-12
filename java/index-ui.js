@@ -95,7 +95,7 @@
     try{
       var hasSupabase=await waitForSupabaseProducts();
       if(hasSupabase){
-        var sb=await window.Supabase.Products.getAll(100000);
+        var sb=await window.Supabase.Products.getAll(1000);
         if(Array.isArray(sb)){setOfferCount(offerCount(sb));return}
       }
       var r=await fetch('/java/Products.json',{cache:'no-store'}),list=r.ok?await r.json():[];

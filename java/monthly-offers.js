@@ -105,7 +105,7 @@
       let products = [];
       const hasSupabaseProducts = await waitForSupabaseProducts();
       if (hasSupabaseProducts) {
-        const currentProducts = await window.Supabase.Products.getAll(100000);
+        const currentProducts = await window.Supabase.Products.getAll(1000);
         products = Array.isArray(currentProducts) ? currentProducts.map(normalizeSupabaseProduct) : [];
       } else {
         const response = await fetch('/java/Products.json', { cache: 'no-store' });

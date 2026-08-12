@@ -198,8 +198,8 @@
   #gate h2{margin:0 0 6px;color:var(--navy)}
   #gate p{color:#7a8296;font-size:.85rem;margin:0 0 18px}
 </style>
-<link rel="stylesheet" href="/style/admin-pro.css?v=20260812-responsive">
-<script src="/java/supabase.js"></script></head>
+<link rel="stylesheet" href="/style/admin-pro.css?v=20260812-clean-admin">
+<script src="/java/supabase.js?v=supabase-20260812-orders-getpage"></script></head>
 <body>
 
 <!-- بوابة دخول بسيطة (حماية شكلية فقط) -->
@@ -217,7 +217,6 @@
 <div class="topbar">
   <h1>⚙️ لوحة التحكم <span class="badge">Bariq</span></h1>
   <div class="actions">
-    <a class="btn btn-navy btn-sm" href="/bot-admin.html">🤖 إدارة البوت</a>
     <button class="btn-ghost btn-sm" onclick="reloadFromFile()">↻ تحميل من الملف</button>
     <button class="btn-danger btn-sm" onclick="syncFromSupabase()">🔄 مزامنة من Supabase</button>
     <button class="btn-gold btn-sm" onclick="exportProducts()">⬇ تنزيل Products.json</button>
@@ -238,6 +237,7 @@
   <div class="tab" data-tab="banners" onclick="switchTab('banners')">🖼️ العروض والبنرات</div>
   <div class="tab" data-tab="customers" onclick="switchTab('customers')">👥 العملاء</div>
   <div class="tab" data-tab="settings" onclick="switchTab('settings')">⚙️ الإعدادات</div>
+  <a class="tab" href="/bot-admin.html" style="text-decoration:none">🤖 إدارة البوت</a>
 </div>
 
 <div class="wrap">
@@ -1559,7 +1559,7 @@ async function loadProducts(){
   // ثانياً: جرّب Supabase (المصدر الحقيقي)
   if (window.Supabase) {
     try {
-      const sbProds = await window.Supabase.Products.getAll(100000);
+      const sbProds = await window.Supabase.Products.getAll(5000);
       if (Array.isArray(sbProds)) {
         products = sbProds.map(function(p) {
           const imgs = [];
@@ -1595,7 +1595,7 @@ async function syncFromSupabase(){
   if (!window.Supabase) { toast('Supabase غير متصل'); return; }
   toast('⏳ جارٍ المزامنة...');
   try {
-    const sbProds = await window.Supabase.Products.getAll(100000);
+    const sbProds = await window.Supabase.Products.getAll(5000);
     if (!Array.isArray(sbProds)) throw new Error('رد غير صالح');
     products = sbProds.map(function(p) {
       const imgs = [];
@@ -1991,7 +1991,7 @@ async function saveProduct(){
       // لو مفيش supabaseId محفوظ محلياً، حاول تطابق بالاسم لمنع التكرار
       if (!targetId && editing) {
         try {
-          const allSb = await window.Supabase.Products.getAll(100000);
+          const allSb = await window.Supabase.Products.getAll(5000);
           const match = (allSb||[]).find(function(sp){ return sp.name_ar && sp.name_ar.trim() === nameAr.trim(); });
           if (match) targetId = match.id;
         } catch(e) {}
@@ -2501,7 +2501,7 @@ async function loadOrdersFromSupabase() {
   }
   
   try {
-    const remote = await window.Supabase.Orders.getAll(); // للتشخيص
+    const remote = await window.Supabase.Orders.getAll(1000); // للتشخيص
     
     if (remote && Array.isArray(remote)) {
       supaOrdersCache = remote.map(remoteOrderToAdminOrder);
@@ -2557,7 +2557,7 @@ async function syncStoreOrders(silent){
   
   // جلب الطلبات من Supabase مباشرة
   try {
-    const remote = await window.Supabase.Orders.getAll();
+    const remote = await window.Supabase.Orders.getAll(1000);
     
     if (remote && Array.isArray(remote) && remote.length > 0) {
       supaOrdersCache = remote.map(remoteOrderToAdminOrder);
@@ -3366,7 +3366,7 @@ async function pushAllProductsToSupabase() {
   // جلب كل منتجات Supabase الحالية لمطابقتها بالاسم (منع التكرار أول مرة)
   var existingByName = {};
   try {
-    var allSb = await window.Supabase.Products.getAll(100000);
+    var allSb = await window.Supabase.Products.getAll(5000);
     (allSb||[]).forEach(function(sp){ if(sp.name_ar) existingByName[sp.name_ar.trim()] = sp.id; });
   } catch(e) {}
 
@@ -4124,7 +4124,7 @@ async function renderVisitorsStats() {
     }
   };
   try {
-    const res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors?select=id,visited_at,page,city,country,ip&order=visited_at.desc&limit=10000', {
+    const res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors?select=id,visited_at,page,city,country,ip&order=visited_at.desc&limit=500', {
       cache: 'no-store',
       headers: Object.assign({}, headers, { Prefer: 'count=exact', 'Cache-Control': 'no-cache' })
     });
@@ -5087,7 +5087,7 @@ window.switchTab = async function(name) {
     await loadSEO();
     // جلب الطلبات لأكثر المنتجات مبيعاً
     try {
-      const orders = await window.Supabase.Orders.getAll();
+      const orders = await window.Supabase.Orders.getAll(1000);
       renderBestSellers(orders || []);
     } catch(e) {
       renderBestSellers([...getOrders(), ...JSON.parse(localStorage.getItem('x2_orders')||'[]')]);
@@ -5151,7 +5151,7 @@ async function syncOrderCustomersFromSupabase() {
   const orders = [];
   try {
     while (true) {
-      const batch = await window.sbFetch('orders?select=*&order=created_at.desc&limit=' + PAGE + '&offset=' + offset);
+      const batch = await window.sbFetch('orders?select=id,order_number,customer_id,customer_name,customer_phone,customer_email,total,status,payment_status,shipping_cost,items,cashback,cashback_status,created_at&order=created_at.desc&limit=' + PAGE + '&offset=' + offset);
       if (!batch || !batch.length) break;
       orders.push(...batch.map(remoteOrderToAdminOrder));
       if (batch.length < PAGE) break;
@@ -5735,7 +5735,7 @@ async function renderReports() {
     }).then(r => parseInt(r.headers.get('content-range')?.split('/')?.[1] || '0'));
 
     const [supaOrders, custCount, vStats] = await Promise.all([
-      window.Supabase.Orders.getAll().catch(() => null),
+      window.Supabase.Orders.getAll(1000).catch(() => null),
       countHdr('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/customers?select=id&limit=1').catch(() => 0),
       window.Supabase.Visitors.getStats().catch(() => null),
     ]);
@@ -6100,7 +6100,7 @@ async function exportCustomers() {
   toast('⏳ جارٍ تحميل البيانات...');
   let custs = [];
   try {
-    const supaCustomers = await window.Supabase.Customers.getAll();
+    const supaCustomers = await window.Supabase.Customers.getAll(1000);
     custs = (supaCustomers || []).map(c => ({
       name: c.full_name || c.name || '',
       phone: c.phone || '',
@@ -6161,7 +6161,7 @@ async function restoreDeletedProducts() {
   toast('⏳ جاري البحث عن منتجات محذوفة...');
   try {
     // جلب كل المنتجات بـ active=false
-    const deleted = await window.sbFetch('products?active=eq.false&order=sort_order.asc&limit=100000');
+    const deleted = await window.sbFetch('products?active=eq.false&order=sort_order.asc&limit=5000');
     if (!deleted || !deleted.length) { toast('لا توجد منتجات محذوفة'); return; }
     // فلتر: استبعد الـ [object Object]
     const valid = deleted.filter(p => {

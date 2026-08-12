@@ -10,7 +10,7 @@
 <link rel="manifest" href="/bot-manifest.json">
 <link rel="apple-touch-icon" href="/assets/icon-96.png">
 <title>مساعد بريق — إدارة البوت</title>
-<script src="/java/supabase.js"></script>
+<script src="/java/supabase.js?v=supabase-20260812-orders-getpage"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 :root{--navy:#152546;--navy2:#0d1c38;--gold:#d4af37;--bg:#f4f6fb;--line:#e2e7ef;--muted:#748097;--ok:#18894a;--danger:#c0392b;--warn:#b7791f}
@@ -46,7 +46,7 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:9px;
 @media(max-width:1050px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(3,1fr)}.product-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:650px){body{background:#eef3fb}.stats{grid-template-columns:repeat(2,1fr)}.searchbar{grid-template-columns:1fr}.row{flex-direction:column}.wrap{padding:10px 10px calc(14px + env(safe-area-inset-bottom))}.card{padding:13px;border-radius:16px;margin-bottom:10px}.product-grid,.msg .product-grid{grid-template-columns:repeat(2,minmax(128px,1fr));gap:8px}.product-card img{height:112px}.bot-fields{grid-template-columns:1fr}.top{justify-content:flex-start;border-radius:0 0 18px 18px}.top h1 small{display:none}.tabs{position:sticky;top:65px;z-index:15;background:#eef3fbbb;margin:0 -10px 10px;padding:9px 10px;backdrop-filter:blur(12px)}#panel-test .grid{display:flex;flex-direction:column}#panel-test .card:first-child{min-height:calc(100dvh - 176px);display:flex;flex-direction:column}.chat{height:auto;min-height:48dvh;flex:1;border-radius:18px}.msg .bubble{max-width:86%}.msg .bubble:has(.product-grid){max-width:98%;width:98%}.chat-controls{grid-template-columns:46px 1fr 78px 46px}#testMessage,#testBtn{min-height:48px}.panel.active{animation:panelIn .18s ease}@keyframes panelIn{from{opacity:.6;transform:translateY(6px)}to{opacity:1;transform:none}}}
 </style>
-<link rel="stylesheet" href="/style/admin-pro.css?v=20260812-responsive">
+<link rel="stylesheet" href="/style/admin-pro.css?v=20260812-clean-admin">
 </head>
 <body>
 
@@ -199,6 +199,7 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:9px;
         <button class="btn-light" onclick="selectVisibleKnowledge()">تحديد الظاهر</button>
         <button class="btn-light" onclick="selectAllFilteredKnowledge()">تحديد الكل</button>
         <button class="btn-light" onclick="clearKnowledgeSelection()">إلغاء التحديد</button>
+        <button class="btn-danger" onclick="deleteDuplicateExactKnowledge()">حذف المكرر المطابق 100%</button>
         <button class="btn-danger" onclick="deleteSelectedKnowledge()">حذف المحدد</button>
         <button class="btn-danger" onclick="deleteAllFilteredKnowledge()">حذف الجميع</button>
       </div>
@@ -410,6 +411,7 @@ function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
 function escAttr(v){return String(v??'').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}
 function saveLocal(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 function readLocal(k,d){try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(d))}catch(e){return d}}
+function yieldUi(){return new Promise(resolve=>setTimeout(resolve,0))}
 function getBotSessionId(){
   let id=localStorage.getItem(BOT_SESSION_KEY);
   if(!id){
@@ -772,9 +774,9 @@ async function loadProductsForBot(force=false){
     }
     let liveProducts=[];
     const productUrls=[
-      'products?select='+encodeURIComponent(BOT_PRODUCT_SELECT)+'&active=eq.true&order=created_at.desc.nullslast,sort_order.asc&limit=10000',
-      'products?select='+encodeURIComponent(BOT_PRODUCT_SELECT)+'&active=eq.true&limit=10000',
-      'products?active=eq.true&limit=10000'
+      'products?select='+encodeURIComponent(BOT_PRODUCT_SELECT)+'&active=eq.true&order=created_at.desc.nullslast,sort_order.asc&limit=500',
+      'products?select='+encodeURIComponent(BOT_PRODUCT_SELECT)+'&active=eq.true&limit=500',
+      'products?active=eq.true&limit=500'
     ];
     for(const url of productUrls){
       try{
@@ -1158,13 +1160,36 @@ function normalizeImportRow(row,index){
   if(!out.question)out.errors.push('question فارغ');
   if(!out.answer&&out.active&&normalize(out.category)!==normalize('أسئلة تحتاج إجابة'))out.errors.push('answer فارغ مع active=true');
   if(out.action&&out.action!=='NONE'&&!KNOWN_IMPORT_ACTIONS.has(out.action.toUpperCase()))out.warnings.push('Action غير معروف: '+out.action);
-  const exact=questions.find(q=>normalize(q.question)===normalize(out.question));
-  if(exact){out.duplicate=exact;out.decision='duplicate'}
-  else{
-    const near=questions.map(q=>({q,s:questionSimilarity(out.question,q.question)})).sort((a,b)=>b.s-a.s)[0];
-    if(near&&near.s>.85){out.similar=near;out.decision='new'}
-  }
   return out;
+}
+function buildImportQuestionMaps(){
+  const exact=new Map(),tokenBuckets=new Map();
+  questions.forEach(q=>{
+    const nq=normalize(q.question);
+    if(!nq)return;
+    exact.set(nq,q);
+    expandedTokens(nq).slice(0,8).forEach(t=>{
+      if(!tokenBuckets.has(t))tokenBuckets.set(t,[]);
+      const bucket=tokenBuckets.get(t);
+      if(bucket.length<80)bucket.push(q);
+    });
+  });
+  return {exact,tokenBuckets};
+}
+function annotateImportSimilarity(row,maps){
+  const nq=normalize(row.question);
+  if(!nq)return row;
+  const exact=maps.exact.get(nq);
+  if(exact){row.duplicate=exact;row.decision='duplicate';return row}
+  const candidates=new Map();
+  expandedTokens(nq).slice(0,8).forEach(t=>(maps.tokenBuckets.get(t)||[]).forEach(q=>candidates.set(String(q.id),q)));
+  let best=null;
+  candidates.forEach(q=>{
+    const s=questionSimilarity(row.question,q.question);
+    if(!best||s>best.s)best={q,s};
+  });
+  if(best&&best.s>.85){row.similar=best;row.decision='new'}
+  return row;
 }
 function markImportFileDuplicates(rows){
   const seen=new Map();
@@ -1178,6 +1203,23 @@ function markImportFileDuplicates(rows){
     }else seen.set(n,r);
   });
   return rows;
+}
+async function normalizeImportRowsChunked(rows){
+  const out=[];
+  const maps=buildImportQuestionMaps();
+  const total=rows.length;
+  $('impTotal').textContent=total;
+  $('importProgressBar').style.width='0%';
+  $('importProgressText').textContent='جاري فحص الملف: 0 / '+total;
+  for(let i=0;i<rows.length;i+=40){
+    const chunk=rows.slice(i,i+40);
+    chunk.forEach((row,j)=>out.push(annotateImportSimilarity(normalizeImportRow(row,i+j),maps)));
+    const done=Math.min(i+chunk.length,total);
+    $('importProgressBar').style.width=(total?Math.round(done/total*100):100)+'%';
+    $('importProgressText').textContent='جاري فحص الملف: '+done+' / '+total;
+    await yieldUi();
+  }
+  return markImportFileDuplicates(out);
 }
 function parseCsv(text){
   const rows=[];let row=[],cell='',q=false;
@@ -1196,6 +1238,9 @@ function parseCsv(text){
 async function handleKnowledgeImportFile(file){
   if(!file)return;
   $('knowledgeImportName').value=file.name;
+  $('startImportBtn').disabled=true;
+  $('importPreviewTable').innerHTML='<tr><td>جاري قراءة الملف...</td></tr>';
+  $('importLog').textContent='جاري تجهيز الملف بدون إيقاف الصفحة.';
   let rows=[];
   const ext=(file.name.split('.').pop()||'').toLowerCase();
   try{
@@ -1209,8 +1254,12 @@ async function handleKnowledgeImportFile(file){
     }else{
       rows=parseCsv(await file.text());
     }
-    importRows=markImportFileDuplicates(rows.map(normalizeImportRow));
+    $('impTotal').textContent=rows.length;
+    $('importProgressText').textContent='تم قراءة '+rows.length+' صف. جاري الفحص...';
+    await yieldUi();
+    importRows=await normalizeImportRowsChunked(rows);
     renderImportPreview();
+    $('importProgressText').textContent='تم تجهيز '+importRows.length+' سؤال. يمكنك بدء الاستيراد الآن.';
     $('startImportBtn').disabled=!importRows.length||!importRows.some(r=>!r.errors.length);
   }catch(e){
     importRows=[];importReport.errors=[{rowNumber:'-',question:file.name,error:e.message}];renderImportPreview();
@@ -1278,6 +1327,71 @@ async function startKnowledgeImport(){
   toast('✅ تم استيراد قاعدة المعرفة بنجاح');
 }
 function csvCell(v){const s=Array.isArray(v)?v.join('،'):String(v??'');return /[",\n\r،]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}
+async function startKnowledgeImport(){
+  if(!hasAdminSession()){toast('لازم تسجيل دخول الأدمن أولاً');return}
+  const updateExisting=$('importUpdateExisting').checked;
+  const rows=importRows.filter(r=>!r.errors.length);
+  let inserted=0,updated=0,skipped=0,failed=0,done=0;
+  importReport.errors=[];
+  const inserts=[],updates=[],importedLocal=[];
+  rows.forEach(r=>{
+    if(r.duplicate){
+      if(updateExisting&&r.duplicate.id)updates.push({row:r,existing:r.duplicate});
+      else skipped++;
+    }else if(r.similar&&r.decision==='skip')skipped++;
+    else if(r.similar&&r.decision==='merge')updates.push({row:r,existing:r.similar.q});
+    else inserts.push(r);
+  });
+  const total=inserts.length+updates.length+skipped;
+  const progress=(step=1)=>{
+    done+=step;
+    const pct=total?Math.round(done/total*100):100;
+    $('importProgressBar').style.width=pct+'%';
+    $('importProgressText').textContent='تم رفع '+done+' / '+total;
+  };
+  $('startImportBtn').disabled=true;
+  for(let i=0;i<inserts.length;i+=50){
+    const rowsBatch=inserts.slice(i,i+50);
+    const batch=rowsBatch.map(r=>importPayload(r));
+    try{
+      const saved=await saveKnowledgePayload('bot_knowledge','POST',batch);
+      inserted+=batch.length;
+      if(Array.isArray(saved)&&saved.length)importedLocal.push(...saved);
+      else rowsBatch.forEach((r,j)=>importedLocal.push({id:'new-'+Date.now()+'-'+i+'-'+j,...batch[j],keywords:batch[j].keywords||[],created_at:new Date().toISOString()}));
+      progress(batch.length);
+    }catch(e){
+      failed+=batch.length;
+      rowsBatch.forEach(r=>importReport.errors.push({rowNumber:r.rowNumber,question:r.question,error:e.message}));
+      progress(batch.length);
+    }
+    await yieldUi();
+  }
+  for(const u of updates){
+    try{
+      const payload=importPayload(u.row,u.existing);
+      await saveKnowledgePayload('bot_knowledge?id=eq.'+encodeURIComponent(u.existing.id),'PATCH',payload);
+      const idx=questions.findIndex(q=>String(q.id)===String(u.existing.id));
+      if(idx!==-1)questions[idx]={...questions[idx],...payload,id:u.existing.id};
+      updated++;progress();
+    }catch(e){
+      failed++;
+      importReport.errors.push({rowNumber:u.row.rowNumber,question:u.row.question,error:e.message});
+      progress();
+    }
+    await yieldUi();
+  }
+  if(skipped)progress(skipped);
+  if(importedLocal.length){
+    questions=[...importedLocal,...questions];
+    buildKnowledgeIndex();
+  }else if(updated){
+    buildKnowledgeIndex();
+  }
+  renderKnowledge(true);renderDashboard();updateCategories();renderImportPreview();
+  $('importProgressText').textContent='تم بنجاح: '+inserted+' | تم تحديث: '+updated+' | تم تجاهل مكرر: '+skipped+' | فشل: '+failed;
+  $('startImportBtn').disabled=false;
+  toast('تم استيراد قاعدة المعرفة بنجاح');
+}
 function knowledgeExportRows(){
   return questions.map(q=>{const cfg=getBotConfig(q)||{};return {
     question:q.question||'',answer:q.answer||'',category:q.category||'',keywords:visibleKeywords(q.keywords).join('،'),
@@ -1427,6 +1541,27 @@ async function deleteSelectedKnowledge(){
 async function deleteAllFilteredKnowledge(){
   const ids=filteredKnowledge().map(x=>x.id);
   await deleteKnowledgeIds(ids,'النتائج الحالية');
+}
+async function deleteDuplicateExactKnowledge(){
+  const rows=filteredKnowledge();
+  const groups=new Map();
+  rows.forEach(x=>{
+    const key=normalize(x.question);
+    if(!key)return;
+    if(!groups.has(key))groups.set(key,[]);
+    groups.get(key).push(x);
+  });
+  const ids=[];
+  groups.forEach(list=>{
+    if(list.length<2)return;
+    list.sort((a,b)=>
+      (Number(b.usage_count)||0)-(Number(a.usage_count)||0) ||
+      (String(b.answer||'').trim()?1:0)-(String(a.answer||'').trim()?1:0) ||
+      Number(a.id)-Number(b.id)
+    );
+    ids.push(...list.slice(1).map(x=>x.id));
+  });
+  await deleteKnowledgeIds(ids,'الأسئلة المكررة المطابقة 100%');
 }
 
 /* =========================================================

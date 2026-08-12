@@ -417,7 +417,7 @@
       if (cached) { const obj = JSON.parse(cached); if (Date.now()-obj.ts < 300000) { addProductsToMap(obj.data, _prodsCache); return _prodsCache; } }
       let arr = [];
       await waitForProductsApi();
-      if (window.Supabase && window.Supabase.Products) arr = await window.Supabase.Products.getAll() || [];
+      if (window.Supabase && window.Supabase.Products) arr = await window.Supabase.Products.getAll(800) || [];
       if (!arr.length) arr = await (await fetch('/java/Products.json')).json();
       try { sessionStorage.setItem(SS_KEY, JSON.stringify({ts:Date.now(),data:arr})); } catch(e2) {}
       addProductsToMap(arr, _prodsCache);
@@ -1656,7 +1656,7 @@
 
       // جلب من Supabase أولاً (المصدر الحقيقي للمنتجات)
       if (window.Supabase && window.Supabase.Products) {
-        products = await window.Supabase.Products.getAll() || [];
+        products = await window.Supabase.Products.getAll(800) || [];
       }
 
       // fallback على Products.json لو Supabase غير متاح

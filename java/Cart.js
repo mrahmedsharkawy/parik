@@ -698,7 +698,7 @@ initX2Cart() || document.addEventListener("DOMContentLoaded", initX2Cart, { once
             let nextId = "";
             try {
                 if (window.Supabase && window.Supabase.Orders) {
-                    const existing = await Promise.race([ window.Supabase.Orders.getAll(), new Promise(resolve => setTimeout(() => resolve(null), 1800)) ]);
+                    const existing = await Promise.race([ window.Supabase.Orders.getAll(500), new Promise(resolve => setTimeout(() => resolve(null), 1800)) ]);
                     if (existing && existing.length > 0) {
                         nextId = "#" + (existing.reduce((max, o) => {
                             const n = parseInt((o.order_number || o.id || "").replace("#", "")) || 0;

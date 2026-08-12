@@ -140,7 +140,7 @@ async function sbFetch(path, opts) {
             apikey: SUPABASE_ANON,
             Authorization: "Bearer " + authToken,
             "Content-Type": "application/json",
-            Prefer: opts.prefer || "return=representation",
+            Prefer: opts.prefer || (opts.count ? "count=" + opts.count : "return=representation"),
           },
           opts.extraHeaders || {},
         ),
@@ -175,7 +175,17 @@ async function sbFetch(path, opts) {
   }
   const t = await res.text();
   recordSbNetwork(path, res.status, t.length);
-  return t ? JSON.parse(t) : null;
+  const data = t ? JSON.parse(t) : null;
+  if (opts.returnMeta) {
+    const range = res.headers.get("content-range") || "",
+      countText = range.includes("/") ? range.split("/").pop() : "";
+    return {
+      data: data,
+      count: countText && "*" !== countText ? parseInt(countText, 10) : null,
+      status: res.status,
+    };
+  }
+  return data;
 }
   function applyGoogleAnalyticsSetting(id) {
     try {
@@ -197,6 +207,65 @@ async function sbFetch(path, opts) {
     } catch (e) {}
   }
 window.sbFetch = sbFetch;
+function clampPageArgs(options, defaults) {
+  const opts = options || {},
+    page = Math.max(parseInt(opts.page || 1, 10) || 1, 1),
+    requested = parseInt(opts.pageSize || defaults.pageSize || 30, 10) || defaults.pageSize || 30,
+    pageSize = Math.max(1, Math.min(requested, defaults.maxPageSize || 100)),
+    offset = (page - 1) * pageSize;
+  return { opts: opts, page: page, pageSize: pageSize, offset: offset };
+}
+function cleanOrderParam(value, fallback, allowed) {
+  const raw = String(value || fallback || "").trim(),
+    parts = raw.split("."),
+    field = parts[0],
+    dir = (parts[1] || "desc").toLowerCase() === "asc" ? "asc" : "desc";
+  return allowed.indexOf(field) >= 0 ? field + "." + dir : fallback;
+}
+function queryText(value) {
+  return String(value || "").trim().replace(/[*,()]/g, " ").replace(/\s+/g, " ").slice(0, 80);
+}
+function addIlikeOr(parts, columns, value) {
+  const q = queryText(value);
+  if (!q) return;
+  parts.push(
+    "or=" +
+      encodeURIComponent(
+        columns.map(function (col) {
+          return col + ".ilike.*" + q + "*";
+        }).join(","),
+      ),
+  );
+}
+const ORDER_LIST_SELECT = [
+    "id",
+    "order_number",
+    "customer_id",
+    "customer_name",
+    "customer_phone",
+    "customer_email",
+    "total",
+    "status",
+    "payment_status",
+    "shipping_cost",
+    "items",
+    "cashback",
+    "cashback_status",
+    "created_at"
+  ].join(","),
+  CUSTOMER_LIST_SELECT = [
+    "id",
+    "full_name",
+    "name",
+    "phone",
+    "email",
+    "country",
+    "city",
+    "address",
+    "active",
+    "blocked",
+    "created_at"
+  ].join(",");
 const SupaCustomers = {
     upsert: async function (c) {
       if (c.phone) {
@@ -229,12 +298,50 @@ const SupaCustomers = {
         }),
       });
     },
-    getAll: async function () {
+    getPage: async function (options) {
+      const p = clampPageArgs(options, { pageSize: 50, maxPageSize: 200 }),
+        parts = [
+          "select=" + encodeURIComponent(CUSTOMER_LIST_SELECT),
+          "limit=" + p.pageSize,
+          "offset=" + p.offset,
+          "order=" +
+            cleanOrderParam(p.opts.sort, "created_at.desc", [
+              "created_at",
+              "full_name",
+              "phone",
+              "email",
+              "city",
+            ]),
+        ];
+      if (p.opts.active !== undefined && p.opts.active !== null && p.opts.active !== "")
+        parts.push("active=eq." + (p.opts.active ? "true" : "false"));
+      if (p.opts.phone) parts.push("phone=ilike.*" + encodeURIComponent(queryText(p.opts.phone)) + "*");
+      if (p.opts.email) parts.push("email=ilike.*" + encodeURIComponent(queryText(p.opts.email)) + "*");
+      if (p.opts.dateFrom) parts.push("created_at=gte." + encodeURIComponent(p.opts.dateFrom));
+      if (p.opts.dateTo) parts.push("created_at=lte." + encodeURIComponent(p.opts.dateTo));
+      addIlikeOr(parts, ["full_name", "name", "phone", "email", "city"], p.opts.search);
+      const meta = await sbFetch("customers?" + parts.join("&"), {
+        count: p.opts.includeCount ? p.opts.countMode || "planned" : "",
+        returnMeta: !0,
+      });
+      return {
+        data: meta.data || [],
+        count: meta.count,
+        page: p.page,
+        pageSize: p.pageSize,
+        hasMore: (meta.data || []).length === p.pageSize,
+      };
+    },
+    getAll: async function (limit) {
       const all = [];
       let offset = 0;
+      const max = Math.min(Math.max(parseInt(limit || 1000, 10) || 1000, 1), 5000);
+      console.warn("[Supabase] Customers.getAll is deprecated; use Customers.getPage(). Limited to " + max + " rows.");
       for (;;) {
+        const size = Math.min(1000, max - offset);
+        if (size <= 0) break;
         const batch = await sbFetch(
-          "customers?order=created_at.desc&limit=1000&offset=" + offset,
+          "customers?select=" + encodeURIComponent(CUSTOMER_LIST_SELECT) + "&order=created_at.desc&limit=" + size + "&offset=" + offset,
         );
         if (!batch || !batch.length) break;
         if ((all.push(...batch), batch.length < 1e3)) break;
@@ -298,25 +405,62 @@ const SupaCustomers = {
         }),
       });
     },
-    getAll: async function () {
+    getPage: async function (options) {
+      const p = clampPageArgs(options, { pageSize: 50, maxPageSize: 200 }),
+        parts = [
+          "select=" + encodeURIComponent(ORDER_LIST_SELECT),
+          "limit=" + p.pageSize,
+          "offset=" + p.offset,
+          "order=" +
+            cleanOrderParam(p.opts.sort, "created_at.desc", [
+              "created_at",
+              "status",
+              "total",
+              "order_number",
+              "payment_status",
+            ]),
+        ];
+      if (p.opts.status) parts.push("status=eq." + encodeURIComponent(p.opts.status));
+      if (p.opts.customerId) parts.push("customer_id=eq." + encodeURIComponent(p.opts.customerId));
+      if (p.opts.customerPhone)
+        parts.push("customer_phone=ilike.*" + encodeURIComponent(queryText(p.opts.customerPhone)) + "*");
+      if (p.opts.dateFrom) parts.push("created_at=gte." + encodeURIComponent(p.opts.dateFrom));
+      if (p.opts.dateTo) parts.push("created_at=lte." + encodeURIComponent(p.opts.dateTo));
+      addIlikeOr(parts, ["order_number", "customer_name", "customer_phone", "customer_email"], p.opts.search);
+      const meta = await sbFetch("orders?" + parts.join("&"), {
+        count: p.opts.includeCount ? p.opts.countMode || "planned" : "",
+        returnMeta: !0,
+      });
+      return {
+        data: meta.data || [],
+        count: meta.count,
+        page: p.page,
+        pageSize: p.pageSize,
+        hasMore: (meta.data || []).length === p.pageSize,
+      };
+    },
+    getAll: async function (limit) {
       const all = [];
-      let offset = 0;
+      const max = Math.min(Math.max(parseInt(limit || 1000, 10) || 1000, 1), 5000);
+      let page = 1;
       for (;;) {
-        const batch = await sbFetch(
-          "orders?select=*&order=created_at.desc&limit=1000&offset=" + offset,
-        );
+        const size = Math.min(200, max - all.length);
+        if (size <= 0) break;
+        const res = await this.getPage({ page, pageSize: size, sort: "created_at.desc" });
+        const batch = res && Array.isArray(res.data) ? res.data : [];
         if (!batch || !batch.length) break;
         all.push(...batch);
-        if (batch.length < 1000) break;
-        offset += 1000;
+        if (batch.length < size) break;
+        page += 1;
       }
       return all;
     },
-    getByPhone: async function (phone) {
+    getByPhone: async function (phone, limit) {
+      const max = Math.min(Math.max(parseInt(limit || 50, 10) || 50, 1), 200);
       try {
         return await sbFetch("rpc/get_orders_by_phone", {
           method: "POST",
-          body: JSON.stringify({ p_phone: phone }),
+          body: JSON.stringify({ p_phone: phone, p_limit: max }),
         });
       } catch (e) {
         return (
@@ -327,7 +471,8 @@ const SupaCustomers = {
           sbFetch(
             "orders?customer_phone=eq." +
               encodeURIComponent(phone) +
-              "&order=created_at.desc&limit=200",
+              "&select=" + encodeURIComponent(ORDER_LIST_SELECT) +
+              "&order=created_at.desc&limit=" + max,
           )
         );
       }
@@ -443,6 +588,22 @@ const SupaCustomers = {
     "id",
     "name_ar",
     "name_en",
+    "category_id",
+    "subcategory_id",
+    "price",
+    "old_price",
+    "stock",
+    "image",
+    "rating",
+    "featured",
+    "active",
+    "sort_order",
+    "created_at",
+  ].join(","),
+  PRODUCT_LEGACY_SELECT = [
+    "id",
+    "name_ar",
+    "name_en",
     "description_ar",
     "description_en",
     "category_id",
@@ -452,24 +613,22 @@ const SupaCustomers = {
     "stock",
     "image",
     "gallery",
-    "categories",
     "rating",
-    "rating_count",
     "featured",
     "active",
     "sort_order",
-    "timer_end",
     "created_at",
     "updated_at"
   ].join(","),
+  PRODUCT_DETAIL_SELECT = "*",
   productListCache = new Map(),
   SupaProducts = {
     getAll: async function (limit) {
       const max = Math.min(
           Math.max(parseInt(limit || 100000, 10) || 100000, 1),
-          100000,
+          5000,
         ),
-        pageSize = 1000,
+        pageSize = 500,
         cacheKey = "active:" + max,
         cached = productListCache.get(cacheKey),
         all = [];
@@ -485,21 +644,7 @@ const SupaCustomers = {
               "&offset=" +
               offset;
           let batch;
-          try {
-            batch = await sbFetch(
-              "products?select=" +
-                encodeURIComponent(PRODUCT_LIST_SELECT) +
-                "&" +
-                baseQuery,
-            );
-          } catch (err) {
-            if (offset > 0) throw err;
-            console.warn(
-              "[Supabase] Product slim select failed, using legacy product load:",
-              err.message,
-            );
-            batch = await sbFetch("products?" + baseQuery);
-          }
+          batch = await sbFetch("products?" + baseQuery);
           if (!batch || !batch.length) break;
           all.push(...batch);
           if (batch.length < size) break;
@@ -512,21 +657,83 @@ const SupaCustomers = {
     },
     getFeatured: async function () {
       return cachedSbFetch(
-        "products?featured=eq.true&active=eq.true&order=sort_order.asc",
+        "products?select=" + encodeURIComponent(PRODUCT_LIST_SELECT) + "&featured=eq.true&active=eq.true&order=sort_order.asc&limit=12",
         SB_TTL_PRODUCTS,
       );
     },
     getByCategory: async function (catId) {
       return cachedSbFetch(
-        "products?category_id=eq." +
+        "products?select=" + encodeURIComponent(PRODUCT_LIST_SELECT) + "&category_id=eq." +
           catId +
-          "&active=eq.true&order=sort_order.asc",
+          "&active=eq.true&order=sort_order.asc&limit=30",
         SB_TTL_PRODUCTS,
       );
     },
+    getPage: async function (options) {
+      const p = clampPageArgs(options, { pageSize: 24, maxPageSize: 60 }),
+        parts = [
+          "select=" + encodeURIComponent(PRODUCT_LIST_SELECT),
+          "limit=" + p.pageSize,
+          "offset=" + p.offset,
+          "order=" +
+            cleanOrderParam(p.opts.sort, "sort_order.asc", [
+              "sort_order",
+              "created_at",
+              "price",
+              "old_price",
+              "stock",
+              "rating",
+            ]),
+        ];
+      if (p.opts.active !== undefined && p.opts.active !== null && p.opts.active !== "")
+        parts.push("active=eq." + (p.opts.active ? "true" : "false"));
+      else parts.push("active=eq.true");
+      if (p.opts.featured !== undefined && p.opts.featured !== null && p.opts.featured !== "")
+        parts.push("featured=eq." + (p.opts.featured ? "true" : "false"));
+      if (p.opts.categoryId) parts.push("category_id=eq." + encodeURIComponent(p.opts.categoryId));
+      if (p.opts.subcategoryId) parts.push("subcategory_id=eq." + encodeURIComponent(p.opts.subcategoryId));
+      const meta = await cachedSbFetch("products?" + parts.join("&"), SB_TTL_PRODUCTS, {
+        count: p.opts.includeCount ? p.opts.countMode || "planned" : "",
+        returnMeta: !0,
+      });
+      return {
+        data: meta.data || [],
+        count: meta.count,
+        page: p.page,
+        pageSize: p.pageSize,
+        hasMore: (meta.data || []).length === p.pageSize,
+      };
+    },
+    getByCategoryPage: async function (options) {
+      return this.getPage(options || {});
+    },
+    search: async function (query, options) {
+      const p = clampPageArgs(options, { pageSize: 12, maxPageSize: 30 }),
+        q = queryText(query);
+      if (!q) return { data: [], count: 0, page: p.page, pageSize: p.pageSize, hasMore: !1 };
+      const parts = [
+        "select=" + encodeURIComponent(PRODUCT_LIST_SELECT),
+        "active=eq.true",
+        "limit=" + p.pageSize,
+        "offset=" + p.offset,
+        "order=" + cleanOrderParam(p.opts.sort, "sort_order.asc", ["sort_order", "created_at", "price", "rating"]),
+      ];
+      addIlikeOr(parts, ["name_ar", "name_en"], q);
+      const meta = await cachedSbFetch("products?" + parts.join("&"), SB_TTL_PRODUCTS, {
+        count: p.opts.includeCount ? p.opts.countMode || "planned" : "",
+        returnMeta: !0,
+      });
+      return {
+        data: meta.data || [],
+        count: meta.count,
+        page: p.page,
+        pageSize: p.pageSize,
+        hasMore: (meta.data || []).length === p.pageSize,
+      };
+    },
     getById: async function (id) {
       var r = await cachedSbFetch(
-        "products?id=eq." + id + "&limit=1",
+        "products?select=" + encodeURIComponent(PRODUCT_DETAIL_SELECT) + "&id=eq." + id + "&limit=1",
         SB_TTL_PRODUCTS,
       );
       return r && r[0] ? r[0] : null;
@@ -636,7 +843,13 @@ const SupaCustomers = {
     },
     pullOrders: async function () {
       try {
-        var remote = await SupaOrders.getAll();
+        var profile = {};
+        try {
+          profile = JSON.parse(localStorage.getItem("x2_profile") || "{}");
+        } catch (_) {}
+        var phone = profile.phone || profile.customerPhone || "";
+        if (!phone) return null;
+        var remote = await SupaOrders.getByPhone(phone, 50);
         if (!remote || !remote.length) return null;
         var local = remote.map(function (r) {
           return {
@@ -870,7 +1083,8 @@ const SupaCustomers = {
   },
   SupaVisitors = {
     getAll: async function (limit) {
-      return sbFetch("visitors?limit=" + (limit || 500));
+      const max = Math.min(Math.max(parseInt(limit || 500, 10) || 500, 1), 1000);
+      return sbFetch("visitors?order=visited_at.desc&limit=" + max);
     },
     getToday: async function () {
       return sbFetch(
@@ -892,7 +1106,7 @@ const SupaCustomers = {
       });
     },
     getStats: async function () {
-      const all = await this.getAll(1e4),
+      const all = await this.getAll(1000),
         today = new Date().toDateString(),
         todayCount = (all || []).filter(
           (v) => new Date(v.visited_at).toDateString() === today,

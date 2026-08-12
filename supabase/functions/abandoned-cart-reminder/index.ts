@@ -95,13 +95,20 @@ Deno.serve(async (req) => {
     let sent = 0;
     let failed = 0;
     let cleared = 0;
+    const endpoints = [...new Set(rows.map((row) => String(row.endpoint || '').trim()).filter(Boolean))];
+    const { data: subscriptions, error: subError } = endpoints.length
+      ? await supabase
+          .from('push_subscriptions')
+          .select('endpoint, p256dh, auth, user_lang')
+          .in('endpoint', endpoints)
+      : { data: [], error: null };
+    if (subError) throw subError;
+    const subscriptionByEndpoint = new Map(
+      (subscriptions || []).map((sub) => [String(sub.endpoint || '').trim(), sub]),
+    );
 
     for (const row of rows) {
-      const { data: sub } = await supabase
-        .from('push_subscriptions')
-        .select('endpoint, p256dh, auth, user_lang')
-        .eq('endpoint', row.endpoint)
-        .maybeSingle();
+      const sub = subscriptionByEndpoint.get(String(row.endpoint || '').trim());
 
       if (!sub) {
         cleared++;

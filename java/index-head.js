@@ -184,7 +184,7 @@
     }
   }
   try {
-    var raw = sessionStorage.getItem('x2_prods_ss_v4') || localStorage.getItem('x2_products_cache_v3');
+    var raw = sessionStorage.getItem('x2_prods_ss_v5') || localStorage.getItem('x2_products_cache_v4');
     if (!raw) return;
     var parsed = JSON.parse(raw);
     var list = parsed && Array.isArray(parsed.data) ? parsed.data : [];
