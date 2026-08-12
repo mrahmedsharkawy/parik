@@ -1,6 +1,6 @@
 (function(){
   var slider=document.getElementById('mobBannerSlider');
-  if(!slider||window.innerWidth>899)return;
+  if(!slider)return;
   var track=document.getElementById('mobSliderTrack');
   var dots=document.querySelectorAll('.mob-slider-dot');
   var slides=track?track.querySelectorAll('.mob-slider-slide'):[];

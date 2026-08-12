@@ -1,6 +1,10 @@
 (function(){
   function initCompact(){
     var update=function(){
+      if(window.innerWidth>=900){
+        document.body.classList.remove('mobile-header-compact');
+        return;
+      }
       var y=Math.max(
         window.scrollY||0,
         window.pageYOffset||0,
@@ -17,6 +21,10 @@
     var sentinel=document.getElementById('hdrSentinel');
     if(sentinel&&'IntersectionObserver'in window){
       new IntersectionObserver(function(e){
+        if(window.innerWidth>=900){
+          document.body.classList.remove('mobile-header-compact');
+          return;
+        }
         document.body.classList.toggle('mobile-header-compact',!e[0].isIntersecting);
       },{rootMargin:'-54px 0px 0px 0px'}).observe(sentinel);
     }

@@ -15,6 +15,7 @@
     @media(max-width:1280px){.grid{grid-template-columns:1fr 1fr}.stats-panel{grid-column:1/-1}.stats-total{grid-template-columns:repeat(4,1fr)}}
     @media(max-width:900px){.grid{grid-template-columns:1fr}.list{max-height:none}.twocol{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.row{align-items:flex-start;flex-direction:column}.actions{justify-content:flex-start}.stats-total,.invoice-summary{grid-template-columns:1fr}.stats-panel{grid-column:auto}}
   </style>
+  <link rel="stylesheet" href="/style/admin-pro.css?v=20260812-responsive">
 </head>
 <body>
 <!-- Google Tag Manager -->
@@ -89,8 +90,29 @@ const CONFIG={
   accountBase:'https://bariqgifts.com/account?section=invoices&order='
 };
 const STATUS={pending:['قيد الانتظار','b-warn','⏳'],processing:['قيد المعالجة','','🔄'],confirmed:['مؤكد','b-ok','✅'],manufacturing:['في مرحلة التصنيع','','🔨'],ready:['طلبك جاهز','b-ok','🎁'],shipped:['تم الشحن','','🚚'],delivered:['تم التوصيل','b-ok','✅'],cancelled:['ملغى','b-red','❌'],returned:['مرتجع','b-red','↩️']};
+const ADMIN_AUTH_KEY='bariq_admin_auth_v1';
+function restoreSharedAdminAuth(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(ADMIN_AUTH_KEY)||'null');
+    if(!saved||!saved.ok||Date.now()>Number(saved.expires||0))return false;
+    token=saved.access||saved.token||'';
+    refreshToken=saved.refresh||saved.refreshToken||'';
+    if(token)sessionStorage.setItem('bariq_sales_token',token);
+    if(refreshToken)sessionStorage.setItem('bariq_sales_refresh',refreshToken);
+    return !!(token||refreshToken);
+  }catch(e){return false}
+}
+function saveSharedAdminAuth(name,auth){
+  token=auth&&auth.access_token||token||'';
+  refreshToken=auth&&auth.refresh_token||refreshToken||'';
+  const tokenExp=Date.now()+((auth&&auth.expires_in)||3600)*1000;
+  sessionStorage.setItem('bariq_sales_token',token);
+  sessionStorage.setItem('bariq_sales_refresh',refreshToken);
+  try{localStorage.setItem(ADMIN_AUTH_KEY,JSON.stringify({ok:true,name:name||'admin',access:token,refresh:refreshToken,tokenExp,expires:Date.now()+30*24*60*60*1000}))}catch(e){}
+}
 let token=sessionStorage.getItem('bariq_sales_token')||'';
 let refreshToken=sessionStorage.getItem('bariq_sales_refresh')||'';
+restoreSharedAdminAuth();
 let orders=[];
 let selected=null;
 let deferredInstallPrompt=null;
@@ -105,9 +127,9 @@ function invoiceLink(o){const n=orderNum(o);return CONFIG.accountBase+encodeURIC
 function remaining(inv){return Math.max(0,(Number(inv&&inv.total)||0)-(Number(inv&&inv.due)||0))}
 function normPhone(v){let p=String(v||'').replace(/\D/g,'');if(p.startsWith('00971'))p=p.slice(2);if(/^05\d{8}$/.test(p))p='971'+p.slice(1);else if(/^5\d{8}$/.test(p))p='971'+p;return p}
 async function api(path,opt={}){const res=await fetch(CONFIG.supabaseUrl+'/rest/v1/'+path,{...opt,headers:{apikey:CONFIG.anon,Authorization:'Bearer '+(token||CONFIG.anon),'Content-Type':'application/json',Prefer:opt.prefer||'return=representation',...(opt.headers||{})}});if(!res.ok){if((res.status===401||res.status===403)&&await refreshAuth())return api(path,opt);throw new Error(await res.text())}return res.status===204?null:res.json()}
-async function refreshAuth(){if(!refreshToken)return false;try{const res=await fetch(CONFIG.supabaseUrl+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{apikey:CONFIG.anon,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:refreshToken})});const data=await res.json();if(!res.ok||!data.access_token)return false;token=data.access_token;refreshToken=data.refresh_token||refreshToken;sessionStorage.setItem('bariq_sales_token',token);sessionStorage.setItem('bariq_sales_refresh',refreshToken);localStorage.removeItem('bariq_sales_token');localStorage.removeItem('bariq_sales_refresh');return true}catch(e){return false}}
-async function login(){const msg=$('loginMsg');msg.textContent='جارٍ الدخول...';try{const res=await fetch(CONFIG.supabaseUrl+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:CONFIG.anon,'Content-Type':'application/json'},body:JSON.stringify({email:$('email').value.trim(),password:$('password').value})});const data=await res.json();if(!res.ok)throw new Error(data.error_description||data.msg||'فشل الدخول');token=data.access_token;refreshToken=data.refresh_token||'';const admin=await api('admins?or=(user_id.eq.'+encodeURIComponent(data.user.id)+',email.eq.'+encodeURIComponent(data.user.email)+')&active=eq.true&limit=1');if(!admin||!admin[0])throw new Error('هذا الحساب ليس أدمن نشط');sessionStorage.setItem('bariq_sales_token',token);sessionStorage.setItem('bariq_sales_refresh',refreshToken);localStorage.removeItem('bariq_sales_token');localStorage.removeItem('bariq_sales_refresh');showApp();await loadOrders()}catch(e){token='';refreshToken='';msg.textContent='خطأ: '+e.message}}
-function logout(){sessionStorage.removeItem('bariq_sales_token');sessionStorage.removeItem('bariq_sales_refresh');localStorage.removeItem('bariq_sales_token');localStorage.removeItem('bariq_sales_refresh');location.reload()}
+async function refreshAuth(){if(!refreshToken)restoreSharedAdminAuth();if(!refreshToken)return false;try{const res=await fetch(CONFIG.supabaseUrl+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{apikey:CONFIG.anon,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:refreshToken})});const data=await res.json();if(!res.ok||!data.access_token){if(res.status===400||res.status===401)localStorage.removeItem(ADMIN_AUTH_KEY);return false}saveSharedAdminAuth('admin',{...data,refresh_token:data.refresh_token||refreshToken});return true}catch(e){return false}}
+async function login(){const msg=$('loginMsg');msg.textContent='جارٍ الدخول...';try{const res=await fetch(CONFIG.supabaseUrl+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:CONFIG.anon,'Content-Type':'application/json'},body:JSON.stringify({email:$('email').value.trim(),password:$('password').value})});const data=await res.json();if(!res.ok)throw new Error(data.error_description||data.msg||'فشل الدخول');token=data.access_token;refreshToken=data.refresh_token||'';const admin=await api('admins?or=(user_id.eq.'+encodeURIComponent(data.user.id)+',email.eq.'+encodeURIComponent(data.user.email)+')&active=eq.true&limit=1');if(!admin||!admin[0])throw new Error('هذا الحساب ليس أدمن نشط');saveSharedAdminAuth(admin[0].full_name||data.user.email||'admin',data);showApp();await loadOrders()}catch(e){token='';refreshToken='';msg.textContent='خطأ: '+e.message}}
+function logout(){sessionStorage.removeItem('bariq_sales_token');sessionStorage.removeItem('bariq_sales_refresh');localStorage.removeItem(ADMIN_AUTH_KEY);location.reload()}
 function showApp(){$('loginBox').classList.add('hide');$('app').classList.remove('hide')}
 async function loadOrders(){try{orders=await api('orders?select=id,order_number,created_at,updated_at,customer_name,customer_phone,customer_email,total,status,cashback,cashback_status,notes,items&order=created_at.desc&limit=1000')||[];render();toast('تم تحديث الطلبات')}catch(e){toast('فشل تحميل الطلبات');alert('فشل تحميل الطلبات: '+e.message)}}
 function renderStatusFilter(){const s=$('statusFilter');s.innerHTML='<option value="all">كل حالات الطلب</option>'+Object.keys(STATUS).map(k=>'<option value="'+k+'">'+STATUS[k][0]+'</option>').join('')}

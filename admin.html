@@ -198,6 +198,7 @@
   #gate h2{margin:0 0 6px;color:var(--navy)}
   #gate p{color:#7a8296;font-size:.85rem;margin:0 0 18px}
 </style>
+<link rel="stylesheet" href="/style/admin-pro.css?v=20260812-responsive">
 <script src="/java/supabase.js"></script></head>
 <body>
 
@@ -216,6 +217,7 @@
 <div class="topbar">
   <h1>⚙️ لوحة التحكم <span class="badge">Bariq</span></h1>
   <div class="actions">
+    <a class="btn btn-navy btn-sm" href="/bot-admin.html">🤖 إدارة البوت</a>
     <button class="btn-ghost btn-sm" onclick="reloadFromFile()">↻ تحميل من الملف</button>
     <button class="btn-danger btn-sm" onclick="syncFromSupabase()">🔄 مزامنة من Supabase</button>
     <button class="btn-gold btn-sm" onclick="exportProducts()">⬇ تنزيل Products.json</button>
@@ -1345,15 +1347,18 @@ function rememberAdminReportsSession(name, authData) {
   const token = authData && authData.access_token || sessionStorage.getItem('admin_token') || '';
   const refreshToken = authData && authData.refresh_token || sessionStorage.getItem('admin_refresh_token') || '';
   if (!token && !refreshToken) return;
+  const tokenExp = Date.now() + ((authData && authData.expires_in) || 3600) * 1000;
+  const payload = {
+    ok: true,
+    name: name || 'admin',
+    access: token,
+    refresh: refreshToken,
+    tokenExp: tokenExp,
+    expires: Date.now() + 30 * 24 * 60 * 60 * 1000
+  };
   try {
-    sessionStorage.setItem('x2_admin_reports_session', JSON.stringify({
-      ok: true,
-      name: name || 'admin',
-      token: token,
-      refreshToken: refreshToken,
-      tokenExp: Date.now() + ((authData && authData.expires_in) || 3600) * 1000,
-      expires: Date.now() + 30 * 24 * 60 * 60 * 1000
-    }));
+    localStorage.setItem('bariq_admin_auth_v1', JSON.stringify(payload));
+    sessionStorage.setItem('x2_admin_reports_session', JSON.stringify({...payload,token:token,refreshToken:refreshToken}));
   } catch(e) {}
 }
 
@@ -1363,10 +1368,13 @@ function clearAdminAuthSession(){
   sessionStorage.removeItem('admin_token');
   sessionStorage.removeItem('admin_refresh_token');
   sessionStorage.removeItem('admin_token_exp');
+  sessionStorage.removeItem('admin_name');
   sessionStorage.removeItem('x2_admin_reports_session');
+  localStorage.removeItem('bariq_admin_auth_v1');
 }
 
 async function refreshAdminToken() {
+  restoreAdminReportsSession();
   const refreshToken = sessionStorage.getItem('admin_refresh_token');
   if (!refreshToken) return null;
   try {
@@ -1384,6 +1392,7 @@ async function refreshAdminToken() {
       sessionStorage.setItem('admin_token', data.access_token);
       sessionStorage.setItem('admin_refresh_token', data.refresh_token || refreshToken);
       sessionStorage.setItem('admin_token_exp', String(Date.now() + (data.expires_in || 3600) * 1000));
+      rememberAdminReportsSession(sessionStorage.getItem('admin_name') || 'admin', {...data, refresh_token:data.refresh_token || refreshToken});
       return data.access_token;
     }
   } catch(e) {}
@@ -1405,10 +1414,10 @@ async function getValidAdminToken() {
 }
 function restoreAdminReportsSession(){
   try{
-    const saved=JSON.parse(sessionStorage.getItem('x2_admin_reports_session')||'null');
+    const saved=JSON.parse(localStorage.getItem('bariq_admin_auth_v1')||sessionStorage.getItem('x2_admin_reports_session')||'null');
     if(!saved||!saved.ok||Date.now()>Number(saved.expires||0))return false;
-    if(saved.token)sessionStorage.setItem('admin_token',saved.token);
-    if(saved.refreshToken)sessionStorage.setItem('admin_refresh_token',saved.refreshToken);
+    if(saved.access||saved.token)sessionStorage.setItem('admin_token',saved.access||saved.token);
+    if(saved.refresh||saved.refreshToken)sessionStorage.setItem('admin_refresh_token',saved.refresh||saved.refreshToken);
     if(saved.tokenExp)sessionStorage.setItem('admin_token_exp',String(saved.tokenExp));
     sessionStorage.setItem('admin_ok','1');
     if(saved.name)sessionStorage.setItem('admin_name',saved.name);
