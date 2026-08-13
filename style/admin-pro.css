@@ -94,6 +94,74 @@ body:before{display:none !important}
   -webkit-backdrop-filter:none !important;
 }
 
+@media (min-width: 1100px){
+  body{
+    padding-right:270px !important;
+    padding-left:0 !important;
+  }
+
+  .topbar,
+  .top{
+    margin-right:-270px !important;
+  }
+
+  .tabs{
+    position:fixed !important;
+    top:76px !important;
+    right:18px !important;
+    left:auto !important;
+    z-index:18 !important;
+    width:240px !important;
+    height:calc(100vh - 92px) !important;
+    max-height:calc(100vh - 92px) !important;
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:stretch !important;
+    gap:9px !important;
+    margin:0 !important;
+    padding:12px !important;
+    background:rgba(255,255,255,.78) !important;
+    border:1px solid rgba(226,232,242,.78) !important;
+    border-radius:22px !important;
+    box-shadow:0 14px 34px rgba(21,37,70,.12) !important;
+    backdrop-filter:blur(14px) saturate(130%) !important;
+    -webkit-backdrop-filter:blur(14px) saturate(130%) !important;
+  }
+
+  .tabs::-webkit-scrollbar{
+    width:4px;
+  }
+
+  .tabs::-webkit-scrollbar-thumb{
+    background:rgba(21,37,70,.24);
+    border-radius:999px;
+  }
+
+  .tab{
+    width:100% !important;
+    min-height:48px !important;
+    justify-content:flex-start !important;
+    text-align:right !important;
+    border-radius:15px !important;
+    padding:11px 14px !important;
+    font-size:.9rem !important;
+    line-height:1.25 !important;
+    white-space:normal !important;
+    box-shadow:none !important;
+  }
+
+  .tab.active{
+    transform:translateX(-4px);
+  }
+
+  .wrap,
+  .app{
+    width:min(100% - 28px,1500px) !important;
+  }
+}
+
 .tab{
   min-height:38px !important;
   padding:8px 16px !important;
@@ -119,6 +187,22 @@ body:before{display:none !important}
   color:#fff !important;
   border-color:var(--admin-gold) !important;
   box-shadow:0 0 0 2px rgba(224,190,56,.18),0 4px 12px rgba(21,37,70,.12) !important;
+}
+
+@media (min-width: 1100px){
+  .tabs .tab,
+  .tabs a.tab{
+    width:100% !important;
+    min-height:48px !important;
+    justify-content:flex-start !important;
+    text-align:right !important;
+    border-radius:15px !important;
+    padding:11px 14px !important;
+    font-size:.9rem !important;
+    line-height:1.25 !important;
+    white-space:normal !important;
+    box-shadow:none !important;
+  }
 }
 
 .card,

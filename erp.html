@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f8fafd">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="إدارة بريق">
+  <title>نظام إدارة بريق</title>
+  <link rel="manifest" href="/erp-manifest.json">
+  <link rel="icon" type="image/png" sizes="96x96" href="/assets/icon-96.png?v=erp-20260813">
+  <link rel="apple-touch-icon" href="/assets/icon.png?v=erp-20260813">
+  <link rel="stylesheet" href="/style/erp.css?v=20260813-sidebar-admin-style-1">
+  <script src="/java/erp-pwa.js?v=20260813" defer></script>
+</head>
+<body>
+  <div class="erp-shell">
+    <aside class="erp-sidebar" id="erpSidebar" aria-label="تنقل نظام الإدارة">
+      <a class="erp-brand" href="/erp" aria-label="نظام إدارة بريق">
+        <img src="/assets/icon.png" alt="">
+        <span>
+          <b>نظام إدارة بريق</b>
+          <small>نظام إدارة بريق</small>
+        </span>
+      </a>
+
+      <nav class="erp-nav">
+        <button class="erp-nav-item active" data-view="dashboard" type="button"><span>📊</span><b>لوحة القيادة</b></button>
+        <button class="erp-nav-item" data-view="orders" type="button"><span>🧾</span><b>الطلبات اليدوية</b></button>
+        <button class="erp-nav-item" data-view="finance" type="button"><span>💳</span><b>المالية</b></button>
+        <button class="erp-nav-item" data-view="expenses" type="button"><span>🧾</span><b>المصروفات</b></button>
+        <button class="erp-nav-item" data-view="inventory" type="button"><span>📦</span><b>المخزون والخامات</b></button>
+        <button class="erp-nav-item" data-view="purchases" type="button"><span>🛒</span><b>المشتريات</b></button>
+        <button class="erp-nav-item" data-view="suppliers" type="button"><span>🏢</span><b>الموردين</b></button>
+        <button class="erp-nav-item" data-view="hr" type="button"><span>👥</span><b>الموظفين</b></button>
+        <button class="erp-nav-item" data-view="payroll" type="button"><span>💰</span><b>الرواتب</b></button>
+        <button class="erp-nav-item" data-view="documents" type="button"><span>📁</span><b>المستندات</b></button>
+        <button class="erp-nav-item" data-view="reports" type="button"><span>📈</span><b>التقارير</b></button>
+        <button class="erp-nav-item" data-view="settings" type="button"><span>⚙️</span><b>الصلاحيات</b></button>
+      </nav>
+
+      <div class="erp-sidebar-foot">
+        <div class="erp-sync-dot"></div>
+        <div>
+          <b id="erpSyncState">جاهز</b>
+          <small id="erpLastSync">لم تتم المزامنة بعد</small>
+        </div>
+      </div>
+    </aside>
+
+    <div class="erp-main">
+      <header class="erp-topbar">
+        <button class="erp-icon-btn" id="erpMenuBtn" type="button" aria-label="فتح القائمة">☰</button>
+        <div class="erp-search">
+          <span>⌕</span>
+          <input id="erpSearch" type="search" placeholder="ابحث في الطلبات، المصروفات، الموردين..." autocomplete="off">
+        </div>
+        <button class="erp-icon-btn erp-notify-btn" id="erpNotifyBtn" type="button" title="التنبيهات" aria-label="التنبيهات">🔔<span id="erpNotifyBadge" hidden>0</span></button>
+        <a class="erp-admin-link" href="/admin.html" target="_blank" rel="noopener">الإدارة</a>
+        <div class="erp-user">
+          <span class="erp-avatar">B</span>
+          <span><b id="erpUserName">Bariq Admin</b><small>مدير النظام</small></span>
+        </div>
+      </header>
+
+      <main class="erp-content">
+        <section class="erp-page-head">
+          <div>
+            <p class="erp-eyebrow">نظام إدارة بريق</p>
+            <h1 id="erpPageTitle">لوحة القيادة</h1>
+            <p id="erpPageSubtitle">نظام إدارة داخلي يعتمد فقط على البيانات التي يتم إدخالها يدويًا.</p>
+          </div>
+          <div class="erp-periods" role="group" aria-label="فلترة الفترة">
+            <button class="active" data-period="today" type="button">اليوم</button>
+            <button data-period="week" type="button">7 أيام</button>
+            <button data-period="month" type="button">الشهر</button>
+            <button data-period="all" type="button">الكل</button>
+          </div>
+        </section>
+
+        <section class="erp-kpis" id="erpKpis" aria-label="مؤشرات الأداء"></section>
+        <section class="erp-search-results" id="erpSearchResults" hidden></section>
+
+        <section class="erp-view active" id="view-dashboard">
+          <div class="erp-grid erp-grid-main">
+            <article class="erp-card erp-chart-card">
+              <div class="erp-card-head">
+                <div><h2>الإيرادات مقابل المصروفات</h2><p>قراءة مالية من القيود اليدوية داخل النظام فقط.</p></div>
+                <span class="erp-chip">تلقائي</span>
+              </div>
+              <div class="erp-line-chart" id="erpRevenueChart"></div>
+            </article>
+            <article class="erp-card">
+              <div class="erp-card-head"><div><h2>توزيع المصروفات</h2><p>مصروفات التشغيل حسب النوع.</p></div></div>
+              <div class="erp-donut-wrap">
+                <div class="erp-donut" id="erpExpenseDonut"><span>0%</span></div>
+                <div class="erp-legend" id="erpExpenseLegend"></div>
+              </div>
+            </article>
+          </div>
+          <div class="erp-grid erp-grid-secondary">
+            <article class="erp-card">
+              <div class="erp-card-head"><div><h2>فصل بيانات المتجر</h2><p>نظام الإدارة لا يسحب منتجات المتجر كمصدر مخزون.</p></div></div>
+              <div class="erp-list" id="topProducts"></div>
+            </article>
+            <article class="erp-card">
+              <div class="erp-card-head"><div><h2>فصل الطلبات</h2><p>نظام الإدارة لا يسحب طلبات المتجر تلقائيًا.</p></div></div>
+              <div class="erp-list" id="statusBreakdown"></div>
+            </article>
+            <article class="erp-card">
+              <div class="erp-card-head"><div><h2>ملخص الأعمال</h2><p>أهم الإشارات التي تحتاج متابعة.</p></div></div>
+              <div class="erp-insights" id="erpInsights"></div>
+            </article>
+            <article class="erp-card">
+              <div class="erp-card-head"><div><h2>آخر المعاملات</h2><p>إيرادات ومصروفات تم إدخالها يدويًا.</p></div></div>
+              <div class="erp-list" id="erpRecentTransactions"></div>
+            </article>
+            <article class="erp-card">
+              <div class="erp-card-head"><div><h2>النشاط الحديث</h2><p>حركة النظام والبيانات.</p></div></div>
+              <div class="erp-timeline" id="erpActivity"></div>
+            </article>
+          </div>
+        </section>
+
+        <section class="erp-view" id="view-orders">
+          <div class="erp-grid erp-grid-main">
+            <article class="erp-card">
+              <div class="erp-card-head"><div><h2>إضافة طلب يدوي</h2><p>أدخل الطلبات يدويًا داخل نظام الإدارة بدون سحب تلقائي من المتجر.</p></div></div>
+              <form class="erp-form" data-erp-form="manual-order">
+                <label>رقم الطلب<input name="order_number" required placeholder="مثال: 1201"></label>
+                <label>اسم العميل<input name="customer_name" required placeholder="اسم العميل"></label>
+                <label>الهاتف<input name="customer_phone" placeholder="05xxxxxxxx"></label>
+                <label>البريد الإلكتروني<input name="customer_email" type="email" placeholder="name@example.com"></label>
+                <label style="grid-column:1/-1">العنوان<input name="customer_address" placeholder="الإمارة، المنطقة، تفاصيل العنوان"></label>
+                <label>الإجمالي<input name="total" type="number" min="0" step="0.01" value="0"></label>
+                <label>حالة الطلب<select name="status"><option value="new">جديد</option><option value="processing">قيد المعالجة</option><option value="ready">جاهز</option><option value="delivered">تم التسليم</option><option value="cancelled">ملغي</option></select></label>
+                <label style="grid-column:1/-1">ملاحظات<input name="notes" placeholder="ملاحظات داخلية"></label>
+                <button class="erp-primary" type="submit">حفظ الطلب</button>
+              </form>
+            </article>
+            <article class="erp-card">
+              <div class="erp-card-head"><div><h2>الطلبات اليدوية</h2><p>آخر الطلبات التي تم إدخالها من هذه الصفحة.</p></div></div>
+              <div class="erp-table-wrap">
+                <table>
+                  <thead><tr><th>رقم الطلب</th><th>العميل</th><th>الهاتف</th><th>البريد</th><th>العنوان</th><th>الحالة</th><th>الإجمالي</th></tr></thead>
+                  <tbody id="erpManualOrdersRows"></tbody>
+                </table>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="erp-view" id="view-finance">
+          <div class="erp-grid erp-grid-main">
+            <article class="erp-card">
+              <div class="erp-card-head"><div><h2>إضافة إيراد</h2><p>كل إيراد يتم إدخاله يدويًا داخل نظام الإدارة. رقم الطلب أو الفاتورة اختياري فقط.</p></div></div>
+              <form class="erp-form" data-erp-form="income">
+                <label>التاريخ<input name="transaction_date" type="date" data-today required></label>
+                <label>المبلغ<input name="amount" type="number" min="0" step="0.01" required placeholder="0.00"></label>
+                <label>الوصف<input name="description" required placeholder="مثال: مبيعات يومية"></label>
+                <label>التصنيف<select name="category_id" data-income-categories></select></label>
+                <label>طريقة الدفع<select name="payment_method" data-payment-methods></select></label>
+                <label>مرجع اختياري<input name="external_reference" placeholder="طلب / فاتورة / مرجع"></label>
+                <label>رقم فاتورة اختياري<input name="invoice_number" placeholder="INV-001"></label>
+                <label>ملاحظات<input name="notes" placeholder="ملاحظات"></label>
+                <button class="erp-primary" type="submit">حفظ الإيراد</button>
+              </form>
+            </article>
+            <article class="erp-card"><div class="erp-card-head"><div><h2>محرك الربح</h2><p>حسابات تلقائية من القيود اليدوية فقط.</p></div></div><div id="erpProfitEngine" class="erp-metric-stack"></div></article>
+            <article class="erp-card" style="grid-column:1/-1"><div class="erp-card-head"><div><h2>دفتر الأستاذ</h2><p>جدول قابل للتعديل السريع مثل Excel. عدّل الوصف أو المبلغ ثم اخرج من الخلية للحفظ.</p></div></div><div class="erp-table-wrap"><table><thead><tr><th>التاريخ</th><th>البند</th><th>النوع</th><th>المبلغ</th><th>المرجع</th></tr></thead><tbody id="erpLedgerRows"></tbody></table></div></article>
+          </div>
+        </section>
+
+        <section class="erp-view" id="view-expenses">
+          <div class="erp-grid erp-grid-main">
+            <article class="erp-card"><div class="erp-card-head"><div><h2>إضافة مصروف</h2><p>يتم حفظ المصروف في جدول النظام داخل قاعدة البيانات.</p></div></div><form class="erp-form" data-erp-form="expense"><label>التاريخ<input name="transaction_date" type="date" data-today required></label><label>المبلغ<input name="amount" type="number" min="0" step="0.01" required placeholder="0.00"></label><label>الوصف<input name="description" required placeholder="مثال: إيجار، بنزين، مواد خام"></label><label>التصنيف<select name="category_id" data-expense-categories></select></label><label>المورد<select name="supplier_id" data-suppliers></select></label><label>طريقة الدفع<select name="payment_method" data-payment-methods></select></label><label>رقم فاتورة<input name="invoice_number" placeholder="اختياري"></label><label>ملاحظات<input name="notes" placeholder="ملاحظات"></label><button class="erp-primary" type="submit">حفظ المصروف</button></form></article>
+            <article class="erp-card"><div class="erp-card-head"><div><h2>سجل المصروفات</h2><p>آخر المصروفات المدخلة.</p></div></div><div class="erp-list" id="erpExpensesList"></div></article>
+          </div>
+        </section>
+
+        <section class="erp-view" id="view-inventory">
+          <div class="erp-grid erp-grid-main">
+            <article class="erp-card"><div class="erp-card-head"><div><h2>إضافة خامة</h2><p>يتم إنشاء الخامة يدويًا داخل نظام الإدارة.</p></div></div><form class="erp-form" data-erp-form="material"><label>الاسم<input name="name" required placeholder="أكريليك 3 مم"></label><label>الكود<input name="code" placeholder="رمز الخامة"></label><label>الوحدة<input name="unit" required placeholder="لوح / متر / قطعة"></label><label>رصيد افتتاحي<input name="opening_quantity" type="number" step="0.001" value="0"></label><label>تكلفة افتتاحية<input name="opening_cost" type="number" step="0.01" value="0"></label><label>حد التنبيه<input name="minimum_stock" type="number" step="0.001" value="0"></label><label>المورد<select name="supplier_id" data-suppliers></select></label><label>المكان<input name="location" placeholder="المخزن / الرف"></label><button class="erp-primary" type="submit">حفظ الخامة</button></form></article>
+            <article class="erp-card"><div class="erp-card-head"><div><h2>حركة مخزون</h2><p>شراء، استهلاك، تالف، إضافة، تصحيح، تحويل.</p></div></div><form class="erp-form" data-erp-form="stock"><label>الخامة<select name="material_id" data-materials required></select></label><label>التاريخ<input name="movement_date" type="date" data-today required></label><label>الحركة<select name="movement_type"><option value="purchase">شراء</option><option value="consumption">استهلاك</option><option value="waste">تالف</option><option value="addition">إضافة</option><option value="adjustment">تصحيح</option><option value="transfer">تحويل</option></select></label><label>الكمية<input name="quantity" type="number" step="0.001" required></label><label>تكلفة الوحدة<input name="unit_cost" type="number" step="0.01" placeholder="اختياري"></label><label>مرجع<input name="reference" placeholder="اختياري"></label><label style="grid-column:1/-1">ملاحظات<input name="notes" placeholder="ملاحظات"></label><button class="erp-primary" type="submit">حفظ الحركة</button></form></article>
+            <article class="erp-card" style="grid-column:1/-1"><div class="erp-card-head"><div><h2>الخامات والمخزون</h2><p>المتوفر الحالي ومتوسط التكلفة وتنبيهات المخزون من حركات النظام.</p></div></div><div class="erp-table-wrap"><table><thead><tr><th>الخامة</th><th>الوحدة</th><th>المتوفر</th><th>حد التنبيه</th><th>الحالة</th></tr></thead><tbody id="erpMaterialsRows"></tbody></table></div></article>
+            <article class="erp-card" style="grid-column:1/-1"><div class="erp-card-head"><div><h2>مخزون منخفض</h2><p>تنبيهات الخامات التي وصلت للحد الأدنى.</p></div></div><div class="erp-list" id="erpLowStock"></div></article>
+          </div>
+        </section>
+
+        <section class="erp-view" id="view-purchases">
+          <div class="erp-grid erp-grid-main">
+            <article class="erp-card"><div class="erp-card-head"><div><h2>إضافة أمر شراء</h2><p>شراء خامة يدويًا، ولو الحالة مستلم يتم تحديث المخزون تلقائيًا.</p></div></div><form class="erp-form" data-erp-form="purchase"><label>المورد<select name="supplier_id" data-suppliers required></select></label><label>التاريخ<input name="purchase_date" type="date" data-today required></label><label>رقم الفاتورة<input name="invoice_number" placeholder="اختياري"></label><label>الخامة<select name="material_id" data-materials required></select></label><label>الكمية<input name="quantity" type="number" min="0" step="0.001" required></label><label>تكلفة الوحدة<input name="unit_cost" type="number" min="0" step="0.01" required></label><label>المدفوع<input name="paid" type="number" min="0" step="0.01" value="0"></label><label>حالة الدفع<select name="payment_status"><option value="unpaid">غير مدفوع</option><option value="partial">مدفوع جزئيًا</option><option value="paid">مدفوع</option></select></label><label>حالة الاستلام<select name="status"><option value="draft">مسودة</option><option value="ordered">تم الطلب</option><option value="received">مستلم</option><option value="cancelled">ملغي</option></select></label><label style="grid-column:1/-1">ملاحظات<input name="notes" placeholder="ملاحظات"></label><button class="erp-primary" type="submit">حفظ أمر الشراء</button></form></article>
+            <article class="erp-card"><div class="erp-card-head"><div><h2>أوامر الشراء</h2><p>كل أوامر الشراء محفوظة في جداول نظام الإدارة فقط.</p></div></div><div class="erp-list" id="erpPurchases"></div></article>
+            <article class="erp-card"><div class="erp-card-head"><div><h2>احتياجات مقترحة</h2><p>اقتراحات بناءً على المخزون والحركة.</p></div></div><div class="erp-insights" id="erpPurchaseInsights"></div></article>
+          </div>
+        </section>
+
+        <section class="erp-view" id="view-suppliers">
+          <div class="erp-grid erp-grid-main">
+            <article class="erp-card"><div class="erp-card-head"><div><h2>إضافة مورد</h2><p>الموردين يتم إدخالهم يدويًا داخل نظام الإدارة.</p></div></div><form class="erp-form" data-erp-form="supplier"><label>اسم المورد<input name="name" required></label><label>التخصص<input name="category" placeholder="خامات / طباعة / توصيل"></label><label>الهاتف<input name="phone"></label><label>البريد<input name="email" type="email"></label><label style="grid-column:1/-1">العنوان<input name="address"></label><label style="grid-column:1/-1">ملاحظات<input name="notes"></label><button class="erp-primary" type="submit">حفظ المورد</button></form></article>
+            <article class="erp-card"><div class="erp-card-head"><div><h2>الموردين</h2><p>إجمالي المشتريات والمستحقات من معاملات النظام فقط.</p></div></div><div class="erp-table-wrap"><table><thead><tr><th>المورد</th><th>التخصص</th><th>الهاتف</th><th>الرصيد</th></tr></thead><tbody id="erpSuppliersRows"></tbody></table></div></article>
+            <article class="erp-card"><div class="erp-card-head"><div><h2>أداء الموردين</h2><p>جاهز للربط بعد تسجيل أوامر الشراء.</p></div></div><div class="erp-empty">سيظهر متوسط التسليم والجودة والتكلفة بعد تسجيل المشتريات.</div></article>
+          </div>
+        </section>
+
+        <section class="erp-view" id="view-hr">
+          <div class="erp-grid erp-grid-main">
+            <article class="erp-card"><div class="erp-card-head"><div><h2>إضافة موظف</h2><p>ملف داخلي كامل للموظف داخل نظام الإدارة.</p></div></div><form class="erp-form" data-erp-form="employee"><label>الاسم<input name="full_name" required></label><label>الوظيفة<input name="job_title"></label><label>القسم<input name="department"></label><label>الراتب<input name="salary" type="number" step="0.01" value="0"></label><label>تاريخ التعيين<input name="hire_date" type="date"></label><label>الهاتف<input name="phone"></label><label>الإقامة<input name="emirates_id"></label><label>انتهاء الإقامة<input name="residence_expiry" type="date"></label><label>الجواز<input name="passport_number"></label><label>البدلات<input name="allowances" type="number" step="0.01" value="0"></label><label>الخصومات<input name="deductions" type="number" step="0.01" value="0"></label><label>ملاحظات<input name="notes"></label><button class="erp-primary" type="submit">حفظ الموظف</button></form></article>
+            <article class="erp-card"><div class="erp-card-head"><div><h2>الموظفين</h2><p>اضغط على اسم الموظف لفتح الملف الكامل.</p></div></div><div class="erp-table-wrap"><table><thead><tr><th>الاسم</th><th>القسم</th><th>الوظيفة</th><th>الحالة</th></tr></thead><tbody id="erpEmployeesRows"></tbody></table></div></article>
+            <article class="erp-card"><div class="erp-card-head"><div><h2>الحضور والتنبيهات</h2><p>جاهز للتوسعة مع الحضور والانصراف.</p></div></div><div class="erp-timeline" id="erpHrActivity"></div></article>
+            <article class="erp-card erp-employee-profile-card" style="grid-column:1/-1">
+              <div class="erp-card-head"><div><h2>ملف الموظف</h2><p>كل تفاصيل الموظف، تقييمه، مميزاته، أخطاؤه، الإقامة، الإجازات والراتب.</p></div></div>
+              <div id="erpEmployeeProfile" class="erp-employee-profile-empty">اختار موظف من القائمة لعرض ملفه.</div>
+            </article>
+          </div>
+        </section>
+
+        <section class="erp-view" id="view-payroll">
+          <div class="erp-grid erp-grid-main">
+            <article class="erp-card"><div class="erp-card-head"><div><h2>إنشاء مسير رواتب</h2><p>يحسب تلقائيًا من رواتب وبدلات وخصومات الموظفين النشطين.</p></div></div><form class="erp-form" data-erp-form="payroll"><label>الشهر<input name="payroll_month" type="month" required></label><label>الحالة<select name="status"><option value="draft">مسودة</option><option value="approved">معتمد</option><option value="paid">مدفوع</option></select></label><label style="grid-column:1/-1">ملاحظات<input name="notes" placeholder="ملاحظات"></label><button class="erp-primary" type="submit">إنشاء المسير</button></form></article>
+            <article class="erp-card"><div class="erp-card-head"><div><h2>مسير الرواتب</h2><p>حساب الرواتب والاستقطاعات والمكافآت.</p></div></div><div class="erp-table-wrap"><table><thead><tr><th>الشهر</th><th>الموظفين</th><th>الإجمالي</th><th>الحالة</th></tr></thead><tbody id="erpPayrollRows"></tbody></table></div></article>
+            <article class="erp-card"><div class="erp-card-head"><div><h2>تكلفة الرواتب</h2><p>تدخل ضمن مصروفات التشغيل عند اعتمادها.</p></div></div><div id="erpPayrollSummary" class="erp-metric-stack"></div></article>
+          </div>
+        </section>
+
+        <section class="erp-view" id="view-documents">
+          <div class="erp-grid erp-grid-main">
+            <article class="erp-card"><div class="erp-card-head"><div><h2>إضافة مستند</h2><p>مستندات الشركة والموظفين مع تنبيه قبل الانتهاء.</p></div></div><form class="erp-form" data-erp-form="document"><label>نوع المستند<input name="document_type" required placeholder="رخصة / إقامة / عقد"></label><label>رقم المستند<input name="document_number"></label><label>نوع المالك<input name="owner_type" placeholder="شركة / موظف / مورد"></label><label>اسم المالك<input name="owner_name"></label><label>تاريخ الإصدار<input name="issue_date" type="date"></label><label>تاريخ الانتهاء<input name="expiry_date" type="date"></label><label>التنبيه قبل كام يوم<input name="alert_days" type="number" value="30"></label><label>ملاحظات<input name="notes"></label><button class="erp-primary" type="submit">حفظ المستند</button></form></article>
+            <article class="erp-card"><div class="erp-card-head"><div><h2>المستندات والانتهاءات</h2><p>رخص، عقود، إقامات، ومستندات تشغيل.</p></div></div><div class="erp-table-wrap"><table><thead><tr><th>المستند</th><th>المالك</th><th>تاريخ الانتهاء</th><th>التنبيه</th></tr></thead><tbody id="erpDocumentsRows"></tbody></table></div></article>
+            <article class="erp-card"><div class="erp-card-head"><div><h2>تنبيهات قريبة</h2><p>المستندات التي تحتاج متابعة.</p></div></div><div class="erp-list" id="erpDocumentAlerts"></div></article>
+          </div>
+        </section>
+
+        <section class="erp-view" id="view-reports">
+          <div class="erp-grid erp-grid-main">
+            <article class="erp-card"><div class="erp-card-head"><div><h2>تقارير مالية</h2><p>ربحية، مبيعات، ومصروفات حسب الفترة.</p></div><button class="erp-primary" id="erpExportCsv" type="button">تصدير CSV</button></div><div class="erp-table-wrap"><table><thead><tr><th>المؤشر</th><th>القيمة</th><th>ملاحظة</th></tr></thead><tbody id="erpReportRows"></tbody></table></div></article>
+            <article class="erp-card"><div class="erp-card-head"><div><h2>رؤى ذكية</h2><p>قواعد عملية بدون ردود عشوائية.</p></div></div><div class="erp-insights" id="erpRuleInsights"></div></article>
+          </div>
+        </section>
+
+        <section class="erp-view" id="view-settings">
+          <div class="erp-grid erp-grid-main">
+            <article class="erp-card"><div class="erp-card-head"><div><h2>الصلاحيات والأمان</h2><p>نظام الإدارة يستخدم جلسة الأدمن الحالية، والصلاحيات التفصيلية تحتاج جدول أدوار لاحقًا.</p></div></div><div class="erp-table-wrap"><table><thead><tr><th>الدور</th><th>الصلاحيات</th><th>الحالة</th></tr></thead><tbody id="erpRolesRows"></tbody></table></div></article>
+            <article class="erp-card"><div class="erp-card-head"><div><h2>سجل التدقيق</h2><p>يتحول إلى سجل تدقيق فعلي عند إضافة جدول مخصص في قاعدة البيانات.</p></div></div><div class="erp-timeline" id="erpAuditLog"></div></article>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="/java/supabase.js?v=20260813-erp" defer></script>
+  <script src="/java/erp.js?v=20260813-employee-profile-1" defer></script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+{
+  "name": "إدارة بريق",
+  "short_name": "إدارة بريق",
+  "description": "نظام إدارة بريق الداخلي للطلبات اليدوية والمالية والمخزون.",
+  "start_url": "/erp",
+  "scope": "/",
+  "display": "standalone",
+  "dir": "rtl",
+  "lang": "ar",
+  "background_color": "#f8fafd",
+  "theme_color": "#14213d",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/assets/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

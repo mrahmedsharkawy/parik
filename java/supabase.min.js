@@ -15,6 +15,8 @@ function isJwtUsable(token) {
 }
 function hasAdminSession() {
   try {
+    const saved = JSON.parse(localStorage.getItem("bariq_admin_auth_v1") || "null");
+    if (saved && saved.ok && Number(saved.expires || 0) > Date.now() && (saved.refresh || saved.refreshToken || saved.access || saved.token)) return !0;
     return (
       "1" === sessionStorage.getItem("admin_ok") ||
       !!sessionStorage.getItem("admin_refresh_token")
@@ -29,6 +31,21 @@ function getStoredAuthToken() {
     const adminToken = sessionStorage.getItem("admin_token") || "";
     if (isJwtUsable(adminToken)) return adminToken;
     sessionStorage.removeItem("admin_token");
+  } catch (_) {}
+  try {
+    const saved = JSON.parse(localStorage.getItem("bariq_admin_auth_v1") || "null");
+    if (saved && saved.ok && Number(saved.expires || 0) > Date.now()) {
+      const access = saved.access || saved.token || "";
+      const refresh = saved.refresh || saved.refreshToken || "";
+      if (refresh) sessionStorage.setItem("admin_refresh_token", refresh);
+      if (saved.tokenExp) sessionStorage.setItem("admin_token_exp", String(saved.tokenExp));
+      if (access && isJwtUsable(access)) {
+        sessionStorage.setItem("admin_token", access);
+        sessionStorage.setItem("admin_ok", "1");
+        if (saved.name) sessionStorage.setItem("admin_name", saved.name);
+        return access;
+      }
+    }
   } catch (_) {}
   if (adminSession) return "";
   try {

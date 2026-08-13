@@ -29,6 +29,10 @@
       "destination": "/google-oauth-app.html"
     },
     {
+      "source": "/erp",
+      "destination": "/erp.html"
+    },
+    {
       "source": "/gifts",
       "destination": "/gifts.html"
     },

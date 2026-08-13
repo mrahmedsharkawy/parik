@@ -12,6 +12,12 @@ const STATIC_URLS = [
   '/bot-admin',
   '/bot-admin.html',
   '/bot-manifest.json',
+  '/erp',
+  '/erp.html',
+  '/erp-manifest.json',
+  '/java/erp.js',
+  '/java/erp-pwa.js',
+  '/style/erp.css',
   '/account',
   '/account.html',
   '/sales-invoices',
@@ -193,6 +199,7 @@ function appHtmlCachePath(path) {
   if (path === '/categories' || path === '/categories.html' || /^\/categories\//.test(path)) return '/categories';
   if (path === '/Cart' || path === '/Cart.html') return '/Cart';
   if (path === '/bot-admin' || path === '/bot-admin.html') return '/bot-admin';
+  if (path === '/erp' || path === '/erp.html') return '/erp';
   if (path === '/product' || path === '/product.html' || /^\/product\//.test(path)) return '/product';
   if (/\.html$/.test(path)) return path.replace(/\.html$/, '');
   return path;
@@ -294,7 +301,7 @@ self.addEventListener('fetch', function(e) {
   };
 
   const isAuthPage = path === '/login' || path === '/login.html';
-  const isFreshHtmlPage = path === '/' || path === '/index.html' || path === '/categories' || path === '/categories.html' || isAuthPage || path === '/account' || path === '/account.html' || path === '/Cart' || path === '/Cart.html' || path === '/product' || path === '/product.html' || path === '/admin' || path === '/admin.html' || path === '/bot-admin' || path === '/bot-admin.html';
+  const isFreshHtmlPage = path === '/' || path === '/index.html' || path === '/categories' || path === '/categories.html' || isAuthPage || path === '/account' || path === '/account.html' || path === '/Cart' || path === '/Cart.html' || path === '/product' || path === '/product.html' || path === '/admin' || path === '/admin.html' || path === '/bot-admin' || path === '/bot-admin.html' || path === '/erp' || path === '/erp.html';
 
   // Key order/account/cart/admin pages must be fresh so checkout and status fixes cannot be stuck behind old HTML.
   if (isHtml && isFreshHtmlPage) {

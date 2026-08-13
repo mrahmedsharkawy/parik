@@ -2389,6 +2389,32 @@ function normalizeAdminArea(value) {
   return first || raw;
 }
 
+function normalizeUaeArea(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  const low = raw.toLowerCase();
+  if (/ras\s*al\s*khaimah|ra.?s\s*al\s*khaimah|\brak\b|khaimah|راس\s*الخيمه|رأس\s*الخيمة/.test(low)) return 'رأس الخيمة';
+  if (/khor\s*fakkan|khorfakkan|خور\s*فكان/.test(low)) return 'خورفكان';
+  if (/fujairah|الفجيره|الفجيرة/.test(low)) return 'الفجيرة';
+  if (/dubai|دبي/.test(low)) return 'دبي';
+  if (/abu\s*dhabi|ابوظبي|أبوظبي/.test(low)) return 'أبوظبي';
+  if (/sharjah|الشارقه|الشارقة/.test(low)) return 'الشارقة';
+  if (/ajman|عجمان/.test(low)) return 'عجمان';
+  if (/umm\s*al\s*quwain|um\s*al\s*quwain|ام\s*القيوين|أم\s*القيوين/.test(low)) return 'أم القيوين';
+  if (/al\s*ain|العين/.test(low)) return 'العين';
+  if (/kalba|كلباء/.test(low)) return 'كلباء';
+  if (/dibba|دبا/.test(low)) return 'دبا';
+  if (/hatta|حتا/.test(low)) return 'حتا';
+  if (/jebel\s*ali|جبل\s*علي/.test(low)) return 'جبل علي';
+  if (/al\s*dhafra|الظفرة/.test(low)) return 'الظفرة';
+  return '';
+}
+
+function isUaeCountry(value) {
+  const raw = String(value || '').trim().toLowerCase();
+  return /^(ae|are|uae|united\s*arab\s*emirates|emirates|الإمارات|الامارات|الإمارات\s*العربية\s*المتحدة|الامارات\s*العربية\s*المتحدة)$/i.test(raw);
+}
+
 function adminPhoneDigits(value) {
   return String(value || '').replace(/\D/g, '');
 }
@@ -2475,7 +2501,7 @@ function isMissingSupabaseColumnError(error, column){
 }
 
 async function updateOrderInSupabaseSafe(id, data){
-  const optionalColumns = ['cashback_expires_at', 'updated_at'];
+  const optionalColumns = ['cashback_expires_at'];
   const payload = Object.assign({}, data);
   for (let attempt = 0; attempt <= optionalColumns.length; attempt++) {
     try {
@@ -2484,8 +2510,7 @@ async function updateOrderInSupabaseSafe(id, data){
       const missingColumn = optionalColumns.find(column => Object.prototype.hasOwnProperty.call(payload, column) && isMissingSupabaseColumnError(e, column));
       if (!missingColumn) throw e;
       delete payload[missingColumn];
-      console.warn(missingColumn + ' غير موجود في Supabase؛ سيتم تحديث الحالة والكاش باك بدونه.', e);
-      toast('⚠️ عمود اختياري غير موجود في قاعدة البيانات، تم تحديث الحالة بدونه');
+      console.warn('Optional Supabase order column is missing; retrying without it:', missingColumn, e);
     }
   }
   return await window.Supabase.Orders.update(id, payload);
@@ -4055,10 +4080,38 @@ function saveVisitorAreas(items) { try { localStorage.setItem(LS_VISITOR_AREAS, 
 function visitorArea(v) {
   const rawCity = v.area || v.city || v.region || v.address || '';
   const rawCountry = v.country || '';
-  if (/dubai|دبي/i.test(String(rawCity || '')) && /^(ae|uae|united\s*arab\s*emirates|الإمارات|الامارات)/i.test(String(rawCountry || '').trim())) return 'رأس الخيمة';
-  const city = normalizeAdminArea(rawCity);
-  const country = normalizeAdminArea(rawCountry);
-  return city || country || 'غير محدد';
+  const city = normalizeUaeArea(rawCity);
+  const countryIsUae = isUaeCountry(rawCountry);
+  if (city) return city;
+  return countryIsUae ? 'غير محدد داخل الإمارات' : '';
+}
+
+function isUaeVisitor(v) {
+  return !!visitorArea(v);
+}
+
+function addAreaCount(map, area, amount) {
+  const clean = normalizeUaeArea(area) || (area === 'غير محدد داخل الإمارات' ? area : '');
+  if (!clean) return;
+  map[clean] = (map[clean] || 0) + (amount || 1);
+}
+
+function customerUaeAreasFromOrders() {
+  const map = {};
+  try {
+    const orders = [...getOrders(), ...JSON.parse(localStorage.getItem('x2_orders') || '[]')];
+    orders.forEach(o => {
+      const sh = o.shipping || o.address_full || o.address || {};
+      const area = normalizeUaeArea(
+        o.city || o.shipping_city || o.customerCity || sh.city || sh.area || sh.state || o.shipping_address || o.address || ''
+      );
+      if (area) addAreaCount(map, area, 1);
+    });
+  } catch(e) {}
+  try {
+    getCustomers().forEach(c => addAreaCount(map, c.city || c.address || '', 1));
+  } catch(e) {}
+  return map;
 }
 
 function isUsefulVisitor(v) {
@@ -4104,15 +4157,15 @@ async function renderVisitorsStats() {
     if (todayEl) todayEl.textContent = todayVisits.length;
     if (allEl)   allEl.textContent   = rows.length;
     if (locEl) {
-      const hasArea = v => visitorArea(v) !== 'غير محدد';
+      const hasArea = v => !!visitorArea(v);
       const localRows = getVisitors().filter(isUsefulVisitor);
       const remoteAllAreas = rows.filter(hasArea);
-      const localAllAreas = localRows.filter(hasArea);
+      const localAllAreas = localRows.filter(isUaeVisitor).filter(hasArea);
       const locRows = remoteAllAreas.length ? remoteAllAreas : localAllAreas;
       const locMap = {};
       locRows.forEach(v => {
-        const loc = hasArea(v) ? visitorArea(v) : 'غير محدد';
-        locMap[loc] = (locMap[loc]||0) + 1;
+        const loc = visitorArea(v);
+        addAreaCount(locMap, loc, 1);
       });
       const sorted = Object.entries(locMap).sort((a,b) => b[1]-a[1]).slice(0, 10);
       if (sorted.length) saveVisitorAreas(sorted);
@@ -4135,8 +4188,6 @@ async function renderVisitorsStats() {
     if (usingCachedRows) rows = cached;
     if (!Array.isArray(rows)) throw new Error('no data');
     await renderRows(rows);
-    const totalCount = (res.headers.get('content-range') || '').split('/')[1];
-    if (!usingCachedRows && allEl && totalCount && totalCount !== '*') allEl.textContent = totalCount;
   } catch(e) {
     const cached = getVisitors().filter(isUsefulVisitor);
     if (cached.length) await renderRows(cached);
