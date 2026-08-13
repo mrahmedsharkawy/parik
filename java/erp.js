@@ -5,6 +5,7 @@
     view: "dashboard",
     period: "month",
     selectedEmployeeId: "",
+    editingManualOrderId: "",
     transactions: [],
     manualOrders: [],
     categories: [],
@@ -105,13 +106,26 @@
     return periodTransactions().filter((row) => row.type === "expense");
   }
 
+  function periodManualOrders() {
+    return state.manualOrders.filter((row) => row.status !== "cancelled" && inPeriod(row.created_at || row.updated_at));
+  }
+
   function total(rows) {
     return rows.reduce((sum, row) => sum + Number(row.amount || 0), 0);
   }
 
+  function totalManualOrders(rows) {
+    return rows.reduce((sum, row) => sum + Number(row.total || 0), 0);
+  }
+
   function totals() {
-    const income = total(incomeRows());
-    const expenses = total(expenseRows());
+    const manualIncome = totalManualOrders(periodManualOrders());
+    const income = total(incomeRows()) + manualIncome;
+    const manualExpenses = total(expenseRows());
+    const purchaseCost = state.purchases
+      .filter((p) => p.status !== "cancelled")
+      .reduce((sum, p) => sum + Number(p.total || 0), 0);
+    const expenses = manualExpenses + purchaseCost;
     const payrollCost = state.payroll.reduce((sum, run) => sum + Number(run.total || run.net_total || 0), 0);
     const stockValue = state.materials.reduce((sum, material) => sum + Number(material.current_stock || 0) * Number(material.average_cost || material.opening_cost || 0), 0);
     const supplierDue = state.purchases.reduce((sum, p) => sum + Math.max(0, Number(p.total || 0) - Number(p.paid || 0)), 0);
@@ -123,6 +137,9 @@
       operatingProfit: income - expenses,
       netProfit: income - expenses,
       margin: income ? ((income - expenses) / income) * 100 : 0,
+      manualIncome,
+      manualExpenses,
+      purchaseCost,
       payrollCost,
       stockValue,
       supplierDue,
@@ -186,8 +203,8 @@
     const docsExpiring = state.documents.filter((d) => daysUntil(d.expiry_date) <= Number(d.alert_days || 30)).length;
     const lowStock = state.materials.filter((m) => Number(m.current_stock || 0) <= Number(m.minimum_stock || 0)).length;
     const kpis = [
-      { label: "إجمالي الإيرادات", value: money(t.income), note: "إدخال يدوي في النظام", icon: "💸", bg: "var(--erp-blue-soft)", change: incomeRows().length + " قيد" },
-      { label: "إجمالي المصروفات", value: money(t.expenses), note: "مصروفات النظام فقط", icon: "🧾", bg: "var(--erp-peach-soft)", change: expenseRows().length + " قيد" },
+      { label: "إجمالي الإيرادات", value: money(t.income), note: "قيود مالية + طلبات يدوية", icon: "💸", bg: "var(--erp-blue-soft)", change: (incomeRows().length + periodManualOrders().length) + " مصدر" },
+      { label: "إجمالي المصروفات", value: money(t.expenses), note: "مصروفات + مشتريات", icon: "🧾", bg: "var(--erp-peach-soft)", change: (expenseRows().length + state.purchases.filter((p) => p.status !== "cancelled").length) + " قيد" },
       { label: "صافي الربح", value: money(t.netProfit), note: "هامش " + t.margin.toFixed(1) + "%", icon: "📈", bg: "var(--erp-mint-soft)", change: t.netProfit >= 0 ? "ربح" : "خسارة" },
       { label: "تنبيهات", value: num(lowStock + docsExpiring, 0), note: "مخزون ومستندات", icon: "🔔", bg: "var(--erp-purple-soft)", change: lowStock + " مخزون" },
     ];
@@ -205,9 +222,10 @@
   function renderRevenueChart() {
     const rows = lastSevenDays().map((day) => {
       const dayRows = state.transactions.filter((row) => String(row.transaction_date || "").slice(0, 10) === day.key);
+      const dayManualOrders = state.manualOrders.filter((row) => row.status !== "cancelled" && String(row.created_at || row.updated_at || "").slice(0, 10) === day.key);
       return {
         label: day.label,
-        income: total(dayRows.filter((row) => row.type === "income")),
+        income: total(dayRows.filter((row) => row.type === "income")) + totalManualOrders(dayManualOrders),
         expense: total(dayRows.filter((row) => row.type === "expense")),
       };
     });
@@ -265,7 +283,7 @@
     const duePurchases = state.purchases.filter((p) => Math.max(0, Number(p.total || 0) - Number(p.paid || 0)) > 0);
     const expiringDocs = state.documents.filter((d) => daysUntil(d.expiry_date) <= Number(d.alert_days || 30));
     const insights = [
-      { title: t.netProfit >= 0 ? "صافي الربح موجب" : "صافي الربح منخفض", text: `الدخل ${money(t.income)} والمصروفات ${money(t.expenses)} من قيود النظام.` },
+      { title: t.netProfit >= 0 ? "صافي الربح موجب" : "صافي الربح منخفض", text: `الدخل ${money(t.income)} يشمل ${money(t.manualIncome)} من الطلبات اليدوية، والمصروفات ${money(t.expenses)}.` },
       { title: low.length ? "مخزون منخفض" : "المخزون مستقر", text: low.length ? `${low.length} خامة تحت حد التنبيه.` : "لا توجد خامات تحت الحد الأدنى." },
       { title: duePurchases.length ? "مستحقات موردين" : "لا توجد مستحقات بارزة", text: duePurchases.length ? `يوجد ${duePurchases.length} فاتورة شراء بها مبلغ مستحق.` : "أرصدة الموردين المسجلة مستقرة." },
       { title: expiringDocs.length ? "مستندات قاربت الانتهاء" : "المستندات آمنة", text: expiringDocs.length ? `${expiringDocs.length} مستند يحتاج متابعة.` : "لا توجد مستندات قريبة الانتهاء." },
@@ -312,7 +330,8 @@
         <td>${esc(order.customer_address || "")}</td>
         <td><span class="erp-status">${esc(orderStatusLabel(order.status))}</span></td>
         <td><b>${money(order.total)}</b></td>
-      </tr>`).join("") : '<tr><td colspan="7">لا توجد طلبات يدوية بعد.</td></tr>';
+        <td><span class="erp-row-actions"><button class="erp-action-mini" type="button" data-edit-manual-order-id="${esc(order.id)}">تعديل</button><button class="erp-danger-mini" type="button" data-delete-row-table="erp_manual_orders" data-delete-row-id="${esc(order.id)}">حذف</button></span></td>
+      </tr>`).join("") : '<tr><td colspan="8">لا توجد طلبات يدوية بعد.</td></tr>';
   }
 
   function renderActivity() {
@@ -339,14 +358,16 @@
         <td>${esc(row.type === "income" ? "إيراد" : "مصروف")}</td>
         <td contenteditable data-table="erp_transactions" data-id="${esc(row.id)}" data-field="amount">${money(row.amount)}</td>
         <td>${esc(row.external_reference || row.invoice_number || "النظام")}</td>
-      </tr>`).join("") : '<tr><td colspan="5">لا توجد قيود مالية بعد.</td></tr>';
+        <td><button class="erp-danger-mini" type="button" data-delete-row-table="erp_transactions" data-delete-row-id="${esc(row.id)}">حذف</button></td>
+      </tr>`).join("") : '<tr><td colspan="6">لا توجد قيود مالية بعد.</td></tr>';
   }
 
   function renderProfitEngine() {
     const t = totals();
     $("erpProfitEngine").innerHTML = [
       ["إجمالي الإيرادات", money(t.income), "مجموع كل الإيرادات اليدوية"],
-      ["إجمالي المصروفات", money(t.expenses), "مجموع كل المصروفات اليدوية"],
+      ["إجمالي المصروفات", money(t.expenses), "المصروفات اليدوية + أوامر الشراء غير الملغية"],
+      ["تكلفة المشتريات", money(t.purchaseCost), "إجمالي أوامر الشراء غير الملغية"],
       ["إجمالي الربح", money(t.grossProfit), "الإيرادات ناقص المصروفات"],
       ["مصروفات التشغيل", money(t.operatingExpenses), "مصروفات التشغيل"],
       ["الربح التشغيلي", money(t.operatingProfit), "نتيجة التشغيل"],
@@ -357,7 +378,7 @@
 
   function renderExpenses() {
     $("erpExpensesList").innerHTML = expenseRows().length ? expenseRows().map((row) => `
-      <div class="erp-list-item"><span><strong>${esc(row.description)}</strong><small>${esc(row.category || categoryName(row.category_id))} - ${esc(row.supplier_id ? supplierName(row.supplier_id) : "بدون مورد")}</small></span><b class="erp-amount">${money(row.amount)}</b></div>`).join("") : '<div class="erp-empty">لا توجد مصروفات. أضف مصروفًا يدويًا من النموذج.</div>';
+      <div class="erp-list-item"><span><strong>${esc(row.description)}</strong><small>${esc(row.category || categoryName(row.category_id))} - ${esc(row.supplier_id ? supplierName(row.supplier_id) : "بدون مورد")}</small></span><span class="erp-row-actions"><b class="erp-amount">${money(row.amount)}</b><button class="erp-danger-mini" type="button" data-delete-row-table="erp_transactions" data-delete-row-id="${esc(row.id)}">حذف</button></span></div>`).join("") : '<div class="erp-empty">لا توجد مصروفات. أضف مصروفًا يدويًا من النموذج.</div>';
   }
 
   function renderInventory() {
@@ -365,8 +386,8 @@
       const current = Number(m.current_stock || 0);
       const min = Number(m.minimum_stock || 0);
       const low = current <= min;
-      return `<tr><td>${esc(m.name)}</td><td>${esc(m.unit)}</td><td>${num(current, 3)}</td><td>${num(min, 3)}</td><td><span class="erp-status" style="background:${low ? "var(--erp-peach-soft)" : "var(--erp-mint-soft)"}">${low ? "مخزون منخفض" : "جيد"}</span></td></tr>`;
-    }).join("") : '<tr><td colspan="5">لا توجد خامات. أضف خامة داخل النظام.</td></tr>';
+      return `<tr><td>${esc(m.name)}</td><td>${esc(m.unit)}</td><td>${num(current, 3)}</td><td>${num(min, 3)}</td><td><span class="erp-status" style="background:${low ? "var(--erp-peach-soft)" : "var(--erp-mint-soft)"}">${low ? "مخزون منخفض" : "جيد"}</span></td><td><button class="erp-danger-mini" type="button" data-delete-row-table="erp_materials" data-delete-row-id="${esc(m.id)}">حذف</button></td></tr>`;
+    }).join("") : '<tr><td colspan="6">لا توجد خامات. أضف خامة داخل النظام.</td></tr>';
     const low = state.materials.filter((m) => Number(m.current_stock || 0) <= Number(m.minimum_stock || 0));
     $("erpLowStock").innerHTML = low.length ? low.map((m) => `<div class="erp-list-item"><span><strong>${esc(m.name)}</strong><small>المتوفر ${num(m.current_stock, 3)} ${esc(m.unit)}</small></span><span class="erp-status">تنبيه</span></div>`).join("") : '<div class="erp-empty">لا توجد خامات تحت الحد الأدنى.</div>';
   }
@@ -374,7 +395,7 @@
   function renderPurchases() {
     $("erpPurchases").innerHTML = state.purchases.length ? state.purchases.map((p) => {
       const due = Math.max(0, Number(p.total || 0) - Number(p.paid || 0));
-      return `<div class="erp-list-item"><span><strong>${esc(p.invoice_number || "فاتورة شراء")}</strong><small>${esc(supplierName(p.supplier_id))} - ${esc(p.payment_status)}</small></span><b class="erp-amount">${money(due)} مستحق</b></div>`;
+      return `<div class="erp-list-item"><span><strong>${esc(p.invoice_number || "فاتورة شراء")}</strong><small>${esc(supplierName(p.supplier_id))} - ${esc(p.payment_status)}</small></span><span class="erp-row-actions"><b class="erp-amount">${money(due)} مستحق</b><button class="erp-danger-mini" type="button" data-delete-row-table="erp_purchases" data-delete-row-id="${esc(p.id)}">حذف</button></span></div>`;
     }).join("") : '<div class="erp-empty">لا توجد مشتريات مسجلة.</div>';
     const low = state.materials.filter((m) => Number(m.current_stock || 0) <= Number(m.minimum_stock || 0));
     $("erpPurchaseInsights").innerHTML = low.length ? low.map((m) => renderInsight({ title: "احتياج شراء: " + m.name, text: `المتوفر ${num(m.current_stock, 3)} والحد الأدنى ${num(m.minimum_stock, 3)}.` })).join("") : renderInsight({ title: "لا توجد احتياجات شراء عاجلة", text: "المواد المسجلة أعلى من الحد الأدنى." });
@@ -384,12 +405,12 @@
     $("erpSuppliersRows").innerHTML = state.suppliers.length ? state.suppliers.map((s) => {
       const supplierPurchases = state.purchases.filter((p) => p.supplier_id === s.id);
       const due = supplierPurchases.reduce((sum, p) => sum + Math.max(0, Number(p.total || 0) - Number(p.paid || 0)), 0);
-      return `<tr><td>${esc(s.name)}</td><td>${esc(s.category || "عام")}</td><td>${esc(s.phone || "")}</td><td><span class="erp-status">${money(due)} مستحق</span></td></tr>`;
-    }).join("") : '<tr><td colspan="4">لا يوجد موردين.</td></tr>';
+      return `<tr><td>${esc(s.name)}</td><td>${esc(s.category || "عام")}</td><td>${esc(s.phone || "")}</td><td><span class="erp-status">${money(due)} مستحق</span></td><td><button class="erp-danger-mini" type="button" data-delete-row-table="erp_suppliers" data-delete-row-id="${esc(s.id)}">حذف</button></td></tr>`;
+    }).join("") : '<tr><td colspan="5">لا يوجد موردين.</td></tr>';
   }
 
   function renderHr() {
-    $("erpEmployeesRows").innerHTML = state.employees.length ? state.employees.map((e) => `<tr class="${String(e.id) === String(state.selectedEmployeeId) ? "erp-row-active" : ""}"><td><button class="erp-link-btn" type="button" data-employee-id="${esc(e.id)}">${esc(e.full_name)}</button></td><td>${esc(e.department || "")}</td><td>${esc(e.job_title || "")}</td><td><span class="erp-status">${e.active ? "نشط" : "متوقف"}</span></td></tr>`).join("") : '<tr><td colspan="4">لا يوجد موظفين.</td></tr>';
+    $("erpEmployeesRows").innerHTML = state.employees.length ? state.employees.map((e) => `<tr class="${String(e.id) === String(state.selectedEmployeeId) ? "erp-row-active" : ""}"><td><button class="erp-link-btn" type="button" data-employee-id="${esc(e.id)}">${esc(e.full_name)}</button></td><td>${esc(e.department || "")}</td><td>${esc(e.job_title || "")}</td><td><span class="erp-status">${e.active ? "نشط" : "متوقف"}</span></td><td><button class="erp-danger-mini" type="button" data-delete-employee-id="${esc(e.id)}">حذف</button></td></tr>`).join("") : '<tr><td colspan="5">لا يوجد موظفين.</td></tr>';
     if (!state.selectedEmployeeId && state.employees[0]) state.selectedEmployeeId = state.employees[0].id;
     renderEmployeeProfile();
   }
@@ -476,7 +497,7 @@
   }
 
   function renderPayroll() {
-    $("erpPayrollRows").innerHTML = state.payroll.length ? state.payroll.map((p) => `<tr><td>${esc(String(p.payroll_month || "").slice(0, 7))}</td><td>${num(p.employee_count || 0, 0)}</td><td>${money(p.total || 0)}</td><td><span class="erp-status">${esc(p.status)}</span></td></tr>`).join("") : '<tr><td colspan="4">لا توجد مسيرات رواتب.</td></tr>';
+    $("erpPayrollRows").innerHTML = state.payroll.length ? state.payroll.map((p) => `<tr><td>${esc(String(p.payroll_month || "").slice(0, 7))}</td><td>${num(p.employee_count || 0, 0)}</td><td>${money(p.total || 0)}</td><td><span class="erp-status">${esc(p.status)}</span></td><td><button class="erp-danger-mini" type="button" data-delete-row-table="erp_payroll" data-delete-row-id="${esc(p.id)}">حذف</button></td></tr>`).join("") : '<tr><td colspan="5">لا توجد مسيرات رواتب.</td></tr>';
     const t = totals();
     $("erpPayrollSummary").innerHTML = [
       ["تكلفة الرواتب", money(t.payrollCost), "من مسيرات الرواتب"],
@@ -486,7 +507,7 @@
   }
 
   function renderDocuments() {
-    $("erpDocumentsRows").innerHTML = state.documents.length ? state.documents.map((d) => `<tr><td>${esc(d.document_type)}</td><td>${esc(d.owner_name || employeeName(d.employee_id) || "")}</td><td>${esc(d.expiry_date || "")}</td><td><span class="erp-status">قبل ${esc(d.alert_days || 30)} يوم</span></td></tr>`).join("") : '<tr><td colspan="4">لا توجد مستندات.</td></tr>';
+    $("erpDocumentsRows").innerHTML = state.documents.length ? state.documents.map((d) => `<tr><td>${esc(d.document_type)}</td><td>${esc(d.owner_name || employeeName(d.employee_id) || "")}</td><td>${esc(d.expiry_date || "")}</td><td><span class="erp-status">قبل ${esc(d.alert_days || 30)} يوم</span></td><td><button class="erp-danger-mini" type="button" data-delete-row-table="erp_documents" data-delete-row-id="${esc(d.id)}">حذف</button></td></tr>`).join("") : '<tr><td colspan="5">لا توجد مستندات.</td></tr>';
     const expiring = state.documents.filter((d) => daysUntil(d.expiry_date) <= Number(d.alert_days || 30));
     $("erpDocumentAlerts").innerHTML = expiring.length ? expiring.map((d) => `<div class="erp-list-item"><span><strong>${esc(d.document_type)}</strong><small>ينتهي في ${esc(d.expiry_date)}</small></span><span class="erp-status">${daysUntil(d.expiry_date)} يوم</span></div>`).join("") : '<div class="erp-empty">لا توجد مستندات قريبة الانتهاء.</div>';
   }
@@ -494,8 +515,10 @@
   function renderReports() {
     const t = totals();
     $("erpReportRows").innerHTML = [
-      ["إجمالي الإيرادات", money(t.income), "كل القيود من نوع إيراد"],
-      ["إجمالي المصروفات", money(t.expenses), "كل القيود من نوع مصروف"],
+      ["إجمالي الإيرادات", money(t.income), "قيود الإيراد + الطلبات اليدوية غير الملغية"],
+      ["إيرادات الطلبات اليدوية", money(t.manualIncome), "إجمالي الطلبات اليدوية غير الملغية"],
+      ["إجمالي المصروفات", money(t.expenses), "كل المصروفات اليدوية + أوامر الشراء"],
+      ["تكلفة المشتريات", money(t.purchaseCost), "أوامر الشراء غير الملغية"],
       ["صافي الربح", money(t.netProfit), "الإيرادات ناقص المصروفات"],
       ["قيمة مخزون الخامات", money(t.stockValue), "المتوفر مضروبًا في متوسط التكلفة"],
       ["تكلفة الرواتب", money(t.payrollCost), "من مسيرات الرواتب"],
@@ -703,13 +726,48 @@
       notes: data.get("notes") || null,
     };
     if (!payload.order_number || !payload.customer_name) return toast("اكتب رقم الطلب واسم العميل.");
-    await erpFetch("erp_manual_orders", {
-      method: "POST",
+    const editingId = state.editingManualOrderId;
+    await erpFetch(editingId ? `erp_manual_orders?id=eq.${encodeURIComponent(editingId)}` : "erp_manual_orders", {
+      method: editingId ? "PATCH" : "POST",
       body: JSON.stringify(payload),
       prefer: "return=minimal",
     });
+    state.editingManualOrderId = "";
+    const submit = form.querySelector("[data-manual-order-submit]");
+    if (submit) submit.textContent = "حفظ الطلب";
     form.reset();
-    toast("تم حفظ الطلب اليدوي.");
+    toast(editingId ? "تم تعديل الطلب اليدوي." : "تم حفظ الطلب اليدوي.");
+    await loadData();
+  }
+
+  function editManualOrder(orderId) {
+    const order = state.manualOrders.find((row) => String(row.id) === String(orderId));
+    const form = document.querySelector('[data-erp-form="manual-order"]');
+    if (!order || !form) return;
+    state.editingManualOrderId = orderId;
+    form.elements.order_number.value = order.order_number || "";
+    form.elements.customer_name.value = order.customer_name || "";
+    form.elements.customer_phone.value = order.customer_phone || "";
+    form.elements.customer_email.value = order.customer_email || "";
+    form.elements.customer_address.value = order.customer_address || "";
+    form.elements.total.value = Number(order.total || 0);
+    form.elements.status.value = order.status || "new";
+    form.elements.notes.value = order.notes || "";
+    const submit = form.querySelector("[data-manual-order-submit]");
+    if (submit) submit.textContent = "حفظ التعديل";
+    form.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  async function deleteStoredRow(table, id) {
+    if (!table || !id) return;
+    const allowed = new Set(["erp_manual_orders", "erp_transactions", "erp_materials", "erp_purchases", "erp_suppliers", "erp_payroll", "erp_documents"]);
+    if (!allowed.has(table)) return toast("جدول غير مسموح بحذفه من الواجهة.");
+    if (!confirm("حذف هذا السجل من قاعدة البيانات؟")) return;
+    await erpFetch(`${table}?id=eq.${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      prefer: "return=minimal",
+    });
+    toast("تم حذف السجل.");
     await loadData();
   }
 
@@ -875,6 +933,19 @@
     await loadData();
   }
 
+  async function deleteEmployee(employeeId) {
+    const employee = state.employees.find((row) => String(row.id) === String(employeeId));
+    if (!employee) return;
+    if (!confirm(`حذف الموظف ${employee.full_name}؟ سيتم حذف ملفه وملاحظاته المرتبطة.`)) return;
+    await erpFetch(`erp_employees?id=eq.${encodeURIComponent(employeeId)}`, {
+      method: "DELETE",
+      prefer: "return=minimal",
+    });
+    if (String(state.selectedEmployeeId) === String(employeeId)) state.selectedEmployeeId = "";
+    toast("تم حذف الموظف.");
+    await loadData();
+  }
+
   async function uploadEmployeeFile(file, employeeId, type) {
     if (!file || !window.Supabase?.Storage?.upload) return "";
     const folder = `erp-employees/${String(employeeId).replace(/[^a-z0-9-]/gi, "")}/${type}`;
@@ -963,14 +1034,17 @@
     const items = activeEmployees.map((employee) => {
       const basic = Number(employee.salary || 0);
       const allowances = Number(employee.allowances || 0);
+      const overtime = Number(employee.overtime_hours || 0) * Number(employee.overtime_rate || 0);
       const deductions = Number(employee.deductions || 0);
+      const latePenalty = Number(employee.late_penalty || 0);
       return {
         payroll_id: payroll.id,
         employee_id: employee.id,
         basic_salary: basic,
         allowances,
-        deductions,
-        net_salary: basic + allowances - deductions,
+        overtime,
+        deductions: deductions + latePenalty,
+        advance: 0,
       };
     });
     await erpFetch("erp_payroll_items", {
@@ -1062,10 +1136,31 @@
       if (event.target.matches("[contenteditable][data-table]")) inlineSave(event.target).catch((e) => toast(e.message));
     });
     document.addEventListener("click", (event) => {
+      const deleteRowBtn = event.target.closest("[data-delete-row-table][data-delete-row-id]");
+      if (deleteRowBtn) {
+        event.preventDefault();
+        deleteStoredRow(deleteRowBtn.dataset.deleteRowTable, deleteRowBtn.dataset.deleteRowId).catch((e) => toast(e.message));
+        return;
+      }
+      const editManualOrderBtn = event.target.closest("[data-edit-manual-order-id]");
+      if (editManualOrderBtn) {
+        event.preventDefault();
+        editManualOrder(editManualOrderBtn.dataset.editManualOrderId);
+        return;
+      }
+      const deleteEmployeeBtn = event.target.closest("[data-delete-employee-id]");
+      if (deleteEmployeeBtn) {
+        event.preventDefault();
+        deleteEmployee(deleteEmployeeBtn.dataset.deleteEmployeeId).catch((e) => toast(e.message));
+        return;
+      }
       const employeeBtn = event.target.closest("[data-employee-id]");
       if (employeeBtn && employeeBtn.classList.contains("erp-link-btn")) {
+        event.preventDefault();
         state.selectedEmployeeId = employeeBtn.dataset.employeeId;
+        renderHr();
         renderEmployeeProfile();
+        $("erpEmployeeProfile")?.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     });
     document.addEventListener("submit", (event) => {

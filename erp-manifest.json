@@ -1,7 +1,7 @@
 {
-  "name": "إدارة بريق",
-  "short_name": "إدارة بريق",
-  "description": "نظام إدارة بريق الداخلي للطلبات اليدوية والمالية والمخزون.",
+  "name": "Bariq ERP",
+  "short_name": "Bariq ERP",
+  "description": "Bariq ERP للطلبات اليدوية والمالية والمخزون.",
   "start_url": "/erp",
   "scope": "/",
   "display": "standalone",

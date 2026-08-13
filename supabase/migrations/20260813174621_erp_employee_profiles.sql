@@ -14,6 +14,23 @@ alter table public.erp_employees
   add column if not exists mistakes text,
   add column if not exists evaluation_notes text;
 
+do $$
+begin
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'erp_payroll_items'
+      and column_name = 'allowance'
+  ) and not exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'erp_payroll_items'
+      and column_name = 'allowances'
+  ) then
+    alter table public.erp_payroll_items rename column allowance to allowances;
+  end if;
+end $$;
+
 alter table public.erp_payroll_items
   add column if not exists allowances numeric(14,2) not null default 0;
 

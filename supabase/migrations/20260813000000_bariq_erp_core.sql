@@ -132,11 +132,11 @@ create table if not exists public.erp_payroll_items (
   payroll_id uuid not null references public.erp_payroll(id) on delete cascade,
   employee_id uuid not null references public.erp_employees(id) on delete cascade,
   basic_salary numeric(14,2) not null default 0,
-  allowance numeric(14,2) not null default 0,
+  allowances numeric(14,2) not null default 0,
   overtime numeric(14,2) not null default 0,
   deductions numeric(14,2) not null default 0,
   advance numeric(14,2) not null default 0,
-  net_salary numeric(14,2) generated always as (basic_salary + allowance + overtime - deductions - advance) stored,
+  net_salary numeric(14,2) generated always as (basic_salary + allowances + overtime - deductions - advance) stored,
   notes text
 );
 
