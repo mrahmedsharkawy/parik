@@ -511,9 +511,13 @@ button {
 
 .erp-page-head h1 {
   margin: 0;
-  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  font-size: clamp(1.35rem, 2.1vw, 1.85rem);
   line-height: 1.15;
   letter-spacing: 0;
+}
+
+.erp-page-head p:not(.erp-eyebrow) {
+  display: none;
 }
 
 .erp-page-head p {
@@ -524,6 +528,7 @@ button {
 
 .erp-periods {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   padding: 6px;
   border-radius: 18px;
@@ -545,9 +550,20 @@ button {
   border-color: var(--erp-primary);
 }
 
+.erp-period-input {
+  min-height: 36px;
+  border: 1px solid var(--erp-border);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--erp-text);
+  padding: 0 10px;
+  font-weight: 800;
+  max-width: 150px;
+}
+
 .erp-kpis {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 16px;
   margin-bottom: 18px;
 }
@@ -635,8 +651,25 @@ button {
 }
 
 .erp-grid-equal {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(360px, 0.9fr) minmax(0, 1.35fr);
   align-items: stretch;
+}
+
+#view-orders .erp-table-wrap table {
+  min-width: 0;
+  table-layout: fixed;
+}
+
+#view-orders .erp-table-wrap th,
+#view-orders .erp-table-wrap td {
+  padding: 12px 8px;
+  font-size: 0.76rem;
+  white-space: nowrap;
+}
+
+#view-orders .erp-table-wrap td {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .erp-grid-secondary {
@@ -840,6 +873,26 @@ button {
   background: rgba(255, 255, 255, 0.78);
 }
 
+.erp-order-tools {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 160px;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.erp-order-tools input,
+.erp-order-tools select {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid var(--erp-border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.84);
+  color: var(--erp-text);
+  padding: 0 12px;
+  font-weight: 800;
+  outline: none;
+}
+
 .erp-row-actions {
   display: inline-flex;
   align-items: center;
@@ -1006,7 +1059,7 @@ tr:last-child td {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .erp-grid-main {
+  .erp-grid-main:not(.erp-grid-equal) {
     grid-template-columns: 1fr;
   }
 }
@@ -1057,6 +1110,11 @@ tr:last-child td {
 
   .erp-periods {
     overflow-x: auto;
+  }
+
+  .erp-order-tools,
+  .erp-grid-equal {
+    grid-template-columns: 1fr;
   }
 
   .erp-periods button {

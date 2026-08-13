@@ -27,7 +27,7 @@
 
       <nav class="erp-nav">
         <button class="erp-nav-item active" data-view="dashboard" type="button"><span>📊</span><b>لوحة القيادة</b></button>
-        <button class="erp-nav-item" data-view="orders" type="button"><span>🧾</span><b>الطلبات اليدوية</b></button>
+        <button class="erp-nav-item" data-view="orders" type="button"><span>🧾</span><b>الطلبات</b></button>
         <button class="erp-nav-item" data-view="finance" type="button"><span>💳</span><b>المالية</b></button>
         <button class="erp-nav-item" data-view="expenses" type="button"><span>🧾</span><b>المصروفات</b></button>
         <button class="erp-nav-item" data-view="inventory" type="button"><span>📦</span><b>المخزون والخامات</b></button>
@@ -76,6 +76,12 @@
             <button data-period="week" type="button">7 أيام</button>
             <button data-period="month" type="button">الشهر</button>
             <button data-period="all" type="button">الكل</button>
+            <button data-period="custom-day" type="button">يوم</button>
+            <button data-period="custom-month" type="button">شهر</button>
+            <button data-period="custom-year" type="button">سنة</button>
+            <input id="erpCustomDay" class="erp-period-input" type="date" hidden>
+            <input id="erpCustomMonth" class="erp-period-input" type="month" hidden>
+            <input id="erpCustomYear" class="erp-period-input" type="number" min="2000" max="2100" step="1" hidden>
           </div>
         </section>
 
@@ -83,7 +89,7 @@
         <section class="erp-search-results" id="erpSearchResults" hidden></section>
 
         <section class="erp-view active" id="view-dashboard">
-          <div class="erp-grid erp-grid-main erp-grid-equal">
+          <div class="erp-grid erp-grid-main">
             <article class="erp-card erp-chart-card">
               <div class="erp-card-head">
                 <div><h2>الإيرادات مقابل المصروفات</h2><p>قراءة مالية من القيود اليدوية داخل النظام فقط.</p></div>
@@ -101,14 +107,6 @@
           </div>
           <div class="erp-grid erp-grid-secondary">
             <article class="erp-card">
-              <div class="erp-card-head"><div><h2>فصل بيانات المتجر</h2><p>نظام الإدارة لا يسحب منتجات المتجر كمصدر مخزون.</p></div></div>
-              <div class="erp-list" id="topProducts"></div>
-            </article>
-            <article class="erp-card">
-              <div class="erp-card-head"><div><h2>فصل الطلبات</h2><p>نظام الإدارة لا يسحب طلبات المتجر تلقائيًا.</p></div></div>
-              <div class="erp-list" id="statusBreakdown"></div>
-            </article>
-            <article class="erp-card">
               <div class="erp-card-head"><div><h2>ملخص الأعمال</h2><p>أهم الإشارات التي تحتاج متابعة.</p></div></div>
               <div class="erp-insights" id="erpInsights"></div>
             </article>
@@ -124,9 +122,9 @@
         </section>
 
         <section class="erp-view" id="view-orders">
-          <div class="erp-grid erp-grid-main">
+          <div class="erp-grid erp-grid-main erp-grid-equal">
             <article class="erp-card">
-              <div class="erp-card-head"><div><h2>إضافة طلب يدوي</h2><p>أدخل الطلبات يدويًا داخل نظام الإدارة بدون سحب تلقائي من المتجر.</p></div></div>
+              <div class="erp-card-head"><div><h2>إضافة طلب</h2><p>أدخل الطلبات داخل نظام الإدارة.</p></div></div>
               <form class="erp-form" data-erp-form="manual-order">
                 <label>رقم الطلب<input name="order_number" required placeholder="مثال: 1201"></label>
                 <label>اسم العميل<input name="customer_name" required placeholder="اسم العميل"></label>
@@ -134,16 +132,29 @@
                 <label>البريد الإلكتروني<input name="customer_email" type="email" placeholder="name@example.com"></label>
                 <label style="grid-column:1/-1">العنوان<input name="customer_address" placeholder="الإمارة، المنطقة، تفاصيل العنوان"></label>
                 <label>الإجمالي<input name="total" type="number" min="0" step="0.01" value="0"></label>
+                <label>العربون<input name="deposit" type="number" min="0" step="0.01" value="0"></label>
+                <label>الباقي<input name="remaining_display" type="text" value="AED 0" readonly></label>
                 <label>حالة الطلب<select name="status"><option value="new">جديد</option><option value="processing">قيد المعالجة</option><option value="ready">جاهز</option><option value="delivered">تم التسليم</option><option value="cancelled">ملغي</option></select></label>
                 <label style="grid-column:1/-1">ملاحظات<input name="notes" placeholder="ملاحظات داخلية"></label>
                 <button class="erp-primary" type="submit" data-manual-order-submit>حفظ الطلب</button>
               </form>
             </article>
             <article class="erp-card">
-              <div class="erp-card-head"><div><h2>الطلبات اليدوية</h2><p>آخر الطلبات التي تم إدخالها من هذه الصفحة.</p></div></div>
+              <div class="erp-card-head"><div><h2>الطلبات</h2><p>بحث وتصفية وتعديل الطلبات.</p></div></div>
+              <div class="erp-order-tools">
+                <input id="erpOrderSearch" type="search" placeholder="بحث برقم الطلب أو اسم العميل أو الهاتف">
+                <select id="erpOrderStatusFilter">
+                  <option value="">كل الحالات</option>
+                  <option value="new">جديد</option>
+                  <option value="processing">قيد المعالجة</option>
+                  <option value="ready">جاهز</option>
+                  <option value="delivered">تم التسليم</option>
+                  <option value="cancelled">ملغي</option>
+                </select>
+              </div>
               <div class="erp-table-wrap">
                 <table>
-                  <thead><tr><th>رقم الطلب</th><th>العميل</th><th>الهاتف</th><th>البريد</th><th>العنوان</th><th>الحالة</th><th>الإجمالي</th><th>إجراء</th></tr></thead>
+                  <thead><tr><th>رقم الطلب</th><th>العميل</th><th>الهاتف</th><th>الحالة</th><th>الإجمالي</th><th>العربون</th><th>الباقي</th><th>إجراء</th></tr></thead>
                   <tbody id="erpManualOrdersRows"></tbody>
                 </table>
               </div>

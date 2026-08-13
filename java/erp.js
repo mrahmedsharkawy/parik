@@ -4,8 +4,13 @@
   const state = {
     view: "dashboard",
     period: "month",
+    customDay: "",
+    customMonth: "",
+    customYear: "",
     selectedEmployeeId: "",
     editingManualOrderId: "",
+    orderSearch: "",
+    orderStatusFilter: "",
     transactions: [],
     manualOrders: [],
     categories: [],
@@ -22,7 +27,7 @@
 
   const titles = {
     dashboard: ["لوحة القيادة", "نظام إدارة داخلي يعتمد فقط على البيانات التي يتم إدخالها يدويًا."],
-    orders: ["الطلبات اليدوية", "إدخال ومتابعة الطلبات يدويًا داخل نظام الإدارة."],
+    orders: ["الطلبات", "إدخال ومتابعة الطلبات يدويًا داخل نظام الإدارة."],
     finance: ["المالية", "دفتر شبيه Excel للإيرادات والمصروفات والحسابات التلقائية."],
     expenses: ["المصروفات", "تسجيل مصروفات الشركة يدويًا مع التصنيفات والموردين والفواتير."],
     inventory: ["المخزون والخامات", "إدارة الخامات وحركات المخزون يدويًا داخل النظام."],
@@ -79,7 +84,12 @@
 
   function inPeriod(dateValue) {
     const d = new Date(dateValue);
-    if (isNaN(d.getTime()) || state.period === "all") return true;
+    if (state.period === "all") return true;
+    if (isNaN(d.getTime())) return false;
+    const iso = d.toISOString().slice(0, 10);
+    if (state.period === "custom-day") return !!state.customDay && iso === state.customDay;
+    if (state.period === "custom-month") return !!state.customMonth && iso.slice(0, 7) === state.customMonth;
+    if (state.period === "custom-year") return !!state.customYear && iso.slice(0, 4) === String(state.customYear);
     const start = new Date();
     start.setHours(0, 0, 0, 0);
     if (state.period === "today") return d >= start;
@@ -110,6 +120,14 @@
     return state.manualOrders.filter((row) => row.status !== "cancelled" && inPeriod(row.created_at || row.updated_at));
   }
 
+  function periodPurchases() {
+    return state.purchases.filter((row) => row.status !== "cancelled" && inPeriod(row.purchase_date || row.created_at));
+  }
+
+  function periodPayroll() {
+    return state.payroll.filter((row) => inPeriod(row.payroll_month || row.created_at));
+  }
+
   function total(rows) {
     return rows.reduce((sum, row) => sum + Number(row.amount || 0), 0);
   }
@@ -118,17 +136,24 @@
     return rows.reduce((sum, row) => sum + Number(row.total || 0), 0);
   }
 
+  function totalManualRemaining(rows) {
+    return rows.reduce((sum, row) => {
+      const remaining = row.remaining == null ? Number(row.total || 0) - Number(row.deposit || 0) : Number(row.remaining || 0);
+      return sum + Math.max(0, remaining);
+    }, 0);
+  }
+
   function totals() {
     const manualIncome = totalManualOrders(periodManualOrders());
     const income = total(incomeRows()) + manualIncome;
     const manualExpenses = total(expenseRows());
-    const purchaseCost = state.purchases
-      .filter((p) => p.status !== "cancelled")
-      .reduce((sum, p) => sum + Number(p.total || 0), 0);
-    const expenses = manualExpenses + purchaseCost;
-    const payrollCost = state.payroll.reduce((sum, run) => sum + Number(run.total || run.net_total || 0), 0);
+    const purchaseCost = periodPurchases().reduce((sum, p) => sum + Number(p.total || 0), 0);
+    const payrollCost = periodPayroll().reduce((sum, run) => sum + Number(run.total || run.net_total || 0), 0);
+    const expenses = manualExpenses + purchaseCost + payrollCost;
     const stockValue = state.materials.reduce((sum, material) => sum + Number(material.current_stock || 0) * Number(material.average_cost || material.opening_cost || 0), 0);
     const supplierDue = state.purchases.reduce((sum, p) => sum + Math.max(0, Number(p.total || 0) - Number(p.paid || 0)), 0);
+    const receivables = totalManualRemaining(state.manualOrders.filter((row) => !["delivered", "cancelled"].includes(row.status)));
+    const debt = supplierDue;
     return {
       income,
       expenses,
@@ -143,6 +168,8 @@
       payrollCost,
       stockValue,
       supplierDue,
+      receivables,
+      debt,
     };
   }
 
@@ -195,7 +222,7 @@
   }
 
   function renderSkeletons() {
-    if ($("erpKpis")) $("erpKpis").innerHTML = Array.from({ length: 4 }).map(() => '<div class="erp-skeleton"></div>').join("");
+    if ($("erpKpis")) $("erpKpis").innerHTML = Array.from({ length: 6 }).map(() => '<div class="erp-skeleton"></div>').join("");
   }
 
   function renderKpis() {
@@ -204,8 +231,10 @@
     const lowStock = state.materials.filter((m) => Number(m.current_stock || 0) <= Number(m.minimum_stock || 0)).length;
     const kpis = [
       { label: "إجمالي الإيرادات", value: money(t.income), note: "قيود مالية + طلبات يدوية", icon: "💸", bg: "var(--erp-blue-soft)", change: (incomeRows().length + periodManualOrders().length) + " مصدر" },
-      { label: "إجمالي المصروفات", value: money(t.expenses), note: "مصروفات + مشتريات", icon: "🧾", bg: "var(--erp-peach-soft)", change: (expenseRows().length + state.purchases.filter((p) => p.status !== "cancelled").length) + " قيد" },
+      { label: "إجمالي المصروفات", value: money(t.expenses), note: "مصروفات + مشتريات + رواتب", icon: "🧾", bg: "var(--erp-peach-soft)", change: (expenseRows().length + periodPurchases().length + periodPayroll().length) + " قيد" },
       { label: "صافي الربح", value: money(t.netProfit), note: "هامش " + t.margin.toFixed(1) + "%", icon: "📈", bg: "var(--erp-mint-soft)", change: t.netProfit >= 0 ? "ربح" : "خسارة" },
+      { label: "مديونية", value: money(t.debt), note: "مبالغ مستحقة للموردين", icon: "📌", bg: "var(--erp-peach-soft)", change: periodPurchases().length + " شراء" },
+      { label: "مستحقات", value: money(t.receivables), note: "طلبات لم يتم تسليمها", icon: "🧾", bg: "var(--erp-blue-soft)", change: state.manualOrders.filter((row) => !["delivered", "cancelled"].includes(row.status)).length + " طلب" },
       { label: "تنبيهات", value: num(lowStock + docsExpiring, 0), note: "مخزون ومستندات", icon: "🔔", bg: "var(--erp-purple-soft)", change: lowStock + " مخزون" },
     ];
     $("erpKpis").innerHTML = kpis.map((item) => `
@@ -223,10 +252,14 @@
     const rows = lastSevenDays().map((day) => {
       const dayRows = state.transactions.filter((row) => String(row.transaction_date || "").slice(0, 10) === day.key);
       const dayManualOrders = state.manualOrders.filter((row) => row.status !== "cancelled" && String(row.created_at || row.updated_at || "").slice(0, 10) === day.key);
+      const dayPurchases = state.purchases.filter((row) => row.status !== "cancelled" && String(row.purchase_date || row.created_at || "").slice(0, 10) === day.key);
+      const dayPayroll = state.payroll.filter((row) => String(row.payroll_month || row.created_at || "").slice(0, 10) === day.key);
       return {
         label: day.label,
         income: total(dayRows.filter((row) => row.type === "income")) + totalManualOrders(dayManualOrders),
-        expense: total(dayRows.filter((row) => row.type === "expense")),
+        expense: total(dayRows.filter((row) => row.type === "expense")) +
+          dayPurchases.reduce((sum, row) => sum + Number(row.total || 0), 0) +
+          dayPayroll.reduce((sum, row) => sum + Number(row.total || row.net_total || 0), 0),
       };
     });
     const max = Math.max(1, ...rows.map((row) => Math.max(row.income, row.expense)));
@@ -255,6 +288,12 @@
     expenseRows().forEach((row) => {
       const key = row.category || categoryName(row.category_id) || "مصروفات أخرى";
       map[key] = (map[key] || 0) + Number(row.amount || 0);
+    });
+    periodPurchases().forEach((row) => {
+      map["مشتريات"] = (map["مشتريات"] || 0) + Number(row.total || 0);
+    });
+    periodPayroll().forEach((row) => {
+      map["رواتب"] = (map["رواتب"] || 0) + Number(row.total || row.net_total || 0);
     });
     return Object.entries(map).sort((a, b) => b[1] - a[1]);
   }
@@ -321,17 +360,28 @@
   function renderManualOrders() {
     const target = $("erpManualOrdersRows");
     if (!target) return;
-    target.innerHTML = state.manualOrders.length ? state.manualOrders.map((order) => `
-      <tr>
-        <td><b>#${esc(order.order_number)}</b></td>
-        <td>${esc(order.customer_name)}</td>
-        <td>${esc(order.customer_phone || "")}</td>
-        <td>${esc(order.customer_email || "")}</td>
-        <td>${esc(order.customer_address || "")}</td>
-        <td><span class="erp-status">${esc(orderStatusLabel(order.status))}</span></td>
-        <td><b>${money(order.total)}</b></td>
-        <td><span class="erp-row-actions"><button class="erp-action-mini" type="button" data-edit-manual-order-id="${esc(order.id)}">تعديل</button><button class="erp-danger-mini" type="button" data-delete-row-table="erp_manual_orders" data-delete-row-id="${esc(order.id)}">حذف</button></span></td>
-      </tr>`).join("") : '<tr><td colspan="8">لا توجد طلبات يدوية بعد.</td></tr>';
+    const q = state.orderSearch.trim().toLowerCase();
+    const rows = state.manualOrders.filter((order) => {
+      const matchStatus = !state.orderStatusFilter || order.status === state.orderStatusFilter;
+      const matchText = !q || [order.order_number, order.customer_name, order.customer_phone, order.customer_email, order.customer_address]
+        .some((value) => String(value || "").toLowerCase().includes(q));
+      return matchStatus && matchText;
+    });
+    target.innerHTML = rows.length ? rows.map((order) => {
+      const deposit = Number(order.deposit || 0);
+      const remaining = order.remaining == null ? Math.max(0, Number(order.total || 0) - deposit) : Number(order.remaining || 0);
+      return `
+        <tr>
+          <td><b>#${esc(order.order_number)}</b></td>
+          <td>${esc(order.customer_name)}</td>
+          <td>${esc(order.customer_phone || "")}</td>
+          <td><span class="erp-status">${esc(orderStatusLabel(order.status))}</span></td>
+          <td><b>${money(order.total)}</b></td>
+          <td>${money(deposit)}</td>
+          <td><b>${money(remaining)}</b></td>
+          <td><span class="erp-row-actions"><button class="erp-action-mini" type="button" data-edit-manual-order-id="${esc(order.id)}">تعديل</button><button class="erp-danger-mini" type="button" data-delete-row-table="erp_manual_orders" data-delete-row-id="${esc(order.id)}">حذف</button></span></td>
+        </tr>`;
+    }).join("") : '<tr><td colspan="8">لا توجد طلبات مطابقة.</td></tr>';
   }
 
   function renderActivity() {
@@ -366,7 +416,7 @@
     const t = totals();
     $("erpProfitEngine").innerHTML = [
       ["إجمالي الإيرادات", money(t.income), "مجموع كل الإيرادات اليدوية"],
-      ["إجمالي المصروفات", money(t.expenses), "المصروفات اليدوية + أوامر الشراء غير الملغية"],
+      ["إجمالي المصروفات", money(t.expenses), "المصروفات اليدوية + أوامر الشراء + الرواتب"],
       ["تكلفة المشتريات", money(t.purchaseCost), "إجمالي أوامر الشراء غير الملغية"],
       ["إجمالي الربح", money(t.grossProfit), "الإيرادات ناقص المصروفات"],
       ["مصروفات التشغيل", money(t.operatingExpenses), "مصروفات التشغيل"],
@@ -517,7 +567,7 @@
     $("erpReportRows").innerHTML = [
       ["إجمالي الإيرادات", money(t.income), "قيود الإيراد + الطلبات اليدوية غير الملغية"],
       ["إيرادات الطلبات اليدوية", money(t.manualIncome), "إجمالي الطلبات اليدوية غير الملغية"],
-      ["إجمالي المصروفات", money(t.expenses), "كل المصروفات اليدوية + أوامر الشراء"],
+      ["إجمالي المصروفات", money(t.expenses), "كل المصروفات اليدوية + أوامر الشراء + الرواتب"],
       ["تكلفة المشتريات", money(t.purchaseCost), "أوامر الشراء غير الملغية"],
       ["صافي الربح", money(t.netProfit), "الإيرادات ناقص المصروفات"],
       ["قيمة مخزون الخامات", money(t.stockValue), "المتوفر مضروبًا في متوسط التكلفة"],
@@ -681,6 +731,15 @@
   function setPeriod(period) {
     state.period = period;
     document.querySelectorAll(".erp-periods button").forEach((btn) => btn.classList.toggle("active", btn.dataset.period === period));
+    const dayInput = $("erpCustomDay");
+    const monthInput = $("erpCustomMonth");
+    const yearInput = $("erpCustomYear");
+    if (dayInput) dayInput.hidden = period !== "custom-day";
+    if (monthInput) monthInput.hidden = period !== "custom-month";
+    if (yearInput) yearInput.hidden = period !== "custom-year";
+    if (period === "custom-day" && dayInput && !dayInput.value) state.customDay = "";
+    if (period === "custom-month" && monthInput && !monthInput.value) state.customMonth = "";
+    if (period === "custom-year" && yearInput && !yearInput.value) state.customYear = "";
     renderAll();
   }
 
@@ -723,6 +782,7 @@
       customer_address: data.get("customer_address") || null,
       status: data.get("status") || "new",
       total: Number(data.get("total") || 0),
+      deposit: Number(data.get("deposit") || 0),
       notes: data.get("notes") || null,
     };
     if (!payload.order_number || !payload.customer_name) return toast("اكتب رقم الطلب واسم العميل.");
@@ -740,6 +800,14 @@
     await loadData();
   }
 
+  function updateManualOrderRemaining(form) {
+    if (!form) return;
+    const total = Number(form.elements.total?.value || 0);
+    const deposit = Number(form.elements.deposit?.value || 0);
+    const remaining = Math.max(0, total - deposit);
+    if (form.elements.remaining_display) form.elements.remaining_display.value = money(remaining);
+  }
+
   function editManualOrder(orderId) {
     const order = state.manualOrders.find((row) => String(row.id) === String(orderId));
     const form = document.querySelector('[data-erp-form="manual-order"]');
@@ -751,8 +819,10 @@
     form.elements.customer_email.value = order.customer_email || "";
     form.elements.customer_address.value = order.customer_address || "";
     form.elements.total.value = Number(order.total || 0);
+    form.elements.deposit.value = Number(order.deposit || 0);
     form.elements.status.value = order.status || "new";
     form.elements.notes.value = order.notes || "";
+    updateManualOrderRemaining(form);
     const submit = form.querySelector("[data-manual-order-submit]");
     if (submit) submit.textContent = "حفظ التعديل";
     form.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -1171,6 +1241,10 @@
       run.catch((e) => toast(e.message));
     });
     document.querySelectorAll("[data-erp-form]").forEach((form) => {
+      if (form.dataset.erpForm === "manual-order") {
+        ["total", "deposit"].forEach((name) => form.elements[name]?.addEventListener("input", () => updateManualOrderRemaining(form)));
+        updateManualOrderRemaining(form);
+      }
       form.addEventListener("submit", (event) => {
         event.preventDefault();
         const action = form.dataset.erpForm;
@@ -1192,6 +1266,29 @@
     });
     $("erpExportCsv").addEventListener("click", exportCsv);
     $("erpSearch").addEventListener("input", renderSearch);
+    $("erpCustomDay")?.addEventListener("change", (event) => {
+      state.customDay = event.target.value || "";
+      state.period = "custom-day";
+      setPeriod("custom-day");
+    });
+    $("erpCustomMonth")?.addEventListener("change", (event) => {
+      state.customMonth = event.target.value || "";
+      state.period = "custom-month";
+      setPeriod("custom-month");
+    });
+    $("erpCustomYear")?.addEventListener("input", (event) => {
+      state.customYear = event.target.value || "";
+      state.period = "custom-year";
+      setPeriod("custom-year");
+    });
+    $("erpOrderSearch")?.addEventListener("input", (event) => {
+      state.orderSearch = event.target.value || "";
+      renderManualOrders();
+    });
+    $("erpOrderStatusFilter")?.addEventListener("change", (event) => {
+      state.orderStatusFilter = event.target.value || "";
+      renderManualOrders();
+    });
     $("erpNotifyBtn").addEventListener("click", () => enableNotifications().catch((e) => toast(e.message)));
   }
 
