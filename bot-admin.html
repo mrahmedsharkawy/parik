@@ -374,7 +374,7 @@ let botProducts=[];
 let botCategories=[];
 let botSubcategories=[];
 let conversation=[];
-const BOT_PRODUCT_LIMIT=24;
+const BOT_PRODUCT_LIMIT=4;
 const BOT_PRODUCT_CACHE_MS=5*60*1000;
 const BOT_KNOWLEDGE_PAGE_SIZE=250;
 const BOT_KNOWLEDGE_RENDER_BATCH=5;
@@ -554,7 +554,10 @@ function canonicalAction(action){
     CHECK_PRODUCT_AVAILABILITY:'PRODUCT_LOOKUP',
     GET_CUSTOMER_ORDERS:'TRACK_ORDER',
     GET_CUSTOMER_INFO:'COLLECT_LEAD',
-    HUMAN_HANDOFF:'HANDOFF_HUMAN'
+    HUMAN_HANDOFF:'HANDOFF_HUMAN',
+    RETURN_ORDER:'UPDATE_ORDER',
+    REFUND_ORDER:'UPDATE_ORDER',
+    CANCEL_ORDER:'UPDATE_ORDER'
   };
   return map[a]!==undefined?map[a]:a;
 }
@@ -886,6 +889,16 @@ function questionSimilarity(a,b){
   }
   return hit/Math.max(A.size,B.size);
 }
+function isQuestionPhraseMatch(message,question){
+  const msg=normalize(message), q=normalize(question);
+  if(!msg||!q)return false;
+  if(msg===q)return true;
+  if(msg.includes(q))return true;
+  const qt=expandedTokens(q).filter(w=>w.length>1);
+  if(qt.length<2)return false;
+  const mt=new Set(expandedTokens(msg));
+  return qt.every(w=>mt.has(w));
+}
 function levenshtein(a,b){
   a=String(a||''); b=String(b||'');
   const prev=Array.from({length:b.length+1},(_,i)=>i);
@@ -947,8 +960,9 @@ function candidateKnowledge(message,entities={}){
     const hit=keywordIndex.get(t);
     if(hit)hit.forEach(id=>ids.add(id));
   });
-  const topicAction={order:'TRACK_ORDER',browse:'CATEGORY_PRODUCTS',gift:'CUSTOM_GIFT_ORDER',human:'HANDOFF_HUMAN',image:'IMAGE_PRODUCT_SEARCH'}[detectTopic(message)];
+  const topicAction={order:'TRACK_ORDER',update_order:'UPDATE_ORDER',browse:'CATEGORY_PRODUCTS',gift:'CUSTOM_GIFT_ORDER',human:'HANDOFF_HUMAN',image:'IMAGE_PRODUCT_SEARCH'}[detectTopic(message)];
   if(topicAction)knowledgeIndex.filter(e=>e.action===topicAction).slice(0,80).forEach(e=>ids.add(e.id));
+  if(returnOrderIntent(message))knowledgeIndex.filter(e=>e.action==='UPDATE_ORDER').slice(0,80).forEach(e=>ids.add(e.id));
   if(entities.occasion||entities.recipient||entities.budget!=null)knowledgeIndex.filter(e=>['CUSTOM_GIFT_ORDER','PRODUCT_SEARCH','CATEGORY_PRODUCTS'].includes(e.action)).slice(0,80).forEach(e=>ids.add(e.id));
   let arr=[...ids].map(id=>knowledgeIndexById.get(id)).filter(Boolean);
   if(!arr.length)arr=knowledgeIndex.filter(e=>e.item&&e.item.active).slice(0,120);
@@ -975,6 +989,7 @@ function score(msg,item,entry=null,entities={}){
   const nq=normalize(item.question),nt=normalize(msg);
   if(nq&&nt.includes(nq))s+=6;
   if(nq&&nq===nt)s+=8;
+  if(isQuestionPhraseMatch(msg,item.question))s+=28;
   // لا تعتبر إجابة سؤال مختلفة صحيحة لمجرد كلمة عامة مشتركة.
   const sim=questionSimilarity(msg,item.question);
   if(sim>=.85)s+=5;
@@ -984,13 +999,21 @@ function score(msg,item,entry=null,entities={}){
   const action=entry?entry.action:configuredAction(getBotConfig(item));
   const topic=detectTopic(msg);
   const sig=intentSignals(msg);
+  const returnIntent=returnOrderIntent(msg);
+  const newIntent=newOrderIntent(msg);
+  const itemText=[item.question,item.answer,visibleKeywords(item.keywords).join(' ')].map(normalize).join(' ');
   if(topic==='order'&&action==='TRACK_ORDER')s+=4;
   if(topic==='browse'&&['CATEGORY_PRODUCTS','PRODUCT_SEARCH','SHOW_CATEGORY'].includes(action))s+=3;
+  if(returnIntent&&action==='UPDATE_ORDER')s+=12;
+  if(returnIntent&&/ارجاع|إرجاع|استرجاع|استرداد|مرتجع|refund|return/.test(itemText))s+=8;
+  if(returnIntent&&['CREATE_QUOTE','CUSTOM_GIFT_ORDER','PRODUCT_SEARCH','CATEGORY_PRODUCTS','PRODUCT_LOOKUP'].includes(action))s-=12;
+  if(returnIntent&&newIntent&&/اعمل\s+طلب|اسوي\s+طلب|اطلب|اشتري|شراء|طلب\s+جديد/.test(itemText))s-=10;
+  if(newIntent&&!returnIntent&&['CREATE_QUOTE','CUSTOM_GIFT_ORDER','PRODUCT_SEARCH'].includes(action))s+=3;
   if((sig.price_question||sig.minimum_quantity||sig.product_inquiry)&&['PRODUCT_SEARCH','PRODUCT_LOOKUP','CHECK_PRODUCT_AVAILABILITY','CREATE_QUOTE','CATEGORY_PRODUCTS','SHOW_PRODUCT'].includes(action))s+=5;
   if(action==='TRACK_ORDER'&&!sig.order_tracking)s-=12;
   if(action==='TRACK_ORDER'&&(sig.price_question||sig.minimum_quantity||sig.product_inquiry)&&!sig.order_number)s-=10;
   if((topic==='gift'||entities.recipient||entities.occasion)&&['CUSTOM_GIFT_ORDER','PRODUCT_SEARCH','CATEGORY_PRODUCTS'].includes(action))s+=2;
-  if(entities.budget!=null&&/سعر|ميزانيه|budget|price|درهم/.test([item.question,item.answer,visibleKeywords(item.keywords).join(' ')].map(normalize).join(' ')))s+=1.5;
+  if(entities.budget!=null&&/سعر|ميزانيه|budget|price|درهم/.test(itemText))s+=1.5;
   if(topic==='order'&&['PRODUCT_SEARCH','CATEGORY_PRODUCTS','CUSTOM_GIFT_ORDER'].includes(action))s-=4;
   if(topic==='browse'&&action==='TRACK_ORDER')s-=5;
   if(topic==='greeting'&&action&&action!=='HANDOFF_HUMAN')s-=5;
@@ -1602,6 +1625,7 @@ async function clearAnsweredUnanswered(text){
 async function persistUnanswered(msg){
   const text=String(msg||'').trim();if(!text)return;
   const list=readLocal('bariq_bot_unanswered',[]),n=normalize(text);
+  const shouldCreateKnowledgeDraft=!extractOrderRef(text)&&!returnOrderIntent(text)&&!hasStrictOrderTrackingSignal(text);
   const hidden=readLocal('bariq_bot_unanswered_hidden',[]).filter(x=>x!==n);
   saveLocal('bariq_bot_unanswered_hidden',hidden);
   let found=list.find(x=>normalize(x.text)===n);
@@ -1620,16 +1644,18 @@ async function persistUnanswered(msg){
           last_seen_at:new Date().toISOString()
         })}).catch(()=>null);
       }
-      const existing=questions.find(x=>normalize(x.question)===n);
-      if(existing){
-        const count=Math.max(Number(existing.usage_count)||0,found.count||1);
-        await window.sbFetch('bot_knowledge?id=eq.'+existing.id,{method:'PATCH',body:JSON.stringify({usage_count:count,active:false,category:existing.category||'أسئلة تحتاج إجابة',updated_at:new Date().toISOString()})});
-      }else{
-        await window.sbFetch('bot_knowledge',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({
-          question:text,answer:'',category:'أسئلة تحتاج إجابة',keywords:[],active:false,usage_count:found.count||1,updated_at:new Date().toISOString()
-        })});
-        found.savedToDb=true;saveLocal('bariq_bot_unanswered',list.slice(0,BOT_UNANSWERED_LOCAL_LIMIT));
-        await loadQuestions();
+      if(shouldCreateKnowledgeDraft){
+        const existing=questions.find(x=>normalize(x.question)===n);
+        if(existing){
+          const count=Math.max(Number(existing.usage_count)||0,found.count||1);
+          await window.sbFetch('bot_knowledge?id=eq.'+existing.id,{method:'PATCH',body:JSON.stringify({usage_count:count,active:false,category:existing.category||'أسئلة تحتاج إجابة',updated_at:new Date().toISOString()})});
+        }else{
+          await window.sbFetch('bot_knowledge',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify({
+            question:text,answer:'',category:'أسئلة تحتاج إجابة',keywords:[],active:false,usage_count:found.count||1,updated_at:new Date().toISOString()
+          })});
+          found.savedToDb=true;saveLocal('bariq_bot_unanswered',list.slice(0,BOT_UNANSWERED_LOCAL_LIMIT));
+          await loadQuestions();
+        }
       }
     }catch(e){console.warn('persistUnanswered:',e.message)}
   }
@@ -1783,6 +1809,14 @@ function minimumQuantityIntent(text){
 function productInquiryIntent(text){
   const t=normalize(text);
   return priceQuestionIntent(text)||minimumQuantityIntent(text)||/(?:عرض\s*سعر|منتج|منتجات|اكواب|أكواب|كوب|استاند|ستاند|قطعه|قطعة|quote)/i.test(t);
+}
+function returnOrderIntent(text){
+  const t=normalize(text);
+  return /(?:ارجاع|إرجاع|رجوع|استرجاع|استرداد|مرتجع|ارجعه|ارجع|refund|return)/i.test(t);
+}
+function newOrderIntent(text){
+  const t=normalize(text);
+  return /(?:اعمل\s+طلب|اسوي\s+طلب|اطلب|اطلبه|اشتري|شراء|طلب\s+جديد|order\s+new|new\s+order)/i.test(t);
 }
 function hasStrictOrderTrackingSignal(text){
   const t=normalize(text), raw=arabicDigits(text);
@@ -2057,7 +2091,7 @@ const INTEREST_TERMS={
   'أطفال':['اطفال','toys','kids']
 };
 const CATEGORY_TERMS={
-  newborn:['مولود','مواليد','بيبي','baby','newborn','اطفال','أطفال'],
+  newborn:['مولود','مواليد','بيبي','baby','newborn','born in','born','اطفال','أطفال'],
   graduation:['تخرج','graduation','graduate'],
   eid:['عيد','eid','فطر','اضحى','أضحى'],
   ramadan:['رمضان','ramadan'],
@@ -2268,8 +2302,8 @@ function categoryPageLabel(value){
   const subName=sub?flatText(sub.name_ar||sub.name_en||sub.name):decodeActionValuePart(params.subcategory);
   return [subName,catName].map(x=>String(x||'').trim()).filter(Boolean).join(' ');
 }
-function categoryProductsIntro(actionValue,fallback){
-  const label=categoryPageLabel(actionValue);
+function categoryProductsIntro(actionValue,fallback,preferredLabel=''){
+  const label=preferredLabel||categoryPageLabel(actionValue);
   return label?'دي المنتجات المطابقة لفئة '+label+':':fallback;
 }
 function productsFromCategoryPageValue(actionValue){
@@ -2334,13 +2368,27 @@ function productNameHasCategoryKey(p,keys){
   const name=normalize(productName(p));
   return (keys||[]).some(k=>(CATEGORY_TERMS[k]||[]).some(w=>hasWholeTerm(name,w)));
 }
+function productHasCategoryKey(p,key){
+  const terms=(CATEGORY_TERMS[key]||[]).map(normalize);
+  if(!terms.length)return false;
+  const name=normalize(productName(p));
+  const cat=productCategoryText(p);
+  const desc=normalize(p.description_ar||p.description_en||p.desc||p.description||'');
+  return terms.some(w=>hasWholeTerm(name,w)||hasWholeTerm(cat,w)||hasWholeTerm(desc,w));
+}
+function explicitCategoryKeys(text){
+  const keys=requestedCategoryKeys(text);
+  const generic=new Set(['corporate']);
+  return keys.filter(k=>!generic.has(k));
+}
 async function recommendCategoryProducts(text,ctx=null){
   await loadProductsForBot();
   const terms=categoryTermsFromText(text);
-  const requestedKeys=requestedCategoryKeys(text);
+  const requestedKeys=explicitCategoryKeys(text);
   if(!terms.length)return [];
   return botProducts.map(p=>{
     const pt=productText(p),ct=productCategoryText(p);let s=0;
+    if(requestedKeys.length&&!requestedKeys.some(k=>productHasCategoryKey(p,k)))return {...p,_score:0};
     terms.forEach(w=>{if(hasWholeTerm(ct,w))s+=20});
     if(s<=0)return {...p,_score:0};
     terms.forEach(w=>{if(hasWholeTerm(pt,w))s+=3});
@@ -2354,10 +2402,11 @@ async function recommendCategoryProductsForAction(actionValue,text,ctx=null){
   if(hasCategoryPageParams(actionValue))return [];
   const terms=[...categoryTermsFromActionValue(actionValue),...categoryTermsFromText(text)];
   const cleanTerms=[...new Set(terms.map(normalize).filter(Boolean))];
-  const requestedKeys=[...new Set([...categoryKeysFromTerms(cleanTerms),...requestedCategoryKeys(text)])];
+  const requestedKeys=[...new Set([...categoryKeysFromTerms(cleanTerms),...explicitCategoryKeys(text)])];
   if(!cleanTerms.length)return [];
   return botProducts.map(p=>{
     const pt=productText(p),ct=productCategoryText(p);let s=0;
+    if(requestedKeys.length&&!requestedKeys.some(k=>productHasCategoryKey(p,k)))return {...p,_score:0};
     cleanTerms.forEach(w=>{if(hasWholeTerm(ct,w))s+=25});
     if(s<=0)return {...p,_score:0};
     if(hasConflictingCategorySignal(p,requestedKeys))return {...p,_score:0};
@@ -2444,6 +2493,29 @@ function compactProductForMemory(p){
 function compactProductsForMemory(arr){
   return (arr||[]).slice(0,BOT_PRODUCT_LIMIT).map(compactProductForMemory);
 }
+function markKnowledgeResult(res,item){
+  if(!res||!item)return res;
+  res.fromKnowledge=true;
+  res.knowledgeId=item.id||res.knowledgeId||null;
+  res.match=res.match||item;
+  if(Array.isArray(res.products))res.products=res.products.slice(0,BOT_PRODUCT_LIMIT);
+  return res;
+}
+function silentResult(meta={}){
+  return {type:'silent',text:'',silent:true,...meta};
+}
+function orderNumberRequestResult(){
+  return {type:'answer',text:'ابعت رقم الطلب',systemAction:'ASK_ORDER_NUMBER'};
+}
+function isCustomerSafeResult(res){
+  if(!res)return false;
+  if(res.type==='silent')return true;
+  if(res.systemAction==='ASK_ORDER_NUMBER')return true;
+  if(res.systemAction==='TRACK_ORDER'&&res.orderRef)return true;
+  if(res.fromKnowledge||res.knowledgeId||res.match)return true;
+  if(res.type==='products'&&res.fromKnowledge)return true;
+  return false;
+}
 async function recommendProductsUI(){
   const m=$('productQuery').value.trim();if(!m)return;
   $('productQueryStatus').textContent='⏳ جاري تحليل الطلب...';
@@ -2523,41 +2595,13 @@ function botStatePayload(){
   };
 }
 async function saveBotConversationState(){
-  if(settings.conversationMemory===false)return null;
-  if(!window.sbFetch)return null;
-  try{
-    const rows=await window.sbFetch('bot_conversations?on_conflict=session_id',{method:'POST',prefer:'resolution=merge-duplicates,return=representation',body:JSON.stringify(botStatePayload())});
-    if(Array.isArray(rows)&&rows[0])botConversationId=rows[0].id;
-    return botConversationId;
-  }catch(e){
-    return null;
-  }
+  return botConversationId||null;
 }
 async function loadBotConversationState(){
-  if(settings.conversationMemory===false)return false;
-  if(!window.sbFetch)return false;
-  try{
-    const rows=await window.sbFetch('bot_conversations?session_id=eq.'+encodeURIComponent(getBotSessionId())+'&limit=1');
-    if(Array.isArray(rows)&&rows[0]){
-      botConversationId=rows[0].id;
-      if(rows[0].state&&typeof rows[0].state==='object')botState={...botState,...rows[0].state,sessionId:getBotSessionId()};
-      return true;
-    }
-  }catch(e){}
   return false;
 }
 async function logBotMessage(role,message,meta={}){
-  try{
-    const conversation_id=botConversationId||await saveBotConversationState();
-    if(!conversation_id)return;
-    await window.sbFetch('bot_messages',{method:'POST',body:JSON.stringify({
-      conversation_id,role,message:String(message||''),
-      intent:meta.intent||botState.lastIntent||null,
-      knowledge_id:meta.knowledge_id||botState.lastKnowledgeId||null,
-      action:meta.action||botState.pendingAction||botState.actionData?.action||null,
-      metadata:meta
-    })});
-  }catch(e){}
+  return;
 }
 
 // ===== فهم الموضوع (مصحح) =====
@@ -2565,6 +2609,7 @@ function detectTopic(text){
   const t=normalize(text);
   const hasNumber=/\d{3,}/.test(arabicDigits(text));
   const sig=intentSignals(text);
+  if(returnOrderIntent(text)) return 'update_order';
   if(/موظف|بشر|احد يرد|حد يكلمني|عايز اتكلم|human|support/i.test(t)) return 'human';
   if((sig.price_question||sig.minimum_quantity||sig.product_inquiry) && !sig.order_tracking) return 'browse';
 
@@ -2635,10 +2680,20 @@ function findBestAnswer(msg,entities={}){
   const margin=second?best.score-second.score:best.score;
   const sim=best.similarity||0;
   // إجابة قاعدة المعرفة لا تُستخدم إلا مع تطابق قوي مستقل، أو تشابه سؤال مرتفع جدًا.
-  const direct=normalize(msg)===normalize(best.question)||normalize(msg).includes(normalize(best.question))||normalize(best.question).includes(normalize(msg));
+  const phraseMatch=isQuestionPhraseMatch(msg,best.question);
+  const direct=phraseMatch||normalize(msg)===normalize(best.question)||normalize(msg).includes(normalize(best.question))||normalize(best.question).includes(normalize(msg));
   const strong=direct||(best.score>=minScore && (sim>=.68 || margin>=3)) && !(second && second.score>=best.score*.94 && sim<.78);
   const medium=!strong && best.score>=Math.max(4,minScore-2) && (!second || margin>=1);
   return strong?{found:true,confidence:'high',item:best,ranked}:medium?{found:false,confidence:'medium',item:best,second,ranked}:{found:false,confidence:'low',ranked};
+}
+function findKnowledgeFirstMatch(msg,entities={}){
+  const ranked=rank(msg,entities);
+  const item=(ranked||[]).find(x=>{
+    if(!x||x.active===false||!String(x.answer||'').trim())return false;
+    const q=normalize(x.question), m=normalize(msg);
+    return isQuestionPhraseMatch(msg,x.question)||q===m||m.includes(q)||q.includes(m);
+  });
+  return item?{found:true,item,ranked}:null;
 }
 function mediumKnowledgeClarify(match){
   const a=match?.item, b=match?.second;
@@ -2667,7 +2722,7 @@ function fieldTypeLabel(type){
 }
 function actionReply(action,value,cfg){
   const example=cfg?.fieldExample?'\nمثال محفوظ: '+cfg.fieldExample:'';
-  if(action==='HANDOFF_HUMAN')return settings.human+'\nتم تسجيل البيانات: '+value;
+  if(action==='HANDOFF_HUMAN')return '';
   if(action==='PRODUCT_SEARCH')return 'تمام، هستخدم البيانات دي في ترشيح المنتجات: '+value;
   if(action==='PRODUCT_LOOKUP')return 'تمام، هبحث عن المنتج ده في الموقع: '+value;
   if(action==='CATEGORY_PRODUCTS')return 'تمام، هعرض منتجات الفئة المناسبة: '+value;
@@ -2697,15 +2752,22 @@ async function executeBotAction(action,actionValue,context={},item=null){
   const answer=String(item?.answer||'').trim();
   const seed=[item?.question,answer,actionValue,context?.raw,contextPrompt(context||{})].filter(Boolean).join(' ');
   if(!action||action==='NONE')return answer?{type:'answer',text:answer}:null;
-  if(action==='HANDOFF_HUMAN')return {type:'answer',text:settings.human};
+  if(action==='HANDOFF_HUMAN')return answer?{type:'answer',text:answer}:silentResult({unanswered:true});
   if(action==='TRACK_ORDER'||action==='GET_ORDER_STATUS'||action==='GET_ORDER_DETAILS'){
     resetBotState('order');
-    return await handleOrderQuery(seed);
+    if(!extractOrderRef(seed)){
+      botState.waitingFor='order_number';
+      return answer?{type:'answer',text:answer}:silentResult({unanswered:true});
+    }
+    return await handleOrderQuery(seed,answer);
   }
   if(action==='CATEGORY_PRODUCTS'||action==='SHOW_CATEGORY'){
     const value=actionValue||'';
-    const products=await recommendCategoryProductsForAction(value,seed,context||{});
-    if(products.length)return {type:'products',text:categoryProductsIntro(value,answer||'دي منتجات مناسبة للفئة المطلوبة:'),products};
+    const products=await recommendCategoryProductsForAction(value,[context?.raw,seed].filter(Boolean).join(' '),context||{});
+    if(products.length){
+      const fallback='دي منتجات مناسبة للفئة المطلوبة:';
+      return {type:'products',text:categoryProductsIntro(value,answer||fallback),products,systemAction:'CATEGORY_PRODUCTS'};
+    }
     if(/^https?:\/\//i.test(value)||/categories\.html/i.test(value)){
       return {type:'clarify',text:'لا يوجد منتجات لهذه الفئة حاليًا.'};
     }
@@ -2721,7 +2783,7 @@ async function executeBotAction(action,actionValue,context={},item=null){
     if(products.length)return {type:'products',text:answer||'لقيت أقرب منتج مطابق من الموقع:',products};
     return answer?{type:'answer',text:answer}:{type:'clarify',text:'محتاج اسم المنتج أو وصف أو رابط صورة أوضح عشان أبحث في منتجات الموقع.'};
   }
-  if(action==='UPDATE_ORDER')return answer?{type:'answer',text:answer}:{type:'clarify',text:'ابعت رقم الطلب والتعديل المطلوب عليه.'};
+  if(action==='UPDATE_ORDER')return answer?{type:'answer',text:answer}:silentResult({unanswered:true});
   if(action==='GET_CUSTOMER_ORDERS'||action==='GET_CUSTOMER_INFO'||action==='COLLECT_LEAD'){
     return answer?{type:'answer',text:answer}:{type:'clarify',text:'ابعت رقم التواصل أو البريد الإلكتروني عشان نكمل معاك.'};
   }
@@ -2729,59 +2791,62 @@ async function executeBotAction(action,actionValue,context={},item=null){
 }
 async function handleConfiguredKnowledge(item){
   const cfg=getBotConfig(item)||{};
+  const answerText=String(item?.answer||'').trim();
+  if(!answerText)return silentResult({unanswered:true,knowledgeId:item?.id||null});
   botState.lastAction=configuredAction(cfg)||botState.lastAction;
   if(cfg.inputMode==='required_data'){
     const action=configuredAction(cfg);
     const seed=[item.question,item.answer,cfg.actionValue,cfg.fieldExample].join(' ');
     if(action==='CATEGORY_PRODUCTS' && categoryBrowseIntent(seed)){
       const products=await recommendCategoryProductsForAction(cfg.actionValue||cfg.fieldExample||'',seed,extractIntent(seed));
-      if(products.length)return {type:'products',text:categoryProductsIntro(cfg.actionValue||cfg.fieldExample||'',String(item.answer||'دي منتجات مناسبة للفئة المطلوبة:')),products};
+      if(products.length)return markKnowledgeResult({type:'products',text:String(item.answer),products},item);
     }
     if(action==='PRODUCT_SEARCH'){
       const products=await recommendProducts(seed,extractIntent(seed));
-      if(products.length)return {type:'products',text:String(item.answer||'دي أقرب منتجات مناسبة:'),products};
+      if(products.length)return markKnowledgeResult({type:'products',text:String(item.answer),products},item);
     }
     if(action==='PRODUCT_LOOKUP'||action==='IMAGE_PRODUCT_SEARCH'){
       const products=await lookupProductByText(seed);
-      if(products.length)return {type:'products',text:String(item.answer||'لقيت أقرب منتجات مطابقة من الموقع:'),products};
+      if(products.length)return markKnowledgeResult({type:'products',text:String(item.answer),products},item);
     }
     if(action==='TRACK_ORDER' && extractOrderRef(seed)){
       resetBotState('order');
-      return await handleOrderQuery(seed);
+      return markKnowledgeResult(await handleOrderQuery(seed,String(item.answer)),item);
     }
+    if(action==='UPDATE_ORDER')return markKnowledgeResult({type:'answer',text:String(item.answer)},item);
     botState.waitingFor='action_param_'+(cfg.fieldType||'text');
     botState.actionData={knowledgeId:item.id,question:item.question,action:action,fieldType:cfg.fieldType||'text',fieldExample:cfg.fieldExample||'',actionValue:cfg.actionValue||''};
     const prompt=requiredDataPrompt(item,cfg);
-    return {type:'clarify',text:prompt+(cfg.fieldExample?'\nمثال: '+cfg.fieldExample:'')};
+    return markKnowledgeResult({type:'clarify',text:prompt+(cfg.fieldExample?'\nمثال: '+cfg.fieldExample:'')},item);
   }
   if(cfg.inputMode==='action'){
     const action=configuredAction(cfg);
     const actionValue=cfg.actionValue||cfg.fieldExample||'';
     const routed=await executeBotAction(action,actionValue,extractIntent([item.question,item.answer,actionValue].join(' ')),item);
-    if(routed)return routed;
-    if(action==='HANDOFF_HUMAN')return {type:'answer',text:settings.human};
+    if(routed)return markKnowledgeResult(routed,item);
+    if(action==='HANDOFF_HUMAN')return markKnowledgeResult({type:'answer',text:String(item.answer)},item);
     if(action==='TRACK_ORDER'){
       resetBotState('order');
-      return await handleOrderQuery(item.question+' '+actionValue);
+      return markKnowledgeResult(await handleOrderQuery(item.question+' '+actionValue,String(item.answer)),item);
     }
     if(action==='CATEGORY_PRODUCTS'){
       const products=await recommendCategoryProductsForAction(actionValue,[item.question,item.answer].join(' '),extractIntent(item.question));
-      if(products.length)return {type:'products',text:categoryProductsIntro(actionValue,String(item.answer||'دي منتجات مناسبة للفئة المطلوبة:')),products};
+      if(products.length)return markKnowledgeResult({type:'products',text:String(item.answer),products},item);
       const label=categoryPageLabel(actionValue)||'الفئة دي';
-      return {type:'clarify',text:'لا يوجد منتجات لهذه الفئة حاليًا.'};
+      return markKnowledgeResult({type:'answer',text:String(item.answer)},item);
     }
     if(action==='PRODUCT_SEARCH'){
       const products=await recommendProducts([item.question,actionValue].join(' '),extractIntent(item.question));
-      if(products.length)return {type:'products',text:String(item.answer||'دي أقرب منتجات مناسبة:'),products};
+      if(products.length)return markKnowledgeResult({type:'products',text:String(item.answer),products},item);
     }
     if(action==='PRODUCT_LOOKUP'||action==='IMAGE_PRODUCT_SEARCH'){
       const products=await lookupProductByText([item.question,item.answer,actionValue].join(' '));
-      if(products.length)return {type:'products',text:String(item.answer||'لقيت أقرب منتجات مطابقة من الموقع:'),products};
-      return {type:'clarify',text:'محتاج اسم المنتج أو وصف أو رابط صورة أوضح عشان أبحث في منتجات الموقع.'};
+      if(products.length)return markKnowledgeResult({type:'products',text:String(item.answer),products},item);
+      return markKnowledgeResult({type:'answer',text:String(item.answer)},item);
     }
-    return {type:'answer',text:String(item.answer||'تم تنفيذ الإجراء: '+(cfg.linkedAction||'إجراء'))};
+    return markKnowledgeResult({type:'answer',text:String(item.answer)},item);
   }
-  return {type:'answer',text:item.answer,match:item};
+  return markKnowledgeResult({type:'answer',text:item.answer,match:item},item);
 }
 
 function withTimeout(promise,ms,fallback=null){
@@ -2851,6 +2916,7 @@ async function handleLLMDecision(llm,raw,ctx,opts={}){
       handled.llm=true;
       return handled;
     }
+    return null;
     if(llm.action_name||llm.action_value){
       const routed=await executeBotAction(llm.action_name,llm.action_value,{...(ctx||{}),raw}, {
         id:llm.knowledge_id||null,
@@ -2865,9 +2931,11 @@ async function handleLLMDecision(llm,raw,ctx,opts={}){
         return routed;
       }
     }
-    return {type:'answer',text:llm.reply,llm:true};
   }
-  if(llm.action==='clarify'&&llm.reply)return {type:'clarify',text:llm.reply,llm:true};
+  if(llm.action==='clarify'&&llm.knowledge_id){
+    const item=questions.find(x=>Number(x.id)===Number(llm.knowledge_id));
+    if(item)return await handleConfiguredKnowledge(item);
+  }
   if(llm.action==='product_search'){
     const products=categoryBrowseIntent(raw)?await recommendCategoryProducts(raw,ctx):await recommendProducts(raw,ctx);
     if(products.length)return {type:'products',text:llm.reply||'لقيتلك أقرب منتجات 👇',products,llm:true};
@@ -2875,12 +2943,14 @@ async function handleLLMDecision(llm,raw,ctx,opts={}){
   if(llm.action==='order_track'){
     const sig=intentSignals(raw);
     if(!sig.order_tracking)return null;
+    const item=questions.find(x=>Number(x.id)===Number(llm.knowledge_id));
+    if(!item)return null;
     resetBotState('order');
-    return await handleOrderQuery(raw);
+    return markKnowledgeResult(await handleOrderQuery(raw,String(item.answer||'')),item);
   }
   if(llm.action==='human'){
     if(llm.unanswered)await persistUnanswered(raw);
-    return {type:'answer',text:settings.human,llm:true};
+    return null;
   }
   return null;
 }
@@ -3043,17 +3113,19 @@ function estimateDelivery(order){
   return'\n📆 التوصيل المتوقع: من '+fmt(minDate)+' إلى '+fmt(maxDate);
 }
 
-async function handleOrderQuery(raw){
+async function handleOrderQuery(raw,knowledgeAnswer=''){
   const ref=extractOrderRef(raw);
   if(!ref&&botState.orderRef&&/(?:Ø§ØªØ´Ø­Ù†|Ø´Ø­Ù†|ÙŠÙˆØµÙ„|ÙˆØµÙ„|ØªÙˆØµÙŠÙ„|delivery|shipped|arrive)/i.test(normalize(raw))){
-    return await handleOrderQuery(botState.orderRef);
+    return await handleOrderQuery(botState.orderRef,knowledgeAnswer);
   }
   if(!ref){
     botState.waitingFor='order_number';
+    return knowledgeAnswer?{type:'answer',text:knowledgeAnswer}:orderNumberRequestResult();
     return {type:'clarify',text:'تمام 📦 ابعتلي رقم الطلب (مثلاً 1001#) وأنا أشوفلك حالته.'};
   }
   const order=await lookupOrder(ref);
   if(!order||order._error){
+    return knowledgeAnswer?{type:'answer',text:knowledgeAnswer}:silentResult({unanswered:true});
     return {type:'fallback',text:'مش لاقي طلب بالرقم ده 🤔 اتأكد من الرقم، أو قوللي عايز حاجة تانية.'};
   }
   const total=order.total!=null?'\n💰 إجمالي الطلب: '+Number(order.total).toFixed(2)+' AED':'';
@@ -3065,6 +3137,8 @@ async function handleOrderQuery(raw){
   botState.waitingFor=null;
   renderBotDebug({intent:'order',actionExecuted:'TRACK_ORDER'});
   const delivery=estimateDelivery(order);
+  const detail='Order '+(order.order_number||('#'+ref))+':\n'+orderStatusLabel(order.status)+total+date+delivery;
+  return knowledgeAnswer?{type:'answer',text:knowledgeAnswer+'\n\n'+detail}:{type:'answer',text:detail,systemAction:'TRACK_ORDER',orderRef:String(ref)};
   return {type:'answer',text:'📦 حالة طلبك '+(order.order_number||('#'+ref))+':\n'+orderStatusLabel(order.status)+total+date+delivery};
 }
 
@@ -3127,14 +3201,29 @@ async function handleSingleMessage(raw, ctx){
   const topic=detectTopic(raw);
 
   if(topic==='order'){
-    if(settings.orderTracking===false)return {type:'answer',text:settings.human};
+    if(settings.orderTracking===false){
+      await persistUnanswered(raw);
+      return silentResult({unanswered:true});
+    }
     resetBotState('order');
     return await handleOrderQuery(raw);
   }
 
+  if(topic==='update_order'){
+    const updateMatch=findBestAnswer(raw,ctx);
+    renderRanking(updateMatch.ranked);
+    if(updateMatch.found){
+      await incrementUsage(updateMatch.item);
+      botState.lastKnowledgeId=updateMatch.item.id;
+      renderBotDebug({knowledgeMatch:updateMatch.item.question,confidence:updateMatch.item.score,actionExecuted:configuredAction(getBotConfig(updateMatch.item))});
+      return await handleConfiguredKnowledge(updateMatch.item);
+    }
+    await persistUnanswered(raw);
+    return silentResult({unanswered:true});
+  }
+
   if(topic==='greeting'){
     resetBotState('idle');
-    return {type:'answer',text:greetingReply(raw)};
   }
 
   let edgeDecision=null;
@@ -3159,7 +3248,7 @@ async function handleSingleMessage(raw, ctx){
     renderBotDebug({knowledgeMatch:panelMatch.item.question,confidence:panelMatch.item.score,actionExecuted:configuredAction(getBotConfig(panelMatch.item))});
     return await handleConfiguredKnowledge(panelMatch.item);
   }
-  if(panelMatch.confidence==='medium')return {type:'clarify',text:mediumKnowledgeClarify(panelMatch)};
+  if(panelMatch.confidence==='medium'){await persistUnanswered(raw);return silentResult({unanswered:true});}
 
   if(topic==='general'){
     resetBotState('idle');
@@ -3188,7 +3277,7 @@ async function handleSingleMessage(raw, ctx){
       renderBotDebug({knowledgeMatch:browseKnowledge.item.question,confidence:browseKnowledge.item.score,actionExecuted:configuredAction(getBotConfig(browseKnowledge.item))});
       return await handleConfiguredKnowledge(browseKnowledge.item);
     }
-    if(browseKnowledge.confidence==='medium')return {type:'clarify',text:mediumKnowledgeClarify(browseKnowledge)};
+    if(browseKnowledge.confidence==='medium'){await persistUnanswered(raw);return silentResult({unanswered:true});}
     await persistUnanswered(raw);
   }
 
@@ -3217,16 +3306,18 @@ async function handleSingleMessage(raw, ctx){
     renderBotDebug({knowledgeMatch:knowledgeFirst.item.question,confidence:knowledgeFirst.item.score,actionExecuted:configuredAction(getBotConfig(knowledgeFirst.item))});
     return await handleConfiguredKnowledge(knowledgeFirst.item);
   }
-  if(knowledgeFirst.confidence==='medium')return {type:'clarify',text:mediumKnowledgeClarify(knowledgeFirst)};
+  if(knowledgeFirst.confidence==='medium'){await persistUnanswered(raw);return silentResult({unanswered:true});}
 
   if(topic==='human'){
     resetBotState('human');
-    return {type:'answer',text:settings.humanHandoff===false?settings.fallback:settings.human};
+    await persistUnanswered(raw);
+    return silentResult({unanswered:true});
   }
 
   if(topic==='intro'){
     resetBotState('intro');
-    return {type:'answer',text:introReply()};
+    await persistUnanswered(raw);
+    return silentResult({unanswered:true});
   }
 
   // طلب جديد
@@ -3243,7 +3334,7 @@ async function handleSingleMessage(raw, ctx){
     return {type:'clarify',text:'تمام، لو دي صورة منتج أو شعار ابعتها كرابط أو اكتب وصفها، وأنا أبحث في منتجات الموقع عن أقرب منتج وسعره. لو شعار تنفيذ مخصص، اكتبلي المنتج المطلوب مع وصف بسيط. مثال: مج حراري بشعار الشركة.'};
   }
 
-  if(topic==='greeting')return {type:'answer',text:greetingReply(raw)};
+  if(topic==='greeting'){await persistUnanswered(raw);return silentResult({unanswered:true});}
 
   // هدية / مناسبة
   if(topic==='gift'){
@@ -3275,7 +3366,7 @@ async function handleSingleMessage(raw, ctx){
     renderBotDebug({knowledgeMatch:match.item.question,confidence:match.item.score,actionExecuted:configuredAction(getBotConfig(match.item))});
     return await handleConfiguredKnowledge(match.item);
   }
-  if(match.confidence==='medium')return {type:'clarify',text:mediumKnowledgeClarify(match)};
+  if(match.confidence==='medium'){await persistUnanswered(raw);return silentResult({unanswered:true});}
 
   // ⭐ تالت: مناسبة من السياق (بدون كلمة "هدية" صريحة)
   if(ctx.occasion){
@@ -3319,7 +3410,7 @@ async function handleSingleMessage(raw, ctx){
       }
       if(llm.action==='human'){
         if(llm.unanswered)await persistUnanswered(raw);
-        return {type:'answer',text:settings.human,llm:true};
+        return silentResult({unanswered:true});
       }
       if(llm.action==='clarify' && llm.reply){
         return {type:'clarify',text:llm.reply,llm:true};
@@ -3342,7 +3433,7 @@ async function handleSingleMessage(raw, ctx){
 // ===== الرد على الرسالة (مع مراعاة السياق) =====
 async function processBotMessageCore(msg){
   const raw=String(msg||'').trim();
-  if(!raw) return {type:'fallback',text:settings.fallback};
+  if(!raw) return silentResult();
 
   const sig=intentSignals(raw);
   const intent=extractIntent(raw);
@@ -3359,6 +3450,15 @@ async function processBotMessageCore(msg){
   botState.category=ctx.category||botState.category||'';
   if(ctx.order_number)botState.orderRef=ctx.order_number;
   renderBotDebug({lastMessage:raw,intent:botState.lastIntent,knowledgeMatch:'',confidence:'',actionExecuted:''});
+
+  const knowledgeFirst=findKnowledgeFirstMatch(raw,ctx);
+  if(knowledgeFirst&&knowledgeFirst.found){
+    renderRanking(knowledgeFirst.ranked);
+    await incrementUsage(knowledgeFirst.item);
+    botState.lastKnowledgeId=knowledgeFirst.item.id;
+    renderBotDebug({knowledgeMatch:knowledgeFirst.item.question,confidence:knowledgeFirst.item.score,actionExecuted:configuredAction(getBotConfig(knowledgeFirst.item))});
+    return await handleConfiguredKnowledge(knowledgeFirst.item);
+  }
 
   const short=normalize(raw);
   if(/^(?:بكم|كم السعر|بكام|سعره|السعر|price)$/.test(short) && botState.lastProduct){
@@ -3404,7 +3504,7 @@ async function processBotMessageCore(msg){
     }
 
     const interruptTopic=detectTopic(raw);
-    if(['order','intro','browse','human','image','order_new'].includes(interruptTopic) && interruptTopic!==botState.topic){
+    if(['order','update_order','intro','browse','human','image','order_new'].includes(interruptTopic) && interruptTopic!==botState.topic){
       resetBotState(interruptTopic);
       return await handleSingleMessage(raw, ctx);
     }
@@ -3489,7 +3589,8 @@ async function processBotMessageCore(msg){
 
     // تحية في نص الflow
     if(detectTopic(raw)==='greeting'){
-      return {type:'answer',text:greetingReply(raw)+'\n\n'+getReminderText()};
+      await persistUnanswered(raw);
+      return silentResult({unanswered:true});
     }
 
     // تغيير الموضوع تماماً
@@ -3521,7 +3622,7 @@ function getReminderText(){
 
 async function processBotMessage(msg){
   try{
-    const res=await processBotMessageCore(msg);
+    const res=await enforceKnowledgeOnlyResult(await processBotMessageCore(msg),msg);
     if(res&&Array.isArray(res.products)&&res.products.length){
       const p=res.products[0];
       botState.productId=p.id||p.supabaseId||null;
@@ -3534,6 +3635,13 @@ async function processBotMessage(msg){
     await persistUnanswered(String(msg||''));
     return {type:'silent',text:''};
   }
+}
+
+async function enforceKnowledgeOnlyResult(res,msg){
+  if(isCustomerSafeResult(res))return res;
+  await persistUnanswered(String(msg||''));
+  renderBotDebug({unansweredSaved:'true',actionExecuted:'SILENT_UNANSWERED'});
+  return silentResult({unanswered:true});
 }
 
 async function incrementUsage(item){
@@ -3640,7 +3748,7 @@ async function handleImageUpload(input){
     }
   }catch(e){
     console.error('Image prepare failed:',e);
-    addMsg('assistant','حصلت مشكلة في قراءة الصورة. جرّب ترفعها مرة تانية.');
+    await persistUnanswered('فشل تجهيز صورة مرفقة: '+(file.name||'image'));
   }
 }
 async function sendPendingImage(comment=''){
@@ -3653,13 +3761,13 @@ async function sendPendingImage(comment=''){
     addMsg('user',caption,{imageUrl:data.previewUrl});
     const holder=document.createElement('div');
     holder.className='msg bot';
-    holder.innerHTML='<div class="avatar"></div><div class="bubble">جاري تحليل الصورة والبحث في منتجات الموقع...</div>';
+    holder.innerHTML='<div class="avatar"></div><div class="bubble"></div>';
     $('chat').appendChild(holder);$('chat').scrollTop=$('chat').scrollHeight;
     const imageUrl=await uploadBotImage(data.file,data.previewUrl);
     const result=await searchProductsByImage(imageUrl,caption,data.previewUrl);
     if(result.products&&result.products.length){
       holder.remove();
-      const text='لقيت أقرب منتج مطابق للصورة من الموقع:';
+      const text='';
       const meta={result_type:'image_search',products:compactProductsForMemory(result.products),image_description:result.imageDescription};
       const el=document.createElement('div');
       el.className='msg bot';
@@ -3668,11 +3776,9 @@ async function sendPendingImage(comment=''){
       conversation.push({role:'assistant',text,meta});
       logBotMessage('assistant',text,{result_type:'image_search',products:result.products.map(p=>p.id).filter(Boolean),image_description:result.imageDescription});
     }else{
-      const text='حللت الصورة، لكن مش لاقي منتج مطابق بوضوح في منتجات الموقع حاليا.';
-      holder.innerHTML='<div class="avatar"></div><div class="bubble">'+esc(text)+'</div>';
-      conversation.push({role:'assistant',text});
+      holder.remove();
       await persistUnanswered('بحث بصورة: '+data.name+' | تعليق: '+caption+(result.imageDescription?' | '+result.imageDescription:''));
-      logBotMessage('assistant',text,{result_type:'image_search_empty',image_description:result.imageDescription});
+      logBotMessage('assistant','',{result_type:'image_search_empty',image_description:result.imageDescription});
     }
     botState.waitingFor=null;
     botState.actionData=null;
@@ -3681,7 +3787,7 @@ async function sendPendingImage(comment=''){
     return true;
   }catch(e){
     console.error('Image search failed:',e);
-    addMsg('assistant','حصلت مشكلة في قراءة الصورة. جرّب ترفعها مرة تانية أو ابعت رابط صورة واضح.');
+    await persistUnanswered('فشل بحث بصورة: '+(data.name||'image')+' | تعليق: '+caption);
     return true;
   }finally{
     if(btn)btn.disabled=false;
@@ -3699,7 +3805,7 @@ async function testBot(){
   if(!m)return;
   const btn=$('testBtn');btn.disabled=true;input.value='';
   addMsg('user',m);
-  const holder=document.createElement('div');holder.className='msg bot';holder.innerHTML='<div class="avatar"></div><div class="bubble">جاري التفكير...</div>';$('chat').appendChild(holder);$('chat').scrollTop=$('chat').scrollHeight;
+  const holder=document.createElement('div');holder.className='msg bot';holder.innerHTML='<div class="avatar"></div><div class="bubble"></div>';$('chat').appendChild(holder);$('chat').scrollTop=$('chat').scrollHeight;
   try{
     const r=await processBotMessage(m);
     if(r&&r.type==='silent'){
@@ -3707,10 +3813,10 @@ async function testBot(){
       saveChatMemory();
       logBotMessage('assistant','',{result_type:'silent_unanswered'});
     }else if(!r||!r.text){
-      holder.innerHTML='<div class="avatar"></div><div class="bubble">'+esc(settings.fallback)+'</div>';
-      conversation.push({role:'assistant',text:settings.fallback});
+      holder.remove();
+      await persistUnanswered(m);
       saveChatMemory();
-      logBotMessage('assistant',settings.fallback,{result_type:'fallback'});
+      logBotMessage('assistant','',{result_type:'silent_unanswered'});
     }else if(r.type==='products'){
       holder.remove();
       const meta={products:compactProductsForMemory(r.products),extraHtml:r.extraHtml||''};
@@ -3726,7 +3832,8 @@ async function testBot(){
       logBotMessage('assistant',r.text,{result_type:r.type,knowledge_id:r.match&&r.match.id,action:lastBotDebug.actionExecuted});
     }
   }catch(e){
-    holder.innerHTML='<div class="avatar"></div><div class="bubble">حصل خطأ: '+esc(e.message)+'</div>';
+    holder.remove();
+    await persistUnanswered(m);
   }finally{
     btn.disabled=false;$('chat').scrollTop=$('chat').scrollHeight;
   }

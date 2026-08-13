@@ -90,6 +90,7 @@ function orderRef(message: string) {
 
 function topic(message: string, ctx: any = {}) {
   const n = normalize(message);
+  if (returnOrderIntent(message)) return "update_order";
   if (/موظف|بشر|حد يكلمني|human|support/.test(n)) return "human";
   if (orderRef(message) && /طلب|رقم|تتبع|حاله|فين|وين|وصل|اتشحن|شحن|order/.test(n)) return "order";
   if (/طلب|طلبي|تتبع|حاله الطلب|اتشحن|شو صار/.test(n)) return "order";
@@ -138,6 +139,21 @@ function canonicalAction(value: unknown) {
   return ACTION_ALIASES[raw] || raw || "NONE";
 }
 
+function returnOrderIntent(message: string) {
+  const n = normalize(message);
+  return /(?:ارجاع|إرجاع|رجوع|استرجاع|استرداد|مرتجع|ارجعه|ارجع|refund|return)/i.test(n);
+}
+
+function phraseMatch(message: string, question: string) {
+  const msg = normalize(message);
+  const q = normalize(question);
+  if (!msg || !q) return false;
+  if (msg === q || msg.includes(q)) return true;
+  const qTokens = q.split(" ").filter((x) => x.length > 1);
+  const msgTokens = new Set(msg.split(" ").filter(Boolean));
+  return qTokens.length >= 2 && qTokens.every((x) => msgTokens.has(x));
+}
+
 function actionFromKnowledge(item: any) {
   let action = canonicalAction(item?.action_name);
   const value = String(item?.action_value || item?.param_example || "");
@@ -154,7 +170,7 @@ async function rpcSearch(req: Request, message: string, ctx: any) {
   const res = await fetch(`${SB_URL}/rest/v1/rpc/bot_knowledge_search`, {
     method: "POST",
     headers: { apikey: key, Authorization: auth, "Content-Type": "application/json" },
-    body: JSON.stringify({ p_message: ctx.normalized || message, p_context: ctx, p_limit: 80 }),
+    body: JSON.stringify({ p_message: ctx.normalized || message, p_context: ctx, p_limit: 30 }),
   });
   if (!res.ok) {
     console.warn("bot_knowledge_search failed", res.status, await res.text());
@@ -175,6 +191,26 @@ function classify(rows: any[]) {
   const actionHigh = ["CATEGORY_PRODUCTS", "PRODUCT_SEARCH", "CUSTOM_GIFT_ORDER", "TRACK_ORDER"].includes(action) && hasToken && score >= 20;
   const high = actionHigh || score >= 38 || (score >= 28 && margin >= 8);
   return { label: high ? "high" : score >= 18 ? "medium" : "low", selected: high ? best : null, candidate: best };
+}
+
+function rerankCandidates(message: string, rows: any[]) {
+  const phraseSorted = [...rows].sort((a, b) => (phraseMatch(message, b.question || "") ? 1 : 0) - (phraseMatch(message, a.question || "") ? 1 : 0));
+  rows = phraseSorted;
+  if (!returnOrderIntent(message)) return rows;
+  return [...rows].sort((a, b) => {
+    const score = (x: any) => {
+      const action = actionFromKnowledge(x);
+      const text = normalize([x.question, x.answer, x.keywords].filter(Boolean).join(" "));
+      let s = Number(x.score || 0);
+      if (phraseMatch(message, x.question || "")) s += 50;
+      if (action === "UPDATE_ORDER") s += 30;
+      if (/ارجاع|إرجاع|استرجاع|استرداد|مرتجع|refund|return/.test(text)) s += 20;
+      if (["CREATE_QUOTE", "CUSTOM_GIFT_ORDER", "PRODUCT_SEARCH", "CATEGORY_PRODUCTS", "PRODUCT_LOOKUP"].includes(action)) s -= 30;
+      if (/اعمل طلب|اسوي طلب|اطلب|اشتري|شراء|طلب جديد/.test(text)) s -= 20;
+      return s;
+    };
+    return score(b) - score(a);
+  });
 }
 
 async function describeImage(imageUrl: string) {
@@ -198,13 +234,13 @@ async function describeImage(imageUrl: string) {
 
 function decision(req: Request, message: string, ctx: any, rows: any[], imageDescription = "") {
   if (imageDescription) {
-    return json(req, { action: "image_search", knowledge_id: null, reply: "جاري تحليل الصورة والبحث في منتجات الموقع.", confidence: 0.96, image_description: imageDescription, entities: ctx, candidates: rows.slice(0, 5) });
+    return json(req, { action: "image_search", knowledge_id: null, reply: "", confidence: 0.96, image_description: imageDescription, entities: ctx, candidates: rows.slice(0, 5), silent_if_no_results: true });
   }
   if (ctx.topic === "order" && ctx.order_number) {
-    return json(req, { action: "order_track", knowledge_id: null, reply: "تمام، هراجع حالة الطلب بالرقم اللي بعتّه.", confidence: 0.98, image_description: "", entities: ctx, candidates: rows.slice(0, 5) });
-  }
-  if (ctx.topic === "greeting") {
-    return json(req, { action: "chat", knowledge_id: null, reply: "هلا بيك في بريق. إزاي أقدر أساعدك؟", confidence: 0.9, image_description: "", entities: ctx, candidates: [] });
+    const orderKnowledge = rows.find((x) => actionFromKnowledge(x) === "TRACK_ORDER" && String(x.answer || "").trim());
+    if (orderKnowledge) {
+      return json(req, { action: "order_track", knowledge_id: Number(orderKnowledge.id) || null, action_name: "TRACK_ORDER", action_value: orderKnowledge.action_value || orderKnowledge.param_example || "", reply: orderKnowledge.answer || "", confidence: 0.98, confidence_label: "high", image_description: "", entities: ctx, candidates: rows.slice(0, 5) });
+    }
   }
   const hit = classify(rows);
   if (hit.label === "high" && hit.selected) {
@@ -215,7 +251,7 @@ function decision(req: Request, message: string, ctx: any, rows: any[], imageDes
       knowledge_id: Number(selected.id) || null,
       action_name: action,
       action_value: selected.action_value || selected.param_example || "",
-      reply: selected.answer || "تمام، هعرض لك الاختيارات المناسبة من الموقع.",
+      reply: selected.answer || "",
       confidence: Math.min(0.99, Math.max(0.76, Number(selected.score || 0) / 55)),
       confidence_label: "high",
       image_description: "",
@@ -224,9 +260,9 @@ function decision(req: Request, message: string, ctx: any, rows: any[], imageDes
     });
   }
   if (hit.label === "medium") {
-    return json(req, { action: "clarify", knowledge_id: null, reply: "تقصد أعرض لك منتجات لفئة أو مناسبة معينة؟ اكتب اسم الفئة بشكل أوضح.", confidence: 0.55, confidence_label: "medium", image_description: "", entities: ctx, candidates: rows.slice(0, 5) });
+    return json(req, { action: "silent", knowledge_id: null, reply: "", confidence: 0.55, confidence_label: "medium", image_description: "", entities: ctx, candidates: rows.slice(0, 5), unanswered: true });
   }
-  return json(req, { action: "human", knowledge_id: null, reply: "محتاج موظف من فريق بريق يراجع طلبك عشان أرد بدقة.", confidence: 0.1, confidence_label: "low", image_description: "", entities: ctx, candidates: rows.slice(0, 5), unanswered: true });
+  return json(req, { action: "silent", knowledge_id: null, reply: "", confidence: 0.1, confidence_label: "low", image_description: "", entities: ctx, candidates: rows.slice(0, 5), unanswered: true });
 }
 
 serve(async (req) => {
@@ -242,6 +278,6 @@ serve(async (req) => {
   const imageUrl = String(body.image_url || "");
   const ctx = entities(message, body.context || {});
   const imageDescription = await describeImage(imageUrl);
-  const rows = await rpcSearch(req, message, ctx);
+  const rows = rerankCandidates(message, await rpcSearch(req, message, ctx));
   return decision(req, message, ctx, rows, imageDescription);
 });
