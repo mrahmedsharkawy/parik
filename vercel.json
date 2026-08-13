@@ -21,6 +21,62 @@
       "destination": "/assets/icon-96.png"
     },
     {
+      "source": "/about-bariq",
+      "destination": "/about-bariq.html"
+    },
+    {
+      "source": "/gifts",
+      "destination": "/gifts.html"
+    },
+    {
+      "source": "/custom-gifts",
+      "destination": "/custom-gifts.html"
+    },
+    {
+      "source": "/corporate-gifts",
+      "destination": "/corporate-gifts.html"
+    },
+    {
+      "source": "/events",
+      "destination": "/events.html"
+    },
+    {
+      "source": "/newborn",
+      "destination": "/newborn.html"
+    },
+    {
+      "source": "/graduation",
+      "destination": "/graduation.html"
+    },
+    {
+      "source": "/national-day",
+      "destination": "/national-day.html"
+    },
+    {
+      "source": "/ramadan",
+      "destination": "/ramadan.html"
+    },
+    {
+      "source": "/acrylic",
+      "destination": "/acrylic.html"
+    },
+    {
+      "source": "/forex",
+      "destination": "/forex.html"
+    },
+    {
+      "source": "/wood",
+      "destination": "/wood.html"
+    },
+    {
+      "source": "/leather",
+      "destination": "/leather.html"
+    },
+    {
+      "source": "/stickers",
+      "destination": "/stickers.html"
+    },
+    {
       "source": "/favicon.png",
       "destination": "/assets/icon-96.png"
     },
