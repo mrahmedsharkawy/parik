@@ -353,6 +353,77 @@
       .offers-sort-lbl { white-space: nowrap; flex-shrink: 0; }
       .offers-sort-btn { white-space: nowrap; flex-shrink: 0; padding: 5px 10px; font-size: 0.72rem; }
     }
+    @media (min-width: 900px) {
+      .main-header {
+        height: 58px !important;
+        min-height: 58px !important;
+        padding: 7px 0 !important;
+        overflow: hidden !important;
+      }
+      .header-content {
+        width: min(1220px, calc(100% - 48px)) !important;
+        min-height: 44px !important;
+        height: 44px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        flex-wrap: nowrap !important;
+        gap: 22px !important;
+        overflow: hidden !important;
+      }
+      .main-header .logo {
+        display: flex !important;
+        align-items: center !important;
+        order: 0 !important;
+        flex: 0 0 auto !important;
+      }
+      .main-header .logo img {
+        display: block !important;
+        width: auto !important;
+        height: 38px !important;
+        object-fit: contain !important;
+      }
+      .main-header .logo-text {
+        display: none !important;
+      }
+      .main-header .search-container {
+        order: 1 !important;
+        flex: 0 1 520px !important;
+        max-width: 520px !important;
+        min-width: 260px !important;
+        margin: 0 !important;
+      }
+      .main-header .search-icon,
+      .main-header .camera-icon,
+      .main-header .cart {
+        order: 2 !important;
+        flex: 0 0 auto !important;
+        color: #fff !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+      }
+      .main-header #imageSearchInput {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        clip-path: inset(50%) !important;
+      }
+      .offers-page-main {
+        width: min(1160px, calc(100% - 48px)) !important;
+      }
+      .offers-products-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        max-width: 1160px !important;
+        gap: 18px !important;
+      }
+      .offers-products-grid .product-card {
+        max-width: none !important;
+        width: 100% !important;
+      }
+    }
   </style>
   <link rel="canonical" href="https://bariqgifts.com/offers">
   <meta name="twitter:card" content="summary_large_image">

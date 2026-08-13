@@ -25,6 +25,10 @@
       "destination": "/about-bariq.html"
     },
     {
+      "source": "/google-oauth-app",
+      "destination": "/google-oauth-app.html"
+    },
+    {
       "source": "/gifts",
       "destination": "/gifts.html"
     },
