@@ -11,10 +11,28 @@
   <link rel="manifest" href="/erp-manifest.json">
   <link rel="icon" type="image/png" sizes="96x96" href="/assets/icon-96.png?v=erp-20260813">
   <link rel="apple-touch-icon" href="/assets/icon.png?v=erp-20260813">
-  <link rel="stylesheet" href="/style/erp.css?v=20260813-employee-delete-1">
-  <script src="/java/erp-pwa.js?v=20260813" defer></script>
+  <link rel="stylesheet" href="/style/erp.css?v=20260818-fix3">
+  <style>
+    @media (max-width: 900px) {
+      .erp-sidebar {
+        transform: translateX(110%) !important;
+      }
+      body.erp-menu-open .erp-sidebar {
+        transform: translateX(0) !important;
+      }
+    }
+  </style>
+  <script src="/java/erp-pwa.js?v=20260818-erp-menu" defer></script>
 </head>
 <body>
+  <script>
+    (function () {
+      document.body.classList.remove("erp-menu-open");
+      if (window.innerWidth > 900) return;
+      var s = document.getElementById("erpSidebar");
+      if (s) s.style.transform = "translateX(110%)";
+    })();
+  </script>
   <div class="erp-shell">
     <aside class="erp-sidebar" id="erpSidebar" aria-label="تنقل نظام الإدارة">
       <a class="erp-brand" href="/erp" aria-label="Bariq ERP">
@@ -29,6 +47,7 @@
         <button class="erp-nav-item active" data-view="dashboard" type="button"><span>📊</span><b>لوحة القيادة</b></button>
         <button class="erp-nav-item" data-view="orders" type="button"><span>🧾</span><b>الطلبات</b></button>
         <button class="erp-nav-item" data-view="finance" type="button"><span>💳</span><b>المالية</b></button>
+        <a class="erp-nav-item" href="/treasury.html" type="button"><span>🏦</span><b>الخزنة</b></a>
         <button class="erp-nav-item" data-view="expenses" type="button"><span>🧾</span><b>المصروفات</b></button>
         <button class="erp-nav-item" data-view="inventory" type="button"><span>📦</span><b>المخزون والخامات</b></button>
         <button class="erp-nav-item" data-view="purchases" type="button"><span>🛒</span><b>المشتريات</b></button>
@@ -57,7 +76,6 @@
           <input id="erpSearch" type="search" placeholder="ابحث في الطلبات، المصروفات، الموردين..." autocomplete="off">
         </div>
         <button class="erp-icon-btn erp-notify-btn" id="erpNotifyBtn" type="button" title="التنبيهات" aria-label="التنبيهات">🔔<span id="erpNotifyBadge" hidden>0</span></button>
-        <a class="erp-admin-link" href="/admin.html" target="_blank" rel="noopener">ERB</a>
         <div class="erp-user">
           <span class="erp-avatar">B</span>
           <span><b id="erpUserName">Bariq Admin</b><small>مدير النظام</small></span>
@@ -260,7 +278,22 @@
     </div>
   </div>
 
-  <script src="/java/supabase.js?v=20260813-erp" defer></script>
-  <script src="/java/erp.js?v=20260813-employee-delete-1" defer></script>
+  <script src="/java/supabase.js?v=20260817-treasury-fix" defer></script>
+  <script src="/java/erp.js?v=20260818-fix3" defer></script>
+  <script>
+    (function () {
+      function checkAuth() {
+        if (typeof window.hasAdminSession !== "function") return;
+        if (!window.hasAdminSession()) {
+          location.replace("/erp-login.html?return=" + encodeURIComponent(location.pathname + location.search));
+        }
+      }
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", checkAuth);
+      } else {
+        checkAuth();
+      }
+    })();
+  </script>
 </body>
 </html>

@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f8fafd">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Bariq Treasury">
+  <title>الخزنة | Bariq ERP</title>
+  <link rel="icon" type="image/png" sizes="96x96" href="/assets/icon-96.png?v=erp-20260813">
+  <link rel="apple-touch-icon" href="/assets/icon.png?v=erp-20260813">
+  <link rel="stylesheet" href="/style/erp.css?v=20260818-fix3">
+  <style>
+    @media (max-width: 900px) {
+      .erp-sidebar {
+        transform: translateX(110%) !important;
+      }
+      body.erp-menu-open .erp-sidebar {
+        transform: translateX(0) !important;
+      }
+    }
+  </style>
+  <script src="/java/supabase.js?v=20260818-treasury-menu" defer></script>
+  <script src="/java/erp-treasury.js?v=20260818-fix3" defer></script>
+</head>
+<body>
+  <script>
+    (function () {
+      document.body.classList.remove("erp-menu-open");
+      if (window.innerWidth > 900) return;
+      var s = document.getElementById("erpSidebar");
+      if (s) s.style.transform = "translateX(110%)";
+    })();
+  </script>
+  <div class="erp-shell">
+    <aside class="erp-sidebar" id="erpSidebar" aria-label="تنقل الخزنة">
+      <a class="erp-brand" href="/erp.html" aria-label="Bariq ERP">
+        <img src="/assets/icon.png" alt="">
+        <span>
+          <b>Bariq ERP</b>
+          <small>نظام الإدارة الداخلي</small>
+        </span>
+      </a>
+
+      <nav class="erp-nav">
+        <a class="erp-nav-item" href="/erp.html"><span>📊</span><b>لوحة القيادة</b></a>
+        <a class="erp-nav-item" href="/erp.html#/orders"><span>🧾</span><b>الطلبات</b></a>
+        <a class="erp-nav-item" href="/erp.html#/finance"><span>💳</span><b>المالية</b></a>
+        <a class="erp-nav-item active" href="/treasury.html"><span>🏦</span><b>الخزنة</b></a>
+        <a class="erp-nav-item" href="/erp.html#/expenses"><span>🧾</span><b>المصروفات</b></a>
+        <a class="erp-nav-item" href="/erp.html#/inventory"><span>📦</span><b>المخزون والخامات</b></a>
+        <a class="erp-nav-item" href="/erp.html#/purchases"><span>🛒</span><b>المشتريات</b></a>
+        <a class="erp-nav-item" href="/erp.html#/suppliers"><span>🏢</span><b>الموردين</b></a>
+        <a class="erp-nav-item" href="/erp.html#/hr"><span>👥</span><b>الموظفين</b></a>
+        <a class="erp-nav-item" href="/erp.html#/payroll"><span>💰</span><b>الرواتب</b></a>
+        <a class="erp-nav-item" href="/erp.html#/documents"><span>📁</span><b>المستندات</b></a>
+        <a class="erp-nav-item" href="/erp.html#/reports"><span>📈</span><b>التقارير</b></a>
+        <a class="erp-nav-item" href="/erp.html#/settings"><span>⚙️</span><b>الصلاحيات</b></a>
+      </nav>
+
+      <div class="erp-sidebar-foot">
+        <div class="erp-sync-dot"></div>
+        <div>
+          <b id="erpSyncState">جاهز</b>
+          <small id="erpLastSync">لم تتم المزامنة بعد</small>
+        </div>
+      </div>
+    </aside>
+
+    <div class="erp-main">
+      <header class="erp-topbar">
+        <button class="erp-icon-btn" id="erpMenuBtn" type="button" aria-label="فتح القائمة">☰</button>
+        <div class="erp-search">
+          <span>⌕</span>
+          <input id="erpSearch" type="search" placeholder="ابحث في الحركات المالية..." autocomplete="off">
+        </div>
+        <button class="erp-icon-btn erp-notify-btn" id="erpNotifyBtn" type="button" title="التنبيهات" aria-label="التنبيهات">🔔<span id="erpNotifyBadge" hidden>0</span></button>
+        <div class="erp-user">
+          <span class="erp-avatar">B</span>
+          <span><b id="erpUserName">Bariq Admin</b><small>مدير النظام</small></span>
+        </div>
+      </header>
+
+      <main class="erp-content">
+        <section class="erp-page-head">
+          <div>
+            <p class="erp-eyebrow">Bariq ERP</p>
+            <h1 id="erpPageTitle">🏦 الخزنة</h1>
+            <p id="erpPageSubtitle">مركز مالي ذكي يعتمد على الإدخال اليدوي 100%.</p>
+          </div>
+          <div class="erp-periods" role="group" aria-label="فلترة الفترة">
+            <button class="active" data-period="today" type="button">اليوم</button>
+            <button data-period="week" type="button">7 أيام</button>
+            <button data-period="month" type="button">الشهر</button>
+            <button data-period="all" type="button">الكل</button>
+            <button data-period="custom-day" type="button">يوم</button>
+            <button data-period="custom-month" type="button">شهر</button>
+            <button data-period="custom-year" type="button">سنة</button>
+            <input id="erpCustomDay" class="erp-period-input" type="date" hidden>
+            <input id="erpCustomMonth" class="erp-period-input" type="month" hidden>
+            <input id="erpCustomYear" class="erp-period-input" type="number" min="2000" max="2100" step="1" hidden>
+          </div>
+        </section>
+
+        <div class="erp-treasury-header">
+          <div class="erp-treasury-status" id="erpLiquidityStatus"><span class="erp-status-dot"></span><b>حالة السيولة:</b> <span id="erpLiquidityStatusText">جاري التحميل...</span></div>
+        </div>
+        <div class="erp-treasury-kpis" id="erpTreasuryKpis"></div>
+
+        <div class="erp-grid erp-grid-main">
+          <article class="erp-card erp-treasury-section">
+            <div class="erp-card-head"><div><h2>⚙️ إعدادات المركز المالي</h2><p>رأس المال، الاحتياطي، البنوك، والكاش.</p></div></div>
+            <form class="erp-form" data-treasury-form="treasury-setup">
+              <label>رأس مال الشركة<input name="capital_amount" type="number" min="0" step="0.01" required placeholder="0.00"></label>
+              <label>احتياطي رأس المال<input name="reserve_amount" type="number" min="0" step="0.01" required placeholder="0.00"></label>
+              <label>اسم البنك<input name="bank_name" placeholder="مثال: ADIB"></label>
+              <label>اسم الحساب<input name="account_name" placeholder="الحساب الجاري"></label>
+              <label>رصيد الحساب<input name="bank_balance" type="number" step="0.01" placeholder="0.00"></label>
+              <label>النقدية بالخزنة<input name="cash_balance" type="number" step="0.01" placeholder="0.00"></label>
+              <button class="erp-primary" type="submit">حفظ الإعدادات</button>
+            </form>
+            <div class="erp-table-wrap" style="margin-top:16px"><table><thead><tr><th>البنك</th><th>الحساب</th><th>الرصيد</th><th>إجراء</th></tr></thead><tbody id="erpBankAccountsRows"></tbody></table></div>
+          </article>
+
+          <article class="erp-card erp-treasury-section">
+            <div class="erp-card-head"><div><h2>➕ إضافة حركة مالية</h2><p>تأكد من نوع الحركة قبل الحفظ.</p></div></div>
+            <form class="erp-form erp-treasury-form-grid" data-treasury-form="treasury-transaction">
+              <label>التاريخ<input name="transaction_date" type="date" data-today required></label>
+              <label>نوع الحركة<select name="type" id="erpTreasuryTxType" required>
+                <option value="deposit">إيداع</option>
+                <option value="withdrawal">سحب</option>
+                <option value="expense">مصروف</option>
+                <option value="capital_injection">إضافة رأس مال</option>
+                <option value="owner_withdrawal">سحب مالك</option>
+                <option value="internal_transfer">تحويل بين الحسابات</option>
+                <option value="asset_purchase">شراء أصل</option>
+                <option value="asset_sale">بيع أصل</option>
+                <option value="installment_payment">دفع قسط</option>
+                <option value="receivable_collection">تحصيل مستحق</option>
+                <option value="liability_payment">سداد مديونية</option>
+                <option value="balance_adjustment">تعديل رصيد</option>
+                <option value="other">حركة أخرى</option>
+              </select></label>
+              <label>المبلغ<input name="amount" type="number" min="0" step="0.01" required placeholder="0.00"></label>
+              <label>من<select name="source_type" id="erpTreasurySourceType"><option value="">--</option><option value="bank">بنك</option><option value="cash">كاش</option><option value="asset">أصل</option><option value="liability">مديونية</option><option value="receivable">مستحق</option></select></label>
+              <label>حساب/جهة المصدر<select name="source_id" id="erpTreasurySourceId"><option value="">--</option></select></label>
+              <label>إلى<select name="destination_type" id="erpTreasuryDestType"><option value="">--</option><option value="bank">بنك</option><option value="cash">كاش</option><option value="asset">أصل</option><option value="liability">مديونية</option><option value="receivable">مستحق</option></select></label>
+              <label>حساب/جهة الوجهة<select name="destination_id" id="erpTreasuryDestId"><option value="">--</option></select></label>
+              <label style="grid-column:1/-1">الوصف<input name="description" required placeholder="وصف الحركة"></label>
+              <label>مرجع<input name="reference_number" placeholder="رقم فاتورة / مرجع"></label>
+              <label style="grid-column:1/-1">ملاحظات<input name="notes" placeholder="ملاحظات"></label>
+              <button class="erp-primary" type="submit">حفظ الحركة</button>
+            </form>
+            <div class="erp-treasury-warning" id="erpReserveWarning" hidden>
+              <p>⚠️ تحذير: هذه العملية ستؤدي إلى انخفاض سيولة الشركة عن احتياطي رأس المال المحدد.</p>
+              <label><input type="checkbox" id="erpReserveOverride"> سمح المدير بالتجاوز</label>
+            </div>
+          </article>
+        </div>
+
+        <div class="erp-grid erp-grid-main">
+          <article class="erp-card erp-treasury-section">
+            <div class="erp-card-head"><div><h2>🏭 الأصول الثابتة</h2><p>ماكينات، سيارات، معدات، أثاث.</p></div></div>
+            <form class="erp-form" data-treasury-form="fixed-asset">
+              <label>اسم الأصل<input name="name" required placeholder="مثال: ماكينة ليزر"></label>
+              <label>التصنيف<input name="category" placeholder="ماكينات / سيارات / أثاث"></label>
+              <label>سعر الشراء<input name="purchase_price" type="number" min="0" step="0.01" required placeholder="0.00"></label>
+              <label>تاريخ الشراء<input name="purchase_date" type="date" data-today required></label>
+              <label>طريقة الشراء<select name="payment_method"><option value="cash">نقدي</option><option value="bank_transfer">تحويل بنكي</option><option value="installment">تقسيط</option><option value="financing">تمويل</option></select></label>
+              <label>المقدم<input name="down_payment" type="number" min="0" step="0.01" value="0"></label>
+              <label>المبلغ الممول<input name="financed_amount" type="number" min="0" step="0.01" value="0"></label>
+              <label>عدد الأقساط<input name="installments_count" type="number" min="0" step="1" value="0"></label>
+              <label>تاريخ أول قسط<input name="first_due_date" type="date"></label>
+              <label>يوم الاستحقاق الشهري<input name="due_day" type="number" min="1" max="31" value="1"></label>
+              <label>القيمة الحالية<input name="current_value" type="number" min="0" step="0.01" placeholder="= سعر الشراء"></label>
+              <label>الرقم التسلسلي<input name="serial_number" placeholder="اختياري"></label>
+              <label>المورد<select name="supplier_id" data-suppliers></select></label>
+              <label style="grid-column:1/-1">ملاحظات<input name="notes" placeholder="ملاحظات"></label>
+              <button class="erp-primary" type="submit">إضافة أصل</button>
+            </form>
+            <div class="erp-table-wrap" style="margin-top:16px"><table><thead><tr><th>الأصل</th><th>السعر</th><th>الممول</th><th>القيمة الحالية</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody id="erpFixedAssetsRows"></tbody></table></div>
+          </article>
+
+          <article class="erp-card erp-treasury-section">
+            <div class="erp-card-head"><div><h2>📅 الأقساط والتمويلات</h2><p>أقساط الأصول والالتزامات المرتبطة بها.</p></div></div>
+            <div class="erp-list" id="erpInstallmentsList"></div>
+            <div class="erp-card-head" style="margin-top:16px"><div><h3>تسجيل دفع قسط</h3></div></div>
+            <form class="erp-form" data-treasury-form="installment-payment">
+              <label>القسط<select name="installment_id" id="erpInstallmentSelect" required></select></label>
+              <label>تاريخ الدفع<input name="paid_at" type="date" data-today required></label>
+              <label>المبلغ المدفوع<input name="amount" type="number" min="0" step="0.01" required placeholder="0.00"></label>
+              <label>مصدر الدفع<select name="payment_source"><option value="bank">بنك</option><option value="cash">كاش</option></select></label>
+              <button class="erp-primary" type="submit">تسجيل الدفع</button>
+            </form>
+          </article>
+        </div>
+
+        <div class="erp-grid erp-grid-secondary">
+          <article class="erp-card erp-treasury-section">
+            <div class="erp-card-head"><div><h2>⏰ الالتزامات القادمة</h2><p>أقساط ومديونيات مستحقة.</p></div></div>
+            <div class="erp-metric-stack" id="erpUpcomingObligations"></div>
+          </article>
+          <article class="erp-card erp-treasury-section">
+            <div class="erp-card-head"><div><h2>📉 المديونيات والالتزامات</h2><p>قروض، تمويلات، ديون.</p></div></div>
+            <form class="erp-form" data-treasury-form="liability">
+              <label>اسم الالتزام<input name="name" required placeholder="مثال: قرض بنكي"></label>
+              <label>الجهة الدائنة<input name="creditor" required placeholder="اسم البنك / الجهة"></label>
+              <label>القيمة الأصلية<input name="original_amount" type="number" min="0" step="0.01" required></label>
+              <label>المدفوع<input name="paid_amount" type="number" min="0" step="0.01" value="0"></label>
+              <label>تاريخ البداية<input name="start_date" type="date" data-today></label>
+              <label>تاريخ الاستحقاق<input name="due_date" type="date"></label>
+              <label>هل يوجد أقساط؟<select name="has_installments"><option value="false">لا</option><option value="true">نعم</option></select></label>
+              <label>قيمة القسط<input name="installment_amount" type="number" min="0" step="0.01" value="0"></label>
+              <label>عدد الأقساط<input name="installments_count" type="number" min="0" step="1" value="0"></label>
+              <label style="grid-column:1/-1">ملاحظات<input name="notes" placeholder="ملاحظات"></label>
+              <button class="erp-primary" type="submit">إضافة التزام</button>
+            </form>
+            <div class="erp-table-wrap" style="margin-top:16px"><table><thead><tr><th>الالتزام</th><th>الجهة</th><th>المتبقي</th><th>الحالة</th></tr></thead><tbody id="erpLiabilitiesRows"></tbody></table></div>
+          </article>
+          <article class="erp-card erp-treasury-section">
+            <div class="erp-card-head"><div><h2>📈 مستحقات لنا</h2><p>أموال يجب تحصيلها.</p></div></div>
+            <form class="erp-form" data-treasury-form="receivable">
+              <label>اسم الجهة<input name="party_name" required></label>
+              <label>نوع الجهة<select name="party_type"><option value="customer">عميل</option><option value="other">أخرى</option></select></label>
+              <label>المبلغ الأصلي<input name="original_amount" type="number" min="0" step="0.01" required></label>
+              <label>المحصل<input name="collected_amount" type="number" min="0" step="0.01" value="0"></label>
+              <label>تاريخ الاستحقاق<input name="due_date" type="date"></label>
+              <label style="grid-column:1/-1">ملاحظات<input name="notes" placeholder="ملاحظات"></label>
+              <button class="erp-primary" type="submit">إضافة مستحق</button>
+            </form>
+            <div class="erp-table-wrap" style="margin-top:16px"><table><thead><tr><th>الجهة</th><th>المتبقي</th><th>تاريخ الاستحقاق</th><th>الحالة</th></tr></thead><tbody id="erpReceivablesRows"></tbody></table></div>
+          </article>
+        </div>
+
+        <div class="erp-grid erp-grid-main">
+          <article class="erp-card erp-treasury-section">
+            <div class="erp-card-head"><div><h2>📦 قيمة المخزون</h2><p>المحاسب يدخل القيمة يدويًا.</p></div></div>
+            <form class="erp-form" data-treasury-form="inventory-value">
+              <label>قيمة المخزون الحالية<input name="value" type="number" min="0" step="0.01" required></label>
+              <label>التاريخ<input name="effective_date" type="date" data-today required></label>
+              <label style="grid-column:1/-1">ملاحظات<input name="notes" placeholder="ملاحظات"></label>
+              <button class="erp-primary" type="submit">تحديث القيمة</button>
+            </form>
+            <div class="erp-metric-stack" style="margin-top:16px"><div class="erp-metric"><small>آخر قيمة مسجلة</small><b class="erp-amount" id="erpInventoryValueDisplay">AED 0</b></div></div>
+          </article>
+
+          <article class="erp-card erp-treasury-section" style="grid-column:1/-1">
+            <div class="erp-card-head"><div><h2>📋 سجل الحركات المالية</h2><p>كل الحركات المحفوظة مع إمكانية البحث والفلترة.</p></div><button class="erp-primary" type="button" id="erpExportTreasuryCsv">تصدير CSV</button></div>
+            <div class="erp-order-tools">
+              <input id="erpTreasurySearch" type="search" placeholder="بحث في الحركات...">
+              <select id="erpTreasuryTypeFilter"><option value="">كل الأنواع</option><option value="deposit">إيداع</option><option value="withdrawal">سحب</option><option value="expense">مصروف</option><option value="capital_injection">إضافة رأس مال</option><option value="owner_withdrawal">سحب مالك</option><option value="internal_transfer">تحويل داخلي</option><option value="asset_purchase">شراء أصل</option><option value="asset_sale">بيع أصل</option><option value="installment_payment">دفع قسط</option><option value="receivable_collection">تحصيل مستحق</option><option value="liability_payment">سداد مديونية</option><option value="balance_adjustment">تعديل رصيد</option><option value="other">أخرى</option></select>
+              <select id="erpTreasuryStatusFilter"><option value="">كل الحالات</option><option value="active">فعّالة</option><option value="cancelled">ملغاة</option></select>
+            </div>
+            <div class="erp-table-wrap"><table><thead><tr><th>التاريخ</th><th>النوع</th><th>المبلغ</th><th>من</th><th>إلى</th><th>الوصف</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody id="erpTreasuryTransactionsRows"></tbody></table></div>
+          </article>
+        </div>
+
+        <div class="erp-grid erp-grid-main">
+          <article class="erp-card erp-treasury-section" style="grid-column:1/-1">
+            <div class="erp-card-head"><div><h2>🔍 سجل التدقيق</h2><p>تتبع التعديلات والإلغاءات على البيانات المالية.</p></div></div>
+            <div class="erp-table-wrap"><table><thead><tr><th>التاريخ</th><th>الجدول</th><th>العملية</th><th>بواسطة</th><th>السبب</th></tr></thead><tbody id="erpAuditLogRows"></tbody></table></div>
+          </article>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      function checkAuth() {
+        if (typeof window.hasAdminSession !== "function") return;
+        if (!window.hasAdminSession()) {
+          location.replace("/erp-login.html?return=" + encodeURIComponent(location.pathname + location.search));
+        }
+      }
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", checkAuth);
+      } else {
+        checkAuth();
+      }
+    })();
+  </script>
+</body>
+</html>

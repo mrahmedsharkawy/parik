@@ -1361,6 +1361,7 @@
   }
 
   function boot() {
+    document.body.classList.add("erp-menu-ready");
     hydrateUser();
     bindEvents();
     setFormDates();

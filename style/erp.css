@@ -160,9 +160,31 @@ button {
 
 .erp-nav-item b {
   flex: 1;
-  font-size: 0.95rem;
+  font-size: 0.84rem;
   font-weight: 900;
   line-height: 1.25;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.erp-nav-item {
+  overflow: hidden;
+  min-width: 0;
+  max-width: 100%;
+  gap: 8px;
+  padding-inline: 10px;
+}
+
+.erp-nav {
+  overflow-x: hidden;
+}
+
+.erp-nav-item,
+.erp-nav-item:hover,
+.erp-nav-item.active {
+  text-decoration: none;
 }
 
 .erp-nav-item:hover,
@@ -1077,12 +1099,29 @@ tr:last-child td {
     height: 100dvh;
     margin: 0;
     border-radius: 24px 0 0 24px;
-    transform: translateX(110%);
-    transition: transform 0.22s ease;
+    transform: translateX(110%) !important;
+    visibility: hidden !important;
+    transition: transform 0.22s ease, visibility 0.22s ease;
   }
 
-  body.erp-menu-open .erp-sidebar {
-    transform: translateX(0);
+  body.erp-menu-ready.erp-menu-open .erp-sidebar {
+    transform: translateX(0) !important;
+    visibility: visible !important;
+  }
+
+  .erp-sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 33, 61, 0.35);
+    z-index: 29;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.22s ease, visibility 0.22s ease;
+  }
+
+  body.erp-menu-open .erp-sidebar-overlay {
+    opacity: 1;
+    visibility: visible;
   }
 
   #erpMenuBtn {
@@ -1132,32 +1171,260 @@ tr:last-child td {
 }
 
 @media (max-width: 640px) {
+  html {
+    font-size: 14px;
+  }
+
   .erp-kpis,
+  .erp-treasury-kpis {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+
   .erp-grid-secondary,
   .erp-form,
   .erp-employee-metrics {
     grid-template-columns: 1fr;
   }
 
+  .erp-kpi {
+    min-height: auto;
+    padding: 10px;
+  }
+
+  .erp-kpi-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+  }
+
+  .erp-kpi-label {
+    font-size: 0.65rem;
+  }
+
+  .erp-kpi-value {
+    font-size: 1rem;
+    margin-top: 4px;
+  }
+
+  .erp-kpi-foot {
+    font-size: 0.6rem;
+    margin-top: 6px;
+  }
+
   .erp-search {
     min-width: 0;
-    height: 44px;
-    padding-inline: 12px;
+    height: 40px;
+    padding-inline: 10px;
   }
 
   .erp-page-head h1 {
-    font-size: 1.65rem;
+    font-size: 1.25rem;
+  }
+
+  .erp-periods {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 6px;
+    gap: 5px;
+  }
+
+  .erp-periods button {
+    min-height: 28px;
+    padding: 0 8px;
+    font-size: 0.72rem;
+    white-space: nowrap;
   }
 
   .erp-card,
   .erp-kpi {
-    border-radius: 18px;
-    padding: 15px;
+    border-radius: 14px;
+    padding: 10px;
   }
 
   .erp-line-chart {
-    height: 240px;
-    gap: 7px;
-    padding: 10px;
+    height: 200px;
+    gap: 6px;
+    padding: 8px;
+  }
+
+  .erp-topbar {
+    padding: 8px 10px;
+  }
+
+  .erp-content {
+    padding: 12px 10px 24px;
+  }
+}
+
+
+/* ===== Treasury / Financial Center ===== */
+
+.erp-treasury-header {
+  margin-bottom: 16px;
+}
+
+.erp-treasury-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid var(--erp-border);
+  font-weight: 800;
+  box-shadow: var(--erp-shadow-soft);
+}
+
+.erp-treasury-status .erp-status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #94a3b8;
+}
+
+.erp-treasury-status.safe .erp-status-dot {
+  background: #22c55e;
+  box-shadow: 0 0 0 5px rgba(34, 197, 94, 0.15);
+}
+
+.erp-treasury-status.warning .erp-status-dot {
+  background: #f59e0b;
+  box-shadow: 0 0 0 5px rgba(245, 158, 11, 0.15);
+}
+
+.erp-treasury-status.danger .erp-status-dot {
+  background: #ef4444;
+  box-shadow: 0 0 0 5px rgba(239, 68, 68, 0.15);
+}
+
+.erp-treasury-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.erp-treasury-kpis .erp-kpi {
+  min-height: 120px;
+}
+
+.erp-treasury-section {
+  scroll-margin-top: 20px;
+}
+
+.erp-treasury-form-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.erp-treasury-warning {
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #b91c1c;
+  font-weight: 800;
+}
+
+.erp-treasury-warning label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.erp-installment-card {
+  border-inline-start: 4px solid var(--erp-border);
+}
+
+.erp-installment-card.upcoming {
+  border-inline-start-color: var(--erp-primary);
+}
+
+.erp-installment-card.due_today {
+  border-inline-start-color: #f59e0b;
+}
+
+.erp-installment-card.overdue,
+.erp-installment-card.partial.overdue {
+  border-inline-start-color: #ef4444;
+  background: rgba(254, 242, 242, 0.7);
+}
+
+.erp-installment-card.paid {
+  border-inline-start-color: #22c55e;
+}
+
+.erp-row-cancelled {
+  opacity: 0.55;
+  text-decoration: line-through;
+}
+
+.erp-obligation-upcoming {
+  color: var(--erp-primary-strong);
+}
+
+.erp-obligation-due {
+  color: #f59e0b;
+}
+
+.erp-obligation-overdue {
+  color: #ef4444;
+}
+
+.erp-obligation-paid {
+  color: #22c55e;
+}
+
+#view-finance .erp-order-tools {
+  grid-template-columns: minmax(0, 1fr) 160px 160px;
+}
+
+@media (max-width: 1180px) {
+  .erp-treasury-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  #view-finance .erp-order-tools {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .erp-treasury-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .erp-treasury-kpis {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .erp-treasury-kpis .erp-kpi {
+    min-height: auto;
+    padding: 8px;
+  }
+
+  .erp-treasury-kpis .erp-kpi-value {
+    font-size: 0.95rem;
+  }
+
+  .erp-treasury-kpis .erp-kpi-label {
+    font-size: 0.6rem;
+  }
+
+  .erp-treasury-kpis .erp-kpi-foot {
+    font-size: 0.55rem;
+  }
+
+  .erp-treasury-status {
+    padding: 6px 10px;
+    font-size: 0.78rem;
   }
 }

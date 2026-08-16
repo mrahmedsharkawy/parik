@@ -1234,7 +1234,7 @@ async function uploadStorageObject(file, path, retried) {
   }
   return SUPABASE_URL + "/storage/v1/object/public/" + BUCKET_NAME + "/" + path;
 }
-const SupaStorage = {
+let SupaStorage = {
     upload: async function (file, folder) {
       const ext =
           file.name && file.name.includes(".")
@@ -1264,8 +1264,8 @@ const SupaStorage = {
       return SupaStorage.upload(fakeFile, folder);
     },
   },
-  USER_SYNC_MIN_PULL_GAP = 30 * 1000,
-  userSyncLastPullAt = 0,
+  USER_SYNC_MIN_PULL_GAP = 30 * 1000;
+let userSyncLastPullAt = 0,
   userSyncPullPromise = null,
   SupaUserSync = {
     _getEmail: function () {
