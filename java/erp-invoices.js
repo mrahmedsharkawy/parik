@@ -690,7 +690,7 @@
   function getInvoicePrintStyles() {
     return `
       .erp-invoice-paper-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 2px solid #152546; padding-bottom: 14px; margin-bottom: 16px; }
-      .erp-invoice-logo img { width: 86px; height: 86px; object-fit: contain; filter: brightness(0); }
+      .erp-invoice-logo img { width: 86px; height: 86px; object-fit: contain; }
       .erp-invoice-company { text-align: center; flex: 1; }
       .erp-invoice-company b { display: block; font-size: 1.3rem; }
       .erp-invoice-company span { color: #7a8296; font-size: 0.9rem; }
@@ -708,12 +708,13 @@
       .erp-invoice-table { width: 100%; max-width: 100%; table-layout: fixed; border-collapse: collapse; margin-bottom: 16px; }
       .erp-invoice-table th, .erp-invoice-table td { border: 1px solid #dfe5ef; padding: 10px; text-align: right; font-size: 0.82rem; word-break: break-word; overflow-wrap: break-word; white-space: normal; vertical-align: top; }
       .erp-invoice-table th { background: #152546; color: #fff; }
-      .erp-invoice-table th:nth-child(1), .erp-invoice-table td:nth-child(1) { width: 30px; text-align: center; }
+      .erp-invoice-table th:nth-child(1), .erp-invoice-table td:nth-child(1) { width: 24px; text-align: center; }
       .erp-invoice-table th:nth-child(2), .erp-invoice-table td:nth-child(2) { width: auto; }
-      .erp-invoice-table th:nth-child(3), .erp-invoice-table td:nth-child(3) { width: 50px; text-align: center; }
-      .erp-invoice-table th:nth-child(4), .erp-invoice-table td:nth-child(4) { width: 78px; }
-      .erp-invoice-table th:nth-child(5), .erp-invoice-table td:nth-child(5) { width: 58px; }
-      .erp-invoice-table th:nth-child(6), .erp-invoice-table td:nth-child(6) { width: 78px; }
+      .erp-invoice-table th:nth-child(3), .erp-invoice-table td:nth-child(3) { width: 40px; text-align: center; }
+      .erp-invoice-table th:nth-child(4), .erp-invoice-table td:nth-child(4) { width: 62px; }
+      .erp-invoice-table th:nth-child(5), .erp-invoice-table td:nth-child(5) { width: 48px; }
+      .erp-invoice-table th:nth-child(6), .erp-invoice-table td:nth-child(6) { width: 62px; }
+      .erp-invoice-table th { font-size: 0.6rem; line-height: 1.2; }
       .erp-invoice-totals { width: 320px; margin-inline-start: auto; margin-bottom: 16px; }
       .erp-invoice-totals div { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #edf0f6; }
       .erp-invoice-grand { font-size: 1.1rem; font-weight: 900; color: #152546; }

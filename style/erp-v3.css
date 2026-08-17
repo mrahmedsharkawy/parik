@@ -1595,7 +1595,6 @@ tr:last-child td {
   object-fit: contain;
   background: #fff;
   border-radius: 14px;
-  filter: brightness(0);
 }
 
 .erp-invoice-company {
@@ -1706,21 +1705,22 @@ tr:last-child td {
   background: var(--erp-navy, #152546);
   color: #fff;
   font-weight: 800;
-  font-size: 0.68rem;
+  font-size: 0.6rem;
+  line-height: 1.2;
 }
 
 .erp-invoice-table th:nth-child(1),
-.erp-invoice-table td:nth-child(1) { width: 28px; text-align: center; }
+.erp-invoice-table td:nth-child(1) { width: 24px; text-align: center; }
 .erp-invoice-table th:nth-child(2),
 .erp-invoice-table td:nth-child(2) { width: auto; }
 .erp-invoice-table th:nth-child(3),
-.erp-invoice-table td:nth-child(3) { width: 46px; text-align: center; }
+.erp-invoice-table td:nth-child(3) { width: 40px; text-align: center; }
 .erp-invoice-table th:nth-child(4),
-.erp-invoice-table td:nth-child(4) { width: 70px; }
+.erp-invoice-table td:nth-child(4) { width: 62px; }
 .erp-invoice-table th:nth-child(5),
-.erp-invoice-table td:nth-child(5) { width: 54px; }
+.erp-invoice-table td:nth-child(5) { width: 48px; }
 .erp-invoice-table th:nth-child(6),
-.erp-invoice-table td:nth-child(6) { width: 70px; }
+.erp-invoice-table td:nth-child(6) { width: 62px; }
 
 .erp-invoice-totals {
   width: 100%;
@@ -1789,6 +1789,29 @@ tr:last-child td {
   text-decoration: underline;
   cursor: pointer;
   font: inherit;
+}
+
+@media (max-width: 1300px) {
+  .erp-invoice-paper {
+    padding: 14px;
+  }
+
+  .erp-invoice-table {
+    font-size: 0.65rem;
+  }
+
+  .erp-invoice-table th,
+  .erp-invoice-table td {
+    padding: 6px 4px;
+  }
+
+  .erp-invoice-table th {
+    font-size: 0.55rem;
+  }
+
+  .erp-invoice-meta {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 @media (max-width: 1180px) {
