@@ -10,31 +10,37 @@
   <title>الخزنة | Bariq ERP</title>
   <link rel="icon" type="image/png" sizes="96x96" href="/assets/icon-96.png?v=erp-20260813">
   <link rel="apple-touch-icon" href="/assets/icon.png?v=erp-20260813">
-  <link rel="stylesheet" href="/style/erp.css?v=20260818-fix3">
+  <link rel="stylesheet" href="/style/erp-v3.css?v=8">
   <style>
+    /* Mobile sidebar anti-cache guard: hide sidebar on mobile unless explicitly opened */
     @media (max-width: 900px) {
-      .erp-sidebar {
-        transform: translateX(110%) !important;
+      .erp-shell { grid-template-columns: 1fr !important; }
+      .erp-sidebar { display: none !important; }
+      body.erp-nav-open .erp-sidebar {
+        display: flex !important;
+        position: fixed !important;
+        inset-block: 0 !important;
+        inset-inline-end: 0 !important;
+        width: min(280px, 82vw) !important;
+        z-index: 30 !important;
       }
-      body.erp-menu-open .erp-sidebar {
-        transform: translateX(0) !important;
+      .erp-sidebar-overlay {
+        position: fixed !important;
+        inset: 0 !important;
+        background: rgba(20, 33, 61, 0.35) !important;
+        z-index: 25 !important;
+        display: none !important;
       }
+      body.erp-nav-open .erp-sidebar-overlay { display: block !important; }
     }
   </style>
-  <script src="/java/supabase.js?v=20260818-treasury-menu" defer></script>
-  <script src="/java/erp-treasury.js?v=20260818-fix3" defer></script>
+  <script src="/java/supabase.js?v=20260818-v2" defer></script>
+  <script src="/java/erp-treasury-v2.js?v=2" defer></script>
 </head>
 <body>
-  <script>
-    (function () {
-      document.body.classList.remove("erp-menu-open");
-      if (window.innerWidth > 900) return;
-      var s = document.getElementById("erpSidebar");
-      if (s) s.style.transform = "translateX(110%)";
-    })();
-  </script>
+
   <div class="erp-shell">
-    <aside class="erp-sidebar" id="erpSidebar" aria-label="تنقل الخزنة">
+    <aside class="erp-sidebar erp-sidebar-mobile-hidden" id="erpSidebar" aria-label="تنقل الخزنة">
       <a class="erp-brand" href="/erp.html" aria-label="Bariq ERP">
         <img src="/assets/icon.png" alt="">
         <span>
@@ -48,6 +54,7 @@
         <a class="erp-nav-item" href="/erp.html#/orders"><span>🧾</span><b>الطلبات</b></a>
         <a class="erp-nav-item" href="/erp.html#/finance"><span>💳</span><b>المالية</b></a>
         <a class="erp-nav-item active" href="/treasury.html"><span>🏦</span><b>الخزنة</b></a>
+        <a class="erp-nav-item" href="/erp-invoices.html"><span>🧾</span><b>الفواتير</b></a>
         <a class="erp-nav-item" href="/erp.html#/expenses"><span>🧾</span><b>المصروفات</b></a>
         <a class="erp-nav-item" href="/erp.html#/inventory"><span>📦</span><b>المخزون والخامات</b></a>
         <a class="erp-nav-item" href="/erp.html#/purchases"><span>🛒</span><b>المشتريات</b></a>
@@ -84,11 +91,6 @@
 
       <main class="erp-content">
         <section class="erp-page-head">
-          <div>
-            <p class="erp-eyebrow">Bariq ERP</p>
-            <h1 id="erpPageTitle">🏦 الخزنة</h1>
-            <p id="erpPageSubtitle">مركز مالي ذكي يعتمد على الإدخال اليدوي 100%.</p>
-          </div>
           <div class="erp-periods" role="group" aria-label="فلترة الفترة">
             <button class="active" data-period="today" type="button">اليوم</button>
             <button data-period="week" type="button">7 أيام</button>

@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f8fafd">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Bariq Invoices">
+  <title>فواتير المبيعات | Bariq ERP</title>
+  <link rel="icon" type="image/png" sizes="96x96" href="/assets/icon-96.png?v=erp-20260813">
+  <link rel="apple-touch-icon" href="/assets/icon.png?v=erp-20260813">
+  <link rel="stylesheet" href="/style/erp-v3.css?v=8">
+  <style>
+    /* Mobile sidebar anti-cache guard: hide sidebar on mobile unless explicitly opened */
+    @media (max-width: 900px) {
+      .erp-shell { grid-template-columns: 1fr !important; }
+      .erp-sidebar { display: none !important; }
+      body.erp-nav-open .erp-sidebar {
+        display: flex !important;
+        position: fixed !important;
+        inset-block: 0 !important;
+        inset-inline-end: 0 !important;
+        width: min(280px, 82vw) !important;
+        z-index: 30 !important;
+      }
+      .erp-sidebar-overlay {
+        position: fixed !important;
+        inset: 0 !important;
+        background: rgba(20, 33, 61, 0.35) !important;
+        z-index: 25 !important;
+        display: none !important;
+      }
+      body.erp-nav-open .erp-sidebar-overlay { display: block !important; }
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+  <script src="/java/supabase.js?v=20260818-v2" defer></script>
+  <script src="/java/erp-invoices.js?v=6" defer></script>
+</head>
+<body>
+  <div class="erp-shell">
+    <aside class="erp-sidebar erp-sidebar-mobile-hidden" id="erpSidebar" aria-label="تنقل الفواتير">
+      <a class="erp-brand" href="/erp.html" aria-label="Bariq ERP">
+        <img src="/assets/icon.png" alt="">
+        <span>
+          <b>Bariq ERP</b>
+          <small>نظام الإدارة الداخلي</small>
+        </span>
+      </a>
+
+      <nav class="erp-nav">
+        <a class="erp-nav-item" href="/erp.html"><span>📊</span><b>لوحة القيادة</b></a>
+        <a class="erp-nav-item" href="/erp.html#/orders"><span>🧾</span><b>الطلبات</b></a>
+        <a class="erp-nav-item" href="/erp.html#/finance"><span>💳</span><b>المالية</b></a>
+        <a class="erp-nav-item" href="/treasury.html"><span>🏦</span><b>الخزنة</b></a>
+        <a class="erp-nav-item active" href="/erp-invoices.html"><span>🧾</span><b>الفواتير</b></a>
+        <a class="erp-nav-item" href="/erp.html#/expenses"><span>🧾</span><b>المصروفات</b></a>
+        <a class="erp-nav-item" href="/erp.html#/inventory"><span>📦</span><b>المخزون والخامات</b></a>
+        <a class="erp-nav-item" href="/erp.html#/purchases"><span>🛒</span><b>المشتريات</b></a>
+        <a class="erp-nav-item" href="/erp.html#/suppliers"><span>🏢</span><b>الموردين</b></a>
+        <a class="erp-nav-item" href="/erp.html#/hr"><span>👥</span><b>الموظفين</b></a>
+        <a class="erp-nav-item" href="/erp.html#/payroll"><span>💰</span><b>الرواتب</b></a>
+        <a class="erp-nav-item" href="/erp.html#/documents"><span>📁</span><b>المستندات</b></a>
+        <a class="erp-nav-item" href="/erp.html#/reports"><span>📈</span><b>التقارير</b></a>
+        <a class="erp-nav-item" href="/erp.html#/settings"><span>⚙️</span><b>الصلاحيات</b></a>
+      </nav>
+
+      <div class="erp-sidebar-foot">
+        <div class="erp-sync-dot"></div>
+        <div>
+          <b id="erpSyncState">جاهز</b>
+          <small id="erpLastSync">لم تتم المزامنة بعد</small>
+        </div>
+      </div>
+    </aside>
+
+    <div class="erp-main">
+      <header class="erp-topbar">
+        <button class="erp-icon-btn" id="erpMenuBtn" type="button" aria-label="فتح القائمة">☰</button>
+        <div class="erp-search">
+          <span>⌕</span>
+          <input id="erpSearch" type="search" placeholder="ابحث في الفواتير..." autocomplete="off">
+        </div>
+        <button class="erp-icon-btn erp-notify-btn" id="erpNotifyBtn" type="button" title="التنبيهات" aria-label="التنبيهات">🔔<span id="erpNotifyBadge" hidden>0</span></button>
+        <div class="erp-user">
+          <span class="erp-avatar">B</span>
+          <span><b id="erpUserName">Bariq Admin</b><small>مدير النظام</small></span>
+        </div>
+      </header>
+
+      <main class="erp-content">
+        <section class="erp-page-head">
+          <div class="erp-periods" role="group" aria-label="أدوات الفواتير">
+            <button class="erp-primary" type="button" id="btnNewInvoice">+ فاتورة جديدة</button>
+            <button class="erp-secondary" type="button" id="btnInvoiceList">قائمة الفواتير</button>
+          </div>
+        </section>
+
+        <div id="invoiceEditorView">
+          <div class="erp-invoice-workspace">
+            <article class="erp-card erp-invoice-form-card">
+              <div class="erp-card-head"><div><h2>📝 بيانات الفاتورة</h2><p>استورد طلبًا أو أدخل البيانات يدويًا.</p></div></div>
+
+              <div class="erp-order-import">
+                <label>رقم الطلب<input id="importOrderNumber" type="text" placeholder="مثال: 1068 أو #1068"></label>
+                <button class="erp-primary" type="button" id="btnImportOrder">استيراد الطلب</button>
+              </div>
+              <div class="erp-invoice-warning" id="duplicateWarning" hidden></div>
+
+              <form class="erp-form erp-invoice-form" id="invoiceForm">
+                <input type="hidden" id="invOrderId" name="order_id">
+
+                <div class="erp-form-section">
+                  <h3>بيانات الفاتورة</h3>
+                  <label>رقم الفاتورة<input id="invNumber" name="invoice_number" readonly></label>
+                  <label>نوع الفاتورة<select name="invoice_type"><option value="normal">فاتورة عادية</option><option value="tax">فاتورة ضريبية</option></select></label>
+                  <label>التاريخ<input name="invoice_date" type="date" data-today required></label>
+                </div>
+
+                <div class="erp-form-section">
+                  <h3>بيانات العميل</h3>
+                  <label>اسم العميل<input name="customer_name" required placeholder="اسم العميل"></label>
+                  <label>رقم الهاتف<input name="customer_phone" placeholder="05xxxxxxxx"></label>
+                  <label>البريد الإلكتروني<input name="customer_email" type="email" placeholder="email@example.com"></label>
+                  <label>العنوان<input name="customer_address" placeholder="العنوان"></label>
+                  <label>الإمارة/المدينة<input name="customer_city" placeholder="دبي"></label>
+                  <label>الرقم الضريبي<input name="customer_vat" placeholder="اختياري"></label>
+                  <label>اسم الشركة<input name="customer_company" placeholder="اختياري"></label>
+                </div>
+
+                <div class="erp-form-section">
+                  <h3>البنود</h3>
+                  <div id="invoiceItems"></div>
+                  <button class="erp-secondary" type="button" id="btnAddItem">+ إضافة بند</button>
+                </div>
+
+                <div class="erp-form-section">
+                  <h3>الحسابات</h3>
+                  <label>خصم نسبة %<input name="discount_percent" type="number" min="0" max="100" step="0.01" value="0"></label>
+                  <label>خصم ثابت<input name="discount_fixed" type="number" min="0" step="0.01" value="0"></label>
+                  <label>ضريبة القيمة المضافة %<select name="vat_rate"><option value="0">بدون ضريبة</option><option value="5" selected>5%</option><option value="10">10%</option></select></label>
+                  <label>الشحن<input name="shipping" type="number" min="0" step="0.01" value="0"></label>
+                  <label>العربون<input name="deposit" type="number" min="0" step="0.01" value="0"></label>
+                  <label>المدفوع<input name="paid" type="number" min="0" step="0.01" value="0"></label>
+                </div>
+
+                <div class="erp-form-section">
+                  <h3>الدفع والملاحظات</h3>
+                  <label>طريقة الدفع<select name="payment_method"><option value="cash">نقدي</option><option value="bank_transfer">تحويل بنكي</option><option value="card">بطاقة</option><option value="cheque">شيك</option><option value="payment_link">رابط دفع</option><option value="other">أخرى</option></select></label>
+                  <label style="grid-column:1/-1">ملاحظات<textarea name="notes" rows="2" placeholder="ملاحظات الفاتورة"></textarea></label>
+                  <label style="grid-column:1/-1">الشروط<textarea name="terms" rows="2" placeholder="شروط الدفع والتسليم"></textarea></label>
+                </div>
+
+                <div class="erp-invoice-actions">
+                  <button class="erp-primary" type="submit">💾 حفظ الفاتورة</button>
+                  <button class="erp-secondary" type="button" id="btnPrint">🖨️ طباعة</button>
+                  <button class="erp-secondary" type="button" id="btnPdf">📄 PDF</button>
+                  <button class="erp-danger" type="button" id="btnCancelInvoice" hidden>❌ إلغاء الفاتورة</button>
+                </div>
+              </form>
+            </article>
+
+            <article class="erp-card erp-invoice-preview-card">
+              <div class="erp-card-head"><div><h2>👁️ معاينة الفاتورة</h2><p>تتحدث تلقائيًا عند التعديل.</p></div></div>
+              <div class="erp-invoice-print" id="invoicePreview"></div>
+            </article>
+          </div>
+        </div>
+
+        <div id="invoiceListView" hidden>
+          <article class="erp-card">
+            <div class="erp-card-head"><div><h2>📋 قائمة الفواتير</h2><p>بحث وفلترة الفواتير المحفوظة.</p></div></div>
+            <div class="erp-order-tools">
+              <input id="invoiceListSearch" type="search" placeholder="بحث برقم الفاتورة أو رقم الطلب أو اسم العميل...">
+              <select id="invoiceListFilter"><option value="">كل الفواتير</option><option value="unpaid">غير مدفوعة</option><option value="partial">مدفوعة جزئيًا</option><option value="paid">مدفوعة بالكامل</option><option value="cancelled">ملغاة</option></select>
+            </div>
+            <div class="erp-table-wrap">
+              <table>
+                <thead><tr><th>رقم الفاتورة</th><th>رقم الطلب</th><th>العميل</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th><th>التاريخ</th><th>إجراء</th></tr></thead>
+                <tbody id="invoiceListRows"></tbody>
+              </table>
+            </div>
+          </article>
+        </div>
+      </main>
+    </div>
+  </div>
+</body>
+</html>
