@@ -55,6 +55,84 @@ function getStoredAuthToken() {
   } catch (_) {}
   return "";
 }
+function restoreAdminSession() {
+  try {
+    const saved = JSON.parse(localStorage.getItem("bariq_admin_auth_v1") || sessionStorage.getItem("x2_admin_reports_session") || "null");
+    if (!saved || !saved.ok || Date.now() > Number(saved.expires || 0)) return !1;
+    if (saved.access || saved.token) sessionStorage.setItem("admin_token", saved.access || saved.token);
+    if (saved.refresh || saved.refreshToken) sessionStorage.setItem("admin_refresh_token", saved.refresh || saved.refreshToken);
+    if (saved.tokenExp) sessionStorage.setItem("admin_token_exp", String(saved.tokenExp));
+    sessionStorage.setItem("admin_ok", "1");
+    if (saved.name) sessionStorage.setItem("admin_name", saved.name);
+    return !!(saved.token || saved.refreshToken);
+  } catch (e) {
+    return !1;
+  }
+}
+function rememberAdminSession(name, authData) {
+  const token = (authData && authData.access_token) || sessionStorage.getItem("admin_token") || "";
+  const refreshToken = (authData && authData.refresh_token) || sessionStorage.getItem("admin_refresh_token") || "";
+  if (!token && !refreshToken) return;
+  const tokenExp = Date.now() + ((authData && authData.expires_in) || 3600) * 1000;
+  const payload = {
+    ok: !0,
+    name: name || sessionStorage.getItem("admin_name") || "admin",
+    access: token,
+    refresh: refreshToken,
+    tokenExp: tokenExp,
+    expires: Date.now() + 30 * 24 * 60 * 60 * 1000
+  };
+  try {
+    localStorage.setItem("bariq_admin_auth_v1", JSON.stringify(payload));
+    sessionStorage.setItem("admin_token", token);
+    sessionStorage.setItem("admin_refresh_token", refreshToken);
+    sessionStorage.setItem("admin_token_exp", String(tokenExp));
+    sessionStorage.setItem("admin_ok", "1");
+  } catch (e) {}
+}
+function clearAdminSession() {
+  try {
+    sessionStorage.removeItem("admin_ok");
+    sessionStorage.removeItem("admin_token");
+    sessionStorage.removeItem("admin_refresh_token");
+    sessionStorage.removeItem("admin_token_exp");
+    sessionStorage.removeItem("admin_name");
+    sessionStorage.removeItem("x2_admin_reports_session");
+    localStorage.removeItem("bariq_admin_auth_v1");
+  } catch (e) {}
+}
+async function refreshAdminToken() {
+  restoreAdminSession();
+  const refreshToken = sessionStorage.getItem("admin_refresh_token");
+  if (!refreshToken) return null;
+  try {
+    const res = await fetch(SUPABASE_URL + "/auth/v1/token?grant_type=refresh_token", {
+      method: "POST",
+      headers: { apikey: SUPABASE_ANON, "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: refreshToken })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      clearAdminSession();
+      return null;
+    }
+    if (data.access_token) {
+      rememberAdminSession(sessionStorage.getItem("admin_name") || "admin", data);
+      return data.access_token;
+    }
+  } catch (e) {}
+  return null;
+}
+async function getValidAdminToken() {
+  const token = sessionStorage.getItem("admin_token");
+  const exp = parseInt(sessionStorage.getItem("admin_token_exp") || "0");
+  if (!token && sessionStorage.getItem("admin_refresh_token")) return await refreshAdminToken();
+  if (token && exp && (exp - Date.now()) < 5 * 60 * 1000) {
+    const newToken = await refreshAdminToken();
+    return newToken || token;
+  }
+  return token || null;
+}
 const SB_CACHE_PREFIX = "bariq_sb_cache_v1:",
   SB_TTL_SETTINGS = 10 * 60 * 1000,
   SB_TTL_CATALOG = 10 * 60 * 1000,
@@ -1268,6 +1346,7 @@ let SupaStorage = {
 let userSyncLastPullAt = 0,
   userSyncPullPromise = null,
   SupaUserSync = {
+    
     _getEmail: function () {
       try {
         return (

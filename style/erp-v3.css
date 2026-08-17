@@ -718,6 +718,208 @@ body.erp-nav-open .erp-sidebar-mobile-hidden {
   text-overflow: ellipsis;
 }
 
+/* الكمبيوتر فقط */
+@media (min-width: 1100px) {
+
+  #view-orders .erp-grid-main {
+    grid-template-columns: minmax(280px, 0.8fr) minmax(0, 2.2fr) !important;
+    gap: 16px !important;
+  }
+
+@media (min-width:1100px){
+
+  #view-expenses .erp-grid-main{
+    grid-template-columns:repeat(2, minmax(0, 1fr)) !important;
+    gap:16px !important;
+    align-items:stretch !important;
+  }
+
+  #view-expenses .erp-grid-main > .erp-card{
+    width:100% !important;
+    min-width:0 !important;
+    height:100% !important;
+  }
+}
+
+/* ===== Purchases Desktop Layout ===== */
+@media (min-width:1100px){
+
+  #view-purchases .erp-grid-main{
+    display:grid !important;
+    grid-template-columns:repeat(2, minmax(0, 1fr)) !important;
+    gap:16px !important;
+    align-items:stretch !important;
+  }
+
+  /* أول جدولين نفس المقاس */
+  #view-purchases .erp-grid-main > .erp-card:nth-child(1),
+  #view-purchases .erp-grid-main > .erp-card:nth-child(2){
+    width:100% !important;
+    min-width:0 !important;
+  }
+
+  /* الجدول الثالث تحت وياخد العرض كله */
+  #view-purchases .erp-grid-main > .erp-card:nth-child(3){
+    grid-column:1 / -1 !important;
+    width:100% !important;
+    min-width:0 !important;
+  }
+}
+
+/* ===== Suppliers Desktop Layout ===== */
+@media (min-width:1100px){
+
+  #view-suppliers .erp-grid-main{
+    display:grid !important;
+    grid-template-columns:repeat(2, minmax(0, 1fr)) !important;
+    gap:16px !important;
+    align-items:stretch !important;
+  }
+
+  /* أول كارتين نفس العرض */
+  #view-suppliers .erp-grid-main > .erp-card:nth-child(1),
+  #view-suppliers .erp-grid-main > .erp-card:nth-child(2){
+    width:100% !important;
+    min-width:0 !important;
+  }
+
+  /* الكارت الثالث تحت بعرض الصفحة كله */
+  #view-suppliers .erp-grid-main > .erp-card:nth-child(3){
+    grid-column:1 / -1 !important;
+    width:100% !important;
+    min-width:0 !important;
+  }
+}
+
+/* ===== HR / Employees Desktop Layout ===== */
+@media (min-width:1100px){
+
+  #view-hr .erp-grid-main{
+    display:grid !important;
+
+    /* اليمين إضافة موظف 30% - الشمال الموظفين 70% */
+    grid-template-columns:minmax(280px,30%) minmax(0,70%) !important;
+
+    gap:16px !important;
+    align-items:stretch !important;
+  }
+
+  /* إضافة موظف - أول كارت - يمين */
+  #view-hr .erp-grid-main > .erp-card:nth-child(1){
+    grid-column:1 !important;
+    width:100% !important;
+    min-width:0 !important;
+  }
+
+  /* الموظفين - ثاني كارت - شمال */
+  #view-hr .erp-grid-main > .erp-card:nth-child(2){
+    grid-column:2 !important;
+    width:100% !important;
+    min-width:0 !important;
+  }
+
+}
+
+@media (min-width:1100px){
+
+  #view-hr .erp-grid-main{
+    display:grid !important;
+    grid-template-columns:minmax(280px,30%) minmax(0,70%) !important;
+    gap:16px !important;
+    align-items:start !important;
+  }
+
+  /* إضافة موظف */
+  #view-hr .erp-grid-main > .erp-card:nth-child(1){
+    grid-column:1 !important;
+  }
+
+  /* الموظفين */
+  #view-hr .erp-grid-main > .erp-card:nth-child(2){
+    grid-column:2 !important;
+  }
+
+  /* الحضور والغيابات - العرض كله */
+  #view-hr .erp-grid-main > .erp-card:nth-child(3){
+    grid-column:1 / -1 !important;
+    width:100% !important;
+    min-width:0 !important;
+  }
+}
+
+
+/* ===== Payroll Desktop Layout ===== */
+@media (min-width:1100px){
+
+  #view-payroll .erp-grid-main{
+    display:grid !important;
+    grid-template-columns:repeat(2, minmax(0, 1fr)) !important;
+    gap:16px !important;
+    align-items:stretch !important;
+  }
+
+  /* إنشاء مسير رواتب */
+  #view-payroll .erp-grid-main > .erp-card:nth-child(1){
+    grid-column:auto !important;
+    width:100% !important;
+    min-width:0 !important;
+  }
+
+  /* مسير الرواتب */
+  #view-payroll .erp-grid-main > .erp-card:nth-child(2){
+    grid-column:auto !important;
+    width:100% !important;
+    min-width:0 !important;
+  }
+
+  /* تكلفة الرواتب - تحت بعرض الصف كله */
+  #view-payroll .erp-grid-main > .erp-card:nth-child(3){
+    grid-column:1 / -1 !important;
+    width:100% !important;
+    min-width:0 !important;
+  }
+
+}
+
+/* ===== Documents - Correct Order ===== */
+@media (min-width:1100px){
+
+  #view-documents > .erp-grid-main{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+    grid-template-areas:
+      "form docs"
+      "alerts alerts" !important;
+    gap:16px !important;
+    align-items:stretch !important;
+  }
+
+  /* إضافة مستند - يمين */
+  #view-documents > .erp-grid-main > .erp-card:nth-child(1){
+    grid-area:form !important;
+    width:100% !important;
+    min-width:0 !important;
+  }
+
+  /* المستندات والانتهاءات - شمال */
+  #view-documents > .erp-grid-main > .erp-card:nth-child(2){
+    grid-area:docs !important;
+    width:100% !important;
+    min-width:0 !important;
+  }
+
+  /* تنبيهات قريبة - تحت بعرض كامل */
+  #view-documents > .erp-grid-main > .erp-card:nth-child(3){
+    grid-area:alerts !important;
+    width:100% !important;
+    min-width:0 !important;
+  }
+}
+
+
+
+}
+
 .erp-grid-secondary {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
@@ -1115,20 +1317,23 @@ tr:last-child td {
     grid-template-columns: 1fr;
   }
 
-  .erp-sidebar {
-    position: fixed;
-    inset-block: 0;
-    inset-inline-end: 0;
-    width: min(84vw, 300px);
-    height: 100dvh;
-    margin: 0;
-    border-radius: 24px 0 0 24px;
-    transform: translateX(110%);
-    visibility: hidden;
-    opacity: 0;
-    pointer-events: none;
-    transition: transform 0.22s ease, visibility 0.22s ease, opacity 0.22s ease;
-  }
+.erp-sidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: auto;
+
+  width: min(84vw, 300px);
+  height: 100dvh;
+  margin: 0;
+  border-radius: 24px 0 0 24px;
+  transform: translateX(110%);
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.22s ease, visibility 0.22s ease, opacity 0.22s ease;
+}
 
   body.erp-nav-open .erp-sidebar {
     transform: translateX(0);
@@ -1787,6 +1992,1174 @@ tr:last-child td {
   text-decoration: underline;
   cursor: pointer;
   font: inherit;
+}
+
+
+/* ===== إصلاح نهائي لمعاينة الفاتورة ===== */
+
+.erp-invoice-workspace{
+  display:grid !important;
+  grid-template-columns:minmax(520px,1fr) 760px !important;
+  gap:20px !important;
+  align-items:start !important;
+  width:100% !important;
+  max-width:1400px !important;
+  margin:0 auto !important;
+}
+
+.erp-invoice-preview-card{
+  width:100% !important;
+  min-width:0 !important;
+  padding:12px !important;
+  overflow:hidden !important;
+  align-self:start !important;
+}
+
+.erp-invoice-print,
+#invoicePreview{
+  width:100% !important;
+  min-width:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+  overflow:hidden !important;
+}
+
+/* A4 داخل المعاينة */
+.erp-invoice-paper{
+  width:100% !important;
+  max-width:720px !important;
+  min-width:0 !important;
+
+  /* نفس شكل A4 بدون إجبار الارتفاع الضخم في المعاينة */
+  aspect-ratio:210 / 297;
+
+  min-height:0 !important;
+  height:auto !important;
+
+  margin:0 auto !important;
+  padding:28px 34px !important;
+
+  box-sizing:border-box !important;
+  overflow:hidden !important;
+
+  background:#fff !important;
+  border:1px solid #e2e6ef !important;
+  border-radius:4px !important;
+}
+
+/* مهم جدًا: منع جدول الفاتورة من الخروج خارج الورقة */
+.erp-invoice-paper .erp-invoice-table{
+  display:table !important;
+  width:100% !important;
+  min-width:0 !important;
+  max-width:100% !important;
+  table-layout:fixed !important;
+  margin:0 0 16px !important;
+  border-collapse:collapse !important;
+}
+
+.erp-invoice-paper .erp-invoice-table th,
+.erp-invoice-paper .erp-invoice-table td{
+  min-width:0 !important;
+  max-width:none !important;
+  box-sizing:border-box !important;
+  overflow:hidden !important;
+  overflow-wrap:anywhere !important;
+  white-space:normal !important;
+}
+
+/* توزيع أعمدة الجدول */
+.erp-invoice-paper .erp-invoice-table th:nth-child(1),
+.erp-invoice-paper .erp-invoice-table td:nth-child(1){
+  width:6% !important;
+}
+
+.erp-invoice-paper .erp-invoice-table th:nth-child(2),
+.erp-invoice-paper .erp-invoice-table td:nth-child(2){
+  width:39% !important;
+}
+
+.erp-invoice-paper .erp-invoice-table th:nth-child(3),
+.erp-invoice-paper .erp-invoice-table td:nth-child(3){
+  width:10% !important;
+}
+
+.erp-invoice-paper .erp-invoice-table th:nth-child(4),
+.erp-invoice-paper .erp-invoice-table td:nth-child(4){
+  width:17% !important;
+}
+
+.erp-invoice-paper .erp-invoice-table th:nth-child(5),
+.erp-invoice-paper .erp-invoice-table td:nth-child(5){
+  width:12% !important;
+}
+
+.erp-invoice-paper .erp-invoice-table th:nth-child(6),
+.erp-invoice-paper .erp-invoice-table td:nth-child(6){
+  width:16% !important;
+}
+
+/* تصغير مساحة عمود معاينة الفاتورة فقط */
+.erp-invoice-workspace{
+  grid-template-columns:
+    minmax(560px, 1fr)
+    700px !important;
+
+  gap: 18px !important;
+  max-width: 1320px !important;
+}
+
+/* تصغير ورقة A4 بصريًا داخل الشاشة فقط */
+.erp-invoice-preview-card{
+  padding: 10px !important;
+}
+
+.erp-invoice-print{
+  display: flex !important;
+  justify-content: center !important;
+  align-items: flex-start !important;
+}
+
+.erp-invoice-paper{
+  zoom: 0.86;
+}
+
+/* =========================================================
+   BARIQ ERP - INVOICE PAGE FINAL LAYOUT FIX
+   ========================================================= */
+
+/* ===== الصفحة الرئيسية: فورم يمين + A4 شمال ===== */
+
+.erp-invoice-workspace{
+  display:grid !important;
+  grid-template-columns:
+    minmax(520px, 1fr)
+    minmax(794px, 794px) !important;
+
+  gap:24px !important;
+  align-items:start !important;
+
+  width:100% !important;
+  max-width:1400px !important;
+
+  margin:0 auto !important;
+  padding:0 !important;
+
+  box-sizing:border-box !important;
+}
+
+
+/* =========================================================
+   FORM COLUMN
+   ========================================================= */
+
+.erp-invoice-form-card{
+  width:100% !important;
+  min-width:0 !important;
+  height:auto !important;
+
+  align-self:start !important;
+
+  padding:20px !important;
+  box-sizing:border-box !important;
+}
+
+
+/* يمنع أي Stretch غريب */
+.erp-invoice-form{
+  display:block !important;
+  width:100% !important;
+  min-width:0 !important;
+}
+
+
+/* كل قسم يبقى Grid منظم */
+.erp-invoice-form .erp-form-section{
+  display:grid !important;
+  grid-template-columns:
+    repeat(2, minmax(0,1fr)) !important;
+
+  column-gap:14px !important;
+  row-gap:12px !important;
+
+  width:100% !important;
+
+  margin:0 0 20px !important;
+  padding:0 0 20px !important;
+
+  border-bottom:1px dashed var(--erp-border) !important;
+}
+
+
+/* العنوان ياخد السطر كله */
+.erp-invoice-form .erp-form-section h3{
+  grid-column:1 / -1 !important;
+
+  margin:0 0 4px !important;
+
+  font-size:1rem !important;
+  font-weight:900 !important;
+
+  color:var(--erp-text) !important;
+}
+
+
+/* كل Label يبقى منظم */
+.erp-invoice-form label{
+  display:flex !important;
+  flex-direction:column !important;
+
+  gap:6px !important;
+
+  min-width:0 !important;
+
+  font-size:.78rem !important;
+  font-weight:700 !important;
+  color:#6f7890 !important;
+}
+
+
+/* الحقول كلها نفس الارتفاع */
+.erp-invoice-form input,
+.erp-invoice-form select,
+.erp-invoice-form textarea{
+  width:100% !important;
+  min-width:0 !important;
+
+  box-sizing:border-box !important;
+
+  border:1px solid var(--erp-border) !important;
+  border-radius:12px !important;
+
+  background:#fbfcfe !important;
+  color:var(--erp-text) !important;
+
+  font:inherit !important;
+  outline:none !important;
+}
+
+
+.erp-invoice-form input,
+.erp-invoice-form select{
+  height:44px !important;
+  padding:0 12px !important;
+}
+
+
+.erp-invoice-form textarea{
+  min-height:80px !important;
+  padding:10px 12px !important;
+  resize:vertical !important;
+}
+
+
+.erp-invoice-form input:focus,
+.erp-invoice-form select:focus,
+.erp-invoice-form textarea:focus{
+  border-color:var(--erp-primary) !important;
+  background:#fff !important;
+}
+
+
+/* =========================================================
+   IMPORT ORDER
+   ========================================================= */
+
+.erp-order-import{
+  display:grid !important;
+
+  grid-template-columns:
+    minmax(0,1fr)
+    150px !important;
+
+  gap:12px !important;
+
+  align-items:end !important;
+
+  margin-bottom:20px !important;
+}
+
+
+.erp-order-import label{
+  min-width:0 !important;
+}
+
+
+.erp-order-import button{
+  height:44px !important;
+  width:100% !important;
+}
+
+
+/* =========================================================
+   ITEMS
+   ========================================================= */
+
+#invoiceItems{
+  grid-column:1 / -1 !important;
+
+  display:flex !important;
+  flex-direction:column !important;
+
+  gap:10px !important;
+
+  width:100% !important;
+}
+
+
+.erp-invoice-item{
+  display:grid !important;
+
+  grid-template-columns:
+    minmax(180px,2fr)
+    70px
+    100px
+    85px
+    36px !important;
+
+  gap:8px !important;
+
+  align-items:center !important;
+
+  width:100% !important;
+  min-width:0 !important;
+
+  margin:0 !important;
+}
+
+
+.erp-invoice-item input{
+  width:100% !important;
+  height:42px !important;
+
+  min-width:0 !important;
+
+  padding:0 10px !important;
+
+  box-sizing:border-box !important;
+}
+
+
+.erp-danger-mini{
+  width:34px !important;
+  height:34px !important;
+
+  border:0 !important;
+  border-radius:9px !important;
+
+  background:#fdecec !important;
+  color:#c0392b !important;
+
+  cursor:pointer !important;
+}
+
+
+/* زر إضافة بند */
+#btnAddItem{
+  grid-column:1 / -1 !important;
+
+  justify-self:start !important;
+
+  margin-top:4px !important;
+}
+
+
+/* =========================================================
+   ACTION BUTTONS
+   ========================================================= */
+
+.erp-invoice-actions{
+  display:grid !important;
+
+  grid-template-columns:
+    repeat(2,minmax(0,1fr)) !important;
+
+  gap:10px !important;
+
+  width:100% !important;
+
+  margin-top:18px !important;
+}
+
+
+.erp-invoice-actions button{
+  width:100% !important;
+  min-height:48px !important;
+
+  margin:0 !important;
+}
+
+
+/* =========================================================
+   PREVIEW COLUMN
+   ========================================================= */
+
+.erp-invoice-preview-card{
+  width:100% !important;
+  min-width:0 !important;
+
+  height:auto !important;
+
+  align-self:start !important;
+
+  padding:16px !important;
+
+  overflow:visible !important;
+
+  box-sizing:border-box !important;
+}
+
+
+/* المعاينة نفسها */
+.erp-invoice-print{
+  width:100% !important;
+
+  margin:0 !important;
+  padding:0 !important;
+
+  background:transparent !important;
+
+  overflow:visible !important;
+}
+
+
+/* =========================================================
+   REAL A4 PAPER
+   ========================================================= */
+
+.erp-invoice-paper{
+  /* A4 حقيقي */
+  width:210mm !important;
+  min-width:210mm !important;
+  max-width:210mm !important;
+
+  min-height:297mm !important;
+
+  margin:0 auto !important;
+
+  padding:12mm !important;
+
+  box-sizing:border-box !important;
+
+  background:#fff !important;
+
+  border:1px solid #e2e6ef !important;
+  border-radius:4px !important;
+
+  box-shadow:
+    0 12px 40px rgba(20,33,61,.14) !important;
+
+  overflow:visible !important;
+
+  position:relative !important;
+
+  color:#152546 !important;
+}
+
+
+/* يمنع أي عنصر يطلع بره الورقة */
+.erp-invoice-paper *{
+  box-sizing:border-box !important;
+  max-width:100%;
+}
+
+
+/* =========================================================
+   A4 HEADER
+   ========================================================= */
+
+.erp-invoice-paper-head{
+  display:grid !important;
+
+  grid-template-columns:
+    82px
+    minmax(0,1fr)
+    82px !important;
+
+  align-items:center !important;
+
+  gap:16px !important;
+
+  width:100% !important;
+
+  padding-bottom:12px !important;
+  margin-bottom:14px !important;
+
+  border-bottom:2px solid #152546 !important;
+}
+
+
+.erp-invoice-logo,
+.erp-invoice-qr{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+
+
+.erp-invoice-logo img{
+  width:72px !important;
+  height:72px !important;
+
+  object-fit:contain !important;
+}
+
+
+.erp-invoice-qr img{
+  width:76px !important;
+  height:76px !important;
+
+  object-fit:contain !important;
+}
+
+
+.erp-invoice-company{
+  text-align:center !important;
+
+  min-width:0 !important;
+}
+
+
+.erp-invoice-company b{
+  display:block !important;
+
+  font-size:1.25rem !important;
+  line-height:1.4 !important;
+
+  color:#152546 !important;
+}
+
+
+.erp-invoice-company span{
+  display:block !important;
+
+  margin-top:3px !important;
+
+  font-size:.76rem !important;
+
+  color:#7a8296 !important;
+}
+
+
+/* =========================================================
+   TITLE
+   ========================================================= */
+
+.erp-invoice-title{
+  width:100% !important;
+
+  text-align:center !important;
+
+  margin:14px 0 !important;
+}
+
+
+.erp-invoice-title h2{
+  margin:0 !important;
+
+  font-size:1.3rem !important;
+  font-weight:900 !important;
+
+  color:#152546 !important;
+}
+
+
+/* =========================================================
+   META
+   ========================================================= */
+
+.erp-invoice-meta{
+  display:grid !important;
+
+  grid-template-columns:
+    repeat(4,minmax(0,1fr)) !important;
+
+  gap:8px !important;
+
+  width:100% !important;
+
+  margin-bottom:14px !important;
+}
+
+
+.erp-invoice-meta div{
+  min-width:0 !important;
+
+  padding:8px !important;
+
+  text-align:center !important;
+
+  background:#f8f9fc !important;
+
+  border:1px solid #e5e9f2 !important;
+  border-radius:9px !important;
+}
+
+
+.erp-invoice-meta span{
+  display:block !important;
+
+  margin-bottom:4px !important;
+
+  font-size:.64rem !important;
+  color:#7a8296 !important;
+}
+
+
+.erp-invoice-meta b{
+  display:block !important;
+
+  font-size:.78rem !important;
+
+  word-break:break-word !important;
+}
+
+
+/* =========================================================
+   PARTIES
+   ========================================================= */
+
+.erp-invoice-parties{
+  display:grid !important;
+
+  grid-template-columns:
+    repeat(2,minmax(0,1fr)) !important;
+
+  gap:12px !important;
+
+  width:100% !important;
+
+  margin-bottom:16px !important;
+}
+
+
+.erp-invoice-party{
+  min-width:0 !important;
+
+  min-height:110px !important;
+
+  padding:12px !important;
+
+  border:1px solid #e5e9f2 !important;
+  border-radius:10px !important;
+
+  font-size:.76rem !important;
+}
+
+
+.erp-invoice-party b{
+  display:block !important;
+
+  margin-bottom:7px !important;
+
+  color:#152546 !important;
+}
+
+
+.erp-invoice-party div{
+  margin-bottom:3px !important;
+
+  color:#3a4256 !important;
+
+  overflow-wrap:anywhere !important;
+}
+
+
+/* =========================================================
+   ITEMS TABLE
+   ========================================================= */
+
+.erp-invoice-table{
+  width:100% !important;
+
+  table-layout:fixed !important;
+
+  border-collapse:collapse !important;
+
+  margin:0 0 16px !important;
+
+  font-size:.7rem !important;
+}
+
+
+.erp-invoice-table th,
+.erp-invoice-table td{
+  border:1px solid #cfd6e3 !important;
+
+  padding:7px 5px !important;
+
+  vertical-align:middle !important;
+
+  word-break:normal !important;
+  overflow-wrap:anywhere !important;
+
+  white-space:normal !important;
+}
+
+
+.erp-invoice-table th{
+  background:#152546 !important;
+  color:#fff !important;
+
+  font-weight:800 !important;
+
+  text-align:center !important;
+
+  font-size:.64rem !important;
+  line-height:1.25 !important;
+}
+
+
+/* رقم */
+.erp-invoice-table th:nth-child(1),
+.erp-invoice-table td:nth-child(1){
+  width:6% !important;
+  text-align:center !important;
+}
+
+
+/* الوصف */
+.erp-invoice-table th:nth-child(2),
+.erp-invoice-table td:nth-child(2){
+  width:40% !important;
+}
+
+
+/* الكمية */
+.erp-invoice-table th:nth-child(3),
+.erp-invoice-table td:nth-child(3){
+  width:10% !important;
+  text-align:center !important;
+}
+
+
+/* سعر الوحدة */
+.erp-invoice-table th:nth-child(4),
+.erp-invoice-table td:nth-child(4){
+  width:16% !important;
+  text-align:center !important;
+}
+
+
+/* الخصم */
+.erp-invoice-table th:nth-child(5),
+.erp-invoice-table td:nth-child(5){
+  width:12% !important;
+  text-align:center !important;
+}
+
+
+/* الإجمالي */
+.erp-invoice-table th:nth-child(6),
+.erp-invoice-table td:nth-child(6){
+  width:16% !important;
+  text-align:center !important;
+}
+
+
+/* =========================================================
+   TOTALS
+   ========================================================= */
+
+.erp-invoice-totals{
+  width:330px !important;
+  max-width:55% !important;
+
+  margin-inline-start:auto !important;
+  margin-bottom:16px !important;
+}
+
+
+.erp-invoice-totals div{
+  display:flex !important;
+
+  align-items:center !important;
+  justify-content:space-between !important;
+
+  gap:20px !important;
+
+  padding:7px 0 !important;
+
+  border-bottom:1px solid #edf0f6 !important;
+
+  font-size:.8rem !important;
+}
+
+
+.erp-invoice-grand{
+  font-size:1rem !important;
+  font-weight:900 !important;
+
+  color:#152546 !important;
+}
+
+
+/* =========================================================
+   WORDS
+   ========================================================= */
+
+.erp-invoice-words{
+  width:100% !important;
+
+  padding:10px 12px !important;
+
+  margin:0 0 14px !important;
+
+  background:#f8f9fc !important;
+
+  border:1px solid #e5e9f2 !important;
+  border-radius:9px !important;
+
+  font-size:.78rem !important;
+  line-height:1.7 !important;
+  font-weight:800 !important;
+}
+
+
+/* =========================================================
+   NOTES
+   ========================================================= */
+
+.erp-invoice-notes{
+  width:100% !important;
+
+  margin-bottom:12px !important;
+
+  font-size:.74rem !important;
+  line-height:1.7 !important;
+
+  overflow-wrap:anywhere !important;
+}
+
+
+/* =========================================================
+   SIGNATURES
+   ========================================================= */
+
+.erp-invoice-signatures{
+  display:grid !important;
+
+  grid-template-columns:
+    repeat(2,minmax(0,1fr)) !important;
+
+  gap:60px !important;
+
+  width:100% !important;
+
+  margin:24px 0 18px !important;
+
+  text-align:center !important;
+
+  font-size:.74rem !important;
+}
+
+
+.erp-sign-line{
+  margin-top:38px !important;
+
+  border-top:1px dashed #152546 !important;
+}
+
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+.erp-invoice-footer{
+  display:flex !important;
+
+  justify-content:center !important;
+  align-items:center !important;
+
+  flex-wrap:wrap !important;
+
+  gap:20px !important;
+
+  width:100% !important;
+
+  padding-top:12px !important;
+
+  border-top:1px solid #e5e9f2 !important;
+
+  font-size:.68rem !important;
+
+  color:#7a8296 !important;
+}
+
+
+/* =========================================================
+   IMPORTANT:
+   لا يوجد Scroll داخل الورقة
+   ========================================================= */
+
+.erp-invoice-preview-card,
+.erp-invoice-print,
+#invoicePreview,
+.erp-invoice-paper{
+  overflow-x:visible !important;
+}
+
+
+
+
+/* =========================================================
+   LARGE SCREEN
+   ========================================================= */
+
+
+.erp-invoice-parties{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  direction:ltr;
+}
+
+.erp-invoice-party{
+  direction:rtl;
+}
+
+.erp-invoice-party:nth-child(2){
+  grid-column:2;
+}
+
+.erp-invoice-party:nth-child(1){
+  grid-column:1;
+}
+
+
+
+
+
+
+
+
+@media (min-width:1500px){
+
+  .erp-invoice-workspace{
+    grid-template-columns:
+      minmax(560px,1fr)
+      794px !important;
+
+    max-width:1450px !important;
+  }
+
+}
+
+
+/* =========================================================
+   SMALL DESKTOP
+   ========================================================= */
+
+@media (max-width:1250px){
+
+  .erp-invoice-workspace{
+    grid-template-columns:1fr !important;
+
+    max-width:900px !important;
+  }
+
+
+  .erp-invoice-preview-card{
+    order:2 !important;
+  }
+
+
+  .erp-invoice-form-card{
+    order:1 !important;
+  }
+
+
+  .erp-invoice-paper{
+    margin:auto !important;
+  }
+
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width:900px){
+
+  .erp-invoice-workspace{
+    display:block !important;
+
+    width:100% !important;
+
+    padding:0 !important;
+  }
+
+
+  .erp-invoice-form-card,
+  .erp-invoice-preview-card{
+    width:100% !important;
+
+    margin-bottom:16px !important;
+  }
+
+
+  .erp-invoice-form .erp-form-section{
+    grid-template-columns:1fr !important;
+  }
+
+
+  .erp-order-import{
+    grid-template-columns:1fr !important;
+  }
+
+
+  .erp-invoice-item{
+    grid-template-columns:
+      1fr
+      1fr !important;
+  }
+
+
+  .erp-invoice-item > *:first-child{
+    grid-column:1 / -1 !important;
+  }
+
+
+  /* A4 يفضل بنفس النسبة لكن يتصغر بصريًا */
+  .erp-invoice-preview-card{
+    overflow-x:auto !important;
+  }
+
+}
+
+
+/* =========================================================
+   PRINT A4
+   ========================================================= */
+
+@page{
+  size:A4 portrait;
+  margin:0;
+}
+
+
+@media print{
+
+  html,
+  body{
+    width:210mm !important;
+
+    margin:0 !important;
+    padding:0 !important;
+
+    background:#fff !important;
+  }
+
+
+  .erp-sidebar,
+  .erp-sidebar-overlay,
+  .erp-topbar,
+  .erp-page-head,
+  .erp-invoice-form-card{
+    display:none !important;
+  }
+
+
+  .erp-main,
+  .erp-content,
+  .erp-invoice-workspace,
+  .erp-invoice-preview-card,
+  .erp-invoice-print,
+  #invoicePreview{
+    display:block !important;
+
+    width:210mm !important;
+    max-width:210mm !important;
+
+    margin:0 !important;
+    padding:0 !important;
+
+    background:#fff !important;
+
+    border:0 !important;
+    box-shadow:none !important;
+
+    overflow:visible !important;
+  }
+
+
+  .erp-invoice-paper{
+    width:210mm !important;
+    min-width:210mm !important;
+    max-width:210mm !important;
+
+    min-height:297mm !important;
+
+    margin:0 !important;
+
+    padding:10mm 12mm !important;
+
+    border:0 !important;
+    border-radius:0 !important;
+
+    box-shadow:none !important;
+
+    overflow:visible !important;
+
+    page-break-after:avoid !important;
+  }
+
+
+  .erp-invoice-table{
+    page-break-inside:avoid !important;
+  }
+
+
+  .erp-invoice-meta,
+  .erp-invoice-parties,
+  .erp-invoice-totals,
+  .erp-invoice-words,
+  .erp-invoice-signatures{
+    break-inside:avoid !important;
+    page-break-inside:avoid !important;
+  }
+
+}
+
+/* على الشاشات الكبيرة */
+@media (min-width: 1500px){
+  .erp-invoice-workspace{
+    grid-template-columns:
+      minmax(580px, 1fr)
+      710px !important;
+
+    max-width: 1350px !important;
+  }
+}
+
+/* الطباعة تفضل A4 حقيقية بدون تصغير */
+@media print{
+  .erp-invoice-paper{
+    zoom: 1 !important;
+  }
+}
+
+/* الطباعة ترجع A4 حقيقية */
+@media print{
+  .erp-invoice-paper{
+    width:210mm !important;
+    max-width:210mm !important;
+    min-width:210mm !important;
+
+    height:297mm !important;
+    min-height:297mm !important;
+
+    aspect-ratio:auto !important;
+
+    padding:10mm 12mm !important;
+    margin:0 !important;
+
+    border:0 !important;
+    box-shadow:none !important;
+
+    overflow:visible !important;
+  }
 }
 
 @media (max-width: 1300px) {

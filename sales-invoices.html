@@ -174,5 +174,69 @@ updateInstallButton();
 if(token){showApp();loadOrders()}
 </script>
 <script src="/translations/translation.min.js?v=translation-20260731g" defer></script>
+<style>
+/* ===== Sales Invoices Only - Remove Admin Sidebar Space ===== */
+
+html,
+body {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+}
+
+body {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* الحاوية الرئيسية */
+body > .wrap {
+  width: calc(100% - 32px) !important;
+  max-width: 1580px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* الهيدر */
+body > .wrap > .top {
+  width: 100% !important;
+  max-width: none !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  left: auto !important;
+  right: auto !important;
+  transform: none !important;
+}
+
+/* محتوى الصفحة */
+#app.grid {
+  width: 100% !important;
+  max-width: none !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* إلغاء أي إزاحة جاية من admin-pro */
+@media (min-width: 1100px) {
+  body {
+    padding-right: 0 !important;
+    padding-left: 0 !important;
+  }
+
+  body > .wrap {
+    margin-inline: auto !important;
+  }
+}
+
+/* الهاتف */
+@media (max-width: 900px) {
+  body > .wrap {
+    width: calc(100% - 20px) !important;
+    margin-inline: auto !important;
+  }
+}
+</style>
 </body>
 </html>

@@ -1091,19 +1091,23 @@ tr:last-child td {
     grid-template-columns: 1fr;
   }
 
-  .erp-sidebar {
-    position: fixed;
-    inset-block: 0;
-    inset-inline-end: 0;
-    width: min(84vw, 300px);
-    height: 100dvh;
-    margin: 0;
-    border-radius: 24px 0 0 24px;
-    transform: translateX(110%) !important;
-    visibility: hidden !important;
-    transition: transform 0.22s ease, visibility 0.22s ease;
-  }
+.erp-sidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: auto;
 
+  width: min(84vw, 300px);
+  height: 100dvh;
+  margin: 0;
+  border-radius: 24px 0 0 24px;
+  transform: translateX(110%);
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.22s ease, visibility 0.22s ease, opacity 0.22s ease;
+}
   body.erp-menu-ready.erp-menu-open .erp-sidebar {
     transform: translateX(0) !important;
     visibility: visible !important;

@@ -307,12 +307,11 @@
     const company = {
       name: "بريق للهدايا والإبداع",
       enName: "BARIQ GIFTS & CREATIVITY",
-      phone: "+971 50 123 4567",
+      phone: "+971 554423151",
       email: "sales@bariqgifts.com",
-      address: "دبي - الإمارات العربية المتحدة",
-      vat: "123456789",
+      address: "راس الخيمه - الإمارات العربية المتحدة",
       website: "www.bariqgifts.com",
-      logo: "/assets/logo.png",
+      logo: "/assets/blak.png",
     };
 
     const itemsRows = data.items.map((item, i) => `
@@ -362,7 +361,6 @@
             <div>${esc(company.phone)}</div>
             <div>${esc(company.email)}</div>
             <div>${esc(company.address)}</div>
-            <div>الرقم الضريبي: ${esc(company.vat)}</div>
           </div>
         </div>
         <table class="erp-invoice-table">

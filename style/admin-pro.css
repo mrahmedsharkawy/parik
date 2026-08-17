@@ -1,400 +1,1443 @@
+/* ==========================================================================
+   Bariq Admin — ERP Visual Theme
+   Drop this file AFTER the current admin styles.
+   It changes presentation only: no IDs, JS hooks, routing, auth, or data logic.
+   ========================================================================== */
+
 :root{
-  --admin-navy:#152546;
-  --admin-navy-2:#203f73;
-  --admin-navy-3:#0f203d;
-  --admin-gold:#e0be38;
-  --admin-bg:#f2f5fa;
-  --admin-surface:#fff;
-  --admin-soft:#f7f9fd;
-  --admin-text:#071a38;
-  --admin-muted:#71809a;
-  --admin-line:#e2e8f2;
-  --admin-good:#147a45;
-  --admin-bad:#c24141;
-  --admin-warn:#a66b00;
-  --admin-shadow:0 4px 14px rgba(21,37,70,.055);
-  --admin-shadow-sm:0 2px 8px rgba(21,37,70,.045);
-  --navy:var(--admin-navy-2);
-  --navy-dark:var(--admin-navy);
-  --gold:var(--admin-gold);
-  --bg:var(--admin-bg);
-  --line:var(--admin-line);
-  --muted:var(--admin-muted);
+  --navy:#14213d;
+  --navy-dark:#0f1b35;
+  --gold:#d4af37;
+
+  --erp-bg:#f8fafd;
+  --erp-surface:rgba(255,255,255,.92);
+  --erp-surface-strong:#fff;
+  --erp-primary:#5b6ee1;
+  --erp-primary-strong:#4055c8;
+  --erp-primary-light:#eef0ff;
+  --erp-blue-soft:#eaf4ff;
+  --erp-purple-soft:#f0ebff;
+  --erp-mint-soft:#e8faf4;
+  --erp-peach-soft:#fff4e7;
+  --erp-pink-soft:#fff0f5;
+  --erp-yellow-soft:#fff8d9;
+
+  --erp-text:#14213d;
+  --erp-muted:#7b8498;
+  --erp-border:#edf0f5;
+  --erp-border-strong:#dbe2ef;
+  --erp-shadow:0 18px 48px rgba(20,33,61,.08);
+  --erp-shadow-soft:0 10px 28px rgba(20,33,61,.055);
+  --erp-radius:22px;
+  --erp-radius-sm:14px;
+
+  --admin-sidebar-w:260px;
+  --danger:#c0392b;
+  --ok:#1e8e4e;
+  --line:var(--erp-border);
+  --bg:var(--erp-bg);
 }
 
 *{box-sizing:border-box}
 
-html,
+html{
+  min-height:100%;
+  background:var(--erp-bg);
+}
+
 body{
-  background:var(--admin-bg) !important;
-  color:var(--admin-text) !important;
-  -webkit-font-smoothing:antialiased;
-  text-rendering:optimizeLegibility;
+  margin:0 !important;
+  min-height:100dvh;
+  overflow-x:hidden;
+  color:var(--erp-text) !important;
+  font-family:"Cairo","Tajawal","IBM Plex Sans Arabic",Inter,"Segoe UI",Tahoma,Arial,sans-serif !important;
+  background:
+    radial-gradient(circle at 12% 10%,rgba(91,110,225,.14),transparent 28%),
+    radial-gradient(circle at 84% 14%,rgba(109,213,178,.16),transparent 26%),
+    linear-gradient(180deg,#f9fbff 0%,#f7f9fc 52%,#fbfcff 100%) !important;
 }
 
-body:before{display:none !important}
+button,input,select,textarea{font:inherit}
+button,.btn{cursor:pointer}
 
-.wrap,
-.app{
-  width:min(100% - 28px,1560px) !important;
-  max-width:1560px !important;
-  margin-inline:auto !important;
-  padding-inline:0 !important;
-  background:transparent !important;
-}
+/* ==========================================================================
+   Desktop shell
+   Current .tabs becomes an ERP-like right sidebar without changing HTML.
+   ========================================================================== */
 
-.top,
-.topbar{
-  background:linear-gradient(135deg,var(--admin-navy) 0%,var(--admin-navy-2) 58%,var(--admin-navy-3) 100%) !important;
-  color:#fff !important;
-  border:0 !important;
-  border-radius:0 0 18px 18px !important;
-  box-shadow:0 2px 10px rgba(21,37,70,.16) !important;
-  overflow:hidden !important;
-  backdrop-filter:none !important;
-  -webkit-backdrop-filter:none !important;
-}
-
-.top h1,
-.topbar h1,
-.brand h1,
-.top .muted,
-.topbar .muted{
-  color:#fff !important;
-}
-
-.top h1,
-.topbar h1,
-.brand h1{
-  font-size:1rem !important;
-  font-weight:800 !important;
-  letter-spacing:0 !important;
-}
-
-.top .btn,
-.topbar .btn,
-.top button,
-.topbar button{
-  background:#fff !important;
-  color:var(--admin-navy) !important;
-  border:1px solid #dce4f0 !important;
-  border-radius:14px !important;
-  box-shadow:var(--admin-shadow-sm) !important;
-}
-
-.tabs{
-  margin:14px auto 10px !important;
-  padding:7px 8px !important;
-  gap:8px !important;
-  background:transparent !important;
-  border:0 !important;
-  border-radius:0 !important;
-  box-shadow:none !important;
-  backdrop-filter:none !important;
-  -webkit-backdrop-filter:none !important;
-}
-
-@media (min-width: 1100px){
+@media (min-width:1101px){
   body{
-    padding-right:270px !important;
-    padding-left:0 !important;
-  }
-
-  .topbar,
-  .top{
-    margin-right:-270px !important;
+    padding-right:calc(var(--admin-sidebar-w) + 42px) !important;
   }
 
   .tabs{
     position:fixed !important;
-    top:76px !important;
+    top:18px !important;
     right:18px !important;
     left:auto !important;
-    z-index:18 !important;
-    width:240px !important;
-    height:calc(100vh - 92px) !important;
-    max-height:calc(100vh - 92px) !important;
-    overflow-y:auto !important;
-    overflow-x:hidden !important;
+    width:var(--admin-sidebar-w) !important;
+    height:calc(100dvh - 36px) !important;
+    margin:0 !important;
+    padding:14px 12px !important;
+
     display:flex !important;
     flex-direction:column !important;
-    align-items:stretch !important;
-    gap:9px !important;
-    margin:0 !important;
-    padding:12px !important;
-    background:rgba(255,255,255,.78) !important;
-    border:1px solid rgba(226,232,242,.78) !important;
-    border-radius:22px !important;
-    box-shadow:0 14px 34px rgba(21,37,70,.12) !important;
-    backdrop-filter:blur(14px) saturate(130%) !important;
-    -webkit-backdrop-filter:blur(14px) saturate(130%) !important;
+    flex-wrap:nowrap !important;
+    gap:10px !important;
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+
+    background:rgba(255,255,255,.94) !important;
+    border:1px solid rgba(219,226,239,.95) !important;
+    border-radius:24px !important;
+    box-shadow:0 22px 48px rgba(20,33,61,.11) !important;
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+    z-index:40 !important;
   }
 
-  .tabs::-webkit-scrollbar{
-    width:4px;
-  }
-
-  .tabs::-webkit-scrollbar-thumb{
-    background:rgba(21,37,70,.24);
-    border-radius:999px;
+  .tabs::before{
+    content:"Bariq Admin";
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:54px;
+    padding:8px 10px;
+    margin-bottom:2px;
+    color:var(--erp-text);
+    font-weight:950;
+    font-size:.95rem;
+    background:rgba(255,255,255,.8);
+    border:1px solid rgba(219,226,239,.95);
+    border-radius:18px;
   }
 
   .tab{
     width:100% !important;
     min-height:48px !important;
+    margin:0 !important;
+    top:auto !important;
+
+    display:flex !important;
+    align-items:center !important;
     justify-content:flex-start !important;
+    gap:9px !important;
+
+    padding:0 13px !important;
+    color:#536078 !important;
     text-align:right !important;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+
+    background:rgba(255,255,255,.86) !important;
+    border:1px solid rgba(219,226,239,.95) !important;
     border-radius:15px !important;
-    padding:11px 14px !important;
-    font-size:.9rem !important;
-    line-height:1.25 !important;
-    white-space:normal !important;
-    box-shadow:none !important;
+    box-shadow:0 8px 18px rgba(20,33,61,.035);
+    transition:background .18s ease,color .18s ease,transform .18s ease,border-color .18s ease,box-shadow .18s ease;
   }
 
+  .tab:hover,
   .tab.active{
-    transform:translateX(-4px);
+    color:var(--erp-text) !important;
+    background:
+      linear-gradient(135deg,rgba(206,244,255,.88),rgba(255,249,220,.84)),
+      rgba(255,255,255,.72) !important;
+    border-color:rgba(212,175,55,.82) !important;
+    box-shadow:0 12px 24px rgba(82,137,156,.14) !important;
+    transform:translateX(-2px);
   }
 
-  .wrap,
-  .app{
-    width:min(100% - 28px,1500px) !important;
+  .topbar{
+    width:min(calc(100% - 56px),1440px) !important;
+    margin:0 auto !important;
   }
-}
 
-.tab{
-  min-height:38px !important;
-  padding:8px 16px !important;
-  background:#fff !important;
-  color:#4e5d74 !important;
-  border:1px solid var(--admin-line) !important;
-  border-radius:22px !important;
-  box-shadow:var(--admin-shadow-sm) !important;
-  font-size:.88rem !important;
-  font-weight:800 !important;
-  text-decoration:none !important;
-}
-
-.tab:hover{
-  background:#f8fafd !important;
-  border-color:#d4dbe8 !important;
-}
-
-.tab.active,
-.filters button.active,
-.period-tabs button.active{
-  background:var(--admin-navy) !important;
-  color:#fff !important;
-  border-color:var(--admin-gold) !important;
-  box-shadow:0 0 0 2px rgba(224,190,56,.18),0 4px 12px rgba(21,37,70,.12) !important;
-}
-
-@media (min-width: 1100px){
-  .tabs .tab,
-  .tabs a.tab{
-    width:100% !important;
-    min-height:48px !important;
-    justify-content:flex-start !important;
-    text-align:right !important;
-    border-radius:15px !important;
-    padding:11px 14px !important;
-    font-size:.9rem !important;
-    line-height:1.25 !important;
-    white-space:normal !important;
-    box-shadow:none !important;
+  .wrap{
+    width:min(calc(100% - 56px),1440px) !important;
+    max-width:1440px !important;
+    margin:0 auto !important;
+    padding:24px 0 42px !important;
   }
 }
 
-.card,
-.panel,
-.stat,
-.item,
-.row,
-.order,
-.rank-item,
-.invoice-card,
-.metric,
-.stat-box,
-.status-stat,
-.empty-state,
-.mini-stat,
-.modal-box,
-.gatebox,
-#gate .box{
-  background:var(--admin-surface) !important;
-  border:1px solid var(--admin-line) !important;
-  border-radius:8px !important;
-  box-shadow:var(--admin-shadow-sm) !important;
-  backdrop-filter:none !important;
-  -webkit-backdrop-filter:none !important;
+/* ==========================================================================
+   Top bar
+   ========================================================================== */
+
+.topbar{
+  position:sticky !important;
+  top:0 !important;
+  z-index:30 !important;
+
+  min-height:72px !important;
+  padding:12px 18px !important;
+
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:14px !important;
+
+  color:var(--erp-text) !important;
+  background: linear-gradient(
+        110deg,
+        #dff7fb 0%,
+        #f3fcfd 32%,
+        #ffffff 52%,
+        #f3fcf9 70%,
+        #dcf8ee 100%
+    ) !important;
+  border:1px solid rgba(237,240,245,.9) !important;
+  border-top:0 !important;
+  border-radius:0 0 22px 22px !important;
+  box-shadow:var(--erp-shadow-soft) !important;
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
 }
 
-.card h2,
-.card h3,
-.panel h2,
-.panel h3,
-.section-title,
-.stat .value,
-.metric .value,
-.stat-box b,
-.status-stat b{
-  color:var(--admin-navy) !important;
-  letter-spacing:0 !important;
+.topbar h1{
+  margin:0 !important;
+  display:flex !important;
+  align-items:center !important;
+  gap:10px !important;
+  color:var(--erp-text) !important;
+  font-size:1.05rem !important;
+  font-weight:950 !important;
 }
 
-.stats,
-.stats-cards,
-.cat-counts,
-.filters,
-.searchbar,
-.mini-filters,
-.bot-fields,
-.twocol,
-.invoice-summary,
-.stats-total,
-.import-stats{
-  background:transparent !important;
-  backdrop-filter:none !important;
-  -webkit-backdrop-filter:none !important;
-}
-
-input,
-select,
-textarea,
-.input,
-.search,
-.field{
-  background:#fff !important;
-  color:var(--admin-text) !important;
-  border:1px solid #dce4f0 !important;
-  border-radius:8px !important;
-  box-shadow:none !important;
-  outline:none !important;
-}
-
-input:focus,
-select:focus,
-textarea:focus{
-  border-color:#b8c7dc !important;
-  box-shadow:0 0 0 3px rgba(31,69,123,.08) !important;
-}
-
-button,
-.btn{
-  border-radius:10px !important;
-  font-weight:800 !important;
-  letter-spacing:0 !important;
-  box-shadow:none !important;
-}
-
-.btn-gold,
-.btn.gold,
-button.gold,
-button.primary,
-.primary{
-  background:var(--admin-gold) !important;
-  color:var(--admin-text) !important;
-  border-color:var(--admin-gold) !important;
-}
-
-.btn-navy,
-.btn.navy,
-button.navy{
-  background:var(--admin-navy) !important;
-  color:#fff !important;
-  border-color:var(--admin-navy) !important;
-}
-
-.btn-danger,
-.danger,
-button.danger{
-  background:#fff5f5 !important;
-  color:var(--admin-bad) !important;
-  border-color:#ffd6d6 !important;
-}
-
-.badge,
-.chip,
-.pill,
-.tag,
-.status,
-.b-ok,
-.b-red,
-.b-warn{
+.topbar .badge{
+  display:inline-flex !important;
+  align-items:center !important;
+  min-height:26px !important;
+  padding:0 10px !important;
+  color:var(--erp-primary-strong) !important;
+  background:var(--erp-primary-light) !important;
+  border:1px solid #dfe3ff !important;
   border-radius:999px !important;
-  font-weight:800 !important;
-  letter-spacing:0 !important;
+  font-size:.72rem !important;
+  font-weight:900 !important;
 }
 
-.chip.ok,
-.b-ok,
-.st-delivered,
-.st-ready{
-  background:#eaf7ef !important;
-  color:var(--admin-good) !important;
-}
-
-.chip.bad,
-.b-red,
-.st-cancelled{
-  background:#fff5f5 !important;
-  color:var(--admin-bad) !important;
-}
-
-.chip.warn,
-.b-warn,
-.st-pending,
-.st-processing{
-  background:#fff8e6 !important;
-  color:var(--admin-warn) !important;
-}
-
-.tools,
-.actions,
-.top-actions{
+.topbar .actions{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:flex-end !important;
+  flex-wrap:wrap !important;
   gap:8px !important;
 }
 
-.table-wrap,
-.list,
-.items,
-.orders,
-.knowledge-list{
-  scrollbar-color:#9aa3b2 transparent;
-  scrollbar-width:thin;
+
+
+
+
+/* ==========================================================================
+   Buttons
+   ========================================================================== */
+
+button,.btn,
+.btn-gold,.btn-navy,.btn-ghost,.btn-danger,.btn-red{
+  min-height:40px;
+  border-radius:13px !important;
+  padding:0 14px !important;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+
+  border:1px solid var(--erp-border) !important;
+  font-size:.82rem !important;
+  font-weight:850 !important;
+  line-height:1.15;
+  text-decoration:none;
+  box-shadow:0 6px 18px rgba(20,33,61,.045);
+  transition:transform .16s ease,box-shadow .16s ease,background .16s ease,border-color .16s ease;
+}
+
+button:hover,.btn:hover,
+.btn-gold:hover,.btn-navy:hover,.btn-ghost:hover,.btn-danger:hover,.btn-red:hover{
+  transform:translateY(-1px);
+  box-shadow:0 10px 22px rgba(20,33,61,.08);
+}
+
+.btn-gold{
+  color:#fff !important;
+  background:linear-gradient(135deg,var(--erp-primary),var(--erp-primary-strong)) !important;
+  border-color:transparent !important;
+}
+
+.btn-navy{
+  color:#fff !important;
+  background:linear-gradient(135deg,#152546,#203f73) !important;
+  border-color:transparent !important;
+}
+
+.btn-ghost{
+  color:var(--erp-text) !important;
+  background:#fff !important;
+  border-color:var(--erp-border-strong) !important;
+}
+
+.btn-danger,.btn-red{
+  color:#b91c1c !important;
+  background:rgba(254,242,242,.92) !important;
+  border-color:rgba(239,68,68,.22) !important;
+}
+
+.btn-sm{
+  min-height:34px !important;
+  padding:0 10px !important;
+  font-size:.76rem !important;
+}
+
+/* ==========================================================================
+   Main panels / cards
+   ========================================================================== */
+
+.panel{display:none}
+.panel.active{display:block}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:18px !important;
+  min-width:0;
+}
+
+.grid>*{min-width:0}
+
+.card{
+  min-width:0 !important;
+  padding:20px !important;
+
+  color:var(--erp-text) !important;
+  background:var(--erp-surface) !important;
+  border:1px solid rgba(237,240,245,.95) !important;
+  border-radius:var(--erp-radius) !important;
+  box-shadow:var(--erp-shadow-soft) !important;
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+}
+
+.card h1,.card h2,.card h3,.card h4{
+  color:var(--erp-text) !important;
+}
+
+.card h2{
+  margin:0 0 16px !important;
+  font-size:1.05rem !important;
+  font-weight:950 !important;
+  line-height:1.4;
+}
+
+/* ==========================================================================
+   Forms
+   ========================================================================== */
+
+label{
+  display:block;
+  margin:12px 0 6px !important;
+  color:#657087 !important;
+  font-size:.78rem !important;
+  font-weight:850 !important;
+}
+
+input[type=text],
+input[type=email],
+input[type=password],
+input[type=number],
+input[type=datetime-local],
+input[type=date],
+input[type=time],
+input[type=search],
+input[type=url],
+input[type=tel],
+textarea,
+select{
+  width:100%;
+  min-width:0;
+  min-height:44px;
+
+  padding:9px 12px !important;
+  color:var(--erp-text) !important;
+  background:rgba(251,252,254,.96) !important;
+  border:1px solid var(--erp-border-strong) !important;
+  border-radius:12px !important;
+  outline:none !important;
+  box-shadow:none !important;
+  transition:border-color .16s ease,box-shadow .16s ease,background .16s ease;
+}
+
+textarea{
+  min-height:86px;
+  resize:vertical;
+}
+
+input:focus,
+textarea:focus,
+select:focus{
+  background:#fff !important;
+  border-color:rgba(91,110,225,.72) !important;
+  box-shadow:0 0 0 4px rgba(91,110,225,.09) !important;
+}
+
+input::placeholder,
+textarea::placeholder{color:#a0a8b8}
+
+input[type=checkbox],
+input[type=radio]{
+  accent-color:var(--erp-primary);
+}
+
+.row{
+  display:flex;
+  gap:10px !important;
+  min-width:0;
+}
+
+.row>*{
+  flex:1;
+  min-width:0;
+}
+
+/* ==========================================================================
+   Hints / chips / states
+   ========================================================================== */
+
+.hint{
+  margin-bottom:14px !important;
+  padding:11px 13px !important;
+  color:var(--erp-muted) !important;
+  background:rgba(248,250,253,.9) !important;
+  border:1px solid var(--erp-border) !important;
+  border-radius:13px !important;
+  font-size:.78rem !important;
+  line-height:1.7 !important;
+}
+
+.chip,
+.status-badge{
+  display:inline-flex !important;
+  align-items:center;
+  justify-content:center;
+  min-height:26px;
+  padding:3px 9px !important;
+  border-radius:999px !important;
+  font-size:.7rem !important;
+  font-weight:900 !important;
+}
+
+.chip{
+  color:var(--erp-primary-strong) !important;
+  background:var(--erp-primary-light) !important;
+  border:1px solid #e0e4ff;
+}
+
+.empty,
+.empty-state{
+  padding:24px !important;
+  color:var(--erp-muted) !important;
+  text-align:center !important;
+  background:rgba(248,250,253,.75) !important;
+  border:1px dashed var(--erp-border-strong) !important;
+  border-radius:16px !important;
+}
+
+/* ==========================================================================
+   Stats
+   ========================================================================== */
+
+.stats-cards,
+.stats{
+  display:grid !important;
+  grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+  gap:14px !important;
+  width:100% !important;
+  overflow:visible !important;
+}
+
+.stat{
+  min-width:0 !important;
+  min-height:120px !important;
+  padding:16px !important;
+  position:relative;
+
+  background:var(--erp-surface) !important;
+  border:1px solid rgba(237,240,245,.95) !important;
+  border-radius:var(--erp-radius-sm) !important;
+  box-shadow:var(--erp-shadow-soft) !important;
+  overflow:hidden;
+}
+
+.stat::after{
+  content:"";
+  position:absolute;
+  width:88px;
+  height:88px;
+  left:-34px;
+  top:-38px;
+  border-radius:50%;
+  background:rgba(91,110,225,.06);
+  pointer-events:none;
+}
+
+.stat .v,
+.stat>b:first-child{
+  color:var(--erp-text) !important;
+  font-size:1.35rem !important;
+  font-weight:950 !important;
+  line-height:1.1 !important;
+}
+
+.stat .l,
+.stat>span,
+.stat small{
+  color:var(--erp-muted) !important;
+}
+
+.stat.gold,.stat.green,.stat.orange,.stat.red,.stat.navy{
+  border-top:1px solid rgba(237,240,245,.95) !important;
+}
+
+/* ==========================================================================
+   Period selectors
+   ========================================================================== */
+
+.period-tabs{
+  display:inline-flex !important;
+  max-width:100%;
+  margin-bottom:14px !important;
+  padding:5px !important;
+  gap:4px !important;
+  overflow-x:auto;
+  background:#fff !important;
+  border:1px solid var(--erp-border) !important;
+  border-radius:16px !important;
+  box-shadow:var(--erp-shadow-soft);
+}
+
+.period-tabs button{
+  min-height:34px !important;
+  padding:0 12px !important;
+  color:#626d83 !important;
+  background:transparent !important;
+  border-color:transparent !important;
+  box-shadow:none !important;
+  white-space:nowrap;
+}
+
+.period-tabs button.active{
+  color:#fff !important;
+  background:var(--erp-primary) !important;
+  border-color:var(--erp-primary) !important;
+}
+
+/* ==========================================================================
+   Tables
+   ========================================================================== */
+
+.admin-table-wrap{
+  overflow:auto !important;
+  max-width:100%;
+  background:rgba(255,255,255,.82) !important;
+  border:1px solid var(--erp-border) !important;
+  border-radius:18px !important;
+  box-shadow:0 6px 20px rgba(20,33,61,.035);
+}
+
+.admin-table{
+  width:100% !important;
+  border-collapse:collapse !important;
+  color:var(--erp-text) !important;
+  font-size:.8rem !important;
+}
+
+.admin-table th,
+.admin-table td{
+  padding:11px 12px !important;
+  border-bottom:1px solid var(--erp-border) !important;
+  text-align:right !important;
+  vertical-align:middle !important;
+}
+
+.admin-table th{
+  position:sticky;
+  top:0;
+  z-index:1;
+  color:#536078 !important;
+  background:#f7f9fd !important;
+  font-size:.74rem !important;
+  font-weight:950 !important;
+  white-space:nowrap;
+}
+
+.admin-table tbody tr{
+  transition:background .14s ease;
+}
+
+.admin-table tbody tr:hover{
+  background:rgba(91,110,225,.035);
+}
+
+.admin-table tr:last-child td{
+  border-bottom:0 !important;
+}
+
+/* ==========================================================================
+   Product / order / list rows
+   ========================================================================== */
+
+.plist,
+.rank-list{
+  display:flex;
+  flex-direction:column;
+  gap:9px !important;
+}
+
+.prod-row,
+.ord-row,
+.rank-item,
+.item{
+  min-width:0;
+  padding:11px 12px !important;
+  background:rgba(255,255,255,.82) !important;
+  border:1px solid var(--erp-border) !important;
+  border-radius:15px !important;
+  box-shadow:0 5px 16px rgba(20,33,61,.025);
+}
+
+.prod-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.prod-row img,
+.prod-row video{
+  width:58px !important;
+  height:58px !important;
+  border-radius:14px !important;
+  background:#f0f3f8 !important;
+}
+
+.prod-row .info,
+.ord-row .oinfo{
+  min-width:0;
+}
+
+.prod-row .info b,
+.ord-row .oinfo b{
+  color:var(--erp-text) !important;
+}
+
+.rank-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.rank-meta,.meta{
+  color:var(--erp-muted) !important;
+  font-size:.74rem !important;
+}
+
+/* ==========================================================================
+   Category blocks / upload
+   ========================================================================== */
+
+.cat-counts{
+  display:grid !important;
+  grid-template-columns:repeat(auto-fit,minmax(125px,1fr)) !important;
+  gap:10px !important;
+  width:100%;
+  margin-bottom:18px !important;
+}
+
+.cc-box{
+  min-width:0 !important;
+  min-height:88px;
+  padding:12px !important;
+  display:flex !important;
+  align-items:center !important;
+  gap:9px !important;
+
+  background:var(--erp-surface) !important;
+  border:1px solid var(--erp-border) !important;
+  border-radius:16px !important;
+  box-shadow:var(--erp-shadow-soft);
+}
+
+.cc-box:hover,
+.cc-box.active{
+  background:linear-gradient(135deg,rgba(238,240,255,.88),rgba(255,249,220,.65)) !important;
+  border-color:rgba(212,175,55,.65) !important;
+}
+
+.cc-box.total{
+  background:rgba(238,240,255,.72) !important;
+}
+
+.cat-box{
+  max-height:220px !important;
+  padding:9px !important;
+  overflow:auto;
+  background:#fbfcfe !important;
+  border:1px solid var(--erp-border-strong) !important;
+  border-radius:13px !important;
+}
+
+.cat-item{
+  padding:7px 8px !important;
+  border-radius:9px !important;
+}
+
+.cat-item:hover{
+  background:var(--erp-primary-light) !important;
+}
+
+.media-drop{
+  padding:20px !important;
+  color:var(--erp-primary-strong) !important;
+  background:rgba(238,240,255,.45) !important;
+  border:1.5px dashed rgba(91,110,225,.48) !important;
+  border-radius:16px !important;
+}
+
+.media-thumb{
+  border-radius:13px !important;
+  border-color:var(--erp-border) !important;
+}
+
+/* ==========================================================================
+   Mini charts
+   ========================================================================== */
+
+.mini-chart{
+  height:160px !important;
+  padding:14px 8px !important;
+  gap:8px !important;
+  border-top:1px solid var(--erp-border) !important;
+  background:
+    linear-gradient(180deg,rgba(91,110,225,.04),rgba(91,110,225,0)),
+    repeating-linear-gradient(0deg,transparent 0 38px,rgba(123,132,152,.08) 39px);
+  border-radius:16px;
+}
+
+.mini-chart .bar .fill{
+  background:linear-gradient(180deg,var(--erp-primary),#9aa5ff) !important;
+}
+
+/* ==========================================================================
+   Pagination
+   ========================================================================== */
+
+.pager{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px !important;
+  justify-content:center;
+  margin-top:16px !important;
+}
+
+.pager button{
+  min-width:34px !important;
+  min-height:34px !important;
+  padding:0 10px !important;
+  color:var(--erp-text) !important;
+  background:#fff !important;
+  border:1px solid var(--erp-border) !important;
+  border-radius:11px !important;
+  box-shadow:none !important;
+}
+
+.pager button.active{
+  color:#fff !important;
+  background:var(--erp-primary) !important;
+  border-color:var(--erp-primary) !important;
+}
+
+/* ==========================================================================
+   Modals
+   Covers common modal class names without changing JS.
+   ========================================================================== */
+
+.modal{
+  position:fixed;
+  inset:0;
+  z-index:200;
+  padding:20px;
+  align-items:center;
+  justify-content:center;
+  background:rgba(20,33,61,.36);
+  backdrop-filter:blur(7px);
+  -webkit-backdrop-filter:blur(7px);
+}
+
+.modalbox,
+.modal-box,
+.modal-content{
+  width:min(720px,100%) !important;
+  max-height:min(86dvh,900px);
+  overflow:auto;
+  padding:22px !important;
+  color:var(--erp-text) !important;
+  background:#fff !important;
+  border:1px solid var(--erp-border) !important;
+  border-radius:22px !important;
+  box-shadow:0 28px 80px rgba(20,33,61,.22) !important;
+}
+
+/* ==========================================================================
+   Toast / login gate
+   ========================================================================== */
+
+.toast{
+  color:#fff !important;
+  background:#152546 !important;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:14px !important;
+  box-shadow:0 14px 38px rgba(20,33,61,.22);
 }
 
 #gate{
   background:
-    radial-gradient(circle at top right,rgba(224,190,56,.12),transparent 32%),
-    linear-gradient(135deg,#0d1b34,#152546) !important;
+    radial-gradient(circle at 20% 10%,rgba(91,110,225,.25),transparent 30%),
+    linear-gradient(135deg,#f6f8fd,#eef2fa) !important;
+  backdrop-filter:blur(10px);
 }
 
-@media(max-width:920px){
+#gate .box{
+  width:min(380px,calc(100vw - 30px)) !important;
+  padding:28px !important;
+  background:rgba(255,255,255,.95) !important;
+  border:1px solid var(--erp-border) !important;
+  border-radius:24px !important;
+  box-shadow:0 28px 80px rgba(20,33,61,.16) !important;
+}
+
+#gate h2{color:var(--erp-text) !important}
+
+/* ==========================================================================
+   Scrollbars
+   ========================================================================== */
+
+.tabs,
+.plist,
+.admin-table-wrap,
+.cat-box,
+.rank-list{
+  scrollbar-width:thin;
+  scrollbar-color:#cdd4e2 transparent;
+}
+
+.tabs::-webkit-scrollbar,
+.plist::-webkit-scrollbar,
+.admin-table-wrap::-webkit-scrollbar,
+.cat-box::-webkit-scrollbar,
+.rank-list::-webkit-scrollbar{
+  width:7px;
+  height:7px;
+}
+
+.tabs::-webkit-scrollbar-thumb,
+.plist::-webkit-scrollbar-thumb,
+.admin-table-wrap::-webkit-scrollbar-thumb,
+.cat-box::-webkit-scrollbar-thumb,
+.rank-list::-webkit-scrollbar-thumb{
+  background:#cdd4e2;
+  border-radius:999px;
+}
+
+/* ==========================================================================
+   Tablet / mobile
+   No new JS needed: tabs become a horizontal navigation strip.
+   ========================================================================== */
+
+@media (max-width:1100px){
+  body{
+    padding-right:0 !important;
+  }
+
+  .topbar{
+    width:100% !important;
+    border-radius:0 0 18px 18px !important;
+    padding:10px 14px !important;
+  }
+
   .tabs{
-    margin-top:10px !important;
-    overflow:auto;
+    position:sticky !important;
+    top:72px !important;
+    z-index:25 !important;
+
+    width:100% !important;
+    height:auto !important;
+    margin:0 !important;
+    padding:8px 12px !important;
+
+    display:flex !important;
+    flex-direction:row !important;
     flex-wrap:nowrap !important;
+    gap:7px !important;
+    overflow-x:auto !important;
+    overflow-y:hidden !important;
+
+    background:rgba(248,250,253,.92) !important;
+    border:0 !important;
+    border-bottom:1px solid var(--erp-border) !important;
+    border-radius:0 !important;
+    box-shadow:0 8px 24px rgba(20,33,61,.04) !important;
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+  }
+
+  .tabs::before{display:none !important}
+
+  .tab{
+    flex:0 0 auto !important;
+    min-height:38px !important;
+    padding:0 11px !important;
+    margin:0 !important;
+    top:auto !important;
+
+    display:inline-flex !important;
+    align-items:center !important;
+
+    color:#5d687e !important;
+    white-space:nowrap !important;
+    background:#fff !important;
+    border:1px solid var(--erp-border) !important;
+    border-radius:12px !important;
+  }
+
+  .tab.active{
+    color:#fff !important;
+    background:var(--erp-primary) !important;
+    border-color:var(--erp-primary) !important;
+  }
+
+  .wrap{
+    width:100% !important;
+    max-width:100% !important;
+    padding:18px 14px 34px !important;
+    margin:0 auto !important;
+  }
+
+  .stats-cards,
+  .stats{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+}
+
+@media (max-width:820px){
+  .grid{
+    grid-template-columns:1fr !important;
+  }
+
+  .topbar{
+    align-items:flex-start !important;
+  }
+
+  .topbar .actions{
+    max-width:62%;
+  }
+
+  .row{
+    flex-wrap:wrap;
+  }
+
+  .row>*{
+    flex:1 1 180px;
+  }
+}
+
+@media (max-width:640px){
+  html{font-size:14px}
+
+  .topbar{
+    min-height:62px !important;
+    gap:8px !important;
+  }
+
+  .topbar h1{
+    font-size:.9rem !important;
+    min-width:0;
+  }
+
+  .topbar .badge{display:none !important}
+
+  .topbar .actions{
+    max-width:58%;
+    flex-wrap:nowrap !important;
+    overflow-x:auto;
+  }
+
+  .topbar .actions button,
+  .topbar .actions .btn{
+    flex:0 0 auto;
+    min-height:34px !important;
+    padding:0 9px !important;
+    font-size:.7rem !important;
+  }
+
+  .tabs{
+    top:62px !important;
+    padding-inline:10px !important;
+  }
+
+  .tab{
+    min-height:34px !important;
+    font-size:.72rem !important;
+    padding-inline:9px !important;
+  }
+
+  .wrap{
+    padding:14px 10px 28px !important;
+  }
+
+  .card{
+    padding:13px !important;
+    border-radius:16px !important;
+  }
+
+  .card h2{
+    font-size:.94rem !important;
+  }
+
+  .stats-cards,
+  .stats{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:9px !important;
+  }
+
+  .stat{
+    min-height:92px !important;
+    padding:11px !important;
+  }
+
+  .stat .v,
+  .stat>b:first-child{
+    font-size:1.02rem !important;
+  }
+
+  .stat .l,
+  .stat>span,
+  .stat small{
+    font-size:.65rem !important;
+  }
+
+  .row{
+    display:grid !important;
+    grid-template-columns:1fr !important;
+  }
+
+  input[type=text],
+  input[type=email],
+  input[type=password],
+  input[type=number],
+  input[type=datetime-local],
+  input[type=date],
+  input[type=time],
+  input[type=search],
+  input[type=url],
+  input[type=tel],
+  textarea,
+  select{
+    min-height:42px;
+    font-size:16px !important; /* prevents iOS focus zoom */
+  }
+
+  .cat-counts{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+
+  .cc-box{
+    min-height:70px;
+  }
+
+  .admin-table{
+    min-width:620px;
+  }
+
+  .prod-row{
+    align-items:flex-start;
+  }
+
+  .prod-row img,
+  .prod-row video{
+    width:52px !important;
+    height:52px !important;
+  }
+
+  .modal{
+    padding:10px;
+  }
+
+  .modalbox,
+  .modal-box,
+  .modal-content{
+    padding:15px !important;
+    border-radius:18px !important;
+  }
+}
+
+/* ==========================================================================
+   Print
+   ========================================================================== */
+
+@media print{
+  body{
+    padding:0 !important;
+    background:#fff !important;
+  }
+
+  .topbar,
+  .tabs,
+  .toast,
+  button,
+  .btn{
+    display:none !important;
+  }
+
+  .wrap{
+    width:100% !important;
+    max-width:100% !important;
+    margin:0 !important;
+    padding:0 !important;
   }
 
   .card,
-  .panel,
-  .modal-box,
-  .gatebox,
-  #gate .box,
-  .login{
-    border-radius:14px !important;
+  .stat,
+  .admin-table-wrap{
+    box-shadow:none !important;
+    backdrop-filter:none !important;
+    break-inside:avoid;
   }
 }
 
-@media(max-width:640px){
-  .wrap,
-  .app{
+
+/* =========================================================
+   Bariq ERP Theme — targeted visual fixes
+   ========================================================= */
+
+
+   
+/* 1) Keep sales invoices page content visible */
+body .sales-invoices,
+body #salesInvoices,
+body #sales-invoices,
+body .invoices-page,
+body .sales-invoices-page,
+body .invoice-content,
+body .invoices-content {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Do not let generic panel rules hide the main invoices panels */
+body .sales-invoices .panel,
+body #salesInvoices .panel,
+body #sales-invoices .panel,
+body .invoices-page .panel,
+body .sales-invoices-page .panel {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* 2) Statistics cards — soft ERP backgrounds */
+.stats-grid > *,
+.stat-grid > *,
+.stats-cards > *,
+.stat-cards > *,
+.stats-panel .stat,
+.stats-panel .card,
+.dashboard-stats .card,
+.kpi-card,
+.stat-card {
+  background: linear-gradient(145deg, #f5f8ff 0%, #eef4ff 100%) !important;
+  border: 1px solid #dfe8f6 !important;
+  box-shadow: 0 7px 20px rgba(21,37,70,.055) !important;
+}
+
+.stats-grid > *:nth-child(4n+2),
+.stat-grid > *:nth-child(4n+2),
+.stats-cards > *:nth-child(4n+2),
+.stat-cards > *:nth-child(4n+2) {
+  background: linear-gradient(145deg, #f1fbf8 0%, #e9f8f3 100%) !important;
+  border-color: #d9eee7 !important;
+}
+
+.stats-grid > *:nth-child(4n+3),
+.stat-grid > *:nth-child(4n+3),
+.stats-cards > *:nth-child(4n+3),
+.stat-cards > *:nth-child(4n+3) {
+  background: linear-gradient(145deg, #fff9ef 0%, #fff3dc 100%) !important;
+  border-color: #f2e4c8 !important;
+}
+
+.stats-grid > *:nth-child(4n+4),
+.stat-grid > *:nth-child(4n+4),
+.stats-cards > *:nth-child(4n+4),
+.stat-cards > *:nth-child(4n+4) {
+  background: linear-gradient(145deg, #fff5f7 0%, #fcecef 100%) !important;
+  border-color: #f0dde2 !important;
+}
+
+/* 3) Purple buttons -> Bariq navy gradient */
+button:not(.danger):not(.delete):not(.btn-danger),
+.btn:not(.danger):not(.delete):not(.btn-danger),
+.primary-btn,
+.btn-primary,
+button.primary,
+.action-btn,
+.save-btn,
+.add-btn,
+.active-tab,
+.nav-btn.active,
+.tabs button.active {
+  --bariq-navy-gradient: linear-gradient(135deg, #284d82 0%, #19365f 48%, #0f2342 100%);
+}
+
+.btn-primary,
+.primary-btn,
+button.primary,
+.save-btn,
+.add-btn,
+.action-btn.primary,
+.tabs button.active,
+.nav-btn.active 
+
+.btn-primary:hover,
+.primary-btn:hover,
+button.primary:hover,
+.save-btn:hover,
+.add-btn:hover,
+.action-btn.primary:hover 
+
+/* Common purple utility classes/backgrounds used by admin pages */
+.bg-purple,
+.purple,
+.purple-btn,
+.btn-purple 
+
+
+/* ==========================================================================
+   BARIQ ADMIN ERP THEME V2 — FINAL OVERRIDES
+   ========================================================================== */
+
+/* --- Bariq navy gradient instead of purple --- */
+:root{
+  --erp-primary:#203f73 !important;
+  --erp-primary-strong:#152546 !important;
+  --erp-primary-light:#edf2f9 !important;
+  --bariq-gradient:linear-gradient(135deg,#2b5287 0%,#1b3c68 52%,#102542 100%);
+}
+
+/* Primary / active buttons */
+.btn-gold,
+.btn-primary,
+.primary-btn,
+button.primary,
+.save-btn,
+.add-btn,
+.action-btn.primary,
+.period-tabs button.active,
+.pager button.active,
+.tab.active{
+  background:var(--bariq-gradient) !important;
+  background-color:#19365f !important;
+  color:#fff !important;
+  border-color:#19365f !important;
+  box-shadow:0 8px 20px rgba(16,37,66,.18) !important;
+}
+
+/* Tabs/sidebar active item */
+@media (min-width:1101px){
+  .tab.active,
+  .tab:hover{
+    background:
+      linear-gradient(135deg,rgba(220,237,255,.96),rgba(255,247,218,.88)) !important;
+    color:#152546 !important;
+    border-color:rgba(212,175,55,.70) !important;
+  }
+}
+
+/* --- ERP-style colored statistics cards --- */
+.stats-cards .stat:nth-child(6n+1),
+.stats .stat:nth-child(6n+1),
+#statsCards .stat:nth-child(6n+1){
+  background:linear-gradient(145deg,#ffffff 0%,#eaf4ff 100%) !important;
+  border-color:#d8e9f8 !important;
+}
+.stats-cards .stat:nth-child(6n+2),
+.stats .stat:nth-child(6n+2),
+#statsCards .stat:nth-child(6n+2){
+  background:linear-gradient(145deg,#ffffff 0%,#e8faf4 100%) !important;
+  border-color:#d8eee7 !important;
+}
+.stats-cards .stat:nth-child(6n+3),
+.stats .stat:nth-child(6n+3),
+#statsCards .stat:nth-child(6n+3){
+  background:linear-gradient(145deg,#ffffff 0%,#fff4e7 100%) !important;
+  border-color:#f1e1cf !important;
+}
+.stats-cards .stat:nth-child(6n+4),
+.stats .stat:nth-child(6n+4),
+#statsCards .stat:nth-child(6n+4){
+  background:linear-gradient(145deg,#ffffff 0%,#fff0f5 100%) !important;
+  border-color:#efdce5 !important;
+}
+.stats-cards .stat:nth-child(6n+5),
+.stats .stat:nth-child(6n+5),
+#statsCards .stat:nth-child(6n+5){
+  background:linear-gradient(145deg,#ffffff 0%,#fff8d9 100%) !important;
+  border-color:#eee5bd !important;
+}
+.stats-cards .stat:nth-child(6n),
+.stats .stat:nth-child(6n),
+#statsCards .stat:nth-child(6n){
+  background:linear-gradient(145deg,#ffffff 0%,#eef3fb 100%) !important;
+  border-color:#dde6f1 !important;
+}
+
+/* Give stats a little more ERP depth */
+.stats-cards .stat,
+.stats .stat,
+#statsCards .stat{
+  box-shadow:0 10px 26px rgba(20,33,61,.06) !important;
+  border-radius:18px !important;
+}
+
+/* ==========================================================================
+   SALES-INVOICES PAGE COMPATIBILITY
+   The standalone sales page uses .wrap, .top, #loginBox and #app.grid.
+   Do not let generic admin panel/grid rules hide or distort it.
+   ========================================================================== */
+
+body:has(.top .brand) > .wrap{
+  max-width:1880px !important;
+}
+
+/* Its main application container must remain visible */
+#app.grid{
+  display:grid !important;
+  visibility:visible !important;
+  opacity:1 !important;
+}
+
+/* When its own JS toggles hide, respect hide only */
+#app.grid:not(.hide){
+  display:grid !important;
+}
+
+/* Sales page panels/cards should stay visible */
+#app.grid .panel,
+#app.grid > .panel{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+}
+
+/* ===== Desktop: Statistics cards in one row ===== */
+@media (min-width:1100px){
+
+  .stats-cards,
+  .stats,
+  #statsCards{
+    display:flex !important;
+    flex-direction:row !important;
+    flex-wrap:nowrap !important;
+    gap:12px !important;
     width:100% !important;
   }
 
-  .top,
-  .topbar{
-    border-radius:0 0 16px 16px !important;
+  .stats-cards .stat,
+  .stats .stat,
+  #statsCards .stat{
+    flex:1 1 0 !important;
+    width:0 !important;
+    min-width:0 !important;
+    max-width:none !important;
   }
+}
+/* ===== Mobile: 3 statistics cards per row ===== */
+@media (max-width: 1099px){
+
+  .stats-cards,
+  .stats,
+  #statsCards{
+    display:grid !important;
+    grid-template-columns:repeat(3, minmax(0, 1fr)) !important;
+    gap:8px !important;
+    width:100% !important;
+  }
+
+  .stats-cards .stat,
+  .stats .stat,
+  #statsCards .stat{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+    margin:0 !important;
+    padding:10px 6px !important;
+    border-radius:14px !important;
+  }
+
+  .stats-cards .stat .v,
+  .stats .stat .v,
+  #statsCards .stat .v{
+    font-size:.95rem !important;
+  }
+
+  .stats-cards .stat .l,
+  .stats .stat .l,
+  #statsCards .stat .l{
+    font-size:.62rem !important;
+    line-height:1.35 !important;
+  }
+}
+
+/* Preserve the sales page's three-column desktop layout */
+@media (min-width:1281px){
+  #app.grid{
+    grid-template-columns:minmax(620px,1.45fr) minmax(380px,.9fr) minmax(280px,.62fr) !important;
+    gap:12px !important;
+    align-items:start !important;
+  }
+}
+
+/* Medium desktop */
+@media (min-width:901px) and (max-width:1280px){
+  #app.grid{
+    grid-template-columns:1fr 1fr !important;
+  }
+  #app.grid .stats-panel{
+    grid-column:1/-1 !important;
+  }
+}
+
+/* Mobile */
+@media (max-width:900px){
+  #app.grid{
+    grid-template-columns:1fr !important;
+  }
+}
+
+/* Standalone sales header should not inherit admin fixed-sidebar spacing */
+body:has(#app.grid) {
+  padding-right:0 !important;
+  padding-left:0 !important;
+}
+body:has(#app.grid) > .wrap{
+  width:calc(100% - 32px) !important;
+  max-width:1580px !important;
+  margin-inline:auto !important;
+}
+
+/* Keep sales-page own header centered */
+body:has(#app.grid) .top{
+  width:100% !important;
+  max-width:none !important;
+  margin-inline:auto !important;
 }
