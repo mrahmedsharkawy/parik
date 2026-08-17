@@ -14,7 +14,7 @@
   <link rel="manifest" href="/erp-manifest.json">
   <link rel="icon" type="image/png" sizes="96x96" href="/assets/icon-96.png?v=erp-20260813">
   <link rel="apple-touch-icon" href="/assets/icon.png?v=erp-20260813">
-  <link rel="stylesheet" href="/style/erp-v3.css?v=202608170447">
+  <link rel="stylesheet" href="/style/erp-v3.css?v=202608170455">
   <style>
     /* Layout guard: ensure sidebar never hides main content */
     .erp-shell {
@@ -31,12 +31,8 @@
       body.erp-nav-open .erp-sidebar {
         display: flex !important;
         position: fixed !important;
-        top: 0 !important;
-        bottom: 0 !important;
-        right: 0 !important;
-        left: auto !important;
-        inset-inline-start: auto !important;
-        inset-inline-end: auto !important;
+        inset-block: 0 !important;
+        inset-inline-end: 0 !important;
         width: min(360px, 92vw) !important;
         z-index: 30 !important;
         padding: 10px !important;
