@@ -1117,24 +1117,26 @@ tr:last-child td {
 
   .erp-sidebar {
     position: fixed;
-    inset-block: 0;
-    inset-inline-end: 0;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: auto;
     width: min(84vw, 300px);
     height: 100dvh;
     margin: 0;
-    border-radius: 24px 0 0 24px;
-    transform: translateX(110%) !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
+    border-radius: 0 24px 24px 0;
+    transform: translateX(110%);
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
     transition: transform 0.22s ease, visibility 0.22s ease, opacity 0.22s ease;
   }
 
   body.erp-nav-open .erp-sidebar {
-    transform: translateX(0) !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    pointer-events: auto !important;
+    transform: translateX(0);
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
   }
 
   .erp-sidebar-overlay {
