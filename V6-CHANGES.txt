@@ -1,0 +1,10 @@
+Bariq AI Sales Assistant V4
+
+- Waiting state is processed before generic intent routing.
+- Bare numbers become order numbers only when order tracking is active/waiting.
+- Budget correction understands "دي ميزانية مش سعر".
+- Knowledge Base direct/fuzzy matches have priority over LLM and generic flows.
+- Strong typo tolerance for knowledge questions.
+- Last product and price context support "سعره كام" and quantity calculations like "20 حبة بكام".
+- Successful order tracking no longer stays stuck waiting for another order number.
+- State is persisted after important transitions.
