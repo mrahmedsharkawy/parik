@@ -1,261 +1,32 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#f8fafd">
-  <title>تسجيل الدخول | Bariq ERP</title>
-  <link rel="icon" type="image/png" sizes="96x96" href="/assets/icon-96.png?v=erp-20260813">
-  <link rel="apple-touch-icon" href="/assets/icon.png?v=erp-20260813">
-  <link rel="stylesheet" href="/style/erp-v3.css?v=202608170455">
-  <script src="/java/supabase.js?v=20260817-login" defer></script>
-  <style>
-    .erp-login-shell {
-      min-height: 100dvh;
-      display: grid;
-      place-items: center;
-      padding: 24px;
-      background: linear-gradient(135deg, #f0f4fa 0%, #e6eef7 100%);
-    }
-    .erp-login-card {
-      width: min(420px, 100%);
-      background: rgba(255,255,255,0.96);
-      border: 1px solid rgba(219,226,239,0.95);
-      border-radius: 26px;
-      padding: 36px 30px;
-      box-shadow: 0 28px 70px rgba(20,33,61,0.12);
-      text-align: center;
-    }
-    .erp-login-brand {
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 22px;
-    }
-    .erp-login-brand img {
-      width: 52px;
-      height: 52px;
-      border-radius: 16px;
-      object-fit: contain;
-      background: #fff;
-      box-shadow: 0 8px 24px rgba(20,33,61,0.1);
-    }
-    .erp-login-brand b {
-      display: block;
-      font-size: 1.25rem;
-      color: var(--erp-text);
-    }
-    .erp-login-brand small {
-      display: block;
-      color: var(--erp-muted);
-      font-size: 0.8rem;
-    }
-    .erp-login-card h1 {
-      font-size: 1.15rem;
-      margin: 0 0 6px;
-      color: var(--erp-text);
-    }
-    .erp-login-card p {
-      color: var(--erp-muted);
-      font-size: 0.9rem;
-      margin: 0 0 24px;
-    }
-    .erp-login-form {
-      display: grid;
-      gap: 14px;
-      text-align: right;
-    }
-    .erp-login-form label {
-      display: grid;
-      gap: 6px;
-      font-weight: 700;
-      font-size: 0.85rem;
-      color: var(--erp-text);
-    }
-    .erp-login-form input {
-      width: 100%;
-      padding: 13px 14px;
-      border: 1px solid #dbe2ef;
-      border-radius: 14px;
-      background: #fbfcfe;
-      font-size: 1rem;
-      outline: none;
-      transition: border-color 0.15s, box-shadow 0.15s;
-    }
-    .erp-login-form input:focus {
-      border-color: var(--erp-primary);
-      box-shadow: 0 0 0 3px rgba(67,97,238,0.12);
-      background: #fff;
-    }
-    .erp-login-form button {
-      margin-top: 8px;
-      padding: 14px;
-      border: none;
-      border-radius: 14px;
-      background: var(--erp-primary);
-      color: #fff;
-      font-weight: 800;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: transform 0.1s, background 0.15s;
-    }
-    .erp-login-form button:hover:not(:disabled) {
-      background: #3651d4;
-    }
-    .erp-login-form button:disabled {
-      opacity: 0.7;
-      cursor: wait;
-    }
-    .erp-login-error {
-      color: #e53935;
-      background: #fdecec;
-      border: 1px solid #f5c6c6;
-      padding: 10px 12px;
-      border-radius: 12px;
-      font-size: 0.85rem;
-      display: none;
-    }
-    .erp-login-back {
-      display: inline-block;
-      margin-top: 18px;
-      color: var(--erp-muted);
-      font-size: 0.85rem;
-      text-decoration: none;
-    }
-    .erp-login-back:hover {
-      color: var(--erp-primary);
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>دخول Bariq ERP</title>
+<link rel="icon" href="/assets/icon.png">
+<style>
+:root{--navy:#152546;--navy2:#274d82;--line:#e2e8f2;--muted:#7b8498;--bg:#f7f9fc}*{box-sizing:border-box}body{margin:0;min-height:100dvh;display:grid;place-items:center;font-family:Tahoma,Arial,sans-serif;color:var(--navy);background:radial-gradient(circle at 15% 10%,#eaf1ff,transparent 32%),radial-gradient(circle at 85% 12%,#e7fbf5,transparent 30%),var(--bg);padding:18px}.login{width:min(430px,100%);background:#fff;border:1px solid var(--line);border-radius:24px;box-shadow:0 20px 60px rgba(21,37,70,.12);padding:28px}.brand{display:flex;align-items:center;gap:12px;margin-bottom:24px}.brand img{width:54px;height:54px;border-radius:16px}.brand b{display:block;font-size:1.15rem}.brand small{color:var(--muted)}label{display:block;margin:12px 0 6px;font-size:.8rem;font-weight:800;color:#626d82}input{width:100%;height:48px;border:1px solid var(--line);border-radius:14px;padding:0 14px;font:inherit;outline:none}input:focus{border-color:#274d82;box-shadow:0 0 0 4px rgba(39,77,130,.08)}button{width:100%;height:50px;border:0;border-radius:14px;margin-top:18px;color:#fff;font:inherit;font-weight:900;cursor:pointer;background:linear-gradient(135deg,#2b5287,#19365f 52%,#102542);box-shadow:0 10px 22px rgba(16,37,66,.18)}button:disabled{opacity:.6;cursor:wait}.msg{display:none;margin:12px 0 0;padding:10px 12px;border-radius:12px;background:#fff3f3;color:#a12d2d;font-size:.78rem}.msg.show{display:block}.foot{margin-top:16px;text-align:center;color:var(--muted);font-size:.72rem}
+</style>
+<script src="/java/supabase.js?v=20260818-v2" defer></script>
 </head>
 <body>
-  <div class="erp-login-shell">
-    <div class="erp-login-card">
-      <div class="erp-login-brand">
-        <img src="/assets/icon.png" alt="Bariq">
-        <div>
-          <b>Bariq ERP</b>
-          <small>نظام الإدارة الداخلي</small>
-        </div>
-      </div>
-      <h1>تسجيل الدخول</h1>
-      <p>أدخل بيانات الأدمن لعرض بيانات الـERP</p>
-
-      <form class="erp-login-form" id="erpLoginForm">
-        <label>
-          البريد الإلكتروني
-          <input type="email" id="erpLoginEmail" placeholder="admin@example.com" required autocomplete="email">
-        </label>
-        <label>
-          كلمة المرور
-          <input type="password" id="erpLoginPassword" placeholder="••••••••" required autocomplete="current-password">
-        </label>
-        <div class="erp-login-error" id="erpLoginError"></div>
-        <button type="submit" id="erpLoginBtn">دخول</button>
-      </form>
-
-      <a class="erp-login-back" href="/admin.html">الدخول من لوحة التحكم القديمة</a>
-    </div>
-  </div>
-
-  <script>
-    (function () {
-      "use strict";
-
-      const $ = (id) => document.getElementById(id);
-
-      function showError(msg) {
-        const el = $("erpLoginError");
-        el.textContent = msg;
-        el.style.display = msg ? "block" : "none";
-      }
-
-      function setLoading(loading) {
-        const btn = $("erpLoginBtn");
-        btn.disabled = loading;
-        btn.textContent = loading ? "⏳ جارٍ التحقق..." : "دخول";
-      }
-
-      async function getAdminAccount(userId, email, token) {
-        const anon = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E";
-        const headers = { apikey: anon, Authorization: "Bearer " + (token || anon), "Content-Type": "application/json" };
-        async function query(path) {
-          const res = await fetch("https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/admins?" + path + "&active=eq.true&limit=1", { headers });
-          const rows = await res.json().catch(() => []);
-          if (!res.ok) return null;
-          return rows && rows[0] ? rows[0] : null;
-        }
-        return await query("user_id=eq." + encodeURIComponent(userId)) || await query("email=eq." + encodeURIComponent(email));
-      }
-
-      function rememberSession(name, authData) {
-        const payload = {
-          ok: true,
-          name: name,
-          access: authData.access_token,
-          token: authData.access_token,
-          refresh: authData.refresh_token,
-          refreshToken: authData.refresh_token,
-          tokenExp: Date.now() + (authData.expires_in || 3600) * 1000,
-          expires: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        };
-        try {
-          localStorage.setItem("bariq_admin_auth_v1", JSON.stringify(payload));
-          sessionStorage.setItem("x2_admin_reports_session", JSON.stringify(payload));
-        } catch (e) {}
-      }
-
-      async function doLogin(event) {
-        event.preventDefault();
-        showError("");
-
-        const email = $("erpLoginEmail").value.trim();
-        const password = $("erpLoginPassword").value.trim();
-        if (!email || !password) {
-          showError("❌ أدخل الإيميل وكلمة المرور");
-          return;
-        }
-
-        setLoading(true);
-        try {
-          const authData = await window.Supabase.Auth.signIn(email, password);
-          const admin = await getAdminAccount(authData.user.id, email, authData.access_token);
-          if (!admin) {
-            await window.Supabase.Auth.signOut(authData.access_token);
-            showError("❌ هذا الإيميل ليس لديه صلاحيات أدمن");
-            setLoading(false);
-            return;
-          }
-
-          sessionStorage.setItem("admin_ok", "1");
-          sessionStorage.setItem("admin_token", authData.access_token);
-          sessionStorage.setItem("admin_refresh_token", authData.refresh_token || "");
-          sessionStorage.setItem("admin_token_exp", String(Date.now() + (authData.expires_in || 3600) * 1000));
-          sessionStorage.setItem("admin_name", admin.full_name || email.split("@")[0]);
-          rememberSession(admin.full_name || email.split("@")[0], authData);
-
-          const returnTo = new URLSearchParams(location.search).get("return") || "/erp.html";
-          location.replace(returnTo);
-        } catch (e) {
-          showError("❌ " + (e.message || "الإيميل أو كلمة المرور غير صحيحة"));
-          setLoading(false);
-        }
-      }
-
-      function boot() {
-        if (typeof window.hasAdminSession === "function" && window.hasAdminSession()) {
-          const returnTo = new URLSearchParams(location.search).get("return") || "/erp.html";
-          location.replace(returnTo);
-          return;
-        }
-        $("erpLoginForm").addEventListener("submit", doLogin);
-      }
-
-      if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", boot);
-      } else {
-        boot();
-      }
-    })();
-  </script>
-</body>
-</html>
+<form class="login" id="erpLoginForm">
+  <div class="brand"><img src="/assets/icon.png" alt=""><span><b>Bariq ERP</b><small>تسجيل دخول نظام الإدارة</small></span></div>
+  <label>البريد الإلكتروني</label><input id="erpEmail" type="email" autocomplete="username" required>
+  <label>كلمة المرور</label><input id="erpPassword" type="password" autocomplete="current-password" required>
+  <div class="msg" id="erpLoginMsg"></div>
+  <button id="erpLoginBtn" type="submit">دخول النظام</button>
+  <div class="foot">الدخول متاح فقط للمالك أو المحاسب المفعّل في ERP.</div>
+</form>
+<script>
+(function(){
+ const form=document.getElementById('erpLoginForm'),btn=document.getElementById('erpLoginBtn'),msg=document.getElementById('erpLoginMsg');
+ const show=(t)=>{msg.textContent=t;msg.classList.toggle('show',!!t)};
+ const clear=()=>{['admin_ok','admin_token','admin_refresh_token','admin_token_exp','admin_name'].forEach(k=>sessionStorage.removeItem(k));localStorage.removeItem('bariq_admin_auth_v1')};
+ function wait(){return new Promise((resolve,reject)=>{let n=0;const x=setInterval(()=>{if(window.Supabase?.Auth?.signIn&&window.sbFetch){clearInterval(x);resolve()}else if(++n>60){clearInterval(x);reject(new Error('تعذر تحميل Supabase'))}},100)})}
+ form.addEventListener('submit',async(e)=>{e.preventDefault();show('');btn.disabled=true;btn.textContent='جارٍ تسجيل الدخول...';try{await wait();clear();const email=document.getElementById('erpEmail').value.trim(),password=document.getElementById('erpPassword').value;const auth=await window.Supabase.Auth.signIn(email,password);if(!auth?.access_token||!auth?.user?.id)throw new Error('بيانات الدخول غير صحيحة');sessionStorage.setItem('admin_ok','1');sessionStorage.setItem('admin_token',auth.access_token);sessionStorage.setItem('admin_refresh_token',auth.refresh_token||'');sessionStorage.setItem('admin_token_exp',String(Date.now()+Number(auth.expires_in||3600)*1000));const rows=await window.sbFetch('erp_users?user_id=eq.'+encodeURIComponent(auth.user.id)+'&active=eq.true&select=user_id,full_name,role,active&limit=1',{requireAuth:true});const u=Array.isArray(rows)?rows[0]:null;if(!u||!['owner','accountant','admin'].includes(String(u.role||'').toLowerCase()))throw new Error('هذا الحساب غير مصرح له بدخول ERP');const name=u.full_name||email.split('@')[0];sessionStorage.setItem('admin_name',name);localStorage.setItem('bariq_admin_auth_v1',JSON.stringify({ok:true,access:auth.access_token,refresh:auth.refresh_token||'',expires:Date.now()+Number(auth.expires_in||3600)*1000,name}));const q=new URLSearchParams(location.search);let ret=q.get('return')||'/erp';if(!ret.startsWith('/'))ret='/erp';location.replace(ret)}catch(err){clear();show(err?.message||'تعذر تسجيل الدخول');btn.disabled=false;btn.textContent='دخول النظام'}});
+ const q=new URLSearchParams(location.search);if(q.get('error')==='forbidden')show('الحساب غير مصرح له بدخول نظام ERP أو تم إيقافه.');
+})();
+</script>
+</body></html>

@@ -187,7 +187,7 @@ button,.btn{cursor:pointer}
         #f3fcf9 70%,
         #dcf8ee 100%
     ) !important;
-  border:1px solid rgba(237,240,245,.9) !important;
+  border:1px solid rgba(6, 27, 63, 0.9) !important;
   border-top:0 !important;
   border-radius:0 0 22px 22px !important;
   box-shadow:var(--erp-shadow-soft) !important;

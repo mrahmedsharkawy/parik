@@ -56,7 +56,20 @@
       }
       body.erp-nav-open .erp-sidebar-overlay { display: block !important; }
     }
-  </style>
+  
+    /* Unified ERP sidebar footer */
+    .erp-sidebar{display:flex!important;flex-direction:column!important}
+    .erp-nav{flex:1 1 auto!important}
+    .erp-sidebar-footer{width:100%!important;margin-top:auto!important;padding:6px 8px!important;border-top:1px solid #e5eaf2!important}
+    .erp-user-status{width:100%!important;height:30px!important;min-height:0!important;padding:5px 8px!important;display:flex!important;align-items:center!important;border:1px solid #e1e7f0!important;border-radius:10px!important;background:linear-gradient(145deg,#fff 0%,#f7f9fd 100%)!important;box-sizing:border-box!important}
+    .erp-user-status-info{width:100%!important;display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:center!important;gap:5px!important}
+    .erp-user-status-dot{width:8px!important;height:8px!important;min-width:8px!important;border-radius:50%!important;background:#22c55e!important;box-shadow:0 0 0 3px rgba(34,197,94,.13)!important}
+    .erp-user-status-text{display:flex!important;flex-direction:row!important;align-items:center!important;gap:6px!important;white-space:nowrap!important;line-height:1!important}
+    .erp-user-status-text b{margin:0!important;padding:0!important;font-size:.68rem!important;line-height:1!important}
+    .erp-user-status-text small{margin:0!important;padding:0!important;font-size:.58rem!important;line-height:1!important;white-space:nowrap!important}
+    .erp-logout-btn{display:flex!important;align-items:center!important;justify-content:center!important;gap:4px!important;width:100%!important;height:22px!important;min-height:22px!important;max-height:22px!important;margin:4px 0 0!important;padding:0 6px!important;border:1px solid #f3c9c9!important;border-radius:7px!important;background:#fff5f5!important;color:#bd2c24!important;font-family:inherit!important;font-size:.62rem!important;font-weight:800!important;line-height:1!important;cursor:pointer!important;box-sizing:border-box!important}
+    .erp-logout-btn:hover{background:#ffeaea!important;border-color:#efb0b0!important}
+</style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
   <script src="/java/supabase.js?v=20260818-v2" defer></script>
   <script src="/java/erp-invoices.js?v=202608170412" defer></script>
@@ -89,12 +102,17 @@
         <a class="erp-nav-item" href="/erp.html#/settings"><span>⚙️</span><b>الصلاحيات</b></a>
       </nav>
 
-      <div class="erp-sidebar-foot">
-        <div class="erp-sync-dot"></div>
-        <div>
-          <b id="erpSyncState">جاهز</b>
-          <small id="erpLastSync">لم تتم المزامنة بعد</small>
+      <div class="erp-sidebar-footer">
+        <div class="erp-user-status">
+          <div class="erp-user-status-info">
+            <span class="erp-user-status-dot"></span>
+            <div class="erp-user-status-text">
+              <b id="erpSyncState">متصل</b>
+              <small id="erpLastSync">آخر تحديث: --</small>
+            </div>
+          </div>
         </div>
+        <button id="erpQuickLogoutBtn" class="erp-logout-btn" type="button">↪ تسجيل خروج</button>
       </div>
     </aside>
 
@@ -208,5 +226,23 @@
       </main>
     </div>
   </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function(){
+      var btn=document.getElementById('erpQuickLogoutBtn');
+      if(btn){
+        btn.addEventListener('click', async function(){
+          try{ if(window.Supabase && window.Supabase.Auth && window.Supabase.Auth.signOut) await window.Supabase.Auth.signOut(); }catch(e){}
+          try{
+            sessionStorage.removeItem('admin_ok');sessionStorage.removeItem('admin_token');sessionStorage.removeItem('admin_refresh_token');sessionStorage.removeItem('admin_token_exp');sessionStorage.removeItem('admin_name');
+            localStorage.removeItem('bariq_admin_auth_v1');localStorage.removeItem('erp_auth_v1');
+          }catch(e){}
+          location.href='/erp-login.html';
+        });
+      }
+      var last=document.getElementById('erpLastSync');
+      if(last) last.textContent='آخر تحديث: '+new Date().toLocaleTimeString('ar-AE',{hour:'2-digit',minute:'2-digit'});
+    });
+  </script>
 </body>
 </html>

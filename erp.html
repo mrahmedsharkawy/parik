@@ -57,7 +57,159 @@
       }
       body.erp-nav-open .erp-sidebar-overlay { display: block !important; }
     }
-  </style>
+
+    /* Data tables: show about 7 rows, then scroll */
+    .erp-table-wrap {
+      max-height: 430px;
+      overflow: auto !important;
+      scrollbar-gutter: stable;
+    }
+    .erp-table-wrap thead th {
+      position: sticky;
+      top: 0;
+      z-index: 3;
+      background: #f8fafd;
+    }
+    #erpExpensesList,
+    #erpPurchases {
+      max-height: 535px;
+      overflow-y: auto;
+      padding-inline-end: 4px;
+      scrollbar-gutter: stable;
+    }
+    #view-orders .erp-table-wrap table {
+      min-width: 0 !important;
+      table-layout: fixed !important;
+    }
+    #view-orders .erp-table-wrap th,
+    #view-orders .erp-table-wrap td {
+      white-space: nowrap !important;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      vertical-align: middle;
+    }
+    #view-orders .erp-table-wrap th:nth-child(2),
+    #view-orders .erp-table-wrap td:nth-child(2) { width: 24%; }
+    #view-orders .erp-table-wrap th:nth-child(4),
+    #view-orders .erp-table-wrap td:nth-child(4) { width: 16%; }
+    .erp-order-customer {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      max-width: 100%;
+      min-width: 0;
+      white-space: nowrap;
+    }
+    .erp-order-customer small {
+      color: var(--erp-muted, #7b8498);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .erp-status-select {
+      width: 100%;
+      min-width: 0;
+      height: 34px;
+      padding: 4px 8px;
+      border: 1px solid var(--erp-border, #dfe5ef);
+      border-radius: 10px;
+      background: #f7f9ff;
+      color: var(--erp-text, #14213d);
+      font-weight: 800;
+      outline: none;
+    }
+    .erp-status-select:focus { border-color: #203f73; box-shadow: 0 0 0 3px rgba(32,63,115,.08); }
+    .erp-order-settled { background: rgba(232,250,244,.35); }
+    .erp-paid-mark { color: #16865b; font-weight: 900; }
+    .erp-report-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+
+    .erp-order-tools { grid-template-columns:minmax(240px,1fr) 160px 170px !important; align-items:center; }
+    .erp-order-date-range { grid-column:1/-1; display:flex; gap:8px; align-items:end; }
+    .erp-order-date-range[hidden] { display:none !important; }
+    .erp-order-date-range label { flex:1; font-size:.72rem; color:var(--erp-muted,#7b8498); font-weight:800; }
+    .erp-order-date-range input { width:100%; margin-top:4px; }
+    .erp-purchase-row { align-items:center !important; gap:12px; }
+    .erp-purchase-info { display:flex !important; flex-direction:column; gap:3px; min-width:0; }
+    .erp-purchase-info small { white-space:normal; line-height:1.45; }
+    #erpInsights, #erpRecentTransactions, #erpActivity { height:360px; max-height:360px; overflow-y:auto !important; scrollbar-gutter:stable; padding-inline-end:4px; overscroll-behavior:contain; }
+    #view-dashboard .erp-grid-secondary > .erp-card { min-height:430px; max-height:430px; overflow:hidden; }
+    #view-dashboard .erp-grid-secondary .erp-list-item,
+    #view-dashboard .erp-grid-secondary .erp-timeline-item,
+    #view-dashboard .erp-grid-secondary .erp-insight { min-height:68px; box-sizing:border-box; }
+    .erp-user-role{display:block;color:var(--erp-muted,#7b8498);font-size:.68rem;margin-top:3px}.erp-owner-lock{font-weight:800;color:#68728a}.erp-user-toggle{padding:6px 9px!important;font-size:.68rem!important}.erp-user-admin{display:grid;gap:14px}.erp-permissions-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.erp-permission-group{border:1px solid var(--erp-border,#dfe5ef);border-radius:14px;padding:10px;background:#fbfcff}.erp-permission-group legend{font-weight:900;padding:0 6px}.erp-permission-group label{display:inline-flex;align-items:center;gap:5px;margin:4px 7px;font-size:.75rem}.erp-account-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.erp-account-form label{display:grid;gap:5px;font-size:.75rem;font-weight:800}.erp-account-actions{display:flex;gap:8px;align-items:end}.erp-settings-head{display:flex;justify-content:space-between;gap:10px;align-items:center}@media(max-width:900px){.erp-permissions-grid,.erp-account-form{grid-template-columns:1fr}.erp-settings-head{align-items:flex-start;flex-direction:column}}
+    @media (max-width:900px) {
+      .erp-order-tools { grid-template-columns:1fr !important; }
+      .erp-order-date-range { grid-column:auto; flex-direction:column; align-items:stretch; }
+    }
+
+    @media print {
+      @page { size:A4 landscape; margin:7mm; }
+      html,body{width:auto!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;background:#fff!important;overflow:visible!important;}
+      .erp-sidebar,.erp-sidebar-overlay,.erp-topbar,.erp-page-head,.erp-search-results,.erp-toast,#erpMenuBtn,.erp-report-actions{display:none!important;}
+      .erp-shell,.erp-main,.erp-content{display:block!important;width:100%!important;max-width:none!important;min-width:0!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;overflow:visible!important;}
+      .erp-view{display:none!important;} #view-reports{display:block!important;width:100%!important;margin:0!important;padding:0!important;overflow:visible!important;}
+      #erpKpis{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:3mm!important;width:100%!important;margin:0 0 4mm!important;padding:0!important;}
+      #erpKpis .erp-kpi{min-width:0!important;min-height:0!important;padding:6px!important;margin:0!important;border:1px solid #dfe5ef!important;border-radius:9px!important;box-shadow:none!important;break-inside:avoid!important;}
+      #erpKpis .erp-kpi-icon{width:25px!important;height:25px!important;font-size:12px!important} #erpKpis .erp-kpi-value{font-size:14px!important;line-height:1.05!important} #erpKpis .erp-kpi-label{font-size:7px!important} #erpKpis .erp-kpi-foot{font-size:6.5px!important}
+      #view-reports .erp-grid-main{display:grid!important;grid-template-columns:minmax(0,2.15fr) minmax(0,1fr)!important;gap:4mm!important;width:100%!important;align-items:start!important;}
+      #view-reports .erp-card{width:100%!important;min-width:0!important;max-width:none!important;height:auto!important;min-height:0!important;margin:0!important;padding:8px!important;border:1px solid #dfe5ef!important;border-radius:9px!important;box-shadow:none!important;overflow:visible!important;break-inside:avoid!important;}
+      #view-reports .erp-card-head{margin-bottom:5px!important} #view-reports .erp-card-head h2{font-size:11px!important;margin:0!important} #view-reports .erp-card-head p{font-size:6.8px!important;margin:1px 0 0!important}
+      #view-reports .erp-table-wrap,#view-reports .erp-insights{height:auto!important;max-height:none!important;overflow:visible!important;}
+      #view-reports table{width:100%!important;table-layout:fixed!important;border-collapse:collapse!important;font-size:7.5px!important} #view-reports th,#view-reports td{padding:3px 4px!important;white-space:normal!important;line-height:1.15!important;overflow:visible!important;text-overflow:clip!important}
+      #view-reports .erp-insight{min-height:0!important;padding:5px 7px!important;margin-bottom:3px!important;break-inside:avoid!important} #view-reports .erp-insight strong{font-size:8px!important} #view-reports .erp-insight small{font-size:6.7px!important;line-height:1.15!important}
+      #view-reports,#view-reports *,#erpKpis,#erpKpis *{zoom:1!important;transform:none!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+    }
+  
+    /* ERP user role + global logout */
+    .erp-sidebar-foot{gap:10px!important;align-items:center!important}
+    .erp-sidebar-foot-state{min-width:0;flex:1}
+    .erp-sidebar-logout{border:1px solid #f1caca;background:#fff6f6;color:#b42318;border-radius:12px;padding:8px 10px;font:inherit;font-weight:800;cursor:pointer;white-space:nowrap}
+    .erp-sidebar-logout:hover{background:#ffecec}
+    #erpUserRole{display:block}
+    @media(max-width:900px){.erp-sidebar-logout span{display:inline}}
+
+
+    /* ===== Permissions page polished layout ===== */
+    #view-settings .erp-settings-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px}
+    #view-settings .erp-settings-head h2{margin:0;font-size:1.35rem;font-weight:900;color:#152546}
+    #view-settings .erp-settings-head p{margin:5px 0 0;color:#7b8498;font-size:.82rem}
+    #view-settings .erp-settings-grid{display:grid!important;grid-template-columns:minmax(0,1.25fr) minmax(420px,.75fr)!important;gap:18px!important;align-items:start!important}
+    #view-settings .erp-user-create-card{width:100%!important;min-width:0!important;padding:22px!important;border:1px solid #e3e8f1!important;border-radius:22px!important;background:linear-gradient(145deg,#fff 0%,#fbfcff 55%,#f6f9ff 100%)!important;box-shadow:0 14px 38px rgba(21,37,70,.07)!important;overflow:hidden!important}
+    #view-settings .erp-account-card-head{padding-bottom:15px!important;margin-bottom:18px!important;border-bottom:1px dashed #e2e7f0!important}
+    #view-settings .erp-account-card-head h2{margin:0!important;color:#152546!important;font-size:1.08rem!important;font-weight:900!important}
+    #view-settings .erp-account-card-head p{margin:5px 0 0!important;color:#81899a!important;font-size:.76rem!important;line-height:1.5!important}
+    #view-settings .erp-user-admin{display:block!important}
+    #view-settings .erp-account-fields{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important;margin-bottom:18px!important}
+    #view-settings .erp-account-field{display:flex!important;flex-direction:column!important;gap:7px!important;min-width:0!important}
+    #view-settings .erp-account-field>span{color:#273856;font-size:.74rem;font-weight:900}
+    #view-settings .erp-account-field input{width:100%!important;height:44px!important;min-width:0!important;padding:0 12px!important;border:1px solid #dce3ee!important;border-radius:12px!important;background:#fff!important;color:#152546!important;font:700 .78rem inherit!important;outline:none!important;box-sizing:border-box!important}
+    #view-settings .erp-account-field input::placeholder{color:#9aa2b2!important;font-weight:600!important}
+    #view-settings .erp-account-field input:focus{border-color:#31598d!important;box-shadow:0 0 0 3px rgba(49,89,141,.08)!important}
+    #view-settings .erp-permissions-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important;width:100%!important}
+    #view-settings .erp-permission-group{min-width:0!important;margin:0!important;padding:13px!important;border:1px solid #e1e7f0!important;border-radius:16px!important;background:linear-gradient(145deg,#fff 0%,#f8faff 100%)!important}
+    #view-settings .erp-permission-group legend{padding:0 7px!important;color:#152546!important;font-size:.9rem!important;font-weight:900!important}
+    #view-settings .erp-permission-group label{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;margin:0!important;padding:5px 2px!important;color:#34435e!important;font-size:.73rem!important;font-weight:700!important}
+    #view-settings .erp-permission-group input[type=checkbox]{width:16px!important;height:16px!important;min-width:16px!important;margin:0!important;padding:0!important;accent-color:#254f82!important;cursor:pointer!important}
+    #view-settings .erp-account-actions{display:grid!important;grid-template-columns:minmax(0,2fr) minmax(120px,.8fr)!important;gap:10px!important;margin-top:16px!important}
+    #view-settings .erp-account-actions button{width:100%!important;min-height:44px!important;border-radius:13px!important;font-family:inherit!important;font-weight:900!important;cursor:pointer!important}
+    #view-settings .erp-save-user-btn{border:0!important;background:linear-gradient(135deg,#2d5b91 0%,#203f73 50%,#152546 100%)!important;color:#fff!important;box-shadow:0 9px 22px rgba(21,37,70,.16)!important}
+    #view-settings .erp-cancel-user-btn{border:1px solid #e0e5ef!important;background:#f4f6fb!important;color:#5c6881!important}
+    #view-settings .erp-audit-card{grid-column:1/-1!important}
+
+    /* ===== Sidebar footer / logout ===== */
+    .erp-sidebar{display:flex!important;flex-direction:column!important}
+    .erp-nav{flex:1 1 auto!important}
+    .erp-sidebar-footer{width:100%!important;margin-top:auto!important;padding-top:12px!important;border-top:1px solid #e5eaf2!important}
+    .erp-user-status{display:flex!important;align-items:center!important;width:100%!important;padding:11px 12px!important;border:1px solid #e1e7f0!important;border-radius:15px!important;background:linear-gradient(145deg,#fff 0%,#f7f9fd 100%)!important;box-sizing:border-box!important}
+    .erp-user-status-info{display:flex!important;align-items:center!important;gap:10px!important;min-width:0!important}
+    .erp-user-status-dot{width:9px!important;height:9px!important;min-width:9px!important;border-radius:50%!important;background:#24c875!important;box-shadow:0 0 0 5px rgba(36,200,117,.12)!important}
+    .erp-user-status-text{min-width:0!important}
+    .erp-user-status-text b{display:block!important;color:#152546!important;font-size:.8rem!important;font-weight:900!important}
+    .erp-user-status-text small{display:block!important;margin-top:2px!important;color:#8992a4!important;font-size:.63rem!important;white-space:nowrap!important}
+    @media(max-width:1100px){#view-settings .erp-settings-grid{grid-template-columns:1fr!important}#view-settings .erp-account-fields{grid-template-columns:repeat(2,minmax(0,1fr))!important}#view-settings .erp-permissions-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+    @media(max-width:650px){#view-settings .erp-user-create-card{padding:15px!important;border-radius:16px!important}#view-settings .erp-account-fields{grid-template-columns:1fr!important}#view-settings .erp-permissions-grid{grid-template-columns:1fr!important}#view-settings .erp-account-actions{grid-template-columns:1fr!important}}
+
+</style>
   <script src="/java/erp-pwa.js?v=20260818-v2" defer></script>
 </head>
 <body>
@@ -89,12 +241,19 @@
         <button class="erp-nav-item" data-view="settings" type="button"><span>⚙️</span><b>الصلاحيات</b></button>
       </nav>
 
-      <div class="erp-sidebar-foot">
-        <div class="erp-sync-dot"></div>
-        <div>
-          <b id="erpSyncState">جاهز</b>
-          <small id="erpLastSync">لم تتم المزامنة بعد</small>
+      <div class="erp-sidebar-footer">
+        <div class="erp-user-status">
+          <div class="erp-user-status-info">
+            <span class="erp-user-status-dot"></span>
+            <div class="erp-user-status-text">
+              <b id="erpSyncState">متصل</b>
+              <small id="erpLastSync">آخر تحديث: --</small>
+            </div>
+          </div>
         </div>
+        <button id="erpQuickLogoutBtn" class="erp-logout-btn" type="button">
+          <span>↪</span> تسجيل خروج
+        </button>
       </div>
     </aside>
 
@@ -108,7 +267,7 @@
         <button class="erp-icon-btn erp-notify-btn" id="erpNotifyBtn" type="button" title="التنبيهات" aria-label="التنبيهات">🔔<span id="erpNotifyBadge" hidden>0</span></button>
         <div class="erp-user">
           <span class="erp-avatar">B</span>
-          <span><b id="erpUserName">Bariq Admin</b><small>مدير النظام</small></span>
+          <span><b id="erpUserName">Bariq Admin</b><small id="erpUserRole">مستخدم ERP</small></span>
         </div>
       </header>
 
@@ -177,7 +336,7 @@
                 <label>الإجمالي<input name="total" type="number" min="0" step="0.01" value="0"></label>
                 <label>العربون<input name="deposit" type="number" min="0" step="0.01" value="0"></label>
                 <label>الباقي<input name="remaining_display" type="text" value="AED 0" readonly></label>
-                <label>حالة الطلب<select name="status"><option value="new">جديد</option><option value="processing">قيد المعالجة</option><option value="ready">جاهز</option><option value="delivered">تم التسليم</option><option value="cancelled">ملغي</option></select></label>
+                <label>حالة الطلب<select name="status"><option value="new">جديد</option><option value="processing">في التصنيع</option><option value="ready">جاهز</option><option value="delivered">تم التسليم</option><option value="cancelled">ملغي</option></select></label>
                 <label style="grid-column:1/-1">ملاحظات<input name="notes" placeholder="ملاحظات داخلية"></label>
                 <button class="erp-primary" type="submit" data-manual-order-submit>حفظ الطلب</button>
               </form>
@@ -189,11 +348,21 @@
                 <select id="erpOrderStatusFilter">
                   <option value="">كل الحالات</option>
                   <option value="new">جديد</option>
-                  <option value="processing">قيد المعالجة</option>
+                  <option value="processing">في التصنيع</option>
                   <option value="ready">جاهز</option>
                   <option value="delivered">تم التسليم</option>
                   <option value="cancelled">ملغي</option>
                 </select>
+                <select id="erpOrderSort" aria-label="ترتيب الطلبات">
+                  <option value="number">ترتيب رقم الطلب 1 ← 2 ← 3</option>
+                  <option value="newest">الأحدث أولًا</option>
+                  <option value="oldest">الأقدم أولًا</option>
+                  <option value="custom">مدة مخصصة</option>
+                </select>
+                <span id="erpOrderDateRange" class="erp-order-date-range" hidden>
+                  <label>من<input id="erpOrderDateFrom" type="date"></label>
+                  <label>إلى<input id="erpOrderDateTo" type="date"></label>
+                </span>
               </div>
               <div class="erp-table-wrap">
                 <table>
@@ -222,7 +391,7 @@
               </form>
             </article>
             <article class="erp-card"><div class="erp-card-head"><div><h2>محرك الربح</h2><p>حسابات تلقائية من القيود اليدوية فقط.</p></div></div><div id="erpProfitEngine" class="erp-metric-stack"></div></article>
-            <article class="erp-card" style="grid-column:1/-1"><div class="erp-card-head"><div><h2>دفتر الأستاذ</h2><p>جدول قابل للتعديل السريع مثل Excel. عدّل الوصف أو المبلغ ثم اخرج من الخلية للحفظ.</p></div></div><div class="erp-table-wrap"><table><thead><tr><th>التاريخ</th><th>البند</th><th>النوع</th><th>المبلغ</th><th>المرجع</th></tr></thead><tbody id="erpLedgerRows"></tbody></table></div></article>
+            <article class="erp-card" style="grid-column:1/-1"><div class="erp-card-head"><div><h2>دفتر الأستاذ</h2><p>جدول قابل للتعديل السريع مثل Excel. عدّل الوصف أو المبلغ ثم اخرج من الخلية للحفظ.</p></div></div><div class="erp-table-wrap"><table><thead><tr><th>التاريخ</th><th>البند</th><th>النوع</th><th>المبلغ</th><th>المرجع</th><th>إجراء</th></tr></thead><tbody id="erpLedgerRows"></tbody></table></div></article>
           </div>
         </section>
 
@@ -237,7 +406,7 @@
           <div class="erp-grid erp-grid-main">
             <article class="erp-card"><div class="erp-card-head"><div><h2>إضافة خامة</h2><p>يتم إنشاء الخامة يدويًا داخل نظام الإدارة.</p></div></div><form class="erp-form" data-erp-form="material"><label>الاسم<input name="name" required placeholder="أكريليك 3 مم"></label><label>الكود<input name="code" placeholder="رمز الخامة"></label><label>الوحدة<input name="unit" required placeholder="لوح / متر / قطعة"></label><label>رصيد افتتاحي<input name="opening_quantity" type="number" step="0.001" value="0"></label><label>تكلفة افتتاحية<input name="opening_cost" type="number" step="0.01" value="0"></label><label>حد التنبيه<input name="minimum_stock" type="number" step="0.001" value="0"></label><label>المورد<select name="supplier_id" data-suppliers></select></label><label>المكان<input name="location" placeholder="المخزن / الرف"></label><button class="erp-primary" type="submit">حفظ الخامة</button></form></article>
             <article class="erp-card"><div class="erp-card-head"><div><h2>حركة مخزون</h2><p>شراء، استهلاك، تالف، إضافة، تصحيح، تحويل.</p></div></div><form class="erp-form" data-erp-form="stock"><label>الخامة<select name="material_id" data-materials required></select></label><label>التاريخ<input name="movement_date" type="date" data-today required></label><label>الحركة<select name="movement_type"><option value="purchase">شراء</option><option value="consumption">استهلاك</option><option value="waste">تالف</option><option value="addition">إضافة</option><option value="adjustment">تصحيح</option><option value="transfer">تحويل</option></select></label><label>الكمية<input name="quantity" type="number" step="0.001" required></label><label>تكلفة الوحدة<input name="unit_cost" type="number" step="0.01" placeholder="اختياري"></label><label>مرجع<input name="reference" placeholder="اختياري"></label><label style="grid-column:1/-1">ملاحظات<input name="notes" placeholder="ملاحظات"></label><button class="erp-primary" type="submit">حفظ الحركة</button></form></article>
-            <article class="erp-card" style="grid-column:1/-1"><div class="erp-card-head"><div><h2>الخامات والمخزون</h2><p>المتوفر الحالي ومتوسط التكلفة وتنبيهات المخزون من حركات النظام.</p></div></div><div class="erp-table-wrap"><table><thead><tr><th>الخامة</th><th>الوحدة</th><th>المتوفر</th><th>حد التنبيه</th><th>الحالة</th></tr></thead><tbody id="erpMaterialsRows"></tbody></table></div></article>
+            <article class="erp-card" style="grid-column:1/-1"><div class="erp-card-head"><div><h2>الخامات والمخزون</h2><p>المتوفر الحالي ومتوسط التكلفة وتنبيهات المخزون من حركات النظام.</p></div></div><div class="erp-table-wrap"><table><thead><tr><th>الخامة</th><th>الوحدة</th><th>المتوفر</th><th>حد التنبيه</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody id="erpMaterialsRows"></tbody></table></div></article>
             <article class="erp-card" style="grid-column:1/-1"><div class="erp-card-head"><div><h2>مخزون منخفض</h2><p>تنبيهات الخامات التي وصلت للحد الأدنى.</p></div></div><div class="erp-list" id="erpLowStock"></div></article>
           </div>
         </section>
@@ -253,7 +422,7 @@
         <section class="erp-view" id="view-suppliers">
           <div class="erp-grid erp-grid-main">
             <article class="erp-card"><div class="erp-card-head"><div><h2>إضافة مورد</h2><p>الموردين يتم إدخالهم يدويًا داخل نظام الإدارة.</p></div></div><form class="erp-form" data-erp-form="supplier"><label>اسم المورد<input name="name" required></label><label>التخصص<input name="category" placeholder="خامات / طباعة / توصيل"></label><label>الهاتف<input name="phone"></label><label>البريد<input name="email" type="email"></label><label style="grid-column:1/-1">العنوان<input name="address"></label><label style="grid-column:1/-1">ملاحظات<input name="notes"></label><button class="erp-primary" type="submit">حفظ المورد</button></form></article>
-            <article class="erp-card"><div class="erp-card-head"><div><h2>الموردين</h2><p>إجمالي المشتريات والمستحقات من معاملات النظام فقط.</p></div></div><div class="erp-table-wrap"><table><thead><tr><th>المورد</th><th>التخصص</th><th>الهاتف</th><th>الرصيد</th></tr></thead><tbody id="erpSuppliersRows"></tbody></table></div></article>
+            <article class="erp-card"><div class="erp-card-head"><div><h2>الموردين</h2><p>إجمالي المشتريات والمستحقات من معاملات النظام فقط.</p></div></div><div class="erp-table-wrap"><table><thead><tr><th>المورد</th><th>التخصص</th><th>الهاتف</th><th>العنوان</th><th>الرصيد</th><th>إجراء</th></tr></thead><tbody id="erpSuppliersRows"></tbody></table></div></article>
             <article class="erp-card"><div class="erp-card-head"><div><h2>أداء الموردين</h2><p>جاهز للربط بعد تسجيل أوامر الشراء.</p></div></div><div class="erp-empty">سيظهر متوسط التسليم والجودة والتكلفة بعد تسجيل المشتريات.</div></article>
           </div>
         </section>
@@ -261,7 +430,7 @@
         <section class="erp-view" id="view-hr">
           <div class="erp-grid erp-grid-main">
             <article class="erp-card"><div class="erp-card-head"><div><h2>إضافة موظف</h2><p>ملف داخلي كامل للموظف داخل نظام الإدارة.</p></div></div><form class="erp-form" data-erp-form="employee"><label>الاسم<input name="full_name" required></label><label>الوظيفة<input name="job_title"></label><label>القسم<input name="department"></label><label>الراتب<input name="salary" type="number" step="0.01" value="0"></label><label>تاريخ التعيين<input name="hire_date" type="date"></label><label>الهاتف<input name="phone"></label><label>الإقامة<input name="emirates_id"></label><label>انتهاء الإقامة<input name="residence_expiry" type="date"></label><label>الجواز<input name="passport_number"></label><label>البدلات<input name="allowances" type="number" step="0.01" value="0"></label><label>الخصومات<input name="deductions" type="number" step="0.01" value="0"></label><label>ملاحظات<input name="notes"></label><button class="erp-primary" type="submit">حفظ الموظف</button></form></article>
-            <article class="erp-card"><div class="erp-card-head"><div><h2>الموظفين</h2><p>اضغط على اسم الموظف لفتح الملف الكامل.</p></div></div><div class="erp-table-wrap"><table><thead><tr><th>الاسم</th><th>القسم</th><th>الوظيفة</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody id="erpEmployeesRows"></tbody></table></div></article>
+            <article class="erp-card"><div class="erp-card-head"><div><h2>الموظفين</h2><p>اضغط على اسم الموظف لفتح الملف الكامل.</p></div></div><div class="erp-table-wrap"><table><thead><tr><th>الاسم</th><th>القسم</th><th>الوظيفة</th><th>تاريخ التعيين</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody id="erpEmployeesRows"></tbody></table></div></article>
             <article class="erp-card"><div class="erp-card-head"><div><h2>الحضور والتنبيهات</h2><p>جاهز للتوسعة مع الحضور والانصراف.</p></div></div><div class="erp-timeline" id="erpHrActivity"></div></article>
             <article class="erp-card erp-employee-profile-card" style="grid-column:1/-1">
               <div class="erp-card-head"><div><h2>ملف الموظف</h2><p>كل تفاصيل الموظف، تقييمه، مميزاته، أخطاؤه، الإقامة، الإجازات والراتب.</p></div></div>
@@ -273,7 +442,7 @@
         <section class="erp-view" id="view-payroll">
           <div class="erp-grid erp-grid-main">
             <article class="erp-card"><div class="erp-card-head"><div><h2>إنشاء مسير رواتب</h2><p>يحسب تلقائيًا من رواتب وبدلات وخصومات الموظفين النشطين.</p></div></div><form class="erp-form" data-erp-form="payroll"><label>الشهر<input name="payroll_month" type="month" required></label><label>الحالة<select name="status"><option value="draft">مسودة</option><option value="approved">معتمد</option><option value="paid">مدفوع</option></select></label><label style="grid-column:1/-1">ملاحظات<input name="notes" placeholder="ملاحظات"></label><button class="erp-primary" type="submit">إنشاء المسير</button></form></article>
-            <article class="erp-card"><div class="erp-card-head"><div><h2>مسير الرواتب</h2><p>حساب الرواتب والاستقطاعات والمكافآت.</p></div></div><div class="erp-table-wrap"><table><thead><tr><th>الشهر</th><th>الموظفين</th><th>الإجمالي</th><th>الحالة</th></tr></thead><tbody id="erpPayrollRows"></tbody></table></div></article>
+            <article class="erp-card"><div class="erp-card-head"><div><h2>مسير الرواتب</h2><p>حساب الرواتب والاستقطاعات والمكافآت.</p></div></div><div class="erp-table-wrap"><table><thead><tr><th>الشهر</th><th>الموظفين</th><th>الإجمالي</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody id="erpPayrollRows"></tbody></table></div></article>
             <article class="erp-card"><div class="erp-card-head"><div><h2>تكلفة الرواتب</h2><p>تدخل ضمن مصروفات التشغيل عند اعتمادها.</p></div></div><div id="erpPayrollSummary" class="erp-metric-stack"></div></article>
           </div>
         </section>
@@ -281,22 +450,91 @@
         <section class="erp-view" id="view-documents">
           <div class="erp-grid erp-grid-main">
             <article class="erp-card"><div class="erp-card-head"><div><h2>إضافة مستند</h2><p>مستندات الشركة والموظفين مع تنبيه قبل الانتهاء.</p></div></div><form class="erp-form" data-erp-form="document"><label>نوع المستند<input name="document_type" required placeholder="رخصة / إقامة / عقد"></label><label>رقم المستند<input name="document_number"></label><label>نوع المالك<input name="owner_type" placeholder="شركة / موظف / مورد"></label><label>اسم المالك<input name="owner_name"></label><label>تاريخ الإصدار<input name="issue_date" type="date"></label><label>تاريخ الانتهاء<input name="expiry_date" type="date"></label><label>التنبيه قبل كام يوم<input name="alert_days" type="number" value="30"></label><label>ملاحظات<input name="notes"></label><button class="erp-primary" type="submit">حفظ المستند</button></form></article>
-            <article class="erp-card"><div class="erp-card-head"><div><h2>المستندات والانتهاءات</h2><p>رخص، عقود، إقامات، ومستندات تشغيل.</p></div></div><div class="erp-table-wrap"><table><thead><tr><th>المستند</th><th>المالك</th><th>تاريخ الانتهاء</th><th>التنبيه</th></tr></thead><tbody id="erpDocumentsRows"></tbody></table></div></article>
+            <article class="erp-card"><div class="erp-card-head"><div><h2>المستندات والانتهاءات</h2><p>رخص، عقود، إقامات، ومستندات تشغيل.</p></div></div><div class="erp-table-wrap"><table><thead><tr><th>المستند</th><th>المالك</th><th>تاريخ الانتهاء</th><th>التنبيه</th><th>إجراء</th></tr></thead><tbody id="erpDocumentsRows"></tbody></table></div></article>
             <article class="erp-card"><div class="erp-card-head"><div><h2>تنبيهات قريبة</h2><p>المستندات التي تحتاج متابعة.</p></div></div><div class="erp-list" id="erpDocumentAlerts"></div></article>
           </div>
         </section>
 
         <section class="erp-view" id="view-reports">
           <div class="erp-grid erp-grid-main">
-            <article class="erp-card"><div class="erp-card-head"><div><h2>تقارير مالية</h2><p>ربحية، مبيعات، ومصروفات حسب الفترة.</p></div><button class="erp-primary" id="erpExportCsv" type="button">تصدير CSV</button></div><div class="erp-table-wrap"><table><thead><tr><th>المؤشر</th><th>القيمة</th><th>ملاحظة</th></tr></thead><tbody id="erpReportRows"></tbody></table></div></article>
+            <article class="erp-card"><div class="erp-card-head"><div><h2>تقارير مالية</h2><p>ربحية، مبيعات، ومصروفات حسب الفترة.</p></div><div class="erp-report-actions"><button class="erp-secondary" id="erpPrintReport" type="button">🖨️ طباعة</button><button class="erp-primary" id="erpExportCsv" type="button">تصدير CSV</button></div></div><div class="erp-table-wrap"><table><thead><tr><th>المؤشر</th><th>القيمة</th><th>ملاحظة</th></tr></thead><tbody id="erpReportRows"></tbody></table></div></article>
             <article class="erp-card"><div class="erp-card-head"><div><h2>رؤى ذكية</h2><p>قواعد عملية بدون ردود عشوائية.</p></div></div><div class="erp-insights" id="erpRuleInsights"></div></article>
           </div>
         </section>
 
         <section class="erp-view" id="view-settings">
-          <div class="erp-grid erp-grid-main">
-            <article class="erp-card"><div class="erp-card-head"><div><h2>الصلاحيات والأمان</h2><p>نظام الإدارة يستخدم جلسة الأدمن الحالية، والصلاحيات التفصيلية تحتاج جدول أدوار لاحقًا.</p></div></div><div class="erp-table-wrap"><table><thead><tr><th>الدور</th><th>الصلاحيات</th><th>الحالة</th></tr></thead><tbody id="erpRolesRows"></tbody></table></div></article>
-            <article class="erp-card"><div class="erp-card-head"><div><h2>سجل التدقيق</h2><p>يتحول إلى سجل تدقيق فعلي عند إضافة جدول مخصص في قاعدة البيانات.</p></div></div><div class="erp-timeline" id="erpAuditLog"></div></article>
+          <div class="erp-settings-head">
+            <div>
+              <h2>الحسابات والصلاحيات</h2>
+              <p>إدارة مستخدمي ERP وصلاحيات كل قسم.</p>
+            </div>
+          </div>
+
+          <div class="erp-grid erp-grid-main erp-settings-grid">
+            <article class="erp-card erp-users-list-card">
+              <div class="erp-card-head">
+                <div>
+                  <h2>حسابات ERP</h2>
+                  <p>حساب المالك محمي ولا يمكن حذفه أو إيقافه.</p>
+                </div>
+              </div>
+              <div class="erp-table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>المستخدم</th>
+                      <th>الصلاحيات</th>
+                      <th>الحالة</th>
+                      <th>إجراء</th>
+                    </tr>
+                  </thead>
+                  <tbody id="erpRolesRows"></tbody>
+                </table>
+              </div>
+            </article>
+
+            <article class="erp-card erp-user-create-card" id="erpUserAdminPanel" hidden>
+              <div class="erp-card-head erp-account-card-head">
+                <div>
+                  <h2 id="erpUserFormTitle">إنشاء حساب جديد</h2>
+                  <p>حدد صلاحيات العرض والإضافة والتعديل والحذف لكل قسم.</p>
+                </div>
+              </div>
+
+              <form id="erpUserForm" class="erp-user-admin">
+                <div class="erp-account-fields">
+                  <label class="erp-account-field">
+                    <span>الاسم</span>
+                    <input name="full_name" type="text" required autocomplete="name" placeholder="اسم المستخدم">
+                  </label>
+                  <label class="erp-account-field">
+                    <span>الإيميل</span>
+                    <input id="erpUserEmail" name="email" type="email" required autocomplete="email" placeholder="name@example.com">
+                  </label>
+                  <label class="erp-account-field">
+                    <span>كلمة المرور</span>
+                    <input name="password" type="password" minlength="8" autocomplete="new-password" placeholder="8 أحرف على الأقل">
+                  </label>
+                </div>
+
+                <div id="erpPermissionsGrid" class="erp-permissions-grid"></div>
+
+                <div class="erp-account-actions">
+                  <button class="erp-primary erp-save-user-btn" type="submit">💾 حفظ الحساب والصلاحيات</button>
+                  <button class="erp-secondary erp-cancel-user-btn" id="erpUserCancel" type="button">إلغاء التعديل</button>
+                </div>
+              </form>
+            </article>
+
+            <article class="erp-card erp-audit-card">
+              <div class="erp-card-head">
+                <div>
+                  <h2>سجل التدقيق</h2>
+                  <p>نشاط النظام الحالي.</p>
+                </div>
+              </div>
+              <div class="erp-timeline" id="erpAuditLog"></div>
+            </article>
           </div>
         </section>
       </main>
@@ -304,7 +542,7 @@
   </div>
 
   <script src="/java/supabase.js?v=20260818-v2" defer></script>
-  <script src="/java/erp-v2.js?v=202608170412" defer></script>
+  <script src="/java/erp-v2.js?v=20260817-final-v4" defer></script>
   <script>
     (function () {
       function checkAuth() {
