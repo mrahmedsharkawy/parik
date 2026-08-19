@@ -69,6 +69,13 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:9px;
 @media(max-width:760px){.v39-head{flex-direction:column}.v39-state{width:100%}.v39-stats{grid-template-columns:1fr 1fr}.v39-controls>*{width:100%}.v39-controls select{width:100%}}
 </style>
 
+
+<style id="v401Dedicated">
+body.v401-only .tabs .tab:not([data-tab="qa-lab"]):not([data-tab="test"]){display:none!important}
+body.v401-only .tabs{grid-template-columns:1fr 1fr!important;max-width:520px;margin-inline:auto}
+</style>
+<script>document.addEventListener('DOMContentLoaded',()=>document.body.classList.add('v401-only'));</script>
+
 </head>
 <body>
 
@@ -89,18 +96,18 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:9px;
 
 <main class="wrap">
 <div class="tabs">
-  <button class="tab active" data-tab="dashboard" onclick="tab('dashboard')">📊 الرئيسية</button>
+  <button class="tab" data-tab="dashboard" onclick="tab('dashboard')">📊 الرئيسية</button>
   <button class="tab" data-tab="knowledge" onclick="tab('knowledge')">📚 قاعدة المعرفة</button>
   <button class="tab" data-tab="unanswered" onclick="tab('unanswered')">❓ بدون إجابة</button>
   <button class="tab" data-tab="test" onclick="tab('test')">🧪 محادثة ذكية</button>
-  <button class="tab" data-tab="qa-lab" onclick="tab('qa-lab')">🧪 مختبر الاختبار</button>
+  <button class="tab active" data-tab="qa-lab" onclick="tab('qa-lab')">🧪 مختبر الاختبار</button>
   <button class="tab" data-tab="products" onclick="tab('products')">🎁 اقتراح المنتجات</button>
   <button class="tab" data-tab="memory" onclick="tab('memory')">🧠 ذاكرة العملاء</button>
   <button class="tab" data-tab="settings" onclick="tab('settings')">⚙️ إعدادات البوت</button>
   <button class="tab" data-tab="meta" onclick="tab('meta')">💬 Meta / WhatsApp</button>
 </div>
 
-<section id="panel-dashboard" class="panel active">
+<section id="panel-dashboard" class="panel">
   <div class="stats">
     <div class="stat"><b id="sTotal">0</b><span>كل الأسئلة</span></div>
     <div class="stat"><b id="sActive">0</b><span>أسئلة فعالة</span></div>
@@ -270,7 +277,7 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:9px;
 </div>
 </section>
 
-<section id="panel-qa-lab" class="panel">
+<section id="panel-qa-lab" class="panel active">
   <div class="v39-lab">
     <div class="v39-head">
       <div>

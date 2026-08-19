@@ -74,6 +74,80 @@
 .erp-logout-btn{display:flex!important;align-items:center!important;justify-content:center!important;gap:4px!important;width:100%!important;height:22px!important;min-height:22px!important;max-height:22px!important;margin:4px 0 0!important;padding:0 6px!important;border:1px solid #f3c9c9!important;border-radius:7px!important;background:#fff5f5!important;color:#bd2c24!important;font:inherit!important;font-size:.62rem!important;font-weight:800!important;line-height:1!important;cursor:pointer!important;box-sizing:border-box!important}
 .erp-logout-btn:hover{background:#ffeaea!important;border-color:#efb0b0!important}
 </style>
+
+<style id="erpTreasurySafeEnhancements">
+/* ===== إضافات آمنة للخزنة فقط ===== */
+.erp-table-wrap.erp-four-rows{
+  max-height:238px !important;
+  overflow:auto !important;
+  scrollbar-gutter:stable;
+}
+.erp-table-wrap.erp-four-rows thead th{
+  position:sticky;
+  top:0;
+  z-index:4;
+  background:#f8fafd;
+}
+.erp-safe-actions{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  white-space:nowrap;
+}
+.erp-safe-action-btn{
+  width:28px;
+  height:28px;
+  min-width:28px;
+  padding:0;
+  border:1px solid #dfe5ef;
+  border-radius:8px;
+  background:#fff;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-size:.78rem;
+  transition:.15s ease;
+}
+.erp-safe-action-btn:hover{transform:translateY(-1px);background:#f7f9ff}
+.erp-safe-action-btn.danger{border-color:#f3c9c9;background:#fff6f6}
+.erp-safe-action-btn.danger:hover{background:#ffecec}
+.erp-print-btn{margin-inline-start:7px}
+.erp-edit-modal{
+  position:fixed;inset:0;z-index:9999;background:rgba(18,30,55,.42);
+  display:flex;align-items:center;justify-content:center;padding:18px;
+}
+.erp-edit-modal[hidden]{display:none!important}
+.erp-edit-dialog{
+  width:min(620px,96vw);max-height:86vh;overflow:auto;background:#fff;
+  border:1px solid #e1e7f0;border-radius:18px;padding:16px;
+  box-shadow:0 24px 70px rgba(20,33,61,.22);direction:rtl;
+}
+.erp-edit-dialog h3{margin:0 0 12px;color:#152546}
+.erp-edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.erp-edit-grid label{display:flex;flex-direction:column;gap:5px;font-size:.72rem;font-weight:800;color:#526079}
+.erp-edit-grid input,.erp-edit-grid textarea,.erp-edit-grid select{
+  width:100%;border:1px solid #dfe5ef;border-radius:10px;padding:9px 10px;font:inherit;background:#fff;
+}
+.erp-edit-grid textarea{min-height:76px;resize:vertical}
+.erp-edit-actions{display:flex;gap:8px;justify-content:flex-start;margin-top:14px}
+.erp-safe-toast{
+  position:fixed;left:18px;bottom:18px;z-index:10000;background:#152546;color:#fff;
+  border-radius:10px;padding:9px 13px;font-size:.75rem;box-shadow:0 12px 30px rgba(21,37,70,.2)
+}
+@media(max-width:700px){.erp-edit-grid{grid-template-columns:1fr}}
+@media print{
+  .erp-sidebar,.erp-topbar,.erp-page-head,.erp-order-tools,.erp-safe-actions,.erp-print-btn,
+  #erpExportTreasuryCsv,.erp-edit-modal,.erp-treasury-warning form,.erp-card form{display:none!important}
+  body{background:#fff!important}
+  .erp-main,.erp-content{width:100%!important;max-width:none!important;margin:0!important;padding:0!important}
+  .erp-card{box-shadow:none!important;border:1px solid #ddd!important;break-inside:avoid}
+  .erp-table-wrap{max-height:none!important;overflow:visible!important}
+  .erp-table-wrap thead th{position:static!important}
+}
+</style>
+
 </head>
 <body>
 
@@ -157,8 +231,8 @@
           <article class="erp-card erp-treasury-section">
             <div class="erp-card-head"><div><h2>⚙️ إعدادات المركز المالي</h2><p>رأس المال، الاحتياطي، البنوك، والكاش.</p></div></div>
             <form class="erp-form" data-treasury-form="treasury-setup">
-              <label>رأس مال الشركة<input name="capital_amount" type="number" min="0" step="0.01" required placeholder="0.00"></label>
-              <label>احتياطي رأس المال<input name="reserve_amount" type="number" min="0" step="0.01" required placeholder="0.00"></label>
+              <label>رأس مال الشركة<input name="capital_amount" type="number" min="0" step="0.01" placeholder="0.00"></label>
+              <label>احتياطي رأس المال<input name="reserve_amount" type="number" min="0" step="0.01" placeholder="0.00"></label>
               <label>اسم البنك<input name="bank_name" placeholder="مثال: ADIB"></label>
               <label>اسم الحساب<input name="account_name" placeholder="الحساب الجاري"></label>
               <label>رصيد الحساب<input name="bank_balance" type="number" step="0.01" placeholder="0.00"></label>
@@ -291,7 +365,7 @@
           </article>
 
           <article class="erp-card erp-treasury-section" style="grid-column:1/-1">
-            <div class="erp-card-head"><div><h2>📋 سجل الحركات المالية</h2><p>كل الحركات المحفوظة مع إمكانية البحث والفلترة.</p></div><button class="erp-primary" type="button" id="erpExportTreasuryCsv">تصدير CSV</button></div>
+            <div class="erp-card-head"><div><h2>📋 سجل الحركات المالية</h2><p>كل الحركات المحفوظة مع إمكانية البحث والفلترة.</p></div><div><button class="erp-primary erp-print-btn" type="button" data-print-section="transactions">🖨️ طباعة</button><button class="erp-primary" type="button" id="erpExportTreasuryCsv">تصدير CSV</button></div></div>
             <div class="erp-order-tools">
               <input id="erpTreasurySearch" type="search" placeholder="بحث في الحركات...">
               <select id="erpTreasuryTypeFilter"><option value="">كل الأنواع</option><option value="deposit">إيداع</option><option value="withdrawal">سحب</option><option value="expense">مصروف</option><option value="capital_injection">إضافة رأس مال</option><option value="owner_withdrawal">سحب مالك</option><option value="internal_transfer">تحويل داخلي</option><option value="asset_purchase">شراء أصل</option><option value="asset_sale">بيع أصل</option><option value="installment_payment">دفع قسط</option><option value="receivable_collection">تحصيل مستحق</option><option value="liability_payment">سداد مديونية</option><option value="balance_adjustment">تعديل رصيد</option><option value="other">أخرى</option></select>
@@ -303,7 +377,7 @@
 
         <div class="erp-grid erp-grid-main">
           <article class="erp-card erp-treasury-section" style="grid-column:1/-1">
-            <div class="erp-card-head"><div><h2>🔍 سجل التدقيق</h2><p>تتبع التعديلات والإلغاءات على البيانات المالية.</p></div></div>
+            <div class="erp-card-head"><div><h2>🔍 سجل التدقيق</h2><p>تتبع التعديلات والإلغاءات على البيانات المالية.</p></div><button class="erp-primary erp-print-btn" type="button" data-print-section="audit">🖨️ طباعة</button></div>
             <div class="erp-table-wrap"><table><thead><tr><th>التاريخ</th><th>الجدول</th><th>العملية</th><th>بواسطة</th><th>السبب</th></tr></thead><tbody id="erpAuditLogRows"></tbody></table></div>
           </article>
         </div>
@@ -344,5 +418,359 @@
   });
 })();
 </script>
+
+<div id="erpSafeEditModal" class="erp-edit-modal" hidden>
+  <div class="erp-edit-dialog">
+    <h3>✏️ تعديل السجل</h3>
+    <div id="erpSafeEditGrid" class="erp-edit-grid"></div>
+    <div class="erp-edit-actions">
+      <button id="erpSafeEditSave" class="erp-primary" type="button">حفظ التعديل</button>
+      <button id="erpSafeEditCancel" class="erp-secondary" type="button">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<script id="erpTreasurySafeEnhancer">
+(function(){
+  'use strict';
+
+  const CONFIG={
+    erpBankAccountsRows:{tables:['erp_treasury_accounts','erp_bank_accounts']},
+    erpFixedAssetsRows:{tables:['erp_fixed_assets','erp_treasury_assets']},
+    erpLiabilitiesRows:{tables:['erp_liabilities','erp_treasury_liabilities']},
+    erpReceivablesRows:{tables:['erp_receivables','erp_treasury_receivables']},
+    erpTreasuryTransactionsRows:{tables:['erp_treasury_transactions']},
+    erpAuditLogRows:{tables:['erp_audit_logs','erp_audit_log']}
+  };
+
+  const HIDDEN_FIELDS=new Set([
+    'id','created_at','updated_at','created_by','updated_by','user_id',
+    'cancelled_by','deleted_by'
+  ]);
+
+  let currentEdit=null;
+  const cache=new Map();
+
+  function toast(msg){
+    let el=document.querySelector('.erp-safe-toast');
+    if(!el){el=document.createElement('div');el.className='erp-safe-toast';document.body.appendChild(el);}
+    el.textContent=msg;
+    clearTimeout(el._timer);
+    el._timer=setTimeout(()=>el.remove(),2800);
+  }
+
+  function hasSb(){return typeof window.sbFetch==='function';}
+
+  async function fetchTable(name){
+    if(cache.has(name))return cache.get(name);
+    try{
+      const rows=await window.sbFetch(name+'?select=*&order=created_at.desc&limit=500');
+      if(Array.isArray(rows)){cache.set(name,rows);return rows;}
+    }catch(e){}
+    try{
+      const rows=await window.sbFetch(name+'?select=*&limit=500');
+      if(Array.isArray(rows)){cache.set(name,rows);return rows;}
+    }catch(e){}
+    return null;
+  }
+
+  async function resolveSource(config){
+    for(const table of config.tables){
+      const rows=await fetchTable(table);
+      if(rows)return {table,rows};
+    }
+    return null;
+  }
+
+  function norm(v){
+    return String(v??'').toLowerCase()
+      .replace(/[إأآٱ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي')
+      .replace(/[^\u0600-\u06ffa-z0-9.\-]+/gi,' ').replace(/\s+/g,' ').trim();
+  }
+
+  function flatValues(obj){
+    return Object.entries(obj||{})
+      .filter(([k,v])=>k!=='id' && v!=null && typeof v!=='object')
+      .map(([k,v])=>norm(v))
+      .filter(v=>v.length>0);
+  }
+
+  function bestRecordForRow(row,rows){
+    const txt=norm(Array.from(row.cells).slice(0,-1).map(c=>c.textContent).join(' '));
+    let best=null,bestScore=-1;
+    for(const rec of rows){
+      let score=0;
+      for(const v of flatValues(rec)){
+        if(v.length>=2 && txt.includes(v)) score+=Math.min(18,v.length);
+      }
+      if(score>bestScore){best=rec;bestScore=score;}
+    }
+    return bestScore>0?best:null;
+  }
+
+  async function resolveRecord(tbody,row){
+    const cfg=CONFIG[tbody.id];
+    if(!cfg)throw new Error('هذا الجدول غير مربوط بقاعدة البيانات.');
+    const src=await resolveSource(cfg);
+    if(!src)throw new Error('تعذر تحديد جدول Supabase الخاص بهذا السجل.');
+    const rec=bestRecordForRow(row,src.rows);
+    if(!rec||!rec.id)throw new Error('تعذر تحديد السجل بدقة. حدّث الصفحة وحاول مرة أخرى.');
+    return {table:src.table,record:rec};
+  }
+
+  function actionHtml(){
+    return '<span class="erp-safe-actions">'+
+      '<button class="erp-safe-action-btn" type="button" data-safe-edit title="تعديل" aria-label="تعديل">✏️</button>'+
+      '<button class="erp-safe-action-btn danger" type="button" data-safe-delete title="حذف" aria-label="حذف">🗑️</button>'+
+    '</span>';
+  }
+
+  function ensureActionHeader(table){
+    const headRow=table.tHead&&table.tHead.rows&&table.tHead.rows[0];
+    if(!headRow)return;
+    const last=headRow.cells[headRow.cells.length-1];
+    if(last && norm(last.textContent).includes('اجراء'))return;
+    const th=document.createElement('th');
+    th.textContent='إجراء';
+    headRow.appendChild(th);
+  }
+
+  function enhanceTable(tbody){
+    const table=tbody.closest('table');
+    if(!table)return;
+    ensureActionHeader(table);
+
+    const rows=Array.from(tbody.rows);
+    rows.forEach(row=>{
+      if(row.dataset.safeEnhanced==='1')return;
+
+      /* Bank accounts: remove legacy text delete button ("حذف"),
+         keep only the compact edit/delete icons. */
+      if(tbody.id==='erpBankAccountsRows'){
+        row.querySelectorAll('button,a').forEach(el=>{
+          if(el.matches('[data-safe-edit],[data-safe-delete]'))return;
+          const label=(el.textContent||'').replace(/\s+/g,' ').trim();
+          if(label==='حذف' || label.includes('حذف')){
+            el.remove();
+          }
+        });
+      }
+      const headCount=table.tHead?.rows?.[0]?.cells?.length||0;
+      let cell=row.cells[row.cells.length-1];
+      const hasActionHead=headCount===row.cells.length && table.tHead && norm(table.tHead.rows[0].cells[headCount-1]?.textContent).includes('اجراء');
+      if(!hasActionHead || !cell){
+        cell=row.insertCell(-1);
+      }
+      if(!cell.querySelector('[data-safe-edit],[data-safe-delete]')){
+        cell.insertAdjacentHTML('beforeend',actionHtml());
+      }
+      row.dataset.safeEnhanced='1';
+    });
+
+    const wrap=table.closest('.erp-table-wrap');
+    if(wrap){
+      if(rows.length>4)wrap.classList.add('erp-four-rows');
+      else wrap.classList.remove('erp-four-rows');
+    }
+  }
+
+  function enhanceAll(){
+    Object.keys(CONFIG).forEach(id=>{
+      const tbody=document.getElementById(id);
+      if(tbody)enhanceTable(tbody);
+    });
+  }
+
+  async function deleteRow(btn){
+    if(!hasSb())return toast('تعذر الاتصال بقاعدة البيانات.');
+    const row=btn.closest('tr'),tbody=btn.closest('tbody');
+    if(!row||!tbody)return;
+    if(!confirm('حذف هذا السجل نهائيًا؟'))return;
+
+    btn.disabled=true;
+    try{
+      const {table,record}=await resolveRecord(tbody,row);
+      await window.sbFetch(table+'?id=eq.'+encodeURIComponent(record.id),{
+        method:'DELETE',
+        prefer:'return=minimal',
+        headers:{Prefer:'return=minimal'}
+      });
+      cache.delete(table);
+      row.remove();
+      enhanceAll();
+      toast('✅ تم حذف السجل.');
+      setTimeout(()=>location.reload(),500);
+    }catch(e){
+      console.error(e);
+      toast('❌ '+(e.message||'فشل الحذف'));
+      btn.disabled=false;
+    }
+  }
+
+  function editableFields(record){
+    return Object.entries(record||{}).filter(([k,v])=>{
+      if(HIDDEN_FIELDS.has(k))return false;
+      if(v===null)return true;
+      return ['string','number','boolean'].includes(typeof v);
+    });
+  }
+
+  function openEdit(table,record){
+    currentEdit={table,record};
+    const grid=document.getElementById('erpSafeEditGrid');
+    grid.innerHTML='';
+    editableFields(record).forEach(([key,value])=>{
+      const label=document.createElement('label');
+      label.textContent=key;
+      let input;
+      if(typeof value==='boolean'){
+        input=document.createElement('select');
+        input.innerHTML='<option value="true">true</option><option value="false">false</option>';
+        input.value=String(value);
+      }else if(String(value??'').length>80){
+        input=document.createElement('textarea');
+        input.value=value??'';
+      }else{
+        input=document.createElement('input');
+        input.type=typeof value==='number'?'number':'text';
+        if(input.type==='number')input.step='any';
+        input.value=value??'';
+      }
+      input.dataset.field=key;
+      input.dataset.type=typeof value;
+      label.appendChild(input);
+      grid.appendChild(label);
+    });
+    document.getElementById('erpSafeEditModal').hidden=false;
+  }
+
+  async function editRow(btn){
+    if(!hasSb())return toast('تعذر الاتصال بقاعدة البيانات.');
+    const row=btn.closest('tr'),tbody=btn.closest('tbody');
+    if(!row||!tbody)return;
+    btn.disabled=true;
+    try{
+      const {table,record}=await resolveRecord(tbody,row);
+      openEdit(table,record);
+    }catch(e){
+      toast('❌ '+(e.message||'تعذر فتح التعديل'));
+    }finally{btn.disabled=false;}
+  }
+
+  function closeEdit(){
+    currentEdit=null;
+    document.getElementById('erpSafeEditModal').hidden=true;
+  }
+
+  async function saveEdit(){
+    if(!currentEdit)return;
+    const btn=document.getElementById('erpSafeEditSave');
+    btn.disabled=true;
+    try{
+      const payload={};
+      document.querySelectorAll('#erpSafeEditGrid [data-field]').forEach(input=>{
+        const key=input.dataset.field,type=input.dataset.type;
+        let value=input.value;
+        if(type==='number')value=value===''?null:Number(value);
+        if(type==='boolean')value=value==='true';
+        payload[key]=value;
+      });
+      await window.sbFetch(currentEdit.table+'?id=eq.'+encodeURIComponent(currentEdit.record.id),{
+        method:'PATCH',
+        prefer:'return=minimal',
+        headers:{Prefer:'return=minimal'},
+        body:JSON.stringify(payload)
+      });
+      cache.delete(currentEdit.table);
+      toast('✅ تم حفظ التعديل.');
+      closeEdit();
+      setTimeout(()=>location.reload(),450);
+    }catch(e){
+      console.error(e);
+      toast('❌ '+(e.message||'فشل التعديل'));
+    }finally{btn.disabled=false;}
+  }
+
+  function printSection(kind){
+    const tbodyId=kind==='audit'?'erpAuditLogRows':'erpTreasuryTransactionsRows';
+    const tbody=document.getElementById(tbodyId);
+    const card=tbody?.closest('.erp-card');
+    if(!card)return window.print();
+
+    const w=window.open('','_blank','width=1100,height=800');
+    if(!w)return window.print();
+    w.document.write('<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>طباعة الخزنة</title>'+
+      '<style>body{font-family:Tahoma,Arial,sans-serif;padding:24px;color:#152546}h2{margin:0 0 6px}p{color:#6f7890}table{width:100%;border-collapse:collapse;margin-top:14px;font-size:12px}th,td{border:1px solid #dfe5ef;padding:8px;text-align:right}th{background:#f4f7fb}.erp-order-tools,.erp-safe-actions,.erp-print-btn,#erpExportTreasuryCsv{display:none!important}</style>'+
+      '</head><body>'+card.innerHTML+'</body></html>');
+    w.document.close();
+    setTimeout(()=>{w.focus();w.print();},250);
+  }
+
+  document.addEventListener('click',e=>{
+    const del=e.target.closest('[data-safe-delete]');
+    if(del){e.preventDefault();deleteRow(del);return;}
+    const edit=e.target.closest('[data-safe-edit]');
+    if(edit){e.preventDefault();editRow(edit);return;}
+    const print=e.target.closest('[data-print-section]');
+    if(print){e.preventDefault();printSection(print.dataset.printSection);return;}
+  });
+
+  function preparePartialTreasurySetup(){
+    const form=document.querySelector('form[data-treasury-form="treasury-setup"]');
+    if(!form || form.dataset.partialReady==='1')return;
+    form.dataset.partialReady='1';
+
+    /* Snapshot last non-empty values loaded by the existing treasury code. */
+    const controls=Array.from(form.querySelectorAll('input[name],select[name]'));
+    const remember=()=>{
+      controls.forEach(el=>{
+        if(String(el.value??'').trim()!=='') el.dataset.lastTreasuryValue=el.value;
+      });
+    };
+    remember();
+    controls.forEach(el=>{
+      el.addEventListener('focus',remember);
+      el.addEventListener('change',()=>{
+        if(String(el.value??'').trim()!=='') el.dataset.lastTreasuryValue=el.value;
+      });
+    });
+
+    /* Capture submit before legacy handler:
+       empty fields are restored to their previously loaded value so the old
+       save routine won't overwrite untouched fields with 0/empty text. */
+    form.addEventListener('submit',()=>{
+      controls.forEach(el=>{
+        if(String(el.value??'').trim()==='' && el.dataset.lastTreasuryValue!==undefined){
+          el.dataset.restoreBlankAfterSubmit='1';
+          el.value=el.dataset.lastTreasuryValue;
+        }
+      });
+      setTimeout(()=>{
+        controls.forEach(el=>{
+          if(el.dataset.restoreBlankAfterSubmit==='1'){
+            el.value='';
+            delete el.dataset.restoreBlankAfterSubmit;
+          }
+        });
+      },0);
+    },true);
+  }
+
+  document.addEventListener('DOMContentLoaded',()=>{
+    preparePartialTreasurySetup();
+    document.getElementById('erpSafeEditCancel')?.addEventListener('click',closeEdit);
+    document.getElementById('erpSafeEditSave')?.addEventListener('click',saveEdit);
+    document.getElementById('erpSafeEditModal')?.addEventListener('click',e=>{if(e.target.id==='erpSafeEditModal')closeEdit();});
+
+    enhanceAll();
+    const obs=new MutationObserver(()=>enhanceAll());
+    Object.keys(CONFIG).forEach(id=>{
+      const tbody=document.getElementById(id);
+      if(tbody)obs.observe(tbody,{childList:true,subtree:false});
+    });
+  });
+})();
+</script>
+
 </body>
 </html>
