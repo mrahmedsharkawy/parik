@@ -1013,6 +1013,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   body.home-immersive-header #category-products .products-row{grid-template-columns:repeat(5,minmax(0,1fr))!important;max-width:100%!important;margin-inline:0!important;gap:16px!important}
   body.home-immersive-header #category-products .product-card{max-width:230px!important}
   body.home-immersive-header #category-products .product-content{min-height:137px!important}
+  body.home-immersive-header .header-content,
+  body.home-immersive-header main.main{width:70%!important}
 }
 @media(min-width:900px){
   body.home-immersive-header .main-header{display:flex!important;justify-content:center!important;overflow:visible!important}
@@ -1287,6 +1289,15 @@ body.home-immersive-header .daily-picks-section+.categories{margin-top:6px!impor
   body.home-immersive-header #category-products .product-card{width:100%!important;min-width:0!important;max-width:none!important;margin:0!important;display:flex!important;flex-direction:column!important;align-self:start!important;box-sizing:border-box!important}
   body.home-immersive-header #category-products .product-img{width:100%!important;height:auto!important;min-height:0!important;aspect-ratio:1/1!important;object-fit:cover!important;display:block!important}
   body.home-immersive-header #category-products .product-content{flex:0 0 auto!important;min-height:118px!important;box-sizing:border-box!important}
+}
+@media(min-width:1600px){
+  body.home-immersive-header main.main,
+  body.home-immersive-header .header-content{
+    width:70%!important;
+    max-width:none!important;
+    margin-left:auto!important;
+    margin-right:auto!important;
+  }
 }
 </style>
 

@@ -20,6 +20,7 @@ Machine-readable indexes:
 - Entity index: https://bariqgifts.com/seo/entity-index.json
 - XML sitemap: https://bariqgifts.com/sitemap.xml
 - Image sitemap: https://bariqgifts.com/image-sitemap.xml
+- Video sitemap: https://bariqgifts.com/video-sitemap.xml
 
 Indexing note:
 Product pages are generated from live Supabase catalog data during build. Placeholder or incomplete products are marked noindex instead of being removed.

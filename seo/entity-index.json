@@ -23,7 +23,32 @@
   "indexes": {
     "products": "https://bariqgifts.com/seo/product-index.json",
     "sitemap": "https://bariqgifts.com/sitemap.xml",
-    "image_sitemap": "https://bariqgifts.com/image-sitemap.xml"
+    "image_sitemap": "https://bariqgifts.com/image-sitemap.xml",
+    "video_sitemap": "https://bariqgifts.com/video-sitemap.xml"
   },
-  "generated_at": "2026-08-20T12:18:46.221Z"
+  "seo_landing_pages": [
+    "https://bariqgifts.com/gifts",
+    "https://bariqgifts.com/custom-gifts",
+    "https://bariqgifts.com/corporate-gifts",
+    "https://bariqgifts.com/events",
+    "https://bariqgifts.com/gifts/newborn-gifts-uae",
+    "https://bariqgifts.com/newborn",
+    "https://bariqgifts.com/gifts/national-day-gifts-uae",
+    "https://bariqgifts.com/national-day",
+    "https://bariqgifts.com/gifts/acrylic-gifts-uae",
+    "https://bariqgifts.com/acrylic",
+    "https://bariqgifts.com/gifts/forex-gifts-uae",
+    "https://bariqgifts.com/forex",
+    "https://bariqgifts.com/gifts/wood-gifts-uae",
+    "https://bariqgifts.com/wood",
+    "https://bariqgifts.com/gifts/leather-gifts-uae",
+    "https://bariqgifts.com/leather",
+    "https://bariqgifts.com/gifts/paper-gifts-uae",
+    "https://bariqgifts.com/gifts/sticker-gifts-uae",
+    "https://bariqgifts.com/stickers",
+    "https://bariqgifts.com/gifts/ramadan-gifts-uae",
+    "https://bariqgifts.com/ramadan",
+    "https://bariqgifts.com/graduation"
+  ],
+  "generated_at": "2026-08-20T13:24:07.106Z"
 }

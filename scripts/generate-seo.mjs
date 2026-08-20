@@ -29,24 +29,179 @@ const PRODUCT_SELECT = [
 
 const STATIC_PAGES = [
   "/",
-  "/about-bariq",
-  "/gifts",
-  "/custom-gifts",
-  "/corporate-gifts",
-  "/events",
-  "/newborn",
-  "/graduation",
-  "/national-day",
-  "/ramadan",
-  "/acrylic",
-  "/forex",
-  "/wood",
-  "/leather",
-  "/stickers",
   "/offers",
   "/monthly-offers",
   "/categories",
+  "/about-bariq",
   "/policy",
+];
+
+const LANDING_PAGES = [
+  {
+    path: "/gifts",
+    title: "هدايا في الإمارات | بريق للهدايا والإبداع",
+    h1: "هدايا مخصصة وتجهيز مناسبات في الإمارات",
+    summary: "تصفح هدايا بريق في الإمارات حسب المناسبة أو الخامة، مع روابط مباشرة لصفحات المنتجات والفئات المتاحة.",
+    description: "هدايا مخصصة وتجهيز مناسبات في الإمارات من بريق: مواليد، تخرج، رمضان، اليوم الوطني، أكريليك، فوركس، خشب، جلد، ورق واستيكر.",
+    image: "/assets/home/banners/hero-1.webp",
+    links: [
+      ["/gifts/newborn-gifts-uae", "هدايا مواليد"],
+      ["/gifts/national-day-gifts-uae", "هدايا اليوم الوطني"],
+      ["/gifts/acrylic-gifts-uae", "هدايا أكريليك"],
+      ["/gifts/forex-gifts-uae", "هدايا فوركس"],
+      ["/gifts/leather-gifts-uae", "هدايا جلد"],
+      ["/gifts/paper-gifts-uae", "هدايا ورق"],
+    ],
+    keywords: ["هدايا", "هدايا مخصصة", "هدايا الإمارات", "بريق للهدايا"],
+  },
+  {
+    path: "/custom-gifts",
+    title: "هدايا مخصصة في الإمارات | بريق",
+    h1: "هدايا مخصصة حسب الاسم أو التصميم",
+    summary: "يمكنك تصفح منتجات قابلة للتخصيص حسب الخامة والمناسبة، ثم تأكيد تفاصيل التصميم والبروفة قبل التنفيذ.",
+    description: "هدايا مخصصة في الإمارات من بريق: أسماء، شعارات وتصاميم حسب المنتج والخامة، مع روابط لفئات الأكريليك والفوركس والخشب والجلد والورق.",
+    image: "/assets/categories/Acrylic/Stand.webp",
+    links: [["/gifts/acrylic-gifts-uae", "أكريليك"], ["/gifts/forex-gifts-uae", "فوركس"], ["/gifts/wood-gifts-uae", "خشب"], ["/gifts/leather-gifts-uae", "جلد"]],
+    keywords: ["هدايا مخصصة", "تخصيص هدايا", "طباعة اسم", "شعار"],
+  },
+  {
+    path: "/corporate-gifts",
+    title: "هدايا شركات وهدايا دعائية | بريق الإمارات",
+    h1: "هدايا شركات وهدايا دعائية في الإمارات",
+    summary: "اختيارات مناسبة للشركات والفعاليات والموظفين حسب المنتج والكمية ونوع التخصيص المطلوب.",
+    description: "هدايا شركات وهدايا دعائية من بريق في الإمارات تشمل خيارات قابلة للتخصيص للشعارات والفعاليات والموظفين حسب المنتج والكمية.",
+    image: "/assets/categories/Forex/stands.webp",
+    links: [["/custom-gifts", "تخصيص حسب الشعار"], ["/events", "تجهيز فعاليات"], ["/categories", "كل المنتجات"]],
+    keywords: ["هدايا شركات", "هدايا دعائية", "براندنق", "لوجو"],
+  },
+  {
+    path: "/events",
+    title: "تجهيز مناسبات وحفلات وفعاليات | بريق",
+    h1: "تجهيز مناسبات وحفلات وفعاليات",
+    summary: "روابط منظمة لمنتجات وتجهيزات يمكن استخدامها في المناسبات والفعاليات حسب الفئات الفعلية في الموقع.",
+    description: "تجهيز مناسبات وفعاليات من بريق: استانـدات، طاولات، مجسمات، لوحات، هدايا وتوزيعات مرتبطة بالفئات الفعلية في الموقع.",
+    image: "/assets/categories/Occasions/Graduation.webp",
+    links: [["/gifts/newborn-gifts-uae", "مواليد"], ["/graduation", "تخرج"], ["/gifts/forex-gifts-uae", "فوركس للفعاليات"]],
+    keywords: ["تجهيز مناسبات", "فعاليات", "حفلات", "توزيعات"],
+  },
+  {
+    path: "/gifts/newborn-gifts-uae",
+    legacy: "/newborn",
+    title: "هدايا مواليد وتجهيز استقبال مولود في الإمارات | بريق",
+    h1: "هدايا مواليد وتجهيز استقبال مولود",
+    summary: "صفحة تجمع منتجات المواليد الصالحة للفهرسة من بريق وروابط الفئات المرتبطة بها.",
+    description: "هدايا مواليد وتجهيز استقبال مولود في الإمارات من بريق، تشمل أطقم مواليد أكريليك وجلد وخيارات مناسبة حسب المنتجات المتاحة.",
+    image: "/assets/categories/Occasions/born-in.webp",
+    productMatch: ["مواليد", "مولود", "استقبال"],
+    links: [["/categories?category=Occasions&subcategory=Born-in", "منتجات مواليد"], ["/categories?category=Acrylic&subcategory=Born+in", "مواليد أكريليك"]],
+    keywords: ["مواليد", "هدايا مواليد", "أطقم مواليد", "استقبال مولود"],
+  },
+  {
+    path: "/gifts/national-day-gifts-uae",
+    legacy: "/national-day",
+    title: "هدايا اليوم الوطني الإماراتي | بريق",
+    h1: "هدايا ومنتجات اليوم الوطني",
+    summary: "منتجات مناسبة لليوم الوطني والفعاليات الوطنية حسب المتاح في قسم المناسبات.",
+    description: "هدايا ومنتجات اليوم الوطني الإماراتي من بريق، مع روابط مباشرة لقسم المناسبات ومنتجات قابلة للتخصيص حسب المتاح.",
+    image: "/assets/categories/Occasions/National Day.webp",
+    productMatch: ["وطني", "اليوم الوطني", "امارات"],
+    links: [["/categories?category=Occasions&subcategory=National+Day", "منتجات اليوم الوطني"], ["/corporate-gifts", "طلبات الشركات"]],
+    keywords: ["اليوم الوطني", "هدايا اليوم الوطني", "هدايا الإمارات"],
+  },
+  {
+    path: "/gifts/acrylic-gifts-uae",
+    legacy: "/acrylic",
+    title: "هدايا ومنتجات أكريليك مخصصة | بريق",
+    h1: "منتجات أكريليك وهدايا مخصصة",
+    summary: "الأكريليك مناسب لمنتجات مثل البوكس، الطاولات، الصواني، المباخر والاستاندات حسب المتاح في الموقع.",
+    description: "منتجات أكريليك وهدايا مخصصة من بريق في الإمارات: بوكس، طاولات، صواني، مباخر واستاندات مع روابط مباشرة للفئات الفرعية.",
+    image: "/assets/categories/Acrylic/Box.webp",
+    productMatch: ["اكريلك", "أكريليك", "acrylic"],
+    links: [["/categories?category=Acrylic", "منتجات الأكريليك"], ["/categories?category=Acrylic&subcategory=Box", "بوكس أكريليك"]],
+    keywords: ["أكريليك", "اكريلك", "هدايا أكريليك", "بوكس أكريليك"],
+  },
+  {
+    path: "/gifts/forex-gifts-uae",
+    legacy: "/forex",
+    title: "منتجات فوركس واستاندات مخصصة | بريق",
+    h1: "منتجات فوركس وتجهيزات مناسبات",
+    summary: "الفوركس يستخدم في منتجات وتجهيزات مثل الاستاندات والمجسمات والطاولات للفعاليات والمناسبات.",
+    description: "منتجات فوركس من بريق للفعاليات والمناسبات: طاولات، استاندات، مجسمات ودوران حسب الأقسام المتاحة.",
+    image: "/assets/categories/Forex/stands.webp",
+    productMatch: ["فوركس", "forex", "foam"],
+    links: [["/categories?category=Forex", "منتجات فوركس"], ["/categories?category=Forex&subcategory=stands", "استاندات فوركس"]],
+    keywords: ["فوركس", "forex", "استاند فوركس", "تجهيز فعاليات"],
+  },
+  {
+    path: "/gifts/wood-gifts-uae",
+    legacy: "/wood",
+    title: "هدايا ومنتجات خشب مخصصة | بريق",
+    h1: "منتجات خشب مخصصة للمناسبات",
+    summary: "قسم الخشب يضم روابط لمنتجات مثل الطاولات والكراسي والمجسمات حسب المتاح في موقع بريق.",
+    description: "منتجات خشبية وهدايا خشب مخصصة من بريق مثل الطاولات والكراسي والمجسمات والمنتجات المرتبطة بالمناسبات.",
+    image: "/assets/categories/wood/tables.webp",
+    productMatch: ["خشب", "wood"],
+    links: [["/categories?category=wood", "منتجات الخشب"], ["/categories?category=wood&subcategory=tables", "طاولات خشب"]],
+    keywords: ["خشب", "هدايا خشب", "طاولات خشب"],
+  },
+  {
+    path: "/gifts/leather-gifts-uae",
+    legacy: "/leather",
+    title: "هدايا ومنتجات جلد مخصصة | بريق",
+    h1: "منتجات جلد مخصصة",
+    summary: "منتجات الجلد في بريق تشمل روابط للبوكسات والصواني والطاولات ومنتجات مواليد حسب المتاح في الفئات.",
+    description: "منتجات جلد مخصصة من بريق تشمل بوكسات، صواني، طاولات ومنتجات مواليد حسب الفئات المتاحة في الموقع.",
+    image: "/assets/categories/leather/boxes.webp",
+    productMatch: ["جلد", "leather"],
+    links: [["/categories?category=leather", "منتجات الجلد"], ["/categories?category=leather&subcategory=born-in", "جلد مواليد"]],
+    keywords: ["جلد", "هدايا جلد", "بوكس جلد"],
+  },
+  {
+    path: "/gifts/paper-gifts-uae",
+    title: "هدايا ومنتجات ورق مخصصة | بريق",
+    h1: "منتجات ورق وبوكسات ورقية",
+    summary: "روابط لمنتجات الورق والبوكسات الورقية حسب الفئات والمنتجات المتاحة داخل الموقع.",
+    description: "منتجات ورق وبوكسات ورقية من بريق للهدايا والمناسبات، مع روابط مباشرة لقسم الورق والفئات الفرعية المتاحة.",
+    image: "/assets/categories/Paper/Paper box.webp",
+    productMatch: ["ورق", "paper", "بوكس ورق"],
+    links: [["/categories?category=Paper", "منتجات الورق"], ["/categories?category=Paper&subcategory=Paper+box", "بوكس ورق"]],
+    keywords: ["ورق", "بوكس ورق", "هدايا ورقية"],
+  },
+  {
+    path: "/gifts/sticker-gifts-uae",
+    legacy: "/stickers",
+    title: "استيكر مخصص للمناسبات | بريق",
+    h1: "استيكر مخصص للمناسبات",
+    summary: "روابط منتجات الاستيكر المتاحة في بريق، بما يشمل المواليد والمناسبات والأنواع الكاملة أو الفارغة.",
+    description: "استيكرات ومنتجات استيكر مخصصة من بريق للمناسبات والمواليد والمنتجات الكاملة أو الفارغة حسب الفئات المتاحة.",
+    image: "/assets/categories/Sticker/occasions.webp",
+    productMatch: ["استيكر", "ستيكر", "sticker"],
+    links: [["/categories?category=Sticker", "منتجات الاستيكر"], ["/categories?category=Sticker&subcategory=born-in", "استيكر مواليد"]],
+    keywords: ["استيكر", "ستيكر", "استيكر مخصص"],
+  },
+  {
+    path: "/gifts/ramadan-gifts-uae",
+    legacy: "/ramadan",
+    title: "هدايا رمضان ومنتجات رمضانية | بريق",
+    h1: "هدايا رمضان ومنتجات رمضانية",
+    summary: "روابط منظمة لمنتجات رمضان المتاحة في بريق من الخشب والأكريليك والفوركس والجلد.",
+    description: "تصفح منتجات رمضان من بريق حسب الخامة: خشب، أكريليك، فوركس وجلد، مع روابط مباشرة للأقسام المتاحة.",
+    image: "/assets/categories/Ramadan/acrylic.webp",
+    productMatch: ["رمضان", "ramadan"],
+    links: [["/categories?category=Ramadan", "كل منتجات رمضان"], ["/categories?category=Ramadan&subcategory=wood", "رمضان خشب"]],
+    keywords: ["رمضان", "هدايا رمضان", "منتجات رمضانية"],
+  },
+  {
+    path: "/graduation",
+    title: "هدايا تخرج وتجهيزات حفلات التخرج | بريق",
+    h1: "هدايا تخرج وتجهيزات حفلات التخرج",
+    summary: "اختيارات تخرج يمكن تصفحها من قسم المناسبات، مع منتجات قابلة للتخصيص حسب الاسم أو التصميم المتاح.",
+    description: "هدايا تخرج وتجهيزات حفلات التخرج من بريق في الإمارات، مع روابط لمنتجات المناسبات القابلة للتخصيص حسب المتاح.",
+    image: "/assets/categories/Occasions/Graduation.webp",
+    productMatch: ["تخرج", "graduation"],
+    links: [["/categories?category=Occasions&subcategory=Graduation", "منتجات التخرج"], ["/events", "تجهيز المناسبات"]],
+    keywords: ["تخرج", "هدايا تخرج", "حفلات تخرج"],
+  },
 ];
 
 function esc(value) {
@@ -111,6 +266,15 @@ function allImages(product) {
       ? product.gallery.split(/[,\n]/)
       : [];
   return [...new Set([product.image, ...gallery].map(absoluteUrl).filter((url) => /\.(avif|webp|png|jpe?g|gif)(\?|#|$)/i.test(url)))].slice(0, 8);
+}
+
+function allVideos(product) {
+  const gallery = Array.isArray(product.gallery)
+    ? product.gallery
+    : typeof product.gallery === "string"
+      ? product.gallery.split(/[,\n]/)
+      : [];
+  return [...new Set(gallery.map(absoluteUrl).filter((url) => /\.(mp4|webm|mov)(\?|#|$)/i.test(url)))].slice(0, 4);
 }
 
 function productName(product) {
@@ -231,6 +395,17 @@ function setHead(html, product, categories, subcategories) {
       seller: { "@type": "Organization", name: "Bariq Gifts" },
     },
   };
+  const videos = allVideos(product);
+  if (videos.length) {
+    jsonLd.video = videos.map((contentUrl, index) => ({
+      "@type": "VideoObject",
+      name: `${name} ${index + 1}`,
+      description,
+      thumbnailUrl: image,
+      contentUrl,
+      uploadDate: compact(product.updated_at || product.created_at || new Date().toISOString()),
+    }));
+  }
   if (oldPrice > price && price > 0) jsonLd.offers.highPrice = oldPrice.toFixed(2);
   const inject = [
     `<meta property="product:price:amount" content="${esc(price.toFixed(2))}">`,
@@ -257,6 +432,124 @@ function setHead(html, product, categories, subcategories) {
 
 function xmlUrl(loc, lastmod, extras = "") {
   return `  <url>\n    <loc>${esc(loc)}</loc>\n    <lastmod>${esc(lastmod)}</lastmod>${extras}\n  </url>`;
+}
+
+function landingProducts(landing, productIndex) {
+  const needles = (landing.productMatch || landing.keywords || []).map((item) => compact(item).toLowerCase()).filter(Boolean);
+  return productIndex
+    .filter((product) => product.indexable)
+    .filter((product) => {
+      if (!needles.length) return true;
+      const haystack = `${product.name} ${product.category}`.toLowerCase();
+      return needles.some((needle) => haystack.includes(needle));
+    })
+    .slice(0, 8);
+}
+
+function productCard(product) {
+  return `<article class="card product-card">
+    <a href="${esc(product.url.replace(SITE, ""))}">
+      <img src="${esc(product.image)}" alt="${esc(product.name)}" width="360" height="360" loading="lazy">
+      <h3>${esc(product.name)}</h3>
+      <p>${esc(product.price ? `AED ${product.price}` : "السعر حسب المنتج")}</p>
+    </a>
+  </article>`;
+}
+
+function landingHtml(landing, products = []) {
+  const canonical = SITE + landing.path;
+  const image = absoluteUrl(landing.image);
+  const breadcrumb = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "الرئيسية", item: `${SITE}/` },
+      { "@type": "ListItem", position: 2, name: landing.h1, item: canonical },
+    ],
+  };
+  const itemList = products.length
+    ? {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        name: landing.h1,
+        itemListElement: products.map((product, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          url: product.url,
+          name: product.name,
+        })),
+      }
+    : null;
+  const schemas = [breadcrumb, itemList].filter(Boolean).map((schema) => `<script type="application/ld+json">${JSON.stringify(schema)}</script>`).join("");
+  const links = landing.links.map(([href, label]) => `<a href="${esc(href)}">${esc(label)}</a>`).join("");
+  const productCards = products.map(productCard).join("");
+  const productSection = productCards
+    ? `<section class="section"><h2>منتجات مرتبطة</h2><div class="grid products-grid">${productCards}</div></section>`
+    : `<section class="section"><h2>منتجات مرتبطة</h2><p>يتم تحديث المنتجات المرتبطة بهذه الفئة من بيانات المتجر الفعلية عند توفر منتجات صالحة للفهرسة.</p></section>`;
+
+  return `<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>${esc(landing.title)}</title>
+  <meta name="description" content="${esc(landing.description)}">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="${esc(canonical)}">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="${esc(landing.title)}">
+  <meta property="og:description" content="${esc(landing.description)}">
+  <meta property="og:url" content="${esc(canonical)}">
+  <meta property="og:image" content="${esc(image)}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${esc(landing.title)}">
+  <meta name="twitter:description" content="${esc(landing.description)}">
+  <meta name="twitter:image" content="${esc(image)}">
+  <link rel="stylesheet" href="/seo-landing.css">
+  ${schemas}
+</head>
+<body>
+  <div class="seo-page">
+    <header class="seo-header">
+      <nav class="seo-nav">
+        <a class="seo-brand" href="/"><img src="/assets/logo.png" alt="بريق" width="44" height="44">بريق</a>
+        <div class="seo-links"><a href="/gifts">الهدايا</a><a href="/categories">الفئات</a><a href="/about-bariq">عن بريق</a></div>
+      </nav>
+    </header>
+    <main class="seo-main">
+      <div class="crumbs"><a href="/">الرئيسية</a> / ${esc(landing.h1)}</div>
+      <section class="hero">
+        <div>
+          <h1>${esc(landing.h1)}</h1>
+          <p>${esc(landing.summary)}</p>
+          <div class="actions">${links}</div>
+        </div>
+        <img class="hero-img" src="${esc(landing.image)}" alt="${esc(landing.h1)} من بريق" width="640" height="480">
+      </section>
+      ${productSection}
+      <section class="section faq">
+        <h2>معلومات مفيدة</h2>
+        <details open><summary>هل المنتجات يتم تحديثها؟</summary><p>نعم، صفحات الفهرسة تتولد من بيانات المنتجات والفئات الفعلية أثناء البناء.</p></details>
+        <details><summary>هل يمكن تخصيص المنتج؟</summary><p>التخصيص يعتمد على نوع المنتج والخامة والتصميم المطلوب، ويتم تأكيد التفاصيل مع العميل قبل التنفيذ.</p></details>
+      </section>
+    </main>
+  </div>
+</body>
+</html>`;
+}
+
+async function writeLandingPage(landing, products) {
+  const target = landing.path === "/" ? path.join(ROOT, "index.html") : path.join(ROOT, landing.path.replace(/^\//, ""), "index.html");
+  await fs.mkdir(path.dirname(target), { recursive: true });
+  await fs.writeFile(target, landingHtml(landing, products), "utf8");
+
+  if (landing.legacy) {
+    const legacyTarget = path.join(ROOT, `${landing.legacy.replace(/^\//, "")}.html`);
+    await fs.writeFile(legacyTarget, landingHtml({ ...landing, path: landing.legacy }, products), "utf8");
+  } else if (!landing.path.startsWith("/gifts/") && landing.path !== "/gifts") {
+    const flatTarget = path.join(ROOT, `${landing.path.replace(/^\//, "")}.html`);
+    await fs.writeFile(flatTarget, landingHtml(landing, products), "utf8");
+  }
 }
 
 async function removePreviousGenerated() {
@@ -289,6 +582,7 @@ async function main() {
   const productIndex = [];
   const sitemap = [];
   const imageSitemap = [];
+  const videoSitemap = [];
   const today = startedAt.slice(0, 10);
 
   for (const page of STATIC_PAGES) sitemap.push(xmlUrl(SITE + page, today));
@@ -316,6 +610,12 @@ async function main() {
       if (images.length) {
         imageSitemap.push(xmlUrl(url, lastmod, images.map((img) => `\n    <image:image><image:loc>${esc(img)}</image:loc><image:title>${esc(productName(product))}</image:title></image:image>`).join("")));
       }
+      const videos = allVideos(product);
+      if (videos.length) {
+        const thumbnail = firstImage(product) || `${SITE}/assets/logo.png`;
+        const description = productDescription(product, categoryLabel(product, categories, subcategories));
+        videoSitemap.push(xmlUrl(url, lastmod, videos.map((video) => `\n    <video:video><video:thumbnail_loc>${esc(thumbnail)}</video:thumbnail_loc><video:title>${esc(productName(product))}</video:title><video:description>${esc(description)}</video:description><video:content_loc>${esc(video)}</video:content_loc></video:video>`).join("")));
+      }
     }
     productIndex.push({
       id: product.id,
@@ -331,10 +631,32 @@ async function main() {
     });
   }
 
+  const generatedLandingPages = [];
+  for (const landing of LANDING_PAGES) {
+    const relatedProducts = landingProducts(landing, productIndex);
+    await writeLandingPage(landing, relatedProducts);
+    generatedLandingPages.push(landing.path);
+    sitemap.push(xmlUrl(SITE + landing.path, today, "\n    <changefreq>weekly</changefreq>\n    <priority>0.75</priority>"));
+    const landingImages = [absoluteUrl(landing.image), ...relatedProducts.map((product) => product.image)].filter(Boolean);
+    if (landingImages.length) {
+      imageSitemap.push(xmlUrl(
+        SITE + landing.path,
+        today,
+        [...new Set(landingImages)].slice(0, 12).map((img) => `\n    <image:image><image:loc>${esc(img)}</image:loc><image:title>${esc(landing.h1)}</image:title></image:image>`).join("")
+      ));
+    }
+    if (landing.legacy) {
+      generatedLandingPages.push(landing.legacy);
+      sitemap.push(xmlUrl(SITE + landing.legacy, today, "\n    <changefreq>monthly</changefreq>\n    <priority>0.55</priority>"));
+    }
+  }
+
   const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemap.join("\n")}\n</urlset>\n`;
   const imageXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n${imageSitemap.join("\n")}\n</urlset>\n`;
+  const videoXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">\n${videoSitemap.join("\n")}\n</urlset>\n`;
   await fs.writeFile(path.join(ROOT, "sitemap.xml"), sitemapXml, "utf8");
   await fs.writeFile(path.join(ROOT, "image-sitemap.xml"), imageXml, "utf8");
+  await fs.writeFile(path.join(ROOT, "video-sitemap.xml"), videoXml, "utf8");
   await fs.writeFile(path.join(SEO_DIR, "product-index.json"), JSON.stringify(productIndex, null, 2), "utf8");
   await fs.writeFile(path.join(SEO_DIR, "noindex-products.json"), JSON.stringify(noindexProducts, null, 2), "utf8");
   await fs.writeFile(path.join(SEO_DIR, "entity-index.json"), JSON.stringify({
@@ -351,7 +673,9 @@ async function main() {
       products: `${SITE}/seo/product-index.json`,
       sitemap: `${SITE}/sitemap.xml`,
       image_sitemap: `${SITE}/image-sitemap.xml`,
+      video_sitemap: `${SITE}/video-sitemap.xml`,
     },
+    seo_landing_pages: generatedLandingPages.map((page) => SITE + page),
     generated_at: startedAt,
   }, null, 2), "utf8");
   await fs.writeFile(path.join(ROOT, "llms.txt"), [
@@ -377,6 +701,7 @@ async function main() {
     `- Entity index: ${SITE}/seo/entity-index.json`,
     `- XML sitemap: ${SITE}/sitemap.xml`,
     `- Image sitemap: ${SITE}/image-sitemap.xml`,
+    `- Video sitemap: ${SITE}/video-sitemap.xml`,
     "",
     "Indexing note:",
     "Product pages are generated from live Supabase catalog data during build. Placeholder or incomplete products are marked noindex instead of being removed.",
@@ -391,7 +716,10 @@ async function main() {
     generated_product_pages: generatedProductFiles.length,
     sitemap_urls: sitemap.length,
     image_sitemap_urls: imageSitemap.length,
+    video_sitemap_urls: videoSitemap.length,
     noindex_count: noindexProducts.length,
+    generated_landing_pages: generatedLandingPages.length,
+    generatedLandingPages,
     generatedProductFiles,
   };
   await fs.writeFile(path.join(SEO_DIR, "build-report.json"), JSON.stringify(report, null, 2), "utf8");
