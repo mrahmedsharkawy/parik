@@ -764,7 +764,7 @@
     if (qmap[section]) { const qel = document.getElementById(qmap[section]); if (qel) qel.classList.add('active'); }
 
     if (section === 'address') section = 'settings';
-    const sections = ['orders','profile','notifications','offers','support','payment','invoices','settings','history','credit','reviews'];
+    const sections = ['orders','profile','notifications','occasions','offers','support','payment','invoices','settings','history','credit','reviews'];
     if (sections.includes(section)) {
       document.getElementById('section-' + section).style.display = '';
     } else {
@@ -1066,6 +1066,7 @@
     _origShow2 && _origShow2(section, filter);
     if (section === 'credit') renderCashback();
     if (section === 'notifications') renderNotifications();
+    if (section === 'occasions' && typeof renderCustomerOccasions === 'function') renderCustomerOccasions();
   };
 
   // ===== عرض الإشعارات =====
@@ -2196,6 +2197,284 @@
 
     observe();
   })();
+
+  // ===== مناسباتك الخاصة =====
+  const OCCASION_TYPE_LABELS = {
+    birthday: 'عيد ميلاد',
+    newborn: 'مولود جديد',
+    graduation: 'تخرج',
+    anniversary: 'ذكرى / زواج',
+    mother_day: 'عيد الأم',
+    national_day: 'اليوم الوطني',
+    eid: 'العيد',
+    other: 'مناسبة'
+  };
+  let customerOccasionsCache = [];
+
+  function safeText(value) {
+    const text = String(value == null ? '' : value);
+    if (typeof escapeHtml === 'function') return escapeHtml(text);
+    return text.replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;' }[ch]));
+  }
+
+  function getJwtClaimsSafe() {
+    try {
+      if (typeof getStoredAuthToken !== 'function') return null;
+      const token = getStoredAuthToken();
+      if (!token) return null;
+      const payload = token.split('.')[1];
+      if (!payload) return null;
+      const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+      const padded = normalized + '='.repeat((4 - normalized.length % 4) % 4);
+      return JSON.parse(decodeURIComponent(escape(atob(padded))));
+    } catch(e) {
+      return null;
+    }
+  }
+
+  function getAuthUserIdSafe() {
+    const claims = getJwtClaimsSafe();
+    return claims && claims.sub ? String(claims.sub) : '';
+  }
+
+  function getOccasionLocalProfile() {
+    try { return JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}') || {}; } catch(e) { return {}; }
+  }
+
+  function normalizeOccasionPhone(value) {
+    if (typeof normalizeUaePhone === 'function') return normalizeUaePhone(value || '');
+    return String(value || '').replace(/[^\d+]/g, '');
+  }
+
+  function monthLength(year, month) {
+    const safeYear = Number(year) || 2024;
+    return new Date(safeYear, Number(month), 0).getDate();
+  }
+
+  function nextOccasionDate(row) {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = Number(row.occasion_month || 1);
+    const originalDay = Number(row.occasion_day || 1);
+    let day = Math.min(originalDay, monthLength(row.occasion_year || year, month));
+    let next = new Date(year, month - 1, day, 9, 0, 0, 0);
+    if (next < new Date(now.getFullYear(), now.getMonth(), now.getDate())) {
+      day = Math.min(originalDay, monthLength(row.occasion_year || year + 1, month));
+      next = new Date(year + 1, month - 1, day, 9, 0, 0, 0);
+    }
+    return next;
+  }
+
+  function daysUntilOccasion(row) {
+    const today = new Date();
+    const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const diff = nextOccasionDate(row).getTime() - start.getTime();
+    return Math.max(0, Math.ceil(diff / 86400000));
+  }
+
+  function occasionDateLabel(row) {
+    const months = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+    const month = months[Math.max(0, Math.min(11, Number(row.occasion_month || 1) - 1))];
+    return `${Number(row.occasion_day || 1)} ${month}${row.occasion_year ? ` ${row.occasion_year}` : ''}`;
+  }
+
+  function occasionStatus(text, isError) {
+    const el = document.getElementById('occasionStatus');
+    if (!el) return;
+    el.textContent = text || '';
+    el.style.color = isError ? '#e53935' : '#7a8296';
+  }
+
+  function resetOccasionForm() {
+    const ids = ['occ-id','occ-name','occ-person','occ-relation','occ-day','occ-year'];
+    ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    const type = document.getElementById('occ-type');
+    const month = document.getElementById('occ-month');
+    const remind = document.getElementById('occ-remind');
+    const enabled = document.getElementById('occ-enabled');
+    if (type) type.value = 'birthday';
+    if (month) month.value = String(new Date().getMonth() + 1);
+    if (remind) remind.value = '7';
+    if (enabled) enabled.checked = true;
+    occasionStatus('');
+  }
+
+  async function getOccasionCustomer(profile) {
+    try {
+      let customer = await findCustomerProfile(profile);
+      if (!customer && (profile.email || profile.phone)) {
+        await saveCustomerProfileToSupabase(profile, profile);
+        customer = await findCustomerProfile(profile);
+      }
+      return customer || null;
+    } catch(e) {
+      return null;
+    }
+  }
+
+  async function loadCustomerOccasions() {
+    const ready = await waitForSupabaseLib();
+    if (!ready || !window.sbFetch) throw new Error('Supabase غير جاهز حالياً.');
+    if (!getAuthUserIdSafe()) throw new Error('سجل الدخول أولاً لحفظ مناسباتك.');
+    const rows = await window.sbFetch('customer_occasions?select=*&order=created_at.desc&limit=500');
+    return Array.isArray(rows) ? rows : [];
+  }
+
+  function renderOccasionRows(rows) {
+    const list = document.getElementById('occasionList');
+    if (!list) return;
+    const notice = document.getElementById('occasionPushNotice');
+    if (notice) notice.style.display = (typeof Notification !== 'undefined' && Notification.permission !== 'granted') ? 'block' : 'none';
+    if (!rows.length) {
+      list.innerHTML = '<div class="occ-empty">لسه مفيش مناسبات محفوظة. أضف أول مناسبة وهتظهر هنا.</div>';
+      return;
+    }
+    const sorted = rows.slice().sort((a, b) => daysUntilOccasion(a) - daysUntilOccasion(b));
+    list.innerHTML = sorted.map(row => {
+      const days = daysUntilOccasion(row);
+      const typeLabel = OCCASION_TYPE_LABELS[row.occasion_type] || 'مناسبة';
+      const reminder = row.reminder_enabled ? `تذكير قبل ${Number(row.remind_before_days || 7)} أيام` : 'التذكير متوقف';
+      const relation = row.relationship ? ` · ${safeText(row.relationship)}` : '';
+      return `<div class="occ-item" data-occ-row="${safeText(row.id)}">
+        <div class="occ-item-main">
+          <div class="occ-item-title">${safeText(row.occasion_name)} · ${safeText(row.person_name)}</div>
+          <div class="occ-item-meta">${safeText(typeLabel)}${relation} · ${safeText(occasionDateLabel(row))} · ${safeText(reminder)}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span class="occ-days">${days === 0 ? 'اليوم' : `باقي ${days} يوم`}</span>
+          <button type="button" class="occ-btn light" data-occ-edit="${safeText(row.id)}">تعديل</button>
+          <button type="button" class="occ-btn danger" data-occ-delete="${safeText(row.id)}">حذف</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  window.renderCustomerOccasions = async function() {
+    const list = document.getElementById('occasionList');
+    if (!list) return;
+    list.innerHTML = '<div class="occ-empty">جاري تحميل مناسباتك...</div>';
+    try {
+      customerOccasionsCache = await loadCustomerOccasions();
+      renderOccasionRows(customerOccasionsCache);
+      occasionStatus('');
+    } catch(e) {
+      customerOccasionsCache = [];
+      list.innerHTML = `<div class="occ-empty">${safeText(e.message || 'تعذر تحميل المناسبات حالياً.')}</div>`;
+    }
+  };
+
+  async function saveCustomerOccasion() {
+    const userId = getAuthUserIdSafe();
+    if (!userId) { occasionStatus('سجل الدخول أولاً لحفظ مناسباتك.', true); return; }
+    const id = document.getElementById('occ-id')?.value || '';
+    const name = document.getElementById('occ-name')?.value.trim() || '';
+    const type = document.getElementById('occ-type')?.value || 'other';
+    const person = document.getElementById('occ-person')?.value.trim() || '';
+    const relation = document.getElementById('occ-relation')?.value.trim() || '';
+    const day = Number(document.getElementById('occ-day')?.value || 0);
+    const month = Number(document.getElementById('occ-month')?.value || 0);
+    const yearRaw = document.getElementById('occ-year')?.value || '';
+    const year = yearRaw ? Number(yearRaw) : null;
+    const remind = Number(document.getElementById('occ-remind')?.value || 7);
+    const enabled = !!document.getElementById('occ-enabled')?.checked;
+    if (!name || !person || !day || !month) { occasionStatus('اكتب اسم المناسبة والشخص واليوم والشهر.', true); return; }
+    if (day < 1 || day > monthLength(year || 2024, month)) { occasionStatus('اليوم غير مناسب للشهر المختار.', true); return; }
+
+    occasionStatus('جاري الحفظ...');
+    try {
+      const ready = await waitForSupabaseLib();
+      if (!ready || !window.sbFetch) throw new Error('Supabase غير جاهز حالياً.');
+      const profile = getOccasionLocalProfile();
+      const customer = await getOccasionCustomer(profile);
+      const payload = {
+        user_id: userId,
+        customer_id: customer?.id || null,
+        customer_email: String(profile.email || customer?.email || '').trim().toLowerCase() || null,
+        customer_phone: normalizeOccasionPhone(profile.phone || customer?.phone || '') || null,
+        occasion_name: name,
+        occasion_type: type,
+        person_name: person,
+        relationship: relation || null,
+        occasion_day: day,
+        occasion_month: month,
+        occasion_year: year,
+        remind_before_days: remind,
+        reminder_enabled: enabled
+      };
+      if (id) {
+        await window.sbFetch(`customer_occasions?id=eq.${encodeURIComponent(id)}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', Prefer: 'return=representation' },
+          body: JSON.stringify(payload)
+        });
+      } else {
+        await window.sbFetch('customer_occasions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Prefer: 'return=representation' },
+          body: JSON.stringify(payload)
+        });
+      }
+      resetOccasionForm();
+      occasionStatus('تم حفظ المناسبة.');
+      await window.renderCustomerOccasions();
+    } catch(e) {
+      occasionStatus(e.message || 'تعذر حفظ المناسبة حالياً.', true);
+    }
+  }
+
+  function editCustomerOccasion(id) {
+    const row = customerOccasionsCache.find(item => String(item.id) === String(id));
+    if (!row) return;
+    const map = {
+      'occ-id': row.id,
+      'occ-name': row.occasion_name || '',
+      'occ-type': row.occasion_type || 'other',
+      'occ-person': row.person_name || '',
+      'occ-relation': row.relationship || '',
+      'occ-day': row.occasion_day || '',
+      'occ-month': row.occasion_month || '',
+      'occ-year': row.occasion_year || '',
+      'occ-remind': row.remind_before_days || 7
+    };
+    Object.keys(map).forEach(key => { const el = document.getElementById(key); if (el) el.value = map[key]; });
+    const enabled = document.getElementById('occ-enabled');
+    if (enabled) enabled.checked = row.reminder_enabled !== false;
+    occasionStatus('عدّل البيانات ثم اضغط حفظ.');
+  }
+
+  async function deleteCustomerOccasion(id) {
+    if (!confirm('حذف هذه المناسبة؟')) return;
+    occasionStatus('جاري الحذف...');
+    try {
+      await window.sbFetch(`customer_occasions?id=eq.${encodeURIComponent(id)}`, { method: 'DELETE', headers: { Prefer: 'return=minimal' } });
+      occasionStatus('تم حذف المناسبة.');
+      await window.renderCustomerOccasions();
+    } catch(e) {
+      occasionStatus(e.message || 'تعذر حذف المناسبة حالياً.', true);
+    }
+  }
+
+  async function enableOccasionPush() {
+    try {
+      if (typeof subscribeToPush === 'function') await subscribeToPush();
+      else document.getElementById('push-subscribe-btn')?.click();
+      const notice = document.getElementById('occasionPushNotice');
+      if (notice && Notification.permission === 'granted') notice.style.display = 'none';
+    } catch(e) {
+      occasionStatus('لم يتم تفعيل الإشعارات. تأكد من سماح المتصفح.', true);
+    }
+  }
+
+  document.addEventListener('click', function(event) {
+    const target = event.target.closest && event.target.closest('[data-occ-save],[data-occ-reset],[data-occ-refresh],[data-occ-edit],[data-occ-delete],[data-occ-enable-push]');
+    if (!target) return;
+    if (target.hasAttribute('data-occ-save')) { event.preventDefault(); saveCustomerOccasion(); return; }
+    if (target.hasAttribute('data-occ-reset')) { event.preventDefault(); resetOccasionForm(); return; }
+    if (target.hasAttribute('data-occ-refresh')) { event.preventDefault(); window.renderCustomerOccasions(); return; }
+    if (target.hasAttribute('data-occ-edit')) { event.preventDefault(); editCustomerOccasion(target.getAttribute('data-occ-edit')); return; }
+    if (target.hasAttribute('data-occ-delete')) { event.preventDefault(); deleteCustomerOccasion(target.getAttribute('data-occ-delete')); return; }
+    if (target.hasAttribute('data-occ-enable-push')) { event.preventDefault(); enableOccasionPush(); }
+  });
 
   (function repairExternalNotificationText() {
     if (!('ServiceWorkerRegistration' in window) || !ServiceWorkerRegistration.prototype.showNotification) return;

@@ -435,6 +435,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 #section-orders,
 #section-profile,
 #section-notifications,
+#section-occasions,
 #section-generic {
   display: flex;
   flex-direction: column;
@@ -951,6 +952,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   #section-orders,
   #section-profile,
   #section-notifications,
+  #section-occasions,
   #section-generic { width: 100% !important; box-sizing: border-box !important; }
   .acc-content {
     max-height: none !important;
@@ -1213,6 +1215,35 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     white-space: nowrap;
   }
 }
+
+/* ===== مناسباتك الخاصة ===== */
+.occ-card{background:#fff;border:1px solid #eef0f6;border-radius:14px;padding:14px 16px}
+.occ-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.occ-title{font-size:1rem;font-weight:900;color:#152546}
+.occ-sub{font-size:.78rem;color:#7a8296;margin-top:4px;line-height:1.6}
+.occ-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+.occ-field{display:flex;flex-direction:column;gap:5px}
+.occ-field label{font-size:.76rem;font-weight:800;color:#657089}
+.occ-field input,.occ-field select{width:100%;border:1.5px solid #e2e7f0;border-radius:10px;padding:9px 11px;font-family:inherit;font-size:.84rem;color:#152546;background:#fff;outline:none;box-sizing:border-box}
+.occ-field input:focus,.occ-field select:focus{border-color:#D4AF37;box-shadow:0 0 0 3px rgba(212,175,55,.12)}
+.occ-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.occ-btn{border:none;border-radius:10px;padding:10px 14px;font-family:inherit;font-size:.82rem;font-weight:900;cursor:pointer}
+.occ-btn.primary{background:#152546;color:#fff}
+.occ-btn.light{background:#f7f8fc;color:#152546;border:1px solid #e2e7f0}
+.occ-btn.danger{background:#fff5f5;color:#e53935;border:1px solid #ffd6d6}
+.occ-list{display:grid;gap:10px;margin-top:14px}
+.occ-item{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid #eef0f6;background:#fafbfe;border-radius:12px;padding:12px 14px}
+.occ-item-main{min-width:0}
+.occ-item-title{font-size:.92rem;font-weight:900;color:#152546;margin-bottom:4px}
+.occ-item-meta{font-size:.76rem;color:#7a8296;line-height:1.6}
+.occ-days{background:#fff8e1;color:#8a6400;border:1px solid #f1d27a;border-radius:999px;padding:5px 10px;font-size:.74rem;font-weight:900;white-space:nowrap}
+.occ-notice{display:none;background:#fff8e1;border:1px solid #f1d27a;color:#6b5200;border-radius:10px;padding:10px 12px;font-size:.8rem;line-height:1.6;margin-top:10px}
+.occ-empty{color:#9aa3b2;text-align:center;padding:28px 12px;border:1px dashed #dfe4ef;border-radius:12px;background:#fafbfe;font-size:.84rem}
+@media (max-width:768px){
+  .occ-form{grid-template-columns:1fr}
+  .occ-item{align-items:flex-start;flex-direction:column}
+  .occ-days{align-self:flex-start}
+}
 </style>
 
 <div class="acc-layout">
@@ -1253,6 +1284,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div class="acc-nav-item" data-acc-section="settings"><span class="ico">📍</span> <span data-i18n="عنواني">عنواني</span></div>
       <div class="acc-nav-item" data-acc-section="payment"><span class="ico">💰</span> <span data-i18n="طرق الدفع">طرق الدفع</span></div>
       <div class="acc-nav-item" data-acc-section="invoices"><span class="ico">🧾</span> <span data-i18n="الفواتير">الفواتير</span></div>
+      <div class="acc-nav-item" data-acc-section="occasions"><span class="ico">🎉</span> <span data-i18n="مناسباتك الخاصة">مناسباتك الخاصة</span></div>
       <div class="acc-nav-item" data-acc-section="support"><span class="ico">🤖</span> <span data-i18n="الخدمة الذاتية">الخدمة الذاتية</span></div>
       <div class="acc-nav-item" data-acc-section="notifications"><span class="ico">🔔</span> <span data-i18n="الإشعارات">الإشعارات</span></div>
 
@@ -1491,6 +1523,87 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           </div>
         </div>
         <div id="notifList"></div>
+      </div>
+    </div>
+
+    <div id="section-occasions" style="display:none">
+      <div class="occ-card">
+        <div class="occ-head">
+          <div>
+            <div class="occ-title">🎉 مناسباتك الخاصة</div>
+            <div class="occ-sub">احفظ مناسبات الأشخاص المهمين، وبريق يذكرك قبلها بإشعار على الجهاز.</div>
+          </div>
+          <button type="button" class="occ-btn light" data-occ-refresh>تحديث</button>
+        </div>
+        <div id="occasionPushNotice" class="occ-notice">
+          🔔 فعّل الإشعارات عشان توصلك تذكيرات المناسبات في وقتها.
+          <button type="button" class="occ-btn primary" data-occ-enable-push style="margin-inline-start:8px;padding:7px 10px">تفعيل الإشعارات</button>
+        </div>
+        <form id="occasionForm" class="occ-form" autocomplete="off">
+          <input type="hidden" id="occ-id">
+          <div class="occ-field">
+            <label>اسم المناسبة</label>
+            <input id="occ-name" type="text" placeholder="مثال: عيد ميلاد مريم" required>
+          </div>
+          <div class="occ-field">
+            <label>نوع المناسبة</label>
+            <select id="occ-type">
+              <option value="birthday">عيد ميلاد</option>
+              <option value="newborn">مولود جديد</option>
+              <option value="graduation">تخرج</option>
+              <option value="anniversary">ذكرى / زواج</option>
+              <option value="mother_day">عيد الأم</option>
+              <option value="national_day">اليوم الوطني</option>
+              <option value="eid">العيد</option>
+              <option value="other">أخرى</option>
+            </select>
+          </div>
+          <div class="occ-field">
+            <label>اسم الشخص</label>
+            <input id="occ-person" type="text" placeholder="مثال: مريم" required>
+          </div>
+          <div class="occ-field">
+            <label>صلة القرابة أو الوصف</label>
+            <input id="occ-relation" type="text" placeholder="مثال: أختي، أمي، صديقي">
+          </div>
+          <div class="occ-field">
+            <label>اليوم</label>
+            <input id="occ-day" type="number" min="1" max="31" placeholder="15" required>
+          </div>
+          <div class="occ-field">
+            <label>الشهر</label>
+            <select id="occ-month" required>
+              <option value="1">يناير</option><option value="2">فبراير</option><option value="3">مارس</option><option value="4">أبريل</option>
+              <option value="5">مايو</option><option value="6">يونيو</option><option value="7">يوليو</option><option value="8">أغسطس</option>
+              <option value="9">سبتمبر</option><option value="10">أكتوبر</option><option value="11">نوفمبر</option><option value="12">ديسمبر</option>
+            </select>
+          </div>
+          <div class="occ-field">
+            <label>السنة (اختياري)</label>
+            <input id="occ-year" type="number" min="1900" max="2200" placeholder="اختياري">
+          </div>
+          <div class="occ-field">
+            <label>التذكير قبل المناسبة</label>
+            <select id="occ-remind">
+              <option value="1">قبل يوم</option>
+              <option value="3">قبل 3 أيام</option>
+              <option value="7" selected>قبل 7 أيام</option>
+              <option value="14">قبل 14 يوم</option>
+              <option value="30">قبل 30 يوم</option>
+            </select>
+          </div>
+          <div class="occ-field" style="grid-column:1/-1">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+              <input id="occ-enabled" type="checkbox" checked style="width:auto"> تفعيل التذكير لهذه المناسبة
+            </label>
+          </div>
+        </form>
+        <div class="occ-actions">
+          <button type="button" class="occ-btn primary" data-occ-save>حفظ المناسبة</button>
+          <button type="button" class="occ-btn light" data-occ-reset>إلغاء</button>
+          <span id="occasionStatus" style="font-size:.78rem;color:#7a8296"></span>
+        </div>
+        <div id="occasionList" class="occ-list"></div>
       </div>
     </div>
 

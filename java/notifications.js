@@ -1,9 +1,20 @@
-const VAPID_PUBLIC_KEY = "BPojY-23BXbIfa1IRkkQD3vAELjTn3nltgFBrlEIjZ3aEbphXAQvFY2E5B2R_mfikZLhGPo0lBeCedB8qoP5-SE";
+const VAPID_PUBLIC_KEY = "BMr4ZWTwS2DgL12mxYFjLM9rmnljnJpY_tsFtWtKxgS2d_z36lcg3sLfIQfOFbX1Tw0ITNG3pB4hJeGI-YEZFHE";
 const SERVICE_WORKER_URL = "/sw.js?v=335";
 
 function urlBase64ToUint8Array(e) {
     const r = (e + "=".repeat((4 - e.length % 4) % 4)).replace(/-/g, "+").replace(/_/g, "/"), t = window.atob(r);
     return Uint8Array.from([ ...t ].map(e => e.charCodeAt(0)));
+}
+
+function samePushApplicationKey(e, r) {
+    try {
+        const t = e && e.options && e.options.applicationServerKey;
+        if (!t) return !0;
+        const a = new Uint8Array(t), n = urlBase64ToUint8Array(r);
+        return a.length === n.length && a.every((e, r) => e === n[r]);
+    } catch (e) {
+        return !0;
+    }
 }
 
 function normalizeUaePhone(e) {
@@ -64,6 +75,7 @@ async function subscribeToPush() {
         const e = await navigator.serviceWorker.ready;
         if ("granted" !== await Notification.requestPermission()) return null;
         let r = await e.pushManager.getSubscription();
+        r && !samePushApplicationKey(r, VAPID_PUBLIC_KEY) && (await r.unsubscribe().catch(() => {}), r = null);
         return r || (r = await e.pushManager.subscribe({
             userVisibleOnly: !0,
             applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)

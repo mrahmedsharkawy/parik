@@ -28,6 +28,23 @@ function hasCronAccess(req: Request) {
   return bearer === secret || req.headers.get('x-cron-secret') === secret;
 }
 
+function readVapidSecret(name: string) {
+  return String(Deno.env.get(name) || '')
+    .trim()
+    .replace(/^Bearer\s+/i, '')
+    .replace(/^["']|["']$/g, '')
+    .replace(/\s+/g, '');
+}
+
+function invalidVapidKeyMessage(name: string, value: string) {
+  if (!value) return `Missing ${name}`;
+  if (value.includes('=')) return `${name} must be URL-safe Base64 without "=" padding`;
+  if (!/^[A-Za-z0-9_-]+$/.test(value)) return `${name} must contain only URL-safe Base64 characters`;
+  if (name === 'VAPID_PUBLIC_KEY' && value.length < 80) return `${name} looks too short`;
+  if (name === 'VAPID_PRIVATE_KEY' && value.length < 40) return `${name} looks too short`;
+  return '';
+}
+
 function normalizeLang(value: unknown) {
   return String(value || '').toLowerCase().startsWith('en') ? 'en' : 'ar';
 }
@@ -64,11 +81,13 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     );
 
-    const VAPID_PRIVATE = Deno.env.get('VAPID_PRIVATE_KEY') || '';
-    const VAPID_PUBLIC = Deno.env.get('VAPID_PUBLIC_KEY') || 'BPojY-23BXbIfa1IRkkQD3vAELjTn3nltgFBrlEIjZ3aEbphXAQvFY2E5B2R_mfikZLhGPo0lBeCedB8qoP5-SE';
-    const VAPID_EMAIL = Deno.env.get('VAPID_EMAIL') || 'mailto:admin@bariq.store';
-    if (!VAPID_PRIVATE) {
-      return new Response(JSON.stringify({ error: 'Missing VAPID_PRIVATE_KEY' }), {
+    const VAPID_PRIVATE = readVapidSecret('VAPID_PRIVATE_KEY');
+    const VAPID_PUBLIC = readVapidSecret('VAPID_PUBLIC_KEY');
+    const VAPID_EMAIL = String(Deno.env.get('VAPID_EMAIL') || 'mailto:bariq.gifts@gmail.com').trim();
+    const privateKeyError = invalidVapidKeyMessage('VAPID_PRIVATE_KEY', VAPID_PRIVATE);
+    const publicKeyError = invalidVapidKeyMessage('VAPID_PUBLIC_KEY', VAPID_PUBLIC);
+    if (privateKeyError || publicKeyError) {
+      return new Response(JSON.stringify({ error: privateKeyError || publicKeyError }), {
         status: 500,
         headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' },
       });

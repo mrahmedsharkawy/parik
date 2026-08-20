@@ -3,8 +3,8 @@
 // يرسل Web Push Notification لجميع المشتركين
 // Environment Variables needed in Supabase Dashboard:
 //   VAPID_PRIVATE_KEY
-//   VAPID_PUBLIC_KEY  = BPojY-23BXbIfa1IRkkQD3vAELjTn3nltgFBrlEIjZ3aEbphXAQvFY2E5B2R_mfikZLhGPo0lBeCedB8qoP5-SE
-//   VAPID_EMAIL       = mailto:admin@bariq.store
+//   VAPID_PUBLIC_KEY
+//   VAPID_EMAIL
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import webpush from 'npm:web-push@3.6.7';
@@ -36,6 +36,23 @@ function bearerToken(req: Request) {
   const header = req.headers.get('authorization') || '';
   const match = header.match(/^Bearer\s+(.+)$/i);
   return match ? match[1].trim() : '';
+}
+
+function readVapidSecret(name: string) {
+  return String(Deno.env.get(name) || '')
+    .trim()
+    .replace(/^Bearer\s+/i, '')
+    .replace(/^["']|["']$/g, '')
+    .replace(/\s+/g, '');
+}
+
+function invalidVapidKeyMessage(name: string, value: string) {
+  if (!value) return `Missing ${name}`;
+  if (value.includes('=')) return `${name} must be URL-safe Base64 without "=" padding`;
+  if (!/^[A-Za-z0-9_-]+$/.test(value)) return `${name} must contain only URL-safe Base64 characters`;
+  if (name === 'VAPID_PUBLIC_KEY' && value.length < 80) return `${name} looks too short`;
+  if (name === 'VAPID_PRIVATE_KEY' && value.length < 40) return `${name} looks too short`;
+  return '';
 }
 
 async function requireAdmin(req: Request, supabase: any) {
@@ -192,11 +209,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    const VAPID_PRIVATE = Deno.env.get('VAPID_PRIVATE_KEY') || '';
-    const VAPID_PUBLIC  = Deno.env.get('VAPID_PUBLIC_KEY')  || 'BPojY-23BXbIfa1IRkkQD3vAELjTn3nltgFBrlEIjZ3aEbphXAQvFY2E5B2R_mfikZLhGPo0lBeCedB8qoP5-SE';
-    const VAPID_EMAIL   = Deno.env.get('VAPID_EMAIL')       || 'mailto:admin@bariq.store';
-    if (!VAPID_PRIVATE) {
-      return new Response(JSON.stringify({ error: 'Missing VAPID_PRIVATE_KEY' }), {
+    const VAPID_PRIVATE = readVapidSecret('VAPID_PRIVATE_KEY');
+    const VAPID_PUBLIC  = readVapidSecret('VAPID_PUBLIC_KEY');
+    const VAPID_EMAIL   = String(Deno.env.get('VAPID_EMAIL') || 'mailto:bariq.gifts@gmail.com').trim();
+    const privateKeyError = invalidVapidKeyMessage('VAPID_PRIVATE_KEY', VAPID_PRIVATE);
+    const publicKeyError = invalidVapidKeyMessage('VAPID_PUBLIC_KEY', VAPID_PUBLIC);
+    if (privateKeyError || publicKeyError) {
+      return new Response(JSON.stringify({ error: privateKeyError || publicKeyError }), {
         status: 500, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
       });
     }

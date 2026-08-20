@@ -109,7 +109,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const REPORT_SESSION_KEY = 'x2_admin_reports_session';
     const REPORTS_SOUND_KEY = 'x2_admin_reports_push_sound';
     const ADMIN_PUSH_EMAIL = '__bariq_admin_orders__@bariq.local';
-    const ADMIN_PUSH_VAPID_PUBLIC_KEY = 'BPojY-23BXbIfa1IRkkQD3vAELjTn3nltgFBrlEIjZ3aEbphXAQvFY2E5B2R_mfikZLhGPo0lBeCedB8qoP5-SE';
+    const ADMIN_PUSH_VAPID_PUBLIC_KEY = 'BMr4ZWTwS2DgL12mxYFjLM9rmnljnJpY_tsFtWtKxgS2d_z36lcg3sLfIQfOFbX1Tw0ITNG3pB4hJeGI-YEZFHE';
     const REPORTS_SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
     let allOrders = [];
     let currentPeriod = 'all';
@@ -185,6 +185,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const raw = atob(base64);
       return Uint8Array.from([].map.call(raw, c => c.charCodeAt(0)));
     }
+    function sameReportsPushApplicationKey(sub, publicKey){
+      try {
+        const current = sub && sub.options && sub.options.applicationServerKey;
+        if(!current) return true;
+        const actual = new Uint8Array(current);
+        const expected = pushKeyToBytes(publicKey);
+        return actual.length === expected.length && actual.every((value, index) => value === expected[index]);
+      } catch(e) {
+        return true;
+      }
+    }
     async function saveReportsAdminPushSubscription(sub){
       const p256dh = sub.getKey('p256dh');
       const auth = sub.getKey('auth');
@@ -231,6 +242,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         if(reg.update) reg.update().catch(() => {});
         await navigator.serviceWorker.ready;
         let sub = await reg.pushManager.getSubscription();
+        if(sub && !sameReportsPushApplicationKey(sub, ADMIN_PUSH_VAPID_PUBLIC_KEY)) {
+          await sub.unsubscribe().catch(() => {});
+          sub = null;
+        }
         if(!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: pushKeyToBytes(ADMIN_PUSH_VAPID_PUBLIC_KEY) });
         const saved = await saveReportsAdminPushSubscription(sub);
         if(!saved) throw new Error('تعذر حفظ اشتراك الأدمن');

@@ -1,9 +1,19 @@
 (function(){
-  var VAPID_PUBLIC_KEY='BPojY-23BXbIfa1IRkkQD3vAELjTn3nltgFBrlEIjZ3aEbphXAQvFY2E5B2R_mfikZLhGPo0lBeCedB8qoP5-SE';
+  var VAPID_PUBLIC_KEY='BMr4ZWTwS2DgL12mxYFjLM9rmnljnJpY_tsFtWtKxgS2d_z36lcg3sLfIQfOFbX1Tw0ITNG3pB4hJeGI-YEZFHE';
   function urlBase64ToUint8Array(base64String){
     var base64=(base64String+'='.repeat((4-base64String.length%4)%4)).replace(/-/g,'+').replace(/_/g,'/');
     var raw=window.atob(base64);
     return Uint8Array.from([].map.call(raw,function(c){return c.charCodeAt(0);}));
+  }
+  function samePushApplicationKey(sub, publicKey){
+    try{
+      var current=sub&&sub.options&&sub.options.applicationServerKey;
+      if(!current)return true;
+      var actual=new Uint8Array(current), expected=urlBase64ToUint8Array(publicKey);
+      if(actual.length!==expected.length)return false;
+      for(var i=0;i<actual.length;i++){if(actual[i]!==expected[i])return false;}
+      return true;
+    }catch(e){return true;}
   }
   function normalizeUaePhone(value){
     var digits=String(value||'').replace(/\D/g,'');
@@ -62,6 +72,10 @@
       await navigator.serviceWorker.ready;
       sendPushLanguageToServiceWorker();
       var sub=await reg.pushManager.getSubscription();
+      if(sub&&!samePushApplicationKey(sub,VAPID_PUBLIC_KEY)){
+        await sub.unsubscribe().catch(function(){});
+        sub=null;
+      }
       if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)});
       saveSubscriptionToSupabase(sub);
       btn.disabled=false;

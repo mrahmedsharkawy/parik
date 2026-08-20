@@ -236,6 +236,7 @@
   <div class="tab" data-tab="categories" onclick="switchTab('categories')">🗂️ الفئات</div>
   <div class="tab" data-tab="banners" onclick="switchTab('banners')">🖼️ العروض والبنرات</div>
   <div class="tab" data-tab="customers" onclick="switchTab('customers')">👥 العملاء</div>
+  <div class="tab" data-tab="customer-occasions" onclick="switchTab('customer-occasions')">🎉 مناسبات العملاء</div>
   <div class="tab" data-tab="settings" onclick="switchTab('settings')">⚙️ الإعدادات</div>
   <a class="tab" href="/bot-admin.html" style="text-decoration:none">🤖 إدارة البوت</a>
   <a class="tab" href="/erp.html" style="text-decoration:none">ERB</a>
@@ -1266,6 +1267,46 @@
     </div>
   </div>
 
+  <div class="panel" id="panel-customer-occasions">
+    <div class="card">
+      <h2>🎉 مناسبات العملاء</h2>
+      <div class="hint">إحصائيات مختصرة للمناسبات المحفوظة، حسب صلاحيات الأدمن الحالية في Supabase.</div>
+      <div class="stats-cards" id="occAdminStats">
+        <div class="stat gold"><span class="ic">🎉</span><div class="v">0</div><div class="l">كل المناسبات</div></div>
+        <div class="stat green"><span class="ic">🔔</span><div class="v">0</div><div class="l">تذكيرات فعالة</div></div>
+        <div class="stat orange"><span class="ic">⏳</span><div class="v">0</div><div class="l">خلال 7 أيام</div></div>
+        <div class="stat navy"><span class="ic">📅</span><div class="v">0</div><div class="l">خلال 30 يوم</div></div>
+      </div>
+      <div class="row" style="margin:14px 0">
+        <input type="text" id="occAdminSearch" placeholder="ابحث باسم الشخص أو المناسبة أو الهاتف..." oninput="renderCustomerOccasionsAdmin()" style="flex:2;min-width:180px">
+        <select id="occAdminFilter" onchange="renderCustomerOccasionsAdmin()" style="width:auto;min-width:150px">
+          <option value="all">كل المناسبات</option>
+          <option value="enabled">التذكير فعال</option>
+          <option value="disabled">التذكير متوقف</option>
+          <option value="week">خلال 7 أيام</option>
+          <option value="month">خلال 30 يوم</option>
+        </select>
+        <button class="btn-navy btn-sm" onclick="loadCustomerOccasionsAdmin()">↻ تحديث</button>
+      </div>
+      <div class="admin-table-wrap scroll-4" style="max-height:420px">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>المناسبة</th>
+              <th>الشخص</th>
+              <th>الصلة</th>
+              <th>التاريخ</th>
+              <th>المتبقي</th>
+              <th>التذكير</th>
+              <th>هاتف / بريد</th>
+            </tr>
+          </thead>
+          <tbody id="occAdminRows"><tr><td colspan="7" class="empty">اضغط تحديث لعرض المناسبات.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- ============ الإعدادات ============ -->
   <div class="panel" id="panel-settings">
     <div class="grid">
@@ -1509,6 +1550,7 @@ function switchTab(name){
   if(name==='invoices'){ syncStoreOrders(true).then(renderInvoices); }
   if(name==='marketing'){ loadPushSubscribersCount(); }
   if(name==='external-marketing'){ renderExternalMarketing(); }
+  if(name==='customer-occasions'){ loadCustomerOccasionsAdmin(); }
 }
 
 async function loadPushSubscribersCount() {
@@ -4809,12 +4851,24 @@ function insertProductVars() {
 
 /* ============ Push Notifications ============ */
 const ADMIN_PUSH_EMAIL = '__bariq_admin_orders__@bariq.local';
-const ADMIN_PUSH_VAPID_PUBLIC_KEY = 'BPojY-23BXbIfa1IRkkQD3vAELjTn3nltgFBrlEIjZ3aEbphXAQvFY2E5B2R_mfikZLhGPo0lBeCedB8qoP5-SE';
+const ADMIN_PUSH_VAPID_PUBLIC_KEY = 'BMr4ZWTwS2DgL12mxYFjLM9rmnljnJpY_tsFtWtKxgS2d_z36lcg3sLfIQfOFbX1Tw0ITNG3pB4hJeGI-YEZFHE';
 
 function adminPushKeyToBytes(base64String) {
   const base64 = (base64String + '='.repeat((4 - base64String.length % 4) % 4)).replace(/-/g, '+').replace(/_/g, '/');
   const raw = atob(base64);
   return Uint8Array.from([].map.call(raw, c => c.charCodeAt(0)));
+}
+
+function sameAdminPushApplicationKey(sub, publicKey) {
+  try {
+    const current = sub && sub.options && sub.options.applicationServerKey;
+    if (!current) return true;
+    const actual = new Uint8Array(current);
+    const expected = adminPushKeyToBytes(publicKey);
+    return actual.length === expected.length && actual.every((value, index) => value === expected[index]);
+  } catch (e) {
+    return true;
+  }
 }
 
 function adminPushSetStatus(message, ok) {
@@ -4872,6 +4926,10 @@ async function enableAdminOrderPush() {
     if (reg.update) reg.update().catch(() => {});
     await navigator.serviceWorker.ready;
     let sub = await reg.pushManager.getSubscription();
+    if (sub && !sameAdminPushApplicationKey(sub, ADMIN_PUSH_VAPID_PUBLIC_KEY)) {
+      await sub.unsubscribe().catch(() => {});
+      sub = null;
+    }
     if (!sub) {
       sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
@@ -6539,6 +6597,106 @@ async function loadCampaignsFromSupabase() {
     campaignsCache = JSON.parse(localStorage.getItem('admin_campaigns')||'[]');
   }
   renderCampaigns();
+}
+
+/* ================= مناسبات العملاء ================= */
+let customerOccasionsAdminCache = [];
+
+function occAdminEsc(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[ch]));
+}
+
+function occAdminNextDate(row) {
+  const now = new Date();
+  const day = Math.max(1, Math.min(31, Number(row.occasion_day) || 1));
+  const month = Math.max(1, Math.min(12, Number(row.occasion_month) || 1));
+  let year = Number(row.occasion_year) || now.getFullYear();
+  let date = new Date(year, month - 1, day);
+  if (!Number(row.occasion_year) && date < new Date(now.getFullYear(), now.getMonth(), now.getDate())) {
+    date = new Date(now.getFullYear() + 1, month - 1, day);
+  }
+  return date;
+}
+
+function occAdminDaysLeft(row) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const date = occAdminNextDate(row);
+  date.setHours(0, 0, 0, 0);
+  return Math.max(0, Math.ceil((date - today) / 86400000));
+}
+
+function occAdminDateLabel(row) {
+  const y = row.occasion_year ? `/${row.occasion_year}` : '';
+  return `${row.occasion_day}/${row.occasion_month}${y}`;
+}
+
+async function loadCustomerOccasionsAdmin() {
+  const rowsEl = $('occAdminRows');
+  if (rowsEl) rowsEl.innerHTML = '<tr><td colspan="7" class="empty">جارٍ التحميل...</td></tr>';
+  try {
+    if (!window.sbFetch) throw new Error('Supabase غير جاهز');
+    const rows = await window.sbFetch('customer_occasions?select=id,occasion_name,occasion_type,person_name,relationship,occasion_day,occasion_month,occasion_year,remind_before_days,reminder_enabled,last_reminder_sent_at,customer_email,customer_phone,created_at&order=created_at.desc&limit=500');
+    customerOccasionsAdminCache = Array.isArray(rows) ? rows : [];
+    renderCustomerOccasionsAdmin();
+  } catch (e) {
+    customerOccasionsAdminCache = [];
+    if (rowsEl) rowsEl.innerHTML = `<tr><td colspan="7" class="empty">${occAdminEsc(e.message || 'تعذر تحميل مناسبات العملاء')}</td></tr>`;
+  }
+}
+
+function renderCustomerOccasionsAdmin() {
+  const rowsEl = $('occAdminRows');
+  const statsEl = $('occAdminStats');
+  if (!rowsEl) return;
+  const search = String($('occAdminSearch')?.value || '').trim().toLowerCase();
+  const filter = $('occAdminFilter')?.value || 'all';
+  const allRows = customerOccasionsAdminCache.slice().sort((a, b) => occAdminDaysLeft(a) - occAdminDaysLeft(b));
+  const filtered = allRows.filter(row => {
+    const days = occAdminDaysLeft(row);
+    const haystack = [row.occasion_name, row.person_name, row.relationship, row.customer_phone, row.customer_email].join(' ').toLowerCase();
+    if (search && !haystack.includes(search)) return false;
+    if (filter === 'enabled' && !row.reminder_enabled) return false;
+    if (filter === 'disabled' && row.reminder_enabled) return false;
+    if (filter === 'week' && days > 7) return false;
+    if (filter === 'month' && days > 30) return false;
+    return true;
+  });
+  if (statsEl) {
+    const total = allRows.length;
+    const enabled = allRows.filter(r => r.reminder_enabled).length;
+    const week = allRows.filter(r => occAdminDaysLeft(r) <= 7).length;
+    const month = allRows.filter(r => occAdminDaysLeft(r) <= 30).length;
+    statsEl.innerHTML = [
+      ['🎉', total, 'كل المناسبات', 'gold'],
+      ['🔔', enabled, 'تذكيرات فعالة', 'green'],
+      ['⏳', week, 'خلال 7 أيام', 'orange'],
+      ['📅', month, 'خلال 30 يوم', 'navy']
+    ].map(s => `<div class="stat ${s[3]}"><span class="ic">${s[0]}</span><div class="v">${s[1]}</div><div class="l">${s[2]}</div></div>`).join('');
+  }
+  if (!filtered.length) {
+    rowsEl.innerHTML = '<tr><td colspan="7" class="empty">لا توجد مناسبات مطابقة.</td></tr>';
+    return;
+  }
+  rowsEl.innerHTML = filtered.map(row => {
+    const days = occAdminDaysLeft(row);
+    const reminder = row.reminder_enabled ? `قبل ${row.remind_before_days || 7} أيام` : 'متوقف';
+    return `<tr>
+      <td><b>${occAdminEsc(row.occasion_name)}</b></td>
+      <td>${occAdminEsc(row.person_name)}</td>
+      <td>${occAdminEsc(row.relationship || '-')}</td>
+      <td>${occAdminEsc(occAdminDateLabel(row))}</td>
+      <td>${days === 0 ? 'اليوم' : `بعد ${days} يوم`}</td>
+      <td><span class="status-badge ${row.reminder_enabled ? 'st-delivered' : 'st-cancelled'}">${occAdminEsc(reminder)}</span></td>
+      <td>${occAdminEsc(row.customer_phone || row.customer_email || '-')}</td>
+    </tr>`;
+  }).join('');
 }
 
 /* ================= بدء لوحة التحكم ================= */
