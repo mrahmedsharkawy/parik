@@ -4,6 +4,7 @@ import path from "node:path";
 const ROOT = process.cwd();
 const SITE = "https://bariqgifts.com";
 const PRODUCT_BASE = path.join(ROOT, "product");
+const CATEGORY_BASE = path.join(ROOT, "categories");
 const SEO_DIR = path.join(ROOT, "seo");
 
 const PRODUCT_SELECT = [
@@ -19,6 +20,7 @@ const PRODUCT_SELECT = [
   "stock",
   "image",
   "gallery",
+  "categories",
   "rating",
   "featured",
   "active",
@@ -93,7 +95,7 @@ const LANDING_PAGES = [
     description: "هدايا مواليد وتجهيز استقبال مولود في الإمارات من بريق، تشمل أطقم مواليد أكريليك وجلد وخيارات مناسبة حسب المنتجات المتاحة.",
     image: "/assets/categories/Occasions/born-in.webp",
     productMatch: ["مواليد", "مولود", "استقبال"],
-    links: [["/categories?category=Occasions&subcategory=Born-in", "منتجات مواليد"], ["/categories?category=Acrylic&subcategory=Born+in", "مواليد أكريليك"]],
+    links: [["/categories/Occasions/Born-in", "منتجات مواليد"], ["/categories/Acrylic/Born-in", "مواليد أكريليك"]],
     keywords: ["مواليد", "هدايا مواليد", "أطقم مواليد", "استقبال مولود"],
   },
   {
@@ -105,7 +107,7 @@ const LANDING_PAGES = [
     description: "هدايا ومنتجات اليوم الوطني الإماراتي من بريق، مع روابط مباشرة لقسم المناسبات ومنتجات قابلة للتخصيص حسب المتاح.",
     image: "/assets/categories/Occasions/National Day.webp",
     productMatch: ["وطني", "اليوم الوطني", "امارات"],
-    links: [["/categories?category=Occasions&subcategory=National+Day", "منتجات اليوم الوطني"], ["/corporate-gifts", "طلبات الشركات"]],
+    links: [["/categories/Occasions/National-Day", "منتجات اليوم الوطني"], ["/corporate-gifts", "طلبات الشركات"]],
     keywords: ["اليوم الوطني", "هدايا اليوم الوطني", "هدايا الإمارات"],
   },
   {
@@ -117,7 +119,7 @@ const LANDING_PAGES = [
     description: "منتجات أكريليك وهدايا مخصصة من بريق في الإمارات: بوكس، طاولات، صواني، مباخر واستاندات مع روابط مباشرة للفئات الفرعية.",
     image: "/assets/categories/Acrylic/Box.webp",
     productMatch: ["اكريلك", "أكريليك", "acrylic"],
-    links: [["/categories?category=Acrylic", "منتجات الأكريليك"], ["/categories?category=Acrylic&subcategory=Box", "بوكس أكريليك"]],
+    links: [["/categories/Acrylic", "منتجات الأكريليك"], ["/categories/Acrylic/Box", "بوكس أكريليك"]],
     keywords: ["أكريليك", "اكريلك", "هدايا أكريليك", "بوكس أكريليك"],
   },
   {
@@ -129,7 +131,7 @@ const LANDING_PAGES = [
     description: "منتجات فوركس من بريق للفعاليات والمناسبات: طاولات، استاندات، مجسمات ودوران حسب الأقسام المتاحة.",
     image: "/assets/categories/Forex/stands.webp",
     productMatch: ["فوركس", "forex", "foam"],
-    links: [["/categories?category=Forex", "منتجات فوركس"], ["/categories?category=Forex&subcategory=stands", "استاندات فوركس"]],
+    links: [["/categories/Forex", "منتجات فوركس"], ["/categories/Forex/stands", "استاندات فوركس"]],
     keywords: ["فوركس", "forex", "استاند فوركس", "تجهيز فعاليات"],
   },
   {
@@ -141,7 +143,7 @@ const LANDING_PAGES = [
     description: "منتجات خشبية وهدايا خشب مخصصة من بريق مثل الطاولات والكراسي والمجسمات والمنتجات المرتبطة بالمناسبات.",
     image: "/assets/categories/wood/tables.webp",
     productMatch: ["خشب", "wood"],
-    links: [["/categories?category=wood", "منتجات الخشب"], ["/categories?category=wood&subcategory=tables", "طاولات خشب"]],
+    links: [["/categories/wood", "منتجات الخشب"], ["/categories/wood/tables", "طاولات خشب"]],
     keywords: ["خشب", "هدايا خشب", "طاولات خشب"],
   },
   {
@@ -153,7 +155,7 @@ const LANDING_PAGES = [
     description: "منتجات جلد مخصصة من بريق تشمل بوكسات، صواني، طاولات ومنتجات مواليد حسب الفئات المتاحة في الموقع.",
     image: "/assets/categories/leather/boxes.webp",
     productMatch: ["جلد", "leather"],
-    links: [["/categories?category=leather", "منتجات الجلد"], ["/categories?category=leather&subcategory=born-in", "جلد مواليد"]],
+    links: [["/categories/leather", "منتجات الجلد"], ["/categories/leather/born-in", "جلد مواليد"]],
     keywords: ["جلد", "هدايا جلد", "بوكس جلد"],
   },
   {
@@ -164,7 +166,7 @@ const LANDING_PAGES = [
     description: "منتجات ورق وبوكسات ورقية من بريق للهدايا والمناسبات، مع روابط مباشرة لقسم الورق والفئات الفرعية المتاحة.",
     image: "/assets/categories/Paper/Paper box.webp",
     productMatch: ["ورق", "paper", "بوكس ورق"],
-    links: [["/categories?category=Paper", "منتجات الورق"], ["/categories?category=Paper&subcategory=Paper+box", "بوكس ورق"]],
+    links: [["/categories/Paper", "منتجات الورق"], ["/categories/Paper/Paper-box", "بوكس ورق"]],
     keywords: ["ورق", "بوكس ورق", "هدايا ورقية"],
   },
   {
@@ -176,7 +178,7 @@ const LANDING_PAGES = [
     description: "استيكرات ومنتجات استيكر مخصصة من بريق للمناسبات والمواليد والمنتجات الكاملة أو الفارغة حسب الفئات المتاحة.",
     image: "/assets/categories/Sticker/occasions.webp",
     productMatch: ["استيكر", "ستيكر", "sticker"],
-    links: [["/categories?category=Sticker", "منتجات الاستيكر"], ["/categories?category=Sticker&subcategory=born-in", "استيكر مواليد"]],
+    links: [["/categories/Sticker", "منتجات الاستيكر"], ["/categories/Sticker/born-in", "استيكر مواليد"]],
     keywords: ["استيكر", "ستيكر", "استيكر مخصص"],
   },
   {
@@ -188,7 +190,7 @@ const LANDING_PAGES = [
     description: "تصفح منتجات رمضان من بريق حسب الخامة: خشب، أكريليك، فوركس وجلد، مع روابط مباشرة للأقسام المتاحة.",
     image: "/assets/categories/Ramadan/acrylic.webp",
     productMatch: ["رمضان", "ramadan"],
-    links: [["/categories?category=Ramadan", "كل منتجات رمضان"], ["/categories?category=Ramadan&subcategory=wood", "رمضان خشب"]],
+    links: [["/categories/Ramadan", "كل منتجات رمضان"], ["/categories/Ramadan/wood", "رمضان خشب"]],
     keywords: ["رمضان", "هدايا رمضان", "منتجات رمضانية"],
   },
   {
@@ -199,7 +201,7 @@ const LANDING_PAGES = [
     description: "هدايا تخرج وتجهيزات حفلات التخرج من بريق في الإمارات، مع روابط لمنتجات المناسبات القابلة للتخصيص حسب المتاح.",
     image: "/assets/categories/Occasions/Graduation.webp",
     productMatch: ["تخرج", "graduation"],
-    links: [["/categories?category=Occasions&subcategory=Graduation", "منتجات التخرج"], ["/events", "تجهيز المناسبات"]],
+    links: [["/categories/Occasions/Graduation", "منتجات التخرج"], ["/events", "تجهيز المناسبات"]],
     keywords: ["تخرج", "هدايا تخرج", "حفلات تخرج"],
   },
 ];
@@ -250,31 +252,92 @@ function absoluteUrl(url) {
   return SITE + "/" + raw.replace(/^\/+/, "");
 }
 
+function normalizeMediaList(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.flatMap(normalizeMediaList);
+  if (typeof value === "object") {
+    return normalizeMediaList(value.url || value.src || value.secure_url || value.image || value.video || value.contentUrl);
+  }
+  const raw = compact(value);
+  if (!raw) return [];
+  if ((raw.startsWith("[") && raw.endsWith("]")) || (raw.startsWith("{") && raw.endsWith("}"))) {
+    try {
+      return normalizeMediaList(JSON.parse(raw));
+    } catch {
+      // Fall back to delimiter parsing below.
+    }
+  }
+  const separator = /^https?:\/\//i.test(raw) || raw.startsWith("//")
+    ? /\n|,\s*(?=https?:\/\/|\/\/|\/)/
+    : /[,\n]/;
+  return raw.split(separator).map(compact).filter(Boolean);
+}
+
+function productMedia(product) {
+  return normalizeMediaList([product.gallery, product.media, product.images, product.video, product.videos]);
+}
+
+function isImageUrl(url) {
+  return /\.(avif|webp|png|jpe?g|gif)(\?|#|$)/i.test(url);
+}
+
+function isVideoUrl(url) {
+  return /\.(mp4|webm|mov|m4v|ogv|ogg)(\?|#|$)/i.test(url) ||
+    /res\.cloudinary\.com\/[^/]+\/video\/upload\//i.test(url) ||
+    /\/video\/upload\//i.test(url) ||
+    /\/videos?\//i.test(url);
+}
+
+function uniqueUrls(urls) {
+  return [...new Set(urls.map(absoluteUrl).filter(Boolean))];
+}
+
 function firstImage(product) {
-  const gallery = Array.isArray(product.gallery)
-    ? product.gallery
-    : typeof product.gallery === "string"
-      ? product.gallery.split(/[,\n]/)
-      : [];
-  return absoluteUrl([product.image, ...gallery].find(Boolean) || "");
+  return uniqueUrls([product.image, ...productMedia(product)]).find(isImageUrl) || "";
 }
 
 function allImages(product) {
-  const gallery = Array.isArray(product.gallery)
-    ? product.gallery
-    : typeof product.gallery === "string"
-      ? product.gallery.split(/[,\n]/)
-      : [];
-  return [...new Set([product.image, ...gallery].map(absoluteUrl).filter((url) => /\.(avif|webp|png|jpe?g|gif)(\?|#|$)/i.test(url)))].slice(0, 8);
+  return uniqueUrls([product.image, ...productMedia(product)]).filter(isImageUrl).slice(0, 8);
 }
 
 function allVideos(product) {
-  const gallery = Array.isArray(product.gallery)
-    ? product.gallery
-    : typeof product.gallery === "string"
-      ? product.gallery.split(/[,\n]/)
-      : [];
-  return [...new Set(gallery.map(absoluteUrl).filter((url) => /\.(mp4|webm|mov)(\?|#|$)/i.test(url)))].slice(0, 4);
+  return uniqueUrls(productMedia(product)).filter(isVideoUrl).slice(0, 4);
+}
+
+function robotsText(hasVideoSitemap) {
+  const disallow = [
+    "/bot-admin",
+    "/bot-admin.html",
+    "/admin",
+    "/admin.html",
+    "/admin-reports",
+    "/admin-reports.html",
+    "/sales-invoices",
+    "/sales-invoices.html",
+    "/checkout",
+    "/checkout.html",
+    "/Cart",
+    "/Cart.html",
+    "/account",
+    "/account.html",
+    "/login",
+    "/login.html",
+  ];
+  const block = (agent) => [
+    `User-agent: ${agent}`,
+    "Allow: /",
+    ...disallow.map((path) => `Disallow: ${path}`),
+  ].join("\n");
+  return [
+    block("*"),
+    "",
+    block("OAI-SearchBot"),
+    "",
+    `Sitemap: ${SITE}/sitemap.xml`,
+    `Sitemap: ${SITE}/image-sitemap.xml`,
+    ...(hasVideoSitemap ? [`Sitemap: ${SITE}/video-sitemap.xml`] : []),
+    "",
+  ].join("\n");
 }
 
 function productName(product) {
@@ -359,6 +422,207 @@ function categoryLabel(product, categories, subcategories) {
   const sub = subcategories.get(String(product.subcategory_id || ""));
   const cat = categories.get(String(product.category_id || ""));
   return compact(sub?.name_ar) || compact(cat?.name_ar) || compact(sub?.name_en) || compact(cat?.name_en) || "";
+}
+
+function rowName(row, fallback = "") {
+  return compact(row?.name_ar) || compact(row?.name_en) || compact(row?.title_ar) || compact(row?.title_en) || compact(row?.slug) || fallback;
+}
+
+function rowSlug(row, fallback) {
+  return encodePathSegment(slugify(row?.slug || row?.category_slug || row?.subcategory_slug || row?.name_en || row?.name_ar, fallback));
+}
+
+function categoryPath(row) {
+  return `/categories/${rowSlug(row, `category-${row?.id || "item"}`)}`;
+}
+
+function subcategoryPath(category, subcategory) {
+  return `${categoryPath(category)}/${rowSlug(subcategory, `subcategory-${subcategory?.id || "item"}`)}`;
+}
+
+function normalizeMatchText(value) {
+  return compact(value)
+    .toLowerCase()
+    .replace(/[\u064b-\u065f\u0670]/g, "")
+    .replace(/[أإآا]/g, "ا")
+    .replace(/ة/g, "ه")
+    .replace(/ى/g, "ي")
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim();
+}
+
+function rowSearchTokens(row) {
+  const raw = [
+    row?.name_ar,
+    row?.name_en,
+    row?.title_ar,
+    row?.title_en,
+    row?.slug,
+    row?.category_slug,
+    row?.subcategory_slug,
+  ]
+    .map(normalizeMatchText)
+    .filter(Boolean);
+  const joined = raw.join(" ");
+  const aliases = [];
+  if (/born|newborn|مولود|مواليد/.test(joined)) aliases.push("مولود", "مواليد", "استقبال مولود", "born in", "newborn");
+  if (/graduation|graduate|تخرج/.test(joined)) aliases.push("تخرج", "خريج", "graduation");
+  if (/national|وطني/.test(joined)) aliases.push("اليوم الوطني", "وطني", "national day");
+  if (/acrylic|اكري/.test(joined)) aliases.push("اكريلك", "اكريليك", "acrylic");
+  if (/forex|فوركس|foam/.test(joined)) aliases.push("فوركس", "forex", "foam");
+  if (/wood|خشب/.test(joined)) aliases.push("خشب", "wood");
+  if (/leather|جلد/.test(joined)) aliases.push("جلد", "leather");
+  if (/paper|ورق|كوب|بوكس/.test(joined)) aliases.push("ورق", "كوب", "بوكس ورق", "paper");
+  if (/sticker|استيكر|ملصق/.test(joined)) aliases.push("استيكر", "ملصق", "sticker");
+  if (/ramadan|رمضان/.test(joined)) aliases.push("رمضان", "ramadan");
+  return [...new Set([...raw, ...aliases.map(normalizeMatchText)].filter((token) => token.length > 1))];
+}
+
+function productSearchText(product) {
+  const categories = Array.isArray(product.categories) ? product.categories : product.categories ? [product.categories] : [];
+  return normalizeMatchText([
+    product.name_ar,
+    product.name_en,
+    product.description_ar,
+    product.description_en,
+    categories.map((item) => (typeof item === "object" ? `${item.ar || ""} ${item.en || ""}` : item)).join(" "),
+  ].join(" "));
+}
+
+function productCoreText(product) {
+  return normalizeMatchText([product.name_ar, product.name_en, product.description_ar, product.description_en].join(" "));
+}
+
+function detectMaterial(text) {
+  if (/\u0627\u0643\u0631\u064a\u0644\u0643|\u0627\u0643\u0631\u064a\u0644\u064a\u0643|acrylic/.test(text)) return "acrylic";
+  if (/\u0641\u0648\u0631\u0643\u0633|forex|foam/.test(text)) return "forex";
+  if (/\u062e\u0634\u0628|wood/.test(text)) return "wood";
+  if (/\u062c\u0644\u062f|leather/.test(text)) return "leather";
+  if (/\u0648\u0631\u0642|paper/.test(text)) return "paper";
+  if (/\u0627\u0633\u062a\u064a\u0643\u0631|\u0633\u062a\u064a\u0643\u0631|\u0645\u0644\u0635\u0642|sticker/.test(text)) return "sticker";
+  return "";
+}
+
+function rowMaterial(row) {
+  const text = rowSearchTokens(row).join(" ");
+  return detectMaterial(text);
+}
+
+function productMaterialFromName(product) {
+  const nameMaterial = detectMaterial(normalizeMatchText([product.name_ar, product.name_en].join(" ")));
+  return nameMaterial || detectMaterial(productCoreText(product));
+}
+
+function productAllowedForCategory(product, category) {
+  const categoryMaterial = rowMaterial(category);
+  const productMaterial = productMaterialFromName(product);
+  return !categoryMaterial || productMaterial === categoryMaterial;
+}
+
+function productMatchesRow(product, row) {
+  const haystack = productSearchText(product);
+  if (!haystack) return false;
+  return rowSearchTokens(row).some((token) => token.length > 1 && haystack.includes(token));
+}
+
+function isBroadCategory(row) {
+  const text = rowSearchTokens(row).join(" ");
+  return /occasions|مناسبات/.test(text);
+}
+
+function productsForCategory(products, category, subcategory = null, childSubcategories = []) {
+  return products
+    .filter((product) => !noindexReasons(product).length)
+    .filter((product) => productAllowedForCategory(product, category))
+    .filter((product) => {
+      const catId = String(product.category_id || "");
+      const subId = String(product.subcategory_id || "");
+      const wantedCatId = String(category?.id || "");
+      const wantedSubId = String(subcategory?.id || "");
+      if (wantedCatId && catId === wantedCatId) {
+        return !subcategory || (wantedSubId && subId === wantedSubId) || productMatchesRow(product, subcategory);
+      }
+      if (subcategory) {
+        const subMatch = productMatchesRow(product, subcategory);
+        return subMatch && (isBroadCategory(category) || productMatchesRow(product, category));
+      }
+      if (productMatchesRow(product, category)) return true;
+      return isBroadCategory(category) && childSubcategories.some((sub) => productMatchesRow(product, sub));
+    })
+    .slice(0, 24);
+}
+
+function categoryPageHtml(template, { category, subcategory, products }) {
+  const catName = rowName(category, "Bariq category");
+  const subName = subcategory ? rowName(subcategory, "Bariq collection") : "";
+  const pageName = subName || catName;
+  const canonicalPath = subcategory ? subcategoryPath(category, subcategory) : categoryPath(category);
+  const canonical = SITE + canonicalPath;
+  const image = firstImage(products[0] || {}) || absoluteUrl(category?.image || subcategory?.image) || `${SITE}/assets/logo.png`;
+  const isIndexable = products.length > 0;
+  const description = isIndexable
+    ? `${pageName} من بريق للهدايا في الإمارات. تصفح منتجات حقيقية من هذه الفئة مع الصور والأسعار وروابط المنتجات.`
+    : `${pageName} من بريق للهدايا في الإمارات. يتم تحديث منتجات هذه الفئة عند توفر منتجات صالحة للفهرسة.`;
+  const itemList = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "@id": `${canonical}#collection`,
+    name: pageName,
+    description,
+    url: canonical,
+    image,
+    isPartOf: { "@type": "WebSite", name: "Bariq Gifts", url: SITE },
+    mainEntity: {
+      "@type": "ItemList",
+      itemListElement: products.slice(0, 12).map((product, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        url: SITE + productPath(product),
+        name: productName(product),
+      })),
+    },
+  };
+  const breadcrumb = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "الرئيسية", item: `${SITE}/` },
+      { "@type": "ListItem", position: 2, name: "الفئات", item: `${SITE}/categories` },
+      { "@type": "ListItem", position: 3, name: catName, item: SITE + categoryPath(category) },
+      ...(subcategory ? [{ "@type": "ListItem", position: 4, name: subName, item: canonical }] : []),
+    ],
+  };
+  const schemas = [
+    ["seo-category-jsonld", itemList],
+    ["seo-category-breadcrumb-jsonld", breadcrumb],
+  ]
+    .map(([id, schema]) => `<script type="application/ld+json" id="${id}">${JSON.stringify(schema).replace(/<\/script/gi, "<\\/script")}</script>`)
+    .join("\n  ");
+
+  let out = template
+    .replace(/<title\b[^>]*>[\s\S]*?<\/title>/i, `<title>${esc(pageName)} | بريق للهدايا</title>`)
+    .replace(/<link\s+rel=["']canonical["'][^>]*>/i, `<link rel="canonical" href="${esc(canonical)}">`)
+    .replace(/\s*<script type="application\/ld\+json" id="seo-category-jsonld">[\s\S]*?<\/script>/gi, "")
+    .replace(/\s*<script type="application\/ld\+json" id="seo-category-breadcrumb-jsonld">[\s\S]*?<\/script>/gi, "");
+  out = replaceMeta(out, `name=["']description["']`, `<meta name="description" content="${esc(description)}">`);
+  out = replaceMeta(out, `name=["']robots["']`, `<meta name="robots" content="${isIndexable ? "index, follow" : "noindex, follow"}">`);
+  out = replaceMeta(out, `property=["']og:title["']`, `<meta property="og:title" content="${esc(pageName)}">`);
+  out = replaceMeta(out, `property=["']og:description["']`, `<meta property="og:description" content="${esc(description)}">`);
+  out = replaceMeta(out, `property=["']og:image["']`, `<meta property="og:image" content="${esc(image)}">`);
+  out = replaceMeta(out, `property=["']og:url["']`, `<meta property="og:url" content="${esc(canonical)}">`);
+  out = replaceMeta(out, `property=["']og:type["']`, `<meta property="og:type" content="website">`);
+  out = replaceMeta(out, `name=["']twitter:title["']`, `<meta name="twitter:title" content="${esc(pageName)}">`);
+  out = replaceMeta(out, `name=["']twitter:description["']`, `<meta name="twitter:description" content="${esc(description)}">`);
+  out = replaceMeta(out, `name=["']twitter:image["']`, `<meta name="twitter:image" content="${esc(image)}">`);
+  return out.replace("</head>", `  ${schemas}\n</head>`);
+}
+
+async function writeCategoryPage(template, payload) {
+  const relPath = (payload.subcategory ? subcategoryPath(payload.category, payload.subcategory) : categoryPath(payload.category)).replace(/^\//, "");
+  const outFile = path.join(ROOT, relPath, "index.html");
+  await fs.mkdir(path.dirname(outFile), { recursive: true });
+  await fs.writeFile(outFile, categoryPageHtml(template, payload), "utf8");
+  return path.relative(ROOT, outFile).replace(/\\/g, "/");
 }
 
 function replaceMeta(html, selector, tag) {
@@ -559,6 +823,10 @@ async function removePreviousGenerated() {
       const resolved = path.resolve(ROOT, file);
       if (resolved.startsWith(path.resolve(PRODUCT_BASE))) await fs.rm(resolved, { force: true });
     }
+    for (const file of report.generatedCategoryFiles || []) {
+      const resolved = path.resolve(ROOT, file);
+      if (resolved.startsWith(path.resolve(CATEGORY_BASE))) await fs.rm(resolved, { force: true });
+    }
   } catch {}
 }
 
@@ -573,7 +841,9 @@ async function main() {
   const categories = mapById(categoriesRows);
   const subcategories = mapById(subcategoryRows);
   const template = await fs.readFile(path.join(ROOT, "product.html"), "utf8");
+  const categoryTemplate = await fs.readFile(path.join(ROOT, "categories.html"), "utf8");
   await fs.mkdir(PRODUCT_BASE, { recursive: true });
+  await fs.mkdir(CATEGORY_BASE, { recursive: true });
   await fs.mkdir(SEO_DIR, { recursive: true });
   await removePreviousGenerated();
 
@@ -586,11 +856,6 @@ async function main() {
   const today = startedAt.slice(0, 10);
 
   for (const page of STATIC_PAGES) sitemap.push(xmlUrl(SITE + page, today));
-
-  for (const cat of categoriesRows) {
-    const catSlug = encodePathSegment(slugify(cat.slug || cat.category_slug || cat.name_en || cat.name_ar, `category-${cat.id}`));
-    sitemap.push(xmlUrl(`${SITE}/categories/${catSlug}`, compact(cat.updated_at || cat.created_at || today).slice(0, 10) || today));
-  }
 
   for (const product of products) {
     const reasons = noindexReasons(product);
@@ -623,12 +888,50 @@ async function main() {
       url,
       indexable: !reasons.length,
       noindex_reasons: reasons,
+      category_id: product.category_id || null,
+      subcategory_id: product.subcategory_id || null,
       category: categoryLabel(product, categories, subcategories),
       price: numberValue(product.price),
       currency: "AED",
       image: firstImage(product),
       updated_at: product.updated_at || product.updated_ta || product.created_at || null,
     });
+  }
+
+  const generatedCategoryPages = [];
+  const generatedCategoryFiles = [];
+  const noindexCategoryPages = [];
+  for (const cat of categoriesRows) {
+    const catSubs = subcategoryRows.filter((sub) => String(sub.category_id || "") === String(cat.id || ""));
+    const catProducts = productsForCategory(products, cat, null, catSubs);
+    const catFile = await writeCategoryPage(categoryTemplate, { category: cat, products: catProducts });
+    const catUrl = SITE + categoryPath(cat);
+    const catLastmod = compact(cat.updated_at || cat.created_at || today).slice(0, 10) || today;
+    generatedCategoryPages.push(categoryPath(cat));
+    generatedCategoryFiles.push(catFile);
+    if (catProducts.length) {
+      sitemap.push(xmlUrl(catUrl, catLastmod, "\n    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>"));
+      const images = uniqueUrls(catProducts.flatMap(allImages)).slice(0, 12);
+      if (images.length) imageSitemap.push(xmlUrl(catUrl, catLastmod, images.map((img) => `\n    <image:image><image:loc>${esc(img)}</image:loc><image:title>${esc(rowName(cat, "Bariq category"))}</image:title></image:image>`).join("")));
+    } else {
+      noindexCategoryPages.push({ url: catUrl, reason: "no_indexable_products" });
+    }
+
+    for (const sub of catSubs) {
+      const subProducts = productsForCategory(products, cat, sub);
+      const subFile = await writeCategoryPage(categoryTemplate, { category: cat, subcategory: sub, products: subProducts });
+      const subUrl = SITE + subcategoryPath(cat, sub);
+      const subLastmod = compact(sub.updated_at || sub.created_at || catLastmod).slice(0, 10) || catLastmod;
+      generatedCategoryPages.push(subcategoryPath(cat, sub));
+      generatedCategoryFiles.push(subFile);
+      if (subProducts.length) {
+        sitemap.push(xmlUrl(subUrl, subLastmod, "\n    <changefreq>weekly</changefreq>\n    <priority>0.65</priority>"));
+        const images = uniqueUrls(subProducts.flatMap(allImages)).slice(0, 12);
+        if (images.length) imageSitemap.push(xmlUrl(subUrl, subLastmod, images.map((img) => `\n    <image:image><image:loc>${esc(img)}</image:loc><image:title>${esc(rowName(sub, "Bariq collection"))}</image:title></image:image>`).join("")));
+      } else {
+        noindexCategoryPages.push({ url: subUrl, reason: "no_indexable_products" });
+      }
+    }
   }
 
   const generatedLandingPages = [];
@@ -654,9 +957,15 @@ async function main() {
   const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemap.join("\n")}\n</urlset>\n`;
   const imageXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n${imageSitemap.join("\n")}\n</urlset>\n`;
   const videoXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">\n${videoSitemap.join("\n")}\n</urlset>\n`;
+  const hasVideoSitemap = videoSitemap.length > 0;
   await fs.writeFile(path.join(ROOT, "sitemap.xml"), sitemapXml, "utf8");
   await fs.writeFile(path.join(ROOT, "image-sitemap.xml"), imageXml, "utf8");
-  await fs.writeFile(path.join(ROOT, "video-sitemap.xml"), videoXml, "utf8");
+  if (hasVideoSitemap) {
+    await fs.writeFile(path.join(ROOT, "video-sitemap.xml"), videoXml, "utf8");
+  } else {
+    await fs.rm(path.join(ROOT, "video-sitemap.xml"), { force: true });
+  }
+  await fs.writeFile(path.join(ROOT, "robots.txt"), robotsText(hasVideoSitemap), "utf8");
   await fs.writeFile(path.join(SEO_DIR, "product-index.json"), JSON.stringify(productIndex, null, 2), "utf8");
   await fs.writeFile(path.join(SEO_DIR, "noindex-products.json"), JSON.stringify(noindexProducts, null, 2), "utf8");
   await fs.writeFile(path.join(SEO_DIR, "entity-index.json"), JSON.stringify({
@@ -673,9 +982,10 @@ async function main() {
       products: `${SITE}/seo/product-index.json`,
       sitemap: `${SITE}/sitemap.xml`,
       image_sitemap: `${SITE}/image-sitemap.xml`,
-      video_sitemap: `${SITE}/video-sitemap.xml`,
+      ...(hasVideoSitemap ? { video_sitemap: `${SITE}/video-sitemap.xml` } : {}),
     },
     seo_landing_pages: generatedLandingPages.map((page) => SITE + page),
+    category_pages: generatedCategoryPages.map((page) => SITE + page),
     generated_at: startedAt,
   }, null, 2), "utf8");
   await fs.writeFile(path.join(ROOT, "llms.txt"), [
@@ -701,7 +1011,7 @@ async function main() {
     `- Entity index: ${SITE}/seo/entity-index.json`,
     `- XML sitemap: ${SITE}/sitemap.xml`,
     `- Image sitemap: ${SITE}/image-sitemap.xml`,
-    `- Video sitemap: ${SITE}/video-sitemap.xml`,
+    ...(hasVideoSitemap ? [`- Video sitemap: ${SITE}/video-sitemap.xml`] : []),
     "",
     "Indexing note:",
     "Product pages are generated from live Supabase catalog data during build. Placeholder or incomplete products are marked noindex instead of being removed.",
@@ -714,12 +1024,17 @@ async function main() {
     categories_loaded: categoriesRows.length,
     subcategories_loaded: subcategoryRows.length,
     generated_product_pages: generatedProductFiles.length,
+    generated_category_pages: generatedCategoryPages.length,
     sitemap_urls: sitemap.length,
     image_sitemap_urls: imageSitemap.length,
     video_sitemap_urls: videoSitemap.length,
     noindex_count: noindexProducts.length,
+    noindex_category_count: noindexCategoryPages.length,
     generated_landing_pages: generatedLandingPages.length,
     generatedLandingPages,
+    generatedCategoryPages,
+    generatedCategoryFiles,
+    noindexCategoryPages,
     generatedProductFiles,
   };
   await fs.writeFile(path.join(SEO_DIR, "build-report.json"), JSON.stringify(report, null, 2), "utf8");

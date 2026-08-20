@@ -1,13 +1,15 @@
 {
-  "generated_at": "2026-08-20T13:24:07.106Z",
+  "generated_at": "2026-08-20T14:28:37.809Z",
   "products_loaded": 106,
   "categories_loaded": 8,
   "subcategories_loaded": 46,
   "generated_product_pages": 106,
-  "sitemap_urls": 42,
-  "image_sitemap_urls": 20,
+  "generated_category_pages": 51,
+  "sitemap_urls": 45,
+  "image_sitemap_urls": 31,
   "video_sitemap_urls": 0,
   "noindex_count": 100,
+  "noindex_category_count": 40,
   "generated_landing_pages": 22,
   "generatedLandingPages": [
     "/gifts",
@@ -32,6 +34,274 @@
     "/gifts/ramadan-gifts-uae",
     "/ramadan",
     "/graduation"
+  ],
+  "generatedCategoryPages": [
+    "/categories/Occasions",
+    "/categories/Occasions/National-Day",
+    "/categories/Occasions/Haq-Al-Laila",
+    "/categories/Occasions/Mother-s-Day",
+    "/categories/Occasions/Graduation",
+    "/categories/Occasions/Eid",
+    "/categories/Occasions/Hajj",
+    "/categories/Occasions/Born-in",
+    "/categories/Occasions/Valentine-s-Day",
+    "/categories/Occasions/Flag-Day",
+    "/categories/Acrylic",
+    "/categories/Acrylic/Box",
+    "/categories/Acrylic/Tables",
+    "/categories/Acrylic/Born-in",
+    "/categories/Acrylic/Censer",
+    "/categories/Acrylic/Trays",
+    "/categories/Acrylic/Stand",
+    "/categories/Paper",
+    "/categories/Paper/Bags",
+    "/categories/Paper/Cups",
+    "/categories/Paper/Tissues",
+    "/categories/Paper/Stickers",
+    "/categories/Paper/relationship",
+    "/categories/Paper/Paper-box",
+    "/categories/Forex",
+    "/categories/Forex/tables",
+    "/categories/Forex/Stands",
+    "/categories/Forex/Models",
+    "/categories/Forex/Rotations",
+    "/categories/Wood",
+    "/categories/Wood/Tables",
+    "/categories/Wood/Chairs",
+    "/categories/Wood/Benches",
+    "/categories/Wood/Cabinets",
+    "/categories/Wood/name-3D",
+    "/categories/Wood/horse",
+    "/categories/Leather",
+    "/categories/Leather/Boxes",
+    "/categories/Leather/Born-in",
+    "/categories/Leather/Trays",
+    "/categories/Leather/Tables",
+    "/categories/Sticker",
+    "/categories/Sticker/Born-in",
+    "/categories/Sticker/Empty",
+    "/categories/Sticker/Full",
+    "/categories/Sticker/Occasions",
+    "/categories/Ramadan",
+    "/categories/Ramadan/Wood",
+    "/categories/Ramadan/Acrylic",
+    "/categories/Ramadan/Forex",
+    "/categories/Ramadan/Leather"
+  ],
+  "generatedCategoryFiles": [
+    "categories/Occasions/index.html",
+    "categories/Occasions/National-Day/index.html",
+    "categories/Occasions/Haq-Al-Laila/index.html",
+    "categories/Occasions/Mother-s-Day/index.html",
+    "categories/Occasions/Graduation/index.html",
+    "categories/Occasions/Eid/index.html",
+    "categories/Occasions/Hajj/index.html",
+    "categories/Occasions/Born-in/index.html",
+    "categories/Occasions/Valentine-s-Day/index.html",
+    "categories/Occasions/Flag-Day/index.html",
+    "categories/Acrylic/index.html",
+    "categories/Acrylic/Box/index.html",
+    "categories/Acrylic/Tables/index.html",
+    "categories/Acrylic/Born-in/index.html",
+    "categories/Acrylic/Censer/index.html",
+    "categories/Acrylic/Trays/index.html",
+    "categories/Acrylic/Stand/index.html",
+    "categories/Paper/index.html",
+    "categories/Paper/Bags/index.html",
+    "categories/Paper/Cups/index.html",
+    "categories/Paper/Tissues/index.html",
+    "categories/Paper/Stickers/index.html",
+    "categories/Paper/relationship/index.html",
+    "categories/Paper/Paper-box/index.html",
+    "categories/Forex/index.html",
+    "categories/Forex/tables/index.html",
+    "categories/Forex/Stands/index.html",
+    "categories/Forex/Models/index.html",
+    "categories/Forex/Rotations/index.html",
+    "categories/Wood/index.html",
+    "categories/Wood/Tables/index.html",
+    "categories/Wood/Chairs/index.html",
+    "categories/Wood/Benches/index.html",
+    "categories/Wood/Cabinets/index.html",
+    "categories/Wood/name-3D/index.html",
+    "categories/Wood/horse/index.html",
+    "categories/Leather/index.html",
+    "categories/Leather/Boxes/index.html",
+    "categories/Leather/Born-in/index.html",
+    "categories/Leather/Trays/index.html",
+    "categories/Leather/Tables/index.html",
+    "categories/Sticker/index.html",
+    "categories/Sticker/Born-in/index.html",
+    "categories/Sticker/Empty/index.html",
+    "categories/Sticker/Full/index.html",
+    "categories/Sticker/Occasions/index.html",
+    "categories/Ramadan/index.html",
+    "categories/Ramadan/Wood/index.html",
+    "categories/Ramadan/Acrylic/index.html",
+    "categories/Ramadan/Forex/index.html",
+    "categories/Ramadan/Leather/index.html"
+  ],
+  "noindexCategoryPages": [
+    {
+      "url": "https://bariqgifts.com/categories/Occasions/National-Day",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Occasions/Haq-Al-Laila",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Occasions/Mother-s-Day",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Occasions/Hajj",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Occasions/Valentine-s-Day",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Occasions/Flag-Day",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Acrylic/Tables",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Acrylic/Censer",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Paper",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Paper/Bags",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Paper/Cups",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Paper/Tissues",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Paper/Stickers",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Paper/relationship",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Paper/Paper-box",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Forex",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Forex/tables",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Forex/Stands",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Forex/Models",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Forex/Rotations",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Wood",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Wood/Tables",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Wood/Chairs",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Wood/Benches",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Wood/Cabinets",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Wood/name-3D",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Wood/horse",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Leather/Boxes",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Leather/Trays",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Leather/Tables",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Sticker",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Sticker/Born-in",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Sticker/Empty",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Sticker/Full",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Sticker/Occasions",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Ramadan",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Ramadan/Wood",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Ramadan/Acrylic",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Ramadan/Forex",
+      "reason": "no_indexable_products"
+    },
+    {
+      "url": "https://bariqgifts.com/categories/Ramadan/Leather",
+      "reason": "no_indexable_products"
+    }
   ],
   "generatedProductFiles": [
     "product/88/%D9%85%D9%86%D8%AA%D8%AC-25-%D9%85%D9%86%D8%AA%D8%AC-25%D9%85%D9%86%D8%AA%D8%AC-25%D9%85%D9%86%D8%AA%D8%AC-25%D9%85%D9%86%D8%AA%D8%AC/index.html",

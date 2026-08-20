@@ -25,38 +25,6 @@
     <lastmod>2026-08-20</lastmod>
   </url>
   <url>
-    <loc>https://bariqgifts.com/categories/Occasions</loc>
-    <lastmod>2026-07-25</lastmod>
-  </url>
-  <url>
-    <loc>https://bariqgifts.com/categories/Acrylic</loc>
-    <lastmod>2026-07-25</lastmod>
-  </url>
-  <url>
-    <loc>https://bariqgifts.com/categories/Paper</loc>
-    <lastmod>2026-07-25</lastmod>
-  </url>
-  <url>
-    <loc>https://bariqgifts.com/categories/Forex</loc>
-    <lastmod>2026-07-25</lastmod>
-  </url>
-  <url>
-    <loc>https://bariqgifts.com/categories/Wood</loc>
-    <lastmod>2026-07-25</lastmod>
-  </url>
-  <url>
-    <loc>https://bariqgifts.com/categories/Leather</loc>
-    <lastmod>2026-07-25</lastmod>
-  </url>
-  <url>
-    <loc>https://bariqgifts.com/categories/Sticker</loc>
-    <lastmod>2026-07-25</lastmod>
-  </url>
-  <url>
-    <loc>https://bariqgifts.com/categories/Ramadan</loc>
-    <lastmod>2026-07-25</lastmod>
-  </url>
-  <url>
     <loc>https://bariqgifts.com/product/603/%D8%B7%D9%82%D9%85-%D9%85%D9%88%D8%A7%D9%84%D9%8A%D8%AF-%D8%AC%D9%84%D8%AF-4-%D9%82%D8%B7%D8%B9</loc>
     <lastmod>2026-07-30</lastmod>
     <changefreq>weekly</changefreq>
@@ -91,6 +59,72 @@
     <lastmod>2026-07-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://bariqgifts.com/categories/Occasions</loc>
+    <lastmod>2026-07-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://bariqgifts.com/categories/Occasions/Graduation</loc>
+    <lastmod>2026-07-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.65</priority>
+  </url>
+  <url>
+    <loc>https://bariqgifts.com/categories/Occasions/Eid</loc>
+    <lastmod>2026-07-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.65</priority>
+  </url>
+  <url>
+    <loc>https://bariqgifts.com/categories/Occasions/Born-in</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.65</priority>
+  </url>
+  <url>
+    <loc>https://bariqgifts.com/categories/Acrylic</loc>
+    <lastmod>2026-07-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://bariqgifts.com/categories/Acrylic/Box</loc>
+    <lastmod>2026-07-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.65</priority>
+  </url>
+  <url>
+    <loc>https://bariqgifts.com/categories/Acrylic/Born-in</loc>
+    <lastmod>2026-07-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.65</priority>
+  </url>
+  <url>
+    <loc>https://bariqgifts.com/categories/Acrylic/Trays</loc>
+    <lastmod>2026-07-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.65</priority>
+  </url>
+  <url>
+    <loc>https://bariqgifts.com/categories/Acrylic/Stand</loc>
+    <lastmod>2026-07-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.65</priority>
+  </url>
+  <url>
+    <loc>https://bariqgifts.com/categories/Leather</loc>
+    <lastmod>2026-07-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://bariqgifts.com/categories/Leather/Born-in</loc>
+    <lastmod>2026-07-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.65</priority>
   </url>
   <url>
     <loc>https://bariqgifts.com/gifts</loc>
