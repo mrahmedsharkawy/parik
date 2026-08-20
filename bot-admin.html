@@ -50,23 +50,27 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:9px;
 </style>
 <link rel="stylesheet" href="/style/admin-pro.css?v=20260812-clean-admin">
 
-<style id="v39TestLabStyles">
-.v39-lab{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px}
-.v39-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:12px}
-.v39-head h2{margin:0;color:var(--navy);font-size:1.06rem}.v39-head p{margin:5px 0 0;color:var(--muted);font-size:.75rem;line-height:1.8}
-.v39-state{min-width:130px;text-align:center;border:1px solid var(--line);border-radius:12px;background:#f8fafc;padding:9px}.v39-state b{display:block;font-size:1.1rem;color:var(--navy)}.v39-state span{font-size:.65rem;color:var(--muted)}
-.v39-warning{background:#fff2f2;border:1px solid #f3c1c1;color:#9e3333;border-radius:10px;padding:9px 11px;margin-bottom:10px;font-size:.72rem}
-.v39-controls{display:flex;gap:7px;flex-wrap:wrap;align-items:end;margin-bottom:10px}.v39-controls label{display:flex;flex-direction:column;gap:4px;color:var(--muted);font-size:.66rem;font-weight:800}.v39-controls select{border:1px solid var(--line);border-radius:9px;background:#fff;padding:7px 9px;min-width:145px;font:inherit}.v39-controls button{border:1px solid var(--line);border-radius:9px;background:#fff;padding:8px 11px;cursor:pointer;font-weight:800}.v39-controls .v39-primary{background:var(--navy);color:#fff;border-color:var(--navy)}
-.v39-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}.v39-stats>div{border:1px solid var(--line);border-radius:11px;padding:9px;background:#fafbfd}.v39-stats b{display:block;color:var(--navy);font-size:1.05rem}.v39-stats span{font-size:.64rem;color:var(--muted)}
-.v39-info{background:#fff9e8;border:1px solid #eddca0;border-radius:10px;padding:9px 11px;color:#6e5a20;font-size:.7rem;line-height:1.75;margin-bottom:9px}
-.v39-progress{height:6px;background:#edf1f7;border-radius:999px;overflow:hidden;margin-bottom:9px}.v39-progress i{display:block;height:100%;width:0;background:var(--gold);transition:.2s}
-.v39-filterbar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:9px}.v39-filterbar button{border:1px solid var(--line);border-radius:999px;background:#fff;padding:5px 9px;cursor:pointer;font-size:.68rem;font-weight:800}.v39-filterbar button.active{background:var(--navy);color:#fff}
-.v39-results{display:grid;gap:8px;max-height:620px;overflow:auto;padding-inline-end:2px}.v39-empty{text-align:center;color:var(--muted);padding:22px;border:1px dashed var(--line);border-radius:11px}
-.v39-case{border:1px solid var(--line);border-radius:12px;padding:10px}.v39-case.pass{border-inline-start:4px solid #2f855a}.v39-case.fail{border-inline-start:4px solid #d64545}
-.v39-case-head{display:flex;justify-content:space-between;gap:8px;align-items:center}.v39-case-head strong{font-size:.76rem;color:var(--navy)}.v39-tags{display:flex;gap:4px;flex-wrap:wrap}.v39-tag{font-size:.6rem;background:#eef3fb;color:#58677f;padding:3px 6px;border-radius:999px}
-.v39-turns{display:grid;gap:5px;margin-top:7px}.v39-turn{padding:7px 8px;border-radius:9px;font-size:.7rem;line-height:1.6}.v39-turn.user{background:#f1f5fb}.v39-turn.bot{background:#fff6d9;border:1px solid #ecd486}.v39-turn.setup{opacity:.78}
-.v39-reason{margin-top:7px;color:#b23a3a;font-size:.66rem}.v39-actions{display:flex;gap:6px;margin-top:7px}.v39-actions button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 8px;cursor:pointer;font-size:.65rem}
-@media(max-width:760px){.v39-head{flex-direction:column}.v39-state{width:100%}.v39-stats{grid-template-columns:1fr 1fr}.v39-controls>*{width:100%}.v39-controls select{width:100%}}
+
+
+<style id="v45LabStyles">
+.v45-lab{background:#f6f8fc;border:1px solid #dfe5ef;border-radius:24px;padding:18px}
+.v45-hero{display:flex;justify-content:space-between;gap:18px;align-items:center;background:linear-gradient(135deg,#13294b,#203c6e);border-radius:20px;padding:20px;color:#fff;margin-bottom:14px}
+.v45-kicker{font-size:.62rem;letter-spacing:1.8px;opacity:.72;font-weight:900}
+.v45-hero h2{margin:5px 0 6px;font-size:1.35rem}.v45-hero p{margin:0;max-width:900px;font-size:.76rem;line-height:1.8;opacity:.84}
+.v45-health{display:flex;align-items:center;gap:14px}.v45-ring{width:110px;height:110px;border:8px solid rgba(255,255,255,.15);border-top-color:#f1c94a;border-radius:50%;display:flex;flex-direction:column;justify-content:center;align-items:center}.v45-ring span{font-size:1.35rem;font-weight:900}.v45-ring small{font-size:.58rem;opacity:.7}
+.v45-health-meta{display:grid;grid-template-columns:auto auto;gap:4px 8px;font-size:.66rem}.v45-health-meta b{font-size:.9rem}.v45-health-meta span{opacity:.65}
+.v45-workbench{display:grid;grid-template-columns:1.5fr .8fr;gap:12px;margin-bottom:12px}.v45-config,.v45-summary,.v45-card{background:#fff;border:1px solid #e1e6ee;border-radius:16px;padding:13px}.v45-config h3,.v45-summary h3,.v45-card h3{margin:0 0 10px;color:#152546;font-size:.8rem}
+.v45-config-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.v45-config label{font-size:.62rem;color:#738097;font-weight:800}.v45-config select,.v45-config input{width:100%;margin-top:4px;border:1px solid #dfe5ef;border-radius:9px;padding:8px;background:#fff;font:inherit}
+.v45-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.v45-actions button{border:1px solid #dfe5ef;border-radius:9px;background:#fff;padding:8px 10px;cursor:pointer;font-weight:800}.v45-actions .v45-run{background:#152546;color:#fff;border-color:#152546}
+.v45-summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.v45-summary-grid>div{border:1px solid #e8ecf2;border-radius:11px;padding:8px;background:#fafbfd}.v45-summary-grid b{display:block;font-size:1rem;color:#152546}.v45-summary-grid span{font-size:.59rem;color:#7a879b}.v45-progress{height:7px;background:#edf1f7;border-radius:999px;overflow:hidden;margin-top:10px}.v45-progress i{display:block;height:100%;width:0;background:#d6aa23}
+.v45-analytics{display:grid;grid-template-columns:1.2fr .8fr;gap:12px;margin-bottom:12px}.v45-skills{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.v44-score{border:1px solid #e4e8ef;border-radius:10px;padding:8px}.v44-score strong{display:block;color:#152546;font-size:.7rem}.v44-score span{font-size:.61rem;color:#7a879b}.v44-score .bar{height:5px;background:#eef1f6;border-radius:999px;overflow:hidden;margin-top:5px}.v44-score .bar i{display:block;height:100%;background:#d6aa23}
+.v45-card #v44Diagnosis,.v45-card #v44TopIssues{font-size:.68rem;color:#5f6d83;line-height:1.75}.v45-card hr{border:0;border-top:1px solid #edf0f4;margin:10px 0}
+.v45-toolbar{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:9px}.v45-filters{display:flex;gap:6px;flex-wrap:wrap}.v45-filters button{border:1px solid #dfe5ef;border-radius:999px;background:#fff;padding:6px 10px;cursor:pointer;font-size:.65rem;font-weight:800}.v45-filters button.active{background:#152546;color:#fff}.v45-safe{font-size:.62rem;color:#718096}
+.v45-results{display:grid;gap:8px;max-height:650px;overflow:auto}.v45-empty{text-align:center;background:#fff;border:1px dashed #d9e0ea;border-radius:13px;padding:24px;color:#7a879b}
+.v44-case{background:#fff;border:1px solid #e2e7ef;border-radius:13px;padding:10px}.v44-case.pass{border-inline-start:4px solid #2f855a}.v44-case.fail{border-inline-start:4px solid #d64545}.v44-case-head{display:flex;justify-content:space-between;gap:8px}.v44-case-head strong{font-size:.72rem;color:#152546}.v44-tags{display:flex;gap:4px;flex-wrap:wrap}.v44-tag{font-size:.57rem;background:#eef3fb;border-radius:999px;padding:3px 6px;color:#5d6c82}
+.v44-turns{display:grid;gap:5px;margin-top:7px}.v44-turn{padding:7px 9px;border-radius:9px;font-size:.68rem;line-height:1.6}.v44-turn.user{background:#f0f4fb}.v44-turn.bot{background:#fff7dc;border:1px solid #ecd687}.v44-turn.setup{opacity:.78}.v44-reason{margin-top:6px;color:#b23a3a;font-size:.64rem}.v44-meta{margin-top:5px;color:#7d899b;font-size:.58rem}.v44-actions{margin-top:6px}.v44-actions button{border:1px solid #dfe5ef;background:#fff;border-radius:8px;padding:5px 8px;cursor:pointer;font-size:.62rem}
+@media(max-width:1000px){.v45-workbench,.v45-analytics{grid-template-columns:1fr}.v45-config-grid{grid-template-columns:1fr 1fr}.v45-skills{grid-template-columns:1fr 1fr}.v45-hero{flex-direction:column;align-items:flex-start}.v45-health{width:100%;justify-content:space-between}}
+@media(max-width:600px){.v45-config-grid,.v45-summary-grid,.v45-skills{grid-template-columns:1fr}.v45-toolbar{flex-direction:column;align-items:flex-start}}
 </style>
 
 </head>
@@ -84,7 +88,7 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:9px;
 </div>
 
 <header class="top">
-  <h1>🤖 مساعد بريق <small style="opacity:.65">Bot Admin Pro V40.1 Stable Pricing</small></h1>
+  <h1>🤖 مساعد بريق <small style="opacity:.65">Bot Admin Pro V57 Emirati Journey QA</small></h1>
 </header>
 
 <main class="wrap">
@@ -270,76 +274,86 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:9px;
 </div>
 </section>
 
+
+
 <section id="panel-qa-lab" class="panel">
-  <div class="v39-lab">
-    <div class="v39-head">
-      <div>
-        <h2>🧪 مختبر اختبار البوت — القاعدة النظيفة</h2>
-        <p>الاختبار مبني على بيانات <b>bot_knowledge</b> الحقيقية فقط. النسخة V40 تختبر محرك التسعير الجديد: السعر المباشر، متابعة الكمية، وأكثر من صنف، بدون حفظ أسئلة فاشلة.</p>
+  <div class="v45-lab">
+    <div class="v45-hero">
+      <div class="v45-hero-copy">
+        <div class="v45-kicker">BARIQ BOT QA LAB</div>
+        <h2>مختبر الجودة الذكي للبوت V57</h2>
+        <p>المختبر دلوقتي بيحاكي عميل إماراتي حقيقي: يدخل يسلّم، يسأل عن عرض أو مناسبة، يتصفح، يسأل عن منتج وسعر، يطلب كمية، أو يكون عميل قديم ويتابع طلبه. كل الجلسات متعددة الخطوات وبلهجة إماراتية طبيعية.</p>
       </div>
-      <div class="v39-state">
-        <b id="v39KbCount">0</b>
-        <span>سؤال/إجابة محمّلة</span>
+      <div class="v45-health">
+        <div class="v45-ring"><span id="v44Percent">0%</span><small>Bot Score</small></div>
+        <div class="v45-health-meta"><b id="v44KbCount">0</b><span>KB</span><b id="v44PriceRows">0</b><span>Prices</span><b id="v44CategoryRows">0</b><span>Categories</span></div>
       </div>
     </div>
 
-    <div id="v39KbWarning" class="v39-warning" hidden>
-      ⚠️ قاعدة المعرفة الحالية قليلة أو غير محمّلة. استورد ملفات القاعدة النظيفة أولًا ثم حدّث الصفحة.
+    <div class="v45-workbench">
+      <div class="v45-config">
+        <h3>⚙️ إعداد الجلسة</h3>
+        <div class="v45-config-grid">
+          <label>عدد الاختبارات<select id="v44Count"><option value="20">20</option><option value="30">30</option><option value="50" selected>50</option><option value="75">75</option><option value="100">100</option></select></label>
+          <label>نوع الاختبار<select id="v44Mode"><option value="mixed" selected>شامل ذكي</option><option value="price">السعر المباشر</option><option value="follow">الكميات والمتابعة</option><option value="multi">أكثر من صنف</option><option value="category">الفئات والروابط</option><option value="tracking">تتبع الطلب</option><option value="emirati">لهجة إماراتية</option><option value="typo">أخطاء إملائية</option><option value="context">ثبات السياق</option><option value="journey">🛍️ رحلة عميل إماراتي</option></select></label>
+          <label>الصعوبة<select id="v44Difficulty"><option value="normal">عادي</option><option value="hard" selected>صعب</option><option value="stress">ضغط</option></select></label>
+          <label>Seed<input id="v44Seed" placeholder="تلقائي"></label>
+        </div>
+        <div class="v45-actions">
+          <button class="v45-run" id="v44Run">▶ تشغيل الاختبار</button>
+          <button id="v44Retry">↻ إعادة الأخطاء</button>
+          <button id="v44Stop">■ إيقاف</button>
+          <button id="v44Clear">مسح</button>
+          <button id="v44ExportCsv">CSV</button>
+          <button id="v44ExportJson">JSON</button>
+        </div>
+      </div>
+
+      <div class="v45-summary">
+        <h3>📈 ملخص مباشر</h3>
+        <div class="v45-summary-grid">
+          <div><b id="v44Done">0</b><span>تم اختباره</span></div>
+          <div><b id="v44Pass">0</b><span>ناجح</span></div>
+          <div><b id="v44Fail">0</b><span>فشل</span></div>
+          <div><b id="v44AvgLatency">0ms</b><span>متوسط الرد</span></div>
+          <div><b id="v44Coverage">0%</b><span>التغطية</span></div>
+        </div>
+        <div class="v45-progress"><i id="v44Progress"></i></div>
+      </div>
     </div>
 
-    <div class="v39-controls">
-      <label>عدد الاختبارات
-        <select id="v39Count">
-          <option value="20">20</option>
-          <option value="30" selected>30</option>
-          <option value="50">50</option>
-          <option value="75">75</option>
-        </select>
-      </label>
-      <label>نوع الاختبار
-        <select id="v39Mode">
-          <option value="mixed" selected>شامل</option>
-          <option value="price">💰 الأسعار</option>
-          <option value="follow">🧠 الكميات والمتابعة</option>
-          <option value="multi">🧮 أكثر من صنف</option>
-          <option value="emirati">🇦🇪 إماراتي</option>
-          <option value="category">🔗 الفئات والروابط</option>
-          <option value="general">💬 عام وتتبع</option>
-        </select>
-      </label>
-      <button class="v39-primary" type="button" id="v39Run">▶ جلسة اختبار جديدة</button>
-      <button type="button" id="v39Retry">↻ إعادة الأخطاء</button>
-      <button type="button" id="v39Stop">⏹ إيقاف</button>
-      <button type="button" id="v39Clear">مسح النتائج</button>
+    <div class="v45-analytics">
+      <div class="v45-card">
+        <h3>📊 أداء كل مهارة</h3>
+        <div id="v44ScoreGrid" class="v45-skills"></div>
+      </div>
+      <div class="v45-card">
+        <h3>🩺 تشخيص تلقائي</h3>
+        <div id="v44Diagnosis">شغّل الاختبار لعرض التشخيص.</div>
+        <hr>
+        <h3>🎯 المشاكل المتكررة</h3>
+        <div id="v44TopIssues">—</div>
+      </div>
     </div>
 
-    <div class="v39-stats">
-      <div><b id="v39Done">0</b><span>تم اختباره</span></div>
-      <div><b id="v39Pass">0</b><span>ناجح</span></div>
-      <div><b id="v39Fail">0</b><span>مراجعة</span></div>
-      <div><b id="v39Percent">0%</b><span>نسبة النجاح</span></div>
+    <div class="v45-toolbar">
+      <div class="v45-filters">
+        <button class="active" data-v44-filter="all">الكل</button>
+        <button data-v44-filter="fail">الأخطاء</button>
+        <button data-v44-filter="pass">الناجح</button>
+        <button data-v44-filter="slow">البطيء</button>
+        <button data-v44-filter="emirati">🇦🇪 إماراتي</button>
+      </div>
+      <div class="v45-safe">🔒 Test only — no database writes</div>
     </div>
 
-    <div class="v39-info">
-      <b>مهم:</b> السيناريو متعدد الخطوات يبدأ بسؤال حقيقي من قاعدة المعرفة ثم يختبر المتابعة.
-      مثلًا: «كم سعر كوب الشاي؟» ← رد السعر ← «زين خليهم 5». لذلك مش هنختبر جملة متابعة من غير سياق.
-      والاختبار لا يكتب في <code>bot_knowledge</code> ولا <code>bot_unanswered</code>.
-    </div>
-
-    <div class="v39-progress"><i id="v39Progress"></i></div>
-
-    <div class="v39-filterbar">
-      <button class="active" data-v39-filter="all">الكل</button>
-      <button data-v39-filter="fail">❌ الأخطاء</button>
-      <button data-v39-filter="pass">✅ الناجح</button>
-      <button data-v39-filter="emirati">🇦🇪 إماراتي</button>
-    </div>
-
-    <div id="v39Results" class="v39-results">
-      <div class="v39-empty">شغّل جلسة اختبار جديدة. كل مرة يتم اختيار منتجات وأسئلة مختلفة من قاعدة المعرفة الحالية.</div>
+    <div id="v44Results" class="v45-results">
+      <div class="v45-empty">ابدأ جلسة اختبار جديدة، وهنا هتشوف كل سيناريو كـ conversation trace مع سبب النجاح أو الفشل.</div>
     </div>
   </div>
 </section>
+
+
 
 
 <section id="panel-products" class="panel">
@@ -1941,6 +1955,13 @@ const RECIPIENT_MAP=[
   [/نفسي|لنفسي|لروحي/,'نفسي']
 ];
 const OCCASION_MAP=[
+  [/اليوم\s*الوطني|يوم\s*وطني|national\s*day/,'اليوم الوطني'],
+  [/يوم\s*العلم|flag\s*day/,'يوم العلم'],
+  [/حق\s*الليله|حق\s*الليلة|حق\s*ليله|haq\s*al[-\s]*laila/,'حق الليلة'],
+  [/يوم\s*الام|عيد\s*الام|mother'?s?\s*day/,'يوم الأم'],
+  [/حج|الحج|hajj/,'الحج'],
+  [/عيد\s*الفطر|الفطر/,'عيد الفطر'],
+  [/عيد\s*الاضحى|عيد\s*الاضحي|الاضحى|الاضحي/,'عيد الأضحى'],
   [/ميلاد/,'عيد ميلاد'],
   [/خطوب[هة]|خطبه/,'خطوبة'],
   [/زواج|جواز|عرس|فرح/,'زواج'],
@@ -1948,14 +1969,12 @@ const OCCASION_MAP=[
   [/ترقي[هة]/,'ترقية'],
   [/مولود|مواليد|بيبي|بيبى|كام\s*سنه|كم\s*سنه|سنه|سنين|استقبال مولود/,'مولود جديد'],
   [/فالنتين|حب|رومانسي/,'رومانسي'],
-  [/رمضان|فطار/,'رمضان'],
-  [/عيد الفطر|عيد الاضحي/,'عيد'],
+  [/رمضان|فطار|افطار/,'رمضان'],
   [/شكر|تقدير/,'شكر وتقدير'],
   [/اعتذار|سوري/,'اعتذار'],
   [/تهنئه|مبروك|تهنئة/,'تهنئة'],
   [/افتتاح|مشروع جديد/,'افتتاح'],
   [/سفر|وداع|هديه سفر/,'سفر/وداع'],
-  [/يوم الام/,'يوم الأم'],
   [/انجاز|نجاح/,'إنجاز'],
   [/عيد/,'عيد']
 ];
@@ -2120,6 +2139,29 @@ function corporateIntent(text){
 function giftIntent(text){
   return /هديه|هدية|هدي[هة]|gift|بوكس|هدايا|مناسبه|مناسبة|اقتراح هديه|اقتراح هدية|عايز حاج[هة]|محتار اجيب|اجيب اي[هة]/.test(normalize(text));
 }
+
+function explicitOccasionV50(text){
+  const t=normalize(text);
+  const occ=matchFirst(OCCASION_MAP,t);
+  if(!occ)return '';
+  /* Avoid treating a bare generic question like "شو المناسبات؟" as one occasion. */
+  if(/شو\s*المناسبات|ايش\s*المناسبات|ما\s*هي\s*المناسبات|ايه\s*المناسبات/.test(t))return '';
+  return occ;
+}
+
+function rememberExplicitOccasionV50(text){
+  const occ=explicitOccasionV50(text);
+  if(!occ)return '';
+  botState.occasion=occ;
+  botState.giftData={...(botState.giftData||{}),occasion:occ};
+  if(botState.waitingFor==='gift_occasion'){
+    botState.waitingFor=null;
+    botState.expectedReply=null;
+  }
+  saveChatMemory();
+  return occ;
+}
+
 function giftRequestIntent(text){
   const t=normalize(text);
   return giftIntent(text)||/(?:عندي|عندنا|ابغي|ابي|أبغي|أبي|عايز|عاوز|محتاج).*(?:مناسبه|مناسبة|هدية|هديه|هدايا|gift)|(?:مناسبه|مناسبة).*(?:هدية|هديه|هدايا|اعمل\s+طلب|اسوي\s+طلب|اطلب)/i.test(t);
@@ -2891,7 +2933,7 @@ async function lookupOrder(ref){
 ========================================================= */
 
 // ===== حالة المحادثة =====
-let botState={sessionId:getBotSessionId(),topic:'idle',currentTopic:'idle',pendingAction:null,waitingFor:null,giftData:{},orderRef:'',orderId:null,pendingOrderRef:'',orderStatusShown:false,recipient:'',occasion:'',budget:null,quantity:null,company:false,city:'',categoryId:null,category:'',productId:null,lastIntent:null,lastKnowledgeId:null,lastAction:null,actionData:null,lastUnitPrice:null,lastPriceUnit:'',lastPriceProductName:''};
+let botState={sessionId:getBotSessionId(),topic:'idle',currentTopic:'idle',pendingAction:null,waitingFor:null,giftData:{},orderRef:'',orderId:null,pendingOrderRef:'',orderStatusShown:false,recipient:'',occasion:'',budget:null,quantity:null,company:false,city:'',categoryId:null,category:'',productId:null,lastIntent:null,lastKnowledgeId:null,lastAction:null,actionData:null,lastUnitPrice:null,lastPriceUnit:'',lastPriceProductName:'',shoppingCart:[],checkoutContact:null,draftOrder:null};
 
 function resetBotState(topic){
   botState={...botState,topic:topic||'idle',currentTopic:topic||'idle',pendingAction:null,waitingFor:null,giftData:{},orderRef:'',pendingOrderRef:'',orderStatusShown:false,actionData:null};
@@ -3804,7 +3846,7 @@ async function handleGiftQuery(raw,ctx){
 
     return {
       type:'clarify',
-      text:'أكيد 🎁 إيه المناسبة؟ عيد ميلاد، تخرج، مولود، زواج، خطوبة، عيد ولا مناسبة تانية؟',
+      text:'أكيد 🎁 شو المناسبة؟ عيد ميلاد، تخرج، مولود، زواج، اليوم الوطني، عيد ولا مناسبة ثانية؟',
       systemAction:'FLOW_REPLY',
       deterministic:true
     };
@@ -4006,15 +4048,25 @@ async function handleSingleMessage(raw, ctx){
 
   if(topic==='greeting'){await persistUnanswered(raw);return silentResult({unanswered:true});}
 
-  // هدية / مناسبة
+  // هدية / مناسبة — V56: لو العميل قال المناسبة بالفعل، ممنوع نسأله عنها مرة ثانية.
   if(topic==='gift'||giftIntent(raw)){
+    const namedOccasion=explicitOccasionV50(raw)||ctx.occasion||'';
     resetBotState('gift');
-    if(!ctx.occasion){
-      botState.waitingFor='gift_occasion';
-      botState.giftData={recipient:ctx.recipient||'',budget:ctx.budget};
-      return {type:'clarify',text:'أكيد، إيه المناسبة؟ عيد ميلاد، تخرج، مولود، زواج، عيد ولا مناسبة تانية؟',systemAction:'FLOW_REPLY'};
+
+    if(namedOccasion){
+      botState.occasion=namedOccasion;
+      botState.giftData={occasion:namedOccasion};
+      botState.waitingFor=null;
+      botState.expectedReply=null;
+      saveChatMemory();
+      return await handleGiftQuery(raw,{...ctx,occasion:namedOccasion});
     }
-    return await handleGiftQuery(raw,ctx);
+
+    botState.waitingFor='gift_occasion';
+    botState.expectedReply='gift_occasion';
+    botState.giftData={recipient:ctx.recipient||'',budget:ctx.budget};
+    saveChatMemory();
+    return {type:'clarify',text:'أكيد 🎁 شو المناسبة؟ عيد ميلاد، تخرج، مولود، زواج، اليوم الوطني، عيد ولا مناسبة ثانية؟',systemAction:'FLOW_REPLY'};
   }
 
   // عرض منتجات عام
@@ -4999,15 +5051,105 @@ async function resolveUnitPriceForItemV18(name){
 }
 
 
-function extractMultiItemPairsV24(raw){
-  const wantWords='(?:عايز|عاوز|عاوزه|اريد|أريد|ابغي|أبغي|ابغى|أبغى|ابي|أبي|ابا|أبا|محتاج|عطني|اعطني|أعطني|هات|هاتلي|خد|خذ|خلي|خليهم|لو)';
 
-  let s=arabicDigits(String(raw||''))
+function extractMultiItemPairsV56(raw){
+  const primary=extractMultiItemPairsV24(raw);
+  if(primary && primary.length>=2)return primary;
+
+  let s=arabicDigits(normalizePriceTyposV46(String(raw||'')))
+    .replace(/[،,]+/g,' و ')
+    .replace(/\s+/g,' ')
+    .trim();
+
+  /* Split on natural Emirati/Arabic connectors before a new quantity request:
+     "أبغي 7 ... وأبا 6 ..."
+     "3 ... و4 ..."
+     "7 ... وهات 2 ..."
+  */
+  s=s.replace(/و(?=(?:ابغي|أبغي|ابي|أبي|ابا|أبا|اريد|أريد|عطني|هات|ضيف|زود)\s*\d)/gi,' و ');
+  const chunks=s.split(/\s+و\s+/).map(x=>x.trim()).filter(Boolean);
+
+  const out=[];
+  for(const ch0 of chunks){
+    let ch=ch0.replace(/^(?:ابغي|أبغي|ابي|أبي|ابا|أبا|اريد|أريد|عطني|اعطني|أعطني|هات(?:\s*لي)?|خد|خذ|محتاج)\s*/i,'').trim();
+    const m=ch.match(/^(\d+(?:\.\d+)?)\s*(?:حبه|حبة|حبات|قطعه|قطعة|قطع|وحده|وحدة|pcs?|حبات)?\s*(.+)$/i);
+    if(!m)continue;
+    const qty=Number(m[1]);
+    const name=String(m[2]||'').replace(/\s+(?:بكم|بكام|كم|احسبهم|تحسبهم).*$/i,'').trim();
+    if(Number.isFinite(qty)&&qty>0&&name)out.push({qty,name});
+  }
+
+  return out.length>=2?out:[];
+}
+
+function buildMultiItemQuoteV56(raw){
+  const items=extractMultiItemPairsV56(raw);
+  if(items.length<2)return null;
+
+  const rows=[], missing=[];
+  let total=0;
+
+  for(const item of items.slice(0,12)){
+    const found=kbUnitPriceForItemV25(item.name);
+    if(!found){
+      missing.push(item.name);
+      continue;
+    }
+    const subtotal=Number(item.qty)*Number(found.price);
+    total+=subtotal;
+    rows.push({
+      qty:Number(item.qty),
+      name:item.name,
+      unitPrice:Number(found.price),
+      subtotal
+    });
+  }
+
+  if(missing.length){
+    return {
+      type:'clarify',
+      text:'فاهم الأصناف والكميات، بس ناقصني سعر: '+missing.join('، ')+'. اكتب الاسم/المقاس زي قاعدة المعرفة وأنا أحسبهم كلهم.',
+      systemAction:'MULTI_ITEM_NEEDS_PRICE',
+      deterministic:true
+    };
+  }
+
+  if(rows.length<2)return null;
+
+  const lines=rows.map(r=>'• '+r.qty+' '+r.name+' × '+r.unitPrice.toFixed(2)+' درهم = '+r.subtotal.toFixed(2)+' درهم');
+  lines.push('');
+  lines.push('💰 الإجمالي: '+total.toFixed(2)+' درهم');
+
+  /* V57: multi-item quote is also the customer's active draft cart.
+     This makes "ثبت الطلب / عايز أعمل أوردر" continue directly to checkout. */
+  botState.shoppingCart=[];
+  for(const r of rows){
+    addCartItemV52(r.name,r.qty,r.unitPrice);
+  }
+  botState.topic='checkout';
+  botState.currentTopic='checkout';
+  botState.lastQuote={items:rows,total,createdAt:new Date().toISOString()};
+  saveChatMemory();
+
+  lines.push('');
+  lines.push('إذا تبا تثبتهم كطلب قل «ثبت الطلب»، وإذا تبا تضيف منتج ثاني قولي.');
+  return {type:'answer',text:lines.join('\n'),systemAction:'MULTI_ITEM_CALC',deterministic:true};
+}
+
+function extractMultiItemPairsV24(raw){
+  /* V46: supports Emirati / natural connectors:
+     "أبغي 2 ... وهات لي 9 ..."
+     "أبا 3 ... وأريد 4 ..."
+     "عطني 2 ... و5 ..."
+  */
+  const wantWords='(?:عايز|عاوز|عاوزه|اريد|أريد|ابغي|أبغي|ابغى|أبغى|ابي|أبي|ابا|أبا|محتاج|عطني|اعطني|أعطني|هات\\s*لي|هاتلي|هات|خد|خذ|خلي|خليهم|لو)';
+
+  let s=arabicDigits(normalizePriceTyposV46(String(raw||'')))
     .replace(/[،,]+/g,' و ')
     .replace(/\s*\+\s*/g,' و ')
     .replace(/\s*&\s*/g,' و ')
-    /* attached conjunctions: "وأريد 4" / "وأبغي 5" / "و5" */
-    .replace(new RegExp('و(?=(?:'+wantWords.slice(3,-1)+'|\\d))','gi'),' و ')
+    /* attached conjunction before desire words or qty */
+    .replace(new RegExp('و(?=(?:عايز|عاوز|عاوزه|اريد|أريد|ابغي|أبغي|ابغى|أبغى|ابي|أبي|ابا|أبا|محتاج|عطني|اعطني|أعطني|هات|خد|خذ|خلي|لو|\\d))','gi'),' و ')
     .replace(/\s+/g,' ')
     .trim();
 
@@ -5025,16 +5167,16 @@ function extractMultiItemPairsV24(raw){
     '(?:^|\\s+و\\s+)' +
     '(?:' + wantWords + '\\s*)?' +
     '(\\d+(?:\\.\\d+)?)\\s*' +
-    '(?:(?:حبه|حبة|قطعه|قطعة|قطع|وحده|وحدة|pc|pcs)\\s+)?' +
+    '(?:(?:حبه|حبة|حبات|قطعه|قطعة|قطع|وحده|وحدة|pc|pcs)\\s+)?' +
     '(.+?)' +
     '(?=(?:\\s+و\\s+(?:' + wantWords + '\\s*)?\\d+(?:\\.\\d+)?)|$)',
     'gi'
   );
 
-  let m;
-  while((m=rePair.exec(s))!==null){
-    const qty=Number(m[1]);
-    let name=String(m[2]||'').trim()
+  let mm;
+  while((mm=rePair.exec(s))!==null){
+    const qty=Number(mm[1]);
+    let name=String(mm[2]||'').trim()
       .replace(new RegExp('^(?:'+wantWords+')\\s+','i'),'')
       .replace(/\s+(?:بكام|بكم|كام|كم\s*سعرهم|تحسبهم\s*لي|احسبهم\s*لي|احسبهم|تحسبهم)$/i,'')
       .trim();
@@ -5049,9 +5191,7 @@ function extractMultiItemPairsV24(raw){
       let firstName=s.slice(0,secondStart).trim()
         .replace(new RegExp('^(?:'+wantWords+')\\s+','i'),'')
         .trim();
-      if(firstName && !/^\d/.test(firstName)){
-        pairs.unshift({qty:1,name:firstName});
-      }
+      if(firstName && !/^\d/.test(firstName))pairs.unshift({qty:1,name:firstName});
     }
   }
 
@@ -5178,6 +5318,7 @@ function kbPricingScoreV27(itemName,row){
 }
 
 function kbUnitPriceForItemV25(itemName){
+  itemName=normalizePriceTyposV46(itemName);
   const target=kbPricingCanonV27(itemName);
   if(!target)return null;
 
@@ -5316,7 +5457,7 @@ async function contextualPriceAnswerV4(raw){
     botState.quantity=qty;
     saveChatMemory();
     const safeName=contextualPriceLabelV12();
-  return {type:'answer',text:'لو '+qty+' '+(pc.unit||'حبة')+' × '+pc.price.toFixed(2)+' درهم = '+total.toFixed(2)+' درهم إجماليًا.'+(safeName?'\nللـ '+safeName:''),systemAction:'CONTEXT_CALC',deterministic:true};
+  return {type:'answer',text:'أكيد 🌷 '+qty+' × '+pc.price.toFixed(2)+' درهم = '+total.toFixed(2)+' درهم إجماليًا'+(safeName?' للـ '+safeName:'')+'. تحب أكمل لك الطلب؟',systemAction:'CONTEXT_CALC',deterministic:true};
   }
   const t=normalize(raw);
   if(/^(?:سعره\s*كام|سعره\s*كم|بكام|بكم|كم\s*سعره|كم\s*السعر|السعر\s*كام|price)$/i.test(t)&&pc){
@@ -5394,7 +5535,7 @@ async function resolveWaitingExpectedV4(raw,intent,ctx){
 
     return {
       type:'clarify',
-      text:'أكيد 🎁 إيه المناسبة؟ عيد ميلاد، تخرج، مولود، زواج، خطوبة، عيد ولا مناسبة تانية؟',
+      text:'أكيد 🎁 شو المناسبة؟ عيد ميلاد، تخرج، مولود، زواج، اليوم الوطني، عيد ولا مناسبة ثانية؟',
       systemAction:'FLOW_REPLY',
       deterministic:true
     };
@@ -5406,13 +5547,14 @@ async function resolveWaitingExpectedV4(raw,intent,ctx){
     saveChatMemory();
     return {
       type:'clarify',
-      text:'أكيد 🎁 إيه المناسبة؟ عيد ميلاد، تخرج، مولود، زواج، خطوبة، عيد ولا مناسبة تانية؟',
+      text:'أكيد 🎁 شو المناسبة؟ عيد ميلاد، تخرج، مولود، زواج، اليوم الوطني، عيد ولا مناسبة ثانية؟',
       systemAction:'FLOW_REPLY',
       deterministic:true
     };
   }
   if(waiting==='gift_occasion'){
-    const resolved=isValidOccasionReplyV16(raw,intent);
+    const explicit=explicitOccasionV50(raw);
+    const resolved=explicit?{ok:true,occasion:explicit}:isValidOccasionReplyV16(raw,intent);
 
     if(resolved.ok){
       botState.occasion=resolved.occasion;
@@ -5430,7 +5572,7 @@ async function resolveWaitingExpectedV4(raw,intent,ctx){
 
     return {
       type:'clarify',
-      text:'أكيد 🎁 إيه المناسبة؟ عيد ميلاد، تخرج، مولود، زواج، خطوبة، عيد ولا مناسبة تانية؟',
+      text:'أكيد 🎁 شو المناسبة؟ عيد ميلاد، تخرج، مولود، زواج، اليوم الوطني، عيد ولا مناسبة ثانية؟',
       systemAction:'FLOW_REPLY',
       deterministic:true
     };
@@ -5456,24 +5598,56 @@ async function resolveWaitingExpectedV4(raw,intent,ctx){
   return null;
 }
 
+
+function normalizePriceTyposV46(value){
+  let s=String(value||'');
+
+  /* Arabic-friendly conservative typo corrections.
+     Avoid \b because JS word boundaries are unreliable with Arabic letters. */
+  const replacements=[
+    [/سغر/gi,'سعر'],
+    [/سعرر/gi,'سعر'],
+    [/اكريلك/gi,'اكريليك'],
+    [/أكريلك/gi,'أكريليك'],
+    [/فوركش/gi,'فوركس'],
+    [/صنيه/gi,'صينية'],
+    [/صينيه/gi,'صينية'],
+    [/علاقه/gi,'علاقة'],
+    [/كوبيه/gi,'كوباية'],
+    [/كوبايه/gi,'كوباية']
+  ];
+
+  for(const [rx,to] of replacements)s=s.replace(rx,to);
+
+  /* "شعر" -> "سعر" only when it is clearly the price-question word. */
+  s=s.replace(/(^|\s)شعر(?=\s+(?:استاند|ستاند|كوب|كوباية|بوكس|صينية|علاقة|هالو|مبخرة|مرايا|كيس|تيشو|تشيو))/gi,'$1سعر');
+
+  /* normalize stand spelling only inside pricing resolver */
+  s=s.replace(/(^|\s)ستاند(?=\s|$)/gi,'$1استاند');
+
+  return s.replace(/\s+/g,' ').trim();
+}
+
 function isDirectPriceQuestionV40(raw){
-  const n=normalize(String(raw||''));
+  const fixed=normalizePriceTyposV46(raw);
+  const n=normalize(String(fixed||''));
   if(!n)return false;
 
-  /* Must explicitly ask about price; dimensions alone are never order numbers. */
-  return /(?:كم\s*سعر|كام\s*سعر|شو\s*سعر|بكم|بكام|سعر\s+|اعرف\s*سعر|اعرف\s+سعر|معرفه\s*سعر)/.test(n);
+  /* Explicit price wording after conservative typo correction. */
+  return /(?:كم\s*سعر|كام\s*سعر|شو\s*سعر|بكم|بكام|سعر\s+|اعرف\s*سعر|معرفه\s*سعر)/.test(n);
 }
 
 function cleanDirectPriceProductV40(raw){
-  let s=arabicDigits(String(raw||''))
+  let s=arabicDigits(normalizePriceTyposV46(String(raw||'')))
     .replace(/[؟?،,]/g,' ')
     .replace(/\s+/g,' ')
     .trim();
 
   s=s
-    .replace(/^(?:هلا|مرحبا|السلام عليكم|لو سمحت|ممكن|زين|تمام|اوك|اوكي|هيه|خوي|الغالي)\s+/i,'')
-    .replace(/^(?:ابغي|أبغي|ابي|أبي|اريد|أريد)\s+(?:اعرف|أعرف)\s+/i,'')
+    .replace(/^(?:هلا|مرحبا|السلام عليكم|لو سمحت|ممكن|زين|تمام|اوك|أوك|اوكي|أوكي|هيه|خوي|الغالي)\s+/i,'')
+    .replace(/^(?:ابغي|أبغي|ابغى|أبغى|ابي|أبي|اريد|أريد)\s+(?:اعرف|أعرف)\s+/i,'')
     .replace(/^(?:كم\s*سعر|كام\s*سعر|شو\s*سعر|بكم|بكام|سعر)\s+/i,'')
+    .replace(/^(?:شو|وش|شنو)\s+/i,'')
     .replace(/\s+(?:بكم|بكام|كم|كام)$/i,'')
     .trim();
 
@@ -5576,83 +5750,262 @@ function followupTokenMatchV29(a,b){
   return ca.includes(cb)||cb.includes(ca);
 }
 
+
+function cartItemsV52(){
+  if(!Array.isArray(botState.shoppingCart))botState.shoppingCart=[];
+  return botState.shoppingCart;
+}
+function addCartItemV52(name,qty,unitPrice,meta={}){
+  name=String(name||'').trim(); qty=Number(qty); unitPrice=Number(unitPrice);
+  if(!name||!Number.isFinite(qty)||qty<=0||!Number.isFinite(unitPrice)||unitPrice<=0)return null;
+  const cart=cartItemsV52(), key=normalize(name);
+  const found=cart.find(x=>normalize(x.name)===key && Number(x.unitPrice)===unitPrice);
+  if(found)found.qty=Number(found.qty||0)+qty;
+  else cart.push({name,qty,unitPrice,knowledgeId:meta.knowledgeId||null});
+  botState.currentTopic='checkout';
+  botState.topic='checkout';
+  saveChatMemory();
+  return cart;
+}
+function cartTotalV52(){
+  return cartItemsV52().reduce((s,x)=>s+Number(x.qty||0)*Number(x.unitPrice||0),0);
+}
+function cartSummaryV52(){
+  const cart=cartItemsV52();
+  if(!cart.length)return '';
+  const lines=cart.map((x,i)=>`${i+1}) ${x.name} — ${x.qty} × ${Number(x.unitPrice).toFixed(2)} = ${(Number(x.qty)*Number(x.unitPrice)).toFixed(2)} درهم`);
+  lines.push(`الإجمالي: ${cartTotalV52().toFixed(2)} درهم`);
+  return lines.join('\n');
+}
+function addAnotherProductIntentV52(raw){
+  const t=normalize(raw);
+  return /(?:زود|زيد|ضيف|اضف|حط|دخل)\s*(?:لي|لنا|عليهم|عليها|وياهم|معاهم|معهم|في الطلب|بالطلب)?/i.test(t) && /\d/.test(arabicDigits(t));
+}
+function extractSingleCartItemV52(raw){
+  let s=arabicDigits(normalizePriceTyposV46(String(raw||'')))
+    .replace(/[،,]+/g,' ')
+    .replace(/\s+/g,' ')
+    .trim()
+    .replace(/^(?:تمام|زين|اوك|أوك|اوكي|أوكي|هيه|هلا)\s+/i,'');
+  const m=s.match(/(?:زود|زيد|ضيف|اضف|حط|دخل)\s*(?:لي|لنا|عليهم|عليها|وياهم|معاهم|معهم|في الطلب|بالطلب)?\s*(?:كمان|بعد)?\s*(\d+(?:\.\d+)?)\s+(.+)/i);
+  if(!m)return null;
+  const qty=Number(m[1]), name=String(m[2]||'').trim();
+  if(!Number.isFinite(qty)||qty<=0||!name)return null;
+  const found=kbUnitPriceForItemV25(name);
+  if(!found)return {qty,name,missing:true};
+  return {qty,name,unitPrice:Number(found.price),knowledgeId:found.row?.id||null};
+}
+
+function purchaseQuantityIntentV57(raw){
+  const t=normalize(raw);
+  if(!t)return false;
+  return /^(?:خلاص|تمام|زين|اوكي|أوكي|اوك|أوك)?\s*(?:اباه|أباه|ابيه|أبيه|ابي|أبي|ابغي|أبغي|باخذ|بآخذ|بغيت|عطني|هاتلي|هات لي|خذ لي|خد لي)\s*\d+(?:\.\d+)?(?:\s*(?:حبه|حبة|قطعه|قطعة|وحده|وحدة))?\s*$/i.test(t);
+}
+
+function checkoutConfirmIntentV52(raw){
+  const t=normalize(raw);
+  return /(?:اعمل|سوي|سو|جهز|ثبت|اكد|أكد|كمل|تمم|خلص|ابي|ابغي|أبي|أبغي|عايز|اريد|أريد).*(?:الطلب|اوردر|الأوردر)|(?:الطلب|اوردر|الأوردر).*(?:تمام|ثبت|اكد|أكد|كمل|اعمل|سوي|سو|جهز|ابي|ابغي|عايز)/i.test(t);
+}
+function extractContactV52(raw){
+  const s=String(raw||'').trim().replace(/\s+/g,' ');
+  if(!s)return null;
+
+  /* V53: checkout asks for NAME + ADDRESS only, no phone number.
+     Preferred forms:
+     "أحمد - رأس الخيمة، النخيل"
+     "الاسم أحمد العنوان دبي ديرة"
+     "محمد، الشارقة التعاون"
+  */
+  let name='', address='';
+
+  const labeled=s.match(/(?:الاسم|اسمي)\s*[:：-]?\s*(.+?)\s+(?:العنوان|عنواني)\s*[:：-]?\s*(.+)$/i);
+  if(labeled){
+    name=String(labeled[1]||'').trim();
+    address=String(labeled[2]||'').trim();
+  }
+
+  if(!name || !address){
+    const sep=s.match(/^(.+?)\s*(?:[-–—|،,])\s*(.+)$/);
+    if(sep){
+      name=String(sep[1]||'').replace(/^(?:الاسم|اسمي)\s*[:：]?\s*/i,'').trim();
+      address=String(sep[2]||'').replace(/^(?:العنوان|عنواني)\s*[:：]?\s*/i,'').trim();
+    }
+  }
+
+  if(!name || !address){
+    const cityRe=/(رأس\s*الخيمة|راس\s*الخيمة|دبي|أبوظبي|ابوظبي|الشارقة|عجمان|أم\s*القيوين|ام\s*القيوين|الفجيرة|العين)/i;
+    const cm=s.match(cityRe);
+    if(cm && cm.index>0){
+      name=s.slice(0,cm.index).replace(/^(?:الاسم|اسمي|أنا|انا)\s*[:：]?\s*/i,'').trim();
+      address=s.slice(cm.index).replace(/^(?:العنوان|عنواني)\s*[:：]?\s*/i,'').trim();
+    }
+  }
+
+  if(!name || !address)return null;
+  if(/\d{8,}/.test(arabicDigits(s)))return null; // phone is not required/expected anymore
+
+  return {name,address};
+}
+function makeDraftOrderV52(contact){
+  const cart=cartItemsV52();
+  if(!cart.length)return null;
+  const draft={
+    id:'BQ-'+Date.now().toString(36).toUpperCase(),
+    items:JSON.parse(JSON.stringify(cart)),
+    total:cartTotalV52(),
+    contact,
+    occasion:botState.occasion||botState.giftData?.occasion||'',
+    status:'draft',
+    createdAt:new Date().toISOString()
+  };
+  botState.draftOrder=draft;
+  botState.checkoutContact=contact;
+  botState.waitingFor=null;
+  botState.expectedReply=null;
+  botState.currentTopic='order_draft';
+  botState.topic='order_draft';
+  saveChatMemory();
+  return draft;
+}
+async function shoppingJourneyRouterV52(raw){
+  /* V52: contact may arrive as "Ahmed 050..." in one message. Never lose a live cart. */
+  const directContact=extractContactV52(raw);
+  if(directContact && cartItemsV52().length && (botState.waitingFor==='checkout_contact' || botState.currentTopic==='checkout')){
+    const draft=makeDraftOrderV52(directContact);
+    return {type:'answer',text:`تم تجهيز طلبك المبدئي ✅\nرقم المرجع: ${draft.id}\n${cartSummaryV52()}\nالاسم: ${directContact.name}\nالعنوان: ${directContact.address}\nفريق المبيعات يكمل التأكيد النهائي من هنا.`,systemAction:'DRAFT_ORDER_CREATED',deterministic:true};
+  }
+  if(botState.waitingFor==='checkout_contact'){
+    const contact=extractContactV52(raw);
+    if(contact){
+      const draft=makeDraftOrderV52(contact);
+      return {type:'answer',text:`تم تجهيز طلبك المبدئي ✅\nرقم المرجع: ${draft.id}\n${cartSummaryV52()}\nالاسم: ${contact.name}\nالعنوان: ${contact.address}\nفريق المبيعات يكمل التأكيد النهائي من هنا.`,systemAction:'DRAFT_ORDER_CREATED',deterministic:true};
+    }
+    return {type:'clarify',text:'أرسل الاسم والعنوان فقط، مثال: أحمد - رأس الخيمة، النخيل.',systemAction:'CHECKOUT_CONTACT',deterministic:true};
+  }
+
+  if(addAnotherProductIntentV52(raw)){
+    const item=extractSingleCartItemV52(raw);
+    if(item){
+      if(item.missing)return {type:'clarify',text:`تمام، بس ما لقيت سعر ${item.name} في قاعدة المعرفة. عطِني الاسم والمقاس مثل ما هو.`,systemAction:'CART_NEEDS_PRICE',deterministic:true};
+      addCartItemV52(item.name,item.qty,item.unitPrice,{knowledgeId:item.knowledgeId});
+      return {type:'answer',text:`تمت إضافة ${item.qty} ${item.name} للطلب ✅\n${cartSummaryV52()}\nتحب تضيف منتج ثاني ولا أثبت الطلب؟`,systemAction:'CART_ADD_ITEM',deterministic:true};
+    }
+  }
+
+  if(checkoutConfirmIntentV52(raw)){
+    if(!cartItemsV52().length)return {type:'clarify',text:'أكيد، بس اختار المنتج والكمية أول عشان أثبت الطلب.',systemAction:'CHECKOUT_EMPTY',deterministic:true};
+    botState.waitingFor='checkout_contact';
+    botState.expectedReply='checkout_contact';
+    saveChatMemory();
+    return {type:'clarify',text:`تمام، هذا ملخص طلبك:\n${cartSummaryV52()}\n\nأرسل الاسم والعنوان فقط عشان أثبت الطلب المبدئي.`,systemAction:'CHECKOUT_CONTACT',deterministic:true};
+  }
+  return null;
+}
 function followupQuantityFromLastPriceV29(raw){
   const ctx=(typeof priceContextV4==='function')?priceContextV4():null;
   if(!ctx || !Number.isFinite(Number(ctx.price)) || Number(ctx.price)<=0)return null;
 
-  const src=arabicDigits(String(raw||''))
+  let src=arabicDigits(String(raw||''))
     .replace(/[،,]+/g,' ')
     .replace(/\s+/g,' ')
     .trim();
+  if(!src)return null;
+
+  /* V45: remove conversational prefixes without losing the quantity request.
+     Examples: "هيه عطني 3", "هلا أبغي 4", "تمام طيب احسب لي 2". */
+  src=src.replace(/^(?:(?:هيه|هية|هلا|هلا والله|مرحبا|تمام|زين|اوك|أوك|اوكي|أوكي|طيب|طب|ايوا|أيوه|ايوه|نعم)\s+){1,3}/i,'').trim();
 
   const n=normalize(src);
 
-  if(typeof explicitOrderSignalV4==='function' && explicitOrderSignalV4(raw))return null;
+  /* Explicit order tracking must stay outside price follow-up. */
+  const hardOrder=
+    /(?:رقم\s*الطلب|رقم\s*طلبي|وين\s*طلبي|طلبي\s*وين|تتبع\s*الطلب|تتبع\s*طلبي|حاله\s*الطلب|حالة\s*الطلب|order\s*number|track\s*order)/i.test(n);
+  if(hardOrder)return null;
+
   if(/ميزاني|budget/.test(n))return null;
 
-  /* V36: natural Arabic follow-up vocabulary. These words only open the
-     follow-up route; product-token matching below remains the safety gate. */
-  const hasWant=/(?:عايز|عاوز|عاوزه|اريد|أريد|ابغي|ابغى|ابي|أبي|بدي|بغيت|محتاج|هات|هاتلي|خلي|خليهم|خليها|اعملي|اعمللي|احسب|عدد|كميه|كمية|لو|ولو|ولا)/.test(n);
-  const hasCalc=/(?:تحسبهم|تحسبه|تحسبها|تحسبلي|احسبهم|احسبه|احسبها|احسبلي|احسب|الحساب|يطلعوا|يطلعو|يطلع|يصيروا|يصيرو|يصير|بكام|بكم|كام|كم|الإجمالي|الاجمالي)/.test(n);
-  if(!hasWant && !hasCalc)return null;
+  /* V42: Emirati/Gulf quantity follow-up vocabulary.
+     Supports: أبا 3 / أبا منهم 2 / أبغيه 8 / عطني 5 / خليهم 4 ... */
+  const qtyPatterns=[
+    /* direct desire / Emirati follow-up */
+    /(?:أباهم|اباهم|أباها|اباها|أباه|اباه|أبا|ابا|أبغيه|ابغيه|أبيه|ابيه|أبغيهم|ابغيهم|ابيهم|أريدهم|اريدهم|خليهم|خليها|خليه|هات\s*لي|هاتلي|هات|عطني|اعطني|أعطني|خذ\s*لي|خد\s*لي|خذلي|خدلي|أبغي|ابغي|أبغى|ابغى|أبي|ابي|أريد|اريد|عايز|عاوز|محتاج|باخذ|بآخذ|باخد|بأخذ|لو|ولو|ولا|طيب|طب|تمام|زين|اوك|أوك|اوكي|أوكي)\s*(?:منه|منها|منهم)?\s*(\d+(?:\.\d+)?)/i,
 
-  /* V32:
-     Quantity is the FIRST number following a request word.
-     Any later numbers stay part of the product specification:
-     "عايز 3 طاولة ... قطر 35 سم" => qty=3, spec still contains 35 سم. */
-  let qm=src.match(/(?:عايز|عاوز|عاوزه|اريد|أريد|ابغي|ابغى|ابي|أبي|بدي|بغيت|محتاج|هات(?:لي)?|خلي(?:هم|ها)?|اعملي|اعمللي|احسب(?:لي|هم|ه|ها)?|عدد|كميه|كمية|لو|ولو|ولا)\s*(\d+(?:\.\d+)?)/i);
+    /* "طيب احسب لي 4" / "احسبلي 4" / "احسبهم 4" */
+    /(?:طيب\s*)?(?:احسب\s*لي|احسبلي|احسبهم|احسبه|احسبها|تحسب\s*لي|تحسبلي|تحسبهم)\s*(\d+(?:\.\d+)?)/i,
 
-  /* Pure short follow-up such as "10 تحسبهم" */
-  if(!qm && hasCalc){
-    qm=src.match(/(?:^|\s)(\d+(?:\.\d+)?)(?=\s|$)/);
+    /* "لو باخذ 6 كم الحساب" / "باخذ 3 كم الحساب" */
+    /(?:لو\s*)?(?:باخذ|بآخذ|باخد|بأخذ|اخذ|آخذ)\s*(\d+(?:\.\d+)?)(?:\s*(?:كم|كام)\s*(?:الحساب|يطلع|يطلعون|يصير|يصيرون))?/i,
+
+    /(?:منه|منها|منهم)\s*(\d+(?:\.\d+)?)/i,
+    /(?:^|\s)(\d+(?:\.\d+)?)\s*(?:حبه|حبة|حبات|قطعه|قطعة|قطع|وحده|وحدة)?\s*(?:بس|فقط)?\s*$/i
+  ];
+
+  let qm=null;
+  for(const re of qtyPatterns){
+    const m=src.match(re);
+    if(m){qm=m;break;}
   }
-
   if(!qm)return null;
 
   const qty=Number(qm[1]);
   if(!Number.isFinite(qty)||qty<=0)return null;
 
-  const lastName=normalize(String(ctx.name||''));
-  if(!lastName)return null;
-
-  /* Remove ONLY the detected quantity occurrence, not dimensions/spec numbers. */
-  const qtyIndex=qm.index + qm[0].lastIndexOf(qm[1]);
-  const withoutQty=src.slice(0,qtyIndex)+' '+src.slice(qtyIndex+qm[1].length);
+  /* Remove only the matched request phrase.
+     Any remaining product words are checked against last confirmed product. */
+  let remainder=src.replace(qm[0],' ').replace(/\s+/g,' ').trim();
 
   const stop=new Set([
-    'عايز','عاوز','عاوزه','اريد','أريد','ابغي','ابغى','ابي','أبي','بدي','بغيت','محتاج',
-    'هات','هاتلي','خلي','خليهم','خليها','اعملي','اعمللي','احسب','عدد','كميه','كمية','من',
-    'لو','ولو','ولا','زين','تمام','طيب','طب','اوك','أوك','اوكي','أوكي','ماشي','حلو','خلاص','ايوا','أيوه','ايوه','نعم','اجل','أجل',
-    'سعر','بكام','بكم','كام','كم','تحسبهم','تحسبه','تحسبها','احسبهم','احسبه','احسبها','تحسبلي','احسبلي',
-    'يطلعوا','يطلعو','يطلع','يصيروا','يصيرو','يصير','الاجمالي','الإجمالي','لي','ليا'
+    'ابا','أبا','اباهم','أباهم','اباها','أباها','اباه','أباه',
+    'ابغيه','أبغيه','ابيه','أبيه','ابغيهم','أبغيهم','ابيهم','أبيهم','اريدهم','أريدهم',
+    'خليهم','خليها','خليه','هاتلي','هات','عطني','اعطني','أعطني','خذلي','خدلي',
+    'ابغي','أبغي','ابغى','أبغى','ابي','أبي','اريد','أريد','عايز','عاوز','محتاج','باخذ','بآخذ','باخد','بأخذ',
+    'منه','منها','منهم','لو','ولو','ولا','طيب','طب','تمام','زين','اوك','أوك','اوكي','أوكي',
+    'كم','كام','تحسبهم','تحسبه','تحسبها','احسبهم','احسبه','احسبها','احسبلي','الحساب',
+    'يطلع','يطلعون','يطلعو','يصير','يصيرون','لي','ليا','بس','فقط','شو','وش','شنو','يعني'
   ]);
 
-  const units=new Set(['سم','مم','متر','م','cm','mm','قطعه','قطعة','قطع','حبه','حبة','وحده','وحدة']);
+  const units=new Set([
+    'سم','مم','متر','م','cm','mm',
+    'قطعه','قطعة','قطع','حبه','حبة','حبات','وحده','وحدة'
+  ]);
 
-  const currentTokens=normalize(withoutQty)
-    .split(/\s+/)
-    .filter(Boolean)
+  const remTokens=normalize(remainder)
+    .split(/\s+/).filter(Boolean)
     .filter(w=>!stop.has(w));
 
+  const lastName=normalize(String(ctx.name||''));
   const lastTokens=lastName.split(/\s+/).filter(Boolean);
 
-  /* Pure quantity continuation:
-     "لو 10 كم تحسبهم" / "طيب 10" */
-  const meaningfulCurrent=currentTokens.filter(w=>!units.has(w) && !/^\d+(?:\.\d+)?$/.test(w));
-  /* Pure continuation means there is literally no product/spec text left.
-     "لو 10 كم تحسبهم" qualifies; "عايز 3 متر" does not. */
-  if(currentTokens.length===0){
+  /* Pure follow-up with no product repetition:
+     "أبا منهم 2" / "أبا 3" / "عطني 5" */
+  const meaningful=remTokens.filter(w=>!units.has(w) && !/^\d+(?:\.\d+)?$/.test(w));
+  if(meaningful.length===0){
     const total=qty*Number(ctx.price);
+
+    botState.lastUnitPrice=Number(ctx.price);
+    botState.lastPriceProductName=ctx.name||botState.lastPriceProductName||'';
+    if(botState.lastProduct){
+      botState.lastProduct.name=ctx.name||botState.lastProduct.name||'';
+      botState.lastProduct.price=Number(ctx.price);
+    }
+    botState.currentTopic='browse';
+    botState.topic='browse';
+    botState.waitingFor=null;
+    botState.expectedReply=null;
+    addCartItemV52(ctx.name||'المنتج',qty,Number(ctx.price));
+    saveChatMemory();
+
     return {
       type:'answer',
-      text:'لو '+qty+' '+(ctx.name||'وحدة')+' × '+Number(ctx.price).toFixed(2)+' درهم = '+total.toFixed(2)+' درهم إجماليًا.',
+      text:'أكيد 🌷 '+qty+' × '+Number(ctx.price).toFixed(2)+' درهم = '+total.toFixed(2)+' درهم إجماليًا للـ '+(ctx.name||'منتج')+'.\nضفته في الطلب المبدئي. إذا تبا تضيف منتج ثاني قلّي، أو قل «ثبت الطلب».',
       systemAction:'FOLLOWUP_QUANTITY_CALC',
       deterministic:true,
       liveData:true
     };
   }
 
-  const currentProductTokens=currentTokens
+  /* Product mentioned explicitly: require compatibility with last product. */
+  const currentProductTokens=remTokens
     .filter(w=>!units.has(w))
     .filter(w=>!/^\d+(?:\.\d+)?$/.test(w));
 
@@ -5666,30 +6019,205 @@ function followupQuantityFromLastPriceV29(raw){
   for(const token of currentProductTokens){
     if(lastProductTokens.some(x=>followupTokenMatchV29(token,x)))matched++;
   }
-
   const coverage=matched/currentProductTokens.length;
-
-  /* Full or shortened product description must still mostly refer
-     to the last confirmed product. */
-  if(coverage<0.6)return null;
-
-  /* V32.1:
-     Do not reject extra measurement details such as "قطر 35 سم".
-     The matched product words remain the safety gate. */
+  if(coverage<0.55)return null;
 
   const total=qty*Number(ctx.price);
 
   botState.lastUnitPrice=Number(ctx.price);
   botState.lastPriceProductName=ctx.name||botState.lastPriceProductName||'';
+  if(botState.lastProduct){
+    botState.lastProduct.name=ctx.name||botState.lastProduct.name||'';
+    botState.lastProduct.price=Number(ctx.price);
+  }
+  botState.currentTopic='browse';
+  botState.topic='browse';
+  botState.waitingFor=null;
+  botState.expectedReply=null;
+  addCartItemV52(ctx.name||'المنتج',qty,Number(ctx.price));
   saveChatMemory();
 
   return {
     type:'answer',
-    text:'لو '+qty+' '+(ctx.name||'وحدة')+' × '+Number(ctx.price).toFixed(2)+' درهم = '+total.toFixed(2)+' درهم إجماليًا.',
+    text:'أكيد 🌷 '+qty+' × '+Number(ctx.price).toFixed(2)+' درهم = '+total.toFixed(2)+' درهم إجماليًا للـ '+(ctx.name||'منتج')+'.\nضفته في الطلب المبدئي. إذا تبا تضيف منتج ثاني قلّي، أو قل «ثبت الطلب».',
     systemAction:'FOLLOWUP_QUANTITY_CALC',
     deterministic:true,
     liveData:true
   };
+}
+
+function smartSalesDiscoveryV49(raw){
+  const t=normalize(raw);
+  if(!t)return null;
+
+  if(isDirectPriceQuestionV40(raw) || explicitOrderSignalV4(raw) || quantityPriceQuestionV4(raw)!=null)return null;
+
+  const asksOffer=/(?:عندكم|في|فيه|فيه شي|في شي).*(?:عرض|عروض|خصم|تخفيض)|(?:شو|وش|ايش|إيش).*(?:العروض|عروض)|(?:ابي|أبي|ابغي|أبغي).*(?:اشوف|أشوف).*(?:العروض|عروض)|(?:شو|وش).*(?:شي|حاجه|حاجة).*(?:حلو|زين).*(?:سعره|سعرها).*(?:زين|حلو)|(?:شي|حاجه|حاجة)\s+(?:حلو|زين)\s+وسعر(?:ه|ها)\s+(?:زين|حلو)/i.test(t);
+  const namedOccasion=(typeof explicitOccasionV50==='function'?explicitOccasionV50(raw):'');
+  const asksGift=/(?:ابغي|أبغي|ابي|أبي|اريد|أريد|عايز|محتاج).*(?:هديه|هدية|هدايا|توزيعات)|(?:عندي).*(?:مناسبه|مناسبة|عيد|تخرج|مولود|عرس|زواج|اليوم الوطني|يوم العلم|رمضان)|(?:ابغي|أبغي|ابي|أبي).*(?:توزيعات)/i.test(t) || (!!namedOccasion && /(?:عندي|ابغي|أبغي|ابي|أبي|توزيعات|هديه|هدية)/i.test(t));
+
+  if(!asksOffer && !asksGift)return null;
+
+  /* V53: asking about offers is NOT an occasion.
+     Never manufacture "مولود" or any other occasion here. */
+  if(asksOffer && !asksGift){
+    botState.waitingFor=null;
+    botState.expectedReply=null;
+    botState.topic='browse';
+    botState.currentTopic='browse';
+    saveChatMemory();
+    return {
+      type:'answer',
+      text:'أكيد ✨ عندنا خيارات وعروض حسب القسم والمنتج. تبا تشوف أكريليك، ورق، فوركس، خشب، جلد، استيكر، رمضان أو مناسبات؟',
+      systemAction:'SHOW_OFFERS',
+      deterministic:true
+    };
+  }
+
+  const occ=namedOccasion||matchFirst(OCCASION_MAP,t)||botState.occasion||'';
+  if(occ){
+    botState.occasion=occ;
+    botState.giftData={...(botState.giftData||{}),occasion:occ};
+    botState.topic='gift';
+    botState.currentTopic='gift';
+    botState.waitingFor=null;
+    botState.expectedReply=null;
+    saveChatMemory();
+    return {
+      type:'answer',
+      text:'أكيد 🎁 فهمت إن المناسبة '+occ+'. أقدر أوجهك للخيارات المناسبة لها مباشرة. وإذا عندك عدد أو نوع منتج معين قولي.',
+      systemAction:'SMART_SALES_DISCOVERY',
+      deterministic:true
+    };
+  }
+
+  botState.topic='gift';
+  botState.currentTopic='gift';
+  botState.waitingFor='gift_occasion';
+  botState.expectedReply='gift_occasion';
+  saveChatMemory();
+  return {
+    type:'clarify',
+    text:'أكيد 🎁 شو المناسبة؟ إذا قلت لي المناسبة أوجهك للخيارات الصح من غير ما أفترض شي من عندي.',
+    systemAction:'SMART_SALES_DISCOVERY',
+    deterministic:true
+  };
+}
+
+
+
+function mainCategoryBrowseV55(raw){
+  const t=normalize(raw);
+  if(!t)return null;
+
+  /* Never steal price, quantity or multi-item requests. */
+  if(isDirectPriceQuestionV40(raw) || quantityPriceQuestionV4(raw)!=null)return null;
+  if(extractMultiItemPairsV56(raw).length>=2)return null;
+
+  const asksBrowse=/(?:شو|وش|ايش|ابي|ابغي|اريد|عندكم|وين|ورني|اشوف|اعرض|قسم)/i.test(t);
+  if(!asksBrowse)return null;
+
+  const routes=[
+    [/خشب/i,'Wood','قسم الخشب'],
+    [/فوركس/i,'Forex','قسم الفوركس'],
+    [/جلد/i,'Leather','قسم الجلد'],
+    [/اكريليك|أكريليك/i,'Acrylic','قسم الأكريليك'],
+    [/ورق/i,'Paper','قسم الورق'],
+    [/استيكر/i,'Sticker','قسم الاستيكر'],
+    [/رمضان/i,'Ramadan','قسم رمضان'],
+    [/مناسبات/i,'Occasions','قسم المناسبات']
+  ];
+
+  for(const [re,cat,label] of routes){
+    if(re.test(t)){
+      botState.topic='browse';
+      botState.currentTopic='browse';
+      botState.waitingFor=null;
+      botState.expectedReply=null;
+      saveChatMemory();
+      return {
+        type:'answer',
+        text:'أكيد 🎁 تقدر تشوف '+label+' من هنا: https://bariqgifts.com/categories.html?category='+cat,
+        systemAction:'MAIN_CATEGORY_BROWSE',
+        deterministic:true
+      };
+    }
+  }
+  return null;
+}
+
+function genericPriceInquiryV55(raw){
+  const t=normalize(raw);
+  if(!t)return null;
+
+  const asksGenericPrice=
+    /(?:ابغي|ابي|اريد|عايز|محتاج).*(?:اعرف|معرفه).*(?:سعر|السعر).*(?:منتج|شي|حاجه)?/i.test(t) ||
+    /(?:سعر\s+منتج).*(?:بس|فقط|الحين|الان)?/i.test(t);
+
+  const clearlyNoOrder=
+    /(?:ما|مو|مش).*(?:ابغي|ابي|اريد|عايز).*(?:اطلب|اشتري)/i.test(t) ||
+    /(?:بس|فقط).*(?:اعرف|معرفه).*(?:السعر|سعر)/i.test(t);
+
+  if(!asksGenericPrice)return null;
+
+  /* If user named a real product, allow normal price engine instead. */
+  const product=cleanDirectPriceProductV40(raw);
+  const p=normalize(product);
+  const genericTokens=/^(?:منتج|شي|حاجه|حاجة|السعر|سعر|منتج بس|منتج فقط)?$/i;
+  if(p && p.length>3 && !genericTokens.test(p) && !/(?:منتج|ما ابغي اطلب|مو ابغي اطلب|مش عايز اطلب)/i.test(p)){
+    return null;
+  }
+
+  botState.topic='price_inquiry';
+  botState.currentTopic='price_inquiry';
+  botState.waitingFor='price_product';
+  botState.expectedReply='price_product';
+  botState.orderRef='';
+  botState.pendingOrderRef='';
+  saveChatMemory();
+
+  return {
+    type:'clarify',
+    text:(clearlyNoOrder?'أكيد، ما في مشكلة 🌷 ':'أكيد 🌷 ')+'شو اسم المنتج والمقاس اللي حاب تعرف سعره؟',
+    systemAction:'ASK_PRICE_PRODUCT',
+    deterministic:true
+  };
+}
+
+function directBrowseInquiryV53(raw){
+  const t=normalize(raw);
+  if(!t)return null;
+
+  /* V54: a product/category route is only for browsing.
+     Price questions must continue to the pricing engine. */
+  if(isDirectPriceQuestionV40(raw) || quantityPriceQuestionV4(raw)!=null)return null;
+
+  const routes=[
+    {re:/(?:مقاعد|بنش|benches).*(?:خشب)|(?:خشب).*(?:مقاعد|بنش|benches)/i,url:'https://bariqgifts.com/categories.html?category=Wood&subcategory=benches',label:'مقاعد خشب'},
+    {re:/(?:طاولات|طاوله|طاولة).*(?:فوركس)|(?:فوركس).*(?:طاولات|طاوله|طاولة)/i,url:'https://bariqgifts.com/categories.html?category=Forex&subcategory=tables',label:'طاولات فوركس'},
+    {re:/(?:طاولات|طاوله|طاولة).*(?:خشب)|(?:خشب).*(?:طاولات|طاوله|طاولة)/i,url:'https://bariqgifts.com/categories.html?category=Wood&subcategory=tables',label:'طاولات خشب'},
+    {re:/(?:طاولات|طاوله|طاولة).*(?:جلد)|(?:جلد).*(?:طاولات|طاوله|طاولة)/i,url:'https://bariqgifts.com/categories.html?category=Leather&subcategory=tables',label:'طاولات جلد'},
+    {re:/(?:بوكس|بوكسات|صندوق).*(?:جلد)|(?:جلد).*(?:بوكس|بوكسات|صندوق)/i,url:'https://bariqgifts.com/categories.html?category=Leather&subcategory=boxes',label:'بوكسات جلد'},
+    {re:/(?:ستاند|استاند|ستاندات).*(?:فوركس)|(?:فوركس).*(?:ستاند|استاند|ستاندات)/i,url:'https://bariqgifts.com/categories.html?category=Forex&subcategory=stands',label:'ستاندات فوركس'},
+    {re:/(?:طاولات|طاوله|طاولة).*(?:اكريليك|أكريليك)|(?:اكريليك|أكريليك).*(?:طاولات|طاوله|طاولة)/i,url:'https://bariqgifts.com/categories.html?category=Acrylic&subcategory=Tables',label:'طاولات أكريليك'}
+  ];
+
+  for(const r of routes){
+    if(r.re.test(t)){
+      botState.topic='browse';
+      botState.currentTopic='browse';
+      botState.waitingFor=null;
+      botState.expectedReply=null;
+      saveChatMemory();
+      return {
+        type:'answer',
+        text:'أكيد 🎁 تقدر تشوف '+r.label+' من هنا: '+r.url,
+        systemAction:'DIRECT_CATEGORY_BROWSE',
+        deterministic:true
+      };
+    }
+  }
+  return null;
 }
 
 async function processBotMessageCore(msg){
@@ -5697,11 +6225,76 @@ async function processBotMessageCore(msg){
   if(!raw)return silentResult();
   botState.lastMessage=raw;
 
-  /* V31 pricing continuation guard:
-     A clear quantity follow-up to a confirmed last price must be handled
-     before a generic KB row can reinterpret it as a new custom-order flow. */
-  const pricingFollowupV31=followupQuantityFromLastPriceV29(raw);
-  if(pricingFollowupV31)return pricingFollowupV31;
+  /* V56 SAFE ROUTING PRIORITY
+     1 order number
+     2 generic price-only inquiry
+     3 multi-item
+     4 quantity follow-up
+     5 direct price
+     6 cart/checkout
+     7 specific/main browse
+     8 sales discovery
+  */
+  const waitingOrderNumberV56=
+    botState.waitingFor==='order_number' ||
+    botState.expectedReply==='order_number' ||
+    String(inferredExpectedReplyV9()||'')==='order_number';
+
+  if(waitingOrderNumberV56){
+    const digits=arabicDigits(raw).trim();
+    if(/^#?\s*\d{3,10}\s*$/.test(digits)){
+      const orderWaitV56=await resolveWaitingExpectedV4(raw,null,{});
+      if(orderWaitV56)return orderWaitV56;
+    }
+  }
+
+  /* "أبغي أعرف سعر منتج بس، ما أبغي أطلب الحين" must never become order tracking. */
+  const genericPriceV56=genericPriceInquiryV55(raw);
+  if(genericPriceV56)return genericPriceV56;
+
+  if(!waitingOrderNumberV56){
+    const multiV56=buildMultiItemQuoteV56(raw);
+    if(multiV56)return multiV56;
+  }
+
+  if(!waitingOrderNumberV56){
+    const followV56=followupQuantityFromLastPriceV29(raw);
+    if(followV56)return followV56;
+
+    /* V57: "خلاص أباه 4" is a purchase quantity, never a goodbye. */
+    if(purchaseQuantityIntentV57(raw)){
+      const forcedQty=arabicDigits(raw).match(/\d+(?:\.\d+)?/);
+      const pc=priceContextV4();
+      if(forcedQty && pc && Number.isFinite(Number(pc.price))){
+        const qty=Number(forcedQty[0]);
+        const total=qty*Number(pc.price);
+        addCartItemV52(pc.name||botState.lastPriceProductName||'المنتج',qty,Number(pc.price));
+        return {
+          type:'answer',
+          text:'أكيد 🌷 '+qty+' × '+Number(pc.price).toFixed(2)+' درهم = '+total.toFixed(2)+' درهم إجماليًا.\nتمت إضافته للطلب. إذا تبا تضيف شي ثاني قولي، أو قل «ثبت الطلب».',
+          systemAction:'PURCHASE_QTY_V57',
+          deterministic:true
+        };
+      }
+    }
+  }
+
+  if(!waitingOrderNumberV56 && isDirectPriceQuestionV40(raw)){
+    const priceV56=await directKnowledgePriceV40(raw);
+    if(priceV56)return priceV56;
+  }
+
+  const shoppingV56=await shoppingJourneyRouterV52(raw);
+  if(shoppingV56)return shoppingV56;
+
+  const specificBrowseV56=directBrowseInquiryV53(raw);
+  if(specificBrowseV56)return specificBrowseV56;
+
+  const mainBrowseV56=mainCategoryBrowseV55(raw);
+  if(mainBrowseV56)return mainBrowseV56;
+
+  const discoveryV56=smartSalesDiscoveryV49(raw);
+  if(discoveryV56)return discoveryV56;
 
   /* =========================================================
      V9 HARD STATE ROUTER
@@ -5961,7 +6554,7 @@ async function processBotMessageCore(msg){
 
     return {
       type:'clarify',
-      text:'أكيد 🎁 إيه المناسبة؟ عيد ميلاد، تخرج، مولود، زواج، خطوبة، عيد ولا مناسبة تانية؟',
+      text:'أكيد 🎁 شو المناسبة؟ عيد ميلاد، تخرج، مولود، زواج، اليوم الوطني، عيد ولا مناسبة ثانية؟',
       systemAction:'FLOW_REPLY',
       deterministic:true
     };
@@ -6433,219 +7026,494 @@ const savedTab=sessionStorage.getItem('bot_tab');if(savedTab)tab(savedTab);
 setTimeout(()=>refreshMemoryPanel().catch(()=>{}),700);
 </script>
 
-<script id="v39CleanTestHarness">
+
+<script id="v44AdvancedTestHarness">
 (function(){
 'use strict';
 
-let v39Results=[];
-let v39Stop=false;
-let v39Filter='all';
+let results=[], stopRequested=false, filter='all', rng=Math.random;
 
-const EM_FOLLOW=[
- q=>`زين خليهم ${q}`,
- q=>`تمام لو ${q}`,
- q=>`أوك أبغي ${q}`,
- q=>`هيه عطني ${q}`,
- q=>`ابا منهم ${q}`,
- q=>`لو باخذ ${q} كم الحساب`,
- q=>`طيب احسب لي ${q}`,
- q=>`ولا ${q} كم تحسبهم لي`
+const FOLLOW_FORMS=[
+ q=>`أبا ${q}`,q=>`أبا منهم ${q}`,q=>`أبغيه ${q}`,q=>`عطني ${q}`,q=>`خليهم ${q}`,
+ q=>`طيب احسب لي ${q}`,q=>`احسبلي ${q}`,q=>`لو باخذ ${q} كم الحساب`,q=>`تمام لو ${q}`,
+ q=>`زين خليهم ${q}`,q=>`أريد منه ${q}`,q=>`لو باخد ${q} كم يطلع`
 ];
-const EM_PRICE=[
- n=>`شو سعر ${n}`,
- n=>`بكم ${n}`,
- n=>`أبغي أعرف سعر ${n}`,
- n=>`لو سمحت كم سعر ${n}`
+const PRICE_FORMS=[
+ n=>`كم سعر ${n}`,n=>`شو سعر ${n}`,n=>`بكم ${n}`,n=>`أبغي أعرف سعر ${n}`,n=>`لو سمحت كم سعر ${n}`
 ];
-const EM_WANT=['أبغي','ابا','أبا','أريد','عطني','محتاج'];
+const WANT=['أبغي','أبا','أريد','عطني','محتاج','هات لي'];
+const TRACKING=[
+ 'وين طلبي','شو صار على طلبي','أبغي أعرف طلبي وين','وين وصل الطلب','شيك لي على طلبي','شو حالة طلبي'
+];
 
-function arr(){try{return Array.isArray(questions)?questions:[]}catch(e){return []}}
-function rnd(a){return a[Math.floor(Math.random()*a.length)]}
-function shuffle(a){return [...a].sort(()=>Math.random()-.5)}
+const EMIRATI_GREETINGS=[
+ 'هلا والله','مرحبا الساع','السلام عليكم','هلا الغالي','يا مرحبا','شحالك'
+];
+const EMIRATI_OFFERS=[
+ 'شو العروض اللي عندكم اليوم؟',
+ 'عندكم عروض هالأيام؟',
+ 'شو عندكم شي حلو وسعره زين؟',
+ 'أبغي أشوف العروض اللي عندكم',
+ 'في شي عليه خصم الحين؟'
+];
+const EMIRATI_OCCASIONS=[
+ 'عندي تخرج وأبغي شي مرتب',
+ 'عندي مولود يديد وأبغي هدية',
+ 'عندي عرس قريب شو تنصحني',
+ 'عندي مناسبة اليوم الوطني وأبغي شي مميز',
+ 'عندي عيد وأبغي توزيعات'
+];
+const EMIRATI_RETURNING=[
+ 'أنا طالب منكم قبل، أبغي أعرف طلبي وين',
+ 'أنا عميل عندكم وطلبي للحين ما وصل',
+ 'كنت طالب منكم قبل، تقدر تشيك لي على الطلب؟'
+];
+const EMIRATI_PRODUCT_QUESTIONS=[
+ n=>`شو رايك في ${n}؟`,
+ n=>`هذا ${n} ينفع للمناسبة؟`,
+ n=>`عندكم نفس ${n} بمقاس ثاني؟`,
+ n=>`أبغي أعرف أكثر عن ${n}`
+];
+const EMIRATI_FOLLOW_REAL=[
+ q=>`زين عطني ${q}`,
+ q=>`خلاص أباه ${q}`,
+ q=>`تمام لو باخذ ${q} كم الحساب؟`,
+ q=>`أوك احسب لي ${q}`,
+ q=>`هيه خليهم ${q}`,
+ q=>`أبا منهم ${q}`,
+ q=>`هات لي ${q}`,
+ q=>`هات لي ${q} شو`
+];
+const EMIRATI_THANKS=[
+ 'تسلم ما قصرت','يعطيك العافية','زين شكراً الغالي','تمام مشكور','كفو تسلم'
+];
+
+const EMIRATI_ADD_MORE=[
+ (q,n)=>`زين زود لي كمان ${q} ${n}`,
+ (q,n)=>`أبغي أضيف بعد ${q} ${n}`,
+ (q,n)=>`حط وياهم ${q} ${n}`,
+ (q,n)=>`ضيف عليهم ${q} ${n}`
+];
+const EMIRATI_CONFIRM_ORDER=['تمام ثبت الطلب','خلاص سو الطلب','أوك كمل الطلب','تمام أكد الأوردر','جهز لي الطلب'];
+const EMIRATI_CONTACT=['أحمد - رأس الخيمة، النخيل','محمد - دبي، ديرة','خالد - الشارقة، التعاون'];
+const EMIRATI_INQUIRY_ONLY=['هلا، عندكم طاولات فوركس؟','شو عندكم في قسم الخشب؟','أبغي أعرف سعر منتج بس، ما أبغي أطلب الحين','عندكم مقاعد خشب؟'];
+const EMIRATI_EXISTING_ORDER=['هلا، أنا طالب منكم قبل وأبغي أتابع الطلب','أنا عندي أوردر سابق، وين وصل؟','شيك لي على طلبي لو سمحت'];
+
+
+
+function makeRng(seed){
+  let h=2166136261>>>0;
+  for(const ch of String(seed)){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)}
+  return ()=>{h+=0x6D2B79F5;let t=h;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}
+}
+function rand(a){return a[Math.floor(rng()*a.length)]}
+function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function kb(){try{return Array.isArray(questions)?questions:[]}catch(e){return []}}
 function esc(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function norm(s){return String(s||'').toLowerCase().replace(/[إأآٱ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').replace(/\s+/g,' ').trim()}
-function resText(r){return !r?'':typeof r==='string'?r:String(r.text||r.answer||r.message||'')}
-function extractPrice(s){
-  const raw=String(s||'').replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d));
-  const hits=[...raw.matchAll(/(\d+(?:\.\d+)?)\s*(?:درهم|AED)/gi)];
-  if(!hits.length)return null;
-  const n=Number(hits[hits.length-1][1]);return Number.isFinite(n)&&n>0?n:null;
-}
-function productName(q){
-  if(typeof kbPricingCanonV27==='function')return kbPricingCanonV27(q);
-  return String(q||'').replace(/^(?:كم\s*سعر|كام\s*سعر|شو\s*سعر|بكم|سعر|أبغي أعرف سعر|ابغي اعرف سعر)\s*/i,'').trim();
-}
-function priceRows(){
-  return arr().filter(x=>x&&x.active!==false&&extractPrice(x.answer)!=null)
-    .map(x=>({row:x,price:extractPrice(x.answer),name:productName(x.question)}))
-    .filter(x=>x.name && x.name.length>1);
-}
-function categoryRows(){
-  return arr().filter(x=>x&&x.active!==false&&(String(x.action_name||'').toUpperCase()==='CATEGORY_PRODUCTS'||/^https:\/\/bariqgifts\.com\/categories/i.test(String(x.action_value||''))));
-}
-function generalRows(){
-  return arr().filter(x=>x&&x.active!==false&&!extractPrice(x.answer)&&String(x.question||'').trim()&&String(x.answer||'').trim());
-}
-function evaluate(sc,lastResult,lastAnswer){
-  const a=norm(lastAnswer);
-  if(!a)return {pass:false,reason:'البوت لم يرسل ردًا.'};
-  if(sc.expectedAmount!=null){
-    const n=Number(sc.expectedAmount);
-    const probes=[n.toFixed(2),String(n),String(Math.round(n*100)/100)];
-    if(!probes.some(v=>a.includes(norm(v))))return {pass:false,reason:`الإجمالي المتوقع ${n} درهم غير موجود في الرد.`};
-  }
-  if(sc.expectAny?.length&&!sc.expectAny.some(x=>a.includes(norm(x))))return {pass:false,reason:'الرد لا يحتوي العلامة المتوقعة.'};
-  if(sc.kind==='category'){
-    const ok = lastResult?.type==='products' || lastResult?.products?.length || a.includes('http') || a.includes('قسم') || a.includes('منتج');
-    if(!ok)return {pass:false,reason:'لم يظهر رابط/قسم/منتجات للفئة.'};
-  }
-  if(sc.kind==='tracking'){
-    const ok = String(lastResult?.systemAction||'').includes('ORDER') || a.includes('رقم') || a.includes('طلب');
-    if(!ok)return {pass:false,reason:'استفسار التتبع لم يدخل مسار الطلب.'};
-  }
-  return {pass:true,reason:''};
-}
+function answerText(r){return !r?'':typeof r==='string'?r:String(r.text||r.answer||r.message||'')}
+function extractPrice(s){const raw=String(s||'').replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d));const m=[...raw.matchAll(/(\d+(?:\.\d+)?)\s*(?:درهم|AED)/gi)];if(!m.length)return null;const n=Number(m[m.length-1][1]);return Number.isFinite(n)&&n>0?n:null}
+function productName(q){if(typeof kbPricingCanonV27==='function')return kbPricingCanonV27(q);return String(q||'').replace(/^(?:كم\s*سعر|كام\s*سعر|شو\s*سعر|بكم|سعر)\s*/i,'').trim()}
+function priceRows(){return kb().filter(x=>x&&x.active!==false&&extractPrice(x.answer)!=null).map(x=>({row:x,price:extractPrice(x.answer),name:productName(x.question)})).filter(x=>x.name)}
+function categoryRows(){return kb().filter(x=>x&&x.active!==false&&(String(x.action_name||'').toUpperCase()==='CATEGORY_PRODUCTS'||String(x.answer||'').includes('categories.html?category=')))}
+function generalRows(){return kb().filter(x=>x&&x.active!==false&&!extractPrice(x.answer)&&String(x.question||'').trim()&&String(x.answer||'').trim())}
+function typo(s){const swaps=[['سعر','سغر'],['اكريليك','اكريلك'],['أكريليك','اكريلك'],['فوركس','فوركش'],['صينية','صنيه'],['كوباية','كوبيه'],['استاند','ستاند'],['علاقة','علاقه']];const hits=swaps.filter(([a])=>String(s).includes(a));if(!hits.length)return s+'؟';const [a,b]=rand(hits);return String(s).replace(a,b)}
 
-/* Isolated test mode:
-   snapshot/restore local bot state and disable training writes/logs. */
 function snapshot(){
   return {
-    botState:JSON.parse(JSON.stringify(typeof botState==='object'?botState:{})),
-    conversation:JSON.parse(JSON.stringify(typeof conversation!=='undefined'?conversation:[])),
-    customerMemories:JSON.parse(JSON.stringify(typeof customerMemories!=='undefined'?customerMemories:[])),
-    waiting:typeof __botProcessingPromiseV7!=='undefined'?__botProcessingPromiseV7:null
+    botState: JSON.parse(JSON.stringify(typeof botState==='object'?botState:{})),
+    conversation: JSON.parse(JSON.stringify(typeof conversation!=='undefined'?conversation:[])),
+    customerMemories: JSON.parse(JSON.stringify(typeof customerMemories!=='undefined'?customerMemories:[]))
   };
 }
 function restore(s){
-  try{ if(typeof botState==='object'){Object.keys(botState).forEach(k=>delete botState[k]);Object.assign(botState,s.botState)} }catch(e){}
-  try{ if(typeof conversation!=='undefined'){conversation.length=0;conversation.push(...s.conversation)} }catch(e){}
-  try{ if(typeof customerMemories!=='undefined'){customerMemories.length=0;customerMemories.push(...s.customerMemories)} }catch(e){}
+  try{Object.keys(botState).forEach(k=>delete botState[k]);Object.assign(botState,s.botState)}catch(e){}
+  try{conversation.length=0;conversation.push(...s.conversation)}catch(e){}
+  try{customerMemories.length=0;customerMemories.push(...s.customerMemories)}catch(e){}
 }
-async function callIsolated(q){
-  if(typeof processBotMessage!=='function')throw new Error('محرك البوت غير متاح.');
+async function callBot(q){
+  if(typeof processBotMessage!=='function')throw new Error('محرك البوت غير متاح');
   return await processBotMessage(q);
 }
+
+function expectedMultiFromCurrentKBV57(sc){
+  try{
+    const pairs=extractMultiItemPairsV56((sc.steps||[]).at(-1)||sc.q||'');
+    if(!pairs || pairs.length<2)return null;
+    let total=0;
+    for(const p of pairs){
+      const f=kbUnitPriceForItemV25(p.name);
+      if(!f || !Number.isFinite(Number(f.price)))return null;
+      total+=Number(p.qty)*Number(f.price);
+    }
+    return total;
+  }catch(e){return null}
+}
+
+function evaluate(sc,lastResult,lastAnswer,turns=[]){
+  const a=norm(lastAnswer);
+  if(sc.kind==='journey'){
+    const botTurns=(turns||[]).filter(t=>t.role==='bot').map(t=>norm(t.text));
+    if(botTurns.some((x,i)=>i>0 && (!x || x==='—' || x==='-' || x==='--')))return {pass:false,reason:'يوجد رد فارغ/شرطة داخل رحلة العميل.'};
+
+    const repeatedWelcome=botTurns.slice(1).some(x=>
+      x.includes('كيف اقدر اخدمك') ||
+      x.includes('كيف اقدر اخدمج') ||
+      x.includes('نورت بريق') ||
+      x.includes('حياك في بريق')
+    );
+    if(repeatedWelcome)return {pass:false,reason:'البوت أعاد رسالة الترحيب بدل الرد على سؤال العميل.'};
+
+    /* Offers must not hallucinate an occasion that customer never mentioned. */
+    const customerText=(turns||[]).filter(t=>t.role==='user').map(t=>norm(t.text)).join(' ');
+    if(String(sc.id||'').startsWith('journey-offer-') && !customerText.includes('مولود')){
+      const hallucinated=botTurns.some(x=>x.includes('مولود جديد') || x.includes('مناسبه لمولود'));
+      if(hallucinated)return {pass:false,reason:'البوت اخترع مناسبة مولود في سؤال عروض عام.'};
+    }
+
+    /* Inquiry-only category/product question must receive a relevant answer. */
+    if(String(sc.id||'').startsWith('journey-inquiry-')){
+      const last=botTurns.at(-1)||'';
+      const userLast=(turns||[]).filter(t=>t.role==='user').map(t=>norm(t.text)).at(-1)||'';
+      if(userLast.includes('قسم الخشب')){
+        if(!(last.includes('category=wood') || last.includes('قسم الخشب') || last.includes('خشب')))return {pass:false,reason:'سؤال قسم الخشب لم يحصل على رد متعلق بالخشب.'};
+      }else if(userLast.includes('سعر منتج') || userLast.includes('اعرف سعر')){
+        if(!(last.includes('اسم المنتج') || last.includes('شو اسم المنتج')))return {pass:false,reason:'استفسار السعر العام لم يطلب اسم المنتج.'};
+      }else{
+        const ok=last.includes('http') || last.includes('قسم') || last.includes('تقدر تشوف') || last.includes('سعر') || last.includes('درهم') || last.includes('منتج');
+        if(!ok)return {pass:false,reason:'سؤال الاستفسار المباشر لم يحصل على رد متعلق بالمنتج/القسم.'};
+      }
+    }
+
+    /* Existing-order journey must stay inside order tracking. */
+    if(String(sc.id||'').startsWith('journey-existing-order-')){
+      const badCalc=botTurns.some(x=>/\d+\s*[×x]\s*\d+/.test(x) && x.includes('درهم اجمالي'));
+      if(badCalc)return {pass:false,reason:'رقم الطلب تم تفسيره ككمية منتج بدل تتبع أوردر.'};
+    }
+  }
+  if(sc.kind==='journey' && String(sc.id||'').startsWith('journey-buy-')){
+    const ok=String(lastResult?.systemAction||'')==='DRAFT_ORDER_CREATED' || (a.includes('طلب')&&a.includes('مرجع'));
+    if(!ok)return {pass:false,reason:'رحلة الشراء لم تصل لإنشاء الطلب المبدئي بعد إضافة المنتج الثاني.'};
+    const addSeen=(turns||[]).some(t=>t.role==='bot' && (norm(t.text).includes('تمت اضافه')||norm(t.text).includes('ضفت')) && norm(t.text).includes('اجمالي'));
+    if(!addSeen)return {pass:false,reason:'المنتج الثاني لم يُثبت بوضوح داخل السلة مع إجمالي محدث.'};
+    return {pass:true,reason:''};
+  }
+  if(!a)return {pass:false,reason:'البوت لم يرسل ردًا.'};
+
+  if(sc.kind==='price' || sc.kind==='typo'){
+    const hasMoney=/\d+(?:\.\d+)?\s*(?:درهم|aed)/i.test(String(lastAnswer||''));
+    if(!hasMoney)return {pass:false,reason:'سؤال السعر لم يرجع سعرًا رقميًا بالدرهم.'};
+  }
+  if(sc.expectedAmount!=null){
+    if(String(lastAnswer||'').toLowerCase().includes('categories.html?category='))return {pass:false,reason:'متابعة السعر/الكمية اتحولت لرابط فئة بدل الحساب.'};
+    const n=Number(sc.expectedAmount);
+    const probes=[String(n),n.toFixed(2),String(Math.round(n*100)/100)];
+    if(!probes.some(v=>a.includes(norm(v)))){
+      const source=sc.qaUnitPrice!=null?` (سعر الوحدة من رد الخطوة الأولى: ${sc.qaUnitPrice} درهم)`:'';
+      return {pass:false,reason:`الإجمالي المتوقع ${n} درهم غير موجود في الرد.${source}`};
+    }
+  }
+  if(sc.expectAny?.length && !sc.expectAny.some(x=>a.includes(norm(x))))return {pass:false,reason:'الرد لا يحتوي العلامة المتوقعة.'};
+  if(sc.kind==='category'){
+    const ok=lastResult?.type==='products'||lastResult?.products?.length||a.includes('http')||a.includes('قسم')||a.includes('منتج');
+    if(!ok)return {pass:false,reason:'لم يظهر رابط/قسم/منتجات للفئة.'};
+  }
+  if(sc.kind==='tracking'){
+    const ok=String(lastResult?.systemAction||'').includes('ORDER')||a.includes('رقم')||a.includes('طلب');
+    if(!ok)return {pass:false,reason:'رسالة التتبع لم تدخل مسار الطلب.'};
+  }
+  return {pass:true,reason:''};
+}
 async function runScenario(sc){
-  const snap=snapshot();
-  const turns=[];
-  let lastResult=null,lastAnswer='',err='';
+  const snap=snapshot(),turns=[];let last=null,lastAnswer='',error='',latencies=[];
+  let firstStepUnitPrice=null;
   try{
     if(typeof resetBotState==='function')resetBotState();
-    try{if(typeof conversation!=='undefined')conversation.length=0}catch(e){}
+
+    /* V54 QA isolation: no previous scenario may leak a price, cart, occasion or order. */
+    try{
+      Object.assign(botState,{
+        topic:'idle',currentTopic:'idle',
+        waitingFor:null,expectedReply:null,pendingAction:null,
+        giftData:{},occasion:'',recipient:'',budget:null,quantity:null,
+        orderRef:'',orderId:null,pendingOrderRef:'',orderStatusShown:false,
+        lastUnitPrice:null,lastPriceUnit:'',lastPriceProductName:'',
+        lastProduct:null,lastKnowledgeId:null,lastAction:null,
+        shoppingCart:[],checkoutContact:null,draftOrder:null
+      });
+    }catch(e){}
+    try{conversation.length=0}catch(e){}
     for(let i=0;i<sc.steps.length;i++){
-      if(v39Stop)throw new Error('تم الإيقاف');
+      if(stopRequested)throw new Error('تم إيقاف الجلسة');
       const q=sc.steps[i];
       turns.push({role:'user',text:q,setup:i<sc.steps.length-1});
-      lastResult=await Promise.race([
-        callIsolated(q),
-        new Promise((_,rej)=>setTimeout(()=>rej(new Error('انتهت مهلة الرد')),9000))
-      ]);
-      lastAnswer=resText(lastResult);
+      const t0=performance.now();
+      last=await Promise.race([callBot(q),new Promise((_,rej)=>setTimeout(()=>rej(new Error('انتهت مهلة الرد')),10000))]);
+      latencies.push(Math.round(performance.now()-t0));
+      lastAnswer=answerText(last);
       turns.push({role:'bot',text:lastAnswer,setup:i<sc.steps.length-1});
+
+      /* V47 QA rule:
+         In a pricing follow-up scenario, the bot's first confirmed price is
+         the source of truth for the expected arithmetic in step 2. */
+      if(i<sc.steps.length-1 && (sc.kind==='follow' || sc.kind==='context' || sc.kind==='journey')){
+        const parsed=extractPrice(lastAnswer);
+        if(Number.isFinite(Number(parsed)) && Number(parsed)>0){
+          firstStepUnitPrice=Number(parsed);
+        }
+      }
     }
-  }catch(e){err=e.message||String(e)}
+  }catch(e){error=e.message||String(e)}
   finally{restore(snap)}
-  const ev=err?{pass:false,reason:err}:evaluate(sc,lastResult,lastAnswer);
-  return {scenario:sc,turns,pass:ev.pass,reason:ev.reason,error:err};
-}
 
-function buildPool(mode){
-  const prices=shuffle(priceRows());
-  const cats=shuffle(categoryRows());
-  const generals=shuffle(generalRows());
-  document.getElementById('v39KbCount').textContent=arr().length;
-  document.getElementById('v39KbWarning').hidden=arr().length>=50;
-
-  const pool=[];
-
-  prices.slice(0,100).forEach((p,i)=>{
-    pool.push({id:'p'+i,kind:'price',dialect:'mixed',title:'سعر منتج من القاعدة',steps:[rnd(EM_PRICE)(p.name)],expectAny:['درهم']});
-    const q=2+Math.floor(Math.random()*8);
-    pool.push({id:'f'+i,kind:'follow',dialect:'emirati',title:'كمية بعد معرفة السعر',steps:[String(p.row.question||rnd(EM_PRICE)(p.name)),rnd(EM_FOLLOW)(q)],expectedAmount:p.price*q,expectAny:['درهم']});
-    const q2=2+Math.floor(Math.random()*7);
-    pool.push({id:'fn'+i,kind:'follow',dialect:'emirati',title:'كمية باسم المنتج',steps:[String(p.row.question||rnd(EM_PRICE)(p.name)),`${rnd(EM_WANT)} ${q2} ${p.name}`],expectedAmount:p.price*q2,expectAny:['درهم']});
-  });
-
-  for(let i=0;i<Math.min(50,Math.floor(prices.length/2));i++){
-    const a=prices[i*2],b=prices[i*2+1]; if(!a||!b)continue;
-    const qa=2+Math.floor(Math.random()*5),qb=2+Math.floor(Math.random()*8);
-    pool.push({id:'m'+i,kind:'multi',dialect:'emirati',title:'حساب صنفين',steps:[`${rnd(EM_WANT)} ${qa} ${a.name} و${rnd(EM_WANT)} ${qb} ${b.name}`],expectedAmount:a.price*qa+b.price*qb,expectAny:['درهم']});
+  const effectiveScenario={...sc};
+  if((sc.kind==='follow' || sc.kind==='context' || sc.kind==='journey') && Number.isFinite(Number(sc.qty)) && firstStepUnitPrice!=null){
+    effectiveScenario.expectedAmount=Number(sc.qty)*Number(firstStepUnitPrice);
+    effectiveScenario.qaUnitPrice=firstStepUnitPrice;
   }
 
-  cats.slice(0,50).forEach((c,i)=>{
-    pool.push({id:'c'+i,kind:'category',dialect:'emirati',title:'استفسار عن فئة',steps:[String(c.question||'').trim()],expectAny:[]});
-  });
+  const ev=error?{pass:false,reason:error}:evaluate(effectiveScenario,last,lastAnswer,turns);
+  return {
+    scenario:effectiveScenario,
+    turns,
+    pass:ev.pass,
+    reason:ev.reason,
+    error,
+    latency:latencies.length?Math.round(latencies.reduce((a,b)=>a+b,0)/latencies.length):0
+  };
+}
 
-  generals.slice(0,80).forEach((g,i)=>{
-    const q=String(g.question||'').trim();
-    const cat=norm(g.category||'');
-    if(cat.includes('تتبع')||cat.includes('طلب')){
-      pool.push({id:'gtrk'+i,kind:'tracking',dialect:'emirati',title:'تتبع طلب',steps:[q],expectAny:['طلب','رقم']});
-    }else{
-      pool.push({id:'g'+i,kind:'general',dialect:'emirati',title:'معرفة عامة',steps:[q],expectAny:[String(g.answer||'').split(/\s+/).filter(x=>x.length>3)[0]||'']});
+function buildPool(mode,difficulty){
+  const prices=shuffle(priceRows()),cats=shuffle(categoryRows()),gens=shuffle(generalRows()),pool=[];
+
+  prices.slice(0,120).forEach((p,i)=>{
+    pool.push({id:`price-${i}`,kind:'price',title:'سعر مباشر من القاعدة',dialect:'mixed',steps:[rand(PRICE_FORMS)(p.name)],expectAny:['درهم']});
+
+    const q=2+Math.floor(rng()*(difficulty==='stress'?18:8));
+    pool.push({id:`follow-${i}`,kind:'follow',title:'متابعة كمية بعد السعر',dialect:'emirati',steps:[String(p.row.question),rand(FOLLOW_FORMS)(q)],qty:q,expectedAmount:p.price*q,expectAny:['درهم']});
+
+    const q2=2+Math.floor(rng()*7);
+    pool.push({id:`context-${i}`,kind:'context',title:'كمية باسم المنتج بعد سياق',dialect:'emirati',steps:[String(p.row.question),`${rand(WANT)} ${q2} ${p.name}`],qty:q2,expectedAmount:p.price*q2,expectAny:['درهم']});
+
+    if(difficulty!=='normal'){
+      pool.push({id:`typo-${i}`,kind:'typo',title:'سعر مع خطأ إملائي',dialect:'emirati',steps:[typo(rand(PRICE_FORMS)(p.name))],expectAny:['درهم']});
     }
   });
 
-  const filtered=mode==='mixed'?pool:pool.filter(x=>x.kind===mode || (mode==='emirati'&&x.dialect==='emirati'));
+  for(let i=0;i<Math.min(80,Math.floor(prices.length/2));i++){
+    const a=prices[i*2],b=prices[i*2+1];if(!a||!b)continue;
+    const qa=2+Math.floor(rng()*6),qb=2+Math.floor(rng()*8);
+    pool.push({id:`multi-${i}`,kind:'multi',title:'حساب أكثر من صنف',dialect:'emirati',steps:[`${rand(WANT)} ${qa} ${a.name} و${rand(WANT)} ${qb} ${b.name}`],expectedAmount:a.price*qa+b.price*qb,expectAny:['درهم','إجمالي','اجمالي']});
+  }
+
+  cats.slice(0,70).forEach((c,i)=>pool.push({id:`cat-${i}`,kind:'category',title:'استفسار فئة/رابط',dialect:'emirati',steps:[String(c.question||'')]}));
+
+  TRACKING.forEach((q,i)=>pool.push({id:`trk-${i}`,kind:'tracking',title:'تتبع طلب',dialect:'emirati',steps:[q],expectAny:['طلب','رقم']}));
+
+  gens.slice(0,70).forEach((g,i)=>{
+    const q=String(g.question||'');
+    if(/تتبع|طلب/.test(norm(g.category||'')))return;
+    pool.push({id:`gen-${i}`,kind:'general',title:'معرفة عامة',dialect:'mixed',steps:[q],expectAny:[]});
+  });
+
+
+  /* V49: realistic Emirati customer journeys + smarter bot context.
+     These are intentionally conversational and multi-turn, not synthetic one-liners. */
+  prices.slice(0,30).forEach((p,i)=>{
+    const qty=2+Math.floor(rng()*7);
+    const p2raw=prices[(i+31)%prices.length]||prices[(i+1)%prices.length]||p;
+    const p2={...p2raw,name:(typeof cleanDirectPriceProductV40==='function'?cleanDirectPriceProductV40(p2raw.name):p2raw.name)||p2raw.name};
+    const qty2=1+Math.floor(rng()*4);
+    pool.push({
+      id:`journey-buy-${i}`,
+      kind:'journey',
+      title:'رحلة عميل إماراتي كاملة حتى الطلب',
+      dialect:'emirati',
+      steps:[
+        rand(EMIRATI_GREETINGS),
+        rand(EMIRATI_OCCASIONS),
+        rand(PRICE_FORMS)(p.name),
+        rand(EMIRATI_FOLLOW_REAL)(qty),
+        rand(EMIRATI_ADD_MORE)(qty2,p2.name),
+        rand(EMIRATI_CONFIRM_ORDER),
+        rand(EMIRATI_CONTACT)
+      ],
+      qty,
+      secondQty:qty2,
+      secondName:p2.name,
+      expectAny:['طلب','مرجع']
+    });
+  });
+
+  prices.slice(30,50).forEach((p,i)=>{
+    pool.push({
+      id:`journey-offer-${i}`,
+      kind:'journey',
+      title:'عميل يسأل عن عرض ثم منتج',
+      dialect:'emirati',
+      steps:[
+        rand(EMIRATI_GREETINGS),
+        rand(EMIRATI_OFFERS),
+        rand(PRICE_FORMS)(p.name)
+      ],
+      expectAny:['درهم']
+    });
+  });
+
+  TRACKING.slice(0,4).forEach((q,i)=>{
+    pool.push({
+      id:`journey-return-${i}`,
+      kind:'journey',
+      title:'عميل قديم يتابع طلبه',
+      dialect:'emirati',
+      steps:[
+        rand(EMIRATI_GREETINGS),
+        rand(EMIRATI_RETURNING),
+        q
+      ],
+      expectAny:['طلب','رقم']
+    });
+  });
+
+  cats.slice(0,20).forEach((c,i)=>{
+    pool.push({
+      id:`journey-category-${i}`,
+      kind:'journey',
+      title:'عميل يتصفح فئة ثم يسأل',
+      dialect:'emirati',
+      steps:[
+        rand(EMIRATI_GREETINGS),
+        rand(EMIRATI_OCCASIONS),
+        String(c.question||'')
+      ],
+      expectAny:[]
+    });
+  });
+
+
+
+  EMIRATI_INQUIRY_ONLY.forEach((q,i)=>{
+    pool.push({id:`journey-inquiry-${i}`,kind:'journey',title:'عميل إماراتي يسأل فقط',dialect:'emirati',steps:[rand(EMIRATI_GREETINGS),q],expectAny:[]});
+  });
+  EMIRATI_EXISTING_ORDER.forEach((q,i)=>{
+    pool.push({id:`journey-existing-order-${i}`,kind:'journey',title:'عميل عنده أوردر سابق',dialect:'emirati',steps:[rand(EMIRATI_GREETINGS),q,'1151'],expectAny:['طلب','رقم']});
+  });
+
+  if(difficulty==='stress'){
+    prices.slice(0,30).forEach((p,i)=>{
+      const q=10+Math.floor(rng()*40);
+      pool.push({id:`stress-${i}`,kind:'follow',title:'متابعة كمية تحت ضغط',dialect:'emirati',steps:[String(p.row.question),`تمام، طيب لو باخذ ${q} كم الحساب كامل؟`],qty:q,expectedAmount:p.price*q,expectAny:['درهم']});
+    });
+  }
+
+  let filtered=mode==='mixed'?pool:pool.filter(x=>x.kind===mode || (mode==='emirati'&&x.dialect==='emirati'));
   return shuffle(filtered.length?filtered:pool);
 }
+
+function updateKbStats(){
+  document.getElementById('v44KbCount').textContent=kb().length;
+  document.getElementById('v44PriceRows').textContent=priceRows().length;
+  document.getElementById('v44CategoryRows').textContent=categoryRows().length;
+}
 function stats(){
-  const pass=v39Results.filter(x=>x.pass).length,fail=v39Results.length-pass;
-  document.getElementById('v39Done').textContent=v39Results.length;
-  document.getElementById('v39Pass').textContent=pass;
-  document.getElementById('v39Fail').textContent=fail;
-  document.getElementById('v39Percent').textContent=v39Results.length?Math.round(pass/v39Results.length*100)+'%':'0%';
+  const pass=results.filter(x=>x.pass).length,fail=results.length-pass;
+  document.getElementById('v44Done').textContent=results.length;
+  document.getElementById('v44Pass').textContent=pass;
+  document.getElementById('v44Fail').textContent=fail;
+  document.getElementById('v44Percent').textContent=results.length?Math.round(pass/results.length*100)+'%':'0%';
+  const lat=results.length?Math.round(results.reduce((a,b)=>a+b.latency,0)/results.length):0;
+  document.getElementById('v44AvgLatency').textContent=lat+'ms';
+  const allKinds=['price','follow','multi','category','tracking','typo','context','general','journey'];
+  const covered=new Set(results.map(x=>x.scenario.kind));
+  document.getElementById('v44Coverage').textContent=Math.round(covered.size/allKinds.length*100)+'%';
+}
+function renderScoreGrid(){
+  const kinds=[
+    ['price','💰 السعر'],['follow','🔁 المتابعة'],['multi','🧮 متعدد'],
+    ['category','🔗 الفئات'],['tracking','📦 التتبع'],['typo','⌨️ الإملاء'],
+    ['context','🧠 السياق'],['general','💬 العام'],['journey','🛍️ رحلة عميل']
+  ];
+  document.getElementById('v44ScoreGrid').innerHTML=kinds.map(([k,l])=>{
+    const rows=results.filter(x=>x.scenario.kind===k);const p=rows.length?Math.round(rows.filter(x=>x.pass).length/rows.length*100):0;
+    return `<div class="v44-score"><strong>${l}</strong><span>${rows.length?`${p}% • ${rows.length} اختبار`:'لم يُختبر'}</span><div class="bar"><i style="width:${p}%"></i></div></div>`;
+  }).join('');
+}
+function diagnose(){
+  if(!results.length){document.getElementById('v44Diagnosis').textContent='شغّل جلسة اختبار علشان يظهر التحليل.';document.getElementById('v44TopIssues').textContent='—';return}
+  const by={};
+  for(const r of results){const k=r.scenario.kind;(by[k]??=[]).push(r)}
+  const scores=Object.entries(by).map(([k,v])=>({k,p:Math.round(v.filter(x=>x.pass).length/v.length*100),n:v.length})).sort((a,b)=>a.p-b.p);
+  const weakest=scores.slice(0,3),strongest=[...scores].sort((a,b)=>b.p-a.p).slice(0,3);
+  document.getElementById('v44Diagnosis').innerHTML=`أضعف أجزاء: <b>${weakest.map(x=>`${x.k} ${x.p}%`).join('، ')}</b><br>أقوى أجزاء: <b>${strongest.map(x=>`${x.k} ${x.p}%`).join('، ')}</b>`;
+  const counts={};results.filter(x=>!x.pass).forEach(x=>{const r=x.reason||'فشل غير محدد';counts[r]=(counts[r]||0)+1});
+  const issues=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  document.getElementById('v44TopIssues').innerHTML=issues.length?issues.map(([r,c])=>`• ${esc(r)} <b>(${c})</b>`).join('<br>'):'لا توجد مشاكل في الجلسة.';
 }
 function render(){
-  stats();
-  let rows=v39Results;
-  if(v39Filter==='pass')rows=rows.filter(x=>x.pass);
-  if(v39Filter==='fail')rows=rows.filter(x=>!x.pass);
-  if(v39Filter==='emirati')rows=rows.filter(x=>x.scenario.dialect==='emirati');
-  const box=document.getElementById('v39Results');
-  if(!rows.length){box.innerHTML='<div class="v39-empty">لا توجد نتائج في هذا الفلتر.</div>';return}
+  stats();renderScoreGrid();diagnose();
+  let rows=results;
+  if(filter==='pass')rows=rows.filter(x=>x.pass);
+  if(filter==='fail')rows=rows.filter(x=>!x.pass);
+  if(filter==='slow')rows=rows.filter(x=>x.latency>1500);
+  if(filter==='emirati')rows=rows.filter(x=>x.scenario.dialect==='emirati');
+  const box=document.getElementById('v44Results');
+  if(!rows.length){box.innerHTML='<div class="v44-empty">لا توجد نتائج في هذا الفلتر.</div>';return}
   box.innerHTML=rows.map(r=>{
-    const idx=v39Results.indexOf(r);
-    return `<div class="v39-case ${r.pass?'pass':'fail'}" data-v39-index="${idx}">
-      <div class="v39-case-head"><strong>${r.pass?'✅':'❌'} ${esc(r.scenario.title)}</strong><div class="v39-tags"><span class="v39-tag">${esc(r.scenario.kind)}</span>${r.scenario.dialect==='emirati'?'<span class="v39-tag">🇦🇪 إماراتي</span>':''}<span class="v39-tag">${r.scenario.steps.length} خطوة</span></div></div>
-      <div class="v39-turns">${r.turns.map(t=>`<div class="v39-turn ${t.role} ${t.setup?'setup':''}"><b>${t.role==='user'?'العميل':'البوت'}:</b> ${esc(t.text||'—')}</div>`).join('')}</div>
-      ${!r.pass?`<div class="v39-reason">⚠️ ${esc(r.reason)}</div><div class="v39-actions"><button data-v39-one>إعادة هذا الاختبار</button></div>`:''}
+    const idx=results.indexOf(r);
+    return `<div class="v44-case ${r.pass?'pass':'fail'}" data-v44-index="${idx}">
+      <div class="v44-case-head"><strong>${r.pass?'✅':'❌'} ${esc(r.scenario.title)}</strong>
+        <div class="v44-tags"><span class="v44-tag">${esc(r.scenario.kind)}</span>${r.scenario.dialect==='emirati'?'<span class="v44-tag">🇦🇪 إماراتي</span>':''}<span class="v44-tag">${r.latency}ms</span><span class="v44-tag">${r.scenario.steps.length} خطوة</span></div>
+      </div>
+      <div class="v44-turns">${r.turns.map(t=>`<div class="v44-turn ${t.role} ${t.setup?'setup':''}"><b>${t.role==='user'?'العميل':'البوت'}:</b> ${esc(t.text||'—')}</div>`).join('')}</div>
+      ${!r.pass?`<div class="v44-reason">⚠️ ${esc(r.reason)}</div><div class="v44-actions"><button data-v44-retry-one>إعادة السيناريو</button></div>`:''}
+      <div class="v44-meta">ID: ${esc(r.scenario.id)} • النوع: ${esc(r.scenario.kind)} • زمن الرد: ${r.latency}ms</div>
     </div>`;
   }).join('');
 }
 async function run(custom){
-  v39Stop=false;
-  const count=Number(document.getElementById('v39Count').value)||30;
-  const mode=document.getElementById('v39Mode').value;
-  const list=custom||buildPool(mode).slice(0,count);
-  if(!custom)v39Results=[];
-  document.getElementById('v39Run').disabled=true;
+  stopRequested=false;
+  const seed=document.getElementById('v44Seed').value.trim()||Date.now().toString(36);
+  document.getElementById('v44Seed').value=seed;
+  rng=makeRng(seed);
+  const count=Number(document.getElementById('v44Count').value)||50;
+  const mode=document.getElementById('v44Mode').value;
+  const difficulty=document.getElementById('v44Difficulty').value;
+  const list=custom||buildPool(mode,difficulty).slice(0,count);
+  if(!custom)results=[];
+  document.getElementById('v44Run').disabled=true;
   try{
     for(let i=0;i<list.length;i++){
-      if(v39Stop)break;
-      const result=await runScenario(list[i]);
-      const old=v39Results.findIndex(x=>x.scenario.id===result.scenario.id);
-      if(old>=0)v39Results[old]=result;else v39Results.push(result);
-      document.getElementById('v39Progress').style.width=Math.round((i+1)/list.length*100)+'%';
+      if(stopRequested)break;
+      const r=await runScenario(list[i]);
+      const old=results.findIndex(x=>x.scenario.id===r.scenario.id);
+      if(old>=0)results[old]=r; else results.push(r);
+      document.getElementById('v44Progress').style.width=Math.round((i+1)/list.length*100)+'%';
       render();
-      await new Promise(r=>setTimeout(r,40));
+      await new Promise(res=>setTimeout(res,30));
     }
-  }finally{document.getElementById('v39Run').disabled=false;render()}
+  }finally{document.getElementById('v44Run').disabled=false;render()}
 }
-
+function download(name,type,data){
+  const blob=new Blob([data],{type});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)
+}
+function exportJson(){download('bariq-test-results.json','application/json;charset=utf-8',JSON.stringify(results,null,2))}
+function exportCsv(){
+  const rows=[['id','kind','title','pass','reason','latency_ms','customer_last','bot_last']];
+  results.forEach(r=>rows.push([r.scenario.id,r.scenario.kind,r.scenario.title,r.pass?'PASS':'FAIL',r.reason||'',r.latency,r.scenario.steps.at(-1)||'',r.turns.filter(x=>x.role==='bot').at(-1)?.text||'']));
+  const csv=rows.map(row=>row.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  download('bariq-test-results.csv','text/csv;charset=utf-8','\ufeff'+csv);
+}
 document.addEventListener('click',e=>{
-  if(e.target.id==='v39Run')return run();
-  if(e.target.id==='v39Stop'){v39Stop=true;return}
-  if(e.target.id==='v39Clear'){v39Results=[];document.getElementById('v39Progress').style.width='0';return render()}
-  if(e.target.id==='v39Retry'){const bad=v39Results.filter(x=>!x.pass).map(x=>x.scenario);if(!bad.length)return alert('لا توجد أخطاء.');return run(bad)}
-  const f=e.target.closest('[data-v39-filter]');if(f){document.querySelectorAll('[data-v39-filter]').forEach(x=>x.classList.remove('active'));f.classList.add('active');v39Filter=f.dataset.v39Filter;return render()}
-  const card=e.target.closest('[data-v39-index]');if(card&&e.target.matches('[data-v39-one]'))return run([v39Results[Number(card.dataset.v39Index)].scenario]);
+  if(e.target.id==='v44Run')return run();
+  if(e.target.id==='v44Stop'){stopRequested=true;return}
+  if(e.target.id==='v44Clear'){results=[];document.getElementById('v44Progress').style.width='0';return render()}
+  if(e.target.id==='v44Retry'){const bad=results.filter(x=>!x.pass).map(x=>x.scenario);if(!bad.length)return alert('لا توجد أخطاء.');return run(bad)}
+  if(e.target.id==='v44ExportJson')return exportJson();
+  if(e.target.id==='v44ExportCsv')return exportCsv();
+  const f=e.target.closest('[data-v44-filter]');if(f){document.querySelectorAll('[data-v44-filter]').forEach(x=>x.classList.remove('active'));f.classList.add('active');filter=f.dataset.v44Filter;return render()}
+  const card=e.target.closest('[data-v44-index]');if(card&&e.target.matches('[data-v44-retry-one]'))return run([results[Number(card.dataset.v44Index)].scenario]);
 });
-document.addEventListener('DOMContentLoaded',()=>{
-  document.getElementById('v39KbCount').textContent=arr().length;
-  document.getElementById('v39KbWarning').hidden=arr().length>=50;
-  render();
-});
+document.addEventListener('DOMContentLoaded',()=>{updateKbStats();render()});
 })();
 </script>
 

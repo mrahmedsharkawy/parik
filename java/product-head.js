@@ -29,6 +29,7 @@
 })();
 
 (function () {
+  if (document.getElementById('seo-product-jsonld') || document.getElementById('product-jsonld')) return;
   var data = {
     '@context': 'https://schema.org',
     '@type': 'Product',

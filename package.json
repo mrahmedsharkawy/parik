@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "scripts": {
+    "build": "node scripts/generate-seo.mjs",
+    "build:seo": "node scripts/generate-seo.mjs"
+  }
+}

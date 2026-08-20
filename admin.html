@@ -199,7 +199,7 @@
   #gate p{color:#7a8296;font-size:.85rem;margin:0 0 18px}
 </style>
 <link rel="stylesheet" href="/style/admin-pro.css?v=20260812-clean-admin">
-<script src="/java/supabase.js?v=supabase-20260812-orders-getpage"></script></head>
+<script src="/java/supabase.js?v=supabase-20260820-safe-sync"></script></head>
 <body>
 
 <!-- بوابة دخول بسيطة (حماية شكلية فقط) -->
@@ -4178,7 +4178,7 @@ async function renderVisitorsStats() {
     }
   };
   try {
-    const res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors?select=id,visited_at,page,city,country,ip&order=visited_at.desc&limit=500', {
+    const res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors?select=*&limit=500', {
       cache: 'no-store',
       headers: Object.assign({}, headers, { Prefer: 'count=exact', 'Cache-Control': 'no-cache' })
     });
@@ -4319,8 +4319,7 @@ async function emFetchVisitors(){
     const adminToken = await getValidAdminToken() || ANON;
     const headers = { apikey: ANON, Authorization: 'Bearer ' + adminToken };
     const urls = [
-      'https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors?select=visited_at,created_at,page,city,country,referrer,source,utm_source&limit=1000',
-      'https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors?select=visited_at,created_at,page,city,country&limit=1000'
+      'https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors?select=*&limit=1000'
     ];
     for (const url of urls) {
       const res = await fetch(url, { headers });

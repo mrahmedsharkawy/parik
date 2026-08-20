@@ -1,5 +1,5 @@
 /* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v398';
+const CACHE = 'bariq-v400-seo';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -200,7 +200,8 @@ function appHtmlCachePath(path) {
   if (path === '/Cart' || path === '/Cart.html') return '/Cart';
   if (path === '/bot-admin' || path === '/bot-admin.html') return '/bot-admin';
   if (path === '/erp' || path === '/erp.html') return '/erp';
-  if (path === '/product' || path === '/product.html' || /^\/product\//.test(path)) return '/product';
+  if (path === '/product' || path === '/product.html') return '/product';
+  if (/^\/product\//.test(path)) return path.replace(/\/+$/, '');
   if (/\.html$/.test(path)) return path.replace(/\.html$/, '');
   return path;
 }
@@ -301,7 +302,8 @@ self.addEventListener('fetch', function(e) {
   };
 
   const isAuthPage = path === '/login' || path === '/login.html';
-  const isFreshHtmlPage = path === '/' || path === '/index.html' || path === '/categories' || path === '/categories.html' || isAuthPage || path === '/account' || path === '/account.html' || path === '/Cart' || path === '/Cart.html' || path === '/product' || path === '/product.html' || path === '/admin' || path === '/admin.html' || path === '/bot-admin' || path === '/bot-admin.html' || path === '/erp' || path === '/erp.html';
+  const isProductDeepLink = /^\/product\//.test(path);
+  const isFreshHtmlPage = path === '/' || path === '/index.html' || path === '/categories' || path === '/categories.html' || isAuthPage || path === '/account' || path === '/account.html' || path === '/Cart' || path === '/Cart.html' || path === '/product' || path === '/product.html' || isProductDeepLink || path === '/admin' || path === '/admin.html' || path === '/bot-admin' || path === '/bot-admin.html' || path === '/erp' || path === '/erp.html' || path === '/sales-invoices' || path === '/sales-invoices.html' || path === '/admin-reports' || path === '/admin-reports.html';
 
   // Key order/account/cart/admin pages must be fresh so checkout and status fixes cannot be stuck behind old HTML.
   if (isHtml && isFreshHtmlPage) {

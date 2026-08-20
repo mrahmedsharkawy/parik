@@ -1,0 +1,29 @@
+{
+  "site": "https://bariqgifts.com",
+  "brand": "بريق للهدايا",
+  "legal_name": "Bariq Gifts",
+  "description": "متجر هدايا مخصصة للمناسبات في الإمارات: تخرج، قرقيعان، يوم الأم، اليوم الوطني، أكريليك، خشب، جلد وورق، مع تصميم وتنفيذ حسب الطلب.",
+  "phone": "+971554423151",
+  "email": "bariq.gifts@gmail.com",
+  "area_served": [
+    "United Arab Emirates",
+    "Ras Al Khaimah",
+    "Dubai",
+    "Sharjah",
+    "Ajman",
+    "Umm Al Quwain",
+    "Fujairah",
+    "Abu Dhabi"
+  ],
+  "address_region": "Ras Al Khaimah, UAE",
+  "social_profiles": [
+    "https://www.instagram.com/bariq.gifts/",
+    "https://www.facebook.com/bariq.gifts"
+  ],
+  "indexes": {
+    "products": "https://bariqgifts.com/seo/product-index.json",
+    "sitemap": "https://bariqgifts.com/sitemap.xml",
+    "image_sitemap": "https://bariqgifts.com/image-sitemap.xml"
+  },
+  "generated_at": "2026-08-20T09:52:03.932Z"
+}

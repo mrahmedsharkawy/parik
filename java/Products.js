@@ -33,6 +33,21 @@ function productTimerIdentity(prod) {
     return String(prod && (prod.id || prod.productId || prod.slug) || name || "product").replace(/[^\w-]+/g, "_").slice(0, 80);
 }
 
+function seoProductSlug(value) {
+    return String(value || "product").normalize("NFKD").replace(/[\u064B-\u065F\u0670]/g, "").replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-+|-+$/g, "").replace(/-{2,}/g, "-").slice(0, 90) || "product";
+}
+
+function productSeoPath(prod, fallbackId) {
+    const id = prod && (prod.id || prod.productId) || fallbackId || "";
+    if (!id) return "product.html";
+    const name = prod && prod.name && (prod.name.ar || prod.name.en || prod.name) || prod && (prod.title || prod.name_ar || prod.name_en) || "product";
+    return `/product/${encodeURIComponent(id)}/${encodeURIComponent(seoProductSlug(name))}`;
+}
+
+try {
+    window.BariqProductSeoPath = productSeoPath;
+} catch (e) {}
+
 function productTimerDuration(prod, cycle) {
     const hash = stableProductHash(productTimerIdentity(prod) + ":" + (cycle || 0));
     const hours = 6 + hash % (PRODUCT_DISCOUNT_TIMER_MAX_HOURS - 5);
@@ -589,7 +604,7 @@ export function createProductCard(prod) {
     window.createProductCard || (window.createProductCard = createProductCard);
     const card = document.createElement("div");
     card.dataset.productId = String(prod.id || prod.productId || "");
-    const productUrl = `product.html?id=${encodeURIComponent(prod.id)}${(localStorage.getItem("lang") || document.documentElement.lang) === "en" ? "&lang=en" : ""}`;
+    const productUrl = `${productSeoPath(prod, prod.id)}${(localStorage.getItem("lang") || document.documentElement.lang) === "en" ? "?lang=en" : ""}`;
     function rememberQuickProduct() {
         try {
             const toArr = v => Array.isArray(v) ? v.filter(Boolean) : v ? [ v ] : [], isVideo = s => /\.(mp4|webm|ogg|ogv|mov|m4v)(\?|#|$)/i.test(String(s || ""));
@@ -1941,7 +1956,7 @@ document.addEventListener("DOMContentLoaded", async function() {
         };
         const productTitle = getT(p.name) || "Bariq";
         const productDescription = String(p.desc || p.description || productTitle || "").replace(/\s+/g, " ").trim();
-        const productUrl = `https://bariqgifts.com/product/${encodeURIComponent(p.id || productId)}`;
+        const productUrl = `https://bariqgifts.com${productSeoPath(p, productId)}`;
         const productImage = imgs[0] || (Array.isArray(p.img) ? p.img[0] : p.img || p.image || "");
         set("category", getT(p.category)), set("name", productTitle), document.title = productTitle + " - Bariq";
         try {
@@ -2108,7 +2123,7 @@ document.addEventListener("DOMContentLoaded", async function() {
             } catch (err) {
                 console.warn("Supabase order save failed:", err);
             }
-            const productUrl = `https://bariqgifts.com/product/${encodeURIComponent(p.id || productId)}`;
+            const productUrl = `https://bariqgifts.com${productSeoPath(p, productId)}`;
             let customerName = profile.name || "", customerPhone = profile.phone || "", customerEmail = profile.email || "", customerAddress = "";
             try {
                 const prof = JSON.parse(localStorage.getItem("x2_profile") || "{}");

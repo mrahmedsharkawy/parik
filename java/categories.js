@@ -25,6 +25,17 @@
     return String(row && (row.category_slug || row.slug || row.name_en || row.name_ar || row.id) || '').trim();
   }
 
+  function seoProductSlug(value) {
+    return String(value || 'product').normalize('NFKD').replace(/[\u064B-\u065F\u0670]/g, '').replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '').replace(/-{2,}/g, '-').slice(0, 90) || 'product';
+  }
+
+  function seoProductPath(product) {
+    const id = product && (product.id || product.productId);
+    if (!id) return '#';
+    const name = product && product.name && (product.name.ar || product.name.en || product.name) || product && (product.title || product.name_ar || product.name_en) || 'product';
+    return `/product/${encodeURIComponent(id)}/${encodeURIComponent(seoProductSlug(name))}`;
+  }
+
   function mergeCategoryLists(base, extra) {
     const out = Array.isArray(base) ? base.map(cat => ({ ...cat, subcategories: Array.isArray(cat.subcategories) ? cat.subcategories.slice() : [] })) : [];
     const findCat = cat => out.find(existing => {
@@ -469,7 +480,7 @@
       const name = (typeof p.name==='object'?(p.name[lang]||p.name.ar||p.name.en):(p.name||(lang === 'en' ? 'Product' : 'منتج')));
       const img  = (Array.isArray(p.img)?p.img[0]:p.img)||'assets/logo.png';
       const langParam = (localStorage.getItem('lang') || document.documentElement.lang) === 'en' ? '?lang=en' : '';
-      const link = p.id ? `product.html?id=${encodeURIComponent(p.id)}${langParam ? '&lang=en' : ''}` : '#';
+      const link = p.id ? `${seoProductPath(p)}${langParam}` : '#';
       const price = parseFloat(p.price)||0;
       const oldPrice = parseFloat(p.oldPrice)||0;
       const sym = {AED:'د.إ',USD:'$',SAR:'ر.س',EGP:'ج.م'}[localStorage.getItem('currency')||'AED']||'د.إ';

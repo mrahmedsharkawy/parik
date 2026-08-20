@@ -268,15 +268,6 @@ async function hardSalesLogout(redirect=true){
   /* امسح الجلسة المشتركة القديمة حتى لا تعيد الصفحة تسجيل الدخول تلقائياً */
   localStorage.removeItem('bariq_admin_auth_v1');
 
-  if(access){
-    try{
-      await fetch(CONFIG.supabaseUrl+'/auth/v1/logout',{
-        method:'POST',
-        headers:{apikey:CONFIG.anon,Authorization:'Bearer '+access}
-      });
-    }catch(e){}
-  }
-
   lockSalesUI();
   document.body.classList.remove('sales-auth-pending');
 
@@ -322,13 +313,19 @@ renderStatusFilter();
 updateInstallButton();
 
 async function getCurrentUser(){
-  if(!token) throw new Error('لا توجد جلسة');
-  const res=await fetch(CONFIG.supabaseUrl+'/auth/v1/user',{
-    headers:{apikey:CONFIG.anon,Authorization:'Bearer '+token}
-  });
-  const data=await res.json();
-  if(!res.ok || !data.id) throw new Error('جلسة غير صالحة');
-  return data;
+  function readJwtUserId(value){
+    try{
+      const part=String(value||'').split('.')[1];
+      if(!part)return '';
+      const b64=part.replace(/-/g,'+').replace(/_/g,'/');
+      const json=JSON.parse(atob(b64.padEnd(Math.ceil(b64.length/4)*4,'=')));
+      return json&&json.sub?String(json.sub):'';
+    }catch(e){return ''}
+  }
+  let id=readJwtUserId(token);
+  if(!id && await refreshAuth()) id=readJwtUserId(token);
+  if(!id) throw new Error('جلسة غير صالحة');
+  return {id};
 }
 
 async function bootSalesApp(){

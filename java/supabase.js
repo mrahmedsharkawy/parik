@@ -1390,7 +1390,11 @@ let userSyncLastPullAt = 0,
       if (Date.now() - userSyncLastPullAt < USER_SYNC_MIN_PULL_GAP) return null;
       const email = this._getEmail();
       if (email) {
-        userSyncLastPullAt = Date.now();
+        try {
+          userSyncLastPullAt = Date.now();
+        } catch (_) {
+          return null;
+        }
         userSyncPullPromise = (async function () {
         try {
           const rows = await sbFetch(

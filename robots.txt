@@ -37,3 +37,4 @@ Disallow: /login
 Disallow: /login.html
 
 Sitemap: https://bariqgifts.com/sitemap.xml
+Sitemap: https://bariqgifts.com/image-sitemap.xml
