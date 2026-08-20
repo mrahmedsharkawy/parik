@@ -221,16 +221,8 @@
       "destination": "/affiliate.html"
     },
     {
-      "source": "/categories/:path*",
-      "destination": "/categories.html"
-    },
-    {
       "source": "/policy/:slug",
       "destination": "/policy.html"
-    },
-    {
-      "source": "/product/:id/:slug",
-      "destination": "/product.html"
     },
     {
       "source": "/product/:id",
