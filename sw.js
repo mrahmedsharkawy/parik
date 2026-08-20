@@ -1,5 +1,5 @@
 /* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v400-seo';
+const CACHE = 'bariq-v406-hero-originals';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -59,10 +59,9 @@ const STATIC_URLS = [
   '/mobile-nav-bar/styles.css',
   '/assets/home/1.webp',
   '/assets/home/2.webp',
-  '/assets/home/صور الغلاف/1-412.webp',
-  '/assets/home/صور الغلاف/1-618.webp',
-  '/assets/home/صور الغلاف/1-420.webp',
-  '/assets/home/صور الغلاف/1-480.webp',
+  '/assets/home/banners/hero-1.webp',
+  '/assets/home/banners/hero-2.webp',
+  '/assets/home/banners/hero-3.webp',
   '/assets/categories/Acrylic/Born in.webp',
   '/assets/categories/Acrylic/Box.webp',
   '/assets/categories/Acrylic/censer.webp',

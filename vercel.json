@@ -1,4 +1,7 @@
 {
+  "framework": null,
+  "buildCommand": "npm run build",
+  "outputDirectory": ".",
   "cleanUrls": false,
   "trailingSlash": false,
   "redirects": [
@@ -12,6 +15,111 @@
         }
       ],
       "destination": "https://bariqgifts.com/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/index.html",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/about-bariq.html",
+      "destination": "/about-bariq",
+      "permanent": true
+    },
+    {
+      "source": "/gifts.html",
+      "destination": "/gifts",
+      "permanent": true
+    },
+    {
+      "source": "/custom-gifts.html",
+      "destination": "/custom-gifts",
+      "permanent": true
+    },
+    {
+      "source": "/corporate-gifts.html",
+      "destination": "/corporate-gifts",
+      "permanent": true
+    },
+    {
+      "source": "/events.html",
+      "destination": "/events",
+      "permanent": true
+    },
+    {
+      "source": "/newborn.html",
+      "destination": "/newborn",
+      "permanent": true
+    },
+    {
+      "source": "/graduation.html",
+      "destination": "/graduation",
+      "permanent": true
+    },
+    {
+      "source": "/national-day.html",
+      "destination": "/national-day",
+      "permanent": true
+    },
+    {
+      "source": "/ramadan.html",
+      "destination": "/ramadan",
+      "permanent": true
+    },
+    {
+      "source": "/acrylic.html",
+      "destination": "/acrylic",
+      "permanent": true
+    },
+    {
+      "source": "/forex.html",
+      "destination": "/forex",
+      "permanent": true
+    },
+    {
+      "source": "/wood.html",
+      "destination": "/wood",
+      "permanent": true
+    },
+    {
+      "source": "/leather.html",
+      "destination": "/leather",
+      "permanent": true
+    },
+    {
+      "source": "/stickers.html",
+      "destination": "/stickers",
+      "permanent": true
+    },
+    {
+      "source": "/offers.html",
+      "destination": "/offers",
+      "permanent": true
+    },
+    {
+      "source": "/monthly-offers.html",
+      "destination": "/monthly-offers",
+      "permanent": true
+    },
+    {
+      "source": "/categories.html",
+      "destination": "/categories",
+      "permanent": true
+    },
+    {
+      "source": "/categorie",
+      "destination": "/categories",
+      "permanent": true
+    },
+    {
+      "source": "/categorie.html",
+      "destination": "/categories",
+      "permanent": true
+    },
+    {
+      "source": "/policy.html",
+      "destination": "/policy",
       "permanent": true
     }
   ],

@@ -29,6 +29,7 @@ const PRODUCT_SELECT = [
 
 const STATIC_PAGES = [
   "/",
+  "/about-bariq",
   "/gifts",
   "/custom-gifts",
   "/corporate-gifts",
@@ -43,7 +44,9 @@ const STATIC_PAGES = [
   "/leather",
   "/stickers",
   "/offers",
+  "/monthly-offers",
   "/categories",
+  "/policy",
 ];
 
 function esc(value) {

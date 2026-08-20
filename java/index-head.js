@@ -189,20 +189,8 @@
     var parsed = JSON.parse(raw);
     var list = parsed && Array.isArray(parsed.data) ? parsed.data : [];
     if (!list.length) return;
-    var seen = {};
-    for (var i = 0; i < list.length && i < 4; i++) {
-      var item = list[i] || {};
-      var img = Array.isArray(item.img) ? item.img[0] : item.img;
-      var href = imageUrl(img);
-      if (!href || seen[href]) continue;
-      seen[href] = true;
-      var link = document.createElement('link');
-      link.rel = 'preload';
-      link.as = 'image';
-      link.href = href;
-      if (i === 0) link.setAttribute('fetchpriority', 'high');
-      document.head.appendChild(link);
-    }
+    // Product images are rendered after category/product data is ready.
+    // Preloading cached product images here can warn when the first viewport changes.
   } catch (e) {}
 })();
 

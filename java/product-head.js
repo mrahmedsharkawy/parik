@@ -28,21 +28,6 @@
   });
 })();
 
-(function () {
-  if (document.getElementById('seo-product-jsonld') || document.getElementById('product-jsonld')) return;
-  var data = {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    name: '',
-    offers: { '@type': 'Offer', priceCurrency: 'AED' }
-  };
-  var script = document.createElement('script');
-  script.type = 'application/ld+json';
-  script.id = 'product-jsonld';
-  script.textContent = JSON.stringify(data);
-  document.head.appendChild(script);
-})();
-
 document.addEventListener('DOMContentLoaded', function () {
   var searchButton = document.querySelector('[data-product-search]');
   if (!searchButton) return;
