@@ -38,6 +38,34 @@ function bearerToken(req: Request) {
   return match ? match[1].trim() : '';
 }
 
+function hasInternalServiceRole(req: Request) {
+  const token = bearerToken(req);
+  const serviceRole = String(Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '').trim();
+  return Boolean(token && serviceRole && token === serviceRole);
+}
+
+function phoneVariants(value: unknown) {
+  const raw = String(value || '').trim();
+  let digits = raw.replace(/\D/g, '');
+  const out = new Set<string>();
+  if (raw) out.add(raw);
+  if (digits) {
+    out.add(digits);
+    out.add('+' + digits);
+  }
+  if (digits.startsWith('00971')) digits = digits.slice(2);
+  if (digits.startsWith('971')) digits = digits.slice(3);
+  if (digits.startsWith('0')) digits = digits.slice(1);
+  if (digits) {
+    out.add(digits);
+    out.add('0' + digits);
+    out.add('971' + digits);
+    out.add('+971' + digits);
+    out.add('00971' + digits);
+  }
+  return Array.from(out).filter(Boolean);
+}
+
 function readVapidSecret(name: string) {
   return String(Deno.env.get(name) || '')
     .trim()
@@ -202,7 +230,7 @@ Deno.serve(async (req) => {
 
   try {
     const payload = await req.json();
-    const { title, body, title_en, body_en, url, image, user_phone, user_email, exclude_endpoint, type, status, iconText, emoji, orderId, order_id, lang, user_lang } = payload;
+    const { title, body, title_en, body_en, url, image, user_phone, user_email, target_endpoint, target_endpoints, exclude_endpoint, type, status, iconText, emoji, orderId, order_id, lang, user_lang } = payload;
     if (!title || !body) {
       return new Response(JSON.stringify({ error: 'title and body required' }), {
         status: 400, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
@@ -234,44 +262,65 @@ Deno.serve(async (req) => {
         status: 403, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
       });
     }
-    if (!publicNewOrder && !(await requireAdmin(req, supabase))) {
+    const internalCall = hasInternalServiceRole(req);
+    if (!publicNewOrder && !internalCall && !(await requireAdmin(req, supabase))) {
       return new Response(JSON.stringify({ error: 'Admin authorization required' }), {
         status: 401, headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
       });
     }
 
-    // إذا تم تمرير هوية عميل، نجمع الاشتراكات بالهاتف + الإيميل معاً لزيادة احتمال الوصول
+    // اختيار المستلمين: endpoint مباشر للوظائف الداخلية، أو هوية عميل، أو بث عام.
+    const directEndpoints = Array.from(new Set([
+      ...(Array.isArray(target_endpoints) ? target_endpoints : []),
+      ...(target_endpoint ? [target_endpoint] : [])
+    ].map((v: any) => String(v || '').trim()).filter(Boolean)));
     const pickByIdentity = Boolean(user_phone || user_email);
     let subs: any[] = [];
-    if (pickByIdentity) {
+
+    if (directEndpoints.length) {
+      const { data, error } = await supabase
+        .from('push_subscriptions')
+        .select('endpoint, p256dh, auth, user_lang')
+        .in('endpoint', directEndpoints);
+      if (error) throw error;
+      subs = data || [];
+    } else if (pickByIdentity) {
       const merged: any[] = [];
-      if (user_phone) {
-        const digits = user_phone.replace(/\D/g, '');
-        const withPlus = '+' + digits;
-        const { data: s1 } = await supabase.from('push_subscriptions').select('endpoint, p256dh, auth, user_lang').eq('user_phone', user_phone);
-        const { data: s2 } = await supabase.from('push_subscriptions').select('endpoint, p256dh, auth, user_lang').eq('user_phone', withPlus);
-        const { data: s3 } = await supabase.from('push_subscriptions').select('endpoint, p256dh, auth, user_lang').eq('user_phone', digits);
-        merged.push(...(s1 || []), ...(s2 || []), ...(s3 || []));
+      for (const variant of phoneVariants(user_phone)) {
+        const { data } = await supabase
+          .from('push_subscriptions')
+          .select('endpoint, p256dh, auth, user_lang')
+          .eq('user_phone', variant);
+        merged.push(...(data || []));
       }
       if (user_email) {
         const mail = String(user_email).trim().toLowerCase();
-        const { data: se } = await supabase.from('push_subscriptions').select('endpoint, p256dh, auth, user_lang').eq('user_email', mail);
-        merged.push(...(se || []));
+        const { data } = await supabase
+          .from('push_subscriptions')
+          .select('endpoint, p256dh, auth, user_lang')
+          .ilike('user_email', mail);
+        merged.push(...(data || []));
       }
       const seen = new Set<string>();
       subs = merged.filter((s) => {
-        if (!s?.endpoint) return false;
-        if (seen.has(s.endpoint)) return false;
-        seen.add(s.endpoint);
-        return true;
+        const endpoint = String(s?.endpoint || '').trim();
+        if (!endpoint || seen.has(endpoint)) return false;
+        seen.add(endpoint);
+        return Boolean(s?.p256dh && s?.auth);
       });
     } else {
-      const { data, error } = await supabase.from('push_subscriptions').select('endpoint, p256dh, auth, user_lang');
+      const { data, error } = await supabase
+        .from('push_subscriptions')
+        .select('endpoint, p256dh, auth, user_lang');
       if (error) throw error;
-      subs = data || [];
+      subs = (data || []).filter((s: any) => s?.endpoint && s?.p256dh && s?.auth);
     }
-    if (!subs || subs.length === 0) {
-      return new Response(JSON.stringify({ sent: 0, message: pickByIdentity ? 'No subscribers for this customer' : 'No subscribers' }), {
+
+    if (!subs.length) {
+      const message = directEndpoints.length
+        ? 'No subscribers for target endpoint'
+        : (pickByIdentity ? 'No subscribers for this customer' : 'No subscribers');
+      return new Response(JSON.stringify({ sent: 0, failed: 0, total: 0, ok: false, message }), {
         headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
       });
     }
@@ -324,13 +373,12 @@ Deno.serve(async (req) => {
           payment: payload.payment || payload.paymentMethod || payload.payment_method || null,
           lang: targetLang
         });
-        const encodedPayload = new TextEncoder().encode(payloadStr);
         return webpush.sendNotification(
           {
             endpoint: sub.endpoint,
             keys: { p256dh: sub.p256dh, auth: sub.auth }
           },
-          encodedPayload,
+          payloadStr,
           {
             // TTL طويل (24 ساعة) بدلاً من 60 ثانية — عشان لو الهاتف كان
             // غير متصل بالإنترنت أو في وضع توفير الطاقة لحظة الإرسال، تحتفظ
@@ -344,6 +392,17 @@ Deno.serve(async (req) => {
           if (err.statusCode === 410 || err.statusCode === 404) {
             await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
           }
+
+          console.error('WEB_PUSH_DELIVERY_FAILED', {
+            statusCode: err?.statusCode || err?.status || null,
+            name: err?.name || 'WebPushError',
+            message: err?.message || 'Web Push delivery failed',
+            body: typeof err?.body === 'string' ? err.body : null,
+            endpointHost: (() => {
+              try { return new URL(String(sub?.endpoint || '')).host; } catch (_err) { return ''; }
+            })()
+          });
+
           throw err;
         })
       })
@@ -352,7 +411,48 @@ Deno.serve(async (req) => {
     const sent   = results.filter(r => r.status === 'fulfilled').length;
     const failed = results.filter(r => r.status === 'rejected').length;
 
-    return new Response(JSON.stringify({ sent, failed, total: subs.length }), {
+    // تشخيص واضح لأي فشل Web Push بدل إخفائه خلف failed فقط.
+    // لا نرجّع مفاتيح الاشتراك نفسها؛ فقط كود الخطأ والرسالة وجزء آمن من الـ endpoint.
+    const failures = results
+      .map((result: any, index: number) => {
+        if (result.status !== 'rejected') return null;
+
+        const err: any = result.reason || {};
+        const endpoint = String(filteredSubs[index]?.endpoint || '');
+        let responseBody = '';
+
+        try {
+          if (typeof err.body === 'string') responseBody = err.body;
+          else if (err.body) responseBody = JSON.stringify(err.body);
+        } catch (_err) {}
+
+        return {
+          index,
+          statusCode: Number(err.statusCode || err.status || 0) || null,
+          name: String(err.name || 'WebPushError'),
+          message: String(err.message || 'Web Push delivery failed'),
+          body: responseBody || null,
+          endpointHost: (() => {
+            try { return new URL(endpoint).host; } catch (_err) { return ''; }
+          })(),
+          endpointTail: endpoint ? endpoint.slice(-18) : ''
+        };
+      })
+      .filter(Boolean);
+
+    const responsePayload: any = {
+      sent,
+      failed,
+      total: filteredSubs.length,
+      ok: failed === 0
+    };
+
+    if (failures.length) {
+      responsePayload.failures = failures;
+      responsePayload.error = 'One or more Web Push deliveries failed';
+    }
+
+    return new Response(JSON.stringify(responsePayload), {
       headers: { ...getCorsHeaders(req), 'Content-Type': 'application/json' }
     });
 

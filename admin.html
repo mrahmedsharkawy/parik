@@ -2544,16 +2544,25 @@ function isMissingSupabaseColumnError(error, column){
 }
 
 async function updateOrderInSupabaseSafe(id, data){
-  const optionalColumns = ['cashback_expires_at'];
+  const optionalColumns = ['cashback_expires_at', 'cashback_status'];
   const payload = Object.assign({}, data);
+  const removed = [];
   for (let attempt = 0; attempt <= optionalColumns.length; attempt++) {
     try {
       return await window.Supabase.Orders.update(id, payload);
     } catch(e) {
-      const missingColumn = optionalColumns.find(column => Object.prototype.hasOwnProperty.call(payload, column) && isMissingSupabaseColumnError(e, column));
-      if (!missingColumn) throw e;
-      delete payload[missingColumn];
-      console.warn('Optional Supabase order column is missing; retrying without it:', missingColumn, e);
+      const text = String((e && (e.message || e.details || e.hint || e.code)) || e || '');
+      let removable = optionalColumns.find(column =>
+        Object.prototype.hasOwnProperty.call(payload, column) && isMissingSupabaseColumnError(e, column)
+      );
+      // بعض wrappers ترجع فقط HTTP 400 من غير اسم العمود؛ نجرب حذف الحقول الاختيارية واحداً واحداً.
+      if (!removable && /\b400\b|Bad Request/i.test(text)) {
+        removable = optionalColumns.find(column => Object.prototype.hasOwnProperty.call(payload, column));
+      }
+      if (!removable) throw e;
+      delete payload[removable];
+      removed.push(removable);
+      console.warn('Optional Supabase order field rejected; retrying without it:', removable, e);
     }
   }
   return await window.Supabase.Orders.update(id, payload);
@@ -2847,7 +2856,7 @@ async function changeOrderStatus(id, status){
           const pushResult = await pushResp.json().catch(() => null);
           if (!pushResult || !pushResult.sent) {
             console.warn('No customer push subscribers matched this order:', pushResult);
-            toast('⚠️ لم يتم العثور على اشتراك إشعارات مفعّل لهذا العميل');
+            toast('⚠️ لم يتم تسليم الإشعار: ' + (pushResult?.message || pushResult?.error || 'لا يوجد اشتراك مطابق للعميل'));
           } else {
             toast('📲 تم إرسال إشعار الحالة للعميل');
           }
@@ -4862,12 +4871,12 @@ function adminPushKeyToBytes(base64String) {
 function sameAdminPushApplicationKey(sub, publicKey) {
   try {
     const current = sub && sub.options && sub.options.applicationServerKey;
-    if (!current) return true;
+    if (!current) return false;
     const actual = new Uint8Array(current);
     const expected = adminPushKeyToBytes(publicKey);
     return actual.length === expected.length && actual.every((value, index) => value === expected[index]);
   } catch (e) {
-    return true;
+    return false;
   }
 }
 
@@ -4922,7 +4931,7 @@ async function enableAdminOrderPush() {
       adminPushSetStatus('لم يتم منح إذن الإشعارات.', false);
       return;
     }
-    const reg = await navigator.serviceWorker.register('/sw.js?v=335', { updateViaCache: 'none' });
+    const reg = await navigator.serviceWorker.register('/sw.js?v=407', { updateViaCache: 'none' });
     if (reg.update) reg.update().catch(() => {});
     await navigator.serviceWorker.ready;
     let sub = await reg.pushManager.getSubscription();
@@ -5027,14 +5036,22 @@ async function sendPushNotification() {
       },
       body: JSON.stringify({ title, body, url, image: image || undefined })
     });
-    if (resp.ok) {
-      statusEl.textContent = `✅ تم الإرسال لـ ${subscriptions.length} مشترك`;
-      toast('✅ تم إرسال الإشعار');
+    const result = await resp.json().catch(() => null);
+    if (!resp.ok) {
+      statusEl.textContent = '❌ خطأ: ' + (result?.error || `HTTP ${resp.status}`);
+      return;
+    }
+    const sentCount = Number(result?.sent || 0);
+    const failedCount = Number(result?.failed || 0);
+    if (sentCount > 0) {
+      statusEl.textContent = `✅ وصل الإرسال إلى ${sentCount} اشتراك${failedCount ? ` — فشل ${failedCount}` : ''}`;
+      toast(`📲 تم إرسال ${sentCount} إشعار`);
       $('push-title').value = '';
       $('push-body').value  = '';
     } else {
-      const err = await resp.text();
-      statusEl.textContent = '❌ خطأ: ' + err;
+      console.warn('Broadcast push failed:', result);
+      statusEl.textContent = '⚠️ لم يتم تسليم أي Push فعلي' + (result?.message ? ': ' + result.message : '');
+      toast('⚠️ لم يتم تسليم أي إشعار فعلي');
     }
   } catch(e) {
     statusEl.textContent = '❌ تعذّر الإرسال: ' + e.message;
