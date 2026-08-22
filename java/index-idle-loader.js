@@ -8,7 +8,7 @@
     '/java/instant-nav.js?v=instant-nav-20260728e',
     '/java/footer-pages.min.js?v=footer-pages-20260723',
     '/java/push-welcome.js?v=push-welcome-20260806-hardened',
-    '/java/notifications.js?v=push-vapid-20260822-register-gateway',
+    '/java/notifications.js?v=vapid-BMr4-20260822-r2',
     '/java/abandoned-cart.js?v=abandoned-cart-20260730a',
     '/java/index-campaign-popup.js?v=coupon-popup-20260804'
   ];

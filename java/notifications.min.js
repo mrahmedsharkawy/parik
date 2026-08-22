@@ -1,5 +1,5 @@
 const VAPID_PUBLIC_KEY = "BMr4ZWTwS2DgL12mxYFjLM9rmnljnJpY_tsFtWtKxgS2d_z36lcg3sLfIQfOFbX1Tw0ITNG3pB4hJeGI-YEZFHE";
-const VAPID_VERSION = "push-vapid-20260822-register-gateway";
+const VAPID_VERSION = "vapid-BMr4-20260822-r2";
 const SERVICE_WORKER_URL = "/sw.js?v=409-push-register";
 const SUPABASE_URL = "https://knleehjjejfeobcmpwnw.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E";
