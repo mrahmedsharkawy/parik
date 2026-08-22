@@ -1,134 +1,33 @@
 // @ts-nocheck
-// Supabase Edge Function: occasion-reminders
-// Scheduled daily. Push delivery is centralized through hyper-api.
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-const ALLOWED_ORIGINS = [
-  'https://bariqgifts.com',
-  'https://www.bariqgifts.com',
-  'https://admin.bariqgifts.com',
-  'http://localhost:3000',
-  'http://localhost:5173',
-];
-
-function getCorsHeaders(req: Request) {
-  const origin = req.headers.get('origin') || '';
-  return {
-    'Access-Control-Allow-Origin': ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0],
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cron-secret',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Vary': 'Origin',
-  };
-}
-
-function hasCronAccess(req: Request) {
-  const secret = Deno.env.get('OCCASION_REMINDER_CRON_SECRET') || '';
-  if (!secret) return false;
-  const bearer = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '').trim();
-  return bearer === secret || req.headers.get('x-cron-secret') === secret;
-}
-
-function daysInMonth(year: number, month: number) { return new Date(Date.UTC(year, month, 0)).getUTCDate(); }
-function validOccasionDate(year: number, month: number, day: number) { return new Date(Date.UTC(year, month - 1, Math.min(day, daysInMonth(year, month)))); }
-function nextOccasionDate(row: any, todayUtc: Date) {
-  const month = Number(row.occasion_month || 0), day = Number(row.occasion_day || 0);
-  if (!month || !day) return null;
-  const currentYear = todayUtc.getUTCFullYear();
-  const fixedYear = row.occasion_year ? Number(row.occasion_year) : null;
-  let candidate = validOccasionDate(fixedYear || currentYear, month, day);
-  if (!fixedYear && candidate < todayUtc) candidate = validOccasionDate(currentYear + 1, month, day);
-  return candidate;
-}
-function isoDateOnly(date: Date) { return date.toISOString().slice(0, 10); }
-function occasionTypeLabel(type: string) {
-  return ({ birthday:'عيد ميلاد', anniversary:'ذكرى زواج', graduation:'تخرج', newborn:'مولود جديد', engagement:'خطوبة', wedding:'زواج', other:'مناسبة' } as any)[type] || 'مناسبة';
-}
-function occasionUrl(type: string) {
-  const path = ({ birthday:'/categories/Occasions', anniversary:'/categories/Occasions', graduation:'/categories/Occasions/Graduation', newborn:'/categories/Occasions/Born-in', engagement:'/categories/Occasions', wedding:'/categories/Occasions', other:'/' } as any)[type] || '/';
-  return 'https://bariqgifts.com' + path;
-}
-
-async function sendViaPushCore(serviceRole: string, payload: any) {
-  const response = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/hyper-api`, {
-    method: 'POST',
-    headers: { 'Content-Type':'application/json', 'apikey':serviceRole, 'Authorization':`Bearer ${serviceRole}` },
-    body: JSON.stringify(payload),
-  });
-  const result = await response.json().catch(async () => ({ error: await response.text().catch(() => '') }));
-  if (!response.ok) throw new Error(result?.error || `hyper-api ${response.status}`);
-  return result || {};
-}
-
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: getCorsHeaders(req) });
-  if (req.method !== 'POST') return new Response(JSON.stringify({ error: 'Method not allowed' }), { status:405, headers:{...getCorsHeaders(req),'Content-Type':'application/json'} });
-  if (!hasCronAccess(req)) return new Response(JSON.stringify({ error:'Scheduler authorization required' }), { status:401, headers:{...getCorsHeaders(req),'Content-Type':'application/json'} });
-
-  try {
-    const serviceRole = String(Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '').trim();
-    if (!serviceRole) throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY');
-    const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', serviceRole);
-    const now = new Date();
-    const todayUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-    const { data: occasions, error } = await supabase
-      .from('customer_occasions')
-      .select('id,user_id,customer_id,customer_email,customer_phone,occasion_name,occasion_type,person_name,relationship,occasion_day,occasion_month,occasion_year,remind_before_days,last_reminder_sent_at')
-      .eq('reminder_enabled', true)
-      .limit(500);
-    if (error) throw error;
-
-    let due=0, sent=0, failed=0, skipped=0;
-    const failures:any[] = [];
-    for (const row of occasions || []) {
-      const nextDate = nextOccasionDate(row, todayUtc);
-      if (!nextDate) { skipped++; continue; }
-      const remindDate = new Date(nextDate);
-      remindDate.setUTCDate(remindDate.getUTCDate() - Number(row.remind_before_days || 7));
-      if (isoDateOnly(remindDate) !== isoDateOnly(todayUtc)) continue;
-      const sentThisYear = row.last_reminder_sent_at && new Date(row.last_reminder_sent_at).getUTCFullYear() === nextDate.getUTCFullYear();
-      if (sentThisYear) { skipped++; continue; }
-      due++;
-
-      let email = String(row.customer_email || '').trim().toLowerCase();
-      let phone = String(row.customer_phone || '').trim();
-      if ((!email || !phone) && row.customer_id) {
-        const { data: customer } = await supabase.from('customers').select('email,phone').eq('id', row.customer_id).maybeSingle();
-        email = email || String(customer?.email || '').trim().toLowerCase();
-        phone = phone || String(customer?.phone || '').trim();
-      }
-      if (!email && !phone) { skipped++; failures.push({id:row.id,error:'missing customer identity'}); continue; }
-
-      const typeLabel = occasionTypeLabel(row.occasion_type);
-      const personName = String(row.person_name || row.occasion_name || 'شخص مهم').trim();
-      const days = Number(row.remind_before_days || 7);
-      try {
-        const result = await sendViaPushCore(serviceRole, {
-          title: `🎁 مناسبة ${personName} قربت!`,
-          body: `باقي ${days} أيام على ${typeLabel} ${personName}. جهز هديتك من بريق وخلي المناسبة أجمل.`,
-          url: occasionUrl(row.occasion_type),
-          type: 'customer_occasion',
-          iconText: '🎁', emoji: '🎁',
-          user_email: email || undefined,
-          user_phone: phone || undefined,
-        });
-        if (Number(result.sent || 0) > 0) {
-          sent++;
-          await supabase.from('customer_occasions').update({ last_reminder_sent_at: new Date().toISOString() }).eq('id', row.id);
-        } else {
-          failed++;
-          failures.push({ id:row.id, message:result.message || result.error || 'no matching subscription', failures:result.failures || [] });
-        }
-      } catch (err) {
-        failed++;
-        failures.push({ id:row.id, error:String(err?.message || err) });
-      }
-    }
-
-    return new Response(JSON.stringify({ sent, failed, skipped, due, failures: failures.slice(0,20) }), {
-      headers:{...getCorsHeaders(req),'Content-Type':'application/json'}
-    });
-  } catch (err) {
-    return new Response(JSON.stringify({ error:err?.message || String(err) }), { status:500, headers:{...getCorsHeaders(req),'Content-Type':'application/json'} });
-  }
-});
+import webpush from 'npm:web-push@3.6.7';
+const INTERNAL='bariq-occ-cron-20260822';
+const ALLOWED=['https://bariqgifts.com','https://www.bariqgifts.com','https://admin.bariqgifts.com'];
+function cors(req){const o=req.headers.get('origin')||'';return {'Access-Control-Allow-Origin':ALLOWED.includes(o)?o:ALLOWED[0],'Access-Control-Allow-Headers':'authorization,apikey,content-type,x-cron-secret','Access-Control-Allow-Methods':'POST,OPTIONS','Vary':'Origin'};}
+function access(req){const env=String(Deno.env.get('OCCASION_REMINDER_CRON_SECRET')||'').trim(),h=String(req.headers.get('x-cron-secret')||'').trim(),b=String(req.headers.get('authorization')||'').replace(/^Bearer\s+/i,'').trim();return (env&&(h===env||b===env))||h===INTERNAL;}
+function dim(y,m){return new Date(Date.UTC(y,m,0)).getUTCDate()} function dte(y,m,d){return new Date(Date.UTC(y,m-1,Math.min(d,dim(y,m))))}
+function next(row,today){const m=+row.occasion_month||0,d=+row.occasion_day||0;if(!m||!d)return null;const y=today.getUTCFullYear(),fy=row.occasion_year?+row.occasion_year:null;let c=dte(fy||y,m,d);if(!fy&&c<today)c=dte(y+1,m,d);return c}
+function label(t){return ({birthday:'عيد ميلاد',anniversary:'ذكرى زواج',graduation:'تخرج',newborn:'مولود جديد',engagement:'خطوبة',wedding:'زواج',other:'مناسبة'})[t]||'مناسبة'}
+function targetUrl(t){const p=({birthday:'/categories/Occasions',anniversary:'/categories/Occasions',graduation:'/categories/Occasions/Graduation',newborn:'/categories/Occasions/Born-in',engagement:'/categories/Occasions',wedding:'/categories/Occasions',other:'/'})[t]||'/';return 'https://bariqgifts.com'+p}
+function normPhone(v){let x=String(v||'').replace(/\D/g,'');if(x.startsWith('00971'))x=x.slice(2);if(x.startsWith('971'))x=x.slice(3);if(x.startsWith('0'))x=x.slice(1);x=x.slice(0,9);return x?'+971'+x:''}
+Deno.serve(async req=>{if(req.method==='OPTIONS')return new Response('ok',{headers:cors(req)});if(req.method!=='POST')return new Response(JSON.stringify({error:'Method not allowed'}),{status:405,headers:{...cors(req),'Content-Type':'application/json'}});if(!access(req))return new Response(JSON.stringify({error:'Scheduler authorization required'}),{status:401,headers:{...cors(req),'Content-Type':'application/json'}});try{
+ const sb=createClient(Deno.env.get('SUPABASE_URL')??'',String(Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')||'').trim());
+ const pub=String(Deno.env.get('VAPID_PUBLIC_KEY')||'').trim(),priv=String(Deno.env.get('VAPID_PRIVATE_KEY')||'').trim(),mail=String(Deno.env.get('VAPID_EMAIL')||'mailto:admin@bariq.store').trim(); if(!pub||!priv)throw new Error('Missing VAPID keys'); webpush.setVapidDetails(mail,pub,priv);
+ const now=new Date(),today=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate()));
+ const {data:rows,error}=await sb.from('customer_occasions').select('*').eq('reminder_enabled',true).limit(500);if(error)throw error;
+ let due=0,sent=0,failed=0,skipped=0;const failures=[];
+ for(const row of rows||[]){const nd=next(row,today);if(!nd){skipped++;continue}const rd=new Date(nd);rd.setUTCDate(rd.getUTCDate()-Number(row.remind_before_days||7));if(today<rd||today>nd)continue;if(row.last_reminder_sent_at&&new Date(row.last_reminder_sent_at).getUTCFullYear()===nd.getUTCFullYear()){skipped++;continue}due++;
+   let subs=[];
+   if(row.user_id){const {data}=await sb.from('push_subscriptions').select('endpoint,p256dh,auth,user_lang,vapid_public_key,user_id').eq('user_id',row.user_id);subs.push(...(data||[]))}
+   const emails=new Set(),phones=new Set(); if(row.customer_email)emails.add(String(row.customer_email).trim().toLowerCase()); if(row.customer_phone)phones.add(normPhone(row.customer_phone));
+   if(row.customer_id){const {data:c}=await sb.from('customers').select('email,phone').eq('id',row.customer_id).maybeSingle();if(c?.email)emails.add(String(c.email).trim().toLowerCase());if(c?.phone)phones.add(normPhone(c.phone))}
+   for(const email of emails){if(!email)continue;const {data}=await sb.from('push_subscriptions').select('endpoint,p256dh,auth,user_lang,vapid_public_key,user_id').eq('user_email',email);subs.push(...(data||[]))}
+   for(const phone of phones){if(!phone)continue;for(const p of [phone,phone.replace(/^\+/, '')]){const {data}=await sb.from('push_subscriptions').select('endpoint,p256dh,auth,user_lang,vapid_public_key,user_id').eq('user_phone',p);subs.push(...(data||[]))}}
+   const seen=new Set();subs=subs.filter(s=>s?.endpoint&&!seen.has(s.endpoint)&&seen.add(s.endpoint)&&String(s.vapid_public_key||'').trim()===pub);
+   if(!subs.length){failed++;failures.push({id:row.id,error:'no current subscription',user_id:row.user_id||null});continue}
+   const person=String(row.person_name||row.occasion_name||'شخص مهم').trim(),days=Math.max(0,Math.ceil((nd.getTime()-today.getTime())/86400000)),title=`🎁 مناسبة ${person} قربت!`,body=days===0?`النهارده ${label(row.occasion_type)} ${person} 🎉 جهز هديتك من بريق وخلي المناسبة أجمل.`:`باقي ${days} ${days===1?'يوم':'أيام'} على ${label(row.occasion_type)} ${person}. جهز هديتك من بريق وخلي المناسبة أجمل.`;
+   let ok=0;for(const s of subs){try{await webpush.sendNotification({endpoint:s.endpoint,keys:{p256dh:s.p256dh,auth:s.auth}},JSON.stringify({title,body,url:targetUrl(row.occasion_type),type:'customer_occasion',iconText:'🎁',emoji:'🎁',lang:s.user_lang||'ar'}),{TTL:86400,urgency:'high'});ok++}catch(e){console.error('OCCASION_PUSH_FAILED',{statusCode:e?.statusCode||null,body:e?.body||null,message:e?.message||String(e)})}}
+   if(ok>0){sent++;await sb.from('customer_occasions').update({last_reminder_sent_at:new Date().toISOString()}).eq('id',row.id)}else{failed++;failures.push({id:row.id,error:'delivery failed'})}
+ }
+ return new Response(JSON.stringify({sent,failed,skipped,due,failures:failures.slice(0,20)}),{headers:{...cors(req),'Content-Type':'application/json'}})
+}catch(e){return new Response(JSON.stringify({error:e?.message||String(e)}),{status:500,headers:{...cors(req),'Content-Type':'application/json'}})}});
