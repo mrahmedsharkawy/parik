@@ -8,7 +8,7 @@
     '/java/instant-nav.js?v=instant-nav-20260728e',
     '/java/footer-pages.min.js?v=footer-pages-20260723',
     '/java/push-welcome.js?v=push-welcome-20260806-hardened',
-    '/java/notifications.js?v=push-vapid-20260821-final',
+    '/java/notifications.js?v=push-vapid-20260822-register-gateway',
     '/java/abandoned-cart.js?v=abandoned-cart-20260730a',
     '/java/index-campaign-popup.js?v=coupon-popup-20260804'
   ];
@@ -28,10 +28,14 @@
   }
 
   function scheduleBoot() {
-    if ('requestIdleCallback' in window) requestIdleCallback(boot, { timeout: 1800 });
-    else setTimeout(boot, 1400);
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(boot, { timeout: 1800 });
+    } else {
+      setTimeout(boot, 1400);
+    }
   }
 
+  // First interaction: load helpers immediately after user intent.
   function onInteract() {
     boot();
     window.removeEventListener('pointerdown', onInteract, true);
@@ -45,6 +49,9 @@
   window.addEventListener('keydown', onInteract, { capture: true, passive: true });
   window.addEventListener('scroll', onInteract, { capture: true, passive: true });
 
-  if (document.readyState === 'complete') scheduleBoot();
-  else window.addEventListener('load', scheduleBoot, { once: true });
+  if (document.readyState === 'complete') {
+    scheduleBoot();
+  } else {
+    window.addEventListener('load', scheduleBoot, { once: true });
+  }
 })();

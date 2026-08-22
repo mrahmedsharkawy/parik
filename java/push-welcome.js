@@ -1,19 +1,9 @@
 (function(){
-  var VAPID_PUBLIC_KEY='BMr4ZWTwS2DgL12mxYFjLM9rmnljnJpY_tsFtWtKxgS2d_z36lcg3sLfIQfOFbX1Tw0ITNG3pB4hJeGI-YEZFHE';
+  var VAPID_PUBLIC_KEY='BHx4kwVuek4CMfsuKhJswPXqOi6bBxlKd9ady7Yw9Ze05HucpoF-gI1ZzwWxbAXUXj0L4PPQd9EKM2ol7Bk6LF0';
   function urlBase64ToUint8Array(base64String){
     var base64=(base64String+'='.repeat((4-base64String.length%4)%4)).replace(/-/g,'+').replace(/_/g,'/');
     var raw=window.atob(base64);
     return Uint8Array.from([].map.call(raw,function(c){return c.charCodeAt(0);}));
-  }
-  function samePushApplicationKey(sub, publicKey){
-    try{
-      var current=sub&&sub.options&&sub.options.applicationServerKey;
-      if(!current)return true;
-      var actual=new Uint8Array(current), expected=urlBase64ToUint8Array(publicKey);
-      if(actual.length!==expected.length)return false;
-      for(var i=0;i<actual.length;i++){if(actual[i]!==expected[i])return false;}
-      return true;
-    }catch(e){return true;}
   }
   function normalizeUaePhone(value){
     var digits=String(value||'').replace(/\D/g,'');
@@ -39,11 +29,23 @@
       var profile={};
       try{profile=JSON.parse(localStorage.getItem('x2_profile')||'{}');}catch(e){}
       var p256dh=sub.getKey('p256dh'),auth=sub.getKey('auth');
-      var payload={endpoint:sub.endpoint,p256dh:p256dh?btoa(String.fromCharCode.apply(null,new Uint8Array(p256dh))):'',auth:auth?btoa(String.fromCharCode.apply(null,new Uint8Array(auth))):'',user_phone:normalizeUaePhone(profile.phone||''),user_email:String(profile.email||'').trim().toLowerCase(),user_lang:getCurrentPushLanguage(),created_at:(new Date).toISOString()};
-      var headers={apikey:anon,Authorization:'Bearer '+anon,'Content-Type':'application/json'};
-      var res=await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/push_subscriptions',{method:'POST',headers:Object.assign({},headers,{Prefer:'resolution=merge-duplicates,return=minimal'}),body:JSON.stringify(payload)});
+      if(!p256dh||!auth)return false;
+      var payload={
+        endpoint:sub.endpoint,
+        p256dh:btoa(String.fromCharCode.apply(null,new Uint8Array(p256dh))),
+        auth:btoa(String.fromCharCode.apply(null,new Uint8Array(auth))),
+        user_phone:normalizeUaePhone(profile.phone||''),
+        user_email:String(profile.email||profile.authEmail||'').trim().toLowerCase(),
+        user_lang:getCurrentPushLanguage(),
+        vapid_public_key:VAPID_PUBLIC_KEY
+      };
+      var res=await fetch('https://knleehjjejfeobcmpwnw.supabase.co/functions/v1/push-register',{
+        method:'POST',
+        headers:{apikey:anon,Authorization:'Bearer '+anon,'Content-Type':'application/json'},
+        body:JSON.stringify(payload)
+      });
       return !!res.ok;
-    }catch(e){}
+    }catch(e){console.warn('Push welcome save failed:',e);return false;}
   }
   async function activatePushFromWelcome(btn){
     if(!('serviceWorker'in navigator)||!('PushManager'in window)||!('Notification'in window)){
@@ -67,17 +69,14 @@
         return false;
       }
       var reg=await navigator.serviceWorker.getRegistration('/');
-      if(!reg)reg=await navigator.serviceWorker.register('/sw.js?v=335',{updateViaCache:'none'});
+      if(!reg)reg=await navigator.serviceWorker.register('/sw.js?v=409-push-register',{updateViaCache:'none'});
       if(reg&&reg.update)reg.update().catch(function(){});
       await navigator.serviceWorker.ready;
       sendPushLanguageToServiceWorker();
       var sub=await reg.pushManager.getSubscription();
-      if(sub&&!samePushApplicationKey(sub,VAPID_PUBLIC_KEY)){
-        await sub.unsubscribe().catch(function(){});
-        sub=null;
-      }
       if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)});
-      saveSubscriptionToSupabase(sub);
+      var saved=await saveSubscriptionToSupabase(sub);
+      if(!saved)throw new Error('تعذر حفظ الاشتراك');
       btn.disabled=false;
       btn.style.background='#27ae60';
       btn.style.color='#fff';
