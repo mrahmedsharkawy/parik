@@ -3,7 +3,7 @@
 // يرسل Web Push Notification لجميع المشتركين
 // Environment Variables needed in Supabase Dashboard:
 //   VAPID_PRIVATE_KEY
-//   VAPID_PUBLIC_KEY  = BHx4kwVuek4CMfsuKhJswPXqOi6bBxlKd9ady7Yw9Ze05HucpoF-gI1ZzwWxbAXUXj0L4PPQd9EKM2ol7Bk6LF0
+//   VAPID_PUBLIC_KEY  = BMr4ZWTwS2DgL12mxYFjLM9rmnljnJpY_tsFtWtKxgS2d_z36lcg3sLfIQfOFbX1Tw0ITNG3pB4hJeGI-YEZFHE
 //   VAPID_EMAIL       = mailto:admin@bariq.store
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';

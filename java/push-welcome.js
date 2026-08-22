@@ -1,5 +1,5 @@
 (function(){
-  var VAPID_PUBLIC_KEY='BHx4kwVuek4CMfsuKhJswPXqOi6bBxlKd9ady7Yw9Ze05HucpoF-gI1ZzwWxbAXUXj0L4PPQd9EKM2ol7Bk6LF0';
+  var VAPID_PUBLIC_KEY='BMr4ZWTwS2DgL12mxYFjLM9rmnljnJpY_tsFtWtKxgS2d_z36lcg3sLfIQfOFbX1Tw0ITNG3pB4hJeGI-YEZFHE';
   function urlBase64ToUint8Array(base64String){
     var base64=(base64String+'='.repeat((4-base64String.length%4)%4)).replace(/-/g,'+').replace(/_/g,'/');
     var raw=window.atob(base64);

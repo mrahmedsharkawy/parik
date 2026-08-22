@@ -1,4 +1,4 @@
-const VAPID_PUBLIC_KEY = "BHx4kwVuek4CMfsuKhJswPXqOi6bBxlKd9ady7Yw9Ze05HucpoF-gI1ZzwWxbAXUXj0L4PPQd9EKM2ol7Bk6LF0";
+const VAPID_PUBLIC_KEY = "BMr4ZWTwS2DgL12mxYFjLM9rmnljnJpY_tsFtWtKxgS2d_z36lcg3sLfIQfOFbX1Tw0ITNG3pB4hJeGI-YEZFHE";
 const VAPID_VERSION = "push-vapid-20260822-register-gateway";
 const SERVICE_WORKER_URL = "/sw.js?v=409-push-register";
 const SUPABASE_URL = "https://knleehjjejfeobcmpwnw.supabase.co";
