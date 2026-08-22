@@ -199,7 +199,7 @@
   #gate p{color:#7a8296;font-size:.85rem;margin:0 0 18px}
 </style>
 <link rel="stylesheet" href="/style/admin-pro.css?v=20260812-clean-admin">
-<script src="/java/supabase.js?v=supabase-20260812-orders-getpage"></script></head>
+<script src="/java/supabase.js?v=supabase-20260820-safe-sync"></script></head>
 <body>
 
 <!-- بوابة دخول بسيطة (حماية شكلية فقط) -->
@@ -217,11 +217,8 @@
 <div class="topbar">
   <h1>⚙️ لوحة التحكم <span class="badge">Bariq</span></h1>
   <div class="actions">
-    <button class="btn-ghost btn-sm" onclick="reloadFromFile()">↻ تحميل من الملف</button>
     <button class="btn-danger btn-sm" onclick="syncFromSupabase()">🔄 مزامنة من Supabase</button>
     <button class="btn-gold btn-sm" onclick="exportProducts()">⬇ تنزيل Products.json</button>
-    <button class="btn-navy btn-sm" onclick="pushAllProductsToSupabase()">☁️ رفع الكل لـ Supabase</button>
-    <button class="btn-navy btn-sm" onclick="migrateImagesToStorage()">🖼️ ترحيل الصور المحلية لـ Storage</button>
   </div>
 </div>
 
@@ -1072,32 +1069,8 @@
       </div>
       <button class="btn-gold" style="width:100%;margin-top:14px" onclick="saveHomeBanners()">💾 حفظ بنرات الرئيسية</button>
     </div>
-    <div class="grid">
-      <div class="card">
-        <h2>➕ إضافة بنر</h2>
-        <label>عنوان البنر (عربي)</label>
-        <input type="text" id="bn-title" placeholder="عروض خاطفة ⚡">
-        <label>نص فرعي</label>
-        <input type="text" id="bn-sub" placeholder="عرض لوقت محدود">
-        <label>رابط الصورة</label>
-        <input type="text" id="bn-img" placeholder="assets/home/banner.png">
-        <label>الرابط عند الضغط</label>
-        <input type="text" id="bn-link" placeholder="offers.html">
-        <label>ترتيب الظهور</label>
-        <input type="number" id="bn-order" value="1" min="1">
-        <div style="display:flex;gap:8px;margin-top:14px">
-          <button class="btn-gold" style="flex:1" onclick="saveBanner()">💾 حفظ البنر</button>
-          <button class="btn-ghost btn-sm" onclick="clearBannerForm()">✕ مسح</button>
-        </div>
-      </div>
-      <div class="card">
-        <h2>🖼️ البنرات الحالية</h2>
-        <div class="plist" id="bannerList"><div class="empty">لا توجد بنرات محفوظة</div></div>
-        <div style="margin-top:12px;display:flex;gap:8px">
-          <button class="btn-ghost btn-sm" onclick="exportBanners()">⬇ تنزيل JSON</button>
-          <button class="btn-danger btn-sm" onclick="clearAllBanners()">🗑 مسح الكل</button>
-        </div>
-      </div>
+    <!-- تم حذف قسمي إضافة بنر والبنرات الحالية حسب الطلب -->
+
     </div>
 
     <!-- المنتجات المميزة واختيارات اليوم (تم نقلها لأول الصفحة) -->
@@ -1264,7 +1237,48 @@
         </div>
       </div>
     </div>
+
+    <!-- ============ مناسبات العملاء داخل صفحة العملاء ============ -->
+    <div class="card">
+      <h2>🎉 مناسبات العملاء</h2>
+      <div class="hint">إحصائيات مختصرة للمناسبات المحفوظة، حسب صلاحيات الأدمن الحالية في Supabase.</div>
+      <div class="stats-cards" id="occAdminStats">
+        <div class="stat gold"><span class="ic">🎉</span><div class="v">0</div><div class="l">كل المناسبات</div></div>
+        <div class="stat green"><span class="ic">🔔</span><div class="v">0</div><div class="l">تذكيرات فعالة</div></div>
+        <div class="stat orange"><span class="ic">⏳</span><div class="v">0</div><div class="l">خلال 7 أيام</div></div>
+        <div class="stat navy"><span class="ic">📅</span><div class="v">0</div><div class="l">خلال 30 يوم</div></div>
+      </div>
+      <div class="row" style="margin:14px 0">
+        <input type="text" id="occAdminSearch" placeholder="ابحث باسم الشخص أو المناسبة أو الهاتف..." oninput="renderCustomerOccasionsAdmin()" style="flex:2;min-width:180px">
+        <select id="occAdminFilter" onchange="renderCustomerOccasionsAdmin()" style="width:auto;min-width:150px">
+          <option value="all">كل المناسبات</option>
+          <option value="enabled">التذكير فعال</option>
+          <option value="disabled">التذكير متوقف</option>
+          <option value="week">خلال 7 أيام</option>
+          <option value="month">خلال 30 يوم</option>
+        </select>
+        <button class="btn-navy btn-sm" onclick="loadCustomerOccasionsAdmin()">↻ تحديث</button>
+      </div>
+      <div class="admin-table-wrap scroll-4" style="max-height:420px">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>المناسبة</th>
+              <th>الشخص</th>
+              <th>الصلة</th>
+              <th>التاريخ</th>
+              <th>المتبقي</th>
+              <th>التذكير</th>
+              <th>هاتف / بريد</th>
+            </tr>
+          </thead>
+          <tbody id="occAdminRows"><tr><td colspan="7" class="empty">اضغط تحديث لعرض المناسبات.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
+
 
   <!-- ============ الإعدادات ============ -->
   <div class="panel" id="panel-settings">
@@ -1509,6 +1523,7 @@ function switchTab(name){
   if(name==='invoices'){ syncStoreOrders(true).then(renderInvoices); }
   if(name==='marketing'){ loadPushSubscribersCount(); }
   if(name==='external-marketing'){ renderExternalMarketing(); }
+  if(name==='customer-occasions'){ loadCustomerOccasionsAdmin(); }
 }
 
 async function loadPushSubscribersCount() {
@@ -2502,16 +2517,25 @@ function isMissingSupabaseColumnError(error, column){
 }
 
 async function updateOrderInSupabaseSafe(id, data){
-  const optionalColumns = ['cashback_expires_at'];
+  const optionalColumns = ['cashback_expires_at', 'cashback_status'];
   const payload = Object.assign({}, data);
+  const removed = [];
   for (let attempt = 0; attempt <= optionalColumns.length; attempt++) {
     try {
       return await window.Supabase.Orders.update(id, payload);
     } catch(e) {
-      const missingColumn = optionalColumns.find(column => Object.prototype.hasOwnProperty.call(payload, column) && isMissingSupabaseColumnError(e, column));
-      if (!missingColumn) throw e;
-      delete payload[missingColumn];
-      console.warn('Optional Supabase order column is missing; retrying without it:', missingColumn, e);
+      const text = String((e && (e.message || e.details || e.hint || e.code)) || e || '');
+      let removable = optionalColumns.find(column =>
+        Object.prototype.hasOwnProperty.call(payload, column) && isMissingSupabaseColumnError(e, column)
+      );
+      // بعض wrappers ترجع فقط HTTP 400 من غير اسم العمود؛ نجرب حذف الحقول الاختيارية واحداً واحداً.
+      if (!removable && /\b400\b|Bad Request/i.test(text)) {
+        removable = optionalColumns.find(column => Object.prototype.hasOwnProperty.call(payload, column));
+      }
+      if (!removable) throw e;
+      delete payload[removable];
+      removed.push(removable);
+      console.warn('Optional Supabase order field rejected; retrying without it:', removable, e);
     }
   }
   return await window.Supabase.Orders.update(id, payload);
@@ -2805,7 +2829,7 @@ async function changeOrderStatus(id, status){
           const pushResult = await pushResp.json().catch(() => null);
           if (!pushResult || !pushResult.sent) {
             console.warn('No customer push subscribers matched this order:', pushResult);
-            toast('⚠️ لم يتم العثور على اشتراك إشعارات مفعّل لهذا العميل');
+            toast('⚠️ لم يتم تسليم الإشعار: ' + (pushResult?.message || pushResult?.error || 'لا يوجد اشتراك مطابق للعميل'));
           } else {
             toast('📲 تم إرسال إشعار الحالة للعميل');
           }
@@ -3117,6 +3141,7 @@ function invoiceStandaloneHtml(inv, order, logoSrc){
   ].map(([label, value]) => `<div class="bank-row"><span>${esc(label)}</span><b dir="ltr">${esc(value)}</b></div>`).join('');
   return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>فاتورة طلب ${esc(inv.orderNumber)}</title><style>body{margin:0;background:#f5f7fb;color:#152546;font-family:Tahoma,Arial,sans-serif}.page{max-width:760px;margin:24px auto;padding:16px}.invoice{background:#fff;border:1px solid #e5e9f2;border-radius:18px;overflow:hidden;box-shadow:0 14px 38px rgba(21,37,70,.12)}.head{background:linear-gradient(135deg,#fff,#fbf4dc);padding:22px;display:flex;gap:14px;align-items:center;border-bottom:1px solid #ece4c7}.logo{width:74px;height:74px;object-fit:contain;background:#fff;border:1px solid #eee;border-radius:14px}.title{font-size:1.3rem;font-weight:900;margin-bottom:6px}.muted{color:#7a8296;font-size:.9rem}.body{padding:22px}.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}.sum{background:#f8f9fc;border:1px solid #e7eaf2;border-radius:12px;padding:12px}.sum span{display:block;color:#7a8296;font-size:.78rem;margin-bottom:5px}.sum b{font-size:1.05rem}table{width:100%;border-collapse:collapse;margin:12px 0}td,th{border-bottom:1px solid #edf0f6;padding:10px;text-align:right}.note{background:#fff8e1;border:1px solid #f1d27a;color:#6b5200;border-radius:12px;padding:12px;font-weight:800;margin:14px 0}.bank{display:grid;gap:9px;background:#f8f9fc;border:1px solid #e7eaf2;border-radius:14px;padding:12px}.bank-row{display:flex;justify-content:space-between;gap:14px;background:#fff;border:1px solid #edf0f6;border-radius:10px;padding:10px}.bank-row span{color:#7a8296}.footer{padding:14px 22px;color:#8b93a4;font-size:.82rem;border-top:1px solid #edf0f6}@media(max-width:640px){.summary{grid-template-columns:1fr}.head{align-items:flex-start}.page{padding:8px;margin:8px auto}}</style></head><body><div class="page"><section class="invoice"><div class="head"><img class="logo" src="${esc(logoSrc || 'https://bariqgifts.com/assets/logo.png')}" alt="Bariq"><div><div class="title">فاتورة طلب ${esc(inv.orderNumber)}</div><div class="muted">${esc(inv.customer || '')}${inv.phone ? ' · ' + esc(inv.phone) : ''}</div></div></div><div class="body"><div class="summary"><div class="sum"><span>إجمالي الطلب</span><b>${formatMoney(inv.total)}</b></div><div class="sum"><span>العربون / المطلوب الآن</span><b>${formatMoney(inv.due)}</b></div><div class="sum"><span>المتبقي بعد التسليم</span><b>${formatMoney(invoiceRemaining(inv))}</b></div></div><table><thead><tr><th>المنتج</th><th>الكمية</th></tr></thead><tbody>${items}</tbody></table><div>نوع الدفع: <b>${esc(inv.typeLabel || '')}</b></div><div class="note">${esc(inv.note || INVOICE_DEFAULT_NOTE)}</div><h3>بيانات التحويل</h3><div class="bank">${bankRows}</div></div><div class="footer">Bariq Gifts - هذه الفاتورة محفوظة كملف مستقل ويمكن فتحها مباشرة في المتصفح.</div></section></div></body></html>`;
 }
+
 async function downloadSelectedInvoiceFile(){
   const inv = currentInvoicePayload();
   if(!inv || !selectedInvoiceOrder){ toast('اختر طلب أولاً'); return; }
@@ -4178,7 +4203,7 @@ async function renderVisitorsStats() {
     }
   };
   try {
-    const res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors?select=id,visited_at,page,city,country,ip&order=visited_at.desc&limit=500', {
+    const res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors?select=*&limit=500', {
       cache: 'no-store',
       headers: Object.assign({}, headers, { Prefer: 'count=exact', 'Cache-Control': 'no-cache' })
     });
@@ -4319,8 +4344,7 @@ async function emFetchVisitors(){
     const adminToken = await getValidAdminToken() || ANON;
     const headers = { apikey: ANON, Authorization: 'Bearer ' + adminToken };
     const urls = [
-      'https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors?select=visited_at,created_at,page,city,country,referrer,source,utm_source&limit=1000',
-      'https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors?select=visited_at,created_at,page,city,country&limit=1000'
+      'https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors?select=*&limit=1000'
     ];
     for (const url of urls) {
       const res = await fetch(url, { headers });
@@ -4818,6 +4842,18 @@ function adminPushKeyToBytes(base64String) {
   return Uint8Array.from([].map.call(raw, c => c.charCodeAt(0)));
 }
 
+function sameAdminPushApplicationKey(sub, publicKey) {
+  try {
+    const current = sub && sub.options && sub.options.applicationServerKey;
+    if (!current) return false;
+    const actual = new Uint8Array(current);
+    const expected = adminPushKeyToBytes(publicKey);
+    return actual.length === expected.length && actual.every((value, index) => value === expected[index]);
+  } catch (e) {
+    return false;
+  }
+}
+
 function adminPushSetStatus(message, ok) {
   const el = $('admin-push-status');
   if (!el) return;
@@ -4829,22 +4865,28 @@ async function saveAdminPushSubscription(sub) {
   const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
   const p256dh = sub.getKey('p256dh');
   const auth = sub.getKey('auth');
-  if (!p256dh || !auth) return false;
   const payload = {
     endpoint: sub.endpoint,
-    p256dh: btoa(String.fromCharCode.apply(null, new Uint8Array(p256dh))),
-    auth: btoa(String.fromCharCode.apply(null, new Uint8Array(auth))),
+    p256dh: p256dh ? btoa(String.fromCharCode.apply(null, new Uint8Array(p256dh))) : '',
+    auth: auth ? btoa(String.fromCharCode.apply(null, new Uint8Array(auth))) : '',
     user_phone: '',
     user_email: ADMIN_PUSH_EMAIL,
     user_lang: 'ar',
-    vapid_public_key: ADMIN_PUSH_VAPID_PUBLIC_KEY
+    created_at: new Date().toISOString()
   };
-  const res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/functions/v1/push-register', {
+  const headers = { apikey: ANON, Authorization: 'Bearer ' + ANON, 'Content-Type': 'application/json' };
+  const res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/push_subscriptions', {
     method: 'POST',
-    headers: { apikey: ANON, Authorization: 'Bearer ' + ANON, 'Content-Type': 'application/json' },
+    headers: { ...headers, Prefer: 'resolution=merge-duplicates,return=minimal' },
     body: JSON.stringify(payload)
   });
-  return res.ok;
+  if (res.ok) return true;
+  const patch = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/push_subscriptions?endpoint=eq.' + encodeURIComponent(sub.endpoint), {
+    method: 'PATCH',
+    headers: { ...headers, Prefer: 'return=minimal' },
+    body: JSON.stringify(payload)
+  });
+  return patch.ok;
 }
 
 async function enableAdminOrderPush() {
@@ -4863,10 +4905,14 @@ async function enableAdminOrderPush() {
       adminPushSetStatus('لم يتم منح إذن الإشعارات.', false);
       return;
     }
-    const reg = await navigator.serviceWorker.register('/sw.js?v=409-push-register', { updateViaCache: 'none' });
+    const reg = await navigator.serviceWorker.register('/sw.js?v=407', { updateViaCache: 'none' });
     if (reg.update) reg.update().catch(() => {});
     await navigator.serviceWorker.ready;
     let sub = await reg.pushManager.getSubscription();
+    if (sub && !sameAdminPushApplicationKey(sub, ADMIN_PUSH_VAPID_PUBLIC_KEY)) {
+      await sub.unsubscribe().catch(() => {});
+      sub = null;
+    }
     if (!sub) {
       sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
@@ -4964,14 +5010,22 @@ async function sendPushNotification() {
       },
       body: JSON.stringify({ title, body, url, image: image || undefined })
     });
-    if (resp.ok) {
-      statusEl.textContent = `✅ تم الإرسال لـ ${subscriptions.length} مشترك`;
-      toast('✅ تم إرسال الإشعار');
+    const result = await resp.json().catch(() => null);
+    if (!resp.ok) {
+      statusEl.textContent = '❌ خطأ: ' + (result?.error || `HTTP ${resp.status}`);
+      return;
+    }
+    const sentCount = Number(result?.sent || 0);
+    const failedCount = Number(result?.failed || 0);
+    if (sentCount > 0) {
+      statusEl.textContent = `✅ وصل الإرسال إلى ${sentCount} اشتراك${failedCount ? ` — فشل ${failedCount}` : ''}`;
+      toast(`📲 تم إرسال ${sentCount} إشعار`);
       $('push-title').value = '';
       $('push-body').value  = '';
     } else {
-      const err = await resp.text();
-      statusEl.textContent = '❌ خطأ: ' + err;
+      console.warn('Broadcast push failed:', result);
+      statusEl.textContent = '⚠️ لم يتم تسليم أي Push فعلي' + (result?.message ? ': ' + result.message : '');
+      toast('⚠️ لم يتم تسليم أي إشعار فعلي');
     }
   } catch(e) {
     statusEl.textContent = '❌ تعذّر الإرسال: ' + e.message;
@@ -6536,6 +6590,106 @@ async function loadCampaignsFromSupabase() {
   renderCampaigns();
 }
 
+/* ================= مناسبات العملاء ================= */
+let customerOccasionsAdminCache = [];
+
+function occAdminEsc(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[ch]));
+}
+
+function occAdminNextDate(row) {
+  const now = new Date();
+  const day = Math.max(1, Math.min(31, Number(row.occasion_day) || 1));
+  const month = Math.max(1, Math.min(12, Number(row.occasion_month) || 1));
+  let year = Number(row.occasion_year) || now.getFullYear();
+  let date = new Date(year, month - 1, day);
+  if (!Number(row.occasion_year) && date < new Date(now.getFullYear(), now.getMonth(), now.getDate())) {
+    date = new Date(now.getFullYear() + 1, month - 1, day);
+  }
+  return date;
+}
+
+function occAdminDaysLeft(row) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const date = occAdminNextDate(row);
+  date.setHours(0, 0, 0, 0);
+  return Math.max(0, Math.ceil((date - today) / 86400000));
+}
+
+function occAdminDateLabel(row) {
+  const y = row.occasion_year ? `/${row.occasion_year}` : '';
+  return `${row.occasion_day}/${row.occasion_month}${y}`;
+}
+
+async function loadCustomerOccasionsAdmin() {
+  const rowsEl = $('occAdminRows');
+  if (rowsEl) rowsEl.innerHTML = '<tr><td colspan="7" class="empty">جارٍ التحميل...</td></tr>';
+  try {
+    if (!window.sbFetch) throw new Error('Supabase غير جاهز');
+    const rows = await window.sbFetch('customer_occasions?select=id,occasion_name,occasion_type,person_name,relationship,occasion_day,occasion_month,occasion_year,remind_before_days,reminder_enabled,last_reminder_sent_at,customer_email,customer_phone,created_at&order=created_at.desc&limit=500');
+    customerOccasionsAdminCache = Array.isArray(rows) ? rows : [];
+    renderCustomerOccasionsAdmin();
+  } catch (e) {
+    customerOccasionsAdminCache = [];
+    if (rowsEl) rowsEl.innerHTML = `<tr><td colspan="7" class="empty">${occAdminEsc(e.message || 'تعذر تحميل مناسبات العملاء')}</td></tr>`;
+  }
+}
+
+function renderCustomerOccasionsAdmin() {
+  const rowsEl = $('occAdminRows');
+  const statsEl = $('occAdminStats');
+  if (!rowsEl) return;
+  const search = String($('occAdminSearch')?.value || '').trim().toLowerCase();
+  const filter = $('occAdminFilter')?.value || 'all';
+  const allRows = customerOccasionsAdminCache.slice().sort((a, b) => occAdminDaysLeft(a) - occAdminDaysLeft(b));
+  const filtered = allRows.filter(row => {
+    const days = occAdminDaysLeft(row);
+    const haystack = [row.occasion_name, row.person_name, row.relationship, row.customer_phone, row.customer_email].join(' ').toLowerCase();
+    if (search && !haystack.includes(search)) return false;
+    if (filter === 'enabled' && !row.reminder_enabled) return false;
+    if (filter === 'disabled' && row.reminder_enabled) return false;
+    if (filter === 'week' && days > 7) return false;
+    if (filter === 'month' && days > 30) return false;
+    return true;
+  });
+  if (statsEl) {
+    const total = allRows.length;
+    const enabled = allRows.filter(r => r.reminder_enabled).length;
+    const week = allRows.filter(r => occAdminDaysLeft(r) <= 7).length;
+    const month = allRows.filter(r => occAdminDaysLeft(r) <= 30).length;
+    statsEl.innerHTML = [
+      ['🎉', total, 'كل المناسبات', 'gold'],
+      ['🔔', enabled, 'تذكيرات فعالة', 'green'],
+      ['⏳', week, 'خلال 7 أيام', 'orange'],
+      ['📅', month, 'خلال 30 يوم', 'navy']
+    ].map(s => `<div class="stat ${s[3]}"><span class="ic">${s[0]}</span><div class="v">${s[1]}</div><div class="l">${s[2]}</div></div>`).join('');
+  }
+  if (!filtered.length) {
+    rowsEl.innerHTML = '<tr><td colspan="7" class="empty">لا توجد مناسبات مطابقة.</td></tr>';
+    return;
+  }
+  rowsEl.innerHTML = filtered.map(row => {
+    const days = occAdminDaysLeft(row);
+    const reminder = row.reminder_enabled ? `قبل ${row.remind_before_days || 7} أيام` : 'متوقف';
+    return `<tr>
+      <td><b>${occAdminEsc(row.occasion_name)}</b></td>
+      <td>${occAdminEsc(row.person_name)}</td>
+      <td>${occAdminEsc(row.relationship || '-')}</td>
+      <td>${occAdminEsc(occAdminDateLabel(row))}</td>
+      <td>${days === 0 ? 'اليوم' : `بعد ${days} يوم`}</td>
+      <td><span class="status-badge ${row.reminder_enabled ? 'st-delivered' : 'st-cancelled'}">${occAdminEsc(reminder)}</span></td>
+      <td>${occAdminEsc(row.customer_phone || row.customer_email || '-')}</td>
+    </tr>`;
+  }).join('');
+}
+
 /* ================= بدء لوحة التحكم ================= */
 (async function init(){
   initStoreSortMode();
@@ -6573,6 +6727,24 @@ async function loadCampaignsFromSupabase() {
       toast('⚠️ لا توجد منتجات - اضغط "↻ تحميل من الملف" لتحميلها');
     }
   }, 1500);
+})();
+</script>
+
+<script>
+(function(){
+  function bindCustomerOccasions(){
+    try{
+      var tab=document.querySelector('.tab[data-tab="customers"]');
+      if(tab && !tab.dataset.occBound){
+        tab.dataset.occBound='1';
+        tab.addEventListener('click',function(){
+          setTimeout(function(){ if(typeof loadCustomerOccasionsAdmin==='function') loadCustomerOccasionsAdmin(); },120);
+        });
+      }
+    }catch(e){ console.warn('customer occasions init',e); }
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',bindCustomerOccasions,{once:true});
+  else bindCustomerOccasions();
 })();
 </script>
 </body>
