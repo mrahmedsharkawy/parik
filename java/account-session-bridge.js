@@ -1,65 +1,17 @@
 (function(){
-  'use strict';
-
-  function usable(token){
-    try{
-      if(!token || token.split('.').length !== 3) return false;
-      var p = token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
-      p += '='.repeat((4-p.length%4)%4);
-      var j = JSON.parse(atob(p));
-      return !j.exp || (j.exp*1000) > Date.now()+15000;
-    }catch(e){ return false; }
-  }
-
-  function extract(raw){
-    if(!raw) return '';
-    try{
-      var o = typeof raw === 'string' ? JSON.parse(raw) : raw;
-      return String(
-        (o && o.access_token) ||
-        (o && o.currentSession && o.currentSession.access_token) ||
-        (o && o.session && o.session.access_token) ||
-        (o && o.data && o.data.session && o.data.session.access_token) ||
-        ''
-      );
-    }catch(e){ return ''; }
-  }
-
-  function restore(){
-    try{
-      var x = localStorage.getItem('x2_token') || '';
-      if(usable(x)) return x;
-
-      var keys = [
-        'sb-knleehjjejfeobcmpwnw-auth-token',
-        'supabase.auth.token'
-      ];
-
-      for(var i=0;i<keys.length;i++){
-        var t = extract(localStorage.getItem(keys[i]));
-        if(usable(t)){
-          localStorage.setItem('x2_token', t);
-          localStorage.setItem('x2_logged', '1');
-          return t;
-        }
-      }
-
-      for(var n=0;n<localStorage.length;n++){
-        var key = localStorage.key(n) || '';
-        if(!/^sb-.*-auth-token$/.test(key)) continue;
-        var tok = extract(localStorage.getItem(key));
-        if(usable(tok)){
-          localStorage.setItem('x2_token', tok);
-          localStorage.setItem('x2_logged', '1');
-          return tok;
-        }
-      }
-    }catch(e){}
-    return '';
-  }
-
-  window.BariqRestoreUserSession = restore;
-  restore();
-  window.addEventListener('pageshow', restore);
-  window.addEventListener('focus', restore);
+'use strict';
+var SUPABASE_URL='https://knleehjjejfeobcmpwnw.supabase.co';
+var ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYXNlIiwicmVmIjoia25sZWhqampIamZlb2JjbXB3bnciLCJyb2xlIjoiYW5vbiIsImlhdCI6MTc4NDAyOTU3MCwiZXhwIjoyMDk5NjA1NTcwfQ.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+var AUTH_KEY='sb-knleehjjejfeobcmpwnw-auth-token', refreshing=null;
+function parseJwt(t){try{var p=String(t||'').split('.')[1];if(!p)return null;p=p.replace(/-/g,'+').replace(/_/g,'/');p+='='.repeat((4-p.length%4)%4);return JSON.parse(atob(p))}catch(_){return null}}
+function usable(t,skew){var j=parseJwt(t);return !!j&&(!j.exp||(j.exp*1000)>Date.now()+(skew||30000))}
+function extract(raw){try{var o=typeof raw==='string'?JSON.parse(raw):raw;if(!o)return{};var s=o.currentSession||o.session||(o.data&&o.data.session)||o;return{access_token:String(s.access_token||''),refresh_token:String(s.refresh_token||''),user:s.user||null,raw:o}}catch(_){return{}}}
+function find(){var keys=[AUTH_KEY,'supabase.auth.token'];for(var i=0;i<keys.length;i++){var raw=localStorage.getItem(keys[i]);if(raw){var s=extract(raw);if(s.access_token||s.refresh_token)return{key:keys[i],session:s}}}for(var n=0;n<localStorage.length;n++){var k=localStorage.key(n)||'';if(!/^sb-.*-auth-token$/.test(k))continue;var ss=extract(localStorage.getItem(k));if(ss.access_token||ss.refresh_token)return{key:k,session:ss}}return null}
+function save(data,key){if(!data||!data.access_token)return'';var obj={access_token:data.access_token,refresh_token:data.refresh_token||'',token_type:data.token_type||'bearer',expires_in:Number(data.expires_in||3600),expires_at:Number(data.expires_at||0)||Math.floor(Date.now()/1000)+Number(data.expires_in||3600),user:data.user||null};try{localStorage.setItem(AUTH_KEY,JSON.stringify(obj));if(key&&key!==AUTH_KEY)localStorage.setItem(key,JSON.stringify(obj));localStorage.setItem('x2_token',data.access_token);if(obj.refresh_token)localStorage.setItem('x2_refresh_token',obj.refresh_token);localStorage.setItem('x2_logged','1')}catch(_){}try{window.dispatchEvent(new CustomEvent('bariq:session-restored'))}catch(_){}return data.access_token}
+function restoreSync(){try{var x=localStorage.getItem('x2_token')||'';if(usable(x))return x}catch(_){}var f=find();if(f&&usable(f.session.access_token)){try{localStorage.setItem('x2_token',f.session.access_token);if(f.session.refresh_token)localStorage.setItem('x2_refresh_token',f.session.refresh_token);localStorage.setItem('x2_logged','1')}catch(_){}return f.session.access_token}return''}
+async function refresh(){if(refreshing)return refreshing;refreshing=(async function(){var f=find(),rt=(f&&f.session.refresh_token)||localStorage.getItem('x2_refresh_token')||'';if(!rt)return'';try{var r=await fetch(SUPABASE_URL+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{apikey:ANON,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:rt}),cache:'no-store'});if(!r.ok){console.warn('[BARIQ_AUTH] refresh failed',r.status);return''}return save(await r.json(),f&&f.key)}catch(e){console.warn('[BARIQ_AUTH] refresh error',e);return''}finally{setTimeout(function(){refreshing=null},50)}})();return refreshing}
+async function ensure(){var t=restoreSync();return t||await refresh()}
+window.BariqRestoreUserSession=restoreSync;window.BariqRefreshUserSession=refresh;window.BariqEnsureUserSession=ensure;window.BariqSessionReady=ensure();
+window.addEventListener('pageshow',function(){ensure()});window.addEventListener('focus',function(){ensure()});document.addEventListener('visibilitychange',function(){if(!document.hidden)ensure()});
+setInterval(function(){try{var t=localStorage.getItem('x2_token')||'';if(!usable(t,300000))ensure()}catch(_){}} ,120000);
 })();
