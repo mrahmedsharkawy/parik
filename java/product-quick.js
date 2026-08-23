@@ -55,3 +55,85 @@
     }
   } catch(e) {}
 })();
+
+/* Bariq: Preview in Your Space loader - R30 cache-safe */
+(function(){
+  if (window.__bariqProductPreviewLoader) return;
+  window.__bariqProductPreviewLoader = true;
+
+  var VERSION='20260823-r33';
+  var PREVIEW_JS='/java/product-preview.js?v='+VERSION;
+  var PREVIEW_CSS='/style/product-preview.css?v='+VERSION;
+
+  function addCss(){
+    var old=document.querySelector('link[data-bariq-product-preview]');
+    if(old){
+      old.href=PREVIEW_CSS;
+      return;
+    }
+    var link=document.createElement('link');
+    link.rel='stylesheet';
+    link.href=PREVIEW_CSS;
+    link.setAttribute('data-bariq-product-preview','1');
+    document.head.appendChild(link);
+  }
+
+  async function clearOldPreviewCache(){
+    if(!('caches' in window)) return;
+    try{
+      var names=await caches.keys();
+      await Promise.all(names.map(async function(name){
+        try{
+          var cache=await caches.open(name);
+          var requests=await cache.keys();
+          await Promise.all(requests.map(function(req){
+            try{
+              var u=new URL(req.url);
+              if(u.pathname==='/java/product-preview.js' ||
+                 u.pathname==='/java/product-preview-r29.js' ||
+                 u.pathname==='/style/product-preview.css'){
+                return cache.delete(req);
+              }
+            }catch(_){}
+            return Promise.resolve(false);
+          }));
+        }catch(_){}
+      }));
+    }catch(_){}
+  }
+
+  async function addScript(){
+    if(window.BariqProductPreview) return;
+
+    var old=document.querySelector('script[data-bariq-product-preview]');
+    if(old) old.remove();
+
+    await clearOldPreviewCache();
+
+    var s=document.createElement('script');
+    s.src=PREVIEW_JS;
+    s.defer=true;
+    s.setAttribute('data-bariq-product-preview','1');
+
+    s.onerror=async function(){
+      console.error('[BARIQ_PREVIEW] failed to load fresh preview script:',PREVIEW_JS);
+      try{
+        await clearOldPreviewCache();
+        var retry=document.createElement('script');
+        retry.src='/java/product-preview.js?v='+VERSION+'-retry-'+Date.now();
+        retry.defer=true;
+        retry.setAttribute('data-bariq-product-preview','1');
+        document.body.appendChild(retry);
+      }catch(_){}
+    };
+
+    document.body.appendChild(s);
+  }
+
+  addCss();
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',addScript,{once:true});
+  }else{
+    addScript();
+  }
+})();
