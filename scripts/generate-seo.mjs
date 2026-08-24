@@ -351,7 +351,7 @@ function productDescription(product, categoryName) {
 }
 
 function productPath(product) {
-  return `/product/${encodePathSegment(product.id)}/${encodePathSegment(slugify(productName(product), `product-${product.id}`))}`;
+  return `/product/${encodePathSegment(product.id)}/`;
 }
 
 function noindexReasons(product) {
@@ -830,6 +830,38 @@ async function removePreviousGenerated() {
   } catch {}
 }
 
+async function removeEncodedProductSlugDirs() {
+  const productRoot = path.resolve(PRODUCT_BASE);
+  const removed = [];
+
+  async function walk(dir) {
+    let entries = [];
+    try {
+      entries = await fs.readdir(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      const full = path.join(dir, entry.name);
+      const resolved = path.resolve(full);
+      if (!resolved.startsWith(productRoot + path.sep)) continue;
+
+      if (/^%[0-9a-f]{2}/i.test(entry.name)) {
+        await fs.rm(resolved, { recursive: true, force: true });
+        removed.push(path.relative(ROOT, resolved).replace(/\\/g, "/"));
+        continue;
+      }
+
+      await walk(resolved);
+    }
+  }
+
+  await walk(productRoot);
+  return removed;
+}
+
 async function main() {
   const startedAt = new Date().toISOString();
   const config = await readSupabaseConfig();
@@ -846,6 +878,7 @@ async function main() {
   await fs.mkdir(CATEGORY_BASE, { recursive: true });
   await fs.mkdir(SEO_DIR, { recursive: true });
   await removePreviousGenerated();
+  const removedEncodedProductDirs = await removeEncodedProductSlugDirs();
 
   const generatedProductFiles = [];
   const noindexProducts = [];
@@ -1036,6 +1069,7 @@ async function main() {
     generatedCategoryFiles,
     noindexCategoryPages,
     generatedProductFiles,
+    removed_encoded_product_dirs: removedEncodedProductDirs.length,
   };
   await fs.writeFile(path.join(SEO_DIR, "build-report.json"), JSON.stringify(report, null, 2), "utf8");
   console.log(JSON.stringify(report, null, 2));

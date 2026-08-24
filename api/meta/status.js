@@ -1,0 +1,2 @@
+import {META_API_VERSION,json,meta,tokenFromReq} from "./_lib.js";
+export default async function handler(req,res){const token=tokenFromReq(req);if(!token)return json(res,200,{connected:false,api_version:META_API_VERSION});try{const me=await meta(token,"me",{fields:"id,name"});json(res,200,{connected:true,api_version:META_API_VERSION,user_id:me.id,user_name:me.name})}catch{json(res,200,{connected:false,api_version:META_API_VERSION})}}

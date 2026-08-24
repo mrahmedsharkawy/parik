@@ -1,0 +1,2 @@
+import {json,meta,requireToken,safeError} from "./_lib.js";
+export default async function handler(req,res){const token=requireToken(req,res);if(!token)return;const id=String(req.query.ad_account_id||"");if(!/^act_\d+$/.test(id))return json(res,400,{error:"Invalid ad account"});try{const d=await meta(token,`${id}/campaigns`,{fields:"id,name,status,effective_status,objective,daily_budget,lifetime_budget,start_time,stop_time,updated_time",limit:100});json(res,200,d)}catch(e){json(res,400,{error:safeError(e)})}}

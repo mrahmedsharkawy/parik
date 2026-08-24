@@ -23,6 +23,16 @@
       "permanent": true
     },
     {
+      "source": "/product/:id/:slug*",
+      "destination": "/product/:id/",
+      "permanent": true
+    },
+    {
+      "source": "/product/:id",
+      "destination": "/product/:id/",
+      "permanent": true
+    },
+    {
       "source": "/about-bariq.html",
       "destination": "/about-bariq",
       "permanent": true

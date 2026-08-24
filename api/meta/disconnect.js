@@ -1,0 +1,1 @@
+import {clearCookie,json} from "./_lib.js";export default async function handler(req,res){clearCookie(res,"bariq_meta_token");json(res,200,{ok:true})}

@@ -61,7 +61,7 @@
   if (window.__bariqProductPreviewLoader) return;
   window.__bariqProductPreviewLoader = true;
 
-  var VERSION='20260823-r33';
+  var VERSION='20260823-r55';
   var PREVIEW_JS='/java/product-preview.js?v='+VERSION;
   var PREVIEW_CSS='/style/product-preview.css?v='+VERSION;
 

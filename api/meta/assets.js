@@ -1,0 +1,2 @@
+import {json,meta,requireToken,safeError} from "./_lib.js";
+export default async function handler(req,res){const token=requireToken(req,res);if(!token)return;try{const [a,p]=await Promise.all([meta(token,"me/adaccounts",{fields:"id,name,account_status,currency",limit:100}),meta(token,"me/accounts",{fields:"id,name,instagram_business_account{id,username}",limit:100})]);json(res,200,{ad_accounts:a.data||[],pages:p.data||[]})}catch(e){json(res,400,{error:safeError(e)})}}

@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Bariq Ads Studio</title>
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="stylesheet" href="/style/ads-studio.css?v=ads-20260824-admingeo3">
+</head>
+<body>
+
+  <div id="adsAdminGate" style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(248,250,253,.97);backdrop-filter:blur(16px)">
+    <div style="width:min(420px,100%);background:#fff;border:1px solid #edf0f5;border-radius:24px;padding:28px;box-shadow:0 22px 60px rgba(20,33,61,.14);text-align:center">
+      <div style="width:56px;height:56px;margin:0 auto 12px;border-radius:18px;background:#5b6ee1;color:#fff;display:grid;place-items:center;font-weight:900;font-size:1.25rem">B</div>
+      <div style="font-size:.75rem;color:#4055c8;font-weight:900;margin-bottom:4px">Bariq Admin</div>
+      <h2 style="margin:0;color:#14213d">تسجيل دخول Ads Studio</h2>
+      <p style="color:#7b8498;font-size:.82rem;line-height:1.8;margin:8px 0 18px">سجّل الدخول بحساب الأدمن للمتابعة.</p>
+
+      <label style="display:grid;gap:6px;text-align:right;color:#7b8498;font-size:.78rem;font-weight:800;margin-bottom:11px">
+        البريد الإلكتروني
+        <input id="adsLoginEmail" type="email" autocomplete="username" style="min-height:46px;border:1px solid #edf0f5;border-radius:14px;padding:0 12px;outline:none">
+      </label>
+
+      <label style="display:grid;gap:6px;text-align:right;color:#7b8498;font-size:.78rem;font-weight:800">
+        كلمة المرور
+        <input id="adsLoginPassword" type="password" autocomplete="current-password" style="min-height:46px;border:1px solid #edf0f5;border-radius:14px;padding:0 12px;outline:none">
+      </label>
+
+      <button id="adsLoginBtn" type="button" style="width:100%;min-height:46px;margin-top:16px;border:0;border-radius:14px;background:#5b6ee1;color:#fff;font-weight:900;cursor:pointer">دخول</button>
+      <div id="adsLoginMsg" style="min-height:22px;margin-top:9px;color:#b91c1c;font-size:.78rem;font-weight:800"></div>
+    </div>
+  </div>
+
+  <div class="studio-shell">
+    <aside class="studio-side">
+      <div class="studio-brand"><div class="studio-logo">B</div><div><strong>Bariq Ads Studio</strong><small>مركز حملات ميتا</small></div></div>
+      <nav id="studioNav">
+        <button class="active" data-view="dashboard"><span class="nav-ico">⌂</span><b>لوحة التحكم</b></button>
+        <button data-view="campaigns"><span class="nav-ico">📣</span><b>الحملات</b></button>
+        <button data-view="drafts"><span class="nav-ico">✎</span><b>المسودات</b></button>
+        <button data-view="performance"><span class="nav-ico">📊</span><b>أداء المنتجات</b></button>
+        <button data-view="audience"><span class="nav-ico">👥</span><b>الجمهور والعملاء</b></button>
+        <button data-view="locations"><span class="nav-ico">📍</span><b>أماكن العملاء</b></button>
+        <button data-view="insights"><span class="nav-ico">🧠</span><b>تحليلات التسويق</b></button>
+        <button data-view="tracking"><span class="nav-ico">🎯</span><b>التتبع</b></button>
+        <button data-view="settings"><span class="nav-ico">⚙</span><b>الإعدادات</b></button>
+      </nav>
+      <div class="studio-security">رموز وصول ميتا ومفتاح التطبيق السري لا يتم إرسالها للمتصفح. كل عمليات ميتا الحساسة تمر عبر الخادم الآمن.</div>
+    </aside>
+
+    <main class="studio-main">
+      <header class="studio-top">
+        <div>
+          <h1 id="pageTitle">Bariq Ads Studio</h1>
+          <p id="pageSub">إدارة إعلانات منتجات بريق من مكان واحد.</p>
+        </div>
+        <div class="top-actions">
+          <span id="metaState" class="state state-warn">جاري فحص اتصال ميتا…</span>
+          <button id="refreshBtn" class="btn ghost">تحديث</button>
+          <button id="connectMetaBtn" class="btn primary">ربط ميتا</button>
+          <button id="adsLogoutBtn" class="btn danger">تسجيل الخروج</button>
+        </div>
+      </header>
+
+      <section id="view-dashboard" class="view active">
+        <div class="toolbar">
+          <select id="rangeSelect">
+            <option value="today">اليوم</option>
+            <option value="yesterday">أمس</option>
+            <option value="7d" selected>7 أيام</option>
+            <option value="30d">30 يوم</option>
+            <option value="month">هذا الشهر</option>
+          </select>
+          <button id="quickAdBtn" class="btn gold">إعلان سريع</button>
+        </div>
+
+        <div id="kpiGrid" class="kpis">
+          <article><span>إجمالي الإنفاق</span><b data-kpi="spend">—</b></article>
+          <article><span>الإيرادات</span><b data-kpi="revenue">—</b></article>
+          <article><span>العائد الإعلاني</span><b data-kpi="roas">—</b></article>
+          <article><span>المشتريات</span><b data-kpi="purchases">—</b></article>
+          <article><span>نسبة النقر</span><b data-kpi="ctr">—</b></article>
+          <article><span>الحملات النشطة</span><b data-kpi="active_campaigns">—</b></article>
+        </div>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div><h2>منتجات بريق</h2><p>بيانات مباشرة من قاعدة المتجر — لا توجد منتجات تجريبية.</p></div>
+            <div class="filters">
+              <input id="productSearch" type="search" placeholder="ابحث عن منتج">
+              <select id="categoryFilter"><option value="">كل الفئات</option></select>
+              <select id="productSort">
+                <option value="newest">الأحدث</option>
+                <option value="price_asc">السعر: الأقل</option>
+                <option value="price_desc">السعر: الأعلى</option>
+              </select>
+            </div>
+          </div>
+          <div id="productsState" class="notice">جاري تحميل المنتجات…</div>
+          <div id="productsCarousel" class="products-carousel"></div>
+          <div id="selectionBar" class="selection-bar">
+            <b id="selectionCount">0 محدد</b>
+            <div>
+              <button id="carouselAdBtn" class="btn primary">إنشاء إعلان دائري</button>
+              <button id="separateAdsBtn" class="btn ghost">إنشاء إعلانات منفصلة</button>
+              <button id="clearSelectionBtn" class="btn ghost">مسح التحديد</button>
+            </div>
+          </div>
+          <div class="pager">
+            <button id="prevProducts" class="btn ghost">السابق</button>
+            <span id="productPageLabel">1</span>
+            <button id="nextProducts" class="btn ghost">التالي</button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><div><h2>الحملات الحالية</h2><p>تظهر من ميتا بعد الاتصال.</p></div></div>
+          <div id="dashboardCampaigns" class="table-wrap"></div>
+        </section>
+      </section>
+
+      <section id="view-campaigns" class="view">
+        <section class="panel">
+          <div class="panel-head"><div><h2>الحملات</h2><p>الحملات الحقيقية من واجهة إعلانات ميتا.</p></div><button id="createCampaignBtn" class="btn primary">إنشاء حملة</button></div>
+          <div id="campaignsTable" class="table-wrap"></div>
+        </section>
+      </section>
+
+      <section id="view-drafts" class="view"><section class="panel"><div class="panel-head"><div><h2>مسودات الإعلانات</h2><p>المسودات محفوظة محليًا في هذه النسخة الأولى حتى يتم تفعيل جدول ad_drafts.</p></div></div><div id="draftsList"></div></section></section>
+      <section id="view-performance" class="view"><section class="panel"><div class="panel-head"><div><h2>أداء المنتجات</h2><p>يعتمد على ربط المنتج بالإعلان وبيانات الأداء الفعلية.</p></div></div><div id="performanceList" class="notice">يتفعل بعد ربط ميتا وإنشاء أول إعلان من الاستوديو.</div></section></section>
+      
+      <section id="view-audience" class="view">
+        <div class="marketing-head">
+          <div>
+            <p class="erp-eyebrow">ذكاء التسويق</p>
+            <h1>الجمهور والعملاء</h1>
+          </div>
+          <div class="marketing-periods">
+            <button class="active" data-marketing-period="30">30 يوم</button>
+            <button data-marketing-period="90">90 يوم</button>
+            <button data-marketing-period="365">سنة</button>
+            <button data-marketing-period="all">الكل</button>
+          </div>
+        </div>
+
+        <div class="kpis marketing-kpis">
+          <article><span>إجمالي العملاء</span><b id="mkCustomers">—</b><small id="mkCustomersFoot">—</small></article>
+          <article><span>إجمالي المبيعات</span><b id="mkRevenue">—</b><small id="mkRevenueFoot">—</small></article>
+          <article><span>متوسط الطلب AOV</span><b id="mkAov">—</b><small id="mkAovFoot">—</small></article>
+          <article><span>عملاء متكررين</span><b id="mkRepeat">—</b><small id="mkRepeatFoot">—</small></article>
+          <article><span>أفضل إمارة</span><b id="mkTopEmirate">—</b><small id="mkTopEmirateFoot">—</small></article>
+          <article><span>أفضل يوم شراء</span><b id="mkTopDay">—</b><small id="mkTopDayFoot">—</small></article>
+        </div>
+
+        <div class="intel-grid intel-grid-main">
+          <section class="panel">
+            <div class="panel-head">
+              <div><h2>خريطة قوة العملاء داخل الإمارات</h2><p>يعتمد على عناوين الطلبات الحقيقية، وليس IP فقط.</p></div>
+              <span class="intel-chip" id="mapCoverageBadge">تغطية البيانات —</span>
+            </div>
+            <div id="uaeMap" class="uae-map">
+              <button class="emirate-card" data-emirate="Dubai"><span>دبي</span><b>—</b><small>—</small></button>
+              <button class="emirate-card" data-emirate="Abu Dhabi"><span>أبوظبي</span><b>—</b><small>—</small></button>
+              <button class="emirate-card" data-emirate="Sharjah"><span>الشارقة</span><b>—</b><small>—</small></button>
+              <button class="emirate-card" data-emirate="Ajman"><span>عجمان</span><b>—</b><small>—</small></button>
+              <button class="emirate-card" data-emirate="Ras Al Khaimah"><span>رأس الخيمة</span><b>—</b><small>—</small></button>
+              <button class="emirate-card" data-emirate="Fujairah"><span>الفجيرة</span><b>—</b><small>—</small></button>
+              <button class="emirate-card" data-emirate="Umm Al Quwain"><span>أم القيوين</span><b>—</b><small>—</small></button>
+            </div>
+            <div id="selectedEmirateDetail" class="intel-detail">
+              <div class="notice">اضغط على إمارة لعرض التحليل التفصيلي.</div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head"><div><h2>العملاء الجدد مقابل المتكررين</h2><p>لقياس جودة الاحتفاظ بالعملاء.</p></div></div>
+            <div class="donut-wrap">
+              <div id="customerDonut" class="intel-donut"><span>—</span></div>
+              <div class="intel-legend">
+                <div><i class="dot new"></i><span>عملاء جدد</span><b id="newCustomersValue">—</b></div>
+                <div><i class="dot returning"></i><span>عملاء متكررين</span><b id="returningCustomersValue">—</b></div>
+              </div>
+            </div>
+            <div class="mini-stat-grid">
+              <div><small>نسبة تكرار الشراء</small><b id="repeatRateValue">—</b></div>
+              <div><small>الطلبات لكل عميل</small><b id="ordersPerCustomerValue">—</b></div>
+              <div><small>أفضل منطقة للعملاء</small><b id="topCustomerAreaValue">—</b></div>
+              <div><small>الإيراد لكل عميل</small><b id="revenuePerCustomerValue">—</b></div>
+            </div>
+          </section>
+        </div>
+
+        <div class="intel-grid intel-grid-equal">
+          <section class="panel">
+            <div class="panel-head"><div><h2>أفضل المناطق والمدن</h2><p>ترتيب حسب المبيعات وعدد الطلبات.</p></div></div>
+            <div id="topAreasList" class="intel-list"><div class="notice">جاري التحليل…</div></div>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><div><h2>أفضل المنتجات حسب المنطقة</h2><p>يساعدك تختار المنتج المناسب لكل جمهور.</p></div></div>
+            <div id="topAreaProducts" class="intel-list"><div class="notice">جاري التحليل…</div></div>
+          </section>
+        </div>
+
+        <div class="intel-grid intel-grid-equal">
+          <section class="panel">
+            <div class="panel-head"><div><h2>أيام الشراء</h2><p>أفضل أيام الأسبوع من الطلبات الفعلية.</p></div></div>
+            <div id="weekdayChart" class="intel-bars"></div>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><div><h2>ساعات الشراء</h2><p>توقيتات الطلب الأعلى للتحضير للـDayparting.</p></div></div>
+            <div id="hourChart" class="intel-bars compact"></div>
+          </section>
+        </div>
+      </section>
+
+      <section id="view-locations" class="view">
+        <div class="marketing-head">
+          <div><p class="erp-eyebrow">التوزيع الجغرافي للعملاء</p><h1>أماكن العملاء</h1></div>
+          <div class="filters">
+            <input id="locationSearch" type="search" placeholder="بحث باسم المنطقة أو المدينة">
+            <select id="locationSort"><option value="revenue">الأعلى مبيعات</option><option value="orders">الأكثر طلبات</option><option value="aov">أعلى متوسط طلب</option></select>
+          </div>
+        </div>
+        <section class="panel">
+          <div class="panel-head"><div><h2>تفصيل الأداء الجغرافي</h2><p>الطلبات، العملاء، المبيعات، متوسط الطلب، وأفضل منتج بكل منطقة.</p></div></div>
+          <div id="locationsTable" class="table-wrap"><div class="notice">جاري تحميل بيانات العملاء…</div></div>
+        </section>
+        <div class="intel-grid intel-grid-equal">
+          <section class="panel"><div class="panel-head"><div><h2>المناطق الأعلى قيمة</h2><p>المناطق الأعلى قيمة للعميل.</p></div></div><div id="highValueAreas" class="intel-list"></div></section>
+          <section class="panel"><div class="panel-head"><div><h2>فرص النمو</h2><p>مناطق فيها إشارات جيدة ويمكن اختبار حملات لها.</p></div></div><div id="growthAreas" class="intel-list"></div></section>
+        </div>
+      </section>
+
+      <section id="view-insights" class="view">
+        <div class="marketing-head">
+          <div><p class="erp-eyebrow">محرك القرارات</p><h1>تحليلات التسويق</h1></div>
+          <button id="refreshIntelBtn" class="btn primary">تحديث التحليل</button>
+        </div>
+
+        <div class="intel-grid intel-grid-main">
+          <section class="panel">
+            <div class="panel-head"><div><h2>الاستهداف المقترح</h2><p>اقتراحات مبنية على الطلبات + بيانات ميتا عند توفر الربط.</p></div><span class="intel-chip">مبني على البيانات</span></div>
+            <div id="recommendedTargeting" class="recommendation-stack"><div class="notice">جاري بناء التوصيات…</div></div>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><div><h2>درجة قوة التسويق</h2><p>ملخص سريع لجودة البيانات والفرص.</p></div></div>
+            <div class="score-ring-wrap">
+              <div id="marketingScoreRing" class="score-ring"><span>—</span></div>
+              <div id="marketingScoreText" class="score-copy">جاري التحليل…</div>
+            </div>
+          </section>
+        </div>
+
+        <div class="intel-grid intel-grid-equal">
+          <section class="panel">
+            <div class="panel-head"><div><h2>الفرص</h2><p>أماكن ومنتجات تستحق اختبار أو زيادة تدريجية.</p></div></div>
+            <div id="opportunitiesList" class="intel-list"></div>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><div><h2>التحذيرات</h2><p>أماكن أو حملات تحتاج مراجعة قبل زيادة الميزانية.</p></div></div>
+            <div id="warningsList" class="intel-list"></div>
+          </section>
+        </div>
+
+        <section class="panel">
+          <div class="panel-head"><div><h2>دمج أداء ميتا</h2><p>عند ربط ميتا، يتم دمج CTR/CPC/ROAS مع بيانات العملاء بدل تحليلهم منفصلين.</p></div></div>
+          <div id="metaOverlay" class="overlay-grid">
+            <div><small>حالة اتصال ميتا</small><b id="overlayMetaState">—</b></div>
+            <div><small>نسبة النقر</small><b id="overlayCtr">—</b></div>
+            <div><small>تكلفة النقرة</small><b id="overlayCpc">—</b></div>
+            <div><small>العائد الإعلاني</small><b id="overlayRoas">—</b></div>
+            <div><small>المشتريات</small><b id="overlayPurchases">—</b></div>
+            <div><small>أفضل إجراء</small><b id="overlayAction">—</b></div>
+          </div>
+        </section>
+      </section>
+
+      <section id="view-tracking" class="view"><section class="panel"><div class="panel-head"><div><h2>حالة التتبع</h2><p>لا نفترض وجود بيكسل أو أحداث شراء. الحالة تُقرأ من ميتا عند تفعيلها.</p></div></div><div id="trackingState" class="notice">لم يتم جلب بيانات التتبع بعد.</div></section></section>
+
+      <section id="view-settings" class="view">
+        <section class="panel">
+          <div class="panel-head"><div><h2>ربط ميتا</h2><p>إصدار الواجهة البرمجية مضبوط مركزيًا في الخادم.</p></div></div>
+          <div class="settings-grid">
+            <label>الحساب الإعلاني<select id="adAccountSelect"><option value="">—</option></select></label>
+            <label>صفحة فيسبوك<select id="pageSelect"><option value="">—</option></select></label>
+            <label>حساب إنستجرام<select id="instagramSelect"><option value="">—</option></select></label>
+            <label>إصدار الواجهة البرمجية<input id="apiVersionField" readonly value="loading…"></label>
+          </div>
+          <div class="setting-actions">
+            <button id="saveMetaSelectionBtn" class="btn primary">حفظ الاختيارات</button>
+            <button id="disconnectMetaBtn" class="btn danger">فصل ميتا</button>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  
+  <dialog id="adDialog" class="campaign-dialog">
+    <form method="dialog" class="campaign-composer" id="adForm">
+      <header class="composer-head">
+        <div>
+          <div class="composer-eyebrow">Bariq Ads Studio</div>
+          <h2 id="adDialogTitle">إنشاء حملة إعلانية</h2>
+          <p>المحتوى ← المنتجات ← الاستهداف ← الميزانية ← المعاينة ← النشر</p>
+        </div>
+        <button value="cancel" class="icon-btn" aria-label="إغلاق">×</button>
+      </header>
+
+      <div class="composer-layout">
+        <section class="composer-editor">
+
+          <div class="composer-step">
+            <div class="step-title"><span>1</span><div><b>نوع الإعلان</b><small>اختر شكل الإعلان الذي سيظهر للعميل.</small></div></div>
+            <div class="format-grid">
+              <label class="format-option active" data-format-card="single">
+                <input type="radio" name="adFormat" value="single" checked>
+                <span class="format-icon">▣</span>
+                <div><b>إعلان منفرد</b><small>منتج واحد + صورة أو فيديو واحد</small></div>
+              </label>
+              <label class="format-option" data-format-card="carousel">
+                <input type="radio" name="adFormat" value="carousel">
+                <span class="format-icon">▦</span>
+                <div><b>إعلان دائري</b><small>من 2 إلى 10 منتجات أو وسائط</small></div>
+              </label>
+            </div>
+          </div>
+
+          <div class="composer-step">
+            <div class="step-title"><span>2</span><div><b>اختيار المنتجات</b><small>اختر المنتج أو المنتجات المرتبطة بالحملة.</small></div></div>
+            <div class="campaign-product-tools">
+              <input id="campaignProductSearch" type="search" placeholder="ابحث عن منتج بالاسم">
+              <select id="campaignProductSelect"><option value="">اختر منتجًا</option></select>
+              <button type="button" id="addCampaignProductBtn" class="btn ghost">+ إضافة</button>
+            </div>
+            <div id="campaignSelectedProducts" class="campaign-selected-products"></div>
+            <div class="composer-hint" id="campaignProductHint">في الإعلان المنفرد اختر منتجًا واحدًا. في الإعلان الدائري يمكنك اختيار حتى 10 منتجات.</div>
+          </div>
+
+          <div class="composer-step">
+            <div class="step-title"><span>3</span><div><b>الصورة أو الفيديو</b><small>استخدم صور المنتجات أو ارفع مادة إعلانية مخصصة.</small></div></div>
+            <div class="media-source-tabs">
+              <label class="source-option active"><input type="radio" name="creativeSource" value="product" checked> صور المنتجات</label>
+              <label class="source-option"><input type="radio" name="creativeSource" value="custom"> رفع مادة مخصصة</label>
+            </div>
+            <div id="customMediaBox" class="custom-media-box hidden">
+              <label class="campaign-dropzone" for="campaignMediaInput">
+                <span class="drop-icon">⬆</span>
+                <b>اسحب الصورة أو الفيديو هنا</b>
+                <small>أو اضغط للاختيار — JPG / PNG / WEBP / MP4 / MOV</small>
+                <input id="campaignMediaInput" type="file" accept="image/*,video/*" multiple hidden>
+              </label>
+              <div id="campaignMediaList" class="campaign-media-list"></div>
+            </div>
+          </div>
+
+          <div class="composer-step">
+            <div class="step-title"><span>4</span><div><b>تفاصيل الحملة</b><small>اسم الحملة والهدف والنص وزر الإجراء.</small></div></div>
+            <div class="composer-form-grid">
+              <label class="span-2">اسم الحملة<input id="campaignName" required></label>
+              <label>الهدف
+                <select id="objective">
+                  <option value="OUTCOME_SALES">المبيعات</option>
+                  <option value="OUTCOME_LEADS">العملاء المحتملون</option>
+                  <option value="OUTCOME_ENGAGEMENT">التفاعل</option>
+                  <option value="OUTCOME_TRAFFIC">الزيارات</option>
+                </select>
+              </label>
+              <label>زر الإجراء
+                <select id="cta">
+                  <option value="SHOP_NOW">تسوق الآن</option>
+                  <option value="LEARN_MORE">اعرف المزيد</option>
+                  <option value="MESSAGE_PAGE">إرسال رسالة</option>
+                </select>
+              </label>
+              <label class="span-2">النص الأساسي<textarea id="primaryText" rows="4" placeholder="اكتب نص الإعلان الذي سيظهر للعميل..."></textarea></label>
+            </div>
+          </div>
+
+          <div class="composer-step">
+            <div class="step-title"><span>5</span><div><b>الاستهداف الجغرافي</b><small>استهدف الإمارات بالكامل أو مناطق محددة.</small></div></div>
+
+            <div class="target-mode-grid">
+              <label class="target-mode active">
+                <input type="radio" name="targetMode" value="all_uae" checked>
+                <div><b>كل الإمارات</b><small>استهداف دولة الإمارات بالكامل</small></div>
+              </label>
+              <label class="target-mode">
+                <input type="radio" name="targetMode" value="custom">
+                <div><b>مناطق محددة</b><small>اختر إمارات ومدن ومناطق مخصصة</small></div>
+              </label>
+            </div>
+
+            <div id="customTargetingBox" class="custom-targeting hidden">
+              <div class="emirates-select-grid">
+                <label><input type="checkbox" value="Dubai"> دبي</label>
+                <label><input type="checkbox" value="Abu Dhabi"> أبوظبي</label>
+                <label><input type="checkbox" value="Sharjah"> الشارقة</label>
+                <label><input type="checkbox" value="Ajman"> عجمان</label>
+                <label><input type="checkbox" value="Ras Al Khaimah"> رأس الخيمة</label>
+                <label><input type="checkbox" value="Fujairah"> الفجيرة</label>
+                <label><input type="checkbox" value="Umm Al Quwain"> أم القيوين</label>
+              </div>
+              <label>مناطق / مدن إضافية
+                <input id="customAreasInput" type="text" placeholder="مثال: النخيل، المعيريض، البرشاء، الممزر">
+              </label>
+            </div>
+
+            <div class="composer-form-grid" style="margin-top:12px">
+              <label>المنصات
+                <select id="campaignPlatforms">
+                  <option value="facebook_instagram">فيسبوك + إنستجرام</option>
+                  <option value="instagram">إنستجرام</option>
+                  <option value="facebook">فيسبوك</option>
+                </select>
+              </label>
+              <label>الفئة العمرية
+                <select id="ageRange">
+                  <option value="18-65">18 - 65+</option>
+                  <option value="18-24">18 - 24</option>
+                  <option value="25-34">25 - 34</option>
+                  <option value="35-44">35 - 44</option>
+                  <option value="45-54">45 - 54</option>
+                  <option value="55-65">55 - 65+</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div class="composer-step">
+            <div class="step-title"><span>6</span><div><b>الميزانية والمدة</b><small>اختر ميزانية يومية أو ميزانية كلية للحملة.</small></div></div>
+
+            <div class="budget-mode-grid">
+              <label class="budget-mode active">
+                <input type="radio" name="budgetMode" value="daily" checked>
+                <div><b>ميزانية يومية</b><small>حدد الصرف لكل يوم</small></div>
+              </label>
+              <label class="budget-mode">
+                <input type="radio" name="budgetMode" value="total">
+                <div><b>ميزانية كلية</b><small>حدد إجمالي ميزانية الحملة</small></div>
+              </label>
+            </div>
+
+            <div class="composer-form-grid">
+              <label id="dailyBudgetLabel">الميزانية اليومية (درهم)<input id="dailyBudget" type="number" min="1" step="1" value="50"></label>
+              <label id="totalBudgetLabel" class="hidden">الميزانية الكلية (درهم)<input id="totalBudget" type="number" min="1" step="1" value="350"></label>
+              <label>المدة (بالأيام)<input id="durationDays" type="number" min="1" max="90" value="7"></label>
+            </div>
+
+            <div class="campaign-budget-summary">
+              <div><small>نوع الميزانية</small><b id="budgetModeSummary">يومية</b></div>
+              <div><small>المتوسط اليومي</small><b id="budgetDailySummary">AED 50</b></div>
+              <div><small>مدة الحملة</small><b id="budgetDurationSummary">7 أيام</b></div>
+              <div class="total"><small>إجمالي الإنفاق المتوقع</small><b id="estimatedSpend">AED 350</b></div>
+            </div>
+            <div id="publishWarning" class="notice hidden"></div>
+          </div>
+        </section>
+
+        <aside class="composer-preview">
+          <div class="preview-sticky">
+            <div class="preview-toolbar">
+              <div><b>معاينة الإعلان</b><small>تتحدث مباشرة أثناء التعديل</small></div>
+              <div class="preview-placement-tabs">
+                <button type="button" class="active" data-preview-placement="feed">Feed</button>
+                <button type="button" data-preview-placement="story">Story</button>
+                <button type="button" data-preview-placement="reel">Reel</button>
+              </div>
+            </div>
+            <div id="adPreview" class="meta-ad-preview"></div>
+            <div class="preview-checklist">
+              <div id="checkProduct"><span>○</span> المنتج</div>
+              <div id="checkCreative"><span>○</span> الصورة / الفيديو</div>
+              <div id="checkTarget"><span>✓</span> الاستهداف</div>
+              <div id="checkBudget"><span>✓</span> الميزانية</div>
+              <div id="checkMeta"><span>○</span> ميتا</div>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <footer class="composer-foot">
+        <div class="composer-foot-status" id="composerStatus">جاهز للتعديل</div>
+        <div class="composer-foot-actions">
+          <button type="button" id="saveDraftBtn" class="btn ghost">حفظ كمسودة</button>
+          <button type="button" id="reviewAdBtn" class="btn gold">مراجعة الحملة</button>
+          <button type="button" id="publishAdBtn" class="btn primary">تأكيد ونشر</button>
+        </div>
+      </footer>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="/java/supabase.js"></script>
+
+  <script>
+  (function(){
+    const gate=document.getElementById('adsAdminGate');
+    const email=document.getElementById('adsLoginEmail');
+    const pass=document.getElementById('adsLoginPassword');
+    const btn=document.getElementById('adsLoginBtn');
+    const msg=document.getElementById('adsLoginMsg');
+
+    function showGate(){ if(gate) gate.style.display='flex'; }
+    function hideGate(){ if(gate) gate.style.display='none'; }
+    function setMsg(t,ok){ if(msg){ msg.textContent=t||''; msg.style.color=ok?'#16a06b':'#b91c1c'; } }
+
+    function hasSavedAdminSession(){
+      try{
+        if(typeof restoreAdminSession==='function') restoreAdminSession();
+        return sessionStorage.getItem('admin_ok')==='1' &&
+          !!(sessionStorage.getItem('admin_token') || sessionStorage.getItem('admin_refresh_token'));
+      }catch(e){ return false; }
+    }
+
+    async function verifyAdminSession(){
+      if(!hasSavedAdminSession()) return false;
+      try{
+        const token = typeof getValidAdminToken==='function'
+          ? await getValidAdminToken()
+          : sessionStorage.getItem('admin_token');
+        if(!token) return false;
+        const rows = await sbFetch('admins?select=id,active&active=eq.true&limit=1',{requireAuth:true});
+        return Array.isArray(rows);
+      }catch(e){ return false; }
+    }
+
+    async function login(){
+      const e=(email?.value||'').trim();
+      const p=(pass?.value||'').trim();
+      if(!e||!p){ setMsg('أدخل البريد الإلكتروني وكلمة المرور.'); return; }
+
+      btn.disabled=true;
+      btn.textContent='جاري التحقق…';
+      setMsg('');
+
+      try{
+        if(!window.Supabase || !Supabase.Auth || typeof Supabase.Auth.signIn!=='function')
+          throw new Error('خدمة تسجيل الدخول غير جاهزة.');
+
+        const auth=await Supabase.Auth.signIn(e,p);
+
+        sessionStorage.setItem('admin_ok','1');
+        sessionStorage.setItem('admin_token',auth.access_token||'');
+        sessionStorage.setItem('admin_refresh_token',auth.refresh_token||'');
+        sessionStorage.setItem('admin_token_exp',String(Date.now()+Number(auth.expires_in||3600)*1000));
+
+        let admin=null;
+        try{
+          const rows=await sbFetch('admins?email=eq.'+encodeURIComponent(e)+'&active=eq.true&limit=1',{requireAuth:true});
+          admin=Array.isArray(rows)?rows[0]:null;
+        }catch(_){}
+
+        if(!admin){
+          try{ if(Supabase.Auth.signOut) await Supabase.Auth.signOut(auth.access_token); }catch(_){}
+          if(typeof clearAdminSession==='function') clearAdminSession();
+          throw new Error('هذا الحساب غير مصرح له بالدخول إلى لوحة الأدمن.');
+        }
+
+        if(typeof rememberAdminSession==='function')
+          rememberAdminSession(admin.full_name || e.split('@')[0], auth);
+
+        setMsg('تم تسجيل الدخول بنجاح.',true);
+        hideGate();
+      }catch(err){
+        setMsg(err?.message || 'فشل تسجيل الدخول.');
+      }finally{
+        btn.disabled=false;
+        btn.textContent='دخول';
+      }
+    }
+
+    btn?.addEventListener('click',login);
+    pass?.addEventListener('keydown',function(e){ if(e.key==='Enter') login(); });
+
+    document.getElementById('adsLogoutBtn')?.addEventListener('click',async function(){
+      try{
+        const token=sessionStorage.getItem('admin_token');
+        if(token && window.Supabase?.Auth?.signOut) await Supabase.Auth.signOut(token);
+      }catch(_){}
+      try{
+        if(typeof clearAdminSession==='function') clearAdminSession();
+        else{
+          ['admin_ok','admin_token','admin_refresh_token','admin_token_exp','admin_name']
+            .forEach(k=>sessionStorage.removeItem(k));
+          localStorage.removeItem('bariq_admin_auth_v1');
+        }
+      }catch(_){}
+      location.reload();
+    });
+
+    (async function(){
+      if(await verifyAdminSession()) hideGate();
+      else showGate();
+    })();
+  })();
+  </script>
+
+  <script type="module" src="/java/ads-studio.js?v=ads-20260824-admingeo3"></script>
+</body>
+</html>

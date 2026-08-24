@@ -1,0 +1,2 @@
+import {json,meta,requireToken,safeError} from "./_lib.js";
+export default async function handler(req,res){if(req.method!=="POST")return json(res,405,{error:"Method not allowed"});const token=requireToken(req,res);if(!token)return;const {campaign_id,status}=req.body||{};if(!/^\d+$/.test(String(campaign_id))||!["ACTIVE","PAUSED"].includes(status))return json(res,400,{error:"Invalid request"});try{const d=await meta(token,String(campaign_id),{status},"POST");json(res,200,d)}catch(e){json(res,400,{error:safeError(e)})}}
