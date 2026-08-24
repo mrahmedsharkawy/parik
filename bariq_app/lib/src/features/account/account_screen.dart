@@ -1,199 +1,98 @@
 import 'package:flutter/material.dart';
-
+import '../../services/account_service.dart';
+import '../../state/app_state.dart';
 import '../../theme/app_theme.dart';
+import '../auth/login_screen.dart';
+import '../catalog/product_card.dart';
+import '../../services/supabase_catalog_service.dart';
 
-class AccountScreen extends StatelessWidget {
+class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
+  @override State<AccountScreen> createState() => _AccountScreenState();
+}
+
+class _AccountScreenState extends State<AccountScreen> {
+  final _service = AccountService();
+  final _catalog = SupabaseCatalogService();
 
   @override
   Widget build(BuildContext context) {
+    final user = _service.user;
+    final state = AppStateScope.of(context);
     return Scaffold(
       appBar: AppBar(title: const Text('حسابي')),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(12, 12, 12, 88),
-        children: const [
-          _AccountSidebarCard(),
-          SizedBox(height: 12),
-          _QuickTabs(),
-          SizedBox(height: 10),
-          _SearchOrdersBox(),
-          SizedBox(height: 10),
-          _GuaranteeBar(),
-          SizedBox(height: 12),
-          _OrderCard(status: 'قيد المعالجة', statusColor: Color(0xFFFFF3E0), title: 'طلب هدايا مخصصة'),
-          SizedBox(height: 10),
-          _OrderCard(status: 'تم الشحن', statusColor: Color(0xFFE3F2FD), title: 'توزيعات مناسبة'),
-        ],
-      ),
-    );
-  }
-}
-
-class _AccountSidebarCard extends StatelessWidget {
-  const _AccountSidebarCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14), side: const BorderSide(color: Color(0xFFEEEEEE))),
-      child: Column(
-        children: const [
-          _AccountHead(),
-          Divider(height: 1, color: Color(0xFFF3F3F3)),
-          _NavSection(title: 'طلباتك', items: [('📋', 'كل الطلبات'), ('⏳', 'قيد المعالجة'), ('🚚', 'تم الشحن'), ('✅', 'تم التوصيل')], activeIndex: 0),
-          _NavSection(title: '', items: [('⭐', 'تقييماتك'), ('👤', 'ملفك الشخصي'), ('🎁', 'القسائم والعروض'), ('🤑', 'كاش باك')], activeIndex: -1),
-          _NavSection(title: '', items: [('❤️', 'منتجات في اهتمامك'), ('📍', 'عنواني'), ('💰', 'طرق الدفع'), ('🔔', 'الإشعارات')], activeIndex: -1),
-        ],
-      ),
-    );
-  }
-}
-
-class _AccountHead extends StatelessWidget {
-  const _AccountHead();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(14),
-      child: Row(
-        children: [
-          Container(width: 42, height: 42, alignment: Alignment.center, decoration: const BoxDecoration(shape: BoxShape.circle, color: AppTheme.navy), child: const Text('م', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900))),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('حسابي', style: TextStyle(color: AppTheme.navy, fontWeight: FontWeight.w900)),
-                Text('مرحباً بك', style: TextStyle(color: Color(0xFF7A8296), fontSize: 12)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _NavSection extends StatelessWidget {
-  const _NavSection({required this.title, required this.items, required this.activeIndex});
-
-  final String title;
-  final List<(String, String)> items;
-  final int activeIndex;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (title.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(10, 3, 10, 1),
-              child: Text(title, style: const TextStyle(color: Color(0xFF888888), fontSize: 10, fontWeight: FontWeight.w800)),
-            ),
-          for (var i = 0; i < items.length; i++) _AccountNavItem(icon: items[i].$1, label: items[i].$2, active: i == activeIndex),
-        ],
-      ),
-    );
-  }
-}
-
-class _AccountNavItem extends StatelessWidget {
-  const _AccountNavItem({required this.icon, required this.label, required this.active});
-
-  final String icon;
-  final String label;
-  final bool active;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(color: active ? AppTheme.navy.withOpacity(.07) : Colors.transparent, borderRadius: BorderRadius.circular(7), border: Border(right: BorderSide(color: active ? AppTheme.gold : Colors.transparent, width: 3))),
-      child: Row(children: [Text(icon), const SizedBox(width: 6), Text(label, style: TextStyle(color: active ? AppTheme.gold : const Color(0xFF333333), fontWeight: active ? FontWeight.w900 : FontWeight.w600, fontSize: 12))]),
-    );
-  }
-}
-
-class _QuickTabs extends StatelessWidget {
-  const _QuickTabs();
-
-  @override
-  Widget build(BuildContext context) {
-    const tabs = ['الكل', 'قيد المعالجة', 'تم الشحن', 'تم التوصيل'];
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: const BorderSide(color: Color(0xFFEEEEEE))),
-      child: Row(children: [for (var i = 0; i < tabs.length; i++) Expanded(child: Container(padding: const EdgeInsets.symmetric(vertical: 12), decoration: BoxDecoration(color: i == 0 ? AppTheme.navy.withOpacity(.07) : null, border: Border(bottom: BorderSide(color: i == 0 ? AppTheme.gold : Colors.transparent, width: 3))), alignment: Alignment.center, child: Text(tabs[i], style: TextStyle(color: i == 0 ? AppTheme.gold : const Color(0xFF555555), fontWeight: FontWeight.w800, fontSize: 12))))]),
-    );
-  }
-}
-
-class _SearchOrdersBox extends StatelessWidget {
-  const _SearchOrdersBox();
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: const BorderSide(color: Color(0xFFEEEEEE))),
-      child: const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        child: Row(children: [Text('🔍'), SizedBox(width: 10), Expanded(child: Text('ابحث في طلباتك', style: TextStyle(color: AppTheme.muted, fontWeight: FontWeight.w700)))]),
-      ),
-    );
-  }
-}
-
-class _GuaranteeBar extends StatelessWidget {
-  const _GuaranteeBar();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(color: const Color(0xFFF0FFF4), borderRadius: BorderRadius.circular(10), border: Border.all(color: const Color(0xFFC3E6CB))),
-      child: const Row(children: [Text('🛡️'), SizedBox(width: 8), Expanded(child: Text('حماية مشترياتك من بريق حتى استلام الطلب', style: TextStyle(color: Color(0xFF155724), fontSize: 12, fontWeight: FontWeight.w800)))]),
-    );
-  }
-}
-
-class _OrderCard extends StatelessWidget {
-  const _OrderCard({required this.status, required this.statusColor, required this.title});
-
-  final String status;
-  final Color statusColor;
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: const BorderSide(color: Color(0xFFEEEEEE))),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(width: 58, height: 58, decoration: BoxDecoration(color: const Color(0xFFF0F0F0), borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFFEEEEEE))), child: const Icon(Icons.card_giftcard, color: AppTheme.gold)),
+      body: ListView(padding: const EdgeInsets.fromLTRB(12, 12, 12, 100), children: [
+        Card(child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(children: [
+            const CircleAvatar(radius: 26, backgroundColor: AppTheme.navy, child: Icon(Icons.person, color: Colors.white)),
             const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.black, fontSize: 13)),
-                  const SizedBox(height: 4),
-                  const Text('طلب تجريبي #BRQ-1001', style: TextStyle(color: Color(0xFFAAAAAA), fontSize: 11)),
-                  const SizedBox(height: 6),
-                  Wrap(spacing: 8, runSpacing: 5, children: [Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3), decoration: BoxDecoration(color: statusColor, borderRadius: BorderRadius.circular(20)), child: Text(status, style: const TextStyle(color: AppTheme.navy, fontWeight: FontWeight.w900, fontSize: 11))), const Text('100 د.إ', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12))]),
-                ],
-              ),
-            ),
-            TextButton(onPressed: () {}, child: const Text('تفاصيل')),
-          ],
-        ),
-      ),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(user?.email ?? 'أهلاً بك في بريق', style: const TextStyle(fontWeight: FontWeight.w900, color: AppTheme.navy)),
+              Text(user == null ? 'سجل الدخول لعرض طلباتك وكاش باكك' : 'حسابك متصل بـ Supabase', style: const TextStyle(color: AppTheme.muted, fontSize: 12)),
+            ])),
+            if (user == null)
+              TextButton(onPressed: () async { await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const LoginScreen())); if (mounted) setState(() {}); }, child: const Text('دخول'))
+            else
+              TextButton(onPressed: () async { await _service.signOut(); if (mounted) setState(() {}); }, child: const Text('خروج')),
+          ]),
+        )),
+        const SizedBox(height: 8),
+        Row(children: [
+          Expanded(child: _Metric(icon: Icons.shopping_cart_outlined, value: '${state.cartCount}', label: 'في السلة')),
+          const SizedBox(width: 8),
+          Expanded(child: _Metric(icon: Icons.favorite_border, value: '${state.favoriteIds.length}', label: 'المفضلة')),
+        ]),
+        const SizedBox(height: 14),
+        const Text('طلباتك', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: AppTheme.navy)),
+        const SizedBox(height: 8),
+        if (user == null)
+          const Card(child: Padding(padding: EdgeInsets.all(18), child: Text('سجّل الدخول لعرض الطلبات الحقيقية المرتبطة بحسابك.', textAlign: TextAlign.center)))
+        else
+          FutureBuilder<List<Map<String, dynamic>>>(
+            future: _service.fetchOrders(),
+            builder: (_, snap) {
+              if (snap.connectionState == ConnectionState.waiting) return const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator(color: AppTheme.gold)));
+              final orders = snap.data ?? [];
+              if (orders.isEmpty) return const Card(child: Padding(padding: EdgeInsets.all(18), child: Text('لا توجد طلبات مرتبطة بالحساب حتى الآن.', textAlign: TextAlign.center)));
+              return Column(children: orders.map((o) => Card(child: ListTile(
+                leading: const CircleAvatar(backgroundColor: Color(0xFFF4F6FA), child: Icon(Icons.receipt_long_outlined, color: AppTheme.navy)),
+                title: Text('${o['order_number'] ?? o['id'] ?? 'طلب'}', style: const TextStyle(fontWeight: FontWeight.w900)),
+                subtitle: Text('${o['status'] ?? 'قيد المراجعة'}'),
+                trailing: Text('${o['total'] ?? o['total_amount'] ?? ''} د.إ', style: const TextStyle(fontWeight: FontWeight.w900, color: AppTheme.gold)),
+              ))).toList());
+            },
+          ),
+        const SizedBox(height: 18),
+        const Text('المفضلة', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: AppTheme.navy)),
+        const SizedBox(height: 8),
+        FutureBuilder(
+          future: _catalog.fetchProducts(limit: 500),
+          builder: (_, snap) {
+            final products = (snap.data ?? []).where((p) => state.favoriteIds.contains(p.id)).toList();
+            if (products.isEmpty) return const Text('لم تضف منتجات للمفضلة بعد.', style: TextStyle(color: AppTheme.muted));
+            return GridView.builder(
+              shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
+              itemCount: products.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, crossAxisSpacing: 8, mainAxisSpacing: 8, childAspectRatio: .66),
+              itemBuilder: (_, i) => BariqProductCard(product: products[i]),
+            );
+          },
+        )
+      ]),
     );
   }
+}
+
+class _Metric extends StatelessWidget {
+  const _Metric({required this.icon, required this.value, required this.label});
+  final IconData icon; final String value; final String label;
+  @override Widget build(BuildContext context) => Card(child: Padding(
+    padding: const EdgeInsets.all(14),
+    child: Column(children: [
+      Icon(icon, color: AppTheme.gold), const SizedBox(height: 4),
+      Text(value, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 20, color: AppTheme.navy)),
+      Text(label, style: const TextStyle(color: AppTheme.muted, fontSize: 12)),
+    ]),
+  ));
 }

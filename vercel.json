@@ -247,6 +247,14 @@
       "destination": "/bot-admin.html"
     },
     {
+      "source": "/ads-studio",
+      "destination": "/ads-studio.html"
+    },
+    {
+      "source": "/ads-studio/",
+      "destination": "/ads-studio.html"
+    },
+    {
       "source": "/categories",
       "destination": "/categories.html"
     },
