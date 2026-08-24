@@ -2219,8 +2219,9 @@
 
   function getJwtClaimsSafe() {
     try {
-      if (typeof getStoredAuthToken !== 'function') return null;
-      const token = getStoredAuthToken();
+      let token = '';
+      if (typeof getStoredAuthToken === 'function') token = getStoredAuthToken();
+      if (!token) token = String(localStorage.getItem('x2_token') || '').trim();
       if (!token) return null;
       const payload = token.split('.')[1];
       if (!payload) return null;
@@ -2235,6 +2236,25 @@
   function getAuthUserIdSafe() {
     const claims = getJwtClaimsSafe();
     return claims && claims.sub ? String(claims.sub) : '';
+  }
+
+  async function ensureAuthUserIdSafe() {
+    let userId = getAuthUserIdSafe();
+    if (userId) return userId;
+    try {
+      if (window.BariqSessionReady && typeof window.BariqSessionReady.then === 'function') {
+        await Promise.race([
+          window.BariqSessionReady,
+          new Promise(resolve => setTimeout(resolve, 2500))
+        ]);
+      }
+    } catch(e) {}
+    userId = getAuthUserIdSafe();
+    if (userId) return userId;
+    try {
+      if (typeof window.BariqEnsureUserSession === 'function') await window.BariqEnsureUserSession();
+    } catch(e) {}
+    return getAuthUserIdSafe();
   }
 
   function getOccasionLocalProfile() {
@@ -2315,8 +2335,8 @@
   async function loadCustomerOccasions() {
     const ready = await waitForSupabaseLib();
     if (!ready || !window.sbFetch) throw new Error('Supabase غير جاهز حالياً.');
-    if (!getAuthUserIdSafe()) throw new Error('سجل الدخول أولاً لحفظ مناسباتك.');
-    const rows = await window.sbFetch('customer_occasions?select=*&order=created_at.desc&limit=500');
+    if (!await ensureAuthUserIdSafe()) throw new Error('سجل الدخول أولاً لحفظ مناسباتك.');
+    const rows = await window.sbFetch('customer_occasions?select=*&order=created_at.desc&limit=500', { requireAuth: true });
     return Array.isArray(rows) ? rows : [];
   }
 
@@ -2364,7 +2384,7 @@
   };
 
   async function saveCustomerOccasion() {
-    const userId = getAuthUserIdSafe();
+    const userId = await ensureAuthUserIdSafe();
     if (!userId) { occasionStatus('سجل الدخول أولاً لحفظ مناسباتك.', true); return; }
     const id = document.getElementById('occ-id')?.value || '';
     const name = document.getElementById('occ-name')?.value.trim() || '';
@@ -2446,7 +2466,8 @@
     if (!confirm('حذف هذه المناسبة؟')) return;
     occasionStatus('جاري الحذف...');
     try {
-      await window.sbFetch(`customer_occasions?id=eq.${encodeURIComponent(id)}`, { method: 'DELETE', headers: { Prefer: 'return=minimal' } });
+      if (!await ensureAuthUserIdSafe()) throw new Error('سجل الدخول أولاً لحذف مناسباتك.');
+      await window.sbFetch(`customer_occasions?id=eq.${encodeURIComponent(id)}`, { method: 'DELETE', requireAuth: true, headers: { Prefer: 'return=minimal' } });
       occasionStatus('تم حذف المناسبة.');
       await window.renderCustomerOccasions();
     } catch(e) {

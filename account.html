@@ -66,7 +66,7 @@
   }
   </style>
 </head>
-<body>
+<body class="account-page">
 <!-- Google Tag Manager -->
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start': new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-PR8J7RM7');</script>
 <!-- End Google Tag Manager -->
@@ -1246,6 +1246,48 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   .occ-item{align-items:flex-start;flex-direction:column}
   .occ-days{align-self:flex-start}
 }
+
+@media (max-width: 899px) {
+  html,
+  body.account-page {
+    height: auto !important;
+    min-height: 100% !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior-y: auto !important;
+    touch-action: pan-y !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  body.account-page #main.main,
+  body.account-page .page,
+  body.account-page .acc-layout,
+  body.account-page .acc-content,
+  body.account-page .acc-content > div,
+  body.account-page .acc-profile-card,
+  body.account-page .occ-card,
+  body.account-page .occ-form,
+  body.account-page .occ-list {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow-y: visible !important;
+    overscroll-behavior-y: auto !important;
+    touch-action: pan-y !important;
+  }
+
+  body.account-page #main.main {
+    padding-bottom: calc(110px + env(safe-area-inset-bottom)) !important;
+  }
+
+  body.account-page .acc-tabs,
+  body.account-page .mh-cats-strip {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    touch-action: pan-x !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+}
 </style>
 
 <div class="acc-layout">
@@ -1765,7 +1807,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div><!-- end acc-content -->
 </div><!-- end acc-layout -->
 
-<script src="/java/account.js?v=20260822-session-r1" defer></script>
+<script src="/java/account.js?v=20260824-session-r2" defer></script>
 
 
 <footer class="site-footer">
@@ -1891,7 +1933,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="/mobile-nav-bar/main-navbar.js?v=mobile-nav-20260806-rtl-pill-fix6" defer></script>
 <script src="/java/push-welcome.js?v=push-welcome-20260806-hardened" defer></script>
 <script src="/java/notifications.js?v=20260822-auth-cart-r3" defer></script>
-<script src="/java/account-occasion-fix.js?v=20260822-r7" defer></script>
+<script src="/java/account-occasion-fix.js?v=20260824-r8" defer></script>
 <script src="/java/abandoned-cart.js?v=20260822-edge-r3" defer></script>
 <script type="module" src="./java/Products.min.js?v=products-20260803-progressive-cart"></script>
 <script src="/java/account-social.js?v=20260812-cache-v1" defer></script>

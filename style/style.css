@@ -26,3 +26,147 @@ body,html{height:100%}body{margin:0}.page{min-height:100dvh;display:flex;flex-di
 /* Fix desktop header search/camera icon visibility (white icons on dark header) */
 @media(min-width:900px){.header-content>.search-icon svg,.header-content>.camera-icon svg{color:#fff!important;stroke:#fff!important;fill:#fff0!important}}
 body.product-page-body .old-price{color:#6b7280!important}
+@media(min-width:530px) and (max-width:890px){.products-row:not(.products-masonry){display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;justify-content:center!important;align-items:start!important;gap:12px!important;column-count:auto!important;column-gap:12px!important}.products-row:not(.products-masonry)>.product-card:not(.product-card-cart){width:100%!important;min-width:0!important;max-width:none!important;margin:0!important;box-sizing:border-box!important}.products-row:not(.products-masonry)>.product-card:not(.product-card-cart)>.product-img{width:100%!important;height:auto!important;min-height:0!important;aspect-ratio:1/1!important;object-fit:cover!important;display:block!important}}
+#home-category-products .product-price-row{
+    display:flex!important;
+    align-items:center!important;
+    gap:3px!important;
+    direction:rtl!important;
+}
+
+#home-category-products .product-fire{
+    margin:0!important;
+    margin-inline:0!important;
+    padding:0!important;
+}
+
+#home-category-products .product-sales{
+    margin:0!important;
+    margin-inline:0!important;
+    padding:0!important;
+}
+
+
+/* ===== BARIQ UNIFIED PRODUCT CARDS — 2026-08-25 =====
+   Uses the home-page card layout everywhere and aligns 3-column rows. */
+@media (max-width:899px){
+  body #category-products .products-row.products-masonry,
+  body #home-category-products .products-row.products-masonry{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:8px!important;
+    align-items:start!important;
+    direction:rtl!important;
+    width:100%!important;
+    max-width:100%!important;
+    margin:0 auto!important;
+    padding:0!important;
+    column-count:auto!important;
+    column-gap:8px!important;
+  }
+  body #category-products .products-column,
+  body #home-category-products .products-column{
+    display:flex!important;
+    flex-direction:column!important;
+    gap:8px!important;
+    min-width:0!important;
+  }
+  body #category-products .product-card:not(.product-card-cart),
+  body #home-category-products .product-card:not(.product-card-cart){
+    width:100%!important;
+    max-width:none!important;
+    min-width:0!important;
+    height:auto!important;
+    min-height:0!important;
+    margin:0!important;
+    display:block!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+    break-inside:avoid!important;
+    -webkit-column-break-inside:avoid!important;
+  }
+  body #category-products .product-img,
+  body #home-category-products .product-img{
+    width:100%!important;
+    height:auto!important;
+    min-height:0!important;
+    aspect-ratio:1/1!important;
+    object-fit:cover!important;
+    display:block!important;
+  }
+  body #category-products .product-content,
+  body #home-category-products .product-content{
+    flex:0 0 auto!important;
+    height:auto!important;
+    min-height:0!important;
+    padding:4px!important;
+    margin:0!important;
+    gap:2px!important;
+    box-sizing:border-box!important;
+  }
+  body #category-products .product-card:has(.product-timer-save-box) .product-content,
+  body #home-category-products .product-card:has(.product-timer-save-box) .product-content{
+    min-height:116px!important;
+  }
+  body #category-products .product-rating-container,
+  body #category-products .product-price-row,
+  body #category-products .product-old-price-striked,
+  body #category-products .product-timer-save-box,
+  body #home-category-products .product-rating-container,
+  body #home-category-products .product-price-row,
+  body #home-category-products .product-old-price-striked,
+  body #home-category-products .product-timer-save-box{
+    margin:1px 0!important;
+    padding:0!important;
+  }
+  body #category-products .product-timer-save-box,
+  body #home-category-products .product-timer-save-box{
+    height:15px!important;min-height:15px!important;max-width:100%!important;
+    font-size:9px!important;line-height:15px!important;gap:2px!important;
+    box-shadow:none!important;overflow:hidden!important;
+  }
+  body #category-products .product-save-text,
+  body #home-category-products .product-save-text{
+    flex:1 1 auto!important;min-width:0!important;overflow:hidden!important;
+    text-overflow:ellipsis!important;white-space:nowrap!important;
+    font-size:9px!important;line-height:15px!important;padding:0 3px!important;
+  }
+  body #category-products .product-timer,
+  body #home-category-products .product-timer{
+    flex:0 0 44px!important;min-width:44px!important;height:15px!important;
+    padding:0 1px!important;font-size:9px!important;line-height:15px!important;
+    direction:ltr!important;unicode-bidi:isolate!important;font-variant-numeric:tabular-nums!important;
+    text-align:center!important;white-space:nowrap!important;display:inline-flex!important;
+    align-items:center!important;justify-content:center!important;flex-direction:row!important;
+  }
+}
+
+/* Exactly when the layout becomes 3 cards per row: flatten masonry columns,
+   stretch each grid row, and make all three cards end on the same baseline. */
+@media (min-width:530px) and (max-width:890px){
+  body #category-products .products-row.products-masonry,
+  body #home-category-products .products-row.products-masonry{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:12px!important;
+    align-items:stretch!important;
+    grid-auto-rows:1fr!important;
+  }
+  body #category-products .products-row.products-masonry>.products-column,
+  body #home-category-products .products-row.products-masonry>.products-column{
+    display:contents!important;
+  }
+  body #category-products .products-row.products-masonry .product-card:not(.product-card-cart),
+  body #home-category-products .products-row.products-masonry .product-card:not(.product-card-cart),
+  body #category-products .products-row:not(.products-masonry)>.product-card:not(.product-card-cart),
+  body #home-category-products .products-row:not(.products-masonry)>.product-card:not(.product-card-cart){
+    height:100%!important;
+    min-height:100%!important;
+    align-self:stretch!important;
+    display:flex!important;
+    flex-direction:column!important;
+  }
+  body #category-products .product-content,
+  body #home-category-products .product-content{
+    flex:1 1 auto!important;
+  }
+}

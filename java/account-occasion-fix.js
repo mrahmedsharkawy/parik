@@ -1,7 +1,7 @@
 (function(){
 'use strict';
-if(window.__bariqOccasionFixR7)return;
-window.__bariqOccasionFixR7=true;
+if(window.__bariqOccasionFixR8)return;
+window.__bariqOccasionFixR8=true;
 
 async function ensure(){
   try{
@@ -20,12 +20,15 @@ async function reloadOccasions(){
     status.textContent='جاري تحميل مناسباتك...';
   }
   try{
-    if(typeof window.loadCustomerOccasions==='function'){
-      await window.loadCustomerOccasions();
+    if(typeof window.renderCustomerOccasions==='function'&&!window.__bariqOccasionFixRendering){
+      window.__bariqOccasionFixRendering=true;
+      try{await window.renderCustomerOccasions()}finally{
+        setTimeout(function(){window.__bariqOccasionFixRendering=false},100);
+      }
       return true;
     }
   }catch(e){
-    console.warn('[BARIQ_OCC] loadCustomerOccasions failed',e);
+    console.warn('[BARIQ_OCC] renderCustomerOccasions failed',e);
   }
   var b=document.querySelector('[data-occ-refresh]');
   if(b&&!b.__bariqOccReloading){

@@ -531,9 +531,7 @@
 
     function createProductsRow() {
       const nextRow = document.createElement('div');
-      const mobileMasonry = window.matchMedia && window.matchMedia('(max-width: 899px)').matches;
-      nextRow.className = mobileMasonry ? 'products-row products-masonry' : 'products-row';
-      if (mobileMasonry) nextRow.innerHTML = '<div class="products-column"></div><div class="products-column"></div>';
+      nextRow.className = 'products-row';
       return nextRow;
     }
 

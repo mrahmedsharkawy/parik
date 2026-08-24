@@ -601,7 +601,6 @@ if (typeof window !== "undefined") {
 }
 
 export function createProductCard(prod) {
-    window.createProductCard || (window.createProductCard = createProductCard);
     const card = document.createElement("div");
     card.dataset.productId = String(prod.id || prod.productId || "");
     const productUrl = `${productSeoPath(prod, prod.id)}${(localStorage.getItem("lang") || document.documentElement.lang) === "en" ? "?lang=en" : ""}`;
@@ -874,22 +873,25 @@ export function createProductCard(prod) {
     }
     const priceRow = document.createElement("div");
     priceRow.className = "product-price-row", priceRow.style.display = "flex", priceRow.style.alignItems = "center", 
-    priceRow.style.gap = "4px", priceRow.style.flexWrap = "nowrap", priceRow.appendChild(price);
+    priceRow.style.gap = "4px", priceRow.style.flexWrap = "nowrap", priceRow.appendChild(price),
+    content.appendChild(priceRow);
     const fire = document.createElement("span");
-    fire.className = "product-fire", fire.textContent = "🔥", fire.style.margin = "0 0px", 
-    priceRow.appendChild(fire);
+    fire.className = "product-fire", fire.textContent = "🔥", fire.style.margin = "0 0px";
     const sales = document.createElement("span");
     sales.className = "product-sales", sales.style.whiteSpace = "nowrap";
     const salesNumber = function(productId) {
         const baseRange = [ 1.5, 2.3, 3.7, 4.2, 5.6, 6.8, 2.8, 3.2, 4.9, 5.2 ], baseValue = baseRange[("string" == typeof productId ? productId.split("").reduce((a, b) => a + b.charCodeAt(0), 0) : productId || 0) % baseRange.length], dayOfMonth = (new Date).getDate(), variation = dayOfMonth % 10 / 10 * .3;
         return (dayOfMonth % 2 == 0 ? baseValue + variation : baseValue - variation).toFixed(1) + "k+";
     }(prod.id || prod.productId);
+    const salesRow = document.createElement("div");
+    salesRow.className = "product-sales-row", salesRow.appendChild(sales), salesRow.appendChild(fire);
     if (sales.textContent = "en" === lang ? `sold ${salesNumber}` : `تم بيع ${salesNumber}`, 
-    priceRow.appendChild(sales), content.appendChild(priceRow), hasProductDiscount) {
+    hasProductDiscount) {
         const oldPriceStriked = document.createElement("div");
         oldPriceStriked.className = "product-old-price-striked", oldPriceStriked.textContent = `${prod.oldPrice} ${currencySymbol}`, 
         content.appendChild(oldPriceStriked);
     }
+    content.appendChild(salesRow);
     const filterRow = document.createElement("div");
     if (filterRow.className = "product-filter-row", filterRow.style.display = "flex", 
     filterRow.style.alignItems = "center", filterRow.style.gap = "0px", filterRow.style.margin = "0px 0", 
@@ -982,6 +984,11 @@ export function createProductCard(prod) {
     cartBtn.style.setProperty("left", "rtl" === cardDir ? "10px" : "auto", "important"),
     card.appendChild(cartBtn), card;
 }
+
+if (typeof window !== "undefined") {
+    window.createProductCard = createProductCard;
+}
+
 
 function getProductRenderKey(list) {
     const toArr = v => Array.isArray(v) ? v.filter(Boolean) : v ? [ v ] : [];
@@ -2588,3 +2595,5 @@ document.addEventListener("DOMContentLoaded", async function() {
         })();
     }).catch(e => console.error("خطأ تحميل المنتج:", e));
 }();
+
+
