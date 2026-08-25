@@ -1193,7 +1193,7 @@ body {
     }
 
 }
-@media (min-width:1021px) and (max-width:1440px) {
+@media (min-width:900px) and (max-width:1440px) {
     main {
         width:90%;
         margin:0 auto
@@ -1207,7 +1207,7 @@ body {
         margin:0 auto
     }
     .logo img {
-        height:25px
+        height:46px
     }
     .search-container input {
         font-size:4px
