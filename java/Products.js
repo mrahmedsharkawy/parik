@@ -872,11 +872,11 @@ export function createProductCard(prod) {
         content.appendChild(timerSaveBox), updateTimer(), interval = setInterval(updateTimer, 1e3);
     }
     const priceRow = document.createElement("div");
-    priceRow.className = "product-price-row", priceRow.style.display = "flex", priceRow.style.alignItems = "center", 
-    priceRow.style.gap = "4px", priceRow.style.flexWrap = "nowrap", priceRow.appendChild(price),
-    content.appendChild(priceRow);
+    priceRow.className = "product-price-row", priceRow.style.display = "flex", priceRow.style.alignItems = "center",
+    priceRow.style.justifyContent = "flex-start", priceRow.style.gap = "3px", priceRow.style.flexWrap = "nowrap",
+    priceRow.style.width = "100%", priceRow.style.direction = "inherit";
     const fire = document.createElement("span");
-    fire.className = "product-fire", fire.textContent = "🔥", fire.style.margin = "0 0px";
+    fire.className = "product-fire", fire.textContent = "🔥", fire.style.margin = "0";
     const sales = document.createElement("span");
     sales.className = "product-sales", sales.style.whiteSpace = "nowrap";
     const salesNumber = function(productId) {
@@ -884,14 +884,16 @@ export function createProductCard(prod) {
         return (dayOfMonth % 2 == 0 ? baseValue + variation : baseValue - variation).toFixed(1) + "k+";
     }(prod.id || prod.productId);
     const salesRow = document.createElement("div");
-    salesRow.className = "product-sales-row", salesRow.appendChild(sales), salesRow.appendChild(fire);
+    salesRow.className = "product-sales-row", salesRow.style.display = "flex", salesRow.style.alignItems = "center",
+    salesRow.style.gap = "2px", salesRow.style.margin = "0", salesRow.style.whiteSpace = "nowrap", salesRow.style.direction = "inherit",
+    salesRow.appendChild(sales), salesRow.appendChild(fire),
+    priceRow.appendChild(price), priceRow.appendChild(salesRow), content.appendChild(priceRow);
     if (sales.textContent = "en" === lang ? `sold ${salesNumber}` : `تم بيع ${salesNumber}`, 
     hasProductDiscount) {
         const oldPriceStriked = document.createElement("div");
         oldPriceStriked.className = "product-old-price-striked", oldPriceStriked.textContent = `${prod.oldPrice} ${currencySymbol}`, 
         content.appendChild(oldPriceStriked);
     }
-    content.appendChild(salesRow);
     const filterRow = document.createElement("div");
     if (filterRow.className = "product-filter-row", filterRow.style.display = "flex", 
     filterRow.style.alignItems = "center", filterRow.style.gap = "0px", filterRow.style.margin = "0px 0", 

@@ -1101,7 +1101,6 @@ body.home-immersive-header .daily-picks-section+.categories{margin-top:6px!impor
     aspect-ratio:auto!important;
     object-fit:cover!important;
     border-radius:21px!important;
-    vertical-align:top!important;
   }
   body.home-immersive-header .mob-banner-ctas{
     position:absolute!important;
@@ -1341,9 +1340,9 @@ body.home-immersive-header .daily-picks-section+.categories{margin-top:6px!impor
     font-size:1.5rem!important;
   }
 }
-</style>
 
-<style>
+
+
 .flash-deal-banner .flash-static-text{display:none}
 @media(max-width:899px){
   body.home-immersive-header .filters-scroll-container,
@@ -1422,60 +1421,7 @@ body.home-immersive-header .daily-picks-section+.categories{margin-top:6px!impor
 }
 </style>
 
-<script id="bariq-global-currency-format">
-(function () {
-  function normalizeTextNode(node) {
-    if (!node || !node.nodeValue || node.nodeValue.indexOf('AED') === -1) return;
-
-    var s = node.nodeValue;
-
-    /* AED 1270 / AED 1,270.00 -> 1270 د.ا / 1,270.00 د.ا */
-    s = s.replace(/\bAED\s*([0-9][0-9,]*(?:\.[0-9]+)?)/g, '$1 د.ا');
-
-    /* 1270 AED -> 1270 د.ا */
-    s = s.replace(/([0-9][0-9,]*(?:\.[0-9]+)?)\s*\bAED\b/g, '$1 د.ا');
-
-    /* Any remaining visible AED labels */
-    s = s.replace(/\bAED\b/g, 'د.ا');
-
-    node.nodeValue = s;
-  }
-
-  function normalizeRoot(root) {
-    if (!root) return;
-
-    if (root.nodeType === Node.TEXT_NODE) {
-      normalizeTextNode(root);
-      return;
-    }
-
-    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-    while (walker.nextNode()) normalizeTextNode(walker.currentNode);
-  }
-
-  function start() {
-    normalizeRoot(document.body);
-
-    new MutationObserver(function (mutations) {
-      mutations.forEach(function (m) {
-        if (m.type === 'characterData') normalizeTextNode(m.target);
-        m.addedNodes.forEach(normalizeRoot);
-      });
-    }).observe(document.body, {
-      childList:true,
-      subtree:true,
-      characterData:true
-    });
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', start);
-  } else {
-    start();
-  }
-})();
-</script>
-
+<script src="/java/bariq-global-currency-format.js?v=20260825-csp1" defer></script>
 </body>
 </html>
 

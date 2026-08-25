@@ -23,16 +23,6 @@
       "permanent": true
     },
     {
-      "source": "/product/:id/:slug*",
-      "destination": "/product/:id/",
-      "permanent": true
-    },
-    {
-      "source": "/product/:id",
-      "destination": "/product/:id/",
-      "permanent": true
-    },
-    {
       "source": "/about-bariq.html",
       "destination": "/about-bariq",
       "permanent": true
@@ -135,6 +125,18 @@
   ],
   "rewrites": [
     {
+      "source": "/product/:id/:slug*",
+      "destination": "/product.html"
+    },
+    {
+      "source": "/product/:id",
+      "destination": "/product.html"
+    },
+    {
+      "source": "/product",
+      "destination": "/product.html"
+    },
+    {
       "source": "/favicon.ico",
       "destination": "/assets/icon-96.png"
     },
@@ -233,14 +235,6 @@
     {
       "source": "/policy/:slug",
       "destination": "/policy.html"
-    },
-    {
-      "source": "/product/:id",
-      "destination": "/product.html"
-    },
-    {
-      "source": "/product",
-      "destination": "/product.html"
     },
     {
       "source": "/bot-admin",
