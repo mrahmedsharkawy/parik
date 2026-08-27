@@ -1,4 +1,5 @@
 import '../config/app_config.dart';
+import '../config/locale_config.dart';
 
 class Product {
   const Product({
@@ -53,8 +54,20 @@ class Product {
   final DateTime? timerEnd;
   final DateTime? createdAt;
 
-  String get displayName => nameAr.trim().isNotEmpty ? nameAr : nameEn;
-  String get description => descriptionAr.trim().isNotEmpty ? descriptionAr : descriptionEn;
+  String get displayName {
+    final primary = BariqLocaleConfig.isEnglish ? nameEn : nameAr;
+    final fallback = BariqLocaleConfig.isEnglish ? nameAr : nameEn;
+    return primary.trim().isNotEmpty ? primary : fallback;
+  }
+
+  String get description {
+    final primary =
+        BariqLocaleConfig.isEnglish ? descriptionEn : descriptionAr;
+    final fallback =
+        BariqLocaleConfig.isEnglish ? descriptionAr : descriptionEn;
+    return primary.trim().isNotEmpty ? primary : fallback;
+  }
+
   bool get hasStock => stock != 0;
 
   List<String> get images {
@@ -77,6 +90,7 @@ class Product {
   factory Product.fromSupabase(Map<String, dynamic> row) {
     final gallery = <String>[];
     final videos = <String>[];
+
     void addMedia(Object? value) {
       if (value == null) return;
       if (value is Iterable) {
@@ -90,7 +104,9 @@ class Product {
         return;
       }
       final url = '$value'.trim();
-      if (url.isEmpty || url.startsWith('data:') || _isPlaceholderImage(url)) return;
+      if (url.isEmpty || url.startsWith('data:') || _isPlaceholderImage(url)) {
+        return;
+      }
       if (_isVideo(url)) {
         if (!videos.contains(url)) videos.add(url);
       } else if (!gallery.contains(url)) {
@@ -103,8 +119,14 @@ class Product {
     addMedia(row['gallery']);
 
     final rawImage = '${row['image'] ?? ''}'.trim();
-    final image = rawImage.isNotEmpty && !_isVideo(rawImage) && !_isPlaceholderImage(rawImage) ? rawImage : '';
+    final image = rawImage.isNotEmpty &&
+            !_isVideo(rawImage) &&
+            !_isPlaceholderImage(rawImage)
+        ? rawImage
+        : '';
+
     final categoryTerms = _catalogTerms(row);
+
     return Product(
       id: '${row['id'] ?? ''}',
       nameAr: '${row['name_ar'] ?? ''}',
@@ -113,14 +135,19 @@ class Product {
       descriptionEn: '${row['description_en'] ?? ''}',
       categoryId: '${row['category_id'] ?? ''}',
       subcategoryId: '${row['subcategory_id'] ?? ''}',
-      categorySlug: '${row['category_slug'] ?? row['categorySlug'] ?? ''}',
-      subcategorySlug: '${row['subcategory_slug'] ?? row['subcategorySlug'] ?? row['subCategorySlug'] ?? ''}',
-      subcategoryName: '${row['subcategory'] ?? row['subCategory'] ?? ''}',
+      categorySlug:
+          '${row['category_slug'] ?? row['categorySlug'] ?? ''}',
+      subcategorySlug:
+          '${row['subcategory_slug'] ?? row['subcategorySlug'] ?? row['subCategorySlug'] ?? ''}',
+      subcategoryName:
+          '${row['subcategory'] ?? row['subCategory'] ?? ''}',
       categoryTerms: categoryTerms,
       price: _toDouble(row['price']),
       oldPrice: _toDouble(row['old_price']),
       stock: _toInt(row['stock']),
-      imageUrl: image.isNotEmpty ? image : (gallery.isNotEmpty ? gallery.first : ''),
+      imageUrl: image.isNotEmpty
+          ? image
+          : (gallery.isNotEmpty ? gallery.first : ''),
       gallery: gallery,
       videoUrls: videos,
       rating: _toDouble(row['rating'], fallback: 5),
@@ -135,7 +162,8 @@ class Product {
 
   static double _toDouble(Object? value, {double fallback = 0}) {
     if (value is num) return value.toDouble();
-    return double.tryParse('$value'.replaceAll(RegExp(r'[^0-9.]'), '')) ?? fallback;
+    return double.tryParse('$value'.replaceAll(RegExp(r'[^0-9.]'), '')) ??
+        fallback;
   }
 
   static int _toInt(Object? value) {
@@ -145,16 +173,23 @@ class Product {
 
   static bool _isVideo(String value) {
     final lower = value.toLowerCase();
-    return lower.contains('/video/upload/') || lower.endsWith('.mp4') || lower.endsWith('.webm') || lower.endsWith('.mov') || lower.endsWith('.m3u8');
+    return lower.contains('/video/upload/') ||
+        lower.endsWith('.mp4') ||
+        lower.endsWith('.webm') ||
+        lower.endsWith('.mov') ||
+        lower.endsWith('.m3u8');
   }
 
   static bool _isPlaceholderImage(String value) {
     final lower = value.toLowerCase();
-    return lower.contains('placeholder') || lower.contains('blak') || lower.contains('black');
+    return lower.contains('placeholder') ||
+        lower.contains('blak') ||
+        lower.contains('black');
   }
 
   static List<String> _catalogTerms(Map<String, dynamic> row) {
     final out = <String>[];
+
     void add(Object? value) {
       if (value == null) return;
       if (value is Iterable) {
@@ -164,7 +199,15 @@ class Product {
         return;
       }
       if (value is Map) {
-        for (final key in ['ar', 'en', 'name_ar', 'name_en', 'slug', 'categorySlug', 'category_slug']) {
+        for (final key in [
+          'ar',
+          'en',
+          'name_ar',
+          'name_en',
+          'slug',
+          'categorySlug',
+          'category_slug'
+        ]) {
           add(value[key]);
         }
         return;
@@ -192,6 +235,7 @@ class Product {
     ]) {
       add(row[key]);
     }
+
     return out;
   }
 }
