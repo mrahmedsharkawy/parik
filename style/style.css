@@ -277,11 +277,6 @@ body,html {
 body {
   margin:0
 }
-.page {
-  min-height:100dvh;
-  display:flex;
-  flex-direction:column
-}
 .main-header {
   position:fixed;
   inset:0 0 auto 0;
@@ -320,10 +315,7 @@ img.broken,img[data-broken="1"] {
 #filtersWrap,.filters-scroll-container {
   min-height:44px
 }
-* {
-  box-sizing:border-box;
-  margin:0
-}
+
 *,body,html {
   font-family:Cairo,"Segoe UI Emoji","Segoe UI Symbol","Apple Color Emoji","Noto Color Emoji",Arial,sans-serif!important;
   overscroll-behavior-x:contain;
