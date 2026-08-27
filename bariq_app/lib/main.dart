@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'src/config/app_config.dart';
@@ -40,13 +41,18 @@ class BariqApp extends StatelessWidget {
         Locale('ar'),
         Locale('en'),
       ],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       builder: (context, child) {
         final media = MediaQuery.of(context);
         return MediaQuery(
           data: media.copyWith(
             // Keep typography compact on small phones and sensible on tablets.
             textScaler: TextScaler.linear(
-              media.textScaler.scale(1).clamp(.90, 1.08),
+              (media.textScaler.scale(1) * .94).clamp(.86, 1.0),
             ),
           ),
           child: Directionality(

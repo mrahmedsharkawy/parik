@@ -17,11 +17,13 @@ import '../catalog/search_screen.dart';
 import '../shared/bariq_network_image.dart';
 import '../shared/storefront_top_bar.dart';
 
-enum _AccountSection { orders, profile, offers, notifications, reviews, wallet, favorites, address, payments, invoices, occasions, support }
+enum AccountSection { orders, profile, offers, notifications, reviews, wallet, favorites, address, payments, invoices, occasions, support }
 enum _OrderFilter { all, processing, shipped, delivered, returns }
 
 class AccountScreen extends StatefulWidget {
-  const AccountScreen({super.key});
+  const AccountScreen({super.key, this.initialSection = AccountSection.orders});
+
+  final AccountSection initialSection;
 
   @override
   State<AccountScreen> createState() => _AccountScreenState();
@@ -31,7 +33,7 @@ class _AccountScreenState extends State<AccountScreen> {
   final _account = AccountService();
   final _catalog = SupabaseCatalogService();
   late Future<_AccountData> _future;
-  _AccountSection _section = _AccountSection.orders;
+  late AccountSection _section;
   _OrderFilter _orderFilter = _OrderFilter.all;
   String _orderQuery = '';
   bool _syncedWishlist = false;
@@ -39,6 +41,7 @@ class _AccountScreenState extends State<AccountScreen> {
   @override
   void initState() {
     super.initState();
+    _section = widget.initialSection;
     _future = _load();
   }
 
@@ -73,7 +76,7 @@ class _AccountScreenState extends State<AccountScreen> {
     await next;
   }
 
-  void _select(_AccountSection section) => setState(() => _section = section);
+  void _select(AccountSection section) => setState(() => _section = section);
 
   @override
   Widget build(BuildContext context) {
@@ -81,7 +84,9 @@ class _AccountScreenState extends State<AccountScreen> {
     final user = _account.user;
     return Scaffold(
       backgroundColor: const Color(0xFFF2F3F6),
-      body: SafeArea(
+      body: Directionality(
+        textDirection: TextDirection.rtl,
+        child: SafeArea(
         bottom: false,
         child: Column(
           children: [
@@ -130,7 +135,7 @@ class _AccountScreenState extends State<AccountScreen> {
                             favorites: favorites,
                             onOrderFilter: (filter) => setState(() => _orderFilter = filter),
                             onOrderSearch: (value) => setState(() => _orderQuery = value),
-                            onSupport: () => _select(_AccountSection.support),
+                            onSupport: () => _select(AccountSection.support),
                             onRefresh: _refresh,
                             onLogin: () async {
                               final ok = await Navigator.of(context).push<bool>(MaterialPageRoute(builder: (_) => const LoginScreen()));
@@ -148,6 +153,7 @@ class _AccountScreenState extends State<AccountScreen> {
             ),
           ],
         ),
+        ),
       ),
     );
   }
@@ -159,30 +165,35 @@ class _AccountScreenState extends State<AccountScreen> {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      isDismissible: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _AccountMenuSheet(
-        email: user?.email,
-        settings: settings,
-        selected: _section,
-        onSelect: (section) {
-          Navigator.of(context).pop();
-          _select(section);
-        },
-        onLogin: () async {
-          Navigator.of(context).pop();
-          final ok = await Navigator.of(context).push<bool>(MaterialPageRoute(builder: (_) => const LoginScreen()));
-          if (ok == true) {
-            await appState.refreshWishlist();
-            if (mounted) setState(() => _future = _load());
-          }
-        },
-        onLogout: user == null
-            ? null
-            : () async {
-                Navigator.of(context).pop();
-                await _account.signOut();
-                if (mounted) setState(() => _future = _load());
-              },
+      builder: (sheetContext) => GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => Navigator.of(sheetContext).pop(),
+        child: _AccountMenuSheet(
+          email: user?.email,
+          settings: settings,
+          selected: _section,
+          onSelect: (section) {
+            Navigator.of(context).pop();
+            _select(section);
+          },
+          onLogin: () async {
+            Navigator.of(context).pop();
+            final ok = await Navigator.of(context).push<bool>(MaterialPageRoute(builder: (_) => const LoginScreen()));
+            if (ok == true) {
+              await appState.refreshWishlist();
+              if (mounted) setState(() => _future = _load());
+            }
+          },
+          onLogout: user == null
+              ? null
+              : () async {
+                  Navigator.of(context).pop();
+                  await _account.signOut();
+                  if (mounted) setState(() => _future = _load());
+                },
+        ),
       ),
     );
   }
@@ -228,17 +239,17 @@ class _MenuHeader extends StatelessWidget {
 class _QuickActions extends StatelessWidget {
   const _QuickActions({required this.section, required this.notificationCount, required this.onSelect});
 
-  final _AccountSection section;
+  final AccountSection section;
   final int notificationCount;
-  final ValueChanged<_AccountSection> onSelect;
+  final ValueChanged<AccountSection> onSelect;
 
   @override
   Widget build(BuildContext context) {
     final items = [
-      ('طلباتي', Icons.receipt_long_rounded, _AccountSection.orders, ''),
-      ('ملفي', Icons.person_rounded, _AccountSection.profile, ''),
-      ('عروض', Icons.card_giftcard_rounded, _AccountSection.offers, ''),
-      ('الإشعارات', Icons.notifications_none_rounded, _AccountSection.notifications, notificationCount > 0 ? '$notificationCount' : ''),
+      ('طلباتي', Icons.receipt_long_rounded, AccountSection.orders, '', const Color(0xFF3A6EA5)),
+      ('ملفي', Icons.person_rounded, AccountSection.profile, '', const Color(0xFF4C3F91)),
+      ('عروض', Icons.card_giftcard_rounded, AccountSection.offers, '', const Color(0xFFC7922E)),
+      ('الإشعارات', Icons.notifications_none_rounded, AccountSection.notifications, notificationCount > 0 ? '$notificationCount' : '', const Color(0xFFE4B84A)),
     ];
     return Container(
       height: 88,
@@ -266,7 +277,7 @@ class _QuickActions extends StatelessWidget {
                       Stack(
                         clipBehavior: Clip.none,
                         children: [
-                          Icon(item.$2, color: active ? AppTheme.gold : AppTheme.navy, size: 25),
+                          Icon(item.$2, color: active ? AppTheme.gold : item.$5, size: 22),
                           if (item.$4.isNotEmpty)
                             PositionedDirectional(
                               top: -9,
@@ -276,7 +287,7 @@ class _QuickActions extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 7),
-                      Text(item.$1, style: TextStyle(color: active ? AppTheme.gold : AppTheme.navy, fontSize: 11, fontWeight: FontWeight.w800)),
+                      Text(item.$1, style: TextStyle(color: active ? AppTheme.gold : AppTheme.navy, fontSize: 10.5, fontWeight: FontWeight.w800)),
                     ],
                   ),
                 ),
@@ -292,7 +303,7 @@ class _QuickActions extends StatelessWidget {
 class _SectionBody extends StatelessWidget {
   const _SectionBody({required this.section, required this.userEmail, required this.orders, required this.invoices, required this.occasions, required this.notifications, required this.orderFilter, required this.orderQuery, required this.profile, required this.products, required this.offers, required this.favorites, required this.onOrderFilter, required this.onOrderSearch, required this.onSupport, required this.onRefresh, required this.onLogin});
 
-  final _AccountSection section;
+  final AccountSection section;
   final String? userEmail;
   final List<Map<String, dynamic>> orders;
   final List<Map<String, dynamic>> invoices;
@@ -313,18 +324,18 @@ class _SectionBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return switch (section) {
-      _AccountSection.orders => _OrdersSection(orders: orders, selectedFilter: orderFilter, query: orderQuery, userEmail: userEmail, onFilter: onOrderFilter, onSearch: onOrderSearch, onSupport: onSupport, onLogin: onLogin),
-      _AccountSection.profile => _ProfileSection(profile: profile, email: userEmail, onLogin: onLogin),
-      _AccountSection.offers => _OffersSection(products: offers),
-      _AccountSection.notifications => _NotificationsSection(notifications: notifications, onRefresh: onRefresh, onLogin: onLogin, signedIn: userEmail != null),
-      _AccountSection.reviews => _ReviewsSection(orders: orders, products: products, userEmail: userEmail),
-      _AccountSection.wallet => _WalletSection(orders: orders),
-      _AccountSection.favorites => _FavoritesSection(products: favorites, onClear: AppStateScope.of(context).clearFavorites),
-      _AccountSection.address => _AddressSection(profile: profile, userEmail: userEmail, onLogin: onLogin),
-      _AccountSection.payments => const _PaymentsSection(),
-      _AccountSection.invoices => _InvoicesSection(invoices: invoices, onRefresh: onRefresh),
-      _AccountSection.occasions => _OccasionsSection(occasions: occasions, profile: profile, userEmail: userEmail, onRefresh: onRefresh, onLogin: onLogin),
-      _AccountSection.support => _SupportSection(userEmail: userEmail),
+      AccountSection.orders => _OrdersSection(orders: orders, selectedFilter: orderFilter, query: orderQuery, userEmail: userEmail, onFilter: onOrderFilter, onSearch: onOrderSearch, onSupport: onSupport, onLogin: onLogin),
+      AccountSection.profile => _ProfileSection(profile: profile, email: userEmail, onLogin: onLogin),
+      AccountSection.offers => _OffersSection(products: offers),
+      AccountSection.notifications => _NotificationsSection(notifications: notifications, onRefresh: onRefresh, onLogin: onLogin, signedIn: userEmail != null),
+      AccountSection.reviews => _ReviewsSection(orders: orders, products: products, userEmail: userEmail),
+      AccountSection.wallet => _WalletSection(orders: orders),
+      AccountSection.favorites => _FavoritesSection(products: favorites, onClear: AppStateScope.of(context).clearFavorites),
+      AccountSection.address => _AddressSection(profile: profile, userEmail: userEmail, onLogin: onLogin),
+      AccountSection.payments => const _PaymentsSection(),
+      AccountSection.invoices => _InvoicesSection(invoices: invoices, onRefresh: onRefresh),
+      AccountSection.occasions => _OccasionsSection(occasions: occasions, profile: profile, userEmail: userEmail, onRefresh: onRefresh, onLogin: onLogin),
+      AccountSection.support => _SupportSection(userEmail: userEmail),
     };
   }
 }
@@ -360,7 +371,7 @@ class _OrdersSection extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         if (userEmail == null)
-          _EmptyPanel(title: 'سجل الدخول لعرض طلباتك', subtitle: 'طلباتك الحقيقية من قاعدة بيانات بريق ستظهر هنا.', action: 'تسجيل الدخول', onAction: onLogin)
+          _EmptyPanel(title: 'سجل الدخول لعرض طلباتك', subtitle: '', action: 'تسجيل الدخول', onAction: onLogin)
         else if (orders.isEmpty)
           const _EmptyPanel(title: 'لا توجد طلبات حتى الآن', subtitle: 'أي طلب مرتبط ببريد حسابك سيظهر هنا تلقائياً.')
         else if (filteredOrders.isEmpty)
@@ -387,7 +398,7 @@ class _SelfService extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(color: AppTheme.navy, borderRadius: BorderRadius.circular(8)),
         child: const Directionality(
-        textDirection: TextDirection.ltr,
+        textDirection: TextDirection.rtl,
         child: Row(
           children: [
             Icon(Icons.chevron_left_rounded, color: AppTheme.gold),
@@ -396,7 +407,7 @@ class _SelfService extends StatelessWidget {
               flex: 8,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text('الخدمة الذاتية', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w900)),
                   SizedBox(height: 5),
@@ -405,7 +416,7 @@ class _SelfService extends StatelessWidget {
               ),
             ),
             SizedBox(width: 10),
-            Text('🤖', style: TextStyle(fontSize: 25)),
+            Text('🤖', style: TextStyle(fontSize: 22)),
           ],
         ),
       ),
@@ -724,7 +735,8 @@ class _ProfileSectionState extends State<_ProfileSection> {
   @override
   Widget build(BuildContext context) {
     final signedIn = widget.email != null;
-    final name = _name.text.trim().isEmpty ? (signedIn ? widget.email!.split('@').first : 'bariq') : _name.text.trim();
+    final name = _name.text.trim().isEmpty ? (signedIn ? widget.email!.split('@').first : 'زائر') : _name.text.trim();
+    final emailText = _email.text.trim();
     return _Panel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -734,7 +746,8 @@ class _ProfileSectionState extends State<_ProfileSection> {
             const SizedBox(width: 12),
             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(name, style: const TextStyle(color: AppTheme.navy, fontSize: 16, fontWeight: FontWeight.w900)),
-              Text(_email.text.trim().isEmpty ? 'bariq.gifts@gmail.com' : _email.text.trim(), style: const TextStyle(color: AppTheme.muted, fontSize: 11)),
+              if (signedIn && emailText.isNotEmpty)
+                Text(emailText, style: const TextStyle(color: AppTheme.muted, fontSize: 11)),
             ]),
           ]),
           const SizedBox(height: 18),
@@ -882,7 +895,7 @@ class _NotificationsSectionState extends State<_NotificationsSection> {
           ),
           const SizedBox(height: 12),
           if (!widget.signedIn)
-            _EmptyPanel(title: 'سجل الدخول لعرض إشعاراتك', subtitle: 'إشعارات الطلبات والكاش باك والمناسبات مرتبطة بحسابك.', action: 'تسجيل الدخول', onAction: widget.onLogin)
+            _EmptyPanel(title: 'سجل الدخول لعرض إشعاراتك', subtitle: '', action: 'تسجيل الدخول', onAction: widget.onLogin)
           else if (widget.notifications.isEmpty)
             const _EmptyPanel(title: 'لا توجد إشعارات حتى الآن', subtitle: 'ستظهر هنا تحديثات طلباتك والعروض والمناسبات.')
           else
@@ -1000,7 +1013,16 @@ class _ReviewsSectionState extends State<_ReviewsSection> {
                 if (pendingVisible.isEmpty && published.isEmpty)
                   const _EmptyPanel(title: 'لم تكتب أي تقييم بعد', subtitle: 'ستظهر هنا المنتجات التي تم تسليمها لتقييم مشترياتك')
                 else ...[
-                  for (final entry in pendingVisible) _ReviewFormCard(entry: entry, name: _reviewName(), onSubmitted: () => setState(() => _publishedFuture = _loadPublished())),
+                  for (final entry in pendingVisible)
+                    _ReviewFormCard(
+                      entry: entry,
+                      name: _reviewName(),
+                      onSubmitted: () {
+                        setState(() {
+                          _publishedFuture = _loadPublished();
+                        });
+                      },
+                    ),
                   if (published.isNotEmpty) ...[
                     const SizedBox(height: 8),
                     const Align(alignment: Alignment.centerRight, child: Text('تعليقاتك المنشورة', style: TextStyle(color: AppTheme.navy, fontSize: 12, fontWeight: FontWeight.w900))),
@@ -1071,7 +1093,7 @@ class _WalletSection extends StatelessWidget {
             children: [
               const SizedBox(width: double.infinity, child: Text('رصيد كاش باك', textAlign: TextAlign.right, style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w800))),
               const SizedBox(height: 8),
-              SizedBox(width: double.infinity, child: Text(money.format(balance), textAlign: TextAlign.right, textDirection: TextDirection.ltr, style: const TextStyle(color: AppTheme.gold, fontSize: 30, fontWeight: FontWeight.w900))),
+              SizedBox(width: double.infinity, child: Text(money.format(balance), textAlign: TextAlign.right, textDirection: TextDirection.ltr, style: const TextStyle(color: AppTheme.gold, fontSize: 24, fontWeight: FontWeight.w900))),
               const SizedBox(height: 6),
               const SizedBox(width: double.infinity, child: Text('🎁 تحصل على 5 د.إ مع كل طلب', textAlign: TextAlign.right, style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w800))),
             ],
@@ -1231,7 +1253,7 @@ class _AddressSectionState extends State<_AddressSection> {
           const _SectionTitle(icon: '📍', title: 'عنوان الشحن'),
           const SizedBox(height: 14),
           if (!signedIn)
-            _EmptyPanel(title: 'سجل الدخول لحفظ عنوان الشحن', subtitle: 'عنوانك الحقيقي من حساب بريق سيظهر هنا.', action: 'تسجيل الدخول', onAction: widget.onLogin)
+            _EmptyPanel(title: 'سجل الدخول لحفظ عنوان الشحن', subtitle: '', action: 'تسجيل الدخول', onAction: widget.onLogin)
           else ...[
             _ProfileField(label: 'الدولة', controller: _country, hint: 'الإمارات العربية المتحدة'),
             _ProfileField(label: 'المدينة / الإمارة', controller: _city, hint: 'دبي'),
@@ -1337,7 +1359,7 @@ class _PaymentMethodCard extends StatelessWidget {
                 children: [for (final asset in assets) _PayAsset(asset: asset)],
               )
             else if (trailingIcon != null)
-              Text(trailingIcon!, style: const TextStyle(fontSize: 27)),
+              Text(trailingIcon!, style: const TextStyle(fontSize: 23)),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
@@ -1580,7 +1602,7 @@ class _OccasionsSectionState extends State<_OccasionsSection> {
           const SizedBox(width: double.infinity, child: Text('احفظ مناسبات الأشخاص المهمين، وبريق يذكرك قبلها.', textAlign: TextAlign.right, style: TextStyle(color: AppTheme.muted, fontSize: 12))),
           const SizedBox(height: 14),
           if (!signedIn)
-            _EmptyPanel(title: 'سجل الدخول لحفظ مناسباتك', subtitle: 'المناسبات والتذكيرات مرتبطة بحسابك في بريق.', action: 'تسجيل الدخول', onAction: widget.onLogin)
+            _EmptyPanel(title: 'سجل الدخول لحفظ مناسباتك', subtitle: '', action: 'تسجيل الدخول', onAction: widget.onLogin)
           else ...[
             _ProfileField(label: 'اسم المناسبة', controller: _name, hint: 'مثال: عيد ميلاد مريم'),
             _OccasionDropdown<String>(label: 'نوع المناسبة', value: selectedType, items: _occasionTypes, labelFor: (value) => _occasionTypeLabel(value), onChanged: (value) => setState(() => _type = value ?? 'other')),
@@ -1815,7 +1837,9 @@ class _SupportSectionState extends State<_SupportSection> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
               color: AppTheme.navy,
-              child: Row(
+              child: Directionality(
+                textDirection: TextDirection.rtl,
+                child: Row(
                 children: [
                   TextButton.icon(
                     onPressed: () => setState(() {
@@ -1829,15 +1853,16 @@ class _SupportSectionState extends State<_SupportSection> {
                   ),
                   const Spacer(),
                   Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text(name, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w900)),
-                      const Text('متاح', style: TextStyle(color: Color(0xFF8AF0A5), fontSize: 11, fontWeight: FontWeight.w800)),
+                      Text(name, textAlign: TextAlign.right, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w900)),
+                      const Text('متاح', textAlign: TextAlign.right, style: TextStyle(color: Color(0xFF8AF0A5), fontSize: 11, fontWeight: FontWeight.w800)),
                     ],
                   ),
                   const SizedBox(width: 10),
                   const CircleAvatar(radius: 22, backgroundColor: Color(0xFF405783), child: Text('🤖', style: TextStyle(fontSize: 23))),
                 ],
+              ),
               ),
             ),
             Container(
@@ -1945,65 +1970,71 @@ class _AccountMenuSheet extends StatelessWidget {
   const _AccountMenuSheet({required this.email, required this.settings, required this.selected, required this.onSelect, required this.onLogin, required this.onLogout});
   final String? email;
   final SiteSettings settings;
-  final _AccountSection selected;
-  final ValueChanged<_AccountSection> onSelect;
+  final AccountSection selected;
+  final ValueChanged<AccountSection> onSelect;
   final VoidCallback onLogin;
   final VoidCallback? onLogout;
 
   @override
   Widget build(BuildContext context) {
     final items = [
-      ('كل الطلبات', Icons.receipt_long_rounded, _AccountSection.orders),
-      ('تقييماتك', Icons.star_rounded, _AccountSection.reviews),
-      ('ملفك الشخصي', Icons.person_rounded, _AccountSection.profile),
-      ('القسائم والعروض', Icons.card_giftcard_rounded, _AccountSection.offers),
-      ('كاش باك', Icons.savings_rounded, _AccountSection.wallet),
-      ('المفضلة', Icons.favorite_rounded, _AccountSection.favorites),
-      ('عنواني', Icons.location_pin, _AccountSection.address),
-      ('طرق الدفع', Icons.payments_rounded, _AccountSection.payments),
-      ('الفواتير', Icons.receipt_rounded, _AccountSection.invoices),
-      ('مناسباتك الخاصة', Icons.celebration_rounded, _AccountSection.occasions),
-      ('الخدمة الذاتية', Icons.smart_toy_rounded, _AccountSection.support),
-      ('الإشعارات', Icons.notifications_rounded, _AccountSection.notifications),
+      ('كل الطلبات', Icons.receipt_long_rounded, AccountSection.orders),
+      ('تقييماتك', Icons.star_rounded, AccountSection.reviews),
+      ('ملفك الشخصي', Icons.person_rounded, AccountSection.profile),
+      ('القسائم والعروض', Icons.card_giftcard_rounded, AccountSection.offers),
+      ('كاش باك', Icons.savings_rounded, AccountSection.wallet),
+      ('المفضلة', Icons.favorite_rounded, AccountSection.favorites),
+      ('عنواني', Icons.location_pin, AccountSection.address),
+      ('طرق الدفع', Icons.payments_rounded, AccountSection.payments),
+      ('الفواتير', Icons.receipt_rounded, AccountSection.invoices),
+      ('مناسباتك الخاصة', Icons.celebration_rounded, AccountSection.occasions),
+      ('الخدمة الذاتية', Icons.smart_toy_rounded, AccountSection.support),
+      ('الإشعارات', Icons.notifications_rounded, AccountSection.notifications),
     ];
-    final name = email == null ? 'bariq' : email!.split('@').first;
+    final signedIn = email != null && email!.trim().isNotEmpty;
+    final name = signedIn ? email!.split('@').first : 'زائر';
     final appState = AppStateScope.of(context);
     return Align(
       alignment: Alignment.centerRight,
-      child: Container(
-        width: MediaQuery.sizeOf(context).width * .68,
-        constraints: const BoxConstraints(maxWidth: 330),
-        height: MediaQuery.sizeOf(context).height * .88,
-        padding: const EdgeInsets.fromLTRB(12, 18, 12, 18),
-        decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.horizontal(left: Radius.circular(18))),
-        child: SafeArea(
-          child: Directionality(
-            textDirection: appState.textDirection,
-            child: ListView(
-              children: [
-                CircleAvatar(radius: 24, backgroundColor: AppTheme.navy, child: Text(_initial(name), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900))),
-                const SizedBox(height: 8),
-                Text(name, textAlign: TextAlign.center, style: const TextStyle(color: AppTheme.navy, fontWeight: FontWeight.w900)),
-                Text(email ?? 'bariq.gifts@gmail.com', textAlign: TextAlign.center, style: const TextStyle(color: AppTheme.muted, fontSize: 11)),
-                const SizedBox(height: 14),
-                for (final item in items)
-                  _MenuRow(label: item.$1, icon: item.$2, active: selected == item.$3, onTap: () => onSelect(item.$3)),
-                const SizedBox(height: 12),
-                _SocialBar(links: settings.socialLinks),
-                const SizedBox(height: 12),
-                _LocaleCurrencyControls(
-                  language: appState.language,
-                  currency: appState.currency,
-                  onLanguage: (value) => appState.setLanguage(value),
-                  onCurrency: (value) => appState.setCurrency(value),
-                ),
-                const SizedBox(height: 8),
-                FilledButton(
-                  onPressed: email == null ? onLogin : onLogout,
-                  style: FilledButton.styleFrom(backgroundColor: const Color(0xFFFFF0F0), foregroundColor: Colors.red, minimumSize: const Size.fromHeight(48)),
-                  child: Text(email == null ? 'تسجيل الدخول' : 'تسجيل الخروج'),
-                ),
-              ],
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {},
+        child: Container(
+          width: MediaQuery.sizeOf(context).width * .68,
+          constraints: const BoxConstraints(maxWidth: 330),
+          height: MediaQuery.sizeOf(context).height * .88,
+          padding: const EdgeInsets.fromLTRB(12, 18, 12, 18),
+          decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.horizontal(left: Radius.circular(18))),
+          child: SafeArea(
+            child: Directionality(
+              textDirection: appState.textDirection,
+              child: ListView(
+                children: [
+                  CircleAvatar(radius: 24, backgroundColor: AppTheme.navy, child: Text(_initial(name), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900))),
+                  const SizedBox(height: 8),
+                  Text(name, textAlign: TextAlign.center, style: const TextStyle(color: AppTheme.navy, fontWeight: FontWeight.w900)),
+                  if (signedIn)
+                    Text(email!, textAlign: TextAlign.center, style: const TextStyle(color: AppTheme.muted, fontSize: 11)),
+                  const SizedBox(height: 14),
+                  for (final item in items)
+                    _MenuRow(label: item.$1, icon: item.$2, active: selected == item.$3, onTap: () => onSelect(item.$3)),
+                  const SizedBox(height: 12),
+                  _SocialBar(links: settings.socialLinks),
+                  const SizedBox(height: 12),
+                  _LocaleCurrencyControls(
+                    language: appState.language,
+                    currency: appState.currency,
+                    onLanguage: (value) => appState.setLanguage(value),
+                    onCurrency: (value) => appState.setCurrency(value),
+                  ),
+                  const SizedBox(height: 8),
+                  FilledButton(
+                    onPressed: email == null ? onLogin : onLogout,
+                    style: FilledButton.styleFrom(backgroundColor: const Color(0xFFFFF0F0), foregroundColor: Colors.red, minimumSize: const Size.fromHeight(48)),
+                    child: Text(email == null ? 'تسجيل الدخول' : 'تسجيل الخروج'),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -2021,16 +2052,44 @@ class _MenuRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final iconColor = active ? AppTheme.gold : _menuIconColor(icon);
     return InkWell(
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(bottom: 6),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         decoration: BoxDecoration(color: active ? const Color(0xFFEDEFF2) : const Color(0xFFF7F8FA), borderRadius: BorderRadius.circular(6)),
-        child: Row(children: [Icon(icon, color: active ? AppTheme.gold : AppTheme.navy, size: 18), const Spacer(), Text(label, style: TextStyle(color: active ? AppTheme.gold : AppTheme.navy, fontWeight: FontWeight.w800))]),
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  textAlign: TextAlign.right,
+                  style: TextStyle(color: active ? AppTheme.gold : AppTheme.navy, fontWeight: FontWeight.w800),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(icon, color: iconColor, size: 17),
+            ],
+          ),
+        ),
       ),
     );
   }
+}
+
+Color _menuIconColor(IconData icon) {
+  if (icon == Icons.receipt_long_rounded || icon == Icons.receipt_rounded) return AppTheme.info;
+  if (icon == Icons.star_rounded || icon == Icons.favorite_rounded) return const Color(0xFFE2557A);
+  if (icon == Icons.person_rounded) return const Color(0xFF4C3F91);
+  if (icon == Icons.card_giftcard_rounded || icon == Icons.celebration_rounded) return const Color(0xFFC7922E);
+  if (icon == Icons.savings_rounded || icon == Icons.payments_rounded) return AppTheme.success;
+  if (icon == Icons.location_pin) return const Color(0xFFB25E3B);
+  if (icon == Icons.smart_toy_rounded) return const Color(0xFF6C7A99);
+  if (icon == Icons.notifications_rounded) return const Color(0xFFE4B84A);
+  return AppTheme.navy;
 }
 
 class _LocaleCurrencyControls extends StatelessWidget {
@@ -2917,7 +2976,7 @@ class _Panel extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(9)),
-      child: child,
+      child: Directionality(textDirection: TextDirection.rtl, child: child),
     );
   }
 }
@@ -2931,17 +2990,44 @@ class _EmptyPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasAction = action != null;
     return Center(
       child: Container(
-        width: 280,
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 28),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
-        child: Column(children: [
-          const Icon(Icons.receipt_long_outlined, size: 46, color: Color(0xFFC7CFDD)),
-          const SizedBox(height: 8),
-          Text(title, textAlign: TextAlign.center, style: const TextStyle(color: AppTheme.navy, fontWeight: FontWeight.w900)),
-          if (subtitle.isNotEmpty) ...[const SizedBox(height: 5), Text(subtitle, textAlign: TextAlign.center, style: const TextStyle(color: AppTheme.muted, fontSize: 12))],
-          if (action != null) ...[const SizedBox(height: 12), TextButton(onPressed: onAction, child: Text(action!, style: const TextStyle(color: AppTheme.gold, fontWeight: FontWeight.w900)))],
+        width: hasAction ? 260 : 280,
+        padding: EdgeInsets.symmetric(horizontal: 18, vertical: hasAction ? 24 : 28),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppTheme.line),
+          boxShadow: const [BoxShadow(color: Color(0x08000000), blurRadius: 14, offset: Offset(0, 4))],
+        ),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Container(
+            width: hasAction ? 52 : 48,
+            height: hasAction ? 52 : 48,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF3F6FB),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(hasAction ? Icons.lock_person_outlined : Icons.receipt_long_outlined, size: hasAction ? 30 : 28, color: const Color(0xFFB9C3D4)),
+          ),
+          const SizedBox(height: 12),
+          Text(title, textAlign: TextAlign.center, style: const TextStyle(color: AppTheme.navy, fontSize: 13, fontWeight: FontWeight.w900)),
+          if (subtitle.isNotEmpty) ...[const SizedBox(height: 5), Text(subtitle, textAlign: TextAlign.center, style: const TextStyle(color: AppTheme.muted, fontSize: 11))],
+          if (action != null) ...[
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: onAction,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.navy,
+                minimumSize: const Size(148, 40),
+                padding: const EdgeInsets.symmetric(horizontal: 18),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+              ),
+              child: Text(action!, style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w900)),
+            ),
+          ],
         ]),
       ),
     );
@@ -3065,10 +3151,23 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      textDirection: TextDirection.ltr,
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [Text(title, style: const TextStyle(color: AppTheme.navy, fontSize: 17, fontWeight: FontWeight.w900)), const SizedBox(width: 6), Text(icon)],
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Directionality(
+        textDirection: TextDirection.rtl,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(icon),
+            const SizedBox(width: 6),
+            Text(
+              title,
+              textAlign: TextAlign.right,
+              style: const TextStyle(color: AppTheme.navy, fontSize: 17, fontWeight: FontWeight.w900),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

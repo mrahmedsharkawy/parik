@@ -40,13 +40,14 @@ class _SiteGridProductCard extends StatelessWidget {
 
     return InkWell(
       onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ProductScreen(productId: product.id, initial: product))),
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: BorderRadius.circular(7),
       child: Container(
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: const Color(0xFFE1E5EC)),
+          borderRadius: BorderRadius.circular(7),
+          border: Border.all(color: const Color(0xFFE4E8F0)),
+          boxShadow: const [BoxShadow(color: Color(0x08000000), blurRadius: 8, offset: Offset(0, 2))],
         ),
         child: Stack(
           children: [
@@ -68,9 +69,9 @@ class _SiteGridProductCard extends StatelessWidget {
                         top: 0,
                         left: 0,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                          decoration: const BoxDecoration(color: Color(0xFF273241)),
-                          child: Text('خصم $discount%', style: const TextStyle(color: Colors.white, fontSize: 11, height: 1, fontWeight: FontWeight.w900)),
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                          decoration: const BoxDecoration(color: Color(0xFF273241), borderRadius: BorderRadius.only(bottomRight: Radius.circular(4))),
+                          child: Text('خصم $discount%', style: const TextStyle(color: Colors.white, fontSize: 9.5, height: 1, fontWeight: FontWeight.w900)),
                         ),
                       ),
                   ],
@@ -86,10 +87,10 @@ class _SiteGridProductCard extends StatelessWidget {
                       textAlign: TextAlign.right,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: AppTheme.navy, fontSize: 13, height: 1.2, fontWeight: FontWeight.w900),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text('★★★★★', textAlign: TextAlign.right, style: TextStyle(color: AppTheme.gold, fontSize: 13, letterSpacing: 0)),
+                        style: const TextStyle(color: AppTheme.navy, fontSize: 12, height: 1.18, fontWeight: FontWeight.w900),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text('★★★★★', textAlign: TextAlign.right, style: TextStyle(color: AppTheme.gold, fontSize: 11.5, letterSpacing: 0)),
                     const SizedBox(height: 3),
                     if (product.oldPrice > product.price)
                       Align(
@@ -108,7 +109,7 @@ class _SiteGridProductCard extends StatelessWidget {
                                 child: const Text(
                                   '42:04:08',
                                   textDirection: TextDirection.ltr,
-                                  style: TextStyle(color: AppTheme.navy, fontSize: 8.5, height: 1, fontWeight: FontWeight.w900),
+                                  style: TextStyle(color: AppTheme.navy, fontSize: 8, height: 1, fontWeight: FontWeight.w900),
                                 ),
                               ),
                               const SizedBox(width: 3),
@@ -118,7 +119,7 @@ class _SiteGridProductCard extends StatelessWidget {
                                 child: Text(
                                   '↓ خصم إضافي ${(product.oldPrice - product.price).toStringAsFixed(2)} د.إ',
                                   textDirection: TextDirection.rtl,
-                                  style: const TextStyle(color: Colors.white, fontSize: 8.5, height: 1, fontWeight: FontWeight.w900),
+                                  style: const TextStyle(color: Colors.white, fontSize: 8, height: 1, fontWeight: FontWeight.w900),
                                 ),
                               ),
                             ],
@@ -136,15 +137,15 @@ class _SiteGridProductCard extends StatelessWidget {
                             Text(
                               money.format(product.price),
                               textDirection: TextDirection.ltr,
-                              style: const TextStyle(color: AppTheme.gold, fontSize: 13, height: 1, fontWeight: FontWeight.w900),
+                              style: const TextStyle(color: AppTheme.gold, fontSize: 12, height: 1, fontWeight: FontWeight.w900),
                             ),
                             const SizedBox(width: 4),
-                            const Text('🔥', style: TextStyle(fontSize: 11)),
+                            const Text('🔥', style: TextStyle(fontSize: 10)),
                             const SizedBox(width: 4),
                             Text(
                               '+${(sold / 1000).toStringAsFixed(1)}k تم بيع',
                               textDirection: TextDirection.ltr,
-                              style: const TextStyle(color: Color(0xFF667085), fontSize: 10, fontWeight: FontWeight.w700),
+                              style: const TextStyle(color: Color(0xFF667085), fontSize: 9.5, fontWeight: FontWeight.w700),
                             ),
                           ],
                         ),
@@ -156,7 +157,7 @@ class _SiteGridProductCard extends StatelessWidget {
                         money.format(product.oldPrice),
                         textAlign: TextAlign.right,
                         textDirection: TextDirection.ltr,
-                        style: const TextStyle(color: Color(0xFF8B93A1), fontSize: 12, height: 1, decoration: TextDecoration.lineThrough, fontWeight: FontWeight.w700),
+                        style: const TextStyle(color: Color(0xFF8B93A1), fontSize: 10.5, height: 1, decoration: TextDecoration.lineThrough, fontWeight: FontWeight.w700),
                       ),
                     ],
                   ),
@@ -197,11 +198,12 @@ class _CompactTodayProductCard extends StatelessWidget {
 
     return InkWell(
       onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ProductScreen(productId: product.id, initial: product))),
-      borderRadius: BorderRadius.circular(2),
+      borderRadius: BorderRadius.circular(4),
       child: Container(
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: Colors.white,
+          borderRadius: BorderRadius.circular(4),
           border: Border.all(color: const Color(0xFFE0E4EA)),
         ),
         child: Stack(
@@ -221,7 +223,7 @@ class _CompactTodayProductCard extends StatelessWidget {
                       ),
                     ),
                     Positioned(
-                      bottom: 6,
+                      bottom: 3,
                       left: 6,
                       child: _FloatingCartButton(onTap: () => state.addToCart(product), compact: true),
                     ),
@@ -238,17 +240,17 @@ class _CompactTodayProductCard extends StatelessWidget {
                           textAlign: TextAlign.right,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(color: AppTheme.navy, fontSize: 10.5, height: 1.15, fontWeight: FontWeight.w900),
+                          style: const TextStyle(color: AppTheme.navy, fontSize: 10, height: 1.12, fontWeight: FontWeight.w900),
                         ),
                         const Spacer(),
-                        const Text('★★★★★', textAlign: TextAlign.right, style: TextStyle(color: AppTheme.gold, fontSize: 9.5, height: 1, letterSpacing: 0)),
+                        const Text('★★★★★', textAlign: TextAlign.right, style: TextStyle(color: AppTheme.gold, fontSize: 9, height: 1, letterSpacing: 0)),
                         const SizedBox(height: 2),
                         Align(
                           alignment: Alignment.centerRight,
                           child: Text(
                             money.format(product.price),
                             textDirection: TextDirection.ltr,
-                            style: const TextStyle(color: AppTheme.navy, fontSize: 12.5, height: 1, fontWeight: FontWeight.w900),
+                            style: const TextStyle(color: AppTheme.navy, fontSize: 11.5, height: 1, fontWeight: FontWeight.w900),
                           ),
                         ),
                         if (product.oldPrice > product.price) ...[
@@ -258,7 +260,7 @@ class _CompactTodayProductCard extends StatelessWidget {
                             child: Text(
                               money.format(product.oldPrice),
                               textDirection: TextDirection.ltr,
-                              style: const TextStyle(color: Color(0xFF8B93A1), fontSize: 10, height: 1, decoration: TextDecoration.lineThrough, fontWeight: FontWeight.w700),
+                              style: const TextStyle(color: Color(0xFF8B93A1), fontSize: 9.2, height: 1, decoration: TextDecoration.lineThrough, fontWeight: FontWeight.w700),
                             ),
                           ),
                         ],
@@ -340,16 +342,16 @@ class _FloatingCartButton extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Container(
-        width: compact ? 28 : 34,
-        height: compact ? 28 : 34,
+        width: compact ? 26 : 32,
+        height: compact ? 26 : 32,
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(7),
           border: Border.all(color: const Color(0xFFD6DCE6)),
-          boxShadow: const [BoxShadow(color: Color(0x1A000000), blurRadius: 8, offset: Offset(0, 3))],
+          boxShadow: const [BoxShadow(color: Color(0x14000000), blurRadius: 7, offset: Offset(0, 2))],
         ),
-        child: Icon(Icons.shopping_cart_outlined, color: AppTheme.navy, size: compact ? 17 : 20),
+        child: Icon(Icons.shopping_cart_outlined, color: AppTheme.info, size: compact ? 15 : 18),
       ),
     );
   }

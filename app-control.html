@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<title>Bariq App Control</title>
+<style>
+:root{
+  --navy:#14213d;--navy-dark:#0f1b35;--gold:#d4af37;
+  --erp-bg:#f8fafd;--erp-surface:rgba(255,255,255,.92);
+  --erp-primary:#5b6ee1;--erp-primary-strong:#4055c8;
+  --erp-primary-light:#eef0ff;--erp-text:#14213d;--erp-muted:#7b8498;
+  --erp-border:#edf0f5;--erp-border-strong:#dbe2ef;
+  --erp-shadow-soft:0 10px 28px rgba(20,33,61,.055);
+  --ok:#1e8e4e;--danger:#c0392b;--line:var(--erp-border);
+}
+*{box-sizing:border-box}
+html{min-height:100%;background:var(--erp-bg)}
+body{
+  margin:0;min-height:100dvh;overflow-x:hidden;color:var(--erp-text);
+  font-family:"Cairo","Tajawal","IBM Plex Sans Arabic",Inter,"Segoe UI",Tahoma,Arial,sans-serif;
+  background:
+    radial-gradient(circle at 12% 10%,rgba(91,110,225,.14),transparent 28%),
+    radial-gradient(circle at 84% 14%,rgba(109,213,178,.16),transparent 26%),
+    linear-gradient(180deg,#f9fbff 0%,#f7f9fc 52%,#fbfcff 100%);
+}
+button,input,select,textarea{font:inherit}
+button,.btn{cursor:pointer}
+
+.shell{min-height:100dvh}
+.side{
+  position:fixed;top:10px;right:10px;width:250px;height:calc(100dvh - 20px);
+  padding:10px;display:flex;flex-direction:column;gap:6px;overflow:hidden;
+  color:var(--erp-text);background:rgba(255,255,255,.94);
+  border:1px solid rgba(219,226,239,.95);border-radius:24px;
+  box-shadow:0 22px 48px rgba(20,33,61,.11);
+  backdrop-filter:blur(18px);z-index:40;
+}
+.brand{
+  min-height:48px;flex:0 0 48px;display:flex;align-items:center;gap:10px;
+  padding:5px 9px;border:1px solid rgba(219,226,239,.95);
+  border-radius:15px;background:rgba(255,255,255,.8)
+}
+.logo{
+  width:36px;height:36px;border-radius:12px;display:grid;place-items:center;
+  color:#fff;background:linear-gradient(135deg,var(--erp-primary),var(--erp-primary-strong));
+  font-weight:950;font-size:16px
+}
+.brand strong{display:block;color:var(--erp-text);font-size:.87rem;font-weight:950}
+.brand small{display:block;color:var(--erp-muted);font-size:.66rem;margin-top:1px}
+nav{display:flex;flex-direction:column;gap:6px;flex:1;min-height:0}
+nav button,.side-foot a,.side-foot button{
+  flex:1 1 0;min-height:38px;max-height:58px;
+  width:100%;border:1px solid rgba(219,226,239,.95);border-radius:12px;
+  padding:0 11px;display:flex;align-items:center;gap:7px;
+  color:#536078;text-align:right;text-decoration:none;background:rgba(255,255,255,.86);
+  font-size:.77rem;font-weight:850;box-shadow:0 5px 14px rgba(20,33,61,.03);
+  transition:.16s ease;
+}
+nav button:hover,nav button.active,.side-foot a:hover,.side-foot button:hover{
+  color:var(--erp-text);
+  background:linear-gradient(135deg,rgba(206,244,255,.88),rgba(255,249,220,.84));
+  border-color:rgba(212,175,55,.82);transform:translateX(-1px)
+}
+.side-foot{display:grid;grid-template-columns:1fr 1fr;gap:6px;flex:0 0 40px}
+.side-foot a,.side-foot button{min-height:40px;justify-content:center;font-size:.68rem}
+
+.main{
+  margin-right:284px;padding:0 28px 50px;min-width:0;
+}
+.top{
+  position:sticky;top:0;z-index:30;min-height:72px;padding:12px 18px;margin:0 auto 20px;
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  color:var(--erp-text);
+  background:linear-gradient(110deg,#dff7fb 0%,#f3fcfd 32%,#fff 52%,#f3fcf9 70%,#dcf8ee 100%);
+  border:1px solid rgba(6,27,63,.9);border-top:0;border-radius:0 0 22px 22px;
+  box-shadow:var(--erp-shadow-soft);backdrop-filter:blur(18px)
+}
+.top h1{margin:0;color:var(--erp-text);font-size:1.05rem;font-weight:950}
+.top p{margin:4px 0 0;color:var(--erp-muted);font-size:.78rem}
+.actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+
+.btn{
+  min-height:40px;border-radius:13px;padding:0 14px;display:inline-flex;
+  align-items:center;justify-content:center;gap:7px;border:1px solid var(--erp-border);
+  font-size:.8rem;font-weight:850;box-shadow:0 6px 18px rgba(20,33,61,.045)
+}
+.btn.primary{color:#fff;background:linear-gradient(135deg,#152546,#203f73);border-color:transparent}
+.btn.gold{color:#fff;background:linear-gradient(135deg,var(--erp-primary),var(--erp-primary-strong));border-color:transparent}
+.btn.ghost{color:var(--erp-text);background:#fff;border-color:var(--erp-border-strong)}
+.btn.danger{color:#b91c1c;background:#fef2f2;border-color:rgba(239,68,68,.22)}
+
+.status{padding:6px 10px;border-radius:999px;font-size:.7rem;font-weight:900;background:#eef1f7;color:#58657a}
+.status.ok{background:#e5f7ed;color:var(--ok)}.status.warn{background:#fff5dc;color:#9a6b00}
+
+.view{display:none}.view.active{display:block}
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-bottom:18px}
+.kpi,.panel{
+  min-width:0;background:var(--erp-surface);border:1px solid rgba(237,240,245,.95);
+  border-radius:22px;box-shadow:var(--erp-shadow-soft);backdrop-filter:blur(8px)
+}
+.kpi{padding:16px;position:relative;overflow:hidden}
+.kpi::before{content:"";position:absolute;inset:0 0 auto;height:3px;background:linear-gradient(90deg,var(--erp-primary),var(--gold))}
+.kpi b{display:block;color:var(--erp-text);font-size:1.35rem;font-weight:950}
+.kpi span{font-size:.74rem;color:var(--erp-muted)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.panel{padding:20px}.panel.full{grid-column:1/-1}
+.panel h2{margin:0 0 5px;color:var(--erp-text);font-size:1.02rem;font-weight:950}
+.panel .sub{color:var(--erp-muted);font-size:.76rem;margin-bottom:14px}
+.row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.field{display:grid;gap:6px;margin-bottom:11px}.field label{font-size:.76rem;font-weight:850;color:#657087}
+.field input,.field select,.field textarea{
+  width:100%;min-height:44px;border:1px solid var(--erp-border-strong);border-radius:12px;
+  padding:9px 12px;background:#fbfcfe;color:var(--erp-text);outline:none
+}
+.field input:focus,.field select:focus,.field textarea:focus{
+  background:#fff;border-color:rgba(91,110,225,.72);box-shadow:0 0 0 4px rgba(91,110,225,.09)
+}
+.field textarea{min-height:86px;resize:vertical}
+.toggle-list{display:grid;gap:9px}
+.toggle{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  border:1px solid var(--erp-border);border-radius:14px;padding:11px 13px;background:#fbfcfe
+}
+.toggle b{color:var(--erp-text);font-size:.82rem}.toggle small{display:block;color:var(--erp-muted);margin-top:2px}
+.switch{position:relative;width:42px;height:24px;flex:0 0 42px}.switch input{display:none}
+.switch i{position:absolute;inset:0;border-radius:99px;background:#cfd5df;cursor:pointer;transition:.2s}
+.switch i:after{content:"";position:absolute;width:18px;height:18px;top:3px;right:3px;background:#fff;border-radius:50%;box-shadow:0 1px 4px #0002;transition:.2s}
+.switch input:checked+i{background:var(--erp-primary)}.switch input:checked+i:after{transform:translateX(-18px)}
+.table-wrap{overflow:auto;border:1px solid var(--erp-border);border-radius:14px;background:#fff}
+.table{width:100%;border-collapse:collapse;min-width:720px;font-size:.78rem}
+.table th,.table td{padding:10px 12px;border-bottom:1px solid var(--erp-border);text-align:right}
+.table th{background:#f8fafd;color:var(--erp-text);font-weight:900}
+.health{display:grid;gap:8px}.health-row{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--erp-border);padding:9px 0}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-left:7px;background:#bfc7d4}.dot.ok{background:#24a66a}.dot.warn{background:#e0a21b}
+.order-list{display:grid;gap:8px}.order-item{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid var(--erp-border);border-radius:13px;padding:10px;background:#fff}
+.drag{color:#9ca6b7}.pill{border-radius:999px;padding:3px 8px;font-size:.68rem;background:var(--erp-primary-light);color:var(--erp-primary-strong)}
+.note{background:#fff9e9;border:1px solid #f0dfaa;color:#735d17;border-radius:13px;padding:11px 12px;font-size:.76rem;line-height:1.7}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--navy);color:#fff;padding:11px 18px;border-radius:10px;opacity:0;pointer-events:none;transition:.25s;z-index:10000}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.gate{position:fixed;inset:0;z-index:9999;background:rgba(248,250,253,.97);backdrop-filter:blur(16px);display:flex;align-items:center;justify-content:center;padding:20px}
+.gate-card{width:min(420px,100%);background:#fff;border:1px solid var(--erp-border);border-radius:24px;padding:28px;box-shadow:0 22px 60px rgba(20,33,61,.14);text-align:center}
+.gate-card h2{margin:7px 0;color:var(--erp-text)}.gate-card p{color:var(--erp-muted);font-size:.8rem}
+.gate-card label{display:grid;gap:6px;text-align:right;color:var(--erp-muted);font-size:.76rem;font-weight:850;margin-bottom:11px}
+.gate-card input{min-height:46px;border:1px solid var(--erp-border);border-radius:14px;padding:0 12px;outline:none}
+
+@media(max-width:1100px){
+  .side{position:static;width:auto;height:auto;margin:10px;overflow:auto}
+  .brand{min-height:48px}.side nav{flex-direction:row;overflow:auto}.side nav button{flex:0 0 auto;min-width:125px;height:42px}
+  .side-foot{display:none}.main{margin-right:0;padding:0 14px 40px}.kpis{grid-template-columns:repeat(3,1fr)}
+}
+@media(max-width:760px){
+  .grid{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}
+  .top{align-items:flex-start;flex-direction:column}.row{grid-template-columns:1fr}
+}
+</style>
+</head><body>
+<div id="adminGate" class="gate"><div class="gate-card"><div class="logo" style="margin:auto">B</div><h2>تسجيل دخول App Control</h2><p style="color:var(--muted)">استخدم نفس حساب الأدمن الحالي.</p><label>البريد الإلكتروني<input id="loginEmail" type="email"></label><label>كلمة المرور<input id="loginPassword" type="password"></label><button id="loginBtn" class="btn primary" style="width:100%">دخول</button><div id="loginMsg" style="min-height:22px;color:#b91c1c;margin-top:8px"></div></div></div>
+<div class="shell"><aside class="side"><div class="brand"><div class="logo">B</div><div><strong>Bariq App</strong><small>App Control Center</small></div></div><nav id="nav"><button class="active" data-view="overview">⌂ نظرة عامة</button><button data-view="release">🚀 الإصدار والتحديث</button><button data-view="features">⚙ خصائص التطبيق</button><button data-view="home">▦ الصفحة الرئيسية</button><button data-view="push">🔔 الإشعارات</button><button data-view="health">♡ App Health</button></nav><div class="side-foot"><a href="/admin.html">← الرجوع للوحة الأدمن</a><button id="logoutBtn">تسجيل الخروج</button></div></aside>
+<main class="main"><header class="top"><div><h1>Bariq App Control</h1><p>تحكم في التطبيق بدون تكرار إدارة منتجات وطلبات الموقع.</p></div><div class="actions"><span id="saveState" class="status">غير محفوظ</span><button id="reloadBtn" class="btn ghost">تحديث البيانات</button><button id="saveBtn" class="btn gold">حفظ إعدادات التطبيق</button></div></header>
+<section id="view-overview" class="view active"><div class="kpis"><div class="kpi"><span>المنتجات النشطة</span><b id="kProducts">—</b></div><div class="kpi"><span>إجمالي العملاء</span><b id="kCustomers">—</b></div><div class="kpi"><span>الطلبات</span><b id="kOrders">—</b></div><div class="kpi"><span>اشتراكات Push</span><b id="kPush">—</b></div><div class="kpi"><span>إشعارات النظام</span><b id="kNotifications">—</b></div></div><div class="grid"><section class="panel"><h2>حالة التطبيق</h2><div class="sub">حالة الاتصال والنسخة الحالية.</div><div class="health"><div class="health-row"><span><i class="dot ok"></i>Supabase</span><b>متصل</b></div><div class="health-row"><span><i id="pushDot" class="dot"></i>Push Backend</span><b id="pushHealth">جاري الفحص</b></div><div class="health-row"><span><i class="dot ok"></i>وضع التطبيق</span><b id="appModeLabel">Production</b></div><div class="health-row"><span><i class="dot ok"></i>الإصدار</span><b id="currentVersionLabel">—</b></div></div></section><section class="panel"><h2>تنبيه سريع داخل التطبيق</h2><div class="field"><label>العنوان</label><input id="announcementTitle"></div><div class="field"><label>النص</label><textarea id="announcementBody"></textarea></div><label class="toggle"><div><b>تفعيل التنبيه</b><small>إظهار الرسالة للمستخدمين.</small></div><span class="switch"><input id="announcementEnabled" type="checkbox"><i></i></span></label></section></div></section>
+<section id="view-release" class="view"><div class="grid"><section class="panel"><h2>الإصدار الحالي</h2><div class="row"><div class="field"><label>Latest Version</label><input id="latestVersion"></div><div class="field"><label>Minimum Version</label><input id="minVersion"></div></div><div class="row"><div class="field"><label>Android Build</label><input id="androidBuild" type="number"></div><div class="field"><label>iOS Build</label><input id="iosBuild" type="number"></div></div><div class="field"><label>رسالة التحديث</label><textarea id="updateMessage"></textarea></div><label class="toggle"><div><b>تحديث إجباري</b><small>منع الإصدارات القديمة.</small></div><span class="switch"><input id="forceUpdate" type="checkbox"><i></i></span></label></section><section class="panel"><h2>روابط المتاجر</h2><div class="field"><label>Google Play</label><input id="playStoreUrl"></div><div class="field"><label>App Store</label><input id="appStoreUrl"></div><div class="field"><label>Deep Link Base</label><input id="deepLinkBase"></div><label class="toggle"><div><b>وضع الصيانة</b><small>عرض شاشة صيانة بدل المتجر.</small></div><span class="switch"><input id="maintenanceMode" type="checkbox"><i></i></span></label><div class="field"><label>رسالة الصيانة</label><textarea id="maintenanceMessage"></textarea></div></section></div></section>
+<section id="view-features" class="view"><div class="grid"><section class="panel full"><h2>Feature Flags</h2><div class="sub">إظهار أو إخفاء خصائص التطبيق بدون تكرار بيانات الموقع.</div><div id="featureToggles" class="toggle-list"></div></section></div></section>
+<section id="view-home" class="view"><div class="grid"><section class="panel"><h2>ترتيب أقسام Home</h2><div id="homeSections" class="order-list"></div></section><section class="panel"><h2>إعدادات العرض</h2><div class="row"><div class="field"><label>Home Page Size</label><input id="homePageSize" type="number"></div><div class="field"><label>Search Page Size</label><input id="searchPageSize" type="number"></div></div><label class="toggle"><div><b>Preload ذكي</b><small>تحميل الصور التالية بحكمة.</small></div><span class="switch"><input id="smartPreload" type="checkbox"><i></i></span></label><label class="toggle"><div><b>Banners التطبيق</b><small>تفعيل البنرات الخاصة بالتطبيق.</small></div><span class="switch"><input id="appBannersEnabled" type="checkbox"><i></i></span></label></section></div></section>
+<section id="view-push" class="view"><div class="grid"><section class="panel"><h2>حالة الإشعارات</h2><div class="health"><div class="health-row"><span>Web Push subscriptions</span><b id="pushCount">—</b></div><div class="health-row"><span>Notifications</span><b id="notificationCount">—</b></div><div class="health-row"><span>Abandoned carts pending</span><b id="abandonedCount">—</b></div></div><div class="note" style="margin-top:12px">FCM/APNs Native يحتاج Device Tokens للموبايل؛ Web Push الحالي مش بديل عنه.</div></section><section class="panel"><h2>خيارات Push</h2><label class="toggle"><div><b>Notification Inbox</b></div><span class="switch"><input id="notificationInbox" type="checkbox"><i></i></span></label><label class="toggle"><div><b>Order Updates</b></div><span class="switch"><input id="orderPush" type="checkbox"><i></i></span></label><label class="toggle"><div><b>Offer Push</b></div><span class="switch"><input id="offerPush" type="checkbox"><i></i></span></label></section><section class="panel full"><h2>آخر الإشعارات</h2><div class="table-wrap"><table class="table"><thead><tr><th>العنوان</th><th>النوع</th><th>الحالة</th><th>التاريخ</th></tr></thead><tbody id="notificationsTable"></tbody></table></div></section></div></section>
+<section id="view-health" class="view"><div class="grid"><section class="panel"><h2>Backend & Data</h2><div id="healthChecks" class="health"></div></section><section class="panel"><h2>Production Checklist</h2><div class="toggle-list"><div class="toggle"><div><b>RLS</b><small>ممنوع Service Role داخل التطبيق.</small></div><span class="pill">إجباري</span></div><div class="toggle"><div><b>FCM / APNs</b><small>Native Push منفصل عن Web Push.</small></div><span class="pill">خارجي</span></div><div class="toggle"><div><b>Deep Links</b><small>Product / Order routes.</small></div><span class="pill">Flutter</span></div></div></section></div></section>
+</main></div><div id="toast" class="toast"></div><script src="/java/supabase.js"></script><script>
+(function(){const $=id=>document.getElementById(id);const featureDefs=[['favorites','المفضلة','إظهار المفضلة ومزامنتها'],['cart','السلة','إظهار السلة داخل التطبيق'],['reviews','التقييمات','عرض وإرسال التقييمات'],['cashback','Cashback','إظهار رصيد الكاش باك'],['offers','العروض','عرض العروض والخصومات'],['image_search','البحث بالصورة','يتفعل عند جاهزية Backend'],['product_preview','جرّب المنتج','معاينة المنتج داخل مكان العميل'],['video','فيديو المنتجات','تشغيل فيديو المنتج'],['occasions','المناسبات','مناسبات العميل والتذكير'],['whatsapp','واتساب','الطلب والتخصيص عبر واتساب']];const homeDefs=[['banners','البنرات'],['flash_offers','عروض خاطفة'],['categories','الفئات'],['daily_picks','اختيارات اليوم'],['featured','منتجات مميزة'],['new_products','أحدث المنتجات'],['recommended','مقترحة لك']];let dirty=false;function toast(t){const x=$('toast');x.textContent=t;x.classList.add('show');setTimeout(()=>x.classList.remove('show'),2200)}function saved(v){dirty=!v;$('saveState').textContent=v?'تم الحفظ':'غير محفوظ';$('saveState').className='status '+(v?'ok':'warn')}document.addEventListener('input',()=>saved(false),true);document.addEventListener('change',()=>saved(false),true);document.querySelectorAll('#nav button').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('#nav button').forEach(x=>x.classList.toggle('active',x===btn));document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));$('view-'+btn.dataset.view).classList.add('active')});$('featureToggles').innerHTML=featureDefs.map(([k,n,d])=>`<label class="toggle"><div><b>${n}</b><small>${d}</small></div><span class="switch"><input data-feature="${k}" type="checkbox"><i></i></span></label>`).join('');$('homeSections').innerHTML=homeDefs.map(([k,n],i)=>`<div class="order-item"><b style="flex:1;color:var(--navy)">${n}</b><input data-home-order="${k}" type="number" min="1" max="20" value="${i+1}" style="width:65px;border:1px solid var(--line);border-radius:8px;padding:6px"><span class="switch"><input data-home-enabled="${k}" type="checkbox" checked><i></i></span></div>`).join('');
+function defaults(){return{latest_version:'0.1.0',minimum_version:'0.1.0',android_build:1,ios_build:1,force_update:false,update_message:'يتوفر إصدار جديد من تطبيق بريق.',play_store_url:'',app_store_url:'',deep_link_base:'https://bariqgifts.com',maintenance_mode:false,maintenance_message:'نقوم حاليًا بتحسين التطبيق، سنعود بعد قليل.',announcement:{enabled:false,title:'',body:''},features:Object.fromEntries(featureDefs.map(x=>[x[0],true])),home:{page_size:24,search_page_size:24,smart_preload:true,app_banners_enabled:true,sections:homeDefs.map((x,i)=>({key:x[0],enabled:true,order:i+1}))},push:{notification_inbox:true,order_updates:true,offers:true}}}
+function setForm(c){c={...defaults(),...(c||{})};c.features={...defaults().features,...(c.features||{})};c.home={...defaults().home,...(c.home||{})};c.push={...defaults().push,...(c.push||{})};c.announcement={...defaults().announcement,...(c.announcement||{})};$('latestVersion').value=c.latest_version;$('minVersion').value=c.minimum_version;$('androidBuild').value=c.android_build;$('iosBuild').value=c.ios_build;$('forceUpdate').checked=!!c.force_update;$('updateMessage').value=c.update_message||'';$('playStoreUrl').value=c.play_store_url||'';$('appStoreUrl').value=c.app_store_url||'';$('deepLinkBase').value=c.deep_link_base||'';$('maintenanceMode').checked=!!c.maintenance_mode;$('maintenanceMessage').value=c.maintenance_message||'';$('announcementEnabled').checked=!!c.announcement.enabled;$('announcementTitle').value=c.announcement.title||'';$('announcementBody').value=c.announcement.body||'';$('homePageSize').value=c.home.page_size;$('searchPageSize').value=c.home.search_page_size;$('smartPreload').checked=!!c.home.smart_preload;$('appBannersEnabled').checked=!!c.home.app_banners_enabled;$('notificationInbox').checked=!!c.push.notification_inbox;$('orderPush').checked=!!c.push.order_updates;$('offerPush').checked=!!c.push.offers;document.querySelectorAll('[data-feature]').forEach(el=>el.checked=c.features[el.dataset.feature]!==false);const map=Object.fromEntries((c.home.sections||[]).map(x=>[x.key,x]));document.querySelectorAll('[data-home-order]').forEach(el=>el.value=map[el.dataset.homeOrder]?.order||el.value);document.querySelectorAll('[data-home-enabled]').forEach(el=>el.checked=map[el.dataset.homeEnabled]?.enabled!==false);$('currentVersionLabel').textContent=c.latest_version||'—';$('appModeLabel').textContent=c.maintenance_mode?'Maintenance':'Production';saved(true)}
+function collect(){const c=defaults();c.latest_version=$('latestVersion').value.trim();c.minimum_version=$('minVersion').value.trim();c.android_build=Number($('androidBuild').value||1);c.ios_build=Number($('iosBuild').value||1);c.force_update=$('forceUpdate').checked;c.update_message=$('updateMessage').value.trim();c.play_store_url=$('playStoreUrl').value.trim();c.app_store_url=$('appStoreUrl').value.trim();c.deep_link_base=$('deepLinkBase').value.trim();c.maintenance_mode=$('maintenanceMode').checked;c.maintenance_message=$('maintenanceMessage').value.trim();c.announcement={enabled:$('announcementEnabled').checked,title:$('announcementTitle').value.trim(),body:$('announcementBody').value.trim()};document.querySelectorAll('[data-feature]').forEach(el=>c.features[el.dataset.feature]=el.checked);c.home.page_size=Number($('homePageSize').value||24);c.home.search_page_size=Number($('searchPageSize').value||24);c.home.smart_preload=$('smartPreload').checked;c.home.app_banners_enabled=$('appBannersEnabled').checked;c.home.sections=homeDefs.map(([k])=>({key:k,enabled:document.querySelector(`[data-home-enabled="${k}"]`).checked,order:Number(document.querySelector(`[data-home-order="${k}"]`).value||99)}));c.push={notification_inbox:$('notificationInbox').checked,order_updates:$('orderPush').checked,offers:$('offerPush').checked};return c}
+function hasSession(){try{if(typeof restoreAdminSession==='function')restoreAdminSession();return sessionStorage.getItem('admin_ok')==='1'&&!!(sessionStorage.getItem('admin_token')||sessionStorage.getItem('admin_refresh_token'))}catch(e){return false}}async function verify(){if(!hasSession())return false;try{const rows=await sbFetch('admins?select=id,active&active=eq.true&limit=1',{requireAuth:true});return Array.isArray(rows)}catch(e){return false}}async function login(){const email=$('loginEmail').value.trim(),pass=$('loginPassword').value;if(!email||!pass){$('loginMsg').textContent='أدخل البريد وكلمة المرور.';return}try{const auth=await Supabase.Auth.signIn(email,pass);sessionStorage.setItem('admin_ok','1');sessionStorage.setItem('admin_token',auth.access_token||'');sessionStorage.setItem('admin_refresh_token',auth.refresh_token||'');const rows=await sbFetch('admins?email=eq.'+encodeURIComponent(email)+'&active=eq.true&limit=1',{requireAuth:true});if(!Array.isArray(rows)||!rows[0])throw new Error('الحساب غير مصرح له.');$('adminGate').style.display='none';await loadAll()}catch(e){$('loginMsg').textContent=e.message||'فشل تسجيل الدخول'}}$('loginBtn').onclick=login;$('loginPassword').addEventListener('keydown',e=>{if(e.key==='Enter')login()});$('logoutBtn').onclick=()=>{try{if(typeof clearAdminSession==='function')clearAdminSession()}catch(e){}location.reload()};
+async function loadConfig(){try{const rows=await sbFetch('app_settings?select=config&key=eq.main&limit=1',{requireAuth:true});setForm(Array.isArray(rows)&&rows[0]?rows[0].config:null)}catch(e){setForm(null);toast('طبّق ملف SQL المرفق أولاً')}}async function saveConfig(){const c=collect();try{await sbFetch('app_settings?on_conflict=key',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=representation'},body:JSON.stringify({key:'main',config:c,updated_at:new Date().toISOString()}),requireAuth:true});setForm(c);toast('تم حفظ إعدادات التطبيق')}catch(e){toast('تعذر الحفظ: '+(e.message||e))}}$('saveBtn').onclick=saveConfig;$('reloadBtn').onclick=loadAll;async function count(path){try{const r=await sbFetch(path,{requireAuth:true});return Array.isArray(r)?r.length:0}catch(e){return null}}function esc(v){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}async function loadMetrics(){const [products,customers,orders,push,notes,abandoned,recent]=await Promise.all([count('products?select=id&active=eq.true'),count('customers?select=id'),count('orders?select=id'),count('push_subscriptions?select=id'),count('notifications?select=id'),count('abandoned_carts?select=id&status=eq.pending'),sbFetch('notifications?select=title,type,status,created_at&order=created_at.desc&limit=15',{requireAuth:true}).catch(()=>[])]);$('kProducts').textContent=products??'—';$('kCustomers').textContent=customers??'—';$('kOrders').textContent=orders??'—';$('kPush').textContent=push??'—';$('kNotifications').textContent=notes??'—';$('pushCount').textContent=push??'—';$('notificationCount').textContent=notes??'—';$('abandonedCount').textContent=abandoned??'—';$('pushDot').className='dot '+(push!==null?'ok':'warn');$('pushHealth').textContent=push!==null?'Backend موجود':'تعذر القراءة';$('notificationsTable').innerHTML=(recent||[]).length?(recent||[]).map(n=>`<tr><td>${esc(n.title||'—')}</td><td>${esc(n.type||'—')}</td><td>${esc(n.status||'—')}</td><td>${n.created_at?new Date(n.created_at).toLocaleString('ar-AE'):'—'}</td></tr>`).join(''):'<tr><td colspan="4">لا توجد إشعارات</td></tr>';$('healthChecks').innerHTML=[['Products',products],['Customers',customers],['Orders',orders],['Push',push],['Notifications',notes]].map(([n,v])=>`<div class="health-row"><span><i class="dot ${v!==null?'ok':'warn'}"></i>${n}</span><b>${v===null?'تعذر القراءة':v}</b></div>`).join('')}async function loadAll(){await Promise.all([loadConfig(),loadMetrics()])}(async()=>{if(await verify()){$('adminGate').style.display='none';await loadAll()}else $('adminGate').style.display='flex'})()})();
+</script></body></html>

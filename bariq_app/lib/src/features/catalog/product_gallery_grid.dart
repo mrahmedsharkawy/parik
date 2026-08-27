@@ -10,6 +10,25 @@ class ProductGalleryGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    if (width >= 700) {
+      return Directionality(
+        textDirection: TextDirection.rtl,
+        child: GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: products.length,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            crossAxisSpacing: 8,
+            mainAxisSpacing: 8,
+            childAspectRatio: .70,
+          ),
+          itemBuilder: (context, index) => BariqProductCard(product: products[index]),
+        ),
+      );
+    }
+
     final right = <Product>[];
     final left = <Product>[];
     for (var i = 0; i < products.length; i++) {

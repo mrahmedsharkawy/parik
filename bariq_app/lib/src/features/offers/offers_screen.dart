@@ -220,7 +220,7 @@ class _FlashHeroState extends State<_FlashHero> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _AnimatedFire(active: !_firePulse, size: 34),
+              _AnimatedFire(active: !_firePulse, size: 28),
               const SizedBox(width: 10),
               const Text.rich(
                 TextSpan(
@@ -231,10 +231,10 @@ class _FlashHeroState extends State<_FlashHero> {
                   ],
                 ),
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white, fontSize: 23, fontWeight: FontWeight.w900, height: 1.1),
+                style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900, height: 1.1),
               ),
               const SizedBox(width: 10),
-              _AnimatedFire(active: _firePulse, size: 34),
+              _AnimatedFire(active: _firePulse, size: 28),
             ],
           ),
           const SizedBox(height: 18),
@@ -244,9 +244,9 @@ class _FlashHeroState extends State<_FlashHero> {
               const Text('على منتجات مختارة', style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w800)),
               const SizedBox(width: 16),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 31, vertical: 13),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
                 decoration: BoxDecoration(color: AppTheme.gold, borderRadius: BorderRadius.circular(999)),
-                child: Text('حتى ${widget.maxDiscount}% خصم', style: const TextStyle(color: AppTheme.navy, fontSize: 18, fontWeight: FontWeight.w900)),
+                child: Text('حتى ${widget.maxDiscount}% خصم', style: const TextStyle(color: AppTheme.navy, fontSize: 15.5, fontWeight: FontWeight.w900)),
               ),
             ],
           ),
@@ -274,7 +274,7 @@ class _FlashHeroState extends State<_FlashHero> {
           Text.rich(
             TextSpan(
               children: [
-                TextSpan(text: '${widget.count} ', style: const TextStyle(color: AppTheme.gold, fontSize: 16, fontWeight: FontWeight.w900)),
+                TextSpan(text: '${widget.count} ', style: const TextStyle(color: AppTheme.gold, fontSize: 14, fontWeight: FontWeight.w900)),
                 const TextSpan(text: 'منتج عليهم عرض الآن'),
               ],
             ),
@@ -321,8 +321,8 @@ class _TimerSeparator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Padding(
-      padding: EdgeInsets.only(bottom: 18, left: 12, right: 12),
-      child: Text(':', style: TextStyle(color: AppTheme.gold, fontSize: 30, fontWeight: FontWeight.w900)),
+      padding: EdgeInsets.only(bottom: 16, left: 10, right: 10),
+      child: Text(':', style: TextStyle(color: AppTheme.gold, fontSize: 24, fontWeight: FontWeight.w900)),
     );
   }
 }
@@ -338,11 +338,11 @@ class _TimerUnit extends StatelessWidget {
     return Column(
       children: [
         Container(
-          width: 57,
-          height: 57,
+          width: 51,
+          height: 51,
           alignment: Alignment.center,
           decoration: BoxDecoration(color: Colors.white.withValues(alpha: .13), borderRadius: BorderRadius.circular(8), border: Border.all(color: AppTheme.gold.withValues(alpha: .58))),
-          child: Text(value, style: const TextStyle(color: AppTheme.gold, fontSize: 24, fontWeight: FontWeight.w900)),
+          child: Text(value, style: const TextStyle(color: AppTheme.gold, fontSize: 20, fontWeight: FontWeight.w900)),
         ),
         const SizedBox(height: 5),
         Text(label, style: const TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.w800)),

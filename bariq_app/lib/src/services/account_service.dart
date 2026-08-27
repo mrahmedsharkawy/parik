@@ -14,18 +14,68 @@ class AccountService {
   User? get user => _client.auth.currentUser;
   Future<AuthResponse> signIn(String email, String password) => _client.auth.signInWithPassword(email: email.trim(), password: password);
   Future<AuthResponse> signUp(String email, String password) => _client.auth.signUp(email: email.trim(), password: password);
+  Future<bool> signInWithGoogle() => _client.auth.signInWithOAuth(OAuthProvider.google);
+  Future<void> resetPassword(String email) => _client.auth.resetPasswordForEmail(email.trim());
   Future<void> signOut() => _client.auth.signOut();
   Future<UserResponse> updatePassword(String password) => _client.auth.updateUser(UserAttributes(password: password));
 
-  Future<List<Map<String, dynamic>>> fetchOrders() async {
-    final email = user?.email?.trim();
-    if (email == null || email.isEmpty) return const [];
-    final rows = await _client
-        .from('orders')
-        .select('id,order_number,created_at,updated_at,total,status,payment_method,payment_status,shipping_cost,notes,items,cashback,cashback_status,cashback_expires_at,customer_name,customer_phone,customer_email')
-        .eq('customer_email', email)
-        .order('created_at', ascending: false);
-    return List<Map<String, dynamic>>.from(rows);
+Future<List<Map<String, dynamic>>> fetchOrders() async {
+  final email = user?.email?.trim();
+
+  if (email == null || email.isEmpty) return const [];
+
+  final rows = await _client
+      .from('orders')
+      .select(
+        'id,order_number,created_at,total,status,payment_method,payment_status,shipping_cost,notes,items,cashback,cashback_status,cashback_expires_at,customer_name,customer_phone,customer_email',
+      )
+      .eq('customer_email', email)
+      .order('created_at', ascending: false);
+
+  return List<Map<String, dynamic>>.from(rows);
+}
+
+  Future<CustomerCashbackCoupon?> fetchAvailableCashbackCoupon({
+    List<Map<String, dynamic>>? orders,
+  }) async {
+    final source = orders ?? await fetchOrders();
+    final codeEntries = <_CustomerCashbackEntry>[];
+    final availableEntries = <_CustomerCashbackEntry>[];
+    final now = DateTime.now();
+
+    for (final order in source) {
+      final orderNumber = '${order['order_number'] ?? order['id'] ?? ''}'.trim();
+      if (orderNumber.isEmpty) continue;
+      final cleanOrderNumber = orderNumber.replaceFirst('#', '');
+      final amount = _cashbackAmountForOrder(order);
+      if (amount > 0) {
+        codeEntries.add(_CustomerCashbackEntry(orderNumber: cleanOrderNumber, amount: amount));
+      }
+
+      final orderStatus = '${order['status'] ?? ''}'.trim().toLowerCase();
+      final cashbackStatus = '${order['cashback_status'] ?? order['cashbackStatus'] ?? ''}'.trim().toLowerCase();
+      if (orderStatus != 'delivered') continue;
+      if (cashbackStatus == 'claimed') continue;
+
+      final expiresAt = _cashbackExpiryForOrder(order);
+      if (expiresAt != null && !expiresAt.isAfter(now)) continue;
+
+      if (amount <= 0) continue;
+
+      availableEntries.add(_CustomerCashbackEntry(orderNumber: cleanOrderNumber, amount: amount));
+    }
+
+    if (availableEntries.isEmpty) return null;
+
+    final balance = availableEntries.fold<double>(0, (sum, entry) => sum + entry.amount);
+    if (balance <= 0) return null;
+    final couponSeed = codeEntries.isEmpty ? availableEntries : codeEntries;
+
+    return CustomerCashbackCoupon(
+      code: _cashbackCouponCodeForCustomer(couponSeed, balance),
+      balance: balance,
+      orderNumbers: availableEntries.map((entry) => entry.orderNumber).toList(growable: false),
+    );
   }
 
   Future<List<Map<String, dynamic>>> fetchInvoices({List<Map<String, dynamic>>? orders}) async {
@@ -225,7 +275,7 @@ class AccountService {
     try {
       final rows = await _client
           .from('customers')
-          .select('id,full_name,name,email,phone,country,city,address,active,created_at')
+          .select('id,full_name,email,phone,country,city,address,active,created_at')
           .eq('email', email)
           .limit(1);
       if (rows is List && rows.isNotEmpty) customer = Map<String, dynamic>.from(rows.first as Map);
@@ -234,7 +284,7 @@ class AccountService {
         if (phone.isNotEmpty) {
           final byPhone = await _client
               .from('customers')
-              .select('id,full_name,name,email,phone,country,city,address,active,created_at')
+              .select('id,full_name,email,phone,country,city,address,active,created_at')
               .eq('phone', phone)
               .limit(1);
           if (byPhone is List && byPhone.isNotEmpty) customer = Map<String, dynamic>.from(byPhone.first as Map);
@@ -266,7 +316,6 @@ class AccountService {
 
     final payload = <String, dynamic>{
       'full_name': profile.name.trim(),
-      'name': profile.name.trim(),
       'email': email,
       'phone': phone,
       'country': profile.country.trim().isEmpty ? _uae : profile.country.trim(),
@@ -315,7 +364,6 @@ class AccountService {
     };
     if (saved.name.trim().isNotEmpty) {
       payload['full_name'] = saved.name.trim();
-      payload['name'] = saved.name.trim();
     }
     if (saved.phone.trim().isNotEmpty) payload['phone'] = normalizeUaePhone(saved.phone);
 
@@ -874,4 +922,61 @@ class CustomerProfile {
     }
     return fallback;
   }
+}
+
+class CustomerCashbackCoupon {
+  const CustomerCashbackCoupon({
+    required this.code,
+    required this.balance,
+    required this.orderNumbers,
+  });
+
+  final String code;
+  final double balance;
+  final List<String> orderNumbers;
+}
+
+class _CustomerCashbackEntry {
+  const _CustomerCashbackEntry({
+    required this.orderNumber,
+    required this.amount,
+  });
+
+  final String orderNumber;
+  final double amount;
+}
+
+double _cashbackAmountForOrder(Map<String, dynamic> order) {
+  final raw = order['cashback'];
+  if (raw is num) return raw.toDouble();
+  return double.tryParse('$raw') ?? 0;
+}
+
+DateTime? _cashbackExpiryForOrder(Map<String, dynamic> order) {
+  final explicitRaw = '${order['cashback_expires_at'] ?? order['cashbackAvailableAt'] ?? order['cashbackExpiresAt'] ?? ''}'.trim();
+  final explicit = DateTime.tryParse(explicitRaw);
+  if (explicit != null) return explicit;
+
+  final baseRaw = '${order['updated_at'] ?? order['updatedAt'] ?? order['created_at'] ?? order['date'] ?? ''}'.trim();
+  final base = DateTime.tryParse(baseRaw);
+  return (base ?? DateTime.now()).add(const Duration(days: 30));
+}
+
+String _cashbackCouponCodeForCustomer(
+  List<_CustomerCashbackEntry> entries,
+  double balance,
+) {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  final seedText = entries.map((entry) => entry.orderNumber).join('|') + balance.toStringAsFixed(2);
+  var seed = 0;
+  for (final unit in seedText.codeUnits) {
+    seed = (seed * 31 + unit) & 0x7fffffff;
+  }
+
+  var code = 'CB-';
+  for (var i = 0; i < 6; i++) {
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    code += chars[seed % chars.length];
+  }
+  return code;
 }

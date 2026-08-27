@@ -1,16 +1,25 @@
 import 'dart:async';
+import 'dart:math' as math;
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:image/image.dart' as image_lib;
+import 'package:image_picker/image_picker.dart';
 
 import '../../models/product.dart';
 import '../../services/supabase_catalog_service.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/app_strings.dart';
+import '../shared/bariq_bottom_nav.dart';
+import '../shell/app_shell.dart';
 import 'product_gallery_grid.dart';
 
 class SearchScreen extends StatefulWidget {
-  const SearchScreen({super.key});
+  const SearchScreen({super.key, this.startWithImageSearch = false});
+
+  final bool startWithImageSearch;
 
   @override
   State<SearchScreen> createState() => _SearchScreenState();
@@ -23,6 +32,7 @@ class _SearchScreenState extends State<SearchScreen>
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
   final _service = SupabaseCatalogService();
+  final _picker = ImagePicker();
 
   final List<Product> _items = [];
 
@@ -32,6 +42,7 @@ class _SearchScreenState extends State<SearchScreen>
   bool _hasMore = false;
   String _query = '';
   Object? _error;
+  bool _imageMode = false;
 
   @override
   bool get wantKeepAlive => true;
@@ -40,6 +51,9 @@ class _SearchScreenState extends State<SearchScreen>
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    if (widget.startWithImageSearch) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _startImageSearch());
+    }
   }
 
   @override
@@ -159,12 +173,58 @@ class _SearchScreenState extends State<SearchScreen>
     }
   }
 
-  void _imageSearchInfo() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(AppStrings.imageSearchUnavailable),
-      ),
-    );
+  Future<void> _startImageSearch() async {
+    try {
+      final file = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 72,
+        maxWidth: 720,
+      );
+      if (file == null) return;
+
+      final generation = ++_requestGeneration;
+      setState(() {
+        _imageMode = true;
+        _query = 'image';
+        _items.clear();
+        _loading = true;
+        _hasMore = false;
+        _error = null;
+      });
+
+      final pickedBytes = await file.readAsBytes();
+      final target = _imageSignature(pickedBytes);
+      if (target == null) throw Exception(AppStrings.imageSearchUnavailable);
+
+      final products = await _service.fetchProducts(limit: 360);
+      final scored = <({Product product, double score})>[];
+
+      for (final product in products) {
+        final imageUrl = product.images.isEmpty ? '' : product.images.first;
+        if (imageUrl.isEmpty) continue;
+        final signature = await _networkImageSignature(imageUrl);
+        if (signature == null) continue;
+        scored.add((product: product, score: _signatureDiff(target, signature)));
+      }
+
+      scored.sort((a, b) => a.score.compareTo(b.score));
+      if (!mounted || generation != _requestGeneration) return;
+      setState(() {
+        _items
+          ..clear()
+          ..addAll(scored.take(36).map((item) => item.product));
+        _loading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = error;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('تعذر البحث بالصورة: $error')),
+      );
+    }
   }
 
   @override
@@ -175,6 +235,16 @@ class _SearchScreenState extends State<SearchScreen>
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8FA),
+      extendBody: true,
+      bottomNavigationBar: BariqBottomNav(
+        selected: 4,
+        cartCount: state.cartCount,
+        english: state.isEnglish,
+        onTap: (index) => Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => AppShell(initialIndex: index)),
+          (route) => false,
+        ),
+      ),
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -250,7 +320,7 @@ class _SearchScreenState extends State<SearchScreen>
                     ),
                   ),
                   suffixIcon: IconButton(
-                    onPressed: _imageSearchInfo,
+                    onPressed: _startImageSearch,
                     icon: const Icon(
                       Icons.camera_alt_outlined,
                       color: AppTheme.navy,
@@ -305,7 +375,7 @@ class _SearchScreenState extends State<SearchScreen>
     }
 
     if (_items.isEmpty) {
-      return Center(child: Text(AppStrings.noResults));
+      return Center(child: Text(_imageMode ? 'لا توجد نتائج قريبة من الصورة' : AppStrings.noResults));
     }
 
     return SingleChildScrollView(
@@ -326,4 +396,95 @@ class _SearchScreenState extends State<SearchScreen>
       ),
     );
   }
+
+  _ImageSignature? _imageSignature(List<int> bytes) {
+    final decoded = image_lib.decodeImage(Uint8List.fromList(bytes));
+    if (decoded == null) return null;
+    final resized = image_lib.copyResize(decoded, width: 12, height: 12);
+    final blocks = List<double>.filled(27, 0);
+    final counts = List<int>.filled(9, 0);
+    var r = 0.0;
+    var g = 0.0;
+    var b = 0.0;
+    var count = 0;
+
+    for (var y = 0; y < resized.height; y++) {
+      for (var x = 0; x < resized.width; x++) {
+        final pixel = resized.getPixel(x, y);
+        if (pixel.a < 20) continue;
+        final red = pixel.r.toDouble();
+        final green = pixel.g.toDouble();
+        final blue = pixel.b.toDouble();
+        final block = math.min(2, y ~/ 4) * 3 + math.min(2, x ~/ 4);
+        r += red;
+        g += green;
+        b += blue;
+        blocks[block * 3] += red;
+        blocks[block * 3 + 1] += green;
+        blocks[block * 3 + 2] += blue;
+        counts[block]++;
+        count++;
+      }
+    }
+
+    if (count == 0) return null;
+    for (var i = 0; i < 9; i++) {
+      if (counts[i] == 0) continue;
+      blocks[i * 3] /= counts[i];
+      blocks[i * 3 + 1] /= counts[i];
+      blocks[i * 3 + 2] /= counts[i];
+    }
+
+    return _ImageSignature(avg: [r / count, g / count, b / count], blocks: blocks);
+  }
+
+  Future<_ImageSignature?> _networkImageSignature(String url) async {
+    try {
+      final data = await NetworkAssetBundle(Uri.parse(_imageSearchUrl(url))).load('');
+      return _imageSignature(data.buffer.asUint8List());
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String _imageSearchUrl(String src) {
+    try {
+      final uri = Uri.parse(src);
+      if (uri.path.contains('/storage/v1/object/public/products/')) {
+        final path = uri.path.replaceFirst('/storage/v1/object/public/', '/storage/v1/render/image/public/');
+        return uri.replace(
+          path: path,
+          queryParameters: {
+            ...uri.queryParameters,
+            'width': '96',
+            'height': '96',
+            'resize': 'cover',
+            'quality': '55',
+          },
+        ).toString();
+      }
+    } catch (_) {}
+    return src;
+  }
+
+  double _signatureDiff(_ImageSignature a, _ImageSignature b) {
+    final avg = math.sqrt(
+          math.pow(a.avg[0] - b.avg[0], 2) +
+              math.pow(a.avg[1] - b.avg[1], 2) +
+              math.pow(a.avg[2] - b.avg[2], 2),
+        ) /
+        441.7;
+    var grid = 0.0;
+    for (var i = 0; i < a.blocks.length; i++) {
+      grid += (a.blocks[i] - b.blocks[i]).abs() / 255;
+    }
+    return (avg * .35) + ((grid / a.blocks.length) * .65);
+  }
+}
+
+class _ImageSignature {
+  const _ImageSignature({required this.avg, required this.blocks});
+
+  final List<double> avg;
+  final List<double> blocks;
 }

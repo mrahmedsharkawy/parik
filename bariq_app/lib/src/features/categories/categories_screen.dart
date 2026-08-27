@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import '../../models/category.dart';
 import '../../models/product.dart';
@@ -23,6 +24,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   String? _categoryId;
   String? _subcategoryId;
   int _visibleProductCount = 18;
+  bool _showCategoryFilters = true;
 
   @override
   void initState() {
@@ -83,114 +85,141 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
             }).toList();
             final visibleProducts = products.take(_visibleProductCount.clamp(0, products.length)).toList();
 
-            return NotificationListener<ScrollNotification>(
-              onNotification: (notification) {
-                if (selected != null && notification.metrics.extentAfter < 900 && _visibleProductCount < products.length) {
-                  setState(() => _visibleProductCount = (_visibleProductCount + 12).clamp(0, products.length).toInt());
-                }
-                return false;
-              },
-              child: CustomScrollView(
-                slivers: [
-                StorefrontTopBarSliver(placeholder: 'إبحث في الفئات', onSearch: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SearchScreen()))),
-                SliverToBoxAdapter(
-                  child: _CategoryFilters(
-                    categories: categories,
-                    selectedId: _categoryId,
-                    onTap: (id) => setState(() {
-                      _categoryId = id;
-                      _subcategoryId = null;
-                      _visibleProductCount = 18;
-                    }),
-                  ),
+            return Column(
+              children: [
+                StorefrontTopBar(
+                  placeholder: 'إبحث في الفئات',
+                  onSearch: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SearchScreen())),
                 ),
-                SliverToBoxAdapter(
-                  child: _PageTitle(
-                    crumb: selected == null ? 'الكل' : 'الكل › ${selected.displayName}',
-                    title: selected == null ? 'جميع الفئات' : selected.displayName,
-                    showBack: selected != null,
-                    onBack: () => setState(() {
-                      _categoryId = null;
-                      _subcategoryId = null;
-                      _visibleProductCount = 18;
-                    }),
-                  ),
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 170),
+                  curve: Curves.easeOutCubic,
+                  child: _showCategoryFilters
+                      ? AnimatedOpacity(
+                          opacity: 1,
+                          duration: const Duration(milliseconds: 140),
+                          child: _CategoryFilters(
+                            categories: categories,
+                            selectedId: _categoryId,
+                            onTap: (id) => setState(() {
+                              _categoryId = id;
+                              _subcategoryId = null;
+                              _visibleProductCount = 18;
+                              _showCategoryFilters = true;
+                            }),
+                          ),
+                        )
+                      : const SizedBox(width: double.infinity, height: 0),
                 ),
-                if (selected == null)
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(18, 8, 18, 110),
-                    sliver: SliverGrid(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) => _MainCategoryCard(
-                          category: categories[index],
-                          onTap: () => setState(() {
-                            _categoryId = categories[index].id;
-                            _visibleProductCount = 18;
-                          }),
-                        ),
-                        childCount: categories.length,
-                      ),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 10,
-                        mainAxisSpacing: 10,
-                        childAspectRatio: 1.72,
-                      ),
-                    ),
-                  )
-                else ...[
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(18, 8, 18, 12),
-                    sliver: SliverGrid(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final sub = subcategories[index];
-                          return _SubcategoryCard(
-                            subcategory: sub,
-                            active: sub.id == _subcategoryId,
-                            onTap: () => setState(() {
-                              _subcategoryId = sub.id == _subcategoryId ? null : sub.id;
+                Expanded(
+                  child: NotificationListener<ScrollNotification>(
+                    onNotification: (notification) {
+                      if (notification is UserScrollNotification) {
+                        if (notification.direction == ScrollDirection.reverse && _showCategoryFilters) {
+                          setState(() => _showCategoryFilters = false);
+                        } else if (notification.direction == ScrollDirection.forward && !_showCategoryFilters) {
+                          setState(() => _showCategoryFilters = true);
+                        }
+                      } else if (notification.metrics.pixels <= 4 && !_showCategoryFilters) {
+                        setState(() => _showCategoryFilters = true);
+                      }
+                      if (selected != null && notification.metrics.extentAfter < 900 && _visibleProductCount < products.length) {
+                        setState(() => _visibleProductCount = (_visibleProductCount + 12).clamp(0, products.length).toInt());
+                      }
+                      return false;
+                    },
+                    child: CustomScrollView(
+                      slivers: [
+                        SliverToBoxAdapter(
+                          child: _PageTitle(
+                            crumb: selected == null ? 'الكل' : 'الكل › ${selected.displayName}',
+                            title: selected == null ? 'جميع الفئات' : selected.displayName,
+                            showBack: selected != null,
+                            onBack: () => setState(() {
+                              _categoryId = null;
+                              _subcategoryId = null;
                               _visibleProductCount = 18;
                             }),
-                          );
-                        },
-                        childCount: subcategories.length,
-                      ),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        crossAxisSpacing: 8,
-                        mainAxisSpacing: 8,
-                        childAspectRatio: .92,
-                      ),
-                    ),
-                  ),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(18, 4, 18, 10),
-                      child: Row(
-                        children: [
-                          const Text('🛍️'),
-                          const SizedBox(width: 5),
-                          Text(_subcategoryId == null ? selected.displayName : 'المنتجات', style: const TextStyle(color: AppTheme.navy, fontSize: 17, fontWeight: FontWeight.w900)),
-                          const Spacer(),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                            decoration: BoxDecoration(color: const Color(0xFFF1F3F6), borderRadius: BorderRadius.circular(999)),
-                            child: Text('${products.length} منتج', style: const TextStyle(color: AppTheme.muted, fontSize: 11, fontWeight: FontWeight.w800)),
+                          ),
+                        ),
+                        if (selected == null)
+                          SliverPadding(
+                            padding: const EdgeInsets.fromLTRB(18, 8, 18, 110),
+                            sliver: SliverGrid(
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) => _MainCategoryCard(
+                                  category: categories[index],
+                                  onTap: () => setState(() {
+                                    _categoryId = categories[index].id;
+                                    _visibleProductCount = 18;
+                                  }),
+                                ),
+                                childCount: categories.length,
+                              ),
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 10,
+                                mainAxisSpacing: 10,
+                                childAspectRatio: 1.72,
+                              ),
+                            ),
+                          )
+                        else ...[
+                          SliverPadding(
+                            padding: const EdgeInsets.fromLTRB(18, 8, 18, 12),
+                            sliver: SliverGrid(
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) {
+                                  final sub = subcategories[index];
+                                  return _SubcategoryCard(
+                                    subcategory: sub,
+                                    active: sub.id == _subcategoryId,
+                                    onTap: () => setState(() {
+                                      _subcategoryId = sub.id == _subcategoryId ? null : sub.id;
+                                      _visibleProductCount = 18;
+                                    }),
+                                  );
+                                },
+                                childCount: subcategories.length,
+                              ),
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 3,
+                                crossAxisSpacing: 8,
+                                mainAxisSpacing: 8,
+                                childAspectRatio: .92,
+                              ),
+                            ),
+                          ),
+                          SliverToBoxAdapter(
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(18, 4, 18, 10),
+                              child: Row(
+                                children: [
+                                  const Text('🛍️'),
+                                  const SizedBox(width: 5),
+                                  Text(_subcategoryId == null ? selected.displayName : 'المنتجات', style: const TextStyle(color: AppTheme.navy, fontSize: 15, fontWeight: FontWeight.w900)),
+                                  const Spacer(),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                                    decoration: BoxDecoration(color: const Color(0xFFF1F3F6), borderRadius: BorderRadius.circular(999)),
+                                    child: Text('${products.length} منتج', style: const TextStyle(color: AppTheme.muted, fontSize: 11, fontWeight: FontWeight.w800)),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          SliverToBoxAdapter(
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(6, 0, 6, 104),
+                              child: ProductGalleryGrid(products: visibleProducts),
+                            ),
                           ),
                         ],
-                      ),
+                      ],
                     ),
                   ),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(6, 0, 6, 104),
-                      child: ProductGalleryGrid(products: visibleProducts),
-                    ),
-                  ),
-                ],
+                ),
               ],
-              ),
             );
           },
         ),
@@ -217,31 +246,106 @@ class _CategoryFilters extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 64,
       color: Colors.white,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
-        itemCount: categories.length + 1,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          final all = index == 0;
-          final category = all ? null : categories[index - 1];
-          final active = all ? selectedId == null : category!.id == selectedId;
-          return ChoiceChip(
-            selected: active,
-            showCheckmark: false,
-            onSelected: (_) => onTap(category?.id),
-            avatar: all
-                ? null
-                : ClipOval(child: BariqNetworkImage(imageUrl: category!.imageUrl, width: 24, height: 24, fit: BoxFit.cover, errorIconSize: 16)),
-            label: Text(all ? 'الكل 💯' : category!.displayName),
-            backgroundColor: Colors.white,
-            selectedColor: const Color(0xFFFFFBF0),
-            side: BorderSide(color: active ? AppTheme.gold : AppTheme.line),
-            labelStyle: TextStyle(color: active ? AppTheme.gold : AppTheme.navy, fontSize: 12, fontWeight: FontWeight.w800),
-          );
-        },
+      padding: const EdgeInsets.only(top: 4, bottom: 4),
+      child: SizedBox(
+        height: 42,
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            itemCount: categories.length + 1,
+            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            itemBuilder: (context, index) {
+              final all = index == 0;
+              final category = all ? null : categories[index - 1];
+              final active = all ? selectedId == null : category!.id == selectedId;
+              return _CategoryFilterTile(
+                label: all ? 'الكل' : category!.displayName,
+                imageUrl: category?.imageUrl,
+                active: active,
+                all: all,
+                onTap: () => onTap(category?.id),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CategoryFilterTile extends StatelessWidget {
+  const _CategoryFilterTile({
+    required this.label,
+    required this.active,
+    required this.all,
+    required this.onTap,
+    this.imageUrl,
+  });
+
+  final String label;
+  final String? imageUrl;
+  final bool active;
+  final bool all;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        width: 88,
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+        decoration: BoxDecoration(
+          color: active ? const Color(0xFFFFFBF0) : Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: active ? AppTheme.gold : AppTheme.line, width: active ? 1.2 : 1),
+          boxShadow: [
+            if (active)
+              const BoxShadow(
+                color: Color(0x14D4AF37),
+                blurRadius: 10,
+                offset: Offset(0, 3),
+              ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (all)
+              const Text('💯', style: TextStyle(fontSize: 13))
+            else
+              ClipOval(
+                child: BariqNetworkImage(
+                  imageUrl: imageUrl ?? '',
+                  width: 24,
+                  height: 24,
+                  fit: BoxFit.cover,
+                  errorIconSize: 15,
+                ),
+              ),
+            const SizedBox(width: 5),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: active ? AppTheme.gold : AppTheme.navy,
+                  fontSize: 10.5,
+                  height: 1.15,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -258,28 +362,41 @@ class _PageTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 20, 18, 8),
+      padding: const EdgeInsets.fromLTRB(18, 16, 18, 8),
       child: Directionality(
         textDirection: TextDirection.rtl,
         child: Row(
           children: [
-            const Icon(Icons.shopping_bag_outlined, color: AppTheme.navy, size: 18),
-            const SizedBox(width: 7),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(crumb, textAlign: TextAlign.right, style: const TextStyle(color: AppTheme.muted, fontSize: 11)),
-                const SizedBox(height: 3),
-                Text(title, textAlign: TextAlign.right, style: const TextStyle(color: AppTheme.navy, fontSize: 17, fontWeight: FontWeight.w900)),
-              ],
+            Expanded(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.shopping_bag_outlined, color: AppTheme.navy, size: 18),
+                  const SizedBox(width: 7),
+                  Flexible(
+                    child: Text(
+                      title,
+                      textAlign: TextAlign.right,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: AppTheme.navy, fontSize: 17, fontWeight: FontWeight.w900),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const Spacer(),
             if (showBack)
               OutlinedButton.icon(
                 onPressed: onBack,
                 icon: const Icon(Icons.arrow_forward, size: 16),
-                label: Text('العودة للفئات'),
+                label: const Text('العودة للفئات'),
                 style: OutlinedButton.styleFrom(foregroundColor: AppTheme.navy, side: const BorderSide(color: AppTheme.line)),
+              )
+            else
+              Text(
+                crumb,
+                textAlign: TextAlign.left,
+                style: const TextStyle(color: AppTheme.muted, fontSize: 11, fontWeight: FontWeight.w800),
               ),
           ],
         ),

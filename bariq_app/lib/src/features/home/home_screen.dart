@@ -1,18 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import '../../models/category.dart';
 import '../../models/product.dart';
 import '../../models/site_settings.dart';
+import '../../services/account_service.dart';
 import '../../services/supabase_catalog_service.dart';
+import '../../state/app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/catalog_filters.dart';
+import '../account/account_screen.dart';
 import '../catalog/product_gallery_grid.dart';
 import '../catalog/product_card.dart';
 import '../catalog/search_screen.dart';
 import '../shared/bariq_network_image.dart';
+import '../shared/storefront_top_bar.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({super.key, this.onOpenAccountSection});
+
+  final ValueChanged<AccountSection>? onOpenAccountSection;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -26,6 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _categoryId;
   String? _subcategoryId;
   int _visibleProductCount = 12;
+  bool _showFloatingBars = false;
 
   @override
   void initState() {
@@ -93,17 +101,33 @@ class _HomeScreenState extends State<HomeScreen> {
             return RefreshIndicator(
               color: AppTheme.gold,
               onRefresh: _refresh,
-              child: NotificationListener<ScrollNotification>(
-                onNotification: (notification) {
-                  final metrics = notification.metrics;
-                  if (metrics.pixels > metrics.maxScrollExtent - 900 && _visibleProductCount < visibleProducts.length) {
-                    setState(() => _visibleProductCount = (_visibleProductCount + 12).clamp(0, visibleProducts.length).toInt());
-                  }
-                  return false;
-                },
-                child: CustomScrollView(
+              child: Stack(
+                children: [
+                  NotificationListener<ScrollNotification>(
+                    onNotification: (notification) {
+                      final metrics = notification.metrics;
+                      if (notification is UserScrollNotification) {
+                        if (notification.direction == ScrollDirection.forward && metrics.pixels > 160 && !_showFloatingBars) {
+                          setState(() => _showFloatingBars = true);
+                        } else if ((notification.direction == ScrollDirection.reverse || metrics.pixels <= 24) && _showFloatingBars) {
+                          setState(() => _showFloatingBars = false);
+                        }
+                      }
+                      if (metrics.pixels > metrics.maxScrollExtent - 900 && _visibleProductCount < visibleProducts.length) {
+                        setState(() => _visibleProductCount = (_visibleProductCount + 12).clamp(0, visibleProducts.length).toInt());
+                      }
+                      return false;
+                    },
+                    child: CustomScrollView(
                   slivers: [
-                    SliverToBoxAdapter(child: _SiteHeader(onSearch: _openSearch)),
+                        SliverToBoxAdapter(
+                          child: _SiteHeader(
+                            onSearch: _openSearch,
+                            onImageSearch: _openImageSearch,
+                            onFavorites: () => widget.onOpenAccountSection?.call(AccountSection.favorites),
+                            onNotifications: () => widget.onOpenAccountSection?.call(AccountSection.notifications),
+                          ),
+                        ),
                     SliverToBoxAdapter(
                       child: _TopShowcase(
                         controller: _bannerController,
@@ -152,8 +176,50 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ),
-                  ],
-                ),
+                      ],
+                    ),
+                  ),
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: IgnorePointer(
+                      ignoring: !_showFloatingBars,
+                      child: AnimatedSlide(
+                        offset: _showFloatingBars ? Offset.zero : const Offset(0, -1.08),
+                        duration: const Duration(milliseconds: 180),
+                        curve: Curves.easeOutCubic,
+                        child: AnimatedOpacity(
+                          opacity: _showFloatingBars ? 1 : 0,
+                          duration: const Duration(milliseconds: 120),
+                          child: Material(
+                            color: Colors.white,
+                            elevation: 5,
+                            shadowColor: const Color(0x1A000000),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                StorefrontTopBar(
+                                  placeholder: 'إبحث في الفئات',
+                                  onSearch: _openSearch,
+                                ),
+                                _FilterChips(
+                                  categories: data.categories,
+                                  selectedId: _categoryId,
+                                  onTap: (id) => setState(() {
+                                    _categoryId = id;
+                                    _subcategoryId = null;
+                                    _visibleProductCount = 12;
+                                  }),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             );
           },
@@ -164,6 +230,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _openSearch() {
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SearchScreen()));
+  }
+
+  void _openImageSearch() {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SearchScreen(startWithImageSearch: true)));
   }
 
   CategoryItem? _selectedCategory(List<CategoryItem> categories, String? id) {
@@ -245,13 +315,49 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class _SiteHeader extends StatelessWidget {
-  const _SiteHeader({required this.onSearch});
+class _SiteHeader extends StatefulWidget {
+  const _SiteHeader({
+    required this.onSearch,
+    required this.onImageSearch,
+    required this.onFavorites,
+    required this.onNotifications,
+  });
 
   final VoidCallback onSearch;
+  final VoidCallback onImageSearch;
+  final VoidCallback onFavorites;
+  final VoidCallback onNotifications;
+
+  @override
+  State<_SiteHeader> createState() => _SiteHeaderState();
+}
+
+class _SiteHeaderState extends State<_SiteHeader> {
+  late Future<int> _notificationsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _notificationsFuture = _loadNotificationCount();
+  }
+
+  Future<int> _loadNotificationCount() async {
+    try {
+      final account = AccountService();
+      final profile = await account.fetchProfile();
+      final orders = await account.fetchOrders();
+      final occasions = await account.fetchOccasions();
+      final notifications = await account.fetchNotifications(orders: orders, occasions: occasions, profile: profile);
+      return notifications.where((item) => !item.read).length.clamp(0, 99).toInt();
+    } catch (_) {
+      return 0;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final appState = AppStateScope.of(context);
+    final favoriteCount = appState.favoriteIds.length.clamp(0, 99).toInt();
     return Container(
       color: AppTheme.navy,
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
@@ -262,18 +368,29 @@ class _SiteHeader extends StatelessWidget {
             child: Directionality(
               textDirection: TextDirection.ltr,
               child: Row(
-                children: const [
-                  SizedBox(width: 38, child: Icon(Icons.favorite_border_rounded, color: Colors.white, size: 27)),
-                  Expanded(
+                children: [
+                  _HeaderIconButton(
+                    icon: Icons.favorite_border_rounded,
+                    count: favoriteCount,
+                    onTap: widget.onFavorites,
+                  ),
+                  const Expanded(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text('Bariq', style: TextStyle(color: AppTheme.gold, fontSize: 25, fontWeight: FontWeight.w800, height: .86)),
-                        Text('Gifts', style: TextStyle(color: AppTheme.gold, fontSize: 11, fontWeight: FontWeight.w700, height: 1)),
+                        Text('Bariq', style: TextStyle(color: AppTheme.gold, fontSize: 23, fontWeight: FontWeight.w800, height: .86)),
+                        Text('Gifts', style: TextStyle(color: AppTheme.gold, fontSize: 10, fontWeight: FontWeight.w700, height: 1)),
                       ],
                     ),
                   ),
-                  SizedBox(width: 38, child: Icon(Icons.notifications_none_rounded, color: Colors.white, size: 27)),
+                  FutureBuilder<int>(
+                    future: _notificationsFuture,
+                    builder: (context, snapshot) => _HeaderIconButton(
+                      icon: Icons.notifications_none_rounded,
+                      count: snapshot.data ?? 0,
+                      onTap: widget.onNotifications,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -287,8 +404,8 @@ class _SiteHeader extends StatelessWidget {
                   SizedBox(
                     width: 38,
                     child: IconButton(
-                      onPressed: onSearch,
-                      icon: const Icon(Icons.search_rounded, color: Colors.white, size: 28),
+                      onPressed: widget.onSearch,
+                      icon: const Icon(Icons.search_rounded, color: Colors.white, size: 24),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints.tightFor(width: 38, height: 38),
                     ),
@@ -296,19 +413,19 @@ class _SiteHeader extends StatelessWidget {
                   const SizedBox(width: 6),
                   Expanded(
                     child: InkWell(
-                      onTap: onSearch,
-                      borderRadius: BorderRadius.circular(22),
+                      onTap: widget.onSearch,
+                      borderRadius: BorderRadius.circular(18),
                       child: Container(
-                        height: 40,
-                        padding: const EdgeInsets.symmetric(horizontal: 18),
+                        height: 38,
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
                         alignment: Alignment.centerRight,
-                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22)),
+                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
                         child: const Text(
                           'إبحث بالمناسبة',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           textAlign: TextAlign.right,
-                          style: TextStyle(color: Color(0xFF9AA2B1), fontSize: 13, fontWeight: FontWeight.w800),
+                          style: TextStyle(color: Color(0xFF9AA2B1), fontSize: 11.5, fontWeight: FontWeight.w800),
                         ),
                       ),
                     ),
@@ -317,8 +434,8 @@ class _SiteHeader extends StatelessWidget {
                   SizedBox(
                     width: 38,
                     child: IconButton(
-                      onPressed: onSearch,
-                      icon: const Icon(Icons.camera_alt_outlined, color: Colors.white, size: 28),
+                      onPressed: widget.onImageSearch,
+                      icon: const Icon(Icons.camera_alt_outlined, color: Color(0xFFBFD3F2), size: 24),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints.tightFor(width: 38, height: 38),
                     ),
@@ -328,6 +445,49 @@ class _SiteHeader extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _HeaderIconButton extends StatelessWidget {
+  const _HeaderIconButton({required this.icon, required this.onTap, this.count = 0});
+
+  final IconData icon;
+  final VoidCallback onTap;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 36,
+      height: 38,
+      child: IconButton(
+        onPressed: onTap,
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints.tightFor(width: 36, height: 38),
+        icon: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Icon(icon, color: const Color(0xFFE9EEF8), size: 24),
+            if (count > 0)
+              PositionedDirectional(
+                top: -7,
+                end: -8,
+                child: Container(
+                  constraints: const BoxConstraints(minWidth: 17),
+                  height: 17,
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  alignment: Alignment.center,
+                  decoration: const BoxDecoration(color: AppTheme.gold, shape: BoxShape.circle),
+                  child: Text(
+                    '$count',
+                    style: const TextStyle(color: AppTheme.navy, fontSize: 8.5, height: 1, fontWeight: FontWeight.w900),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -610,12 +770,12 @@ class _ServiceStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 42,
+      height: 38,
       margin: const EdgeInsets.fromLTRB(4, 0, 4, 8),
       padding: const EdgeInsets.symmetric(horizontal: 4),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(9),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(color: AppTheme.line.withValues(alpha: .9)),
         boxShadow: const [BoxShadow(color: Color(0x0B000000), blurRadius: 9, offset: Offset(0, 2))],
       ),
@@ -628,9 +788,9 @@ class _ServiceStrip extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(item.$1, color: AppTheme.gold, size: 18),
+                  Icon(item.$1, color: i == 0 ? const Color(0xFFE4B84A) : i == 1 ? const Color(0xFFC7922E) : AppTheme.success, size: 16),
                   const SizedBox(width: 5),
-                  Flexible(child: Text(item.$2, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppTheme.navy, fontSize: 11, fontWeight: FontWeight.w900))),
+                  Flexible(child: Text(item.$2, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppTheme.navy, fontSize: 10.2, fontWeight: FontWeight.w900))),
                   if (i != _items.length - 1) const SizedBox(width: 5),
                   if (i != _items.length - 1) Container(width: 1, height: 20, color: AppTheme.line),
                 ],
@@ -656,11 +816,11 @@ class _SectionTitle extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(10, 0, 10, 8),
       child: Row(
         children: [
-          Text(leading, style: const TextStyle(fontSize: 15)),
+          Text(leading, style: const TextStyle(fontSize: 13)),
           const SizedBox(width: 4),
-          Text(title, style: const TextStyle(color: AppTheme.navy, fontSize: 16, fontWeight: FontWeight.w900)),
+          Text(title, style: const TextStyle(color: AppTheme.navy, fontSize: 14.5, fontWeight: FontWeight.w900)),
           const Spacer(),
-          Text(action, style: const TextStyle(color: AppTheme.navy, fontSize: 13, fontWeight: FontWeight.w900)),
+          Text(action, style: const TextStyle(color: AppTheme.navy, fontSize: 11.5, fontWeight: FontWeight.w900)),
         ],
       ),
     );
@@ -698,29 +858,97 @@ class _FilterChips extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = categories;
-    return SizedBox(
-      height: 48,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        itemCount: items.length + 1,
-        separatorBuilder: (_, __) => const SizedBox(width: 7),
-        itemBuilder: (context, i) {
-          final all = i == 0;
-          final category = all ? null : items[i - 1];
-          final active = all ? selectedId == null : category!.id == selectedId;
-          return ChoiceChip(
-            selected: active,
-            onSelected: (_) => onTap(category?.id),
-            showCheckmark: false,
-            label: Text(all ? 'الكل 💯' : category!.displayName, maxLines: 1),
-            selectedColor: const Color(0xFFFFFBF0),
-            backgroundColor: Colors.white,
-            side: BorderSide(color: active ? AppTheme.gold : AppTheme.line),
-            labelStyle: TextStyle(color: active ? AppTheme.gold : AppTheme.navy, fontSize: 12, fontWeight: FontWeight.w800),
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-          );
-        },
+    return Container(
+      height: 50,
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Directionality(
+        textDirection: TextDirection.rtl,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          itemCount: items.length + 1,
+          separatorBuilder: (_, __) => const SizedBox(width: 7),
+          itemBuilder: (context, i) {
+            final all = i == 0;
+            final category = all ? null : items[i - 1];
+            final active = all ? selectedId == null : category!.id == selectedId;
+            return _HomeCategoryChip(
+              label: all ? 'الكل' : category!.displayName,
+              imageUrl: category?.imageUrl,
+              all: all,
+              active: active,
+              onTap: () => onTap(category?.id),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _HomeCategoryChip extends StatelessWidget {
+  const _HomeCategoryChip({
+    required this.label,
+    required this.active,
+    required this.all,
+    required this.onTap,
+    this.imageUrl,
+  });
+
+  final String label;
+  final bool active;
+  final bool all;
+  final VoidCallback onTap;
+  final String? imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 140),
+        width: 88,
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+        decoration: BoxDecoration(
+          color: active ? const Color(0xFFFFFBF0) : Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: active ? AppTheme.gold : AppTheme.line, width: active ? 1.2 : 1),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (all)
+              const Text('💯', style: TextStyle(fontSize: 13))
+            else
+              ClipOval(
+                child: BariqNetworkImage(
+                  imageUrl: imageUrl ?? '',
+                  width: 24,
+                  height: 24,
+                  fit: BoxFit.cover,
+                  errorIconSize: 15,
+                ),
+              ),
+            const SizedBox(width: 5),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: active ? AppTheme.gold : AppTheme.navy,
+                  fontSize: 10.5,
+                  height: 1.15,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -736,11 +964,11 @@ class _SubcategoryImageStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 88,
+      height: 84,
       color: Colors.white,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final contentWidth = (subcategories.length * 60) + ((subcategories.length - 1).clamp(0, 99) * 14) + 20;
+          final contentWidth = (subcategories.length * 58) + ((subcategories.length - 1).clamp(0, 99) * 12) + 20;
           if (contentWidth <= constraints.maxWidth) {
             return Center(
               child: Row(
@@ -752,7 +980,7 @@ class _SubcategoryImageStrip extends StatelessWidget {
                       active: subcategories[index].id == selectedId,
                       onTap: onTap,
                     ),
-                    if (index != subcategories.length - 1) const SizedBox(width: 14),
+                    if (index != subcategories.length - 1) const SizedBox(width: 12),
                   ],
                 ],
               ),
@@ -762,7 +990,7 @@ class _SubcategoryImageStrip extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.fromLTRB(10, 4, 10, 8),
             itemCount: subcategories.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 14),
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
             itemBuilder: (context, index) => _SubcategoryImageItem(
               subcategory: subcategories[index],
               active: subcategories[index].id == selectedId,
@@ -785,20 +1013,20 @@ class _SubcategoryImageItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 60,
+      width: 58,
       child: InkWell(
         onTap: () => onTap(subcategory.id),
         borderRadius: BorderRadius.circular(34),
         child: Column(
           children: [
             Container(
-              width: 50,
-              height: 50,
+              width: 48,
+              height: 48,
               padding: const EdgeInsets.all(2),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(color: active ? AppTheme.gold : const Color(0xFFE6E9EF), width: active ? 1.5 : 1),
-                boxShadow: const [BoxShadow(color: Color(0x14000000), blurRadius: 8, offset: Offset(0, 2))],
+                boxShadow: const [BoxShadow(color: Color(0x10000000), blurRadius: 7, offset: Offset(0, 2))],
               ),
               child: ClipOval(child: BariqNetworkImage(imageUrl: subcategory.imageUrl, fit: BoxFit.cover, errorIconSize: 22)),
             ),
@@ -808,7 +1036,7 @@ class _SubcategoryImageItem extends StatelessWidget {
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: active ? AppTheme.gold : AppTheme.navy, fontSize: 10.5, fontWeight: FontWeight.w900),
+              style: TextStyle(color: active ? AppTheme.gold : AppTheme.navy, fontSize: 9.8, fontWeight: FontWeight.w900),
             ),
           ],
         ),

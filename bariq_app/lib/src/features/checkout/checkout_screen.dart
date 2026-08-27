@@ -7,7 +7,9 @@ import '../../models/product.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_theme.dart';
 import '../catalog/search_screen.dart';
+import '../shared/bariq_bottom_nav.dart';
 import '../shared/storefront_top_bar.dart';
+import '../shell/app_shell.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key, this.buyNow});
@@ -42,25 +44,35 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
+      extendBody: true,
+      bottomNavigationBar: BariqBottomNav(
+        selected: 0,
+        cartCount: state.cartCount,
+        english: state.isEnglish,
+        onTap: (index) => Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => AppShell(initialIndex: index)),
+          (route) => false,
+        ),
+      ),
       body: SafeArea(
         bottom: false,
         child: CustomScrollView(
           slivers: [
             StorefrontTopBarSliver(showBack: true, placeholder: 'إبحث بالصورة أو الاسم أو المناسبة', onSearch: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SearchScreen()))),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(22, 22, 22, 114),
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 110),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   const _GreenNotice(),
                   const SizedBox(height: 24),
-                  const Text('بيانات التواصل', textAlign: TextAlign.right, style: TextStyle(color: AppTheme.navy, fontSize: 18, fontWeight: FontWeight.w900)),
+                  const Text('بيانات التواصل', textAlign: TextAlign.right, style: TextStyle(color: AppTheme.navy, fontSize: 15.5, fontWeight: FontWeight.w900)),
                   const SizedBox(height: 12),
                   _Field(controller: _name, label: 'الاسم الكامل', icon: Icons.person_outline),
                   _Field(controller: _phone, label: 'رقم الهاتف', icon: Icons.phone_outlined, keyboard: TextInputType.phone),
                   _Field(controller: _city, label: 'الإمارة / المدينة', icon: Icons.location_on_outlined),
                   _Notes(controller: _notes),
                   const SizedBox(height: 22),
-                  const Text('ملخص الطلب', textAlign: TextAlign.right, style: TextStyle(color: AppTheme.navy, fontSize: 18, fontWeight: FontWeight.w900)),
+                  const Text('ملخص الطلب', textAlign: TextAlign.right, style: TextStyle(color: AppTheme.navy, fontSize: 15.5, fontWeight: FontWeight.w900)),
                   const SizedBox(height: 12),
                   for (final item in items)
                     Padding(
@@ -76,15 +88,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   const Divider(height: 28),
                   Row(
                     children: [
-                      Text(money.format(total), textDirection: TextDirection.ltr, style: const TextStyle(color: AppTheme.navy, fontSize: 18, fontWeight: FontWeight.w900)),
+                      Text(money.format(total), textDirection: TextDirection.ltr, style: const TextStyle(color: AppTheme.navy, fontSize: 15.5, fontWeight: FontWeight.w900)),
                       const Spacer(),
-                      const Text('الإجمالي', style: TextStyle(color: AppTheme.navy, fontSize: 17, fontWeight: FontWeight.w900)),
+                      const Text('الإجمالي', style: TextStyle(color: AppTheme.navy, fontSize: 15, fontWeight: FontWeight.w900)),
                     ],
                   ),
                   const SizedBox(height: 18),
                   FilledButton(
                     onPressed: items.isEmpty ? null : () => _send(items, total),
-                    style: FilledButton.styleFrom(backgroundColor: AppTheme.navy, minimumSize: const Size.fromHeight(58), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30))),
+                    style: FilledButton.styleFrom(backgroundColor: AppTheme.navy, minimumSize: const Size.fromHeight(50), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24))),
                     child: Text('تأكيد الطلب عبر واتساب (${items.fold<int>(0, (sum, item) => sum + item.$2)} قطعة)', style: const TextStyle(fontWeight: FontWeight.w900)),
                   ),
                   const SizedBox(height: 26),

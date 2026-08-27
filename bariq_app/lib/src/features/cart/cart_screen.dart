@@ -3,6 +3,7 @@ import 'package:intl/intl.dart' hide TextDirection;
 
 import '../../models/cart_item.dart';
 import '../../models/product.dart';
+import '../../services/account_service.dart';
 import '../../services/supabase_catalog_service.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_theme.dart';
@@ -13,7 +14,9 @@ import '../shared/bariq_network_image.dart';
 import '../shared/storefront_top_bar.dart';
 
 class CartScreen extends StatefulWidget {
-  const CartScreen({super.key});
+  const CartScreen({super.key, this.onBrowseTrending});
+
+  final VoidCallback? onBrowseTrending;
 
   @override
   State<CartScreen> createState() => _CartScreenState();
@@ -45,9 +48,10 @@ class _CartScreenState extends State<CartScreen> {
                 delegate: SliverChildListDelegate([
                   if (items.isEmpty) ...[
                     _EmptyCart(
-                      onBrowse: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const SearchScreen()),
-                      ),
+                      onBrowse: widget.onBrowseTrending ??
+                          () => Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const SearchScreen()),
+                              ),
                     ),
                     const SizedBox(height: 24),
                   ] else ...[
@@ -57,7 +61,7 @@ class _CartScreenState extends State<CartScreen> {
                     const SizedBox(height: 12),
                     for (final item in items) _CartLine(item: item),
                     const SizedBox(height: 26),
-                    _Summary(total: state.cartTotal, count: state.cartCount),
+                    _CashbackSummary(total: state.cartTotal, count: state.cartCount),
                     const SizedBox(height: 16),
                     FilledButton(
                       onPressed: () => Navigator.of(context).push(
@@ -67,7 +71,7 @@ class _CartScreenState extends State<CartScreen> {
                       ),
                       style: FilledButton.styleFrom(
                         backgroundColor: AppTheme.navy,
-                        minimumSize: const Size.fromHeight(52),
+                        minimumSize: const Size.fromHeight(48),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(28),
                         ),
@@ -204,8 +208,8 @@ class _CartLine extends StatelessWidget {
         : 0;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(10),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.fromLTRB(7, 8, 7, 7),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(9),
@@ -213,118 +217,117 @@ class _CartLine extends StatelessWidget {
       ),
       child: Directionality(
         textDirection: TextDirection.rtl,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Padding(
-              padding: EdgeInsets.only(top: 2),
-              child: Icon(
-                Icons.radio_button_checked_rounded,
-                color: AppTheme.navy,
-                size: 22,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(top: 2),
+                  child: Icon(
+                    Icons.radio_button_checked_rounded,
+                    color: AppTheme.navy,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(7),
+                  child: BariqNetworkImage(
+                    imageUrl: product.images.first,
+                    width: 108,
+                    height: 108,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Text(
-                              product.displayName,
-                              textAlign: TextAlign.right,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: AppTheme.navy,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            const Text(
-                              'متبقي القليل، العرض قريباً ينتهي',
-                              textAlign: TextAlign.right,
-                              style: TextStyle(
-                                color: Colors.redAccent,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                IconButton(
-                                  onPressed: () =>
-                                      state.removeFromCart(product.id),
-                                  icon: const Icon(
-                                    Icons.delete_outline_rounded,
-                                    color: Color(0xFF2B3348),
-                                    size: 20,
-                                  ),
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints.tightFor(
-                                    width: 32,
-                                    height: 32,
-                                  ),
-                                ),
-                                const Spacer(),
-                                if (discount > 0) _DiscountBadge(value: discount),
-                                const SizedBox(width: 6),
-                                Text(
-                                  money.format(product.price),
-                                  textDirection: TextDirection.ltr,
-                                  style: const TextStyle(
-                                    color: AppTheme.gold,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            if (old > 0)
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: Text(
-                                  money.format(old),
-                                  textDirection: TextDirection.ltr,
-                                  style: const TextStyle(
-                                    color: Colors.grey,
-                                    decoration: TextDecoration.lineThrough,
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ),
-                          ],
+                      Text(
+                        product.displayName,
+                        textAlign: TextAlign.right,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: AppTheme.navy,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
                         ),
                       ),
-                      const SizedBox(width: 10),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(7),
-                        child: BariqNetworkImage(
-                          imageUrl: product.images.first,
-                          width: 118,
-                          height: 118,
-                          fit: BoxFit.cover,
+                      const SizedBox(height: 3),
+                      const Text(
+                        'متبقي القليل، العرض قريباً ينتهي',
+                        textAlign: TextAlign.right,
+                        style: TextStyle(
+                          color: Colors.redAccent,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
                         ),
+                      ),
+                      const SizedBox(height: 1),
+                      const Text(
+                        'سريع بشرائك قبل نفاذ الكمية!',
+                        textAlign: TextAlign.right,
+                        style: TextStyle(
+                          color: Colors.redAccent,
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          if (discount > 0) _DiscountBadge(value: discount),
+                          const SizedBox(width: 6),
+                          if (old > 0)
+                            Text(
+                              money.format(old),
+                              textDirection: TextDirection.ltr,
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                decoration: TextDecoration.lineThrough,
+                                fontSize: 10,
+                              ),
+                            ),
+                          const SizedBox(width: 6),
+                          Text(
+                            money.format(product.price),
+                            textDirection: TextDirection.ltr,
+                            style: const TextStyle(
+                              color: AppTheme.gold,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  const SizedBox(height: 10),
-                  Align(
-                    alignment: Alignment.center,
-                    child: _Qty(
-                      quantity: item.quantity,
-                      onChanged: (value) => state.setQuantity(product.id, value),
-                    ),
+                ),
+                IconButton(
+                  onPressed: () => state.removeFromCart(product.id),
+                  icon: const Icon(
+                    Icons.delete_outline_rounded,
+                    color: Color(0xFF2B3348),
+                    size: 19,
                   ),
-                ],
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints.tightFor(
+                    width: 30,
+                    height: 30,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: _Qty(
+                quantity: item.quantity,
+                onChanged: (value) => state.setQuantity(product.id, value),
               ),
             ),
           ],
@@ -369,7 +372,7 @@ class _Qty extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 32,
+      height: 26,
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border.all(color: AppTheme.line),
@@ -380,32 +383,33 @@ class _Qty extends StatelessWidget {
         children: [
           IconButton(
             onPressed: () => onChanged(quantity - 1),
-            icon: const Icon(Icons.remove, size: 15),
-            constraints: const BoxConstraints.tightFor(width: 36, height: 32),
+            icon: const Icon(Icons.remove, size: 14),
+            constraints: const BoxConstraints.tightFor(width: 30, height: 26),
             padding: EdgeInsets.zero,
           ),
           SizedBox(
-            width: 42,
+            width: 34,
             child: Text(
               '$quantity',
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: AppTheme.navy,
+                fontSize: 12,
                 fontWeight: FontWeight.w900,
               ),
             ),
           ),
           IconButton(
             onPressed: () => onChanged(quantity + 1),
-            icon: const Icon(Icons.add, size: 15),
-            constraints: const BoxConstraints.tightFor(width: 36, height: 32),
+            icon: const Icon(Icons.add, size: 14),
+            constraints: const BoxConstraints.tightFor(width: 30, height: 26),
             padding: EdgeInsets.zero,
           ),
           const Padding(
-            padding: EdgeInsetsDirectional.only(end: 10),
+            padding: EdgeInsetsDirectional.only(end: 8),
             child: Text(
               'الكمية',
-              style: TextStyle(fontSize: 10.5, color: AppTheme.muted),
+              style: TextStyle(fontSize: 9, color: AppTheme.muted),
             ),
           ),
         ],
@@ -414,14 +418,319 @@ class _Qty extends StatelessWidget {
   }
 }
 
-class _Summary extends StatelessWidget {
+class _CashbackSummary extends StatefulWidget {
+  const _CashbackSummary({required this.total, required this.count});
+
+  final double total;
+  final int count;
+
+  @override
+  State<_CashbackSummary> createState() => _CashbackSummaryState();
+}
+
+class _CashbackSummaryState extends State<_CashbackSummary> {
+  final _couponController = TextEditingController();
+  final _account = AccountService();
+
+  bool _applying = false;
+  double _discount = 0;
+  String _message = '';
+  bool _ok = false;
+
+  @override
+  void dispose() {
+    _couponController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _applyCoupon() async {
+    final code = _couponController.text.trim().toUpperCase();
+    if (code.isEmpty) {
+      _showMessage('أدخل كود الخصم أولاً', false);
+      return;
+    }
+
+    setState(() {
+      _applying = true;
+      _message = '';
+    });
+
+    try {
+      final coupon = await _account.fetchAvailableCashbackCoupon();
+      if (!mounted) return;
+
+      if (coupon == null || coupon.code.toUpperCase() != code) {
+        _showMessage('الكود غير صحيح أو لا يوجد كاش باك متاح', false);
+        return;
+      }
+
+      final amount = coupon.balance.clamp(0, widget.total).toDouble();
+      if (amount <= 0) {
+        _showMessage('لا يوجد خصم متاح لهذا الكوبون', false);
+        return;
+      }
+
+      setState(() {
+        _discount = amount;
+        _ok = true;
+        _message = 'تم تطبيق خصم ${amount.toStringAsFixed(2)} د.إ';
+      });
+    } catch (_) {
+      if (mounted) _showMessage('تعذر تطبيق الكود، حاول مرة أخرى', false);
+    } finally {
+      if (mounted) setState(() => _applying = false);
+    }
+  }
+
+  void _showMessage(String value, bool ok) {
+    setState(() {
+      _discount = 0;
+      _message = value;
+      _ok = ok;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final money = NumberFormat.currency(
+      locale: 'ar_AE',
+      symbol: 'د.إ',
+      decimalDigits: widget.total >= 1000 ? 2 : 0,
+    );
+    final grandTotal = (widget.total - _discount).clamp(0, double.infinity).toDouble();
+
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text(
+            'ملخص الطلب',
+            textAlign: TextAlign.right,
+            style: TextStyle(
+              color: AppTheme.navy,
+              fontSize: 16,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 14),
+          _SummaryRow(label: 'السعر الفرعي', value: money.format(widget.total)),
+          _SummaryRow(
+            label: 'الخصم',
+            value: _discount > 0 ? '-${money.format(_discount)}' : 'يتم تحديده لاحقاً',
+            valueColor: _discount > 0 ? const Color(0xFF16833A) : AppTheme.navy,
+          ),
+          const _SummaryRow(label: 'رسوم الشحن', value: 'يتم تحديده لاحقاً'),
+          const SizedBox(height: 10),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              FilledButton(
+                onPressed: _applying ? null : _applyCoupon,
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppTheme.navy,
+                  disabledBackgroundColor: AppTheme.navy.withValues(alpha: .65),
+                  fixedSize: const Size(68, 44),
+                  minimumSize: const Size(68, 44),
+                  padding: EdgeInsets.zero,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(7),
+                  ),
+                ),
+                child: _applying
+                    ? const SizedBox(
+                        width: 15,
+                        height: 15,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text(
+                        'تطبيق',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
+                      ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: SizedBox(
+                  height: 44,
+                  child: TextField(
+                    controller: _couponController,
+                    textAlign: TextAlign.right,
+                    textDirection: TextDirection.ltr,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => _applyCoupon(),
+                    style: const TextStyle(
+                      color: AppTheme.navy,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'كود الخصم (CB-XXXXXX)',
+                      hintStyle: const TextStyle(
+                        color: AppTheme.muted,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(7),
+                        borderSide: const BorderSide(color: AppTheme.line),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(7),
+                        borderSide: const BorderSide(color: AppTheme.gold),
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(7),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            _message.isEmpty ? 'الكود موجود في حسابك ← قسم الكاش باك' : _message,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: _message.isEmpty
+                  ? AppTheme.gold
+                  : _ok
+                      ? const Color(0xFF16833A)
+                      : const Color(0xFFC62828),
+              fontSize: 10.5,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 18),
+          Row(
+            children: [
+              const Text(
+                'الإجمالي',
+                style: TextStyle(
+                  color: AppTheme.navy,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                money.format(grandTotal),
+                textDirection: TextDirection.ltr,
+                style: const TextStyle(
+                  color: AppTheme.navy,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'تأكيد الطلب يتم على واتساب لإكمال البيانات وتحديد اللون والمقاس والدفع عند الاستلام أو تحويل بنكي. عدد القطع: ${widget.count}',
+            textAlign: TextAlign.right,
+            style: const TextStyle(
+              color: AppTheme.muted,
+              fontSize: 11,
+              height: 1.7,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Summary extends StatefulWidget {
   const _Summary({required this.total, required this.count});
 
   final double total;
   final int count;
 
   @override
+  State<_Summary> createState() => _SummaryState();
+}
+
+class _SummaryState extends State<_Summary> {
+  final _couponController = TextEditingController();
+  final _account = AccountService();
+
+  bool _applyingCoupon = false;
+  double _couponDiscount = 0;
+  String _couponMessage = '';
+  bool _couponOk = false;
+
+  @override
+  void dispose() {
+    _couponController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _applyCashbackCoupon() async {
+    final code = _couponController.text.trim().toUpperCase();
+    if (code.isEmpty) {
+      setState(() {
+        _couponDiscount = 0;
+        _couponOk = false;
+        _couponMessage = 'أدخل كود الخصم أولاً';
+      });
+      return;
+    }
+
+    setState(() {
+      _applyingCoupon = true;
+      _couponMessage = '';
+    });
+
+    try {
+      final coupon = await _account.fetchAvailableCashbackCoupon();
+      if (!mounted) return;
+      if (coupon == null || coupon.code.toUpperCase() != code) {
+        setState(() {
+          _couponDiscount = 0;
+          _couponOk = false;
+          _couponMessage = 'الكود غير صحيح أو لا يوجد كاش باك متاح';
+        });
+        return;
+      }
+
+      final amount = coupon.balance.clamp(0, widget.total).toDouble();
+      if (amount <= 0) {
+        setState(() {
+          _couponDiscount = 0;
+          _couponOk = false;
+          _couponMessage = 'لا يوجد خصم متاح لهذا الكوبون';
+        });
+        return;
+      }
+
+      setState(() {
+        _couponDiscount = amount;
+        _couponOk = true;
+        _couponMessage = 'تم تطبيق خصم ${amount.toStringAsFixed(2)} د.إ';
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _couponDiscount = 0;
+        _couponOk = false;
+        _couponMessage = 'تعذر تطبيق الكود، حاول مرة أخرى';
+      });
+    } finally {
+      if (mounted) setState(() => _applyingCoupon = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final total = widget.total;
+    final count = widget.count;
+    final grandTotal = (total - _couponDiscount).clamp(0, double.infinity).toDouble();
     final money = NumberFormat.currency(
       locale: 'ar_AE',
       symbol: 'د.إ',
@@ -437,7 +746,7 @@ class _Summary extends StatelessWidget {
             textAlign: TextAlign.right,
             style: TextStyle(
               color: AppTheme.navy,
-              fontSize: 19,
+              fontSize: 17,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -452,7 +761,7 @@ class _Summary extends StatelessWidget {
                 onPressed: () {},
                 style: FilledButton.styleFrom(
                   backgroundColor: AppTheme.navy,
-                  minimumSize: const Size(72, 46),
+                minimumSize: const Size(68, 42),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(6),
                   ),
@@ -462,7 +771,7 @@ class _Summary extends StatelessWidget {
               const SizedBox(width: 8),
               const Expanded(
                 child: SizedBox(
-                  height: 46,
+                  height: 42,
                   child: TextField(
                     textAlign: TextAlign.right,
                     decoration: InputDecoration(
@@ -492,7 +801,7 @@ class _Summary extends StatelessWidget {
                 'الإجمالي',
                 style: TextStyle(
                   color: AppTheme.navy,
-                  fontSize: 17,
+                  fontSize: 15.5,
                   fontWeight: FontWeight.w900,
                 ),
               ),
@@ -502,7 +811,7 @@ class _Summary extends StatelessWidget {
                 textDirection: TextDirection.ltr,
                 style: const TextStyle(
                   color: AppTheme.navy,
-                  fontSize: 17,
+                  fontSize: 15.5,
                   fontWeight: FontWeight.w900,
                 ),
               ),
@@ -525,10 +834,11 @@ class _Summary extends StatelessWidget {
 }
 
 class _SummaryRow extends StatelessWidget {
-  const _SummaryRow({required this.label, required this.value});
+  const _SummaryRow({required this.label, required this.value, this.valueColor});
 
   final String label;
   final String value;
+  final Color? valueColor;
 
   @override
   Widget build(BuildContext context) {
@@ -544,7 +854,7 @@ class _SummaryRow extends StatelessWidget {
           Text(
             value,
             textAlign: TextAlign.left,
-            style: const TextStyle(color: AppTheme.navy, fontSize: 12),
+            style: TextStyle(color: valueColor ?? AppTheme.navy, fontSize: 12),
           ),
         ],
       ),
@@ -614,7 +924,7 @@ class _SecuritySection extends StatelessWidget {
             textAlign: TextAlign.right,
             style: const TextStyle(
               color: AppTheme.navy,
-              fontSize: 16,
+              fontSize: 14.5,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -660,8 +970,8 @@ class _EmptyCart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(28, 46, 28, 28),
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 44),
+      margin: const EdgeInsets.fromLTRB(28, 42, 28, 26),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 38),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
@@ -672,7 +982,7 @@ class _EmptyCart extends StatelessWidget {
         children: [
           const Icon(
             Icons.shopping_cart_outlined,
-            size: 62,
+            size: 56,
             color: Color(0xFFE3E8F1),
           ),
           const SizedBox(height: 20),
@@ -680,7 +990,7 @@ class _EmptyCart extends StatelessWidget {
             'عربة التسوق الخاصة بك فارغة',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 16,
+              fontSize: 14.5,
               fontWeight: FontWeight.w900,
               color: AppTheme.navy,
             ),
@@ -696,7 +1006,7 @@ class _EmptyCart extends StatelessWidget {
             onPressed: onBrowse,
             style: FilledButton.styleFrom(
               backgroundColor: AppTheme.navy,
-              minimumSize: const Size(174, 48),
+              minimumSize: const Size(166, 44),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24),
               ),

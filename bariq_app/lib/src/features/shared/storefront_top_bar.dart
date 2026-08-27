@@ -26,7 +26,7 @@ class StorefrontTopBar extends StatelessWidget {
       child: Container(
         width: double.infinity,
         color: AppTheme.navy,
-        padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+        padding: const EdgeInsets.fromLTRB(10, 7, 10, 7),
         child: Stack(
           alignment: Alignment.center,
           children: [
@@ -37,7 +37,7 @@ class StorefrontTopBar extends StatelessWidget {
                 height: 40,
                 child: IconButton(
                   onPressed: showBack ? () => Navigator.of(context).maybePop() : onSearch,
-                  icon: Icon(showBack ? Icons.chevron_left_rounded : Icons.camera_alt_outlined, color: Colors.white, size: 27),
+                  icon: Icon(showBack ? Icons.chevron_left_rounded : Icons.camera_alt_outlined, color: showBack ? Colors.white : const Color(0xFFBFD3F2), size: 24),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints.tightFor(width: 36, height: 36),
                 ),
@@ -50,7 +50,7 @@ class StorefrontTopBar extends StatelessWidget {
                 height: 40,
                 child: IconButton(
                   onPressed: onSearch,
-                  icon: const Icon(Icons.search_rounded, color: Colors.white, size: 27),
+                  icon: const Icon(Icons.search_rounded, color: Color(0xFFFFFFFF), size: 24),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints.tightFor(width: 38, height: 38),
                 ),
@@ -61,12 +61,16 @@ class StorefrontTopBar extends StatelessWidget {
               right: 82,
               child: InkWell(
                 onTap: onSearch,
-                borderRadius: BorderRadius.circular(13),
+                borderRadius: BorderRadius.circular(11),
                 child: Container(
-                  height: 40,
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  height: 38,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
                   alignment: Alignment.centerRight,
-                  decoration: BoxDecoration(color: const Color(0xFFF3F5FA), borderRadius: BorderRadius.circular(13)),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF5F7FB),
+                    borderRadius: BorderRadius.circular(11),
+                    border: Border.all(color: Colors.white.withValues(alpha: .35)),
+                  ),
                   child: Directionality(
                     textDirection: TextDirection.rtl,
                     child: Text(
@@ -74,13 +78,13 @@ class StorefrontTopBar extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.right,
-                      style: const TextStyle(color: Color(0xFF9098A8), fontSize: 13, fontWeight: FontWeight.w800),
+                      style: const TextStyle(color: Color(0xFF8D96A8), fontSize: 11.5, fontWeight: FontWeight.w800),
                     ),
                   ),
                 ),
               ),
             ),
-            Positioned(right: 8, child: Text(trailingTitle, style: const TextStyle(color: Colors.white, fontSize: 21, fontWeight: FontWeight.w900))),
+            Positioned(right: 8, child: Text(trailingTitle, style: const TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w900))),
           ],
         ),
       ),

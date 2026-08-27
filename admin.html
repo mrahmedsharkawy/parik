@@ -199,6 +199,84 @@
   #gate p{color:#7a8296;font-size:.85rem;margin:0 0 18px}
 </style>
 <link rel="stylesheet" href="/style/admin-pro.css?v=20260812-clean-admin">
+<style id="adminSidebarCompactPatch">
+/* Bariq Admin sidebar: all items visible, but distributed across the full height */
+@media (min-width:1101px){
+  :root{--admin-sidebar-w:250px}
+
+  body{
+    padding-right:calc(var(--admin-sidebar-w) + 34px) !important;
+  }
+
+  .tabs{
+    top:10px !important;
+    right:10px !important;
+    width:var(--admin-sidebar-w) !important;
+    height:calc(100dvh - 20px) !important;
+    padding:10px !important;
+    gap:6px !important;
+    overflow:hidden !important;
+    display:flex !important;
+    flex-direction:column !important;
+  }
+
+  .tabs::before{
+    min-height:48px !important;
+    height:48px !important;
+    flex:0 0 48px !important;
+    padding:6px 9px !important;
+    margin:0 0 2px !important;
+    border-radius:15px !important;
+    font-size:.88rem !important;
+  }
+
+  /* Each menu item shares the remaining sidebar height equally. */
+  .tab{
+    min-height:36px !important;
+    height:auto !important;
+    max-height:56px !important;
+    flex:1 1 0 !important;
+    padding:0 11px !important;
+    gap:8px !important;
+    border-radius:12px !important;
+    font-size:.78rem !important;
+    line-height:1.15 !important;
+    box-shadow:0 5px 13px rgba(20,33,61,.035) !important;
+  }
+
+  .tab:hover,.tab.active{
+    transform:translateX(-1px) !important;
+  }
+
+  .admin-backup-tab{
+    margin-top:2px !important;
+    flex:1 1 0 !important;
+    min-height:38px !important;
+    color:#14213d !important;
+    background:linear-gradient(135deg,#fff9dc,#eef8ff) !important;
+    border-color:rgba(212,175,55,.85) !important;
+    justify-content:center !important;
+    font-weight:900 !important;
+  }
+}
+
+/* On shorter desktop screens keep everything visible, without making it tiny. */
+@media (min-width:1101px) and (max-height:800px){
+  .tabs{gap:4px !important;padding:8px !important}
+  .tabs::before{
+    min-height:40px !important;
+    height:40px !important;
+    flex-basis:40px !important;
+    font-size:.82rem !important;
+  }
+  .tab{
+    min-height:31px !important;
+    max-height:46px !important;
+    font-size:.73rem !important;
+    padding:0 9px !important;
+  }
+}
+</style>
 <script src="/java/supabase.js?v=supabase-20260820-safe-sync"></script></head>
 <body>
 
@@ -234,9 +312,11 @@
   <div class="tab" data-tab="banners" onclick="switchTab('banners')">🖼️ العروض والبنرات</div>
   <div class="tab" data-tab="customers" onclick="switchTab('customers')">👥 العملاء</div>
   <div class="tab" data-tab="settings" onclick="switchTab('settings')">⚙️ الإعدادات</div>
-  <a class="tab" href="/bot-admin.html" style="text-decoration:none">🤖 إدارة البوت</a>
-  <a class="tab" href="/ads-studio" style="text-decoration:none">📣 Ads Studio</a>
-  <a class="tab" href="/erp.html" style="text-decoration:none">ERB</a>
+  <a class="tab admin-external-link" href="/app-control.html" target="_blank" rel="noopener noreferrer" style="text-decoration:none">📱 App Control</a>
+  <a class="tab admin-external-link" href="/bot-admin.html" target="_blank" rel="noopener noreferrer" style="text-decoration:none">🤖 إدارة البوت</a>
+  <a class="tab admin-external-link" href="/ads-studio" target="_blank" rel="noopener noreferrer" style="text-decoration:none">📣 Ads Studio</a>
+  <a class="tab admin-external-link" href="/erp.html" target="_blank" rel="noopener noreferrer" style="text-decoration:none">ERB</a>
+  <button type="button" class="tab admin-backup-tab" onclick="downloadAdminBackup()">💾 Backup</button>
 </div>
 
 <div class="wrap">
@@ -886,7 +966,7 @@
     <div class="card" style="margin-top:16px">
       <h2>📤 تصدير التقارير</h2>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <a class="btn-navy" href="/admin-reports.html" style="text-decoration:none">📱 شاشة تقارير الهاتف</a>
+        <a class="btn-navy" href="/admin-reports.html" target="_blank" rel="noopener noreferrer" style="text-decoration:none">📱 شاشة تقارير الهاتف</a>
         <button class="btn-gold" onclick="exportReportExcel()">📊 تصدير Excel</button>
         <button class="btn-navy" onclick="exportReportPDF()">📄 تصدير PDF</button>
         <button class="btn-ghost" onclick="exportReportJSON()">📋 تصدير JSON</button>
@@ -6746,6 +6826,62 @@ function renderCustomerOccasionsAdmin() {
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',bindCustomerOccasions,{once:true});
   else bindCustomerOccasions();
+})();
+</script>
+
+<script id="bariqAdminNavigationPatch">
+(function(){
+  function markExternalLinks(){
+    document.querySelectorAll('a[href]').forEach(function(a){
+      var href=(a.getAttribute('href')||'').trim();
+      if(!href || href.charAt(0)==='#' || /^javascript:/i.test(href) || /^mailto:/i.test(href) || /^tel:/i.test(href)) return;
+      a.target='_blank';
+      a.rel='noopener noreferrer';
+    });
+  }
+
+  window.downloadAdminBackup=function(){
+    try{
+      var safeLocal={};
+      for(var i=0;i<localStorage.length;i++){
+        var key=localStorage.key(i);
+        if(!key) continue;
+        if(/token|auth|session|password|secret|admin_ok|refresh/i.test(key)) continue;
+        safeLocal[key]=localStorage.getItem(key);
+      }
+      var backup={
+        format:'bariq-admin-backup-v1',
+        generated_at:new Date().toISOString(),
+        source:location.origin,
+        data:{
+          products:(typeof products!=='undefined'?products:null),
+          categories:(typeof categories!=='undefined'?categories:null),
+          orders:(typeof getOrders==='function'?getOrders():null),
+          settings:(typeof getSettings==='function'?getSettings():null),
+          banners:(typeof getBanners==='function'?getBanners():null),
+          coupons:(typeof getCoupons==='function'?getCoupons():null),
+          local_storage:safeLocal
+        }
+      };
+      var blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json;charset=utf-8'});
+      var url=URL.createObjectURL(blob);
+      var a=document.createElement('a');
+      a.href=url;
+      a.download='Bariq-Admin-Backup-'+new Date().toISOString().replace(/[:.]/g,'-')+'.json';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(function(){URL.revokeObjectURL(url)},1500);
+      if(typeof toast==='function') toast('✅ تم تنزيل النسخة الاحتياطية');
+    }catch(err){
+      console.error('Backup failed:',err);
+      if(typeof toast==='function') toast('❌ تعذر إنشاء النسخة الاحتياطية');
+      else alert('تعذر إنشاء النسخة الاحتياطية');
+    }
+  };
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',markExternalLinks,{once:true});
+  else markExternalLinks();
 })();
 </script>
 </body>
