@@ -1,15 +1,30 @@
-# ما الذي تغير عن النسخة القديمة؟
+# Bariq Flutter — completion pass
 
-النسخة القديمة كان فيها `Set<String>` للسلة داخل Home وSet آخر داخل Offers، بينما Cart نفسها كانت تبدأ فارغة. النسخة الجديدة تستخدم `AppState` واحد لكل التطبيق.
+تمت إعادة بناء الواجهة الأساسية اعتمادًا على `preview.html` القديم باعتباره مرجع الشكل الأقرب للموقع، مع ربط Flutter مباشرة بنفس مشروع Supabase.
 
-الفئات القديمة كانت Hard-coded. النسخة الجديدة تقرأ `categories` و`subcategories` من Supabase وتفلتر المنتجات حسب `subcategory_id`.
+## ما تم توحيده
+- الصفحة الرئيسية: Hero مشابه للمعاينة القديمة، بحث، شرائح الفئات، Trust Bar، اختيارات اليوم، فئات، وكروت منتجات بنفس روح الموقع.
+- كروت المنتجات: صورة مربعة، خصم، نجوم، شريط مؤقت/توفير، السعر القديم والجديد، تم بيع، زر السلة.
+- الفئات: `categories` و`subcategories` من Supabase بدل Hard-code، مع فلترة المنتجات الحقيقية.
+- العروض: مبنية من `old_price > price` وتدعم الفرز.
+- صفحة المنتج: بيانات حقيقية تشمل `description_ar/en`, gallery, stock, rating_count, discount والتخصيص عبر واتساب.
+- السلة: AppState موحد لكل التطبيق بدل Preview ثابت.
+- الحساب: Supabase Auth وقراءة الطلبات من `orders.customer_email`.
+- الإعدادات: `settings.whatsapp`, `currency`, `language`, `daily_picks`.
+- Bottom Nav قريب من شريط الموقع بدون نصوص ظاهرة.
 
-الحساب القديم كان يحتوي طلبات تجريبية ثابتة. النسخة الجديدة تستخدم Supabase Auth وتحاول قراءة طلبات المستخدم الحقيقية من `orders`.
+## قاعدة البيانات التي تم مطابقة الكود عليها
+Products: `description_ar`, `description_en`, `category_id`, `subcategory_id`, `stock`, `gallery`, `rating_count`, `featured`, `active`, `sort_order`, `timer_end`.
+Categories/Subcategories: `active`, `sort_order`, `image`.
+Orders: `customer_email`, `customer_phone`, `items`, `status`, `total`.
+Settings: `whatsapp`, `currency`, `language`, `daily_picks`.
 
-أضيفت صفحات ووظائف جديدة:
-- SearchScreen
-- ProductScreen
-- CheckoutScreen
-- LoginScreen
-- shared cart/favorites state
-- local persistence
+## التشغيل
+```powershell
+flutter clean
+flutter pub get
+flutter analyze
+flutter run -d chrome
+```
+
+> ملاحظة: التطابق البصري النهائي 1:1 يحتاج مراجعة Screenshot بجانب الموقع على نفس عرض الهاتف، لأن Flutter Native لا يقرأ CSS الموقع. لكن هذه النسخة أصبحت مبنية على نفس بنية المعاينة القديمة ونفس بيانات Supabase بدل التصميم التجريبي السابق.

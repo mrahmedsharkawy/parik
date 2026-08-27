@@ -1,81 +1,760 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' hide TextDirection;
+
+import '../../models/cart_item.dart';
+import '../../models/product.dart';
+import '../../services/supabase_catalog_service.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_theme.dart';
+import '../catalog/product_gallery_grid.dart';
+import '../catalog/search_screen.dart';
 import '../checkout/checkout_screen.dart';
+import '../shared/bariq_network_image.dart';
+import '../shared/storefront_top_bar.dart';
 
-class CartScreen extends StatelessWidget {
+class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
+
+  @override
+  State<CartScreen> createState() => _CartScreenState();
+}
+
+class _CartScreenState extends State<CartScreen> {
+  late final Future<List<Product>> _suggestions =
+      SupabaseCatalogService().fetchProducts(limit: 12);
 
   @override
   Widget build(BuildContext context) {
     final state = AppStateScope.of(context);
     final items = state.cartItems;
-    final money = NumberFormat.currency(locale: 'ar_AE', symbol: 'د.إ', decimalDigits: 0);
-
     return Scaffold(
-      appBar: AppBar(title: Text('السلة (${state.cartCount})')),
-      bottomNavigationBar: items.isEmpty ? null : SafeArea(
-        minimum: const EdgeInsets.all(10),
-        child: FilledButton(
-          onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => AppStateScope(state: state, child: const CheckoutScreen()))),
-          style: FilledButton.styleFrom(backgroundColor: AppTheme.navy, minimumSize: const Size.fromHeight(54)),
-          child: Text('تأكيد الطلب • ${money.format(state.cartTotal)}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+      backgroundColor: const Color(0xFFF4F5F7),
+      body: SafeArea(
+        bottom: false,
+        child: CustomScrollView(
+          slivers: [
+            StorefrontTopBarSliver(
+              placeholder: 'إبحث بالصورة أو الاسم أو المناسبة',
+              onSearch: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const SearchScreen()),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(10, 14, 10, 112),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  if (items.isEmpty) ...[
+                    _EmptyCart(
+                      onBrowse: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const SearchScreen()),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ] else ...[
+                    const _ShippingNote(),
+                    const SizedBox(height: 12),
+                    _SelectAll(count: items.length, onClear: state.clearCart),
+                    const SizedBox(height: 12),
+                    for (final item in items) _CartLine(item: item),
+                    const SizedBox(height: 26),
+                    _Summary(total: state.cartTotal, count: state.cartCount),
+                    const SizedBox(height: 16),
+                    FilledButton(
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const CheckoutScreen(),
+                        ),
+                      ),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppTheme.navy,
+                        minimumSize: const Size.fromHeight(52),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(28),
+                        ),
+                      ),
+                      child: Text(
+                        'تأكيد الطلب عبر واتساب (${state.cartCount} قطعة)',
+                        style: const TextStyle(fontWeight: FontWeight.w900),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'لن يتم تحصيل رسوم منك حتى تقوم بمراجعة هذا الطلب وتأكيده.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: AppTheme.muted,
+                        fontSize: 11,
+                        height: 1.7,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    const _SecurityInfo(),
+                    const SizedBox(height: 30),
+                  ],
+                  const _SuggestionTitle(),
+                  const SizedBox(height: 12),
+                  _SuggestedProducts(future: _suggestions),
+                ]),
+              ),
+            ),
+          ],
         ),
       ),
-      body: items.isEmpty
-          ? const Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-              Icon(Icons.shopping_cart_outlined, size: 78, color: Color(0xFFCDD4E0)),
-              SizedBox(height: 12),
-              Text('السلة فارغة', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 19, color: AppTheme.navy)),
-              SizedBox(height: 5),
-              Text('أضف منتجاتك المفضلة وارجع هنا', style: TextStyle(color: AppTheme.muted)),
-            ]))
-          : ListView(
-              padding: const EdgeInsets.fromLTRB(10, 10, 10, 110),
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(color: const Color(0xFFF2FFF0), borderRadius: BorderRadius.circular(12)),
-                  child: const Text('🚚 يتم تحديد تكلفة الشحن وموعد التسليم بعد مراجعة الطلب مع فريق بريق.', style: TextStyle(fontWeight: FontWeight.w700)),
-                ),
-                const SizedBox(height: 10),
-                ...items.map((item) => Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(9),
-                    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      ClipRRect(borderRadius: BorderRadius.circular(10), child: CachedNetworkImage(
-                        imageUrl: item.product.imageUrl, width: 92, height: 100, fit: BoxFit.cover,
-                        errorWidget: (_, __, ___) => Container(width: 92, height: 100, color: const Color(0xFFF0F3F8), child: const Icon(Icons.image_outlined)),
-                      )),
+    );
+  }
+}
+
+class _ShippingNote extends StatelessWidget {
+  const _ShippingNote();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: const BoxDecoration(color: Color(0xFFEFFFF0)),
+      child: const Text(
+        'يتم تحديد الشحن بعد تأكيد الطلب في واتساب مع فريق المبيعات 🚚',
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: Color(0xFF087A2D),
+          fontSize: 11.5,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+}
+
+class _SelectAll extends StatelessWidget {
+  const _SelectAll({required this.count, required this.onClear});
+
+  final int count;
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 50,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(7),
+        border: Border.all(color: AppTheme.line),
+      ),
+      child: Directionality(
+        textDirection: TextDirection.rtl,
+        child: Row(
+          children: [
+            const Icon(
+              Icons.radio_button_checked_rounded,
+              color: AppTheme.navy,
+              size: 21,
+            ),
+            const SizedBox(width: 8),
+            const Text(
+              'تحديد الكل',
+              style: TextStyle(
+                color: AppTheme.navy,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              'المحدد: $count',
+              style: const TextStyle(
+                color: AppTheme.navy,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const Spacer(),
+            TextButton.icon(
+              onPressed: onClear,
+              icon: const Icon(Icons.delete_outline_rounded, size: 18),
+              label: const Text('حذف المحدد'),
+              style: TextButton.styleFrom(
+                foregroundColor: AppTheme.navy,
+                padding: EdgeInsets.zero,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CartLine extends StatelessWidget {
+  const _CartLine({required this.item});
+
+  final CartItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    final state = AppStateScope.of(context);
+    final product = item.product;
+    final money = NumberFormat.currency(
+      locale: 'ar_AE',
+      symbol: 'د.إ',
+      decimalDigits: product.price >= 1000 ? 2 : 0,
+    );
+    final old = product.oldPrice > product.price ? product.oldPrice : 0;
+    final discount = old > 0
+        ? ((old - product.price) / old * 100).round().clamp(0, 99).toInt()
+        : 0;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(9),
+        border: Border.all(color: AppTheme.line),
+      ),
+      child: Directionality(
+        textDirection: TextDirection.rtl,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(top: 2),
+              child: Icon(
+                Icons.radio_button_checked_rounded,
+                color: AppTheme.navy,
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              product.displayName,
+                              textAlign: TextAlign.right,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: AppTheme.navy,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            const Text(
+                              'متبقي القليل، العرض قريباً ينتهي',
+                              textAlign: TextAlign.right,
+                              style: TextStyle(
+                                color: Colors.redAccent,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                IconButton(
+                                  onPressed: () =>
+                                      state.removeFromCart(product.id),
+                                  icon: const Icon(
+                                    Icons.delete_outline_rounded,
+                                    color: Color(0xFF2B3348),
+                                    size: 20,
+                                  ),
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints.tightFor(
+                                    width: 32,
+                                    height: 32,
+                                  ),
+                                ),
+                                const Spacer(),
+                                if (discount > 0) _DiscountBadge(value: discount),
+                                const SizedBox(width: 6),
+                                Text(
+                                  money.format(product.price),
+                                  textDirection: TextDirection.ltr,
+                                  style: const TextStyle(
+                                    color: AppTheme.gold,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (old > 0)
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: Text(
+                                  money.format(old),
+                                  textDirection: TextDirection.ltr,
+                                  style: const TextStyle(
+                                    color: Colors.grey,
+                                    decoration: TextDecoration.lineThrough,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
                       const SizedBox(width: 10),
-                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text(item.product.displayName, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w900, color: AppTheme.navy)),
-                        const SizedBox(height: 5),
-                        Text(money.format(item.product.price), style: const TextStyle(fontWeight: FontWeight.w900, color: AppTheme.gold)),
-                        const SizedBox(height: 10),
-                        Row(children: [
-                          IconButton(onPressed: () => state.setQuantity(item.product.id, item.quantity - 1), icon: const Icon(Icons.remove_circle_outline)),
-                          Text('${item.quantity}', style: const TextStyle(fontWeight: FontWeight.w900)),
-                          IconButton(onPressed: () => state.setQuantity(item.product.id, item.quantity + 1), icon: const Icon(Icons.add_circle_outline)),
-                          const Spacer(),
-                          IconButton(onPressed: () => state.removeFromCart(item.product.id), icon: const Icon(Icons.delete_outline, color: Colors.red)),
-                        ]),
-                      ])),
-                    ]),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(7),
+                        child: BariqNetworkImage(
+                          imageUrl: product.images.first,
+                          width: 118,
+                          height: 118,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ],
                   ),
-                )),
-                Card(child: Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: Row(children: [
-                    const Text('الإجمالي', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: AppTheme.navy)),
-                    const Spacer(),
-                    Text(money.format(state.cartTotal), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: AppTheme.gold)),
-                  ]),
-                )),
+                  const SizedBox(height: 10),
+                  Align(
+                    alignment: Alignment.center,
+                    child: _Qty(
+                      quantity: item.quantity,
+                      onChanged: (value) => state.setQuantity(product.id, value),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DiscountBadge extends StatelessWidget {
+  const _DiscountBadge({required this.value});
+
+  final int value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF1D5),
+        borderRadius: BorderRadius.circular(5),
+      ),
+      child: Text(
+        '$value%-',
+        textDirection: TextDirection.ltr,
+        style: const TextStyle(
+          color: AppTheme.gold,
+          fontSize: 11,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+    );
+  }
+}
+
+class _Qty extends StatelessWidget {
+  const _Qty({required this.quantity, required this.onChanged});
+
+  final int quantity;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 32,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: AppTheme.line),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            onPressed: () => onChanged(quantity - 1),
+            icon: const Icon(Icons.remove, size: 15),
+            constraints: const BoxConstraints.tightFor(width: 36, height: 32),
+            padding: EdgeInsets.zero,
+          ),
+          SizedBox(
+            width: 42,
+            child: Text(
+              '$quantity',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: AppTheme.navy,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+          IconButton(
+            onPressed: () => onChanged(quantity + 1),
+            icon: const Icon(Icons.add, size: 15),
+            constraints: const BoxConstraints.tightFor(width: 36, height: 32),
+            padding: EdgeInsets.zero,
+          ),
+          const Padding(
+            padding: EdgeInsetsDirectional.only(end: 10),
+            child: Text(
+              'الكمية',
+              style: TextStyle(fontSize: 10.5, color: AppTheme.muted),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Summary extends StatelessWidget {
+  const _Summary({required this.total, required this.count});
+
+  final double total;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final money = NumberFormat.currency(
+      locale: 'ar_AE',
+      symbol: 'د.إ',
+      decimalDigits: total >= 1000 ? 2 : 0,
+    );
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text(
+            'ملخص الطلب',
+            textAlign: TextAlign.right,
+            style: TextStyle(
+              color: AppTheme.navy,
+              fontSize: 19,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 16),
+          _SummaryRow(label: 'السعر الفرعي', value: money.format(total)),
+          const _SummaryRow(label: 'الخصم', value: 'يتم تحديده لاحقاً'),
+          const _SummaryRow(label: 'رسوم الشحن', value: 'يتم تحديده لاحقاً'),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              FilledButton(
+                onPressed: () {},
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppTheme.navy,
+                  minimumSize: const Size(72, 46),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+                child: const Text('تطبيق'),
+              ),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: SizedBox(
+                  height: 46,
+                  child: TextField(
+                    textAlign: TextAlign.right,
+                    decoration: InputDecoration(
+                      hintText: 'كود الخصم (CB-XXXXXX)',
+                      contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'الكود موجود في حسابك ← قسم الكاش باك',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: AppTheme.gold,
+              fontSize: 10.5,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 18),
+          Row(
+            children: [
+              const Text(
+                'الإجمالي',
+                style: TextStyle(
+                  color: AppTheme.navy,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                money.format(total),
+                textDirection: TextDirection.ltr,
+                style: const TextStyle(
+                  color: AppTheme.navy,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'تأكيد الطلب يتم على واتساب لإكمال البيانات وتحديد اللون والمقاس والدفع عند الاستلام أو تحويل بنكي. عدد القطع: $count',
+            textAlign: TextAlign.right,
+            style: const TextStyle(
+              color: AppTheme.muted,
+              fontSize: 11.5,
+              height: 1.7,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SummaryRow extends StatelessWidget {
+  const _SummaryRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: AppTheme.line)),
+      ),
+      child: Row(
+        children: [
+          Text(label, style: const TextStyle(color: AppTheme.navy, fontSize: 12)),
+          const Spacer(),
+          Text(
+            value,
+            textAlign: TextAlign.left,
+            style: const TextStyle(color: AppTheme.navy, fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SecurityInfo extends StatelessWidget {
+  const _SecurityInfo();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Directionality(
+      textDirection: TextDirection.rtl,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _SecuritySection(
+            title: 'خيارات الدفع الآمنة',
+            body: 'نلتزم بحماية معلومات الدفع الخاصة بك.',
+            logos: [
+              'assets/pay/googlepay.webp',
+              'assets/pay/applepay.webp',
+              'assets/pay/amex.webp',
+              'assets/pay/mastercard.webp',
+              'assets/pay/visa.webp',
+              'assets/pay/tabby.webp',
+              'assets/pay/tamara.webp',
+            ],
+          ),
+          _SecuritySection(
+            title: 'تأمين الخصوصية',
+            body:
+                'حماية خصوصيتك أمر بالغ الأهمية بالنسبة لنا. لن نحتفظ بمعلوماتك الشخصية أو نشاركها إلا حسب سياسة الخصوصية.',
+          ),
+          _SecuritySection(
+            title: 'سياسة الإرجاع',
+            body:
+                'قبل إرجاع المنتجات ضمن شروطنا، سيتم توضيح خطوات الإرجاع وكيفية استرداد المبلغ في صفحة سياسة الإرجاع.',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SecuritySection extends StatelessWidget {
+  const _SecuritySection({
+    required this.title,
+    required this.body,
+    this.logos = const [],
+  });
+
+  final String title;
+  final String body;
+  final List<String> logos;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 22),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            title,
+            textAlign: TextAlign.right,
+            style: const TextStyle(
+              color: AppTheme.navy,
+              fontSize: 16,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            body,
+            textAlign: TextAlign.right,
+            style: const TextStyle(
+              color: AppTheme.muted,
+              height: 1.8,
+              fontSize: 12,
+            ),
+          ),
+          if (logos.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 10,
+              runSpacing: 8,
+              children: [
+                for (final logo in logos)
+                  Image.asset(
+                    logo,
+                    height: 22,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                  ),
               ],
             ),
+          ],
+          const Divider(height: 26),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyCart extends StatelessWidget {
+  const _EmptyCart({required this.onBrowse});
+
+  final VoidCallback onBrowse;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(28, 46, 28, 28),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 44),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppTheme.line),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.shopping_cart_outlined,
+            size: 62,
+            color: Color(0xFFE3E8F1),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'عربة التسوق الخاصة بك فارغة',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w900,
+              color: AppTheme.navy,
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'إضافة سعادتك المفضلة.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: AppTheme.muted, fontSize: 12),
+          ),
+          const SizedBox(height: 24),
+          FilledButton(
+            onPressed: onBrowse,
+            style: FilledButton.styleFrom(
+              backgroundColor: AppTheme.navy,
+              minimumSize: const Size(174, 48),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+            ),
+            child: const Text(
+              'رؤية المنتجات الرائجة',
+              style: TextStyle(fontWeight: FontWeight.w900),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SuggestionTitle extends StatelessWidget {
+  const _SuggestionTitle();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Text(
+      'استكشف اختيارات Bariq لك',
+      textAlign: TextAlign.right,
+      style: TextStyle(
+        color: AppTheme.navy,
+        fontSize: 14,
+        fontWeight: FontWeight.w900,
+      ),
+    );
+  }
+}
+
+class _SuggestedProducts extends StatelessWidget {
+  const _SuggestedProducts({required this.future});
+
+  final Future<List<Product>> future;
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<Product>>(
+      future: future,
+      builder: (context, snapshot) {
+        final products = (snapshot.data ?? const <Product>[])
+            .where((product) => product.active)
+            .take(8)
+            .toList();
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            products.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.all(18),
+            child: Center(
+              child: CircularProgressIndicator(color: AppTheme.gold),
+            ),
+          );
+        }
+        if (products.isEmpty) return const SizedBox.shrink();
+        return ProductGalleryGrid(products: products);
+      },
     );
   }
 }

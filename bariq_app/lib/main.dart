@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'src/config/app_config.dart';
 import 'src/features/shell/app_shell.dart';
 import 'src/state/app_state.dart';
@@ -11,32 +12,27 @@ Future<void> main() async {
     url: AppConfig.supabaseUrl,
     anonKey: AppConfig.supabaseAnonKey,
   );
-
   final state = AppState();
   await state.initialize();
-
-  runApp(BariqApp(state: state));
+  runApp(AppStateScope(state: state, child: const BariqApp()));
 }
 
 class BariqApp extends StatelessWidget {
-  const BariqApp({super.key, required this.state});
-  final AppState state;
+  const BariqApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return AppStateScope(
-      state: state,
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'بريق للهدايا',
-        locale: const Locale('ar'),
-        builder: (context, child) => Directionality(
-          textDirection: TextDirection.rtl,
-          child: child ?? const SizedBox.shrink(),
-        ),
-        theme: AppTheme.light,
-        home: const AppShell(),
+    final state = AppStateScope.of(context);
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'بريق',
+      locale: Locale(state.language),
+      builder: (context, child) => Directionality(
+        textDirection: state.textDirection,
+        child: child ?? const SizedBox.shrink(),
       ),
+      theme: AppTheme.light,
+      home: const AppShell(),
     );
   }
 }

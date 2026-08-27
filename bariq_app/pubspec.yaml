@@ -1,7 +1,7 @@
 name: bariq_app
-description: Bariq Gifts native Flutter shopping app.
+description: Bariq Gifts mobile shopping app built with Flutter.
 publish_to: 'none'
-version: 1.0.0+1
+version: 0.1.0+1
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
@@ -13,15 +13,29 @@ dependencies:
   supabase_flutter: ^2.8.1
   cached_network_image: ^3.4.1
   intl: ^0.19.0
-  shared_preferences: ^2.3.3
   url_launcher: ^6.3.1
-  share_plus: ^10.1.2
-  image_picker: ^1.1.2
+  shared_preferences: ^2.3.3
 
 dev_dependencies:
-  flutter_test:
-    sdk: flutter
   flutter_lints: ^4.0.0
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/home/banners/
+    - assets/pay/
+    - assets/social/
+    - assets/categories/
+    - assets/categories/Acrylic/
+    - assets/categories/Forex/
+    - assets/categories/leather/
+    - assets/categories/Occasions/
+    - assets/categories/paper/
+    - assets/categories/Ramadan/
+    - assets/categories/Sticker/
+    - assets/categories/wood/
+  fonts:
+    - family: Cairo
+      fonts:
+        - asset: assets/fonts/cairo-arabic.woff2
+        - asset: assets/fonts/cairo-latin.woff2

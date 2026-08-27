@@ -1,11 +1,11 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../../models/category.dart';
 import '../../models/product.dart';
 import '../../services/supabase_catalog_service.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_theme.dart';
-import 'product_card.dart';
+import '../shared/bariq_network_image.dart';
+import 'product_gallery_grid.dart';
 
 class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({super.key});
@@ -52,7 +52,7 @@ class _CategoryTile extends StatelessWidget {
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFE7EAF0))),
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          ClipOval(child: CachedNetworkImage(imageUrl: category.image, width: 64, height: 64, fit: BoxFit.cover, errorWidget: (_, __, ___) => Container(width: 64, height: 64, color: const Color(0xFFF0F3F8), child: const Icon(Icons.category_outlined, color: AppTheme.gold)))),
+          ClipOval(child: BariqNetworkImage(imageUrl: category.imageUrl, width: 64, height: 64, fit: BoxFit.cover, errorIconSize: 32)),
           const SizedBox(height: 8),
           Text(category.displayName, textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12, color: AppTheme.navy)),
         ]),
@@ -88,7 +88,7 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> {
           itemBuilder: (_, i) => ListTile(
             tileColor: Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14), side: const BorderSide(color: Color(0xFFE7EAF0))),
-            leading: ClipOval(child: CachedNetworkImage(imageUrl: subs[i].image, width: 48, height: 48, fit: BoxFit.cover, errorWidget: (_, __, ___) => const CircleAvatar(child: Icon(Icons.card_giftcard)))),
+            leading: ClipOval(child: BariqNetworkImage(imageUrl: subs[i].imageUrl, width: 48, height: 48, fit: BoxFit.cover, errorIconSize: 24)),
             title: Text(subs[i].displayName, style: const TextStyle(fontWeight: FontWeight.w900, color: AppTheme.navy)),
             trailing: const Icon(Icons.chevron_left),
             onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => SubcategoryProductsScreen(subcategory: subs[i]))),
@@ -114,11 +114,9 @@ class SubcategoryProductsScreen extends StatelessWidget {
           if (snap.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator(color: AppTheme.gold));
           final products = snap.data ?? [];
           if (products.isEmpty) return const Center(child: Text('لا توجد منتجات في هذا القسم حالياً'));
-          return GridView.builder(
-            padding: const EdgeInsets.fromLTRB(10, 10, 10, 100),
-            itemCount: products.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, crossAxisSpacing: 9, mainAxisSpacing: 9, childAspectRatio: .66),
-            itemBuilder: (_, i) => BariqProductCard(product: products[i]),
+          return SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(6, 10, 6, 100),
+            child: ProductGalleryGrid(products: products.take(24).toList()),
           );
         },
       ),

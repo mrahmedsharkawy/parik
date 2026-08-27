@@ -1,0 +1,69 @@
+import 'package:flutter/material.dart';
+
+class BariqNetworkImage extends StatelessWidget {
+  const BariqNetworkImage({
+    super.key,
+    required this.imageUrl,
+    this.width,
+    this.height,
+    this.fit = BoxFit.cover,
+    this.placeholderColor = const Color(0xFFF4F5F7),
+    this.errorIconSize = 28,
+  });
+
+  final String imageUrl;
+  final double? width;
+  final double? height;
+  final BoxFit fit;
+  final Color placeholderColor;
+  final double errorIconSize;
+
+  @override
+  Widget build(BuildContext context) {
+    if (imageUrl.isEmpty) {
+      return _ImageFallback(color: placeholderColor, errorIconSize: errorIconSize);
+    }
+
+    if (imageUrl.startsWith('assets/')) {
+      return Image.asset(
+        imageUrl,
+        width: width,
+        height: height,
+        fit: fit,
+        filterQuality: FilterQuality.medium,
+        errorBuilder: (_, __, ___) => _ImageFallback(color: placeholderColor, errorIconSize: errorIconSize),
+      );
+    }
+
+    return Image.network(
+      imageUrl,
+      width: width,
+      height: height,
+      fit: fit,
+      filterQuality: FilterQuality.medium,
+      gaplessPlayback: true,
+      cacheWidth: width == null ? null : (width! * MediaQuery.devicePixelRatioOf(context)).round(),
+      cacheHeight: height == null ? null : (height! * MediaQuery.devicePixelRatioOf(context)).round(),
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) return child;
+        return ColoredBox(color: placeholderColor);
+      },
+      errorBuilder: (_, __, ___) => _ImageFallback(color: placeholderColor, errorIconSize: errorIconSize),
+    );
+  }
+}
+
+class _ImageFallback extends StatelessWidget {
+  const _ImageFallback({required this.color, required this.errorIconSize});
+
+  final Color color;
+  final double errorIconSize;
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: color,
+      child: Icon(Icons.image_outlined, color: Colors.grey, size: errorIconSize),
+    );
+  }
+}

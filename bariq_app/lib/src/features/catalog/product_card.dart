@@ -1,90 +1,377 @@
-import 'package:cached_network_image/cached_network_image.dart';
+import 'dart:math' as Math;
+
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' hide TextDirection;
+
 import '../../models/product.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_theme.dart';
 import '../product/product_screen.dart';
+import '../shared/bariq_network_image.dart';
 
 class BariqProductCard extends StatelessWidget {
-  const BariqProductCard({super.key, required this.product});
+  const BariqProductCard({super.key, required this.product, this.compact = false});
+
   final Product product;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final money = NumberFormat.currency(locale: 'ar_AE', symbol: 'د.إ', decimalDigits: 0);
+    if (compact) {
+      return _CompactTodayProductCard(product: product, money: money);
+    }
+
+    return _SiteGridProductCard(product: product, money: money);
+  }
+}
+
+class _SiteGridProductCard extends StatelessWidget {
+  const _SiteGridProductCard({required this.product, required this.money});
+
+  final Product product;
+  final NumberFormat money;
 
   @override
   Widget build(BuildContext context) {
     final state = AppStateScope.of(context);
-    final money = NumberFormat.currency(locale: 'ar_AE', symbol: 'د.إ', decimalDigits: 0);
+    final discount = product.discountPercent;
+    final sold = 3000 + (product.id.hashCode.abs() % 2400);
+
     return InkWell(
-      onTap: () => Navigator.of(context).push(MaterialPageRoute(
-        builder: (_) => AppStateScope(state: state, child: ProductScreen(product: product)),
-      )),
-      borderRadius: BorderRadius.circular(14),
+      onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ProductScreen(productId: product.id, initial: product))),
+      borderRadius: BorderRadius.circular(6),
       child: Container(
+        clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFE7EAF0)),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: const Color(0xFFE1E5EC)),
         ),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Expanded(
-            child: Stack(fit: StackFit.expand, children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(13)),
-                child: CachedNetworkImage(
-                  imageUrl: product.imageUrl,
-                  fit: BoxFit.cover,
-                  errorWidget: (_, __, ___) => const ColoredBox(
-                    color: Color(0xFFF0F3F8),
-                    child: Icon(Icons.card_giftcard, color: AppTheme.gold, size: 42),
+        child: Stack(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Stack(
+                  children: [
+                    SizedBox(
+                      height: 204,
+                      width: double.infinity,
+                      child: BariqNetworkImage(
+                        imageUrl: product.images.first,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    if (discount > 0)
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                          decoration: const BoxDecoration(color: Color(0xFF273241)),
+                          child: Text('خصم $discount%', style: const TextStyle(color: Colors.white, fontSize: 11, height: 1, fontWeight: FontWeight.w900)),
+                        ),
+                      ),
+                  ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 7, 8, 7),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                    Text(
+                      product.displayName,
+                      textAlign: TextAlign.right,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: AppTheme.navy, fontSize: 13, height: 1.2, fontWeight: FontWeight.w900),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text('★★★★★', textAlign: TextAlign.right, style: TextStyle(color: AppTheme.gold, fontSize: 13, letterSpacing: 0)),
+                    const SizedBox(height: 3),
+                    if (product.oldPrice > product.price)
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Directionality(
+                          textDirection: TextDirection.ltr,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: const Color(0xFF9AA6BA)),
+                                  borderRadius: BorderRadius.circular(1),
+                                ),
+                                child: const Text(
+                                  '42:04:08',
+                                  textDirection: TextDirection.ltr,
+                                  style: TextStyle(color: AppTheme.navy, fontSize: 8.5, height: 1, fontWeight: FontWeight.w900),
+                                ),
+                              ),
+                              const SizedBox(width: 3),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                color: const Color(0xFF192A48),
+                                child: Text(
+                                  '↓ خصم إضافي ${(product.oldPrice - product.price).toStringAsFixed(2)} د.إ',
+                                  textDirection: TextDirection.rtl,
+                                  style: const TextStyle(color: Colors.white, fontSize: 8.5, height: 1, fontWeight: FontWeight.w900),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 4),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Directionality(
+                        textDirection: TextDirection.rtl,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              money.format(product.price),
+                              textDirection: TextDirection.ltr,
+                              style: const TextStyle(color: AppTheme.gold, fontSize: 13, height: 1, fontWeight: FontWeight.w900),
+                            ),
+                            const SizedBox(width: 4),
+                            const Text('🔥', style: TextStyle(fontSize: 11)),
+                            const SizedBox(width: 4),
+                            Text(
+                              '+${(sold / 1000).toStringAsFixed(1)}k تم بيع',
+                              textDirection: TextDirection.ltr,
+                              style: const TextStyle(color: Color(0xFF667085), fontSize: 10, fontWeight: FontWeight.w700),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    if (product.oldPrice > product.price)
+                      Text(
+                        money.format(product.oldPrice),
+                        textAlign: TextAlign.right,
+                        textDirection: TextDirection.ltr,
+                        style: const TextStyle(color: Color(0xFF8B93A1), fontSize: 12, height: 1, decoration: TextDecoration.lineThrough, fontWeight: FontWeight.w700),
+                      ),
+                    ],
                   ),
                 ),
+              ],
+            ),
+            Positioned(
+              left: 8,
+              bottom: 8,
+              child: _FloatingCartButton(onTap: () => state.addToCart(product)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class DailyPickCard extends StatelessWidget {
+  const DailyPickCard({super.key, required this.product});
+
+  final Product product;
+
+  @override
+  Widget build(BuildContext context) => BariqProductCard(product: product, compact: true);
+}
+
+class _CompactTodayProductCard extends StatelessWidget {
+  const _CompactTodayProductCard({required this.product, required this.money});
+
+  final Product product;
+  final NumberFormat money;
+
+  @override
+  Widget build(BuildContext context) {
+    final state = AppStateScope.of(context);
+    final discount = product.discountPercent;
+
+    return InkWell(
+      onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ProductScreen(productId: product.id, initial: product))),
+      borderRadius: BorderRadius.circular(2),
+      child: Container(
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: const Color(0xFFE0E4EA)),
+        ),
+        child: Stack(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Stack(
+                  children: [
+                    SizedBox(
+                      height: 102,
+                      width: double.infinity,
+                      child: BariqNetworkImage(
+                        imageUrl: product.images.first,
+                        fit: BoxFit.cover,
+                        errorIconSize: 18,
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 6,
+                      left: 6,
+                      child: _FloatingCartButton(onTap: () => state.addToCart(product), compact: true),
+                    ),
+                  ],
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(5, 4, 5, 5),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          product.displayName,
+                          textAlign: TextAlign.right,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(color: AppTheme.navy, fontSize: 10.5, height: 1.15, fontWeight: FontWeight.w900),
+                        ),
+                        const Spacer(),
+                        const Text('★★★★★', textAlign: TextAlign.right, style: TextStyle(color: AppTheme.gold, fontSize: 9.5, height: 1, letterSpacing: 0)),
+                        const SizedBox(height: 2),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            money.format(product.price),
+                            textDirection: TextDirection.ltr,
+                            style: const TextStyle(color: AppTheme.navy, fontSize: 12.5, height: 1, fontWeight: FontWeight.w900),
+                          ),
+                        ),
+                        if (product.oldPrice > product.price) ...[
+                          const SizedBox(height: 2),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: Text(
+                              money.format(product.oldPrice),
+                              textDirection: TextDirection.ltr,
+                              style: const TextStyle(color: Color(0xFF8B93A1), fontSize: 10, height: 1, decoration: TextDecoration.lineThrough, fontWeight: FontWeight.w700),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            if (discount > 0)
+              Positioned(
+                left: 3,
+                bottom: 10,
+                child: _DiscountSeal(discount: discount),
               ),
-              if (product.discountPercent > 0)
-                PositionedDirectional(
-                  top: 7,
-                  start: 7,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(color: AppTheme.navy, borderRadius: BorderRadius.circular(999)),
-                    child: Text('-${product.discountPercent}%', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 11)),
-                  ),
-                ),
-              PositionedDirectional(
-                top: 7,
-                end: 7,
-                child: InkWell(
-                  onTap: () => state.toggleFavorite(product),
-                  child: CircleAvatar(
-                    radius: 16,
-                    backgroundColor: Colors.white.withOpacity(.92),
-                    child: Icon(state.isFavorite(product.id) ? Icons.favorite : Icons.favorite_border, size: 19, color: state.isFavorite(product.id) ? Colors.red : AppTheme.navy),
-                  ),
-                ),
-              ),
-            ]),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(9),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(product.displayName, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12.5, color: AppTheme.ink)),
-              const SizedBox(height: 6),
-              Row(children: [
-                Text(money.format(product.price), style: const TextStyle(fontWeight: FontWeight.w900, color: AppTheme.navy)),
-                const Spacer(),
-                InkWell(
-                  onTap: () => state.addToCart(product),
-                  child: Container(
-                    width: 34, height: 30,
-                    decoration: BoxDecoration(color: state.inCart(product.id) ? AppTheme.gold : const Color(0xFFF5F6F9), borderRadius: BorderRadius.circular(9)),
-                    child: Icon(state.inCart(product.id) ? Icons.check : Icons.add_shopping_cart, size: 17, color: state.inCart(product.id) ? Colors.white : AppTheme.navy),
-                  ),
-                ),
-              ]),
-              if (product.oldPrice > product.price)
-                Text(money.format(product.oldPrice), style: const TextStyle(color: AppTheme.muted, fontSize: 11, decoration: TextDecoration.lineThrough)),
-            ]),
-          )
-        ]),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DiscountSeal extends StatelessWidget {
+  const _DiscountSeal({required this.discount});
+
+  final int discount;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipPath(
+      clipper: _SealClipper(),
+      child: Container(
+        width: 31,
+        height: 31,
+        alignment: Alignment.center,
+        color: AppTheme.navy,
+        child: Text(
+          '-$discount%',
+          textDirection: TextDirection.ltr,
+          style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.w900),
+        ),
+      ),
+    );
+  }
+}
+
+class _SealClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final path = Path();
+    const points = 16;
+    for (var i = 0; i < points; i++) {
+      final radius = i.isEven ? size.width * .5 : size.width * .39;
+      final angle = -1.5708 + i * 6.28318 / points;
+      final point = Offset(center.dx + radius * Math.cos(angle), center.dy + radius * Math.sin(angle));
+      if (i == 0) {
+        path.moveTo(point.dx, point.dy);
+      } else {
+        path.lineTo(point.dx, point.dy);
+      }
+    }
+    return path..close();
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
+}
+
+class _FloatingCartButton extends StatelessWidget {
+  const _FloatingCartButton({required this.onTap, this.compact = false});
+
+  final VoidCallback onTap;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        width: compact ? 28 : 34,
+        height: compact ? 28 : 34,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFFD6DCE6)),
+          boxShadow: const [BoxShadow(color: Color(0x1A000000), blurRadius: 8, offset: Offset(0, 3))],
+        ),
+        child: Icon(Icons.shopping_cart_outlined, color: AppTheme.navy, size: compact ? 17 : 20),
+      ),
+    );
+  }
+}
+
+class _FavoriteButton extends StatelessWidget {
+  const _FavoriteButton({required this.active, required this.onTap});
+
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(999),
+      child: Container(
+        width: 30,
+        height: 30,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(color: Colors.white.withValues(alpha: .92), shape: BoxShape.circle),
+        child: Icon(active ? Icons.favorite : Icons.favorite_border_rounded, color: active ? Colors.redAccent : AppTheme.navy, size: 20),
       ),
     );
   }
