@@ -26,7 +26,9 @@ class _ProductVideoScreenState extends State<ProductVideoScreen> {
     super.initState();
     _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl));
     _initializing = _controller.initialize().then((_) {
-      _controller.setLooping(true);
+      _controller
+        ..setLooping(true)
+        ..play();
       if (mounted) setState(() {});
     });
   }

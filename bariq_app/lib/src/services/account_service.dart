@@ -1,6 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 
+import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../config/app_config.dart';
 
 class AccountService {
   AccountService({SupabaseClient? client}) : _client = client ?? Supabase.instance.client;
@@ -12,10 +16,228 @@ class AccountService {
   static const _comma = '\u{060C} ';
 
   User? get user => _client.auth.currentUser;
-  Future<AuthResponse> signIn(String email, String password) => _client.auth.signInWithPassword(email: email.trim(), password: password);
-  Future<AuthResponse> signUp(String email, String password) => _client.auth.signUp(email: email.trim(), password: password);
-  Future<bool> signInWithGoogle() => _client.auth.signInWithOAuth(OAuthProvider.google);
-  Future<void> resetPassword(String email) => _client.auth.resetPasswordForEmail(email.trim());
+  Future<AuthResponse> signIn(String email, String password) async {
+    final cleanEmail = email.trim().toLowerCase();
+    AuthResponse response;
+    try {
+      response = await _client.auth
+          .signInWithPassword(
+            email: cleanEmail,
+            password: password,
+          )
+          .timeout(const Duration(seconds: 12));
+    } on TimeoutException {
+      response = await _signInLikeWebsite(cleanEmail, password);
+    }
+    try {
+      await completeSignedInProfile().timeout(const Duration(seconds: 8));
+    } on TimeoutException {
+      // Do not block login if profile sync is slow; account screens refetch it.
+    } on PostgrestException {
+      // Auth succeeded, so profile sync failures should not keep the user stuck.
+    }
+    return response;
+  }
+
+  Future<AuthResponse> _signInLikeWebsite(String email, String password) async {
+    final uri = Uri.parse(
+      '${AppConfig.supabaseUrl}/auth/v1/token?grant_type=password',
+    );
+    final response = await http
+        .post(
+          uri,
+          headers: const {
+            'apikey': AppConfig.supabaseAnonKey,
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'email': email,
+            'password': password,
+          }),
+        )
+        .timeout(const Duration(seconds: 18));
+
+    final data = response.body.trim().isEmpty
+        ? const <String, dynamic>{}
+        : jsonDecode(response.body) as Map<String, dynamic>;
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      final message = '${data['error_description'] ?? data['msg'] ?? data['message'] ?? 'Login failed'}';
+      throw AuthException(message);
+    }
+
+    return _client.auth.recoverSession(jsonEncode(data));
+  }
+
+  Future<AuthResponse> signUp(String email, String password) =>
+      _client.auth.signUp(
+        email: email.trim().toLowerCase(),
+        password: password,
+        emailRedirectTo: 'bariqapp://login-callback/',
+      );
+
+  Future<AuthResponse> signUpCustomer({
+    required String name,
+    required String email,
+    required String phone,
+    required String address,
+    required String password,
+  }) async {
+    final cleanEmail = email.trim().toLowerCase();
+    final cleanPhone = normalizeUaePhone(phone);
+
+    if (name.trim().isEmpty ||
+        cleanEmail.isEmpty ||
+        cleanPhone.isEmpty ||
+        address.trim().isEmpty ||
+        password.isEmpty) {
+      throw const AccountValidationException(
+        'اكتب الاسم والبريد والهاتف والعنوان وكلمة المرور',
+      );
+    }
+
+    if (!RegExp(r'^\S+@\S+\.\S+$').hasMatch(cleanEmail)) {
+      throw const AccountValidationException('البريد الإلكتروني غير صحيح');
+    }
+
+    if (cleanPhone.length < 13) {
+      throw AccountValidationException(_phoneError);
+    }
+
+    if (password.length < 6) {
+      throw const AccountValidationException(
+        'كلمة المرور يجب أن تكون 6 أحرف على الأقل',
+      );
+    }
+
+    // Do not reject an old customer row here. A legacy website customer may
+    // exist in customers without having a Supabase Auth identity yet.
+    final response = await _client.auth.signUp(
+      email: cleanEmail,
+      password: password,
+      emailRedirectTo: 'bariqapp://login-callback/',
+      data: {
+        'full_name': name.trim(),
+        'name': name.trim(),
+        'phone': cleanPhone,
+        'address': address.trim(),
+      },
+    );
+
+    final authUser = response.user;
+    if (authUser == null) {
+      throw const AccountValidationException(
+        'تعذر إنشاء الحساب حالياً. حاول مرة أخرى.',
+      );
+    }
+
+    // Supabase can return an existing user with no identities on duplicate
+    // sign-up. Treat it as a duplicate instead of pretending signup worked.
+    if (authUser.identities != null && authUser.identities!.isEmpty) {
+      throw const AccountDuplicateException();
+    }
+
+    final profile = CustomerProfile(
+      name: name.trim(),
+      email: cleanEmail,
+      phone: cleanPhone,
+      address: address.trim(),
+    );
+
+    // When email confirmation is disabled we already have a session and can
+    // sync immediately. If confirmation is enabled, metadata keeps the profile
+    // until the first authenticated session is created.
+    if (response.session != null || _client.auth.currentSession != null) {
+      await saveProfile(profile);
+    }
+
+    return response;
+  }
+
+  Future<bool> customerExistsByEmail(String email) async {
+    final cleanEmail = email.trim().toLowerCase();
+    if (cleanEmail.isEmpty) return false;
+    try {
+      final rows = await _client
+          .from('customers')
+          .select('id')
+          .eq('email', cleanEmail)
+          .limit(1);
+      return rows is List && rows.isNotEmpty;
+    } on PostgrestException {
+      return false;
+    }
+  }
+
+  Future<void> ensureCustomerNotDuplicated({required String email, required String phone}) async {
+    final cleanEmail = email.trim().toLowerCase();
+    final cleanPhone = normalizeUaePhone(phone);
+    final filters = <String>[];
+    if (cleanEmail.isNotEmpty) filters.add('email.eq.$cleanEmail');
+    if (cleanPhone.isNotEmpty) filters.add('phone.eq.$cleanPhone');
+    if (filters.isEmpty) return;
+    try {
+      final rows = await _client
+          .from('customers')
+          .select('id,email,phone')
+          .or(filters.join(','))
+          .limit(1);
+      if (rows is List && rows.isNotEmpty) {
+        throw const AccountDuplicateException();
+      }
+    } on PostgrestException {
+      // If the customers table is protected, Supabase Auth still prevents duplicate emails.
+    }
+  }
+
+  Future<CustomerProfile> completeSignedInProfile() async {
+    final current = user;
+    if (current == null) return const CustomerProfile();
+
+    final orders = await fetchOrders();
+    final stored = await fetchProfile(orders: orders);
+    final meta = current.userMetadata ?? const <String, dynamic>{};
+
+    final profile = stored.copyWith(
+      name: stored.name.trim().isNotEmpty
+          ? stored.name
+          : '${meta['full_name'] ?? meta['name'] ?? current.email?.split('@').first ?? ''}',
+      email: stored.email.trim().isNotEmpty
+          ? stored.email
+          : (current.email ?? '').trim().toLowerCase(),
+      phone: stored.phone.trim().isNotEmpty
+          ? stored.phone
+          : normalizeUaePhone('${meta['phone'] ?? ''}'),
+      address: stored.addressSummary.trim().isNotEmpty
+          ? stored.addressSummary
+          : '${meta['address'] ?? ''}'.trim(),
+    );
+
+    // customers requires a valid phone in the current schema/service logic.
+    // New Google users can finish phone/address later without breaking login.
+    if (profile.phone.trim().isNotEmpty) {
+      try {
+        return await saveProfile(profile);
+      } on PostgrestException {
+        await _pushProfileSync(profile);
+        return profile;
+      }
+    }
+
+    await _pushProfileSync(profile);
+    return profile;
+  }
+
+  Future<bool> signInWithGoogle() => _client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: 'bariqapp://login-callback/',
+        queryParams: const {'prompt': 'select_account'},
+      );
+
+  Future<void> resetPassword(String email) =>
+      _client.auth.resetPasswordForEmail(
+        email.trim().toLowerCase(),
+        redirectTo: 'bariqapp://login-callback/',
+      );
   Future<void> signOut() => _client.auth.signOut();
   Future<UserResponse> updatePassword(String password) => _client.auth.updateUser(UserAttributes(password: password));
 
@@ -979,4 +1201,24 @@ String _cashbackCouponCodeForCustomer(
     code += chars[seed % chars.length];
   }
   return code;
+}
+
+class AccountValidationException implements Exception {
+  const AccountValidationException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
+}
+
+class AccountDuplicateException implements Exception {
+  const AccountDuplicateException([
+    this.message = 'هذا البريد الإلكتروني أو رقم الهاتف مسجّل بالفعل',
+  ]);
+
+  final String message;
+
+  @override
+  String toString() => message;
 }

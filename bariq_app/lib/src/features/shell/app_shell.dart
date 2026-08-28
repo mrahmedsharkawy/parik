@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import '../../state/app_state.dart';
 import '../account/account_screen.dart';
@@ -21,6 +22,7 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   late int _index;
+  bool _navCompact = false;
 
   late final List<Widget?> _pages;
 
@@ -47,12 +49,22 @@ class _AppShellState extends State<AppShell> {
 
     return Scaffold(
       extendBody: true,
-      body: IndexedStack(
-        index: _index,
-        children: List.generate(
-          _pages.length,
-          (index) => RepaintBoundary(
-            child: _pages[index] ?? const SizedBox.shrink(),
+      body: NotificationListener<UserScrollNotification>(
+        onNotification: (notification) {
+          final compact = notification.direction == ScrollDirection.reverse;
+          final expanded = notification.direction == ScrollDirection.forward;
+          if ((compact && !_navCompact) || (expanded && _navCompact)) {
+            setState(() => _navCompact = compact);
+          }
+          return false;
+        },
+        child: IndexedStack(
+          index: _index,
+          children: List.generate(
+            _pages.length,
+            (index) => RepaintBoundary(
+              child: _pages[index] ?? const SizedBox.shrink(),
+            ),
           ),
         ),
       ),
@@ -60,9 +72,11 @@ class _AppShellState extends State<AppShell> {
         selected: _index,
         cartCount: state.cartCount,
         english: state.isEnglish,
+        compact: _navCompact,
         onTap: (index) {
           if (index == _index) return;
           setState(() {
+            _navCompact = false;
             _index = index;
             _pages[index] ??= _buildPage(index);
           });

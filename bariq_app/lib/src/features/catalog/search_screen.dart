@@ -415,7 +415,9 @@ class _SearchScreenState extends State<SearchScreen>
         final red = pixel.r.toDouble();
         final green = pixel.g.toDouble();
         final blue = pixel.b.toDouble();
-        final block = math.min(2, y ~/ 4) * 3 + math.min(2, x ~/ 4);
+        final int block =
+            math.min<int>(2, y ~/ 4) * 3 +
+            math.min<int>(2, x ~/ 4);
         r += red;
         g += green;
         b += blue;

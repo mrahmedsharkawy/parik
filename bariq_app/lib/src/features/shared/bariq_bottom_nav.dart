@@ -10,12 +10,14 @@ class BariqBottomNav extends StatelessWidget {
     required this.cartCount,
     required this.english,
     required this.onTap,
+    this.compact = false,
   });
 
   final int selected;
   final int cartCount;
   final bool english;
   final ValueChanged<int> onTap;
+  final bool compact;
 
   List<(IconData, String)> get _items => [
         (Icons.shopping_cart_outlined, AppStrings.cart),
@@ -36,18 +38,34 @@ class BariqBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
+    final normalHeight = width < 360 ? 54.0 : 59.0;
+    final height = compact ? 47.0 : normalHeight;
+    final horizontalInset = compact ? 58.0 : 10.0;
+    final maxWidth = compact
+        ? (width - (horizontalInset * 2)).clamp(300.0, 430.0).toDouble()
+        : (width >= 700 ? 620.0 : double.infinity);
 
     return SafeArea(
-      minimum: const EdgeInsets.fromLTRB(10, 0, 10, 7),
+      minimum: EdgeInsets.fromLTRB(
+        compact ? 0 : 10,
+        0,
+        compact ? 0 : 10,
+        compact ? 9 : 7,
+      ),
       child: Center(
         heightFactor: 1,
         child: ConstrainedBox(
           constraints: BoxConstraints(
-            maxWidth: width >= 700 ? 620 : double.infinity,
+            maxWidth: maxWidth,
           ),
-          child: Container(
-            height: width < 360 ? 54 : 59,
-            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 6),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+            height: height,
+            padding: EdgeInsets.symmetric(
+              horizontal: compact ? 5 : 7,
+              vertical: compact ? 4 : 6,
+            ),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 begin: Alignment.topCenter,
@@ -59,15 +77,15 @@ class BariqBottomNav extends StatelessWidget {
                 ],
                 stops: [0, .46, 1],
               ),
-              borderRadius: BorderRadius.circular(29),
+              borderRadius: BorderRadius.circular(999),
               border: Border.all(color: Colors.white.withValues(alpha: .24)),
-              boxShadow: const [
+              boxShadow: [
                 BoxShadow(
-                  color: Color(0x4A07152D),
-                  blurRadius: 20,
-                  offset: Offset(0, 6),
+                  color: const Color(0x4A07152D),
+                  blurRadius: compact ? 16 : 20,
+                  offset: Offset(0, compact ? 5 : 6),
                 ),
-                BoxShadow(
+                const BoxShadow(
                   color: Color(0x1FFFFFFF),
                   blurRadius: 1,
                   offset: Offset(0, -1),
@@ -112,25 +130,13 @@ class BariqBottomNav extends StatelessWidget {
                               alignment: Alignment.center,
                               children: [
                                 if (index == 2)
-                                  const Positioned.fill(
-                                    child: DecoratedBox(
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Color(0x66FF7A38),
-                                            blurRadius: 17,
-                                            spreadRadius: 1,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
+                                  _BariqFireIcon(size: compact ? 27 : 31)
+                                else
+                                  Icon(
+                                    item.$1,
+                                    color: active ? Colors.white : _iconColors[index],
+                                    size: compact ? 21 : 24,
                                   ),
-                                Icon(
-                                  item.$1,
-                                  color: index == 2 ? AppTheme.gold : active ? Colors.white : _iconColors[index],
-                                  size: index == 2 ? 29 : 24,
-                                ),
                                 if (index == 0 && cartCount > 0)
                                   PositionedDirectional(
                                     top: -10,
@@ -169,6 +175,69 @@ class BariqBottomNav extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _BariqFireIcon extends StatefulWidget {
+  const _BariqFireIcon({required this.size});
+
+  final double size;
+
+  @override
+  State<_BariqFireIcon> createState() => _BariqFireIconState();
+}
+
+class _BariqFireIconState extends State<_BariqFireIcon>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _scale;
+  late final Animation<double> _glow;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 920),
+    )..repeat(reverse: true);
+    final curve = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
+    _scale = Tween<double>(begin: .94, end: 1.1).animate(curve);
+    _glow = Tween<double>(begin: .28, end: .62).animate(curve);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _scale.value,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFFF7436).withValues(alpha: _glow.value),
+                  blurRadius: 18,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+            child: Text(
+              '🔥',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: widget.size, height: 1),
+            ),
+          ),
+        );
+      },
     );
   }
 }

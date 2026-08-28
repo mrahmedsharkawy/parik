@@ -5,13 +5,16 @@ import '../../models/cart_item.dart';
 import '../../models/product.dart';
 import '../../services/account_service.dart';
 import '../../services/supabase_catalog_service.dart';
+import '../../services/whatsapp_order_service.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_theme.dart';
+import '../account/account_screen.dart';
+import '../auth/login_screen.dart';
 import '../catalog/product_gallery_grid.dart';
 import '../catalog/search_screen.dart';
-import '../checkout/checkout_screen.dart';
 import '../shared/bariq_network_image.dart';
 import '../shared/storefront_top_bar.dart';
+import '../shell/app_shell.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key, this.onBrowseTrending});
@@ -25,6 +28,55 @@ class CartScreen extends StatefulWidget {
 class _CartScreenState extends State<CartScreen> {
   late final Future<List<Product>> _suggestions =
       SupabaseCatalogService().fetchProducts(limit: 12);
+  final _orderService = WhatsAppOrderService();
+  bool _sendingOrder = false;
+
+  Future<void> _confirmViaWhatsApp() async {
+    final state = AppStateScope.of(context);
+    if (state.cartItems.isEmpty || _sendingOrder) return;
+
+    setState(() => _sendingOrder = true);
+    try {
+      final result = await _orderService.submitAndOpen(
+        lines: state.cartItems
+            .map((item) => WhatsAppOrderLine(product: item.product, quantity: item.quantity))
+            .toList(growable: false),
+      );
+      if (!mounted) return;
+      if (!result.opened) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تعذر فتح واتساب.')),
+        );
+        return;
+      }
+      await state.clearCart();
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => const AppShell(
+            initialIndex: 1,
+            accountInitialSection: AccountSection.orders,
+          ),
+        ),
+        (route) => false,
+      );
+    } on WhatsAppOrderLoginRequired {
+      if (!mounted) return;
+      final ok = await Navigator.of(context).push<bool>(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
+      if (ok == true && mounted) {
+        await _confirmViaWhatsApp();
+      }
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('تعذر تأكيد الطلب: $error')),
+      );
+    } finally {
+      if (mounted) setState(() => _sendingOrder = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,13 +116,10 @@ class _CartScreenState extends State<CartScreen> {
                     _CashbackSummary(total: state.cartTotal, count: state.cartCount),
                     const SizedBox(height: 16),
                     FilledButton(
-                      onPressed: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const CheckoutScreen(),
-                        ),
-                      ),
+                      onPressed: _sendingOrder ? null : _confirmViaWhatsApp,
                       style: FilledButton.styleFrom(
                         backgroundColor: AppTheme.navy,
+                        disabledBackgroundColor: AppTheme.navy.withValues(alpha: .62),
                         minimumSize: const Size.fromHeight(48),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(28),

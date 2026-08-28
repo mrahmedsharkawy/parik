@@ -599,14 +599,14 @@ class _OrderCard extends StatelessWidget {
                           label: 'تتبع',
                           color: AppTheme.gold,
                           icon: '📦',
-                          onTap: () => _openWhatsApp('مرحباً بريق، أريد تتبع طلب رقم $number'),
+                          onTap: () => _openWhatsApp(_trackingMessage(order)),
                         ),
                         const SizedBox(width: 10),
                         _OrderAction(
                           label: 'إرجاع',
                           color: Colors.redAccent,
                           icon: '↩',
-                          onTap: () => _openWhatsApp('مرحباً بريق، أريد طلب إرجاع للطلب رقم $number'),
+                          onTap: () => _openWhatsApp(_returnMessage(order)),
                         ),
                       ],
                     ),
@@ -3254,6 +3254,102 @@ String _statusLabel(Object? value) {
 bool _isConfirmedStatus(Object? value) {
   final status = '$value'.trim().toLowerCase();
   return status.contains('confirm') || status.contains('مؤكد');
+}
+
+String _orderNumber(Map<String, dynamic> order) {
+  final value = '${order['order_number'] ?? order['orderNumber'] ?? order['id'] ?? ''}'.trim();
+  if (value.isEmpty) return '#';
+  return value.startsWith('#') ? value : '#$value';
+}
+
+String _trackingMessage(Map<String, dynamic> order) {
+  final number = _orderNumber(order);
+  final status = _statusLabel(order['status']);
+  final name = _firstText([
+    order['customer_name'],
+    order['customerName'],
+    order['name'],
+  ]);
+  final phone = _firstText([
+    order['customer_phone'],
+    order['customerPhone'],
+    order['phone'],
+  ]);
+
+  return [
+    '📦 تتبع طلب',
+    'رقم الطلب: $number',
+    'الحالة: $status',
+    'الاسم: ${name.isEmpty ? 'غير متوفر' : name}',
+    'الهاتف:  ${phone.isEmpty ? 'غير متوفر' : phone}',
+    'أرجو التحديث على طلبي 🙏',
+  ].join('\n');
+}
+
+String _returnMessage(Map<String, dynamic> order) {
+  final number = _orderNumber(order);
+  final product = _firstOrderProductName(order);
+  final name = _firstText([
+    order['customer_name'],
+    order['customerName'],
+    order['name'],
+  ]);
+  final phone = _firstText([
+    order['customer_phone'],
+    order['customerPhone'],
+    order['phone'],
+  ]);
+
+  return [
+    '↩️ طلب إرجاع',
+    'رقم الطلب: $number',
+    'المنتج: ${product.isEmpty ? 'غير محدد' : product}',
+    'الاسم: ${name.isEmpty ? 'غير متوفر' : name}',
+    'الهاتف:  ${phone.isEmpty ? 'غير متوفر' : phone}',
+    'أرجو مساعدتي في الإرجاع 🙏',
+  ].join('\n');
+}
+
+String _firstOrderProductName(Map<String, dynamic> order) {
+  final items = order['items'];
+  if (items is List && items.isNotEmpty) {
+    final first = items.first;
+    if (first is Map) {
+      final name = _firstText([
+        first['title'],
+        first['name'],
+        first['product_name'],
+        first['productName'],
+      ]);
+      if (name.isNotEmpty) return name;
+    }
+  }
+  return _firstText([
+    order['product_name'],
+    order['productName'],
+    order['title'],
+    order['name'],
+  ]);
+}
+
+String _orderItemsMessage(Map<String, dynamic> order) {
+  final items = order['items'];
+  if (items is! List || items.isEmpty) return '- غير محدد';
+  return items.whereType<Map>().map((item) {
+    final name = _firstText([item['title'], item['name'], item['product_name']]);
+    final qty = _firstText([item['qty'], item['quantity']]);
+    final price = _moneyValue(item['price'] ?? item['unit'] ?? item['total']);
+    final money = NumberFormat.currency(locale: 'ar_AE', symbol: 'د.إ', decimalDigits: 2);
+    return '- ${name.isEmpty ? 'منتج' : name} x${qty.isEmpty ? '1' : qty} (${money.format(price)})';
+  }).join('\n');
+}
+
+String _firstText(List<Object?> values) {
+  for (final value in values) {
+    final text = '${value ?? ''}'.trim();
+    if (text.isNotEmpty && text != 'null') return text;
+  }
+  return '';
 }
 
 Future<void> _openWhatsApp(String message) async {

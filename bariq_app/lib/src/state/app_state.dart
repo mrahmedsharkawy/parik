@@ -217,12 +217,13 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> addToCart(Product product) async {
+  Future<void> addToCart(Product product, {int quantity = 1}) async {
     final current = _cart[product.id];
+    final safeQuantity = quantity.clamp(1, 99).toInt();
 
     _cart[product.id] = current == null
-        ? CartItem(product: product)
-        : current.copyWith(quantity: current.quantity + 1);
+        ? CartItem(product: product, quantity: safeQuantity)
+        : current.copyWith(quantity: current.quantity + safeQuantity);
 
     notifyListeners();
     unawaited(_persistCart());
