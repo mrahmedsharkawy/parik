@@ -208,11 +208,11 @@ class WhatsAppOrderService {
       for (final row in rows) {
         final raw = '${(row as Map)['order_number'] ?? ''}';
         final number = int.tryParse(raw.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
-        if (number > max) max = number;
+        if (number >= 1000 && number <= 999999999 && number > max) max = number;
       }
       return '#${max + 1}';
     } catch (_) {
-      return '#${DateTime.now().millisecondsSinceEpoch.toString().substring(6)}';
+      return '#1000';
     }
   }
 
@@ -348,7 +348,12 @@ class WhatsAppOrderService {
       ].join('\n');
     }).join('\n\n');
 
+    final primaryProductUrl = lines.isEmpty
+        ? ''
+        : '${AppConfig.siteUrl}/product/${lines.first.product.id}';
     return [
+      if (primaryProductUrl.isNotEmpty) primaryProductUrl,
+      if (primaryProductUrl.isNotEmpty) '',
       'طلب جديد من الموقع',
       '',
       'رقم الطلب: $orderNumber',
@@ -381,7 +386,10 @@ class WhatsAppOrderService {
   }) {
     final line = lines.first;
     final product = line.product;
+    final primaryProductUrl = '${AppConfig.siteUrl}/product/${product.id}';
     return [
+      primaryProductUrl,
+      '',
       'مرحباً، أريد تخصيص طلب:',
       '',
       'رقم الطلب: $orderNumber',

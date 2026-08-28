@@ -13,6 +13,24 @@
     try { return JSON.parse(localStorage.getItem(CART_KEY) || '[]'); } catch (e) { return []; }
   }
 
+  async function reserveShortOrderNumber() {
+    let latestSerial = 999;
+    try {
+      if (window.Supabase && window.Supabase.Orders) {
+        const orders = await window.Supabase.Orders.getAll(500);
+        latestSerial = (Array.isArray(orders) ? orders : []).reduce((max, order) => {
+          const raw = String(order.order_number || order.orderNumber || order.id || '').replace(/\D/g, '');
+          const number = Number(raw);
+          return Number.isSafeInteger(number) && number >= 1000 && number <= 999999999 && number > max ? number : max;
+        }, latestSerial);
+      }
+    } catch (e) {}
+    const local = Number(localStorage.getItem('x2_order_counter') || 999);
+    const next = Math.max(latestSerial, Number.isSafeInteger(local) && local <= 999999999 ? local : 999) + 1;
+    localStorage.setItem('x2_order_counter', String(next));
+    return '#' + next;
+  }
+
   function esc(value) {
     return String(value || '').replace(/[&<>"]/g, function (char) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[char];
@@ -103,8 +121,9 @@
       const customerName = order.customerName || '';
       const customerPhone = order.customerPhone || (order.shipping && order.shipping.phone) || '';
       const city = order.shipping && order.shipping.city || order.address && order.address.city || '';
+      const displayOrderId = '#' + String(order.id || '').replace(/^#+/, '');
       const adminBody = [
-        `طلب جديد #${order.id}`,
+        `طلب جديد ${displayOrderId}`,
         `العميل: ${customerName || 'غير متوفر'} | المنتج: ${productName || 'منتج'} | السعر: ${totalText}`,
         customerPhone || city ? `الهاتف: ${customerPhone || 'غير متوفر'}${city ? ' | المدينة: ' + city : ''}` : '',
         'اضغط لفتح الطلب'
@@ -163,8 +182,9 @@
     if (!city) { alert('من فضلك أدخل المدينة'); return; }
     if (!address) { alert('من فضلك أدخل العنوان'); return; }
 
+    const orderId = await reserveShortOrderNumber();
     const order = {
-      id: 'ORD-' + Date.now(),
+      id: orderId,
       date: new Date().toISOString(),
       cashback: 5,
       cashbackStatus: 'pending',
@@ -204,7 +224,11 @@
     await notifyAdminNewOrder(order);
 
     const itemsText = cartItems.map(it => `- ${it.name || it.title || 'Product'} x${Number(it.qty || 1)}`).join('\n');
+    const firstProduct = cartItems[0] || {};
+    const primaryProductUrl = firstProduct.id ? 'https://bariqgifts.com/product/' + encodeURIComponent(firstProduct.id) : '';
     const msg = encodeURIComponent([
+      primaryProductUrl,
+      primaryProductUrl ? '' : null,
       'مرحباً، أريد تأكيد الطلب',
       '',
       'رقم الطلب: ' + order.id,
@@ -220,7 +244,7 @@
       '',
       'المدينة: ' + city,
       'الإجمالي: ' + fmt(totalPrice)
-    ].join('\n'));
+    ].filter(line => line !== null).join('\n'));
     alert('✅ تم تأكيد طلبك!\nرقم الطلب: ' + order.id);
     window.open('https://wa.me/971554423151?text=' + msg, '_blank', 'noopener');
     window.location.href = 'account.html';

@@ -9,6 +9,7 @@ class StorefrontTopBar extends StatelessWidget {
     this.placeholder = 'إبحث في Bariq',
     this.trailingTitle = 'Bariq',
     this.onSearch,
+    this.onImageSearch,
   });
 
   static const double height = 56;
@@ -17,6 +18,7 @@ class StorefrontTopBar extends StatelessWidget {
   final String placeholder;
   final String trailingTitle;
   final VoidCallback? onSearch;
+  final VoidCallback? onImageSearch;
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +38,7 @@ class StorefrontTopBar extends StatelessWidget {
                 width: 36,
                 height: 40,
                 child: IconButton(
-                  onPressed: showBack ? () => Navigator.of(context).maybePop() : onSearch,
+                  onPressed: showBack ? () => Navigator.of(context).maybePop() : (onImageSearch ?? onSearch),
                   icon: Icon(showBack ? Icons.chevron_left_rounded : Icons.camera_alt_outlined, color: showBack ? Colors.white : const Color(0xFFBFD3F2), size: 24),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints.tightFor(width: 36, height: 36),
@@ -58,7 +60,7 @@ class StorefrontTopBar extends StatelessWidget {
             ),
             Positioned(
               left: 88,
-              right: 82,
+              right: showBack && onImageSearch != null ? 124 : 82,
               child: InkWell(
                 onTap: onSearch,
                 borderRadius: BorderRadius.circular(11),
@@ -84,6 +86,20 @@ class StorefrontTopBar extends StatelessWidget {
                 ),
               ),
             ),
+            if (showBack && onImageSearch != null)
+              Positioned(
+                right: 80,
+                child: SizedBox(
+                  width: 36,
+                  height: 40,
+                  child: IconButton(
+                    onPressed: onImageSearch,
+                    icon: const Icon(Icons.camera_alt_outlined, color: Color(0xFFBFD3F2), size: 23),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+                  ),
+                ),
+              ),
             Positioned(right: 8, child: Text(trailingTitle, style: const TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w900))),
           ],
         ),
@@ -99,12 +115,14 @@ class StorefrontTopBarSliver extends StatelessWidget {
     this.placeholder = 'إبحث في Bariq',
     this.trailingTitle = 'Bariq',
     this.onSearch,
+    this.onImageSearch,
   });
 
   final bool showBack;
   final String placeholder;
   final String trailingTitle;
   final VoidCallback? onSearch;
+  final VoidCallback? onImageSearch;
 
   @override
   Widget build(BuildContext context) {
@@ -116,6 +134,7 @@ class StorefrontTopBarSliver extends StatelessWidget {
           placeholder: placeholder,
           trailingTitle: trailingTitle,
           onSearch: onSearch,
+          onImageSearch: onImageSearch,
         ),
       ),
     );

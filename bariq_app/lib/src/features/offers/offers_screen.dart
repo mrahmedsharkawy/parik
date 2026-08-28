@@ -22,12 +22,49 @@ class _OffersScreenState extends State<OffersScreen> {
   final _service = SupabaseCatalogService();
   late Future<List<Product>> _future;
   String _sort = 'discount';
-  int _visibleOfferCount = 16;
+  final List<Product> _deals = [];
+  bool _loadingMore = false;
+  bool _hasMore = true;
 
   @override
   void initState() {
     super.initState();
-    _future = _service.fetchProducts(limit: 500);
+    _future = _loadFirstPage();
+  }
+
+  Future<List<Product>> _loadFirstPage() async {
+    final rows = await _service.fetchProductsPage(
+      limit: SupabaseCatalogService.pageSize,
+      discountedOnly: true,
+      sort: _supabaseSort,
+    );
+    _deals
+      ..clear()
+      ..addAll(rows.where((product) => product.discountPercent > 0));
+    _hasMore = rows.length == SupabaseCatalogService.pageSize;
+    return _deals;
+  }
+
+  Future<void> _loadMore() async {
+    if (_loadingMore || !_hasMore) return;
+    setState(() => _loadingMore = true);
+    try {
+      final rows = await _service.fetchProductsPage(
+        offset: _deals.length,
+        limit: SupabaseCatalogService.pageSize,
+        discountedOnly: true,
+        sort: _supabaseSort,
+      );
+      if (!mounted) return;
+      final ids = _deals.map((item) => item.id).toSet();
+      setState(() {
+        _deals.addAll(rows.where((product) => product.discountPercent > 0 && ids.add(product.id)));
+        _hasMore = rows.length == SupabaseCatalogService.pageSize;
+        _loadingMore = false;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _loadingMore = false);
+    }
   }
 
   @override
@@ -46,15 +83,14 @@ class _OffersScreenState extends State<OffersScreen> {
               return Center(child: Text('تعذر تحميل العروض\n${snapshot.error}', textAlign: TextAlign.center));
             }
 
-            final deals = (snapshot.data ?? const <Product>[]).where((product) => product.discountPercent > 0).toList();
+            final deals = _deals.isNotEmpty ? _deals.toList() : (snapshot.data ?? const <Product>[]);
             _sortDeals(deals);
-            final visibleDeals = deals.take(_visibleOfferCount.clamp(0, deals.length)).toList();
             final maxDiscount = deals.isEmpty ? 0 : deals.map((p) => p.discountPercent).reduce((a, b) => a > b ? a : b);
 
             return NotificationListener<ScrollNotification>(
               onNotification: (notification) {
-                if (notification.metrics.extentAfter < 900 && _visibleOfferCount < deals.length) {
-                  setState(() => _visibleOfferCount = (_visibleOfferCount + 12).clamp(0, deals.length).toInt());
+                if (notification.metrics.extentAfter < 900) {
+                  unawaited(_loadMore());
                 }
                 return false;
               },
@@ -94,9 +130,16 @@ class _OffersScreenState extends State<OffersScreen> {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(6, 0, 6, 104),
-                    child: ProductGalleryGrid(products: visibleDeals),
+                    child: ProductGalleryGrid(products: deals),
                   ),
                 ),
+                if (_loadingMore)
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.only(bottom: 24),
+                      child: Center(child: CircularProgressIndicator(color: AppTheme.gold, strokeWidth: 2)),
+                    ),
+                  ),
                 ],
               ),
             );
@@ -108,8 +151,14 @@ class _OffersScreenState extends State<OffersScreen> {
 
   void _setSort(String value) => setState(() {
         _sort = value;
-        _visibleOfferCount = 16;
+        _future = _loadFirstPage();
       });
+
+  String get _supabaseSort {
+    if (_sort == 'price_asc') return 'price_asc';
+    if (_sort == 'price_desc') return 'price_desc';
+    return 'sort_order';
+  }
 
   void _sortDeals(List<Product> deals) {
     if (_sort == 'discount') deals.sort((a, b) => b.discountPercent.compareTo(a.discountPercent));

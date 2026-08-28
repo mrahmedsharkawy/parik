@@ -21,7 +21,7 @@
     url:'https://bariqgifts.com/',
     logo:'https://bariqgifts.com/assets/logo.png',
     image:'https://bariqgifts.com/assets/logo.png',
-    telephone:'+971554423151',
+    telephone:'+971544046084',
     email:'bariq.gifts@gmail.com',
     address:{
       '@type':'PostalAddress',

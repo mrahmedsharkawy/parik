@@ -692,7 +692,7 @@ initX2Cart() || document.addEventListener("DOMContentLoaded", initX2Cart, { once
         if (!items.length) return;
         const phone = function(phone) {
             return String(phone || "").replace(/\D/g, "");
-        }("+971554423151");
+        }("+971544046084");
         if (!phone) return;
         async function reserveOrderId() {
             let nextId = "";
@@ -701,13 +701,17 @@ initX2Cart() || document.addEventListener("DOMContentLoaded", initX2Cart, { once
                     const existing = await Promise.race([ window.Supabase.Orders.getAll(500), new Promise(resolve => setTimeout(() => resolve(null), 1800)) ]);
                     if (existing && existing.length > 0) {
                         nextId = "#" + (existing.reduce((max, o) => {
-                            const n = parseInt((o.order_number || o.id || "").replace("#", "")) || 0;
-                            return n > max ? n : max;
+                            const raw = String(o.order_number || o.orderNumber || o.id || "").replace(/\D/g, "");
+                            const n = Number(raw);
+                            return Number.isSafeInteger(n) && n >= 1000 && n <= 999999999 && n > max ? n : max;
                         }, 999) + 1);
                     }
                 }
             } catch (e) {}
-            if (!nextId) nextId = "#" + (parseInt(localStorage.getItem("x2_order_counter") || "999", 10) + 1);
+            if (!nextId) {
+                const local = parseInt(localStorage.getItem("x2_order_counter") || "999", 10);
+                nextId = "#" + ((Number.isSafeInteger(local) && local <= 999999999 ? local : 999) + 1);
+            }
             localStorage.setItem("x2_order_counter", nextId.replace("#", ""));
             return nextId;
         }

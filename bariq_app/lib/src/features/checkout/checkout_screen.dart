@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' hide TextDirection;
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../config/app_config.dart';
@@ -28,6 +29,23 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _email = TextEditingController();
 
   bool _sending = false;
+
+  Future<String> _reserveShortOrderNumber() async {
+    var max = 999;
+    try {
+      final rows = await Supabase.instance.client
+          .from('orders')
+          .select('order_number')
+          .order('created_at', ascending: false)
+          .limit(500);
+      for (final row in rows) {
+        final raw = '${row['order_number'] ?? ''}';
+        final number = int.tryParse(raw.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+        if (number >= 1000 && number <= 999999999 && number > max) max = number;
+      }
+    } catch (_) {}
+    return '#${max + 1}';
+  }
 
   @override
   void dispose() {
@@ -274,8 +292,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     setState(() => _sending = true);
 
     try {
-      // نفس صيغة رقم الطلب المستخدمة في الموقع.
-      final orderId = 'ORD-${DateTime.now().millisecondsSinceEpoch}';
+      final orderId = await _reserveShortOrderNumber();
 
       // نفس تنسيق محتويات السلة في رسالة الموقع.
       final itemsText = items
@@ -285,7 +302,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           .join('\n');
 
       // نفس رسالة واتساب الموجودة في java/checkout.js بالموقع.
+      final primaryProductUrl = items.isEmpty
+          ? ''
+          : '${AppConfig.siteUrl}/product/${items.first.$1.id}';
       final message = [
+        if (primaryProductUrl.isNotEmpty) primaryProductUrl,
+        if (primaryProductUrl.isNotEmpty) '',
         'مرحباً، أريد تأكيد الطلب',
         '',
         'رقم الطلب: $orderId',

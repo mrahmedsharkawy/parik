@@ -2086,10 +2086,12 @@ document.addEventListener("DOMContentLoaded", async function() {
             try {
                 const existing = await window.Supabase.Orders.getAll(500);
                 if (existing && existing.length > 0) {
-                    orderId = "#" + (existing.reduce((max, o) => {
-                        const n = parseInt((o.order_number || "").replace("#", "")) || 0;
-                        return n > max ? n : max;
-                    }, 999) + 1);
+                    const latestSerial = existing.reduce((max, order) => {
+                        const raw = String(order.order_number || order.orderNumber || order.id || "").replace(/\D/g, "");
+                        const number = Number(raw);
+                        return Number.isSafeInteger(number) && number >= 1000 && number <= 999999999 && number > max ? number : max;
+                    }, 999);
+                    orderId = "#" + (latestSerial + 1);
                 }
             } catch (e) {}
             if (!orderId) {
@@ -2229,7 +2231,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                     customizationLines.push("تنبيه: العميل اختار صور تخصيص، برجاء طلب إرسالها في واتساب إذا لم تظهر كمرفقات.");
                 }
             }
-            const msgLines = [ "مرحباً، أريد تخصيص طلب:", "", `رقم الطلب: ${orderId}`, "", "بيانات العميل:", `الاسم: ${customerName || "غير متوفر"}`, `الهاتف: ${customerPhone || "غير متوفر"}`, `البريد: ${customerEmail || "غير متوفر"}`, `العنوان: ${customerAddress || "موقع العميل"}`, "", "تفاصيل الطلب:", `المنتج: ${getT(p.name)}`, `الكمية: ${qtyVal}`, `السعر: ${total} ${sym}`, `الرابط: ${productUrl}` ];
+            const msgLines = [ productUrl, "", "مرحباً، أريد تخصيص طلب:", "", `رقم الطلب: ${orderId}`, "", "بيانات العميل:", `الاسم: ${customerName || "غير متوفر"}`, `الهاتف: ${customerPhone || "غير متوفر"}`, `البريد: ${customerEmail || "غير متوفر"}`, `العنوان: ${customerAddress || "موقع العميل"}`, "", "تفاصيل الطلب:", `المنتج: ${getT(p.name)}`, `الكمية: ${qtyVal}`, `السعر: ${total} ${sym}` ];
             customizationLines.length && msgLines.push("", "بيانات التخصيص:", ...customizationLines);
             const msgText = msgLines.join("\n");
             const msg = encodeURIComponent(msgText);

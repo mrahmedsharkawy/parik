@@ -27,7 +27,7 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen>
     with AutomaticKeepAliveClientMixin {
-  static const _pageSize = 24;
+  static const _pageSize = SupabaseCatalogService.pageSize;
 
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
@@ -196,7 +196,7 @@ class _SearchScreenState extends State<SearchScreen>
       final target = _imageSignature(pickedBytes);
       if (target == null) throw Exception(AppStrings.imageSearchUnavailable);
 
-      final products = await _service.fetchProducts(limit: 360);
+      final products = await _service.fetchProductsPage(limit: _pageSize);
       final scored = <({Product product, double score})>[];
 
       for (final product in products) {

@@ -9,6 +9,7 @@ import '../config/app_config.dart';
 class AccountService {
   AccountService({SupabaseClient? client}) : _client = client ?? Supabase.instance.client;
   final SupabaseClient _client;
+  static const pageSize = 20;
 
   static const _uae = '\u{0627}\u{0644}\u{0625}\u{0645}\u{0627}\u{0631}\u{0627}\u{062A} \u{0627}\u{0644}\u{0639}\u{0631}\u{0628}\u{064A}\u{0629} \u{0627}\u{0644}\u{0645}\u{062A}\u{062D}\u{062F}\u{0629}';
   static const _loginFirst = '\u{0633}\u{062C}\u{0644} \u{0627}\u{0644}\u{062F}\u{062E}\u{0648}\u{0644} \u{0623}\u{0648}\u{0644}\u{0627}';
@@ -241,18 +242,39 @@ class AccountService {
   Future<void> signOut() => _client.auth.signOut();
   Future<UserResponse> updatePassword(String password) => _client.auth.updateUser(UserAttributes(password: password));
 
-Future<List<Map<String, dynamic>>> fetchOrders() async {
+Future<List<Map<String, dynamic>>> fetchOrders({
+  int offset = 0,
+  int limit = pageSize,
+  String? status,
+  String? search,
+}) async {
   final email = user?.email?.trim();
 
   if (email == null || email.isEmpty) return const [];
 
-  final rows = await _client
+  var query = _client
       .from('orders')
       .select(
         'id,order_number,created_at,total,status,payment_method,payment_status,shipping_cost,notes,items,cashback,cashback_status,cashback_expires_at,customer_name,customer_phone,customer_email',
       )
-      .eq('customer_email', email)
-      .order('created_at', ascending: false);
+      .eq('customer_email', email);
+
+  final cleanStatus = status?.trim().toLowerCase() ?? '';
+  if (cleanStatus.isNotEmpty && cleanStatus != 'all') {
+    query = query.eq('status', cleanStatus);
+  }
+
+  final q = search?.trim() ?? '';
+  if (q.isNotEmpty) {
+    query = query.or(
+      'order_number.ilike.%$q%,customer_name.ilike.%$q%,customer_phone.ilike.%$q%,customer_email.ilike.%$q%',
+    );
+  }
+
+  final pageSize = limit.clamp(1, AccountService.pageSize).toInt();
+  final rows = await query
+      .order('created_at', ascending: false)
+      .range(offset, offset + pageSize - 1);
 
   return List<Map<String, dynamic>>.from(rows);
 }
@@ -318,7 +340,8 @@ Future<List<Map<String, dynamic>>> fetchOrders() async {
           .from('erp_invoices')
           .select('*')
           .or('customer->>email.eq.$email,customer->>phone.eq.${user?.phone ?? ''}')
-          .order('invoice_date', ascending: false);
+          .order('invoice_date', ascending: false)
+          .range(0, pageSize - 1);
       for (final row in rows) {
         final invoice = Map<String, dynamic>.from(row as Map);
         final key = '${invoice['invoice_number'] ?? invoice['id']}';
@@ -353,7 +376,7 @@ Future<List<Map<String, dynamic>>> fetchOrders() async {
     final deletedIds = _stringSet(state['deleted_ids']);
     final items = <AccountNotification>[];
 
-    for (final row in await _fetchRemoteNotificationRows()) {
+    for (final row in await _fetchRemoteNotificationRows(limit: pageSize)) {
       final notification = AccountNotification.fromRow(Map<String, dynamic>.from(row));
       if (notification.id.isEmpty || deletedIds.contains(notification.id)) continue;
       if (!_notificationBelongsToCustomer(row, orders: orders, email: email, phone: phone)) continue;
@@ -372,7 +395,7 @@ Future<List<Map<String, dynamic>>> fetchOrders() async {
       if (current == null || item.createdAt.isAfter(current.createdAt)) byId[item.id] = item;
     }
     final out = byId.values.toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    return out.take(60).toList(growable: false);
+    return out.take(pageSize).toList(growable: false);
   }
 
   Future<void> markNotificationsRead(Iterable<AccountNotification> notifications) async {
@@ -419,7 +442,7 @@ Future<List<Map<String, dynamic>>> fetchOrders() async {
         .select('*')
         .eq('user_id', uid)
         .order('created_at', ascending: false)
-        .limit(500);
+        .range(0, pageSize - 1);
     return rows.map<CustomerOccasion>((row) => CustomerOccasion.fromRow(Map<String, dynamic>.from(row as Map))).toList();
   }
 
@@ -621,13 +644,14 @@ Future<List<Map<String, dynamic>>> fetchOrders() async {
     );
   }
 
-  Future<List<Map<String, dynamic>>> _fetchRemoteNotificationRows() async {
+  Future<List<Map<String, dynamic>>> _fetchRemoteNotificationRows({int limit = pageSize, int offset = 0}) async {
+    final pageSize = limit.clamp(1, AccountService.pageSize).toInt();
     try {
       final rows = await _client
           .from('notifications')
           .select('id,type,icon,title,msg,body,order_id,is_read,read,created_at,user_id,customer_email,customer_phone,url,status,order_status,amount,cashback')
           .order('created_at', ascending: false)
-          .limit(80);
+          .range(offset, offset + pageSize - 1);
       return List<Map<String, dynamic>>.from(rows.map((row) => Map<String, dynamic>.from(row as Map)));
     } on PostgrestException {
       try {
@@ -635,7 +659,7 @@ Future<List<Map<String, dynamic>>> fetchOrders() async {
             .from('notifications')
             .select('id,type,icon,title,msg,order_id,is_read,created_at')
             .order('created_at', ascending: false)
-            .limit(80);
+            .range(offset, offset + pageSize - 1);
         return List<Map<String, dynamic>>.from(rows.map((row) => Map<String, dynamic>.from(row as Map)));
       } on PostgrestException {
         return const [];

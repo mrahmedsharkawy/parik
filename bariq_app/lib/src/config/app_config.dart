@@ -9,7 +9,7 @@ class AppConfig {
   );
 
   static const siteUrl = 'https://bariqgifts.com';
-  static const defaultWhatsApp = '+971554423151';
+  static const defaultWhatsApp = '+971544046084';
   static String get whatsappNumber => defaultWhatsApp.replaceAll(RegExp(r'[^0-9]'), '');
 
   static String mediaUrl(String? value) {

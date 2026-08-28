@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
@@ -32,8 +34,11 @@ class _HomeScreenState extends State<HomeScreen> {
   int _bannerIndex = 0;
   String? _categoryId;
   String? _subcategoryId;
-  int _visibleProductCount = 12;
   bool _showFloatingBars = false;
+  bool _loadingProducts = false;
+  bool _hasMoreProducts = true;
+  final List<Product> _products = [];
+  String _productSort = 'daily_random';
 
   @override
   void initState() {
@@ -48,17 +53,26 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<_HomeData> _load() async {
-    final values = await Future.wait([
-      _catalog.fetchProducts(limit: 500),
+    final setupValues = await Future.wait([
       _catalog.fetchCategories(),
       _catalog.fetchSubcategories(),
       _catalog.fetchSettings(),
     ]);
+    final settings = setupValues[2] as SiteSettings;
+    _productSort = settings.productSort;
+    final products = await _catalog.fetchProductsPage(
+      limit: SupabaseCatalogService.pageSize,
+      sort: _productSort,
+    );
+    _products
+      ..clear()
+      ..addAll(products);
+    _hasMoreProducts = _products.length == SupabaseCatalogService.pageSize;
     return _HomeData(
-      products: values[0] as List<Product>,
-      categories: values[1] as List<CategoryItem>,
-      subcategories: values[2] as List<SubcategoryItem>,
-      settings: values[3] as SiteSettings,
+      products: _products,
+      categories: setupValues[0] as List<CategoryItem>,
+      subcategories: setupValues[1] as List<SubcategoryItem>,
+      settings: settings,
     );
   }
 
@@ -66,6 +80,55 @@ class _HomeScreenState extends State<HomeScreen> {
     final next = _load();
     setState(() => _future = next);
     await next;
+  }
+
+  Future<void> _reloadProducts({String? categoryId, String? subcategoryId}) async {
+    setState(() {
+      _categoryId = categoryId;
+      _subcategoryId = subcategoryId;
+      _loadingProducts = true;
+      _hasMoreProducts = true;
+      _products.clear();
+    });
+    try {
+      final page = await _catalog.fetchProductsPage(
+        limit: SupabaseCatalogService.pageSize,
+        categoryId: categoryId,
+        subcategoryId: subcategoryId,
+        sort: _productSort,
+      );
+      if (!mounted) return;
+      setState(() {
+        _products.addAll(page);
+        _hasMoreProducts = page.length == SupabaseCatalogService.pageSize;
+        _loadingProducts = false;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _loadingProducts = false);
+    }
+  }
+
+  Future<void> _loadMoreProducts() async {
+    if (_loadingProducts || !_hasMoreProducts) return;
+    setState(() => _loadingProducts = true);
+    try {
+      final page = await _catalog.fetchProductsPage(
+        offset: _products.length,
+        limit: SupabaseCatalogService.pageSize,
+        categoryId: _categoryId,
+        subcategoryId: _subcategoryId,
+        sort: _productSort,
+      );
+      if (!mounted) return;
+      final ids = _products.map((item) => item.id).toSet();
+      setState(() {
+        _products.addAll(page.where((item) => ids.add(item.id)));
+        _hasMoreProducts = page.length == SupabaseCatalogService.pageSize;
+        _loadingProducts = false;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _loadingProducts = false);
+    }
   }
 
   @override
@@ -85,18 +148,17 @@ class _HomeScreenState extends State<HomeScreen> {
             }
 
             final data = snapshot.data!;
-            final allProducts = _storeProducts(data.products.toList(), data.settings.productSort);
+            final allProducts = _storeProducts(_products.toList(), data.settings.productSort);
             final selectedCategory = _selectedCategory(data.categories, _categoryId);
             final selectedSubcategories = selectedCategory == null ? const <SubcategoryItem>[] : data.subcategories.where((item) => item.categoryId == selectedCategory.id).toList();
-            final products = _storeProducts(data.products.where((product) {
+            final products = _storeProducts(_products.where((product) {
               final subcategory = _selectedSubcategory(data.subcategories, _subcategoryId);
               if (selectedCategory != null && !matchesCategory(product, selectedCategory, data.subcategories)) return false;
               if (subcategory != null && !matchesSubcategory(product, subcategory)) return false;
               return true;
             }).toList(), data.settings.productSort);
             final today = _dailyPicks(allProducts, data.settings.dailyPicks);
-            final visibleProducts = products;
-            final pagedProducts = visibleProducts.take(_visibleProductCount).toList();
+            final pagedProducts = products;
 
             return RefreshIndicator(
               color: AppTheme.gold,
@@ -113,8 +175,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           setState(() => _showFloatingBars = false);
                         }
                       }
-                      if (metrics.pixels > metrics.maxScrollExtent - 900 && _visibleProductCount < visibleProducts.length) {
-                        setState(() => _visibleProductCount = (_visibleProductCount + 12).clamp(0, visibleProducts.length).toInt());
+                      if (metrics.pixels > metrics.maxScrollExtent - 900) {
+                        unawaited(_loadMoreProducts());
                       }
                       return false;
                     },
@@ -135,11 +197,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         onChanged: (index) => setState(() => _bannerIndex = index),
                         subcategories: data.subcategories,
                         selectedId: _subcategoryId,
-                        onTap: (id) => setState(() {
-                          _subcategoryId = id == _subcategoryId ? null : id;
-                          _categoryId = null;
-                          _visibleProductCount = 12;
-                        }),
+                        onTap: (id) => _reloadProducts(subcategoryId: id == _subcategoryId ? null : id),
                       ),
                     ),
                     const SliverToBoxAdapter(child: _ServiceStrip()),
@@ -149,11 +207,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: _FilterChips(
                         categories: data.categories,
                         selectedId: _categoryId,
-                        onTap: (id) => setState(() {
-                          _categoryId = id;
-                          _subcategoryId = null;
-                          _visibleProductCount = 12;
-                        }),
+                        onTap: (id) => _reloadProducts(categoryId: id),
                       ),
                     ),
                     if (selectedSubcategories.isNotEmpty)
@@ -161,10 +215,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: _SubcategoryImageStrip(
                           subcategories: selectedSubcategories,
                           selectedId: _subcategoryId,
-                          onTap: (id) => setState(() {
-                            _subcategoryId = id == _subcategoryId ? null : id;
-                            _visibleProductCount = 12;
-                          }),
+                          onTap: (id) => _reloadProducts(categoryId: _categoryId, subcategoryId: id == _subcategoryId ? null : id),
                         ),
                       ),
                     SliverToBoxAdapter(
@@ -176,6 +227,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ),
+                    if (_loadingProducts && _products.isNotEmpty)
+                      const SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.only(bottom: 24),
+                          child: Center(child: CircularProgressIndicator(color: AppTheme.gold, strokeWidth: 2)),
+                        ),
+                      ),
                       ],
                     ),
                   ),
@@ -206,11 +264,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 _FilterChips(
                                   categories: data.categories,
                                   selectedId: _categoryId,
-                                  onTap: (id) => setState(() {
-                                    _categoryId = id;
-                                    _subcategoryId = null;
-                                    _visibleProductCount = 12;
-                                  }),
+                                  onTap: (id) => _reloadProducts(categoryId: id),
                                 ),
                               ],
                             ),

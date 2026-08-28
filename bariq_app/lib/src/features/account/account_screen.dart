@@ -54,8 +54,12 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Future<_AccountData> _load() async {
-    final ordersFuture = _account.fetchOrders();
-    final productsFuture = _catalog.fetchProducts(limit: 1000);
+    final ordersFuture = _account.fetchOrders(
+      limit: AccountService.pageSize,
+      status: _orderStatusValue(_orderFilter),
+      search: _orderQuery,
+    );
+    final productsFuture = _catalog.fetchProducts(limit: SupabaseCatalogService.pageSize);
     final orders = await ordersFuture;
     final profile = await _account.fetchProfile(orders: orders);
     final occasions = await _account.fetchOccasions();
@@ -77,6 +81,16 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   void _select(AccountSection section) => setState(() => _section = section);
+
+  String? _orderStatusValue(_OrderFilter filter) {
+    return switch (filter) {
+      _OrderFilter.processing => 'processing',
+      _OrderFilter.shipped => 'shipped',
+      _OrderFilter.delivered => 'delivered',
+      _OrderFilter.returns => 'returned',
+      _OrderFilter.all => null,
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -133,8 +147,14 @@ class _AccountScreenState extends State<AccountScreen> {
                             products: data.products,
                             offers: offers,
                             favorites: favorites,
-                            onOrderFilter: (filter) => setState(() => _orderFilter = filter),
-                            onOrderSearch: (value) => setState(() => _orderQuery = value),
+                            onOrderFilter: (filter) => setState(() {
+                              _orderFilter = filter;
+                              _future = _load();
+                            }),
+                            onOrderSearch: (value) => setState(() {
+                              _orderQuery = value;
+                              _future = _load();
+                            }),
                             onSupport: () => _select(AccountSection.support),
                             onRefresh: _refresh,
                             onLogin: () async {

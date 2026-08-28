@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 import 'package:url_launcher/url_launcher.dart';
@@ -43,6 +44,7 @@ class _ProductScreenState extends State<ProductScreen> {
   int _quantity = 1;
   bool _descExpanded = false;
   bool _sendingOrder = false;
+  bool _navCompact = false;
   String _customText = '';
   String _customNotes = '';
   String _customImagePath = '';
@@ -66,10 +68,12 @@ class _ProductScreenState extends State<ProductScreen> {
       builder: (context, snapshot) {
         final product = snapshot.data ?? widget.initial;
 
-        if (product == null && snapshot.connectionState == ConnectionState.waiting) {
+        if (product == null &&
+            snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             backgroundColor: Colors.white,
-            body: Center(child: CircularProgressIndicator(color: AppTheme.gold)),
+            body:
+                Center(child: CircularProgressIndicator(color: AppTheme.gold)),
           );
         }
 
@@ -77,12 +81,15 @@ class _ProductScreenState extends State<ProductScreen> {
           return const Scaffold(body: Center(child: Text('تعذر تحميل المنتج')));
         }
 
-        _relatedFuture ??= _service.fetchProducts(limit: 48).then(
-              (items) => items
-                  .where((item) => item.id != product.id && item.categoryId == product.categoryId)
-                  .take(6)
-                  .toList(growable: false),
-            );
+        _relatedFuture ??=
+            _service.fetchProducts(limit: SupabaseCatalogService.pageSize).then(
+                  (items) => items
+                      .where((item) =>
+                          item.id != product.id &&
+                          item.categoryId == product.categoryId)
+                      .take(6)
+                      .toList(growable: false),
+                );
 
         return _ProductView(
           product: product,
@@ -94,9 +101,11 @@ class _ProductScreenState extends State<ProductScreen> {
           customText: _customText,
           customNotes: _customNotes,
           customImagePath: _customImagePath,
+          navCompact: _navCompact,
           relatedFuture: _relatedFuture!,
           onImageChanged: (value) => setState(() => _index = value),
-          onQuantityChanged: (value) => setState(() => _quantity = value.clamp(1, 99)),
+          onQuantityChanged: (value) =>
+              setState(() => _quantity = value.clamp(1, 99)),
           onToggleDesc: () => setState(() => _descExpanded = !_descExpanded),
           onCustomize: () => _sendCustomization(product),
           onPickCustomizationImage: _pickCustomizationImage,
@@ -110,6 +119,7 @@ class _ProductScreenState extends State<ProductScreen> {
           onOrder: () => _sendOrder(product),
           onShare: () => _share(product),
           onVideo: product.videoUrls.isEmpty ? null : () => _openVideo(product),
+          onNavCompactChanged: (value) => setState(() => _navCompact = value),
         );
       },
     );
@@ -168,7 +178,9 @@ class _ProductScreenState extends State<ProductScreen> {
                     onPressed: _pickCustomizationImage,
                     icon: const Icon(Icons.camera_alt_outlined),
                     label: Text(
-                      _customImagePath.isEmpty ? 'رفع صورة التخصيص' : 'تم اختيار صورة التخصيص',
+                      _customImagePath.isEmpty
+                          ? 'رفع صورة التخصيص'
+                          : 'تم اختيار صورة التخصيص',
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -179,7 +191,8 @@ class _ProductScreenState extends State<ProductScreen> {
                     maxLines: 5,
                     decoration: const InputDecoration(
                       labelText: 'تفاصيل أو ملاحظات التخصيص',
-                      hintText: 'الألوان، المقاس، المناسبة، أي تفاصيل إضافية...',
+                      hintText:
+                          'الألوان، المقاس، المناسبة، أي تفاصيل إضافية...',
                     ),
                   ),
                   const SizedBox(height: 14),
@@ -193,7 +206,8 @@ class _ProductScreenState extends State<ProductScreen> {
                       ),
                     ),
                     icon: const Icon(Icons.check_rounded),
-                    label: const Text('حفظ التخصيص', style: TextStyle(fontWeight: FontWeight.w900)),
+                    label: const Text('إرسال الطلب والتخصيص الجديد',
+                        style: TextStyle(fontWeight: FontWeight.w900)),
                   ),
                 ],
               ),
@@ -375,6 +389,7 @@ class _ProductView extends StatelessWidget {
     required this.customText,
     required this.customNotes,
     required this.customImagePath,
+    required this.navCompact,
     required this.relatedFuture,
     required this.onImageChanged,
     required this.onQuantityChanged,
@@ -386,6 +401,7 @@ class _ProductView extends StatelessWidget {
     required this.onOrder,
     required this.onShare,
     required this.onVideo,
+    required this.onNavCompactChanged,
   });
 
   final Product product;
@@ -397,6 +413,7 @@ class _ProductView extends StatelessWidget {
   final String customText;
   final String customNotes;
   final String customImagePath;
+  final bool navCompact;
   final Future<List<Product>> relatedFuture;
   final ValueChanged<int> onImageChanged;
   final ValueChanged<int> onQuantityChanged;
@@ -408,11 +425,13 @@ class _ProductView extends StatelessWidget {
   final VoidCallback onOrder;
   final VoidCallback onShare;
   final VoidCallback? onVideo;
+  final ValueChanged<bool> onNavCompactChanged;
 
   @override
   Widget build(BuildContext context) {
     final state = AppStateScope.of(context);
-    final money = NumberFormat.currency(locale: 'ar_AE', symbol: 'د.إ', decimalDigits: 0);
+    final money =
+        NumberFormat.currency(locale: 'ar_AE', symbol: 'د.إ', decimalDigits: 0);
     final images = product.images;
     final sold = 3000 + (product.id.hashCode.abs() % 2400);
 
@@ -421,272 +440,347 @@ class _ProductView extends StatelessWidget {
       extendBody: true,
       body: SafeArea(
         bottom: false,
-        child: CustomScrollView(
-          slivers: [
-            StorefrontTopBarSliver(
-              showBack: true,
-              placeholder: 'إبحث بالصورة أو الاسم أو المناسبة',
-              onSearch: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const SearchScreen()),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(10, 8, 10, 0),
-                child: Column(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: Stack(
-                        children: [
-                          AspectRatio(
-                            aspectRatio: 1,
-                            child: PageView.builder(
-                              controller: imageController,
-                              reverse: true,
-                              itemCount: images.length,
-                              onPageChanged: onImageChanged,
-                              itemBuilder: (context, i) => BariqNetworkImage(
-                                imageUrl: images[i],
-                                fit: BoxFit.cover,
-                                placeholderColor: const Color(0xFFF2F3F6),
-                                errorIconSize: 55,
-                              ),
-                            ),
-                          ),
-                          if (onVideo != null)
-                            _FloatingVideoThumb(
-                                url: product.videoUrls.first,
-                                onTap: onVideo!,
-                              ),
-                        ],
-                      ),
-                    ),
-                    if (images.length > 1) ...[
-                      const SizedBox(height: 7),
-                      _ProductThumbStrip(
-                        images: images,
-                        index: index,
-                        onTap: (value) {
-                          onImageChanged(value);
-                          imageController.animateToPage(
-                            value,
-                            duration: const Duration(milliseconds: 220),
-                            curve: Curves.easeOutCubic,
-                          );
-                        },
-                      ),
-                    ],
-                  ],
+        child: NotificationListener<UserScrollNotification>(
+          onNotification: (notification) {
+            final compact = notification.direction == ScrollDirection.reverse;
+            final expanded = notification.direction == ScrollDirection.forward;
+            if (compact && !navCompact) {
+              onNavCompactChanged(true);
+            } else if (expanded && navCompact) {
+              onNavCompactChanged(false);
+            }
+            return false;
+          },
+          child: CustomScrollView(
+            slivers: [
+              StorefrontTopBarSliver(
+                showBack: true,
+                placeholder: 'إبحث بالصورة أو الاسم أو المناسبة',
+                onSearch: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const SearchScreen()),
+                ),
+                onImageSearch: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                      builder: (_) =>
+                          const SearchScreen(startWithImageSearch: true)),
                 ),
               ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 110),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
-                  Row(
-                    textDirection: TextDirection.ltr,
-                    crossAxisAlignment: CrossAxisAlignment.start,
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 8, 10, 0),
+                  child: Column(
                     children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            onPressed: onShare,
-                            icon: const Icon(Icons.ios_share_outlined, color: Color(0xFF3478F6), size: 21),
-                          ),
-                          IconButton(
-                            onPressed: () => state.toggleFavorite(product),
-                            icon: Icon(
-                              state.isFavorite(product.id) ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                              color: state.isFavorite(product.id) ? const Color(0xFFE34D59) : AppTheme.navy,
-                              size: 22,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Text(
-                              product.displayName,
-                              textAlign: TextAlign.right,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: AppTheme.navy,
-                                fontSize: 14,
-                                height: 1.35,
-                                fontWeight: FontWeight.w900,
+                      SizedBox(
+                        height: MediaQuery.sizeOf(context).width * .72,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: Stack(
+                            children: [
+                              PageView.builder(
+                                controller: imageController,
+                                reverse: true,
+                                itemCount: images.length,
+                                onPageChanged: onImageChanged,
+                                itemBuilder: (context, i) => BariqNetworkImage(
+                                  imageUrl: images[i],
+                                  fit: BoxFit.cover,
+                                  placeholderColor: const Color(0xFFF2F3F6),
+                                  errorIconSize: 55,
+                                ),
                               ),
+                              if (onVideo != null)
+                                _FloatingVideoThumb(
+                                  url: product.videoUrls.first,
+                                  onTap: onVideo!,
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      if (images.length > 1) ...[
+                        const SizedBox(height: 5),
+                        _ProductThumbStrip(
+                          images: images,
+                          index: index,
+                          onTap: (value) {
+                            onImageChanged(value);
+                            imageController.animateToPage(
+                              value,
+                              duration: const Duration(milliseconds: 220),
+                              curve: Curves.easeOutCubic,
+                            );
+                          },
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 110),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    Row(
+                      textDirection: TextDirection.ltr,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              onPressed: onShare,
+                              icon: const Icon(Icons.ios_share_outlined,
+                                  color: Color(0xFF3478F6), size: 21),
                             ),
-                            const SizedBox(height: 7),
-                            Directionality(
-                              textDirection: TextDirection.rtl,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.max,
-                                children: [
-                                  Text(
-                                    product.rating.toStringAsFixed(1),
-                                    textDirection: TextDirection.ltr,
-                                    style: const TextStyle(color: AppTheme.gold, fontSize: 10.5, fontWeight: FontWeight.w900),
-                                  ),
-                                  const SizedBox(width: 2),
-                                  Text(
-                                    '★★★★★',
-                                    textDirection: TextDirection.ltr,
-                                    style: const TextStyle(color: AppTheme.gold, fontSize: 11, fontWeight: FontWeight.w900),
-                                  ),
-                                  const SizedBox(width: 5),
-                                  const Text('🔥', style: TextStyle(fontSize: 12)),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    '+${(sold / 1000).toStringAsFixed(1)}k تم بيع',
-                                    textDirection: TextDirection.ltr,
-                                    style: const TextStyle(color: AppTheme.muted, fontSize: 10, fontWeight: FontWeight.w700),
-                                  ),
-                                ],
+                            IconButton(
+                              onPressed: () => state.toggleFavorite(product),
+                              icon: Icon(
+                                state.isFavorite(product.id)
+                                    ? Icons.favorite_rounded
+                                    : Icons.favorite_border_rounded,
+                                color: state.isFavorite(product.id)
+                                    ? const Color(0xFFE34D59)
+                                    : AppTheme.navy,
+                                size: 22,
                               ),
                             ),
                           ],
                         ),
-                      ),
-                    ],
-                  ),
-                  const Divider(height: 22),
-                  Row(
-                    textDirection: TextDirection.ltr,
-                    children: [
-                      _QtyStepper(quantity: quantity, onChanged: onQuantityChanged),
-                      const Spacer(),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            money.format(product.price),
-                            textDirection: TextDirection.ltr,
-                            style: const TextStyle(color: AppTheme.navy, fontSize: 20, fontWeight: FontWeight.w900),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text(
+                                product.displayName,
+                                textAlign: TextAlign.right,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: AppTheme.navy,
+                                  fontSize: 14,
+                                  height: 1.35,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                              const SizedBox(height: 7),
+                              Directionality(
+                                textDirection: TextDirection.rtl,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.max,
+                                  children: [
+                                    Text(
+                                      product.rating.toStringAsFixed(1),
+                                      textDirection: TextDirection.ltr,
+                                      style: const TextStyle(
+                                          color: AppTheme.gold,
+                                          fontSize: 10.5,
+                                          fontWeight: FontWeight.w900),
+                                    ),
+                                    const SizedBox(width: 2),
+                                    Text(
+                                      '★★★★★',
+                                      textDirection: TextDirection.ltr,
+                                      style: const TextStyle(
+                                          color: AppTheme.gold,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w900),
+                                    ),
+                                    const SizedBox(width: 5),
+                                    const Text('🔥',
+                                        style: TextStyle(fontSize: 12)),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '+${(sold / 1000).toStringAsFixed(1)}k تم بيع',
+                                      textDirection: TextDirection.ltr,
+                                      style: const TextStyle(
+                                          color: AppTheme.muted,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w700),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
-                          if (product.oldPrice > product.price)
-                            Row(
-                              children: [
-                                Text(
-                                  money.format(product.oldPrice),
-                                  textDirection: TextDirection.ltr,
-                                  style: const TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 11,
-                                    decoration: TextDecoration.lineThrough,
-                                  ),
-                                ),
-                                const SizedBox(width: 7),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFFFF7DD),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    'خصم ${product.discountPercent}%',
-                                    style: const TextStyle(color: AppTheme.navy, fontSize: 9, fontWeight: FontWeight.w900),
-                                  ),
-                                ),
-                              ],
+                        ),
+                      ],
+                    ),
+                    const Divider(height: 22),
+                    Row(
+                      textDirection: TextDirection.ltr,
+                      children: [
+                        _QtyStepper(
+                            quantity: quantity, onChanged: onQuantityChanged),
+                        const Spacer(),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              money.format(product.price),
+                              textDirection: TextDirection.ltr,
+                              style: const TextStyle(
+                                  color: AppTheme.navy,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w900),
                             ),
-                        ],
+                            if (product.oldPrice > product.price)
+                              Row(
+                                children: [
+                                  Text(
+                                    money.format(product.oldPrice),
+                                    textDirection: TextDirection.ltr,
+                                    style: const TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 11,
+                                      decoration: TextDecoration.lineThrough,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 7),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 7, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFFF7DD),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      'خصم ${product.discountPercent}%',
+                                      style: const TextStyle(
+                                          color: AppTheme.navy,
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w900),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 13),
+                    FilledButton.icon(
+                      onPressed: sendingOrder ? null : onOrder,
+                      icon: const Icon(Icons.chat_rounded,
+                          size: 16, color: Colors.white),
+                      label: Text(
+                        sendingOrder ? 'جاري تجهيز الطلب...' : 'شراء الآن',
+                        style: const TextStyle(
+                            fontSize: 11, fontWeight: FontWeight.w900),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 13),
-                  FilledButton.icon(
-                    onPressed: sendingOrder ? null : onOrder,
-                    icon: const Icon(Icons.chat_rounded, size: 18, color: Colors.white),
-                    label: Text(
-                      sendingOrder ? 'جاري تجهيز الطلب...' : 'شراء الآن',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppTheme.navy,
+                        fixedSize:
+                            Size(MediaQuery.sizeOf(context).width - 44, 38),
+                        minimumSize: const Size.fromHeight(38),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 7),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(13)),
+                      ),
                     ),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppTheme.navy,
-                      minimumSize: const Size.fromHeight(47),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      onPressed: onAddToCart,
+                      icon: const Icon(Icons.shopping_cart_outlined,
+                          color: AppTheme.gold, size: 16),
+                      label: const Text(
+                        'إضافة إلى السلة',
+                        style: TextStyle(
+                            color: AppTheme.gold,
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w900),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppTheme.gold),
+                        fixedSize:
+                            Size(MediaQuery.sizeOf(context).width - 44, 33),
+                        minimumSize: const Size.fromHeight(33),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(13)),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  OutlinedButton.icon(
-                    onPressed: onAddToCart,
-                    icon: const Icon(Icons.shopping_cart_outlined, color: AppTheme.gold, size: 18),
-                    label: const Text(
-                      'إضافة إلى السلة',
-                      style: TextStyle(color: AppTheme.gold, fontSize: 11, fontWeight: FontWeight.w900),
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      onPressed: onCustomize,
+                      icon: const Icon(Icons.chat_bubble_outline_rounded,
+                          color: Color(0xFF00A66A), size: 15),
+                      label: Text(
+                        customText.isEmpty && customNotes.isEmpty
+                            ? 'تخصيص الطلب عبر واتساب'
+                            : 'تم حفظ التخصيص - تعديل',
+                        style: const TextStyle(
+                            fontSize: 10.5, fontWeight: FontWeight.w900),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF008D5C),
+                        side: const BorderSide(color: Color(0xFF00C878)),
+                        fixedSize:
+                            Size(MediaQuery.sizeOf(context).width - 44, 33),
+                        minimumSize: const Size.fromHeight(33),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(13)),
+                      ),
                     ),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppTheme.gold),
-                      minimumSize: const Size.fromHeight(40),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                    const SizedBox(height: 8),
+                    _PreviewTryButton(onTap: onPreview),
+                    const SizedBox(height: 20),
+                    _ReviewsBox(productId: product.id),
+                    const SizedBox(height: 12),
+                    _ProductImageGrid(images: images),
+                    const SizedBox(height: 12),
+                    _DescriptionBox(
+                        product: product,
+                        expanded: descExpanded,
+                        onToggle: onToggleDesc),
+                    const SizedBox(height: 12),
+                    _CustomizationPanel(
+                      customText: customText,
+                      customNotes: customNotes,
+                      imagePath: customImagePath,
+                      onTap: onCustomize,
+                      onPickImage: onPickCustomizationImage,
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  OutlinedButton.icon(
-                    onPressed: onCustomize,
-                    icon: const Icon(Icons.chat_bubble_outline_rounded, color: Color(0xFF00A66A), size: 17),
-                    label: Text(
-                      customText.isEmpty && customNotes.isEmpty ? 'تخصيص الطلب عبر واتساب' : 'تم حفظ التخصيص - تعديل',
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900),
+                    const SizedBox(height: 24),
+                    const Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        'منتجات مشابهة',
+                        style: TextStyle(
+                            color: AppTheme.navy,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w900),
+                      ),
                     ),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF008D5C),
-                      side: const BorderSide(color: Color(0xFF00C878)),
-                      minimumSize: const Size.fromHeight(40),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                    const SizedBox(height: 10),
+                    FutureBuilder<List<Product>>(
+                      future: relatedFuture,
+                      builder: (context, snapshot) {
+                        final related = snapshot.data ?? const <Product>[];
+                        if (related.isEmpty) return const SizedBox.shrink();
+                        return ProductGalleryGrid(products: related);
+                      },
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  _PreviewTryButton(onTap: onPreview),
-                  const SizedBox(height: 20),
-                  _ReviewsBox(productId: product.id),
-                  const SizedBox(height: 12),
-                  _ProductImageGrid(images: images),
-                  const SizedBox(height: 12),
-                  _DescriptionBox(product: product, expanded: descExpanded, onToggle: onToggleDesc),
-                  const SizedBox(height: 12),
-                  _CustomizationPanel(
-                    customText: customText,
-                    customNotes: customNotes,
-                    imagePath: customImagePath,
-                    onTap: onCustomize,
-                    onPickImage: onPickCustomizationImage,
-                  ),
-                  const SizedBox(height: 24),
-                  const Align(
-                    alignment: Alignment.centerRight,
-                    child: Text(
-                      'منتجات مشابهة',
-                      style: TextStyle(color: AppTheme.navy, fontSize: 14, fontWeight: FontWeight.w900),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  FutureBuilder<List<Product>>(
-                    future: relatedFuture,
-                    builder: (context, snapshot) {
-                      final related = snapshot.data ?? const <Product>[];
-                      if (related.isEmpty) return const SizedBox.shrink();
-                      return ProductGalleryGrid(products: related);
-                    },
-                  ),
-                ]),
+                  ]),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: BariqBottomNav(
         selected: 4,
         cartCount: state.cartCount,
         english: state.isEnglish,
+        compact: navCompact,
         onTap: (tab) {
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (_) => AppShell(initialIndex: tab)),
@@ -782,41 +876,46 @@ class _ProductThumbStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 58,
+      height: 40,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         reverse: true,
-        padding: const EdgeInsets.symmetric(horizontal: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 1),
         itemCount: images.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 7),
+        separatorBuilder: (_, __) => const SizedBox(width: 5),
         itemBuilder: (context, i) {
           final selected = i == index;
           return InkWell(
             onTap: () => onTap(i),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(8),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 160),
-              width: 58,
-              height: 58,
-              padding: EdgeInsets.all(selected ? 2 : 0),
+              width: 40,
+              height: 40,
+              padding: EdgeInsets.all(selected ? 1.5 : 0),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: selected ? AppTheme.gold : const Color(0xFFDDE3ED),
-                  width: selected ? 1.5 : 1,
+                  width: selected ? 1.2 : .8,
                 ),
                 boxShadow: selected
-                    ? const [BoxShadow(color: Color(0x1AD4AF37), blurRadius: 10, offset: Offset(0, 4))]
+                    ? const [
+                        BoxShadow(
+                            color: Color(0x1AD4AF37),
+                            blurRadius: 7,
+                            offset: Offset(0, 3))
+                      ]
                     : null,
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(6),
                 child: BariqNetworkImage(
                   imageUrl: images[i],
                   fit: BoxFit.cover,
                   placeholderColor: const Color(0xFFF2F3F6),
-                  errorIconSize: 18,
+                  errorIconSize: 14,
                 ),
               ),
             ),
@@ -839,7 +938,7 @@ class _FloatingVideoThumb extends StatefulWidget {
 
 class _FloatingVideoThumbState extends State<_FloatingVideoThumb> {
   VideoPlayerController? _controller;
-  Offset _offset = const Offset(8, 12);
+  Offset? _offset;
 
   @override
   void initState() {
@@ -871,10 +970,14 @@ class _FloatingVideoThumbState extends State<_FloatingVideoThumb> {
         builder: (context, constraints) {
           const width = 78.0;
           const height = 104.0;
-          final maxX = (constraints.maxWidth - width).clamp(0.0, double.infinity);
-          final maxY = (constraints.maxHeight - height).clamp(0.0, double.infinity);
-          final left = _offset.dx.clamp(0.0, maxX);
-          final top = _offset.dy.clamp(0.0, maxY);
+          final maxX =
+              (constraints.maxWidth - width).clamp(0.0, double.infinity);
+          final maxY =
+              (constraints.maxHeight - height).clamp(0.0, double.infinity);
+          final effectiveOffset = _offset ??
+              Offset(maxX - 12, (constraints.maxHeight - height) / 2 + 32);
+          final left = effectiveOffset.dx.clamp(0.0, maxX);
+          final top = effectiveOffset.dy.clamp(0.0, maxY);
 
           return Stack(
             children: [
@@ -882,53 +985,58 @@ class _FloatingVideoThumbState extends State<_FloatingVideoThumb> {
                 left: left,
                 top: top,
                 child: GestureDetector(
-            onTap: widget.onTap,
-            onPanUpdate: (details) {
-              setState(() {
-                _offset = Offset(
-                  (_offset.dx + details.delta.dx).clamp(0.0, maxX),
-                  (_offset.dy + details.delta.dy).clamp(0.0, maxY),
-                );
-              });
-            },
-            child: Container(
-              width: width,
-              height: height,
-              clipBehavior: Clip.antiAlias,
-              decoration: BoxDecoration(
-                color: Colors.black,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.white, width: 2),
-                boxShadow: const [
-                  BoxShadow(color: Color(0x55000000), blurRadius: 14, offset: Offset(0, 5)),
-                ],
-              ),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  if (ready)
-                    FittedBox(
-                      fit: BoxFit.cover,
-                      child: SizedBox(
-                        width: controller.value.size.width,
-                        height: controller.value.size.height,
-                        child: VideoPlayer(controller),
-                      ),
+                  onTap: widget.onTap,
+                  onPanUpdate: (details) {
+                    setState(() {
+                      _offset = Offset(
+                        (left + details.delta.dx).clamp(0.0, maxX),
+                        (top + details.delta.dy).clamp(0.0, maxY),
+                      );
+                    });
+                  },
+                  child: Container(
+                    width: width,
+                    height: height,
+                    clipBehavior: Clip.antiAlias,
+                    decoration: BoxDecoration(
+                      color: Colors.black,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: const [
+                        BoxShadow(
+                            color: Color(0x55000000),
+                            blurRadius: 14,
+                            offset: Offset(0, 5)),
+                      ],
                     ),
-                  if (!ready) const ColoredBox(color: Colors.black),
-                  const Center(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(color: Color(0xCCFFFFFF), shape: BoxShape.circle),
-                      child: Padding(
-                        padding: EdgeInsets.all(7),
-                        child: Icon(Icons.play_arrow_rounded, color: Colors.black, size: 25),
-                      ),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        if (ready)
+                          FittedBox(
+                            fit: BoxFit.cover,
+                            child: SizedBox(
+                              width: controller.value.size.width,
+                              height: controller.value.size.height,
+                              child: VideoPlayer(controller),
+                            ),
+                          ),
+                        if (!ready) const ColoredBox(color: Colors.black),
+                        const Center(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                                color: Color(0xCCFFFFFF),
+                                shape: BoxShape.circle),
+                            child: Padding(
+                              padding: EdgeInsets.all(7),
+                              child: Icon(Icons.play_arrow_rounded,
+                                  color: Colors.black, size: 25),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
-          ),
+                ),
               ),
             ],
           );
@@ -947,18 +1055,23 @@ class _PreviewTryButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return OutlinedButton.icon(
       onPressed: onTap,
-      icon: const Icon(Icons.auto_awesome_rounded, color: AppTheme.gold, size: 18),
+      icon: const Icon(Icons.auto_awesome_rounded,
+          color: AppTheme.gold, size: 15),
       label: const Text(
         'جرّب المنتج في مكانك',
-        style: TextStyle(color: AppTheme.navy, fontSize: 11, fontWeight: FontWeight.w900),
+        style: TextStyle(
+            color: AppTheme.navy, fontSize: 10.5, fontWeight: FontWeight.w900),
       ),
       style: OutlinedButton.styleFrom(
         backgroundColor: const Color(0xFFFFFCF7),
         side: const BorderSide(color: AppTheme.gold),
-        minimumSize: const Size.fromHeight(46),
+        fixedSize: Size(MediaQuery.sizeOf(context).width - 44, 33),
+        minimumSize: const Size.fromHeight(33),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         shadowColor: AppTheme.gold.withValues(alpha: .18),
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
       ),
     );
   }
@@ -973,28 +1086,74 @@ class _ProductImageGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final visible = images.take(4).toList(growable: false);
     if (visible.isEmpty) return const SizedBox.shrink();
-    return GridView.builder(
-      padding: EdgeInsets.zero,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: visible.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 8,
-        crossAxisSpacing: 8,
-        childAspectRatio: 1.18,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 18),
+      child: GridView.builder(
+        padding: EdgeInsets.zero,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: visible.length,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          mainAxisSpacing: 6,
+          crossAxisSpacing: 6,
+          childAspectRatio: 1.55,
+        ),
+        itemBuilder: (context, index) {
+          return InkWell(
+            onTap: () => _openImage(context, visible[index]),
+            borderRadius: BorderRadius.circular(8),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: BariqNetworkImage(
+                imageUrl: visible[index],
+                fit: BoxFit.cover,
+                placeholderColor: const Color(0xFFF3F4F6),
+                errorIconSize: 20,
+              ),
+            ),
+          );
+        },
       ),
-      itemBuilder: (context, index) {
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: BariqNetworkImage(
-            imageUrl: visible[index],
-            fit: BoxFit.cover,
-            placeholderColor: const Color(0xFFF3F4F6),
-            errorIconSize: 24,
-          ),
-        );
-      },
+    );
+  }
+
+  void _openImage(BuildContext context, String imageUrl) {
+    showDialog<void>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: .86),
+      builder: (_) => Dialog.fullscreen(
+        backgroundColor: Colors.transparent,
+        child: Stack(
+          children: [
+            Center(
+              child: InteractiveViewer(
+                minScale: .9,
+                maxScale: 4,
+                child: BariqNetworkImage(
+                  imageUrl: imageUrl,
+                  fit: BoxFit.contain,
+                  placeholderColor: Colors.transparent,
+                  errorIconSize: 34,
+                ),
+              ),
+            ),
+            Positioned(
+              top: 12,
+              right: 12,
+              child: SafeArea(
+                child: IconButton.filled(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close_rounded),
+                  style: IconButton.styleFrom(
+                      backgroundColor: Colors.black54,
+                      foregroundColor: Colors.white),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -1016,7 +1175,8 @@ class _CustomizationPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final uploadLabel = imagePath.isEmpty ? 'رفع صور التخصيص' : 'تم اختيار صورة التخصيص';
+    final uploadLabel =
+        imagePath.isEmpty ? 'رفع صور التخصيص' : 'تم اختيار صورة التخصيص';
 
     return Container(
       padding: const EdgeInsets.all(13),
@@ -1025,7 +1185,8 @@ class _CustomizationPanel extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppTheme.line),
         boxShadow: const [
-          BoxShadow(color: Color(0x08000000), blurRadius: 16, offset: Offset(0, 8)),
+          BoxShadow(
+              color: Color(0x08000000), blurRadius: 16, offset: Offset(0, 8)),
         ],
       ),
       child: Column(
@@ -1047,14 +1208,18 @@ class _CustomizationPanel extends StatelessWidget {
                   const CircleAvatar(
                     radius: 19,
                     backgroundColor: AppTheme.navy,
-                    child: Icon(Icons.camera_alt_outlined, color: Colors.white, size: 18),
+                    child: Icon(Icons.camera_alt_outlined,
+                        color: Colors.white, size: 18),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       uploadLabel,
                       textAlign: TextAlign.right,
-                      style: TextStyle(color: AppTheme.navy, fontSize: 12, fontWeight: FontWeight.w900),
+                      style: TextStyle(
+                          color: AppTheme.navy,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900),
                     ),
                   ),
                 ],
@@ -1068,14 +1233,20 @@ class _CustomizationPanel extends StatelessWidget {
               textAlign: TextAlign.right,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: AppTheme.muted, fontSize: 10.5, fontWeight: FontWeight.w800),
+              style: const TextStyle(
+                  color: AppTheme.muted,
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 12),
           ],
           const Text(
             'ملاحظات التخصيص',
             textAlign: TextAlign.right,
-            style: TextStyle(color: AppTheme.navy, fontSize: 12, fontWeight: FontWeight.w900),
+            style: TextStyle(
+                color: AppTheme.navy,
+                fontSize: 12,
+                fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 7),
           InkWell(
@@ -1097,7 +1268,9 @@ class _CustomizationPanel extends StatelessWidget {
                         : 'اكتب اللون، المقاس، العبارة المطلوبة، أماكن الصور، أو أي تفاصيل مهمة...',
                 textAlign: TextAlign.right,
                 style: TextStyle(
-                  color: (customText.isNotEmpty || customNotes.isNotEmpty) ? AppTheme.navy : AppTheme.muted,
+                  color: (customText.isNotEmpty || customNotes.isNotEmpty)
+                      ? AppTheme.navy
+                      : AppTheme.muted,
                   fontSize: 12,
                   height: 1.6,
                   fontWeight: FontWeight.w700,
@@ -1123,7 +1296,9 @@ class _ReviewsBoxState extends State<_ReviewsBox> {
   final _controller = TextEditingController();
   int _rating = 5;
   bool _sending = false;
-  late Future<List<Map<String, dynamic>>> _future = ReviewService().fetchByProduct(widget.productId);
+  bool _showAllReviews = false;
+  late Future<List<Map<String, dynamic>>> _future =
+      ReviewService().fetchByProduct(widget.productId);
 
   @override
   void dispose() {
@@ -1176,9 +1351,66 @@ class _ReviewsBoxState extends State<_ReviewsBox> {
           const Text(
             'التقييمات والتعليقات',
             textAlign: TextAlign.right,
-            style: TextStyle(color: AppTheme.navy, fontSize: 13, fontWeight: FontWeight.w900),
+            style: TextStyle(
+                color: AppTheme.navy,
+                fontSize: 13,
+                fontWeight: FontWeight.w900),
           ),
           const Divider(height: 20),
+          FutureBuilder<List<Map<String, dynamic>>>(
+            future: _future,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(12),
+                    child: CircularProgressIndicator(
+                        color: AppTheme.gold, strokeWidth: 2),
+                  ),
+                );
+              }
+
+              final reviews = snapshot.data ?? const <Map<String, dynamic>>[];
+              if (reviews.isEmpty) {
+                return const Text(
+                  'لا توجد تعليقات بعد.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: AppTheme.muted, fontSize: 10),
+                );
+              }
+
+              return Column(
+                children: [
+                  for (final review
+                      in reviews.take(_showAllReviews ? reviews.length : 3))
+                    _ReviewLine(review: review),
+                  if (reviews.length > 3)
+                    TextButton.icon(
+                      onPressed: () =>
+                          setState(() => _showAllReviews = !_showAllReviews),
+                      icon: Icon(
+                          _showAllReviews
+                              ? Icons.keyboard_arrow_up_rounded
+                              : Icons.keyboard_arrow_down_rounded,
+                          size: 16),
+                      label: Text(_showAllReviews
+                          ? 'إخفاء'
+                          : 'إظهار الكل (${reviews.length})'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppTheme.navy,
+                        textStyle: const TextStyle(
+                            fontSize: 10.5, fontWeight: FontWeight.w900),
+                        minimumSize: const Size.fromHeight(30),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+          const Divider(height: 22),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: List.generate(5, (index) {
@@ -1186,12 +1418,15 @@ class _ReviewsBoxState extends State<_ReviewsBox> {
               return IconButton(
                 onPressed: () => setState(() => _rating = star),
                 icon: Icon(
-                  star <= _rating ? Icons.star_rounded : Icons.star_border_rounded,
+                  star <= _rating
+                      ? Icons.star_rounded
+                      : Icons.star_border_rounded,
                   color: AppTheme.gold,
-                  size: 22,
+                  size: 16,
                 ),
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints.tightFor(width: 28, height: 28),
+                constraints:
+                    const BoxConstraints.tightFor(width: 20, height: 20),
               );
             }),
           ),
@@ -1204,8 +1439,10 @@ class _ReviewsBoxState extends State<_ReviewsBox> {
             decoration: InputDecoration(
               hintText: 'اكتب تعليقك عن المنتج...',
               hintStyle: const TextStyle(color: AppTheme.muted, fontSize: 11),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
                 borderSide: const BorderSide(color: AppTheme.line),
@@ -1224,37 +1461,11 @@ class _ReviewsBoxState extends State<_ReviewsBox> {
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.navy,
                 minimumSize: const Size(120, 38),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18)),
               ),
               child: Text(_sending ? 'جاري الإرسال...' : 'إرسال التقييم'),
             ),
-          ),
-          const Divider(height: 22),
-          FutureBuilder<List<Map<String, dynamic>>>(
-            future: _future,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(12),
-                    child: CircularProgressIndicator(color: AppTheme.gold, strokeWidth: 2),
-                  ),
-                );
-              }
-
-              final reviews = snapshot.data ?? const <Map<String, dynamic>>[];
-              if (reviews.isEmpty) {
-                return const Text(
-                  'لا توجد تعليقات بعد.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: AppTheme.muted, fontSize: 10),
-                );
-              }
-
-              return Column(
-                children: [for (final review in reviews.take(5)) _ReviewLine(review: review)],
-              );
-            },
           ),
         ],
       ),
@@ -1281,12 +1492,18 @@ class _ReviewLine extends StatelessWidget {
             children: [
               Text(
                 '${rating.toStringAsFixed(1)} ★',
-                style: const TextStyle(color: AppTheme.gold, fontSize: 10, fontWeight: FontWeight.w900),
+                style: const TextStyle(
+                    color: AppTheme.gold,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900),
               ),
               const Spacer(),
               Text(
                 name,
-                style: const TextStyle(color: AppTheme.navy, fontSize: 10, fontWeight: FontWeight.w800),
+                style: const TextStyle(
+                    color: AppTheme.navy,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800),
               ),
             ],
           ),
@@ -1295,7 +1512,8 @@ class _ReviewLine extends StatelessWidget {
             Text(
               comment,
               textAlign: TextAlign.right,
-              style: const TextStyle(color: AppTheme.muted, fontSize: 10, height: 1.5),
+              style: const TextStyle(
+                  color: AppTheme.muted, fontSize: 10, height: 1.5),
             ),
           ],
         ],
@@ -1305,7 +1523,8 @@ class _ReviewLine extends StatelessWidget {
 }
 
 class _DescriptionBox extends StatelessWidget {
-  const _DescriptionBox({required this.product, required this.expanded, required this.onToggle});
+  const _DescriptionBox(
+      {required this.product, required this.expanded, required this.onToggle});
   final Product product;
   final bool expanded;
   final VoidCallback onToggle;
@@ -1327,7 +1546,10 @@ class _DescriptionBox extends StatelessWidget {
           const Text(
             'تفاصيل المنتج',
             textAlign: TextAlign.right,
-            style: TextStyle(color: AppTheme.navy, fontSize: 13, fontWeight: FontWeight.w900),
+            style: TextStyle(
+                color: AppTheme.navy,
+                fontSize: 13,
+                fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 7),
           Text(
@@ -1335,7 +1557,8 @@ class _DescriptionBox extends StatelessWidget {
             textAlign: TextAlign.right,
             maxLines: expanded ? null : 4,
             overflow: expanded ? TextOverflow.visible : TextOverflow.ellipsis,
-            style: const TextStyle(color: AppTheme.muted, fontSize: 10.5, height: 1.6),
+            style: const TextStyle(
+                color: AppTheme.muted, fontSize: 10.5, height: 1.6),
           ),
           if (description.length > 150)
             Align(
@@ -1344,7 +1567,8 @@ class _DescriptionBox extends StatelessWidget {
                 onPressed: onToggle,
                 child: Text(
                   expanded ? 'عرض أقل' : 'عرض المزيد',
-                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900),
+                  style: const TextStyle(
+                      fontSize: 10, fontWeight: FontWeight.w900),
                 ),
               ),
             ),

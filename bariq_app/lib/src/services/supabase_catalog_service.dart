@@ -10,7 +10,8 @@ class SupabaseCatalogService {
 
   final SupabaseClient _client;
 
-  static const int _maxListLimit = 120;
+  static const int pageSize = 20;
+  static const int _maxListLimit = 20;
 
   // Only fields used by Product are fetched.
   static const productColumns =
@@ -20,7 +21,7 @@ class SupabaseCatalogService {
 
   int _safeLimit(int value) => value.clamp(1, _maxListLimit);
 
-  Future<List<Product>> fetchProducts({int limit = 48}) async {
+  Future<List<Product>> fetchProducts({int limit = pageSize}) async {
     final rows = await _client
         .from('products')
         .select(productColumns)
@@ -34,9 +35,11 @@ class SupabaseCatalogService {
 
   Future<List<Product>> fetchProductsPage({
     int offset = 0,
-    int limit = 24,
+    int limit = pageSize,
     String? categoryId,
     String? subcategoryId,
+    bool discountedOnly = false,
+    String sort = 'sort_order',
   }) async {
     var query = _client
         .from('products')
@@ -51,12 +54,27 @@ class SupabaseCatalogService {
       query = query.eq('subcategory_id', subcategoryId);
     }
 
+    if (discountedOnly) {
+      query = query.gt('old_price', 0);
+    }
+
     final pageSize = _safeLimit(limit);
 
-    final rows = await query
-        .order('sort_order', ascending: true)
-        .order('created_at', ascending: false)
-        .range(offset, offset + pageSize - 1);
+    final sorted = switch (sort) {
+      'newest' || 'created_at' => query.order('created_at', ascending: false),
+      'oldest' => query.order('created_at', ascending: true),
+      'price_asc' => query.order('price', ascending: true),
+      'price_desc' => query.order('price', ascending: false),
+      'discount' => query
+          .order('old_price', ascending: false)
+          .order('price', ascending: true),
+      'rating' => query.order('rating', ascending: false),
+      'name_az' => query.order('name_ar', ascending: true),
+      _ => query
+          .order('created_at', ascending: false),
+    };
+
+    final rows = await sorted.range(offset, offset + pageSize - 1);
 
     return _parseProducts(rows);
   }
@@ -102,7 +120,7 @@ class SupabaseCatalogService {
   Future<List<Product>> fetchProductsByCategory(
     String categoryId, {
     String? subcategoryId,
-    int limit = 48,
+    int limit = pageSize,
   }) async {
     return fetchProductsPage(
       offset: 0,
@@ -114,7 +132,7 @@ class SupabaseCatalogService {
 
   Future<List<Product>> fetchBySubcategory(
     String subcategoryId, {
-    int limit = 48,
+    int limit = pageSize,
   }) {
     return fetchProductsPage(
       offset: 0,
@@ -125,7 +143,7 @@ class SupabaseCatalogService {
 
   Future<List<Product>> searchProducts(
     String query, {
-    int limit = 24,
+    int limit = pageSize,
     int offset = 0,
   }) async {
     final q = query.trim();

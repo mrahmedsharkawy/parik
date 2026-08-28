@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
@@ -23,8 +25,10 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   late Future<_Data> _future;
   String? _categoryId;
   String? _subcategoryId;
-  int _visibleProductCount = 18;
   bool _showCategoryFilters = true;
+  bool _loadingProducts = false;
+  bool _hasMoreProducts = true;
+  final List<Product> _products = [];
 
   @override
   void initState() {
@@ -36,13 +40,64 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     final values = await Future.wait([
       _service.fetchCategories(),
       _service.fetchSubcategories(),
-      _service.fetchProducts(limit: 500),
+      _service.fetchProductsPage(limit: SupabaseCatalogService.pageSize),
     ]);
+    _products
+      ..clear()
+      ..addAll(values[2] as List<Product>);
+    _hasMoreProducts = _products.length == SupabaseCatalogService.pageSize;
     return _Data(
       categories: values[0] as List<CategoryItem>,
       subcategories: values[1] as List<SubcategoryItem>,
-      products: values[2] as List<Product>,
+      products: _products,
     );
+  }
+
+  Future<void> _reloadProducts({String? categoryId, String? subcategoryId}) async {
+    setState(() {
+      _categoryId = categoryId;
+      _subcategoryId = subcategoryId;
+      _loadingProducts = true;
+      _hasMoreProducts = true;
+      _products.clear();
+    });
+    try {
+      final page = await _service.fetchProductsPage(
+        limit: SupabaseCatalogService.pageSize,
+        categoryId: categoryId,
+        subcategoryId: subcategoryId,
+      );
+      if (!mounted) return;
+      setState(() {
+        _products.addAll(page);
+        _hasMoreProducts = page.length == SupabaseCatalogService.pageSize;
+        _loadingProducts = false;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _loadingProducts = false);
+    }
+  }
+
+  Future<void> _loadMoreProducts() async {
+    if (_loadingProducts || !_hasMoreProducts || _categoryId == null) return;
+    setState(() => _loadingProducts = true);
+    try {
+      final page = await _service.fetchProductsPage(
+        offset: _products.length,
+        limit: SupabaseCatalogService.pageSize,
+        categoryId: _categoryId,
+        subcategoryId: _subcategoryId,
+      );
+      if (!mounted) return;
+      final ids = _products.map((item) => item.id).toSet();
+      setState(() {
+        _products.addAll(page.where((item) => ids.add(item.id)));
+        _hasMoreProducts = page.length == SupabaseCatalogService.pageSize;
+        _loadingProducts = false;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _loadingProducts = false);
+    }
   }
 
   @override
@@ -77,13 +132,13 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
             final subcategories = selected == null
                 ? data.subcategories
                 : data.subcategories.where((item) => item.categoryId == selected.id).toList();
-            final products = data.products.where((product) {
+            final products = _products.where((product) {
               if (selected != null && !matchesCategory(product, selected, data.subcategories)) return false;
               final subcategory = _selectedSubcategory(data.subcategories, _subcategoryId);
               if (subcategory != null && !matchesSubcategory(product, subcategory)) return false;
               return true;
             }).toList();
-            final visibleProducts = products.take(_visibleProductCount.clamp(0, products.length)).toList();
+            final visibleProducts = products.toList();
 
             return Column(
               children: [
@@ -101,12 +156,10 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                           child: _CategoryFilters(
                             categories: categories,
                             selectedId: _categoryId,
-                            onTap: (id) => setState(() {
-                              _categoryId = id;
-                              _subcategoryId = null;
-                              _visibleProductCount = 18;
+                            onTap: (id) {
                               _showCategoryFilters = true;
-                            }),
+                              unawaited(_reloadProducts(categoryId: id));
+                            },
                           ),
                         )
                       : const SizedBox(width: double.infinity, height: 0),
@@ -123,8 +176,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                       } else if (notification.metrics.pixels <= 4 && !_showCategoryFilters) {
                         setState(() => _showCategoryFilters = true);
                       }
-                      if (selected != null && notification.metrics.extentAfter < 900 && _visibleProductCount < products.length) {
-                        setState(() => _visibleProductCount = (_visibleProductCount + 12).clamp(0, products.length).toInt());
+                      if (selected != null && notification.metrics.extentAfter < 900) {
+                        unawaited(_loadMoreProducts());
                       }
                       return false;
                     },
@@ -135,11 +188,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                             crumb: selected == null ? 'الكل' : 'الكل › ${selected.displayName}',
                             title: selected == null ? 'جميع الفئات' : selected.displayName,
                             showBack: selected != null,
-                            onBack: () => setState(() {
-                              _categoryId = null;
-                              _subcategoryId = null;
-                              _visibleProductCount = 18;
-                            }),
+                            onBack: () => _reloadProducts(),
                           ),
                         ),
                         if (selected == null)
@@ -149,10 +198,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                               delegate: SliverChildBuilderDelegate(
                                 (context, index) => _MainCategoryCard(
                                   category: categories[index],
-                                  onTap: () => setState(() {
-                                    _categoryId = categories[index].id;
-                                    _visibleProductCount = 18;
-                                  }),
+                                  onTap: () => _reloadProducts(categoryId: categories[index].id),
                                 ),
                                 childCount: categories.length,
                               ),
@@ -174,10 +220,10 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                                   return _SubcategoryCard(
                                     subcategory: sub,
                                     active: sub.id == _subcategoryId,
-                                    onTap: () => setState(() {
-                                      _subcategoryId = sub.id == _subcategoryId ? null : sub.id;
-                                      _visibleProductCount = 18;
-                                    }),
+                                    onTap: () => _reloadProducts(
+                                      categoryId: _categoryId,
+                                      subcategoryId: sub.id == _subcategoryId ? null : sub.id,
+                                    ),
                                   );
                                 },
                                 childCount: subcategories.length,
@@ -214,6 +260,13 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                               child: ProductGalleryGrid(products: visibleProducts),
                             ),
                           ),
+                          if (_loadingProducts && _products.isNotEmpty)
+                            const SliverToBoxAdapter(
+                              child: Padding(
+                                padding: EdgeInsets.only(bottom: 24),
+                                child: Center(child: CircularProgressIndicator(color: AppTheme.gold, strokeWidth: 2)),
+                              ),
+                            ),
                         ],
                       ],
                     ),

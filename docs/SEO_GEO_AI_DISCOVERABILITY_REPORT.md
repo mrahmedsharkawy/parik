@@ -62,7 +62,7 @@ Each new landing page has a unique description focused on its actual intent and 
 Added:
 
 - `LocalBusiness` entity for Bariq using verified business information.
-- Phone/WhatsApp: `+971554423151`.
+- Phone/WhatsApp: `+971544046084`.
 - Email: `bariq.gifts@gmail.com`.
 - Locality-level address: Ras Al Khaimah, United Arab Emirates.
 - UAE-wide service area.

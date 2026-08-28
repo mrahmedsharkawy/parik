@@ -430,17 +430,17 @@ const SupaCustomers = {
     getAll: async function (limit) {
       const all = [];
       let offset = 0;
-      const max = Math.min(Math.max(parseInt(limit || 1000, 10) || 1000, 1), 5000);
+      const max = Math.min(Math.max(parseInt(limit || 20, 10) || 20, 1), 20);
       console.warn("[Supabase] Customers.getAll is deprecated; use Customers.getPage(). Limited to " + max + " rows.");
       for (;;) {
-        const size = Math.min(1000, max - offset);
+        const size = Math.min(20, max - offset);
         if (size <= 0) break;
         const batch = await sbFetch(
           "customers?select=" + encodeURIComponent(CUSTOMER_LIST_SELECT) + "&order=created_at.desc&limit=" + size + "&offset=" + offset,
         );
         if (!batch || !batch.length) break;
-        if ((all.push(...batch), batch.length < 1e3)) break;
-        offset += 1e3;
+        if ((all.push(...batch), batch.length < 20)) break;
+        offset += 20;
       }
       return all;
     },
@@ -536,10 +536,10 @@ const SupaCustomers = {
     },
     getAll: async function (limit) {
       const all = [];
-      const max = Math.min(Math.max(parseInt(limit || 1000, 10) || 1000, 1), 5000);
+      const max = Math.min(Math.max(parseInt(limit || 20, 10) || 20, 1), 20);
       let page = 1;
       for (;;) {
-        const size = Math.min(200, max - all.length);
+        const size = Math.min(20, max - all.length);
         if (size <= 0) break;
         const res = await this.getPage({ page, pageSize: size, sort: "created_at.desc" });
         const batch = res && Array.isArray(res.data) ? res.data : [];
@@ -551,7 +551,7 @@ const SupaCustomers = {
       return all;
     },
     getByPhone: async function (phone, limit) {
-      const max = Math.min(Math.max(parseInt(limit || 50, 10) || 50, 1), 200);
+      const max = Math.min(Math.max(parseInt(limit || 20, 10) || 20, 1), 20);
       try {
         return await sbFetch("rpc/get_orders_by_phone", {
           method: "POST",
@@ -720,10 +720,10 @@ const SupaCustomers = {
   SupaProducts = {
     getAll: async function (limit) {
       const max = Math.min(
-          Math.max(parseInt(limit || 100000, 10) || 100000, 1),
-          5000,
+          Math.max(parseInt(limit || 20, 10) || 20, 1),
+          20,
         ),
-        pageSize = 500,
+        pageSize = 20,
         cacheKey = "active:" + max,
         cached = productListCache.get(cacheKey),
         all = [];
@@ -1178,7 +1178,7 @@ const SupaCustomers = {
   },
   SupaVisitors = {
     getAll: async function (limit) {
-      const max = Math.min(Math.max(parseInt(limit || 500, 10) || 500, 1), 1000);
+      const max = Math.min(Math.max(parseInt(limit || 20, 10) || 20, 1), 20);
       return sbFetch("visitors?order=visited_at.desc&limit=" + max);
     },
     getToday: async function () {
