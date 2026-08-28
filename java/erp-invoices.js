@@ -307,7 +307,7 @@
     const company = {
       name: "بريق للهدايا والإبداع",
       enName: "BARIQ GIFTS & CREATIVITY",
-      phone: "+971 554423151",
+      phone: "+971544046084",
       email: "sales@bariqgifts.com",
       address: "راس الخيمه - الإمارات العربية المتحدة",
       website: "www.bariqgifts.com",

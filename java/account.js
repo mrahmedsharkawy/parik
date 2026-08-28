@@ -17,7 +17,7 @@
     account: '28859428',
     swift: 'ABDIAEADXXX',
     currency: 'AED',
-    whatsapp: '971554423151'
+    whatsapp: '971544046084'
   };
   const ACC_EN = (localStorage.getItem('lang') || document.documentElement.lang || 'ar') === 'en';
   const accText = (ar, en) => ACC_EN ? en : ar;
@@ -385,7 +385,7 @@
     return 'delivered';
   }
 
-  const WA_PHONE = '971554423151';
+  const WA_PHONE = '971544046084';
   let _prodsCache = null;
   function waitForProductsApi() {
     if (window.Supabase && window.Supabase.Products) return Promise.resolve(true);
@@ -1760,7 +1760,7 @@
     if (text.includes('اضغط على الزر أدناه') || text.includes('Tap the button below')) {
       const waBtn = document.createElement('div');
       waBtn.style.cssText = 'padding:4px 0 0 36px;';
-      waBtn.innerHTML = `<a href="https://wa.me/971554423151?text=%D9%85\u0631\u062d\u0628\u0627\u060c%20\u0623\u062d\u062a\u0627\u062c%20\u0645\u0633\u0627\u0639\u062f\u0629" target="_blank" style="display:inline-flex;align-items:center;gap:7px;background:#25D366;color:#fff;border-radius:20px;padding:8px 16px;font-size:0.78rem;font-weight:700;text-decoration:none;">💬 ${accText('فتح واتساب', 'Open WhatsApp')}</a>`;
+      waBtn.innerHTML = `<a href="https://wa.me/971544046084?text=%D9%85\u0631\u062d\u0628\u0627\u060c%20\u0623\u062d\u062a\u0627\u062c%20\u0645\u0633\u0627\u0639\u062f\u0629" target="_blank" style="display:inline-flex;align-items:center;gap:7px;background:#25D366;color:#fff;border-radius:20px;padding:8px 16px;font-size:0.78rem;font-weight:700;text-decoration:none;">💬 ${accText('فتح واتساب', 'Open WhatsApp')}</a>`;
       msgs.appendChild(waBtn);
     }
 

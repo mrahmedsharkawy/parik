@@ -2248,7 +2248,7 @@ document.addEventListener("DOMContentLoaded", async function() {
             }
             sessionStorage.setItem("x2_after_wa", "1");
             document.addEventListener("visibilitychange", handleReturn);
-            window.open(`https://wa.me/971554423151?text=${msg}`, "_self");
+            window.open(`https://wa.me/971544046084?text=${msg}`, "_self");
             accountReturnTimer = setTimeout(returnToAccount, 2e3);
         }));
         const relEl = document.getElementById("relatedProducts");

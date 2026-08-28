@@ -2056,7 +2056,7 @@ async function sharePreview(toSales){
   }
 }
 function getWhatsappNumber(){
-  var fallback='971554423151';
+  var fallback='971544046084';
   try{
     var vals=[
       localStorage.getItem('x2_whatsapp'),

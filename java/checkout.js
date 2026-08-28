@@ -246,7 +246,7 @@
       'الإجمالي: ' + fmt(totalPrice)
     ].filter(line => line !== null).join('\n'));
     alert('✅ تم تأكيد طلبك!\nرقم الطلب: ' + order.id);
-    window.open('https://wa.me/971554423151?text=' + msg, '_blank', 'noopener');
+    window.open('https://wa.me/971544046084?text=' + msg, '_blank', 'noopener');
     window.location.href = 'account.html';
   };
 
