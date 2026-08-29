@@ -7,7 +7,6 @@ import '../../models/category.dart';
 import '../../models/product.dart';
 import '../../services/supabase_catalog_service.dart';
 import '../../theme/app_theme.dart';
-import '../../utils/catalog_filters.dart';
 import '../catalog/product_gallery_grid.dart';
 import '../catalog/search_screen.dart';
 import '../shared/bariq_network_image.dart';
@@ -132,13 +131,10 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
             final subcategories = selected == null
                 ? data.subcategories
                 : data.subcategories.where((item) => item.categoryId == selected.id).toList();
-            final products = _products.where((product) {
-              if (selected != null && !matchesCategory(product, selected, data.subcategories)) return false;
-              final subcategory = _selectedSubcategory(data.subcategories, _subcategoryId);
-              if (subcategory != null && !matchesSubcategory(product, subcategory)) return false;
-              return true;
-            }).toList();
-            final visibleProducts = products.toList();
+            // Supabase already filters this page using the stable category and
+            // subcategory IDs. Do not filter the returned rows again by their
+            // localized names, otherwise changing locale can hide valid rows.
+            final visibleProducts = List<Product>.unmodifiable(_products);
 
             return Column(
               children: [
@@ -248,7 +244,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                                     decoration: BoxDecoration(color: const Color(0xFFF1F3F6), borderRadius: BorderRadius.circular(999)),
-                                    child: Text('${products.length} منتج', style: const TextStyle(color: AppTheme.muted, fontSize: 11, fontWeight: FontWeight.w800)),
+                                    child: Text('${visibleProducts.length} منتج', style: const TextStyle(color: AppTheme.muted, fontSize: 11, fontWeight: FontWeight.w800)),
                                   ),
                                 ],
                               ),
@@ -281,14 +277,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   }
 }
 
-SubcategoryItem? _selectedSubcategory(List<SubcategoryItem> subcategories, String? id) {
-  if (id == null) return null;
-  for (final subcategory in subcategories) {
-    if (subcategory.id == id) return subcategory;
-  }
-  return null;
-}
-
 class _CategoryFilters extends StatelessWidget {
   const _CategoryFilters({required this.categories, required this.selectedId, required this.onTap});
 
@@ -304,7 +292,7 @@ class _CategoryFilters extends StatelessWidget {
       child: SizedBox(
         height: 42,
         child: Directionality(
-          textDirection: TextDirection.rtl,
+          textDirection: Directionality.of(context),
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
@@ -417,7 +405,7 @@ class _PageTitle extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 8),
       child: Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: Directionality.of(context),
         child: Row(
           children: [
             Expanded(
@@ -429,7 +417,7 @@ class _PageTitle extends StatelessWidget {
                   Flexible(
                     child: Text(
                       title,
-                      textAlign: TextAlign.right,
+                      textAlign: TextAlign.start,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(color: AppTheme.navy, fontSize: 17, fontWeight: FontWeight.w900),
@@ -448,7 +436,7 @@ class _PageTitle extends StatelessWidget {
             else
               Text(
                 crumb,
-                textAlign: TextAlign.left,
+                textAlign: TextAlign.start,
                 style: const TextStyle(color: AppTheme.muted, fontSize: 11, fontWeight: FontWeight.w800),
               ),
           ],

@@ -29,6 +29,14 @@ class UserSyncService {
     return items.map((item) => _extractId(item)).where((id) => id.isNotEmpty).toSet();
   }
 
+  Future<List<String>?> pullRecentlyViewed() async {
+    final data = await _pull('recently_viewed');
+    if (data == null) return null;
+    final items = data['items'];
+    if (items is! List) return const [];
+    return items.map(_extractId).where((id) => id.isNotEmpty).take(20).toList(growable: false);
+  }
+
   Future<void> pushCart(List<StoredCartLine> lines) {
     return _push(
       'cart',
@@ -61,6 +69,16 @@ class UserSyncService {
             'price': product.price,
           };
         }).toList(),
+        'ts': DateTime.now().millisecondsSinceEpoch,
+      },
+    );
+  }
+
+  Future<void> pushRecentlyViewed(List<String> ids) {
+    return _push(
+      'recently_viewed',
+      {
+        'items': ids.take(20).map((id) => {'id': id}).toList(growable: false),
         'ts': DateTime.now().millisecondsSinceEpoch,
       },
     );

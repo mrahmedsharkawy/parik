@@ -31,10 +31,14 @@ class AppState extends ChangeNotifier {
   final Map<String, CartItem> _cart = {};
   final Map<String, Product> _favoriteProducts = {};
   final Set<String> _favoriteIds = {};
+  final Map<String, Product> _recentProducts = {};
+  final List<String> _recentIds = [];
 
   String _language = 'ar';
+  final ValueNotifier<String> languageListenable = ValueNotifier<String>('ar');
   String _currency = 'AED';
   AppRuntimeSettings _runtimeSettings = AppRuntimeSettings.defaults;
+  int _notificationCount = 0;
 
   bool _initialized = false;
   bool _initializing = false;
@@ -43,12 +47,15 @@ class AppState extends ChangeNotifier {
   String get language => _language;
   String get currency => _currency;
   AppRuntimeSettings get runtimeSettings => _runtimeSettings;
+  int get notificationCount => _notificationCount;
   bool get isEnglish => _language == 'en';
   TextDirection get textDirection =>
       isEnglish ? TextDirection.ltr : TextDirection.rtl;
 
   List<CartItem> get cartItems => _cart.values.toList(growable: false);
   Set<String> get favoriteIds => Set.unmodifiable(_favoriteIds);
+  List<Product> get favoriteProducts => _favoriteIds.map((id) => _favoriteProducts[id]).whereType<Product>().toList(growable: false);
+  List<Product> get recentlyViewedProducts => _recentIds.map((id) => _recentProducts[id]).whereType<Product>().toList(growable: false);
 
   int get cartCount =>
       _cart.values.fold(0, (sum, item) => sum + item.quantity);
@@ -68,6 +75,7 @@ class AppState extends ChangeNotifier {
 
       _language = _normalizeLanguage(prefs.getString('lang'));
       BariqLocaleConfig.setLanguage(_language);
+      languageListenable.value = _language;
 
       _currency = _normalizeCurrency(prefs.getString('currency'));
       _runtimeSettings = await _appSettingsService.fetch();
@@ -89,10 +97,12 @@ class AppState extends ChangeNotifier {
               .toList(growable: false);
 
       final localFavs = (await _store.loadFavoriteIds()).toSet();
+      final localRecent = await _store.loadRecentlyViewedIds();
 
       await _hydrate(
         cartLines: localCart,
         favouriteIds: localFavs,
+        recentlyViewedIds: localRecent,
       );
 
       _initialized = true;
@@ -114,15 +124,24 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setNotificationCount(int value) {
+    final next = value < 0 ? 0 : value;
+    if (_notificationCount == next) return;
+    _notificationCount = next;
+    notifyListeners();
+  }
+
   Future<void> _syncRemoteState() async {
     try {
       final results = await Future.wait<dynamic>([
         _sync.pullCart(),
         _sync.pullWishlist(),
+        _sync.pullRecentlyViewed(),
       ]);
 
       final remoteCart = results[0] as List<StoredCartLine>?;
       final remoteFavs = results[1] as Set<String>?;
+      final remoteRecent = results[2] as List<String>?;
 
       final localCart = _cart.values
           .map(
@@ -138,15 +157,22 @@ class AppState extends ChangeNotifier {
               ? remoteCart
               : localCart;
 
-      final mergedFavs = remoteFavs ?? _favoriteIds;
+      final mergedFavs = <String>{..._favoriteIds, ...?remoteFavs};
+      final mergedRecent = <String>[];
+      for (final id in <String>[...?remoteRecent, ..._recentIds]) {
+        if (!mergedRecent.contains(id)) mergedRecent.add(id);
+        if (mergedRecent.length == 20) break;
+      }
 
       await _hydrate(
         cartLines: mergedCart,
         favouriteIds: mergedFavs,
+        recentlyViewedIds: mergedRecent,
       );
 
       await _persistCart();
       await _persistFavorites();
+      await _persistRecentlyViewed();
 
       notifyListeners();
     } catch (_) {
@@ -157,13 +183,16 @@ class AppState extends ChangeNotifier {
   Future<void> _hydrate({
     required Iterable<StoredCartLine> cartLines,
     required Iterable<String> favouriteIds,
+    required Iterable<String> recentlyViewedIds,
   }) async {
     final lines = cartLines.toList(growable: false);
     final favs = favouriteIds.toSet();
+    final recent = recentlyViewedIds.where((id) => id.isNotEmpty).take(20).toList(growable: false);
 
     final ids = <String>{
       ...lines.map((line) => line.productId),
       ...favs,
+      ...recent,
     };
 
     if (ids.isEmpty) {
@@ -172,6 +201,10 @@ class AppState extends ChangeNotifier {
         ..clear()
         ..addAll(favs);
       _favoriteProducts.clear();
+      _recentIds
+        ..clear()
+        ..addAll(recent);
+      _recentProducts.clear();
       return;
     }
 
@@ -204,6 +237,13 @@ class AppState extends ChangeNotifier {
             .where(byId.containsKey)
             .map((id) => MapEntry(id, byId[id]!)),
       );
+
+    _recentIds
+      ..clear()
+      ..addAll(recent);
+    _recentProducts
+      ..clear()
+      ..addEntries(recent.where(byId.containsKey).map((id) => MapEntry(id, byId[id]!)));
   }
 
   Future<void> setLanguage(String value) async {
@@ -212,6 +252,7 @@ class AppState extends ChangeNotifier {
 
     _language = next;
     BariqLocaleConfig.setLanguage(next);
+    languageListenable.value = next;
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('lang', next);
@@ -291,11 +332,29 @@ class AppState extends ChangeNotifier {
     unawaited(_persistFavorites());
   }
 
+  Future<void> recordViewedProduct(Product product) async {
+    _recentProducts[product.id] = product;
+    _recentIds
+      ..remove(product.id)
+      ..insert(0, product.id);
+    if (_recentIds.length > 20) {
+      final removed = _recentIds.sublist(20);
+      _recentIds.removeRange(20, _recentIds.length);
+      for (final id in removed) {
+        _recentProducts.remove(id);
+      }
+    }
+    notifyListeners();
+    unawaited(_persistRecentlyViewed());
+  }
+
   Future<void> refreshWishlist() async {
     final remoteFavs = await _sync.pullWishlist();
     if (remoteFavs == null) return;
 
-    final missing = remoteFavs
+    final mergedFavs = <String>{..._favoriteIds, ...remoteFavs};
+
+    final missing = mergedFavs
         .where((id) => !_favoriteProducts.containsKey(id))
         .toSet();
 
@@ -308,7 +367,7 @@ class AppState extends ChangeNotifier {
 
     _favoriteIds
       ..clear()
-      ..addAll(remoteFavs);
+      ..addAll(mergedFavs);
 
     _favoriteProducts.removeWhere(
       (id, _) => !_favoriteIds.contains(id),
@@ -317,7 +376,31 @@ class AppState extends ChangeNotifier {
     await _store.saveFavoriteIds(
       _favoriteIds.toList(growable: false),
     );
+    if (mergedFavs.length != remoteFavs.length) unawaited(_persistFavorites());
 
+    notifyListeners();
+  }
+
+  Future<void> refreshRecentlyViewed() async {
+    final remoteIds = await _sync.pullRecentlyViewed();
+    if (remoteIds == null) return;
+    final merged = <String>[];
+    for (final id in <String>[...remoteIds, ..._recentIds]) {
+      if (id.isNotEmpty && !merged.contains(id)) merged.add(id);
+      if (merged.length == 20) break;
+    }
+    final missing = merged.where((id) => !_recentProducts.containsKey(id)).toSet();
+    if (missing.isNotEmpty) {
+      final products = await _catalog.fetchProductsByIds(missing);
+      for (final product in products) {
+        _recentProducts[product.id] = product;
+      }
+    }
+    _recentIds
+      ..clear()
+      ..addAll(merged);
+    _recentProducts.removeWhere((id, _) => !_recentIds.contains(id));
+    await _persistRecentlyViewed();
     notifyListeners();
   }
 
@@ -363,6 +446,15 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  Future<void> _persistRecentlyViewed() async {
+    await _store.saveRecentlyViewedIds(_recentIds);
+    try {
+      await _sync.pushRecentlyViewed(_recentIds);
+    } catch (_) {
+      // Keep the local viewing history if Supabase is temporarily unavailable.
+    }
+  }
+
   String _normalizeLanguage(String? value) =>
       value == 'en' ? 'en' : 'ar';
 
@@ -393,6 +485,12 @@ class AppStateScope extends InheritedNotifier<AppState> {
   static AppState of(BuildContext context) {
     final scope =
         context.dependOnInheritedWidgetOfExactType<AppStateScope>();
+    assert(scope != null, 'AppStateScope missing');
+    return scope!.notifier!;
+  }
+
+  static AppState read(BuildContext context) {
+    final scope = context.getInheritedWidgetOfExactType<AppStateScope>();
     assert(scope != null, 'AppStateScope missing');
     return scope!.notifier!;
   }

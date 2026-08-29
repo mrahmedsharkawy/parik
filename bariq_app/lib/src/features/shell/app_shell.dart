@@ -32,6 +32,15 @@ class _AppShellState extends State<AppShell> {
     _index = widget.initialIndex ??
         const int.fromEnvironment('BARIQ_INITIAL_TAB', defaultValue: 4);
     _pages = List<Widget?>.filled(5, null)..[_index] = _buildPage(_index);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _warmTabs());
+  }
+
+  Future<void> _warmTabs() async {
+    for (final index in const [3, 2, 0, 1]) {
+      await Future<void>.delayed(const Duration(milliseconds: 650));
+      if (!mounted || _pages[index] != null) continue;
+      setState(() => _pages[index] = _buildPage(index));
+    }
   }
 
   @override
@@ -61,8 +70,11 @@ class _AppShellState extends State<AppShell> {
           index: _index,
           children: List.generate(
             _pages.length,
-            (index) => RepaintBoundary(
-              child: _pages[index] ?? const SizedBox.shrink(),
+            (index) => TickerMode(
+              enabled: index == _index,
+              child: RepaintBoundary(
+                child: _pages[index] ?? const SizedBox.shrink(),
+              ),
             ),
           ),
         ),
@@ -70,6 +82,7 @@ class _AppShellState extends State<AppShell> {
       bottomNavigationBar: BariqBottomNav(
         selected: _index,
         cartCount: state.cartCount,
+        notificationCount: state.notificationCount,
         english: state.isEnglish,
         compact: _navCompact,
         onTap: (index) {

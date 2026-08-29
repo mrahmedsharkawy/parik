@@ -5,7 +5,14 @@ class AppTheme {
 
   static const navy = Color(0xFF152546);
   static const navy2 = Color(0xFF1C3158);
-  static const gold = Color(0xFFD4AF37);
+  static const gold = Color(0xFFB8923A);
+  static const goldLight = Color(0xFFE7D29A);
+  static const goldDark = Color(0xFF7F5A18);
+  static const goldGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [goldLight, gold, goldDark],
+  );
   static const canvas = Color(0xFFFFFFFF);
   static const ink = Color(0xFF111827);
   static const muted = Color(0xFF6B7280);

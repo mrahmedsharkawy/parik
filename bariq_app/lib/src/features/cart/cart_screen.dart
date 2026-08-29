@@ -8,6 +8,7 @@ import '../../services/supabase_catalog_service.dart';
 import '../../services/whatsapp_order_service.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/app_strings.dart';
 import '../account/account_screen.dart';
 import '../auth/login_screen.dart';
 import '../catalog/product_gallery_grid.dart';
@@ -45,7 +46,7 @@ class _CartScreenState extends State<CartScreen> {
       if (!mounted) return;
       if (!result.opened) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تعذر فتح واتساب.')),
+          SnackBar(content: Text(AppStrings.tr('تعذر فتح واتساب.', 'Unable to open WhatsApp.'))),
         );
         return;
       }
@@ -89,7 +90,7 @@ class _CartScreenState extends State<CartScreen> {
         child: CustomScrollView(
           slivers: [
             StorefrontTopBarSliver(
-              placeholder: 'إبحث بالصورة أو الاسم أو المناسبة',
+              placeholder: AppStrings.searchHeader,
               onSearch: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const SearchScreen()),
               ),
@@ -126,15 +127,15 @@ class _CartScreenState extends State<CartScreen> {
                         ),
                       ),
                       child: Text(
-                        'تأكيد الطلب عبر واتساب (${state.cartCount} قطعة)',
+                        AppStrings.tr('تأكيد الطلب عبر واتساب (${state.cartCount} قطعة)', 'Confirm via WhatsApp (${state.cartCount} items)'),
                         style: const TextStyle(fontWeight: FontWeight.w900),
                       ),
                     ),
                     const SizedBox(height: 12),
-                    const Text(
-                      'لن يتم تحصيل رسوم منك حتى تقوم بمراجعة هذا الطلب وتأكيده.',
+                    Text(
+                      AppStrings.tr('لن يتم تحصيل رسوم منك حتى تقوم بمراجعة هذا الطلب وتأكيده.', 'You will not be charged until you review and confirm this order.'),
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: AppTheme.muted,
                         fontSize: 11,
                         height: 1.7,
@@ -196,7 +197,7 @@ class _SelectAll extends StatelessWidget {
         border: Border.all(color: AppTheme.line),
       ),
       child: Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: Directionality.of(context),
         child: Row(
           children: [
             const Icon(
@@ -247,8 +248,8 @@ class _CartLine extends StatelessWidget {
     final state = AppStateScope.of(context);
     final product = item.product;
     final money = NumberFormat.currency(
-      locale: 'ar_AE',
-      symbol: 'د.إ',
+      locale: AppStrings.currencyLocale,
+      symbol: AppStrings.currencySymbol,
       decimalDigits: product.price >= 1000 ? 2 : 0,
     );
     final old = product.oldPrice > product.price ? product.oldPrice : 0;
@@ -265,9 +266,8 @@ class _CartLine extends StatelessWidget {
         border: Border.all(color: AppTheme.line),
       ),
       child: Directionality(
-        textDirection: TextDirection.rtl,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        textDirection: Directionality.of(context),
+        child: Stack(
           children: [
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -285,8 +285,8 @@ class _CartLine extends StatelessWidget {
                   borderRadius: BorderRadius.circular(7),
                   child: BariqNetworkImage(
                     imageUrl: product.images.first,
-                    width: 108,
-                    height: 108,
+                    width: 92,
+                    height: 92,
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -297,7 +297,7 @@ class _CartLine extends StatelessWidget {
                     children: [
                       Text(
                         product.displayName,
-                        textAlign: TextAlign.right,
+                        textAlign: TextAlign.start,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -309,7 +309,7 @@ class _CartLine extends StatelessWidget {
                       const SizedBox(height: 3),
                       const Text(
                         'متبقي القليل، العرض قريباً ينتهي',
-                        textAlign: TextAlign.right,
+                        textAlign: TextAlign.start,
                         style: TextStyle(
                           color: Colors.redAccent,
                           fontSize: 10,
@@ -319,7 +319,7 @@ class _CartLine extends StatelessWidget {
                       const SizedBox(height: 1),
                       const Text(
                         'سريع بشرائك قبل نفاذ الكمية!',
-                        textAlign: TextAlign.right,
+                        textAlign: TextAlign.start,
                         style: TextStyle(
                           color: Colors.redAccent,
                           fontSize: 9.5,
@@ -371,9 +371,9 @@ class _CartLine extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 6),
-            Align(
-              alignment: AlignmentDirectional.centerEnd,
+            PositionedDirectional(
+              end: 0,
+              bottom: 0,
               child: _Qty(
                 quantity: item.quantity,
                 onChanged: (value) => state.setQuantity(product.id, value),
@@ -542,28 +542,28 @@ class _CashbackSummaryState extends State<_CashbackSummary> {
   @override
   Widget build(BuildContext context) {
     final money = NumberFormat.currency(
-      locale: 'ar_AE',
-      symbol: 'د.إ',
+      locale: AppStrings.currencyLocale,
+      symbol: AppStrings.currencySymbol,
       decimalDigits: widget.total >= 1000 ? 2 : 0,
     );
     final grandTotal = (widget.total - _discount).clamp(0, double.infinity).toDouble();
 
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: Directionality.of(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
-            'ملخص الطلب',
-            textAlign: TextAlign.right,
-            style: TextStyle(
+          Text(
+            AppStrings.tr('ملخص الطلب', 'Order summary'),
+            textAlign: TextAlign.start,
+            style: const TextStyle(
               color: AppTheme.navy,
               fontSize: 16,
               fontWeight: FontWeight.w900,
             ),
           ),
           const SizedBox(height: 14),
-          _SummaryRow(label: 'السعر الفرعي', value: money.format(widget.total)),
+          _SummaryRow(label: AppStrings.tr('السعر الفرعي', 'Subtotal'), value: money.format(widget.total)),
           _SummaryRow(
             label: 'الخصم',
             value: _discount > 0 ? '-${money.format(_discount)}' : 'يتم تحديده لاحقاً',
@@ -606,7 +606,7 @@ class _CashbackSummaryState extends State<_CashbackSummary> {
                   height: 44,
                   child: TextField(
                     controller: _couponController,
-                    textAlign: TextAlign.right,
+                    textAlign: TextAlign.start,
                     textDirection: TextDirection.ltr,
                     textInputAction: TextInputAction.done,
                     onSubmitted: (_) => _applyCoupon(),
@@ -682,7 +682,7 @@ class _CashbackSummaryState extends State<_CashbackSummary> {
           const SizedBox(height: 8),
           Text(
             'تأكيد الطلب يتم على واتساب لإكمال البيانات وتحديد اللون والمقاس والدفع عند الاستلام أو تحويل بنكي. عدد القطع: ${widget.count}',
-            textAlign: TextAlign.right,
+            textAlign: TextAlign.start,
             style: const TextStyle(
               color: AppTheme.muted,
               fontSize: 11,
@@ -781,18 +781,18 @@ class _SummaryState extends State<_Summary> {
     final count = widget.count;
     final grandTotal = (total - _couponDiscount).clamp(0, double.infinity).toDouble();
     final money = NumberFormat.currency(
-      locale: 'ar_AE',
-      symbol: 'د.إ',
+      locale: AppStrings.currencyLocale,
+      symbol: AppStrings.currencySymbol,
       decimalDigits: total >= 1000 ? 2 : 0,
     );
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: Directionality.of(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Text(
             'ملخص الطلب',
-            textAlign: TextAlign.right,
+            textAlign: TextAlign.start,
             style: TextStyle(
               color: AppTheme.navy,
               fontSize: 17,
@@ -822,7 +822,7 @@ class _SummaryState extends State<_Summary> {
                 child: SizedBox(
                   height: 42,
                   child: TextField(
-                    textAlign: TextAlign.right,
+                    textAlign: TextAlign.start,
                     decoration: InputDecoration(
                       hintText: 'كود الخصم (CB-XXXXXX)',
                       contentPadding: EdgeInsets.symmetric(horizontal: 12),
@@ -869,7 +869,7 @@ class _SummaryState extends State<_Summary> {
           const SizedBox(height: 8),
           Text(
             'تأكيد الطلب يتم على واتساب لإكمال البيانات وتحديد اللون والمقاس والدفع عند الاستلام أو تحويل بنكي. عدد القطع: $count',
-            textAlign: TextAlign.right,
+            textAlign: TextAlign.start,
             style: const TextStyle(
               color: AppTheme.muted,
               fontSize: 11.5,
@@ -898,11 +898,11 @@ class _SummaryRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Text(label, style: const TextStyle(color: AppTheme.navy, fontSize: 12)),
+          Text(AppStrings.auto(label), style: const TextStyle(color: AppTheme.navy, fontSize: 12)),
           const Spacer(),
           Text(
             value,
-            textAlign: TextAlign.left,
+            textAlign: TextAlign.start,
             style: TextStyle(color: valueColor ?? AppTheme.navy, fontSize: 12),
           ),
         ],
@@ -916,8 +916,8 @@ class _SecurityInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Directionality(
-      textDirection: TextDirection.rtl,
+    return Directionality(
+      textDirection: Directionality.of(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -970,7 +970,7 @@ class _SecuritySection extends StatelessWidget {
         children: [
           Text(
             title,
-            textAlign: TextAlign.right,
+            textAlign: TextAlign.start,
             style: const TextStyle(
               color: AppTheme.navy,
               fontSize: 14.5,
@@ -980,7 +980,7 @@ class _SecuritySection extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             body,
-            textAlign: TextAlign.right,
+            textAlign: TextAlign.start,
             style: const TextStyle(
               color: AppTheme.muted,
               height: 1.8,
@@ -1035,20 +1035,20 @@ class _EmptyCart extends StatelessWidget {
             color: Color(0xFFE3E8F1),
           ),
           const SizedBox(height: 20),
-          const Text(
-            'عربة التسوق الخاصة بك فارغة',
+          Text(
+            AppStrings.emptyCart,
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 14.5,
               fontWeight: FontWeight.w900,
               color: AppTheme.navy,
             ),
           ),
           const SizedBox(height: 6),
-          const Text(
-            'إضافة سعادتك المفضلة.',
+          Text(
+            AppStrings.tr('إضافة سعادتك المفضلة.', 'Add something you love.'),
             textAlign: TextAlign.center,
-            style: TextStyle(color: AppTheme.muted, fontSize: 12),
+            style: const TextStyle(color: AppTheme.muted, fontSize: 12),
           ),
           const SizedBox(height: 24),
           FilledButton(
@@ -1060,9 +1060,9 @@ class _EmptyCart extends StatelessWidget {
                 borderRadius: BorderRadius.circular(24),
               ),
             ),
-            child: const Text(
-              'رؤية المنتجات الرائجة',
-              style: TextStyle(fontWeight: FontWeight.w900),
+            child: Text(
+              AppStrings.tr('رؤية المنتجات الرائجة', 'View trending products'),
+              style: const TextStyle(fontWeight: FontWeight.w900),
             ),
           ),
         ],
@@ -1076,10 +1076,10 @@ class _SuggestionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Text(
-      'استكشف اختيارات Bariq لك',
-      textAlign: TextAlign.right,
-      style: TextStyle(
+    return Text(
+      AppStrings.tr('استكشف اختيارات Bariq لك', 'Explore Bariq picks for you'),
+      textAlign: TextAlign.start,
+      style: const TextStyle(
         color: AppTheme.navy,
         fontSize: 14,
         fontWeight: FontWeight.w900,

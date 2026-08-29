@@ -6,6 +6,7 @@ class LocalStore {
   static const _cartKey = 'bariq_cart_v2';
   static const _cartLinesKey = 'bariq_cart_lines_v1';
   static const _favoritesKey = 'bariq_favorites_v2';
+  static const _recentlyViewedKey = 'bariq_recently_viewed_v1';
 
   Future<List<String>> loadCartIds() async {
     final p = await SharedPreferences.getInstance();
@@ -46,6 +47,16 @@ class LocalStore {
   Future<void> saveFavoriteIds(List<String> ids) async {
     final p = await SharedPreferences.getInstance();
     await p.setStringList(_favoritesKey, ids);
+  }
+
+  Future<List<String>> loadRecentlyViewedIds() async {
+    final p = await SharedPreferences.getInstance();
+    return p.getStringList(_recentlyViewedKey) ?? const [];
+  }
+
+  Future<void> saveRecentlyViewedIds(List<String> ids) async {
+    final p = await SharedPreferences.getInstance();
+    await p.setStringList(_recentlyViewedKey, ids.take(20).toList(growable: false));
   }
 }
 

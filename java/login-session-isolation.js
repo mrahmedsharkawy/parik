@@ -10,6 +10,8 @@ function clearOldAuth(){
   try{
     localStorage.removeItem('x2_token');
     localStorage.removeItem('x2_refresh_token');
+    localStorage.removeItem('x2_token_expires_at');
+    localStorage.removeItem('x2_refresh_token');
     localStorage.removeItem(AUTH_KEY);
     localStorage.removeItem('supabase.auth.token');
     var keys=[];

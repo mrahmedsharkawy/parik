@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class BariqNetworkImage extends StatelessWidget {
@@ -8,6 +9,7 @@ class BariqNetworkImage extends StatelessWidget {
     this.width,
     this.height,
     this.fit = BoxFit.cover,
+    this.alignment = Alignment.center,
     this.placeholderColor = const Color(0xFFF4F5F7),
     this.errorIconSize = 28,
   });
@@ -16,6 +18,7 @@ class BariqNetworkImage extends StatelessWidget {
   final double? width;
   final double? height;
   final BoxFit fit;
+  final Alignment alignment;
   final Color placeholderColor;
   final double errorIconSize;
 
@@ -31,8 +34,24 @@ class BariqNetworkImage extends StatelessWidget {
         width: width,
         height: height,
         fit: fit,
+        alignment: alignment,
         filterQuality: FilterQuality.medium,
         errorBuilder: (_, __, ___) => _ImageFallback(color: placeholderColor, errorIconSize: errorIconSize),
+      );
+    }
+
+    if (kIsWeb) {
+      return Image.network(
+        imageUrl,
+        width: width,
+        height: height,
+        fit: fit,
+        alignment: alignment,
+        filterQuality: FilterQuality.low,
+        gaplessPlayback: true,
+        webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
+        errorBuilder: (_, __, ___) =>
+            _ImageFallback(color: placeholderColor, errorIconSize: errorIconSize),
       );
     }
 
@@ -41,6 +60,7 @@ class BariqNetworkImage extends StatelessWidget {
       width: width,
       height: height,
       fit: fit,
+      alignment: alignment,
       fadeInDuration: const Duration(milliseconds: 160),
       placeholder: (_, __) => ColoredBox(color: placeholderColor),
       errorWidget: (_, __, ___) =>

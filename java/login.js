@@ -103,15 +103,16 @@
     try { return JSON.parse(localStorage.getItem('x2_users') || '[]'); } catch(e) { return []; }
   }
 
-  function rememberLocalUser(profile, pass) {
+  function rememberLocalUser(profile) {
     try {
       const users = readLocalUsers();
       const email = String(profile.email || '').trim().toLowerCase();
       const phone = normalizeUaePhone(profile.phone || '');
       const idx = users.findIndex(u => String(u.email || '').trim().toLowerCase() === email || normalizeUaePhone(u.phone || '') === phone);
-      const row = { name: profile.name || '', email, phone, address: profile.address || '', pass: btoa(pass), date: new Date().toISOString() };
+      const row = { name: profile.name || '', email, phone, address: profile.address || '', date: new Date().toISOString() };
       if (idx >= 0) users[idx] = { ...users[idx], ...row };
       else users.push(row);
+      users.forEach(user => { delete user.pass; delete user.password; });
       localStorage.setItem('x2_users', JSON.stringify(users));
     } catch(e) {}
   }
@@ -135,9 +136,12 @@
 
   function buildProfile(data) {
     const prev = (() => { try { return JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}'); } catch(e) { return {}; } })();
+    delete prev.password;
+    const safeData = { ...data };
+    delete safeData.password;
     const email = String(data.email || prev.email || '').trim().toLowerCase();
     const phone = normalizeUaePhone(data.phone || prev.phone || '');
-    return { ...prev, ...data, email, phone, address: data.address || data.city || prev.address || '', password: data.password || prev.password || '' };
+    return { ...prev, ...safeData, email, phone, address: data.address || data.city || prev.address || '' };
   }
 
   function saveProfile(data) {
@@ -302,27 +306,7 @@
   }
 
   async function loginWithoutEmailConfirmation(email, pass) {
-    const cleanEmail = String(email || '').trim().toLowerCase();
-    const localProfile = (() => { try { return JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}'); } catch(e) { return {}; } })();
-    const localUser = readLocalUsers().find(u => String(u.email || '').trim().toLowerCase() === cleanEmail);
-    const localPassOk = (String(localProfile.email || '').trim().toLowerCase() === cleanEmail && localProfile.password === pass)
-      || (localUser && localUser.pass === btoa(pass));
-    if (!localPassOk) return false;
-
-    const existingCustomer = await findExistingCustomer(cleanEmail, localProfile.phone || localUser?.phone || '');
-    const customerData = customerProfileData(existingCustomer);
-    const profile = saveProfile({
-      ...customerData,
-      name: customerData.name || localProfile.name || localUser?.name || cleanEmail.split('@')[0],
-      email: customerData.email || cleanEmail,
-      phone: customerData.phone || localProfile.phone || localUser?.phone || '',
-      address: customerData.address || localProfile.address || localUser?.address || '',
-      password: pass
-    });
-    rememberLocalUser(profile, pass);
-    showSuccess('تم تسجيل الدخول بنجاح! 🎉', 'مرحباً ' + (profile.name || cleanEmail.split('@')[0]).split(' ')[0] + '! جارٍ تحويلك...');
-    setTimeout(() => { window.location.href = 'account.html'; }, 1200);
-    return true;
+    return false;
   }
 
   async function loginExistingAccountAfterSignup(email, pass, fallback) {
@@ -339,8 +323,7 @@
         name: customerData.name || meta.full_name || fallback?.name || cleanEmail.split('@')[0],
         email: customerData.email || cleanEmail,
         phone: customerData.phone || normalizeUaePhone(meta.phone || fallback?.phone || ''),
-        address: customerData.address || meta.address || fallback?.address || '',
-        password: pass
+        address: customerData.address || meta.address || fallback?.address || ''
       });
       rememberLocalUser(profile, pass);
       await ensureCustomerSaved(profile).catch(() => {});
@@ -386,7 +369,7 @@
       }
 
       // حفظ الجلسة مع دمج بيانات العميل المخزنة سابقاً في customers
-      const profile = saveProfile({ ...customerData, name: customerData.name || name, email: user.email || customerData.email || email, phone: meta.phone || customerData.phone || repairedPhone || '', address: meta.address || customerData.address || '', password: pass });
+      const profile = saveProfile({ ...customerData, name: customerData.name || name, email: user.email || customerData.email || email, phone: meta.phone || customerData.phone || repairedPhone || '', address: meta.address || customerData.address || '' });
 
       // مزامنة مع جدول customers
       try { await ensureCustomerSaved(profile); } catch(e) {}
@@ -409,8 +392,7 @@
             name: customerData.name || email.split('@')[0],
             email: customerData.email || email,
             phone: customerData.phone || '',
-            address: customerData.address || '',
-            password: pass
+            address: customerData.address || ''
           });
           rememberLocalUser(profile, pass);
           showSuccess('تم تسجيل الدخول بنجاح! 🎉', 'مرحباً ' + (profile.name || email.split('@')[0]).split(' ')[0] + '! جارٍ تحويلك...');
@@ -463,7 +445,7 @@
       }
 
       // حفظ كل بيانات العميل في حسابه (localStorage) بعد التسجيل
-      const profile = saveProfile({ name: fullName, email, phone, address, password: pass });
+      const profile = saveProfile({ name: fullName, email, phone, address });
       rememberLocalUser(profile, pass);
 
       // حفظ في customers أيضاً والتأكد أنه ظهر في قاعدة العملاء
@@ -482,7 +464,7 @@
           if (btn) { btn.disabled = false; btn.textContent = 'إنشاء حساب جديد'; }
           return;
         }
-        const profile = buildProfile({ name: fullName, email, phone, address, password: pass });
+        const profile = buildProfile({ name: fullName, email, phone, address });
         try {
           await ensureCustomerSaved(profile);
         } catch(saveErr) {
@@ -576,6 +558,7 @@
       if (oauthMode === 'signup') {
         localStorage.removeItem('x2_logged');
         localStorage.removeItem('x2_token');
+        localStorage.removeItem('x2_refresh_token');
         localStorage.removeItem(PROFILE_KEY);
       }
     } catch(e) {}
@@ -599,6 +582,7 @@
 
     const params = new URLSearchParams(hash.substring(1));
     const accessToken = params.get('access_token');
+    const refreshToken = params.get('refresh_token');
     if (!accessToken) return;
     const query = new URLSearchParams(window.location.search);
     const oauthMode = query.get('oauth_mode') || localStorage.getItem('x2_oauth_mode') || 'login';
@@ -621,6 +605,7 @@
       const customerData = customerProfileData(existingCustomer);
       if (oauthMode === 'signup' && existingCustomer) {
         localStorage.removeItem('x2_token');
+        localStorage.removeItem('x2_refresh_token');
         localStorage.removeItem('x2_logged');
         localStorage.removeItem(PROFILE_KEY);
         switchTab('register');
@@ -640,6 +625,7 @@
       };
 
       localStorage.setItem('x2_token', accessToken);
+      if (refreshToken) localStorage.setItem('x2_refresh_token', refreshToken);
       localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
       localStorage.setItem('x2_logged', '1');
       const needsProfileCompletion = !existingCustomer;

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:image_picker/image_picker.dart';
@@ -8,11 +10,13 @@ import 'package:video_player/video_player.dart';
 import '../../config/app_config.dart';
 import '../../models/product.dart';
 import '../../services/account_service.dart';
+import '../../services/product_cutout_service.dart';
 import '../../services/review_service.dart';
 import '../../services/supabase_catalog_service.dart';
 import '../../services/whatsapp_order_service.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/app_strings.dart';
 import '../account/account_screen.dart';
 import '../auth/login_screen.dart';
 import '../catalog/product_gallery_grid.dart';
@@ -48,10 +52,12 @@ class _ProductScreenState extends State<ProductScreen> {
   String _customText = '';
   String _customNotes = '';
   String _customImagePath = '';
+  String _recordedProductId = '';
 
   @override
   void initState() {
     super.initState();
+    unawaited(ProductCutoutService.instance.warmUp().catchError((_) {}));
     _future = _service.fetchProduct(widget.productId);
   }
 
@@ -78,7 +84,14 @@ class _ProductScreenState extends State<ProductScreen> {
         }
 
         if (product == null) {
-          return const Scaffold(body: Center(child: Text('تعذر تحميل المنتج')));
+          return Scaffold(body: Center(child: Text(AppStrings.tr('تعذر تحميل المنتج', 'Unable to load product'))));
+        }
+
+        if (_recordedProductId != product.id) {
+          _recordedProductId = product.id;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) AppStateScope.read(context).recordViewedProduct(product);
+          });
         }
 
         _relatedFuture ??=
@@ -180,7 +193,7 @@ class _ProductScreenState extends State<ProductScreen> {
                   const SizedBox(height: 8),
                   TextField(
                     controller: textController,
-                    textAlign: TextAlign.right,
+                    textAlign: TextAlign.start,
                     decoration: const InputDecoration(
                       labelText: 'الاسم / النص المطلوب على المنتج',
                       hintText: 'مثال: ديار',
@@ -199,7 +212,7 @@ class _ProductScreenState extends State<ProductScreen> {
                   const SizedBox(height: 10),
                   TextField(
                     controller: notesController,
-                    textAlign: TextAlign.right,
+                    textAlign: TextAlign.start,
                     minLines: 3,
                     maxLines: 5,
                     decoration: const InputDecoration(
@@ -447,7 +460,7 @@ class _ProductView extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = AppStateScope.of(context);
     final money =
-        NumberFormat.currency(locale: 'ar_AE', symbol: 'د.إ', decimalDigits: 0);
+        NumberFormat.currency(locale: AppStrings.currencyLocale, symbol: AppStrings.currencySymbol, decimalDigits: 0);
     final images = product.images;
     final sold = 3000 + (product.id.hashCode.abs() % 2400);
 
@@ -471,7 +484,7 @@ class _ProductView extends StatelessWidget {
             slivers: [
               StorefrontTopBarSliver(
                 showBack: true,
-                placeholder: 'إبحث بالصورة أو الاسم أو المناسبة',
+                placeholder: AppStrings.searchHeader,
                 onSearch: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const SearchScreen()),
                 ),
@@ -571,7 +584,7 @@ class _ProductView extends StatelessWidget {
                             children: [
                               Text(
                                 product.displayName,
-                                textAlign: TextAlign.right,
+                                textAlign: TextAlign.start,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
@@ -583,7 +596,7 @@ class _ProductView extends StatelessWidget {
                               ),
                               const SizedBox(height: 7),
                               Directionality(
-                                textDirection: TextDirection.rtl,
+                                textDirection: Directionality.of(context),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   mainAxisSize: MainAxisSize.max,
@@ -664,7 +677,7 @@ class _ProductView extends StatelessWidget {
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Text(
-                                      'خصم ${product.discountPercent}%',
+                                      AppStrings.tr('خصم ${product.discountPercent}%', '${product.discountPercent}% off'),
                                       style: const TextStyle(
                                           color: AppTheme.navy,
                                           fontSize: 9,
@@ -683,7 +696,9 @@ class _ProductView extends StatelessWidget {
                       icon: const Icon(Icons.chat_rounded,
                           size: 16, color: Colors.white),
                       label: Text(
-                        sendingOrder ? 'جاري تجهيز الطلب...' : 'شراء الآن',
+                        sendingOrder
+                            ? AppStrings.tr('جاري تجهيز الطلب...', 'Preparing order...')
+                            : AppStrings.buyNow,
                         style: const TextStyle(
                             fontSize: 11, fontWeight: FontWeight.w900),
                       ),
@@ -704,9 +719,9 @@ class _ProductView extends StatelessWidget {
                       onPressed: onAddToCart,
                       icon: const Icon(Icons.shopping_cart_outlined,
                           color: AppTheme.gold, size: 16),
-                      label: const Text(
-                        'إضافة إلى السلة',
-                        style: TextStyle(
+                      label: Text(
+                        AppStrings.addToCart,
+                        style: const TextStyle(
                             color: AppTheme.gold,
                             fontSize: 10.5,
                             fontWeight: FontWeight.w900),
@@ -730,8 +745,8 @@ class _ProductView extends StatelessWidget {
                           color: Color(0xFF00A66A), size: 15),
                       label: Text(
                         customText.isEmpty && customNotes.isEmpty
-                            ? 'تخصيص الطلب عبر واتساب'
-                            : 'تم حفظ التخصيص - تعديل',
+                            ? AppStrings.tr('تخصيص الطلب عبر واتساب', 'Customize via WhatsApp')
+                            : AppStrings.tr('تم حفظ التخصيص - تعديل', 'Customization saved - Edit'),
                         style: const TextStyle(
                             fontSize: 10.5, fontWeight: FontWeight.w900),
                       ),
@@ -772,10 +787,10 @@ class _ProductView extends StatelessWidget {
                       onPickImage: onPickCustomizationImage,
                     ),
                     const SizedBox(height: 24),
-                    const Align(
-                      alignment: Alignment.centerRight,
+                    Align(
+                      alignment: AlignmentDirectional.centerStart,
                       child: Text(
-                        'منتجات مشابهة',
+                        AppStrings.tr('منتجات مشابهة', 'Similar products'),
                         style: TextStyle(
                             color: AppTheme.navy,
                             fontSize: 14,
@@ -801,6 +816,7 @@ class _ProductView extends StatelessWidget {
       bottomNavigationBar: BariqBottomNav(
         selected: 4,
         cartCount: state.cartCount,
+        notificationCount: state.notificationCount,
         english: state.isEnglish,
         compact: navCompact,
         onTap: (tab) {
@@ -1079,8 +1095,8 @@ class _PreviewTryButton extends StatelessWidget {
       onPressed: onTap,
       icon: const Icon(Icons.auto_awesome_rounded,
           color: AppTheme.gold, size: 15),
-      label: const Text(
-        'جرّب المنتج في مكانك',
+      label: Text(
+        AppStrings.tr('جرّب المنتج في مكانك', 'Try the product in your space'),
         style: TextStyle(
             color: AppTheme.navy, fontSize: 10.5, fontWeight: FontWeight.w900),
       ),
@@ -1225,7 +1241,7 @@ class _CustomizationPanel extends StatelessWidget {
                 border: Border.all(color: const Color(0xFFD9E3F4)),
               ),
               child: Row(
-                textDirection: TextDirection.rtl,
+                textDirection: Directionality.of(context),
                 children: [
                   const CircleAvatar(
                     radius: 19,
@@ -1237,7 +1253,7 @@ class _CustomizationPanel extends StatelessWidget {
                   Expanded(
                     child: Text(
                       uploadLabel,
-                      textAlign: TextAlign.right,
+                      textAlign: TextAlign.start,
                       style: TextStyle(
                           color: AppTheme.navy,
                           fontSize: 12,
@@ -1252,7 +1268,7 @@ class _CustomizationPanel extends StatelessWidget {
           if (imagePath.isNotEmpty) ...[
             Text(
               imagePath.split(RegExp(r'[\\/]')).last,
-              textAlign: TextAlign.right,
+              textAlign: TextAlign.start,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
@@ -1264,7 +1280,7 @@ class _CustomizationPanel extends StatelessWidget {
           ],
           const Text(
             'ملاحظات التخصيص',
-            textAlign: TextAlign.right,
+            textAlign: TextAlign.start,
             style: TextStyle(
                 color: AppTheme.navy,
                 fontSize: 12,
@@ -1288,7 +1304,7 @@ class _CustomizationPanel extends StatelessWidget {
                     : customText.isNotEmpty
                         ? customText
                         : 'اكتب اللون، المقاس، العبارة المطلوبة، أماكن الصور، أو أي تفاصيل مهمة...',
-                textAlign: TextAlign.right,
+                textAlign: TextAlign.start,
                 style: TextStyle(
                   color: (customText.isNotEmpty || customNotes.isNotEmpty)
                       ? AppTheme.navy
@@ -1334,9 +1350,17 @@ class _ReviewsBoxState extends State<_ReviewsBox> {
     setState(() => _sending = true);
     try {
       final user = AccountService().user;
+      var customerName = '';
+      if (user != null) {
+        try {
+          customerName = (await AccountService().fetchProfile()).name.trim();
+        } catch (_) {}
+      }
       await ReviewService().submit(
         productId: widget.productId,
-        name: user?.email?.split('@').first ?? 'عميل بريق',
+        name: customerName.isNotEmpty
+            ? customerName
+            : (user?.email?.split('@').first ?? 'زائر'),
         rating: _rating,
         text: text,
       );
@@ -1370,10 +1394,10 @@ class _ReviewsBoxState extends State<_ReviewsBox> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
-            'التقييمات والتعليقات',
-            textAlign: TextAlign.right,
-            style: TextStyle(
+          Text(
+            AppStrings.reviews,
+            textAlign: TextAlign.start,
+            style: const TextStyle(
                 color: AppTheme.navy,
                 fontSize: 13,
                 fontWeight: FontWeight.w900),
@@ -1394,8 +1418,8 @@ class _ReviewsBoxState extends State<_ReviewsBox> {
 
               final reviews = snapshot.data ?? const <Map<String, dynamic>>[];
               if (reviews.isEmpty) {
-                return const Text(
-                  'لا توجد تعليقات بعد.',
+                return Text(
+                  AppStrings.tr('لا توجد تعليقات بعد.', 'No reviews yet.'),
                   textAlign: TextAlign.center,
                   style: TextStyle(color: AppTheme.muted, fontSize: 10),
                 );
@@ -1416,8 +1440,8 @@ class _ReviewsBoxState extends State<_ReviewsBox> {
                               : Icons.keyboard_arrow_down_rounded,
                           size: 16),
                       label: Text(_showAllReviews
-                          ? 'إخفاء'
-                          : 'إظهار الكل (${reviews.length})'),
+                          ? AppStrings.tr('إخفاء', 'Hide')
+                          : AppStrings.tr('إظهار الكل (${reviews.length})', 'Show all (${reviews.length})')),
                       style: TextButton.styleFrom(
                         foregroundColor: AppTheme.navy,
                         textStyle: const TextStyle(
@@ -1461,9 +1485,9 @@ class _ReviewsBoxState extends State<_ReviewsBox> {
             controller: _controller,
             minLines: 2,
             maxLines: 4,
-            textAlign: TextAlign.right,
+            textAlign: TextAlign.start,
             decoration: InputDecoration(
-              hintText: 'اكتب تعليقك عن المنتج...',
+              hintText: AppStrings.tr('اكتب تعليقك عن المنتج...', 'Write your review...'),
               hintStyle: const TextStyle(color: AppTheme.muted, fontSize: 11),
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -1481,7 +1505,7 @@ class _ReviewsBoxState extends State<_ReviewsBox> {
           ),
           const SizedBox(height: 9),
           Align(
-            alignment: Alignment.centerLeft,
+            alignment: AlignmentDirectional.centerEnd,
             child: FilledButton(
               onPressed: _sending ? null : _submit,
               style: FilledButton.styleFrom(
@@ -1490,7 +1514,7 @@ class _ReviewsBoxState extends State<_ReviewsBox> {
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(18)),
               ),
-              child: Text(_sending ? 'جاري الإرسال...' : 'إرسال التقييم'),
+              child: Text(_sending ? AppStrings.tr('جاري الإرسال...', 'Sending...') : AppStrings.tr('إرسال التقييم', 'Submit review')),
             ),
           ),
         ],
@@ -1537,7 +1561,7 @@ class _ReviewLine extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               comment,
-              textAlign: TextAlign.right,
+              textAlign: TextAlign.start,
               style: const TextStyle(
                   color: AppTheme.muted, fontSize: 10, height: 1.5),
             ),
@@ -1569,9 +1593,9 @@ class _DescriptionBox extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
-            'تفاصيل المنتج',
-            textAlign: TextAlign.right,
+          Text(
+            AppStrings.tr('تفاصيل المنتج', 'Product details'),
+            textAlign: TextAlign.start,
             style: TextStyle(
                 color: AppTheme.navy,
                 fontSize: 13,
@@ -1580,7 +1604,7 @@ class _DescriptionBox extends StatelessWidget {
           const SizedBox(height: 7),
           Text(
             description,
-            textAlign: TextAlign.right,
+            textAlign: TextAlign.start,
             maxLines: expanded ? null : 4,
             overflow: expanded ? TextOverflow.visible : TextOverflow.ellipsis,
             style: const TextStyle(
@@ -1588,11 +1612,11 @@ class _DescriptionBox extends StatelessWidget {
           ),
           if (description.length > 150)
             Align(
-              alignment: Alignment.centerRight,
+              alignment: AlignmentDirectional.centerStart,
               child: TextButton(
                 onPressed: onToggle,
                 child: Text(
-                  expanded ? 'عرض أقل' : 'عرض المزيد',
+                  expanded ? AppStrings.tr('عرض أقل', 'Show less') : AppStrings.tr('عرض المزيد', 'Show more'),
                   style: const TextStyle(
                       fontSize: 10, fontWeight: FontWeight.w900),
                 ),

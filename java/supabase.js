@@ -25,6 +25,37 @@ function hasAdminSession() {
     return !1;
   }
 }
+function rememberUserSession(authData) {
+  if (!authData) return;
+  try {
+    if (authData.access_token) localStorage.setItem("x2_token", authData.access_token);
+    if (authData.refresh_token) localStorage.setItem("x2_refresh_token", authData.refresh_token);
+    if (authData.expires_in) localStorage.setItem("x2_token_expires_at", String(Date.now() + Number(authData.expires_in) * 1000));
+  } catch (_) {}
+}
+async function refreshUserToken() {
+  let refreshToken = "";
+  try { refreshToken = localStorage.getItem("x2_refresh_token") || ""; } catch (_) {}
+  if (!refreshToken) return "";
+  try {
+    const res = await fetch(SUPABASE_URL + "/auth/v1/token?grant_type=refresh_token", {
+      method: "POST",
+      headers: { apikey: SUPABASE_ANON, "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: refreshToken })
+    });
+    const data = await res.json().catch(function () { return {}; });
+    if (!res.ok || !data.access_token) throw new Error("refresh failed");
+    rememberUserSession(data);
+    return data.access_token;
+  } catch (_) {
+    try {
+      localStorage.removeItem("x2_token");
+      localStorage.removeItem("x2_refresh_token");
+      localStorage.removeItem("x2_token_expires_at");
+    } catch (_) {}
+    return "";
+  }
+}
 function getStoredAuthToken() {
   const adminSession = hasAdminSession();
   try {
@@ -219,6 +250,8 @@ async function sbFetch(path, opts) {
   const retry = !(opts = opts || {}).__retriedAuth,
     adminSession = hasAdminSession();
   let storedToken = getStoredAuthToken();
+  if (!storedToken && !adminSession && !opts.forceAnon)
+    storedToken = await refreshUserToken();
   !storedToken &&
     !opts.forceAnon &&
     adminSession &&
@@ -261,10 +294,8 @@ async function sbFetch(path, opts) {
       retry &&
       !adminSession
     ) {
-      try {
-        localStorage.removeItem("x2_token");
-      } catch (_) {}
-      return sbFetch(path, Object.assign({}, opts, { __retriedAuth: !0 }));
+      const refreshed = await refreshUserToken();
+      if (refreshed) return sbFetch(path, Object.assign({}, opts, { __retriedAuth: !0 }));
     }
     throw new Error("SB " + res.status + ": " + e);
   }
@@ -995,6 +1026,7 @@ const SupaCustomers = {
         data = await res.json();
       if (!res.ok)
         throw new Error(data.error_description || data.msg || "Login failed");
+      rememberUserSession(data);
       return data;
     },
     signUp: async function (email, password, metadata) {
@@ -1013,6 +1045,7 @@ const SupaCustomers = {
         data = await res.json();
       if (!res.ok)
         throw new Error(data.error_description || data.msg || "Signup failed");
+      rememberUserSession(data);
       return data;
     },
     resetPassword: async function (email) {

@@ -6,6 +6,7 @@ import 'package:intl/intl.dart' hide TextDirection;
 import '../../models/product.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/app_strings.dart';
 import '../product/product_screen.dart';
 import '../shared/bariq_network_image.dart';
 
@@ -17,7 +18,11 @@ class BariqProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final money = NumberFormat.currency(locale: 'ar_AE', symbol: 'د.إ', decimalDigits: 0);
+    final money = NumberFormat.currency(
+      locale: AppStrings.currencyLocale,
+      symbol: AppStrings.currencySymbol,
+      decimalDigits: 0,
+    );
     if (compact) {
       return _CompactTodayProductCard(product: product, money: money);
     }
@@ -84,17 +89,17 @@ class _SiteGridProductCard extends StatelessWidget {
                     children: [
                     Text(
                       product.displayName,
-                      textAlign: TextAlign.right,
+                      textAlign: TextAlign.start,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                         style: const TextStyle(color: AppTheme.navy, fontSize: 12, height: 1.18, fontWeight: FontWeight.w900),
                       ),
                       const SizedBox(height: 4),
-                      const Text('★★★★★', textAlign: TextAlign.right, style: TextStyle(color: AppTheme.gold, fontSize: 11.5, letterSpacing: 0)),
+                      const Text('★★★★★', textAlign: TextAlign.start, style: TextStyle(color: AppTheme.gold, fontSize: 11.5, letterSpacing: 0)),
                     const SizedBox(height: 3),
                     if (product.oldPrice > product.price)
                       Align(
-                        alignment: Alignment.centerRight,
+                        alignment: AlignmentDirectional.centerStart,
                         child: Directionality(
                           textDirection: TextDirection.ltr,
                           child: Row(
@@ -118,7 +123,7 @@ class _SiteGridProductCard extends StatelessWidget {
                                 color: const Color(0xFF192A48),
                                 child: Text(
                                   '↓ خصم إضافي ${(product.oldPrice - product.price).toStringAsFixed(2)} د.إ',
-                                  textDirection: TextDirection.rtl,
+                                  textDirection: Directionality.of(context),
                                   style: const TextStyle(color: Colors.white, fontSize: 8, height: 1, fontWeight: FontWeight.w900),
                                 ),
                               ),
@@ -128,9 +133,9 @@ class _SiteGridProductCard extends StatelessWidget {
                       ),
                     const SizedBox(height: 4),
                     Align(
-                      alignment: Alignment.centerRight,
+                      alignment: AlignmentDirectional.centerStart,
                       child: Directionality(
-                        textDirection: TextDirection.rtl,
+                        textDirection: Directionality.of(context),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -153,11 +158,13 @@ class _SiteGridProductCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     if (product.oldPrice > product.price)
-                      Text(
-                        money.format(product.oldPrice),
-                        textAlign: TextAlign.right,
-                        textDirection: TextDirection.ltr,
-                        style: const TextStyle(color: Color(0xFF8B93A1), fontSize: 10.5, height: 1, decoration: TextDecoration.lineThrough, fontWeight: FontWeight.w700),
+                      Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Text(
+                          money.format(product.oldPrice),
+                          textDirection: TextDirection.ltr,
+                          style: const TextStyle(color: Color(0xFF8B93A1), fontSize: 10.5, height: 1, decoration: TextDecoration.lineThrough, fontWeight: FontWeight.w700),
+                        ),
                       ),
                     ],
                   ),
@@ -198,12 +205,12 @@ class _CompactTodayProductCard extends StatelessWidget {
 
     return InkWell(
       onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ProductScreen(productId: product.id, initial: product))),
-      borderRadius: BorderRadius.circular(4),
+      borderRadius: BorderRadius.circular(15),
       child: Container(
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(15),
           border: Border.all(color: const Color(0xFFE0E4EA)),
         ),
         child: Stack(
@@ -214,67 +221,91 @@ class _CompactTodayProductCard extends StatelessWidget {
                 Stack(
                   children: [
                     SizedBox(
-                      height: 102,
+                      height: 110,
                       width: double.infinity,
                       child: BariqNetworkImage(
                         imageUrl: product.images.first,
-                        fit: BoxFit.cover,
+                        fit: BoxFit.contain,
                         errorIconSize: 18,
                       ),
-                    ),
-                    Positioned(
-                      bottom: 3,
-                      left: 6,
-                      child: _FloatingCartButton(onTap: () => state.addToCart(product), compact: true),
                     ),
                   ],
                 ),
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(5, 4, 5, 5),
+                    padding: const EdgeInsets.fromLTRB(6, 4, 6, 32),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Text(
                           product.displayName,
-                          textAlign: TextAlign.right,
+                          textAlign: TextAlign.start,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(color: AppTheme.navy, fontSize: 10, height: 1.12, fontWeight: FontWeight.w900),
+                          style: const TextStyle(color: AppTheme.navy, fontSize: 9.5, height: 1.1, fontWeight: FontWeight.w900),
                         ),
-                        const Spacer(),
-                        const Text('★★★★★', textAlign: TextAlign.right, style: TextStyle(color: AppTheme.gold, fontSize: 9, height: 1, letterSpacing: 0)),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: 5),
                         Align(
-                          alignment: Alignment.centerRight,
-                          child: Text(
-                            money.format(product.price),
-                            textDirection: TextDirection.ltr,
-                            style: const TextStyle(color: AppTheme.navy, fontSize: 11.5, height: 1, fontWeight: FontWeight.w900),
+                          alignment: AlignmentDirectional.centerStart,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            textDirection: Directionality.of(context),
+                            children: [
+                            Text(
+                              money.format(product.price),
+                              textDirection: TextDirection.ltr,
+                              style: const TextStyle(color: AppTheme.navy, fontSize: 10.5, height: 1, fontWeight: FontWeight.w900),
+                            ),
+                            if (product.oldPrice > product.price) ...[
+                              const SizedBox(width: 4),
+                              Text(
+                                money.format(product.oldPrice),
+                                textDirection: TextDirection.ltr,
+                                style: const TextStyle(color: Color(0xFF8B93A1), fontSize: 9, height: 1, decoration: TextDecoration.lineThrough, fontWeight: FontWeight.w700),
+                              ),
+                            ],
+                            ],
                           ),
                         ),
-                        if (product.oldPrice > product.price) ...[
-                          const SizedBox(height: 2),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: Text(
-                              money.format(product.oldPrice),
-                              textDirection: TextDirection.ltr,
-                              style: const TextStyle(color: Color(0xFF8B93A1), fontSize: 9.2, height: 1, decoration: TextDecoration.lineThrough, fontWeight: FontWeight.w700),
-                            ),
-                          ),
-                        ],
                       ],
                     ),
                   ),
                 ),
               ],
             ),
+            if (state.runtimeSettings.featureEnabled('favorites'))
+              Positioned(
+                top: 5,
+                left: 5,
+                child: _FavoriteButton(
+                  active: state.isFavorite(product.id),
+                  onTap: () => state.toggleFavorite(product),
+                ),
+              ),
+            Positioned(
+              left: 8,
+              bottom: 7,
+              child: _FloatingCartButton(
+                onTap: () => state.addToCart(product),
+                compact: true,
+              ),
+            ),
             if (discount > 0)
               Positioned(
-                left: 3,
-                bottom: 10,
-                child: _DiscountSeal(discount: discount),
+                right: 8,
+                bottom: 7,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                  decoration: BoxDecoration(
+                    gradient: AppTheme.goldGradient,
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                  child: Text(
+                    '-$discount%',
+                    textDirection: TextDirection.ltr,
+                    style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w900),
+                  ),
+                ),
               ),
           ],
         ),

@@ -72,11 +72,16 @@ CREATE TABLE IF NOT EXISTS reviews (
   name       TEXT NOT NULL DEFAULT 'زائر',
   rating     INT NOT NULL DEFAULT 5,
   text       TEXT NOT NULL,
-  date       TIMESTAMPTZ DEFAULT NOW()
+  date       TIMESTAMPTZ DEFAULT NOW(),
+  user_id    UUID REFERENCES auth.users(id) ON DELETE SET NULL DEFAULT auth.uid(),
+  customer_email TEXT,
+  order_id   TEXT
 );
 ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
 -- CREATE POLICY "public_reviews" ON reviews FOR ALL USING (true) WITH CHECK (true);
 CREATE INDEX IF NOT EXISTS idx_reviews_product ON reviews(product_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_user_date ON reviews(user_id, date DESC);
+CREATE INDEX IF NOT EXISTS idx_reviews_customer_email_date ON reviews(lower(customer_email), date DESC);
 
 -- Index للبحث السريع
 CREATE INDEX IF NOT EXISTS idx_orders_phone ON orders(customer_phone);

@@ -74,7 +74,7 @@ set config = coalesce(config, '{}'::jsonb) || jsonb_build_object(
     'search_page_size', coalesce(config #> '{home,search_page_size}', '20'::jsonb),
     'main_banner', coalesce(
       config #> '{home,main_banner}',
-      '{"enabled":true,"ar":{"url":"","path":""},"en":{"url":"","path":""},"updated_at":""}'::jsonb
+      '{"enabled":true,"ar":{"items":[]},"en":{"items":[]},"updated_at":""}'::jsonb
     )
   )
 ), updated_at = now()

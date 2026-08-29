@@ -11,9 +11,12 @@ import '../../services/review_service.dart';
 import '../../services/supabase_catalog_service.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/app_strings.dart';
 import '../auth/login_screen.dart';
 import '../catalog/product_gallery_grid.dart';
 import '../catalog/search_screen.dart';
+import '../offers/offers_screen.dart';
+import '../product/product_screen.dart';
 import '../shared/bariq_network_image.dart';
 import '../shared/storefront_top_bar.dart';
 
@@ -37,12 +40,40 @@ class _AccountScreenState extends State<AccountScreen> {
   _OrderFilter _orderFilter = _OrderFilter.all;
   String _orderQuery = '';
   bool _syncedWishlist = false;
+  final List<Product> _offers = [];
+  int _offersOffset = 0;
+  bool _offersLoading = false;
+  bool _offersHasMore = true;
+  final List<Map<String, dynamic>> _walletOrders = [];
+  int _walletOffset = 0;
+  bool _walletLoading = false;
+  bool _walletHasMore = true;
+  CustomerCashbackCoupon? _cashbackCoupon;
+  final List<Map<String, dynamic>> _invoices = [];
+  List<Map<String, dynamic>> _invoiceOrders = const [];
+  int _invoiceOffset = 0;
+  bool _invoicesLoading = false;
+  bool _invoicesHasMore = true;
+  int _reportedNotificationCount = -1;
+
+  void _reportNotificationCount(int count, AppState appState) {
+    if (_reportedNotificationCount == count) return;
+    _reportedNotificationCount = count;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) appState.setNotificationCount(count);
+    });
+  }
 
   @override
   void initState() {
     super.initState();
     _section = widget.initialSection;
     _future = _load();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_section == AccountSection.offers) _loadMoreOffers();
+      if (_section == AccountSection.wallet) _loadMoreWalletOrders();
+      if (_section == AccountSection.invoices) _loadMoreInvoices();
+    });
   }
 
   @override
@@ -50,7 +81,8 @@ class _AccountScreenState extends State<AccountScreen> {
     super.didChangeDependencies();
     if (_syncedWishlist) return;
     _syncedWishlist = true;
-    AppStateScope.of(context).refreshWishlist().catchError((_) {});
+    final state = AppStateScope.of(context);
+    Future.wait([state.refreshWishlist(), state.refreshRecentlyViewed()]).catchError((_) => <void>[]);
   }
 
   Future<_AccountData> _load() async {
@@ -63,11 +95,25 @@ class _AccountScreenState extends State<AccountScreen> {
     final orders = await ordersFuture;
     final profile = await _account.fetchProfile(orders: orders);
     final occasions = await _account.fetchOccasions();
+    final notificationsFuture = _account.fetchNotifications(orders: orders, occasions: occasions, profile: profile);
+    final notificationCountFuture = _account.fetchUnreadNotificationCount(orders: orders, occasions: occasions, profile: profile);
+    final invoicePage = await _account.fetchInvoices(orders: orders, offset: 0, limit: AccountService.pageSize);
+    final invoices = invoicePage.items;
+    _invoiceOrders = orders;
+    if (_invoices.isEmpty) {
+      _invoices.addAll(invoices);
+      _invoiceOffset = invoicePage.nextOffset;
+      _invoicesHasMore = invoicePage.hasMore;
+      if (_section == AccountSection.invoices && _invoices.length < 6 && _invoicesHasMore) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _loadMoreInvoices());
+      }
+    }
     return _AccountData(
       orders: orders,
-      invoices: await _account.fetchInvoices(orders: orders),
+      invoices: invoices,
       occasions: occasions,
-      notifications: await _account.fetchNotifications(orders: orders, occasions: occasions, profile: profile),
+      notifications: await notificationsFuture,
+      notificationCount: await notificationCountFuture,
       products: await productsFuture,
       profile: profile,
       settings: await _catalog.fetchSettings(),
@@ -75,12 +121,110 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Future<void> _refresh() async {
+    await AppStateScope.of(context).refreshRuntimeSettings();
+    _offers
+      ..clear();
+    _offersOffset = 0;
+    _offersHasMore = true;
+    _walletOrders.clear();
+    _walletOffset = 0;
+    _walletHasMore = true;
+    _cashbackCoupon = null;
+    _invoices.clear();
+    _invoiceOrders = const [];
+    _invoiceOffset = 0;
+    _invoicesHasMore = true;
     final next = _load();
     setState(() => _future = next);
+    if (_section == AccountSection.offers) await _loadMoreOffers();
+    if (_section == AccountSection.wallet) await _loadMoreWalletOrders();
+    if (_section == AccountSection.invoices && _invoices.isEmpty) await _loadMoreInvoices();
     await next;
   }
 
-  void _select(AccountSection section) => setState(() => _section = section);
+  void _select(AccountSection section) {
+    setState(() => _section = section);
+    if (section == AccountSection.offers && _offers.isEmpty) {
+      _loadMoreOffers();
+    }
+    if (section == AccountSection.wallet && _walletOrders.isEmpty) {
+      _loadMoreWalletOrders();
+    }
+    if (section == AccountSection.invoices && _invoices.isEmpty) {
+      _loadMoreInvoices();
+    }
+  }
+
+  Future<void> _loadMoreInvoices() async {
+    if (_invoicesLoading || !_invoicesHasMore || _invoiceOrders.isEmpty) return;
+    setState(() => _invoicesLoading = true);
+    try {
+      final page = await _account.fetchInvoices(
+        orders: _invoiceOrders,
+        offset: _invoiceOffset,
+        limit: AccountService.pageSize,
+      );
+      if (!mounted) return;
+      final keys = _invoices.map(_invoiceRowKey).toSet();
+      setState(() {
+        _invoiceOffset = page.nextOffset;
+        _invoices.addAll(page.items.where((row) => keys.add(_invoiceRowKey(row))));
+        _invoicesHasMore = page.hasMore;
+        _invoicesLoading = false;
+      });
+      if (_section == AccountSection.invoices && _invoices.length < 6 && _invoicesHasMore) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _loadMoreInvoices());
+      }
+    } catch (_) {
+      if (mounted) setState(() => _invoicesLoading = false);
+    }
+  }
+
+  Future<void> _loadMoreOffers() async {
+    if (_offersLoading || !_offersHasMore) return;
+    setState(() => _offersLoading = true);
+    try {
+      final rows = await _catalog.fetchProductsPage(
+        offset: _offersOffset,
+        limit: SupabaseCatalogService.pageSize,
+        discountedOnly: true,
+        sort: 'discount',
+      );
+      if (!mounted) return;
+      final ids = _offers.map((product) => product.id).toSet();
+      setState(() {
+        _offersOffset += rows.length;
+        _offers.addAll(rows.where((product) => product.discountPercent > 0 && ids.add(product.id)));
+        _offersHasMore = rows.length == SupabaseCatalogService.pageSize;
+        _offersLoading = false;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _offersLoading = false);
+    }
+  }
+
+  Future<void> _loadMoreWalletOrders() async {
+    if (_walletLoading || !_walletHasMore) return;
+    setState(() => _walletLoading = true);
+    try {
+      final firstPage = _walletOffset == 0;
+      final rowsFuture = _account.fetchOrders(offset: _walletOffset, limit: AccountService.pageSize);
+      final couponFuture = firstPage ? _account.fetchAvailableCashbackCoupon() : Future<CustomerCashbackCoupon?>.value(_cashbackCoupon);
+      final rows = await rowsFuture;
+      final coupon = await couponFuture;
+      if (!mounted) return;
+      final ids = _walletOrders.map((order) => '${order['id'] ?? order['order_number'] ?? ''}').toSet();
+      setState(() {
+        _walletOffset += rows.length;
+        _walletOrders.addAll(rows.where((order) => ids.add('${order['id'] ?? order['order_number'] ?? ''}')));
+        _walletHasMore = rows.length == AccountService.pageSize;
+        _cashbackCoupon = coupon;
+        _walletLoading = false;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _walletLoading = false);
+    }
+  }
 
   String? _orderStatusValue(_OrderFilter filter) {
     return switch (filter) {
@@ -99,37 +243,66 @@ class _AccountScreenState extends State<AccountScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF2F3F6),
       body: Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: appState.textDirection,
         child: SafeArea(
         bottom: false,
         child: Column(
           children: [
             StorefrontTopBar(
-              placeholder: 'إبحث بالصورة أو الاسم أو المناسبة',
+              placeholder: AppStrings.searchHeader,
               onSearch: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SearchScreen())),
             ),
             Expanded(
               child: FutureBuilder<_AccountData>(
                 future: _future,
                 builder: (context, snapshot) {
-                  final data = snapshot.data ?? const _AccountData(orders: [], invoices: [], occasions: [], notifications: [], products: [], profile: CustomerProfile());
-                  final favorites = data.products.where((product) => appState.favoriteIds.contains(product.id)).toList();
-                  final offers = data.products.where((product) => product.discountPercent > 0).take(10).toList();
+                  final data = snapshot.data ?? const _AccountData(orders: [], invoices: [], occasions: [], notifications: [], notificationCount: 0, products: [], profile: CustomerProfile());
+                  final favorites = appState.favoriteProducts;
+                  final runtime = appState.runtimeSettings;
+                  final visibleNotifications = runtime.notificationInboxEnabled
+                      ? data.notifications.where((item) {
+                          final orderType = item.type == 'order_status' || item.type == 'order_update' || item.type == 'cashback';
+                          final offerType = item.type == 'offer' || item.type == 'discount' || item.type == 'product';
+                          if (orderType && !runtime.orderNotificationsEnabled) return false;
+                          if (offerType && !runtime.offerNotificationsEnabled) return false;
+                          return true;
+                        }).toList(growable: false)
+                      : const <AccountNotification>[];
+                  final notificationCount = !runtime.notificationInboxEnabled
+                      ? 0
+                      : runtime.orderNotificationsEnabled && runtime.offerNotificationsEnabled
+                          ? data.notificationCount
+                          : visibleNotifications.where((item) => !item.read).length;
+                  _reportNotificationCount(notificationCount, appState);
                   return RefreshIndicator(
                     color: AppTheme.gold,
                     onRefresh: _refresh,
-                    child: ListView(
+                    child: NotificationListener<ScrollNotification>(
+                      onNotification: (notification) {
+                        if (_section == AccountSection.offers && notification.metrics.extentAfter < 700) {
+                          _loadMoreOffers();
+                        }
+                        if (_section == AccountSection.wallet && notification.metrics.extentAfter < 700) {
+                          _loadMoreWalletOrders();
+                        }
+                        if (_section == AccountSection.invoices && notification.metrics.extentAfter < 700) {
+                          _loadMoreInvoices();
+                        }
+                        return false;
+                      },
+                      child: ListView(
                       padding: const EdgeInsets.fromLTRB(4, 14, 4, 112),
                       children: [
                         _MenuHeader(onTap: () => _openMenu(context, user, data.settings)),
                         const SizedBox(height: 14),
                         _QuickActions(
                           section: _section,
-                          notificationCount: _notificationCount(data.notifications),
+                          notificationCount: notificationCount,
                           onSelect: _select,
                         ),
                         const SizedBox(height: 14),
-                        if (snapshot.connectionState == ConnectionState.waiting)
+                        if (snapshot.connectionState == ConnectionState.waiting &&
+                            !snapshot.hasData)
                           const Padding(padding: EdgeInsets.all(28), child: Center(child: CircularProgressIndicator(color: AppTheme.gold)))
                         else if (snapshot.hasError)
                           _EmptyPanel(title: 'تعذر تحميل بيانات الحساب', subtitle: '${snapshot.error}')
@@ -138,34 +311,37 @@ class _AccountScreenState extends State<AccountScreen> {
                             section: _section,
                             userEmail: user?.email,
                             orders: data.orders,
-                            invoices: data.invoices,
+                            invoices: _invoices.isEmpty ? data.invoices : _invoices,
+                            invoicesLoading: _invoicesLoading,
                             occasions: data.occasions,
-                            notifications: data.notifications,
+                            notifications: visibleNotifications,
+                            notificationCount: notificationCount,
                             orderFilter: _orderFilter,
                             orderQuery: _orderQuery,
                             profile: data.profile,
                             products: data.products,
-                            offers: offers,
+                            offers: _offers,
+                            offersLoading: _offersLoading,
+                            walletOrders: _walletOrders,
+                            walletLoading: _walletLoading,
+                            cashbackCoupon: _cashbackCoupon,
                             favorites: favorites,
-                            onOrderFilter: (filter) => setState(() {
-                              _orderFilter = filter;
-                              _future = _load();
-                            }),
-                            onOrderSearch: (value) => setState(() {
-                              _orderQuery = value;
-                              _future = _load();
-                            }),
+                            onOrderFilter: (filter) =>
+                                setState(() => _orderFilter = filter),
+                            onOrderSearch: (value) =>
+                                setState(() => _orderQuery = value),
                             onSupport: () => _select(AccountSection.support),
                             onRefresh: _refresh,
                             onLogin: () async {
                               final ok = await Navigator.of(context).push<bool>(MaterialPageRoute(builder: (_) => const LoginScreen()));
                               if (ok == true) {
-                                await appState.refreshWishlist();
+                                await Future.wait([appState.refreshWishlist(), appState.refreshRecentlyViewed()]);
                                 setState(() => _future = _load());
                               }
                             },
                           ),
                       ],
+                      ),
                     ),
                   );
                 },
@@ -177,8 +353,6 @@ class _AccountScreenState extends State<AccountScreen> {
       ),
     );
   }
-
-  int _notificationCount(List<AccountNotification> notifications) => notifications.where((item) => !item.read).length.clamp(0, 99).toInt();
 
   void _openMenu(BuildContext context, user, SiteSettings settings) {
     final appState = AppStateScope.of(context);
@@ -202,7 +376,7 @@ class _AccountScreenState extends State<AccountScreen> {
             Navigator.of(context).pop();
             final ok = await Navigator.of(context).push<bool>(MaterialPageRoute(builder: (_) => const LoginScreen()));
             if (ok == true) {
-              await appState.refreshWishlist();
+              await Future.wait([appState.refreshWishlist(), appState.refreshRecentlyViewed()]);
               if (mounted) setState(() => _future = _load());
             }
           },
@@ -220,11 +394,12 @@ class _AccountScreenState extends State<AccountScreen> {
 }
 
 class _AccountData {
-  const _AccountData({required this.orders, required this.invoices, required this.occasions, required this.notifications, required this.products, required this.profile, this.settings = const SiteSettings(siteName: 'Bariq', logo: '', whatsapp: AppConfig.defaultWhatsApp, currency: 'AED', language: 'ar', dailyPicks: [], productSort: 'daily_random', instagram: '', facebook: '', tiktok: '', snapchat: '', youtube: '', twitter: '', pinterest: '')});
+  const _AccountData({required this.orders, required this.invoices, required this.occasions, required this.notifications, required this.notificationCount, required this.products, required this.profile, this.settings = const SiteSettings(siteName: 'Bariq', logo: '', whatsapp: AppConfig.defaultWhatsApp, currency: 'AED', language: 'ar', dailyPicks: [], productSort: 'daily_random', instagram: '', facebook: '', tiktok: '', snapchat: '', youtube: '', twitter: '', pinterest: '')});
   final List<Map<String, dynamic>> orders;
   final List<Map<String, dynamic>> invoices;
   final List<CustomerOccasion> occasions;
   final List<AccountNotification> notifications;
+  final int notificationCount;
   final List<Product> products;
   final CustomerProfile profile;
   final SiteSettings settings;
@@ -276,7 +451,7 @@ class _QuickActions extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(9)),
       child: Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: Directionality.of(context),
         child: Row(
           children: items.map((item) {
             final active = item.$3 == section;
@@ -307,7 +482,7 @@ class _QuickActions extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 7),
-                      Text(item.$1, style: TextStyle(color: active ? AppTheme.gold : AppTheme.navy, fontSize: 10.5, fontWeight: FontWeight.w800)),
+                      Text(AppStrings.auto(item.$1), style: TextStyle(color: active ? AppTheme.gold : AppTheme.navy, fontSize: 10.5, fontWeight: FontWeight.w800)),
                     ],
                   ),
                 ),
@@ -321,19 +496,25 @@ class _QuickActions extends StatelessWidget {
 }
 
 class _SectionBody extends StatelessWidget {
-  const _SectionBody({required this.section, required this.userEmail, required this.orders, required this.invoices, required this.occasions, required this.notifications, required this.orderFilter, required this.orderQuery, required this.profile, required this.products, required this.offers, required this.favorites, required this.onOrderFilter, required this.onOrderSearch, required this.onSupport, required this.onRefresh, required this.onLogin});
+  const _SectionBody({required this.section, required this.userEmail, required this.orders, required this.invoices, required this.invoicesLoading, required this.occasions, required this.notifications, required this.notificationCount, required this.orderFilter, required this.orderQuery, required this.profile, required this.products, required this.offers, required this.offersLoading, required this.walletOrders, required this.walletLoading, required this.cashbackCoupon, required this.favorites, required this.onOrderFilter, required this.onOrderSearch, required this.onSupport, required this.onRefresh, required this.onLogin});
 
   final AccountSection section;
   final String? userEmail;
   final List<Map<String, dynamic>> orders;
   final List<Map<String, dynamic>> invoices;
+  final bool invoicesLoading;
   final List<CustomerOccasion> occasions;
   final List<AccountNotification> notifications;
+  final int notificationCount;
   final _OrderFilter orderFilter;
   final String orderQuery;
   final CustomerProfile profile;
   final List<Product> products;
   final List<Product> offers;
+  final bool offersLoading;
+  final List<Map<String, dynamic>> walletOrders;
+  final bool walletLoading;
+  final CustomerCashbackCoupon? cashbackCoupon;
   final List<Product> favorites;
   final ValueChanged<_OrderFilter> onOrderFilter;
   final ValueChanged<String> onOrderSearch;
@@ -346,14 +527,14 @@ class _SectionBody extends StatelessWidget {
     return switch (section) {
       AccountSection.orders => _OrdersSection(orders: orders, selectedFilter: orderFilter, query: orderQuery, userEmail: userEmail, onFilter: onOrderFilter, onSearch: onOrderSearch, onSupport: onSupport, onLogin: onLogin),
       AccountSection.profile => _ProfileSection(profile: profile, email: userEmail, onLogin: onLogin),
-      AccountSection.offers => _OffersSection(products: offers),
-      AccountSection.notifications => _NotificationsSection(notifications: notifications, onRefresh: onRefresh, onLogin: onLogin, signedIn: userEmail != null),
+      AccountSection.offers => _OffersSection(products: offers, loading: offersLoading),
+      AccountSection.notifications => _NotificationsSection(notifications: notifications, unreadCount: notificationCount, onRefresh: onRefresh, onLogin: onLogin, signedIn: userEmail != null),
       AccountSection.reviews => _ReviewsSection(orders: orders, products: products, userEmail: userEmail),
-      AccountSection.wallet => _WalletSection(orders: orders),
+      AccountSection.wallet => _WalletSection(orders: walletOrders, loading: walletLoading, coupon: cashbackCoupon),
       AccountSection.favorites => _FavoritesSection(products: favorites, onClear: AppStateScope.of(context).clearFavorites),
       AccountSection.address => _AddressSection(profile: profile, userEmail: userEmail, onLogin: onLogin),
       AccountSection.payments => const _PaymentsSection(),
-      AccountSection.invoices => _InvoicesSection(invoices: invoices, onRefresh: onRefresh),
+      AccountSection.invoices => _InvoicesSection(invoices: invoices, loading: invoicesLoading, onRefresh: onRefresh),
       AccountSection.occasions => _OccasionsSection(occasions: occasions, profile: profile, userEmail: userEmail, onRefresh: onRefresh, onLogin: onLogin),
       AccountSection.support => _SupportSection(userEmail: userEmail),
     };
@@ -417,8 +598,8 @@ class _SelfService extends StatelessWidget {
         height: 74,
         padding: const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(color: AppTheme.navy, borderRadius: BorderRadius.circular(8)),
-        child: const Directionality(
-        textDirection: TextDirection.rtl,
+        child: Directionality(
+        textDirection: Directionality.of(context),
         child: Row(
           children: [
             Icon(Icons.chevron_left_rounded, color: AppTheme.gold),
@@ -427,7 +608,7 @@ class _SelfService extends StatelessWidget {
               flex: 8,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text('الخدمة الذاتية', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w900)),
                   SizedBox(height: 5),
@@ -454,7 +635,7 @@ class _SearchBox extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextField(
       onChanged: onChanged,
-      textAlign: TextAlign.right,
+      textAlign: TextAlign.start,
       decoration: InputDecoration(
         hintText: 'اسم المنتج / رقم الطلب الخاص بالطلب / رقم ...',
         prefixIcon: const Icon(Icons.search, color: AppTheme.gold),
@@ -485,7 +666,7 @@ class _OrderTabs extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: Directionality.of(context),
       child: Container(
         height: 44,
         width: double.infinity,
@@ -529,7 +710,7 @@ class _BuyerProtection extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
       decoration: BoxDecoration(color: const Color(0xFFEFFFF0), borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFFC9EBCD))),
-      child: const Row(children: [Icon(Icons.shield_outlined, color: Color(0xFF14833B), size: 18), SizedBox(width: 8), Expanded(child: Text('ضمان الطلب | استرداد مجاني وجودة حديثة', textAlign: TextAlign.right, style: TextStyle(color: Color(0xFF14833B), fontSize: 11, fontWeight: FontWeight.w800)))]),
+      child: const Row(children: [Icon(Icons.shield_outlined, color: Color(0xFF14833B), size: 18), SizedBox(width: 8), Expanded(child: Text('ضمان الطلب | استرداد مجاني وجودة حديثة', textAlign: TextAlign.start, style: TextStyle(color: Color(0xFF14833B), fontSize: 11, fontWeight: FontWeight.w800)))]),
     );
   }
 }
@@ -559,7 +740,7 @@ class _OrderCard extends StatelessWidget {
         border: Border.all(color: AppTheme.line.withValues(alpha: .65)),
       ),
       child: Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: Directionality.of(context),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -571,17 +752,17 @@ class _OrderCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(name, textAlign: TextAlign.right, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppTheme.navy, fontSize: 13, fontWeight: FontWeight.w900)),
+                    Text(name, textAlign: TextAlign.start, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppTheme.navy, fontSize: 13, fontWeight: FontWeight.w900)),
                     const SizedBox(height: 3),
-                    Text('رقم الطلب: $number', textAlign: TextAlign.right, style: const TextStyle(color: AppTheme.muted, fontSize: 10)),
+                    Text('رقم الطلب: $number', textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.muted, fontSize: 10)),
                     const Spacer(),
                     Align(
-                      alignment: Alignment.centerRight,
+                      alignment: AlignmentDirectional.centerStart,
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerRight,
+                        alignment: AlignmentDirectional.centerStart,
                         child: Row(
-                          textDirection: TextDirection.rtl,
+                          textDirection: Directionality.of(context),
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             _Badge(
@@ -610,9 +791,9 @@ class _OrderCard extends StatelessWidget {
                 children: [
                   FittedBox(
                     fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
+                    alignment: AlignmentDirectional.centerEnd,
                     child: Row(
-                      textDirection: TextDirection.rtl,
+                      textDirection: Directionality.of(context),
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         _OrderAction(
@@ -626,7 +807,7 @@ class _OrderCard extends StatelessWidget {
                           label: 'إرجاع',
                           color: Colors.redAccent,
                           icon: '↩',
-                          onTap: () => _openWhatsApp(_returnMessage(order)),
+                          onTap: () => _requestReturn(context, order),
                         ),
                       ],
                     ),
@@ -657,9 +838,10 @@ class _ProfileSectionState extends State<_ProfileSection> {
   final _email = TextEditingController();
   final _address = TextEditingController();
   final _phone = TextEditingController();
-  final _password = TextEditingController();
+  final _currentPassword = TextEditingController();
   final _newPassword = TextEditingController();
   final _confirmPassword = TextEditingController();
+  bool _showCurrentPassword = false;
   bool _showPassword = false;
   bool _saving = false;
   bool _changingPassword = false;
@@ -683,7 +865,7 @@ class _ProfileSectionState extends State<_ProfileSection> {
     _email.dispose();
     _address.dispose();
     _phone.dispose();
-    _password.dispose();
+    _currentPassword.dispose();
     _newPassword.dispose();
     _confirmPassword.dispose();
     super.dispose();
@@ -728,7 +910,12 @@ class _ProfileSectionState extends State<_ProfileSection> {
   }
 
   Future<void> _changePassword() async {
+    final currentPassword = _currentPassword.text;
     final password = _newPassword.text;
+    if (currentPassword.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('أدخل كلمة السر الحالية أولًا')));
+      return;
+    }
     if (password.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('كلمة السر الجديدة يجب أن تكون 6 أحرف على الأقل')));
       return;
@@ -739,8 +926,10 @@ class _ProfileSectionState extends State<_ProfileSection> {
     }
     setState(() => _changingPassword = true);
     try {
+      await _service.verifyCurrentPassword(currentPassword);
       await _service.updatePassword(password);
       if (!mounted) return;
+      _currentPassword.clear();
       _newPassword.clear();
       _confirmPassword.clear();
       setState(() => _changingPassword = false);
@@ -761,7 +950,7 @@ class _ProfileSectionState extends State<_ProfileSection> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(textDirection: TextDirection.rtl, children: [
+          Row(textDirection: Directionality.of(context), children: [
             CircleAvatar(radius: 25, backgroundColor: AppTheme.navy, child: Text(_initial(name), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900))),
             const SizedBox(width: 12),
             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -784,20 +973,43 @@ class _ProfileSectionState extends State<_ProfileSection> {
               }
             }),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                OutlinedButton(onPressed: () => setState(() => _showPassword = !_showPassword), child: Text(_showPassword ? 'إخفاء' : 'إظهار')),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: OutlinedButton(
+                    onPressed: () => setState(() => _showCurrentPassword = !_showCurrentPassword),
+                    style: OutlinedButton.styleFrom(minimumSize: const Size(0, 48)),
+                    child: Text(_showCurrentPassword ? 'إخفاء' : 'إظهار'),
+                  ),
+                ),
                 const SizedBox(width: 8),
-                Expanded(child: _ProfileField(label: 'كلمة السر', controller: _password, hint: '••••••••••••••••', obscureText: !_showPassword, enabled: false)),
+                Expanded(
+                  child: _ProfileField(
+                    label: 'كلمة السر الحالية',
+                    controller: _currentPassword,
+                    hint: 'أدخل كلمة السر الحالية',
+                    obscureText: !_showCurrentPassword,
+                  ),
+                ),
               ],
             ),
             FilledButton(onPressed: _saving ? null : _save, style: FilledButton.styleFrom(backgroundColor: AppTheme.navy, minimumSize: const Size.fromHeight(46)), child: Text(_saving ? 'جاري الحفظ...' : 'حفظ التغييرات 💾')),
             const SizedBox(height: 18),
-            const SizedBox(width: double.infinity, child: Text('قسم الأمان', textAlign: TextAlign.right, style: TextStyle(color: AppTheme.muted, fontSize: 12, fontWeight: FontWeight.w800))),
+            const SizedBox(width: double.infinity, child: Text('قسم الأمان', textAlign: TextAlign.start, style: TextStyle(color: AppTheme.muted, fontSize: 12, fontWeight: FontWeight.w800))),
             const SizedBox(height: 8),
-            const SizedBox(width: double.infinity, child: Text('تغيير كلمة السر', textAlign: TextAlign.right, style: TextStyle(color: AppTheme.navy, fontSize: 15, fontWeight: FontWeight.w900))),
+            Row(
+              children: [
+                Expanded(child: Text('تغيير كلمة السر', textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.navy, fontSize: 15, fontWeight: FontWeight.w900))),
+                OutlinedButton(
+                  onPressed: () => setState(() => _showPassword = !_showPassword),
+                  child: Text(_showPassword ? 'إخفاء' : 'إظهار'),
+                ),
+              ],
+            ),
             const SizedBox(height: 10),
-            _ProfileField(label: 'كلمة السر الجديدة', controller: _newPassword, hint: 'أدخل كلمة السر الجديدة', obscureText: true),
-            _ProfileField(label: 'تأكيد كلمة السر الجديدة', controller: _confirmPassword, hint: 'أعد كتابة كلمة السر الجديدة', obscureText: true),
+            _ProfileField(label: 'كلمة السر الجديدة', controller: _newPassword, hint: 'أدخل كلمة السر الجديدة', obscureText: !_showPassword),
+            _ProfileField(label: 'تأكيد كلمة السر الجديدة', controller: _confirmPassword, hint: 'أعد كتابة كلمة السر الجديدة', obscureText: !_showPassword),
             FilledButton(onPressed: _changingPassword ? null : _changePassword, style: FilledButton.styleFrom(backgroundColor: AppTheme.navy, minimumSize: const Size.fromHeight(46)), child: Text(_changingPassword ? 'جاري التغيير...' : 'تغيير كلمة السر 🔒')),
           ],
         ],
@@ -812,8 +1024,9 @@ class _ProfileSectionState extends State<_ProfileSection> {
 }
 
 class _OffersSection extends StatelessWidget {
-  const _OffersSection({required this.products});
+  const _OffersSection({required this.products, required this.loading});
   final List<Product> products;
+  final bool loading;
 
   @override
   Widget build(BuildContext context) {
@@ -823,17 +1036,22 @@ class _OffersSection extends StatelessWidget {
         children: [
           const SizedBox(
             width: double.infinity,
-            child: Text('العروض والخصومات', textAlign: TextAlign.right, style: TextStyle(color: AppTheme.navy, fontSize: 18, fontWeight: FontWeight.w900)),
+            child: Text('العروض والخصومات', textAlign: TextAlign.start, style: TextStyle(color: AppTheme.navy, fontSize: 18, fontWeight: FontWeight.w900)),
           ),
           const SizedBox(height: 4),
           const SizedBox(
             width: double.infinity,
-            child: Text('كل المنتجات اللي عليها خصم في مكان واحد', textAlign: TextAlign.right, style: TextStyle(color: AppTheme.muted, fontSize: 12)),
+            child: Text('كل المنتجات اللي عليها خصم في مكان واحد', textAlign: TextAlign.start, style: TextStyle(color: AppTheme.muted, fontSize: 12)),
           ),
           const SizedBox(height: 10),
-          Align(alignment: Alignment.centerRight, child: _Badge(text: '${products.length} عرض', color: AppTheme.navy, bg: const Color(0xFFF1F3F6))),
+          Align(alignment: Alignment.centerLeft, child: _Badge(text: '${products.length} عرض', color: AppTheme.navy, bg: const Color(0xFFF1F3F6))),
           const SizedBox(height: 10),
-          if (products.isEmpty) const _EmptyPanel(title: 'لا توجد عروض حالياً', subtitle: '') else ProductGalleryGrid(products: products),
+          if (products.isEmpty && !loading) const _EmptyPanel(title: 'لا توجد عروض حالياً', subtitle: '') else ProductGalleryGrid(products: products),
+          if (loading)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Center(child: CircularProgressIndicator(color: AppTheme.gold, strokeWidth: 2)),
+            ),
         ],
       ),
     );
@@ -841,9 +1059,10 @@ class _OffersSection extends StatelessWidget {
 }
 
 class _NotificationsSection extends StatefulWidget {
-  const _NotificationsSection({required this.notifications, required this.onRefresh, required this.onLogin, required this.signedIn});
+  const _NotificationsSection({required this.notifications, required this.unreadCount, required this.onRefresh, required this.onLogin, required this.signedIn});
 
   final List<AccountNotification> notifications;
+  final int unreadCount;
   final Future<void> Function() onRefresh;
   final VoidCallback onLogin;
   final bool signedIn;
@@ -886,7 +1105,7 @@ class _NotificationsSectionState extends State<_NotificationsSection> {
 
   @override
   Widget build(BuildContext context) {
-    final unread = widget.notifications.where((item) => !item.read).length;
+    final unread = widget.unreadCount;
     return _Panel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -931,10 +1150,32 @@ class _NotificationTile extends StatelessWidget {
 
   final AccountNotification notification;
 
+  Future<void> _open(BuildContext context) async {
+    final uri = Uri.tryParse(notification.url.trim());
+    var productId = notification.productId.trim();
+    productId = productId.isNotEmpty ? productId : (uri?.queryParameters['id'] ?? uri?.queryParameters['product_id'] ?? '').trim();
+    final segments = uri?.pathSegments ?? const <String>[];
+    final productIndex = segments.indexWhere((segment) => segment.toLowerCase() == 'product');
+    if (productId.isEmpty && productIndex >= 0 && productIndex + 1 < segments.length) productId = segments[productIndex + 1].trim();
+    if (productId.isNotEmpty) {
+      await Navigator.of(context).push(MaterialPageRoute(builder: (_) => ProductScreen(productId: productId)));
+      return;
+    }
+    if (notification.type == 'offer' || segments.any((segment) => segment.toLowerCase().contains('offer'))) {
+      await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const OffersScreen()));
+      return;
+    }
+    if (notification.url.trim().isNotEmpty) await _openExternalUrl(notification.url);
+  }
+
   @override
   Widget build(BuildContext context) {
     final date = DateFormat('d MMMM، h:mm a', 'ar_AE').format(notification.createdAt);
-    return Container(
+    final interactive = notification.productId.trim().isNotEmpty || notification.url.trim().isNotEmpty || notification.type == 'offer';
+    return InkWell(
+      onTap: interactive ? () => _open(context) : null,
+      borderRadius: BorderRadius.circular(9),
+      child: Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
       decoration: BoxDecoration(
@@ -943,23 +1184,29 @@ class _NotificationTile extends StatelessWidget {
         border: Border.all(color: notification.read ? AppTheme.line : AppTheme.gold.withValues(alpha: .42)),
       ),
       child: Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: Directionality.of(context),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(notification.icon.isEmpty ? '🔔' : notification.icon, style: const TextStyle(fontSize: 22)),
+            if (notification.imageUrl.isNotEmpty)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: SizedBox(width: 54, height: 54, child: BariqNetworkImage(imageUrl: notification.imageUrl, fit: BoxFit.cover)),
+              )
+            else
+              Text(notification.icon.isEmpty ? '🔔' : notification.icon, style: const TextStyle(fontSize: 22)),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(notification.title, textAlign: TextAlign.right, style: const TextStyle(color: AppTheme.navy, fontSize: 13, fontWeight: FontWeight.w900)),
+                  Text(notification.title, textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.navy, fontSize: 13, fontWeight: FontWeight.w900)),
                   if (notification.message.trim().isNotEmpty) ...[
                     const SizedBox(height: 4),
-                    Text(notification.message, textAlign: TextAlign.right, style: const TextStyle(color: AppTheme.muted, fontSize: 11.5, height: 1.35)),
+                    Text(notification.message, textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.muted, fontSize: 11.5, height: 1.35)),
                   ],
                   const SizedBox(height: 5),
-                  Text(date, textAlign: TextAlign.right, style: const TextStyle(color: Color(0xFFB8BFCC), fontSize: 10)),
+                  Text(date, textAlign: TextAlign.start, style: const TextStyle(color: Color(0xFFB8BFCC), fontSize: 10)),
                 ],
               ),
             ),
@@ -967,6 +1214,7 @@ class _NotificationTile extends StatelessWidget {
             CircleAvatar(radius: 4, backgroundColor: notification.read ? AppTheme.line : AppTheme.gold),
           ],
         ),
+      ),
       ),
     );
   }
@@ -993,7 +1241,21 @@ class _ReviewsSectionState extends State<_ReviewsSection> {
     _publishedFuture = _loadPublished();
   }
 
-  Future<List<Map<String, dynamic>>> _loadPublished() => _reviews.fetchByName(_reviewName());
+  Future<List<Map<String, dynamic>>> _loadPublished() => _reviews.fetchMine(
+        email: widget.userEmail,
+        legacyNames: _reviewNames(),
+      );
+
+  List<String> _reviewNames() {
+    final names = <String>{};
+    for (final order in widget.orders) {
+      final name = '${order['customer_name'] ?? ''}'.trim();
+      if (name.isNotEmpty) names.add(name);
+    }
+    final email = (widget.userEmail ?? '').trim();
+    if (email.contains('@')) names.add(email.split('@').first);
+    return names.toList();
+  }
 
   String _reviewName() {
     for (final order in widget.orders) {
@@ -1025,29 +1287,34 @@ class _ReviewsSectionState extends State<_ReviewsSection> {
                 ],
               ),
               const SizedBox(height: 8),
-              const Text('منتجات تم تسليمها - قيّم مشترياتك', textAlign: TextAlign.right, style: TextStyle(color: AppTheme.navy, fontSize: 12, fontWeight: FontWeight.w900)),
-              const SizedBox(height: 12),
               if (snapshot.connectionState == ConnectionState.waiting)
                 const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator(color: AppTheme.gold)))
               else ...[
                 if (pendingVisible.isEmpty && published.isEmpty)
                   const _EmptyPanel(title: 'لم تكتب أي تقييم بعد', subtitle: 'ستظهر هنا المنتجات التي تم تسليمها لتقييم مشترياتك')
                 else ...[
-                  for (final entry in pendingVisible)
-                    _ReviewFormCard(
-                      entry: entry,
-                      name: _reviewName(),
-                      onSubmitted: () {
-                        setState(() {
-                          _publishedFuture = _loadPublished();
-                        });
-                      },
-                    ),
                   if (published.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    const Align(alignment: Alignment.centerRight, child: Text('تعليقاتك المنشورة', style: TextStyle(color: AppTheme.navy, fontSize: 12, fontWeight: FontWeight.w900))),
+                    const Align(alignment: AlignmentDirectional.centerStart, child: Text('تعليقاتك المنشورة', style: TextStyle(color: AppTheme.navy, fontSize: 12, fontWeight: FontWeight.w900))),
                     const SizedBox(height: 10),
                     for (final row in published) _PublishedReviewCard(row: row, product: _productById('${row['product_id'] ?? ''}')),
+                  ],
+                  if (pendingVisible.isNotEmpty) ...[
+                    if (published.isNotEmpty) const SizedBox(height: 14),
+                    const Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: Text('منتجات تم تسليمها - قيّم مشترياتك', textAlign: TextAlign.start, style: TextStyle(color: AppTheme.navy, fontSize: 12, fontWeight: FontWeight.w900)),
+                    ),
+                    const SizedBox(height: 12),
+                    for (final entry in pendingVisible)
+                      _ReviewFormCard(
+                        entry: entry,
+                        name: _reviewName(),
+                        onSubmitted: () {
+                          setState(() {
+                            _publishedFuture = _loadPublished();
+                          });
+                        },
+                      ),
                   ],
                 ],
               ],
@@ -1092,16 +1359,19 @@ class _ReviewsSectionState extends State<_ReviewsSection> {
 }
 
 class _WalletSection extends StatelessWidget {
-  const _WalletSection({required this.orders});
+  const _WalletSection({required this.orders, required this.loading, required this.coupon});
   final List<Map<String, dynamic>> orders;
+  final bool loading;
+  final CustomerCashbackCoupon? coupon;
 
   @override
   Widget build(BuildContext context) {
     final money = NumberFormat.currency(locale: 'ar_AE', symbol: 'د.إ', decimalDigits: 2);
     final entries = _cashbackEntries(orders);
-    final balance = entries.where((entry) => entry.status == _CashbackStatus.earned).fold<double>(0, (sum, entry) => sum + entry.amount);
+    final loadedBalance = entries.where((entry) => entry.status == _CashbackStatus.earned).fold<double>(0, (sum, entry) => sum + entry.amount);
+    final balance = coupon?.balance ?? loadedBalance;
     final couponReady = balance >= 5;
-    final couponCode = _cashbackCouponCode(entries, balance);
+    final couponCode = coupon?.code ?? _cashbackCouponCode(entries, balance);
     return Column(
       children: [
         Container(
@@ -1111,11 +1381,11 @@ class _WalletSection extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(width: double.infinity, child: Text('رصيد كاش باك', textAlign: TextAlign.right, style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w800))),
+              const SizedBox(width: double.infinity, child: Text('رصيد كاش باك', textAlign: TextAlign.start, style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w800))),
               const SizedBox(height: 8),
-              SizedBox(width: double.infinity, child: Text(money.format(balance), textAlign: TextAlign.right, textDirection: TextDirection.ltr, style: const TextStyle(color: AppTheme.gold, fontSize: 24, fontWeight: FontWeight.w900))),
+              SizedBox(width: double.infinity, child: Text(money.format(balance), textAlign: TextAlign.start, textDirection: TextDirection.ltr, style: const TextStyle(color: AppTheme.gold, fontSize: 24, fontWeight: FontWeight.w900))),
               const SizedBox(height: 6),
-              const SizedBox(width: double.infinity, child: Text('🎁 تحصل على 5 د.إ مع كل طلب', textAlign: TextAlign.right, style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w800))),
+              const SizedBox(width: double.infinity, child: Text('🎁 تحصل على 5 د.إ مع كل طلب', textAlign: TextAlign.start, style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w800))),
             ],
           ),
         ),
@@ -1126,10 +1396,15 @@ class _WalletSection extends StatelessWidget {
             children: [
               const _SectionTitle(icon: '📜', title: 'سجل الطلبات'),
               const SizedBox(height: 10),
-              if (entries.isEmpty)
+              if (entries.isEmpty && !loading)
                 const _EmptyPanel(title: 'لم تضع أي طلب بعد', subtitle: '')
               else
-                for (final entry in entries.take(10)) _CashbackLine(entry: entry),
+                for (final entry in entries) _CashbackLine(entry: entry),
+              if (loading)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 14),
+                  child: Center(child: CircularProgressIndicator(color: AppTheme.gold, strokeWidth: 2)),
+                ),
             ],
           ),
         ),
@@ -1150,6 +1425,7 @@ class _FavoritesSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final recent = AppStateScope.of(context).recentlyViewedProducts;
     return _Panel(
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(
@@ -1167,6 +1443,14 @@ class _FavoritesSection extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         if (products.isEmpty) const _EmptyPanel(title: 'لا توجد منتجات في المفضلة', subtitle: 'اضغط القلب على أي منتج ليظهر هنا.') else ProductGalleryGrid(products: products),
+        if (recent.isNotEmpty) ...[
+          const SizedBox(height: 18),
+          const Divider(height: 1),
+          const SizedBox(height: 14),
+          const _SectionTitle(icon: '👁️', title: 'شوهدت مؤخرًا'),
+          const SizedBox(height: 10),
+          ProductGalleryGrid(products: recent),
+        ],
       ]),
     );
   }
@@ -1369,7 +1653,7 @@ class _PaymentMethodCard extends StatelessWidget {
         border: Border.all(color: AppTheme.line),
       ),
       child: Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: Directionality.of(context),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -1383,12 +1667,12 @@ class _PaymentMethodCard extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(title, textAlign: TextAlign.right, style: const TextStyle(color: AppTheme.navy, fontSize: 13, fontWeight: FontWeight.w900)),
+                  Text(AppStrings.auto(title), textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.navy, fontSize: 13, fontWeight: FontWeight.w900)),
                   if (subtitle.isNotEmpty) ...[
                     const SizedBox(height: 3),
-                    Text(subtitle, textAlign: TextAlign.right, style: const TextStyle(color: AppTheme.muted, fontSize: 10.5, fontWeight: FontWeight.w600)),
+                    Text(AppStrings.auto(subtitle), textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.muted, fontSize: 10.5, fontWeight: FontWeight.w600)),
                   ],
                   if (details.isNotEmpty) ...[
                     const SizedBox(height: 10),
@@ -1402,13 +1686,13 @@ class _PaymentMethodCard extends StatelessWidget {
                               TextSpan(text: item.$2, style: const TextStyle(color: Color(0xFF343A46), fontWeight: FontWeight.w900)),
                             ],
                           ),
-                          textAlign: TextAlign.right,
-                          textDirection: TextDirection.rtl,
+                          textAlign: TextAlign.start,
+                          textDirection: Directionality.of(context),
                           style: const TextStyle(fontSize: 10.5, height: 1.4),
                         ),
                       ),
                     const SizedBox(height: 3),
-                    const Text('بعد التحويل أرسل إيصال الدفع عبر واتساب', textAlign: TextAlign.right, style: TextStyle(color: AppTheme.muted, fontSize: 10)),
+                    const Text('بعد التحويل أرسل إيصال الدفع عبر واتساب', textAlign: TextAlign.start, style: TextStyle(color: AppTheme.muted, fontSize: 10)),
                   ],
                 ],
               ),
@@ -1440,8 +1724,9 @@ class _PayAsset extends StatelessWidget {
 }
 
 class _InvoicesSection extends StatelessWidget {
-  const _InvoicesSection({required this.invoices, required this.onRefresh});
+  const _InvoicesSection({required this.invoices, required this.loading, required this.onRefresh});
   final List<Map<String, dynamic>> invoices;
+  final bool loading;
   final Future<void> Function() onRefresh;
 
   @override
@@ -1450,18 +1735,23 @@ class _InvoicesSection extends StatelessWidget {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(
           children: [
-            OutlinedButton(onPressed: () => onRefresh(), style: OutlinedButton.styleFrom(minimumSize: const Size(52, 36), padding: const EdgeInsets.symmetric(horizontal: 12)), child: const Text('تحديث', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800))),
-            const Spacer(),
             const _SectionTitle(icon: '🧾', title: 'فواتيري'),
+            const Spacer(),
+            OutlinedButton(onPressed: () => onRefresh(), style: OutlinedButton.styleFrom(minimumSize: const Size(52, 36), padding: const EdgeInsets.symmetric(horizontal: 12)), child: const Text('تحديث', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800))),
           ],
         ),
         const SizedBox(height: 4),
-        const SizedBox(width: double.infinity, child: Text('افتح الفاتورة لعرض بيانات التحويل ونسخ كل بند منفرداً.', textAlign: TextAlign.right, style: TextStyle(color: AppTheme.muted, fontSize: 11))),
+        const SizedBox(width: double.infinity, child: Text('افتح الفاتورة لعرض بيانات التحويل ونسخ كل بند منفرداً.', textAlign: TextAlign.start, style: TextStyle(color: AppTheme.muted, fontSize: 11))),
         const SizedBox(height: 12),
         if (invoices.isEmpty)
           const _EmptyPanel(title: 'لا توجد فواتير محفوظة حتى الآن', subtitle: 'الفواتير المرسلة من الأدمن ستظهر هنا تلقائياً.')
         else
           for (final row in invoices) _InvoiceLine(row: row),
+        if (loading)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 14),
+            child: Center(child: SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.2, color: AppTheme.gold))),
+          ),
       ]),
     );
   }
@@ -1619,7 +1909,7 @@ class _OccasionsSectionState extends State<_OccasionsSection> {
             ],
           ),
           const SizedBox(height: 8),
-          const SizedBox(width: double.infinity, child: Text('احفظ مناسبات الأشخاص المهمين، وبريق يذكرك قبلها.', textAlign: TextAlign.right, style: TextStyle(color: AppTheme.muted, fontSize: 12))),
+          const SizedBox(width: double.infinity, child: Text('احفظ مناسبات الأشخاص المهمين، وبريق يذكرك قبلها.', textAlign: TextAlign.start, style: TextStyle(color: AppTheme.muted, fontSize: 12))),
           const SizedBox(height: 14),
           if (!signedIn)
             _EmptyPanel(title: 'سجل الدخول لحفظ مناسباتك', subtitle: '', action: 'تسجيل الدخول', onAction: widget.onLogin)
@@ -1643,7 +1933,7 @@ class _OccasionsSectionState extends State<_OccasionsSection> {
               contentPadding: EdgeInsets.zero,
               controlAffinity: ListTileControlAffinity.leading,
               activeColor: AppTheme.gold,
-              title: const Text('تفعيل التذكير لهذه المناسبة', textAlign: TextAlign.right, style: TextStyle(color: AppTheme.navy, fontSize: 12, fontWeight: FontWeight.w800)),
+              title: const Text('تفعيل التذكير لهذه المناسبة', textAlign: TextAlign.start, style: TextStyle(color: AppTheme.navy, fontSize: 12, fontWeight: FontWeight.w800)),
             ),
             Row(
               children: [
@@ -1658,7 +1948,7 @@ class _OccasionsSectionState extends State<_OccasionsSection> {
             else
               for (final occasion in rows) _OccasionRow(occasion: occasion, deleting: _deleting, onEdit: () => _edit(occasion), onDelete: () => _delete(occasion)),
             const SizedBox(height: 6),
-            const Text('التذكيرات مربوطة بنظام إشعارات الموقع عبر جدول customer_occasions.', textAlign: TextAlign.right, style: TextStyle(color: AppTheme.muted, fontSize: 10.5)),
+            const Text('التذكيرات مربوطة بنظام إشعارات الموقع عبر جدول customer_occasions.', textAlign: TextAlign.start, style: TextStyle(color: AppTheme.muted, fontSize: 10.5)),
           ],
         ],
       ),
@@ -1682,11 +1972,11 @@ class _OccasionDropdown<T> extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, textAlign: TextAlign.right, style: const TextStyle(color: AppTheme.muted, fontSize: 11)),
+          Text(AppStrings.auto(label), textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.muted, fontSize: 11)),
           const SizedBox(height: 4),
           DropdownButtonFormField<T>(
             value: value,
-            items: items.map((item) => DropdownMenuItem<T>(value: item, alignment: AlignmentDirectional.centerEnd, child: Text(labelFor(item), textAlign: TextAlign.right))).toList(),
+            items: items.map((item) => DropdownMenuItem<T>(value: item, alignment: AlignmentDirectional.centerEnd, child: Text(labelFor(item), textAlign: TextAlign.start))).toList(),
             onChanged: onChanged,
             decoration: InputDecoration(
               filled: true,
@@ -1733,11 +2023,11 @@ class _OccasionRow extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('${occasion.name} · ${occasion.personName}', textAlign: TextAlign.right, style: const TextStyle(color: AppTheme.navy, fontSize: 13, fontWeight: FontWeight.w900)),
+                Text('${occasion.name} · ${occasion.personName}', textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.navy, fontSize: 13, fontWeight: FontWeight.w900)),
                 const SizedBox(height: 4),
-                Text('${_occasionTypeLabel(occasion.type)}$relation · ${_occasionDateLabel(occasion)} · $reminder', textAlign: TextAlign.right, style: const TextStyle(color: AppTheme.muted, fontSize: 10.5, height: 1.4)),
+                Text('${_occasionTypeLabel(occasion.type)}$relation · ${_occasionDateLabel(occasion)} · $reminder', textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.muted, fontSize: 10.5, height: 1.4)),
               ],
             ),
           ),
@@ -1858,9 +2148,19 @@ class _SupportSectionState extends State<_SupportSection> {
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
               color: AppTheme.navy,
               child: Directionality(
-                textDirection: TextDirection.rtl,
+                textDirection: Directionality.of(context),
                 child: Row(
                 children: [
+                  const CircleAvatar(radius: 22, backgroundColor: Color(0xFF405783), child: Text('🤖', style: TextStyle(fontSize: 23))),
+                  const SizedBox(width: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(name, textAlign: TextAlign.start, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w900)),
+                      const Text('متاح', textAlign: TextAlign.start, style: TextStyle(color: Color(0xFF8AF0A5), fontSize: 11, fontWeight: FontWeight.w800)),
+                    ],
+                  ),
+                  const Spacer(),
                   TextButton.icon(
                     onPressed: () => setState(() {
                       _messages
@@ -1871,16 +2171,6 @@ class _SupportSectionState extends State<_SupportSection> {
                     label: const Text('مسح'),
                     style: TextButton.styleFrom(foregroundColor: Colors.white70, backgroundColor: Colors.white.withValues(alpha: .1), padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6)),
                   ),
-                  const Spacer(),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(name, textAlign: TextAlign.right, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w900)),
-                      const Text('متاح', textAlign: TextAlign.right, style: TextStyle(color: Color(0xFF8AF0A5), fontSize: 11, fontWeight: FontWeight.w800)),
-                    ],
-                  ),
-                  const SizedBox(width: 10),
-                  const CircleAvatar(radius: 22, backgroundColor: Color(0xFF405783), child: Text('🤖', style: TextStyle(fontSize: 23))),
                 ],
               ),
               ),
@@ -1930,7 +2220,7 @@ class _SupportSectionState extends State<_SupportSection> {
                   Expanded(
                     child: TextField(
                       controller: _controller,
-                      textAlign: TextAlign.right,
+                      textAlign: TextAlign.start,
                       textInputAction: TextInputAction.send,
                       onSubmitted: (_) => _send(),
                       decoration: InputDecoration(
@@ -1966,7 +2256,7 @@ class _ChatBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Align(
-      alignment: message.bot ? Alignment.centerRight : Alignment.centerLeft,
+      alignment: message.bot ? AlignmentDirectional.centerStart : AlignmentDirectional.centerEnd,
       child: Container(
         constraints: const BoxConstraints(maxWidth: 320),
         margin: const EdgeInsets.only(bottom: 9),
@@ -1978,7 +2268,7 @@ class _ChatBubble extends StatelessWidget {
         ),
         child: Text(
           message.text,
-          textAlign: TextAlign.right,
+          textAlign: TextAlign.start,
           style: TextStyle(color: message.bot ? AppTheme.navy : Colors.white, fontSize: 12, height: 1.6, fontWeight: FontWeight.w700),
         ),
       ),
@@ -2012,10 +2302,10 @@ class _AccountMenuSheet extends StatelessWidget {
       ('الإشعارات', Icons.notifications_rounded, AccountSection.notifications),
     ];
     final signedIn = email != null && email!.trim().isNotEmpty;
-    final name = signedIn ? email!.split('@').first : 'زائر';
+    final name = signedIn ? email!.split('@').first : AppStrings.auto('زائر');
     final appState = AppStateScope.of(context);
     return Align(
-      alignment: Alignment.centerRight,
+      alignment: AlignmentDirectional.centerStart,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () {},
@@ -2051,7 +2341,7 @@ class _AccountMenuSheet extends StatelessWidget {
                   FilledButton(
                     onPressed: email == null ? onLogin : onLogout,
                     style: FilledButton.styleFrom(backgroundColor: const Color(0xFFFFF0F0), foregroundColor: Colors.red, minimumSize: const Size.fromHeight(48)),
-                    child: Text(email == null ? 'تسجيل الدخول' : 'تسجيل الخروج'),
+                    child: Text(email == null ? AppStrings.login : AppStrings.logout),
                   ),
                 ],
               ),
@@ -2080,13 +2370,13 @@ class _MenuRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         decoration: BoxDecoration(color: active ? const Color(0xFFEDEFF2) : const Color(0xFFF7F8FA), borderRadius: BorderRadius.circular(6)),
         child: Directionality(
-          textDirection: TextDirection.rtl,
+          textDirection: Directionality.of(context),
           child: Row(
             children: [
               Expanded(
                 child: Text(
-                  label,
-                  textAlign: TextAlign.right,
+                  AppStrings.auto(label),
+                  textAlign: TextAlign.start,
                   style: TextStyle(color: active ? AppTheme.gold : AppTheme.navy, fontWeight: FontWeight.w800),
                 ),
               ),
@@ -2127,25 +2417,12 @@ class _LocaleCurrencyControls extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Align(
-          alignment: direction == TextDirection.rtl ? Alignment.centerRight : Alignment.centerLeft,
+          alignment: direction == TextDirection.rtl ? AlignmentDirectional.centerStart : AlignmentDirectional.centerEnd,
           child: Text(language == 'en' ? 'Language and Currency 🌐' : 'اللغة والعملة 🌐', style: const TextStyle(color: AppTheme.muted, fontSize: 10.5)),
         ),
         const SizedBox(height: 6),
         Row(
           children: [
-            Expanded(
-              child: _MenuSelect<String>(
-                value: currency,
-                items: const ['AED', 'USD', 'EUR', 'SAR', 'EGP', 'KWD', 'JOD', 'GBP'],
-                labelFor: (value) => _currencyLabel(value, language),
-                icon: '💱',
-                textDirection: direction,
-                onChanged: (value) {
-                  if (value != null) onCurrency(value);
-                },
-              ),
-            ),
-            const SizedBox(width: 8),
             Expanded(
               child: _MenuSelect<String>(
                 value: language == 'en' ? 'en' : 'ar',
@@ -2155,6 +2432,19 @@ class _LocaleCurrencyControls extends StatelessWidget {
                 textDirection: direction,
                 onChanged: (value) {
                   if (value != null) onLanguage(value);
+                },
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _MenuSelect<String>(
+                value: currency,
+                items: const ['AED', 'USD', 'EUR', 'SAR', 'EGP', 'KWD', 'JOD', 'GBP'],
+                labelFor: (value) => _currencyLabel(value, language),
+                icon: '💱',
+                textDirection: direction,
+                onChanged: (value) {
+                  if (value != null) onCurrency(value);
                 },
               ),
             ),
@@ -2196,7 +2486,7 @@ class _MenuSelect<T> extends StatelessWidget {
                   (item) => DropdownMenuItem<T>(
                     value: item,
                     alignment: AlignmentDirectional.centerEnd,
-                    child: Text('$icon ${labelFor(item)}', textAlign: textDirection == TextDirection.rtl ? TextAlign.right : TextAlign.left, overflow: TextOverflow.ellipsis),
+                    child: Text('$icon ${labelFor(item)}', textAlign: textDirection == TextDirection.rtl ? TextAlign.start : TextAlign.start, overflow: TextOverflow.ellipsis),
                   ),
                 )
                 .toList(),
@@ -2275,7 +2565,7 @@ class _ReviewFormCardState extends State<_ReviewFormCard> {
     }
     setState(() => _saving = true);
     try {
-      await _service.submit(productId: widget.entry.productId, name: widget.name, rating: _rating, text: text);
+      await _service.submit(productId: widget.entry.productId, name: widget.name, rating: _rating, text: text, orderId: widget.entry.orderId);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم إرسال التقييم')));
       widget.onSubmitted();
@@ -2296,15 +2586,15 @@ class _ReviewFormCardState extends State<_ReviewFormCard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            textDirection: TextDirection.rtl,
+            textDirection: Directionality.of(context),
             children: [
               _Thumb(image: widget.entry.image, size: 52),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(widget.entry.title, textAlign: TextAlign.right, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppTheme.navy, fontWeight: FontWeight.w900)),
+                  Text(widget.entry.title, textAlign: TextAlign.start, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppTheme.navy, fontWeight: FontWeight.w900)),
                   const SizedBox(height: 3),
-                  Text('طلب رقم ${widget.entry.orderId}', textAlign: TextAlign.right, style: const TextStyle(color: AppTheme.muted, fontSize: 10)),
+                  Text('طلب رقم ${widget.entry.orderId}', textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.muted, fontSize: 10)),
                 ]),
               ),
             ],
@@ -2328,7 +2618,7 @@ class _ReviewFormCardState extends State<_ReviewFormCard> {
             controller: _controller,
             minLines: 2,
             maxLines: 3,
-            textAlign: TextAlign.right,
+            textAlign: TextAlign.start,
             decoration: InputDecoration(
               hintText: 'اكتب تعليقك عن المنتج...',
               filled: true,
@@ -2379,18 +2669,18 @@ class _PublishedReviewCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            textDirection: TextDirection.rtl,
+            textDirection: Directionality.of(context),
             children: [
               if (product != null) _Thumb(image: product!.imageUrl, size: 48) else const Icon(Icons.inventory_2_outlined, color: AppTheme.muted, size: 38),
               const SizedBox(width: 10),
-              Expanded(child: Text(product?.displayName ?? 'منتج #$productId', textAlign: TextAlign.right, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppTheme.navy, fontWeight: FontWeight.w900))),
+              Expanded(child: Text(product?.displayName ?? 'منتج #$productId', textAlign: TextAlign.start, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppTheme.navy, fontWeight: FontWeight.w900))),
             ],
           ),
           const SizedBox(height: 8),
           Text('★' * rating + '☆' * (5 - rating), textDirection: TextDirection.ltr, style: const TextStyle(color: AppTheme.gold, fontSize: 17, fontWeight: FontWeight.w900)),
           if ('${row['text'] ?? ''}'.trim().isNotEmpty) ...[
             const SizedBox(height: 6),
-            Text('${row['text']}', textAlign: TextAlign.right, style: const TextStyle(color: AppTheme.navy, fontSize: 12, height: 1.5)),
+            Text('${row['text']}', textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.navy, fontSize: 12, height: 1.5)),
           ],
           const SizedBox(height: 6),
           const Text('منشور', style: TextStyle(color: AppTheme.muted, fontSize: 10)),
@@ -2428,10 +2718,10 @@ class _CashbackLine extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('طلب #${entry.orderNumber}', textAlign: TextAlign.right, style: const TextStyle(color: Color(0xFF111111), fontSize: 13, fontWeight: FontWeight.w900)),
+              Text('طلب #${entry.orderNumber}', textAlign: TextAlign.start, style: const TextStyle(color: Color(0xFF111111), fontSize: 13, fontWeight: FontWeight.w900)),
               const SizedBox(height: 4),
               Row(
-                textDirection: TextDirection.rtl,
+                textDirection: Directionality.of(context),
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(entry.dateLabel, style: const TextStyle(color: AppTheme.muted, fontSize: 10)),
@@ -2520,7 +2810,7 @@ class _CashbackProgress extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(width: double.infinity, child: Text('اجمع 5 د.إ كاش باك واحصل على كوبون خصم', textAlign: TextAlign.right, style: TextStyle(color: AppTheme.navy, fontSize: 13, fontWeight: FontWeight.w900))),
+          const SizedBox(width: double.infinity, child: Text('اجمع 5 د.إ كاش باك واحصل على كوبون خصم', textAlign: TextAlign.start, style: TextStyle(color: AppTheme.navy, fontSize: 13, fontWeight: FontWeight.w900))),
           const SizedBox(height: 10),
           ClipRRect(
             borderRadius: BorderRadius.circular(999),
@@ -2671,7 +2961,7 @@ class _InvoiceLine extends StatelessWidget {
     final image = _invoiceProductImage(invoice, order);
     final items = _invoiceItems(invoice, order);
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: Directionality.of(context),
       child: Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppTheme.line), boxShadow: [BoxShadow(color: AppTheme.navy.withValues(alpha: .06), blurRadius: 18, offset: const Offset(0, 7))]),
@@ -2684,17 +2974,17 @@ class _InvoiceLine extends StatelessWidget {
           collapsedBackgroundColor: const Color(0xFFFFFCF5),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          leading: const Icon(Icons.keyboard_arrow_down_rounded, color: AppTheme.muted),
-          trailing: _Thumb(image: image, size: 54),
-          title: Text('فاتورة طلب $orderNumber', textAlign: TextAlign.right, style: const TextStyle(color: AppTheme.navy, fontSize: 14, fontWeight: FontWeight.w900)),
+          leading: _Thumb(image: image, size: 54),
+          trailing: const Icon(Icons.keyboard_arrow_down_rounded, color: AppTheme.muted),
+          title: Text('فاتورة طلب $orderNumber', textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.navy, fontSize: 14, fontWeight: FontWeight.w900)),
           subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 3),
-              Text(_invoiceCustomer(invoice, order), maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.right, style: const TextStyle(color: AppTheme.muted, fontSize: 10.5)),
+              Text(_invoiceCustomer(invoice, order), maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.muted, fontSize: 10.5)),
               const SizedBox(height: 7),
               Wrap(
-                alignment: WrapAlignment.end,
+                alignment: WrapAlignment.start,
                 spacing: 6,
                 runSpacing: 5,
                 children: [
@@ -2715,7 +3005,7 @@ class _InvoiceLine extends StatelessWidget {
               margin: const EdgeInsets.symmetric(vertical: 9),
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(color: const Color(0xFFFFF8E1), borderRadius: BorderRadius.circular(10), border: Border.all(color: const Color(0xFFF1D27A))),
-              child: Text(_invoiceNote(invoice), textAlign: TextAlign.right, style: const TextStyle(color: Color(0xFF6B5200), fontSize: 12, fontWeight: FontWeight.w800)),
+              child: Text(_invoiceNote(invoice), textAlign: TextAlign.start, style: const TextStyle(color: Color(0xFF6B5200), fontSize: 12, fontWeight: FontWeight.w800)),
             ),
             if (!earned) ...[
               _InvoiceBankBox(orderNumber: orderNumber),
@@ -2747,7 +3037,7 @@ class _InvoiceInfoLine extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      child: Text(text, textAlign: TextAlign.right, style: TextStyle(color: gold ? const Color(0xFF8A6500) : const Color(0xFF30384A), fontSize: 12, height: 1.8, fontWeight: gold ? FontWeight.w800 : FontWeight.w600)),
+      child: Text(text, textAlign: TextAlign.start, style: TextStyle(color: gold ? const Color(0xFF8A6500) : const Color(0xFF30384A), fontSize: 12, height: 1.8, fontWeight: gold ? FontWeight.w800 : FontWeight.w600)),
     );
   }
 }
@@ -2791,9 +3081,9 @@ class _InvoiceBankRow extends StatelessWidget {
         children: [
           TextButton(onPressed: () => _copyValue(context, value, label), style: TextButton.styleFrom(backgroundColor: AppTheme.navy, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 10), minimumSize: const Size(42, 30), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(7))), child: const Text('نسخ', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800))),
           const SizedBox(width: 8),
-          Expanded(child: Text(value, textAlign: TextAlign.left, textDirection: TextDirection.ltr, style: const TextStyle(color: AppTheme.navy, fontSize: 10.5, fontWeight: FontWeight.w900))),
+          Expanded(child: Text(value, textAlign: TextAlign.start, textDirection: TextDirection.ltr, style: const TextStyle(color: AppTheme.navy, fontSize: 10.5, fontWeight: FontWeight.w900))),
           const SizedBox(width: 8),
-          Text(label, style: const TextStyle(color: AppTheme.muted, fontSize: 10.5, fontWeight: FontWeight.w700)),
+          Text(AppStrings.auto(label), style: const TextStyle(color: AppTheme.muted, fontSize: 10.5, fontWeight: FontWeight.w700)),
         ],
       ),
     );
@@ -2811,7 +3101,7 @@ class _InvoiceAction extends StatelessWidget {
     return FilledButton(
       onPressed: onTap,
       style: FilledButton.styleFrom(backgroundColor: color, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), minimumSize: const Size(0, 38), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9))),
-      child: Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900)),
+      child: Text(AppStrings.auto(label), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900)),
     );
   }
 }
@@ -2924,9 +3214,9 @@ class _ReadonlyField extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        if (label.isNotEmpty) Text(label, style: const TextStyle(color: AppTheme.muted, fontSize: 11)),
+        if (label.isNotEmpty) Text(AppStrings.auto(label), style: const TextStyle(color: AppTheme.muted, fontSize: 11)),
         const SizedBox(height: 4),
-        Container(width: double.infinity, padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(6), border: Border.all(color: AppTheme.line)), child: Text(value, textAlign: TextAlign.right, style: const TextStyle(color: Color(0xFF222222)))),
+        Container(width: double.infinity, padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(6), border: Border.all(color: AppTheme.line)), child: Text(value, textAlign: TextAlign.start, style: const TextStyle(color: Color(0xFF222222)))),
       ]),
     );
   }
@@ -2960,7 +3250,7 @@ class _ProfileField extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, textAlign: TextAlign.right, style: const TextStyle(color: AppTheme.muted, fontSize: 11)),
+          Text(AppStrings.auto(label), textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.muted, fontSize: 11)),
           const SizedBox(height: 4),
           TextField(
             controller: controller,
@@ -2969,9 +3259,9 @@ class _ProfileField extends StatelessWidget {
             obscureText: obscureText,
             keyboardType: keyboardType,
             onChanged: onChanged,
-            textAlign: TextAlign.right,
+            textAlign: TextAlign.start,
             decoration: InputDecoration(
-              hintText: hint,
+              hintText: AppStrings.auto(hint),
               filled: true,
               fillColor: readOnly || !enabled ? const Color(0xFFF7F8FB) : Colors.white,
               contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -2996,7 +3286,7 @@ class _Panel extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(9)),
-      child: Directionality(textDirection: TextDirection.rtl, child: child),
+      child: Directionality(textDirection: Directionality.of(context), child: child),
     );
   }
 }
@@ -3033,8 +3323,8 @@ class _EmptyPanel extends StatelessWidget {
             child: Icon(hasAction ? Icons.lock_person_outlined : Icons.receipt_long_outlined, size: hasAction ? 30 : 28, color: const Color(0xFFB9C3D4)),
           ),
           const SizedBox(height: 12),
-          Text(title, textAlign: TextAlign.center, style: const TextStyle(color: AppTheme.navy, fontSize: 13, fontWeight: FontWeight.w900)),
-          if (subtitle.isNotEmpty) ...[const SizedBox(height: 5), Text(subtitle, textAlign: TextAlign.center, style: const TextStyle(color: AppTheme.muted, fontSize: 11))],
+          Text(AppStrings.auto(title), textAlign: TextAlign.center, style: const TextStyle(color: AppTheme.navy, fontSize: 13, fontWeight: FontWeight.w900)),
+          if (subtitle.isNotEmpty) ...[const SizedBox(height: 5), Text(AppStrings.auto(subtitle), textAlign: TextAlign.center, style: const TextStyle(color: AppTheme.muted, fontSize: 11))],
           if (action != null) ...[
             const SizedBox(height: 16),
             FilledButton(
@@ -3106,7 +3396,7 @@ class _OrderAction extends StatelessWidget {
           children: [
             Text(icon, style: const TextStyle(fontSize: 11)),
             const SizedBox(width: 2),
-            Text(label, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w900)),
+            Text(AppStrings.auto(label), style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w900)),
           ],
         ),
       ),
@@ -3172,17 +3462,17 @@ class _SectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Align(
-      alignment: Alignment.centerRight,
+      alignment: AlignmentDirectional.centerStart,
       child: Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: Directionality.of(context),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(icon),
             const SizedBox(width: 6),
             Text(
-              title,
-              textAlign: TextAlign.right,
+              AppStrings.auto(title),
+              textAlign: TextAlign.start,
               style: const TextStyle(color: AppTheme.navy, fontSize: 17, fontWeight: FontWeight.w900),
             ),
           ],
@@ -3276,6 +3566,12 @@ bool _isConfirmedStatus(Object? value) {
   return status.contains('confirm') || status.contains('مؤكد');
 }
 
+String _invoiceRowKey(Map<String, dynamic> row) {
+  final invoice = Map<String, dynamic>.from((row['invoice'] as Map?) ?? const {});
+  final order = Map<String, dynamic>.from((row['order'] as Map?) ?? const {});
+  return '${invoice['invoice_number'] ?? invoice['order_number'] ?? invoice['orderNumber'] ?? order['order_number'] ?? invoice['id'] ?? order['id'] ?? ''}';
+}
+
 String _orderNumber(Map<String, dynamic> order) {
   final value = '${order['order_number'] ?? order['orderNumber'] ?? order['id'] ?? ''}'.trim();
   if (value.isEmpty) return '#';
@@ -3306,7 +3602,7 @@ String _trackingMessage(Map<String, dynamic> order) {
   ].join('\n');
 }
 
-String _returnMessage(Map<String, dynamic> order) {
+String _returnMessage(Map<String, dynamic> order, String reason) {
   final number = _orderNumber(order);
   final product = _firstOrderProductName(order);
   final name = _firstText([
@@ -3324,10 +3620,54 @@ String _returnMessage(Map<String, dynamic> order) {
     '↩️ طلب إرجاع',
     'رقم الطلب: $number',
     'المنتج: ${product.isEmpty ? 'غير محدد' : product}',
+    'سبب الإرجاع: $reason',
     'الاسم: ${name.isEmpty ? 'غير متوفر' : name}',
     'الهاتف:  ${phone.isEmpty ? 'غير متوفر' : phone}',
     'أرجو مساعدتي في الإرجاع 🙏',
   ].join('\n');
+}
+
+Future<void> _requestReturn(
+  BuildContext context,
+  Map<String, dynamic> order,
+) async {
+  final controller = TextEditingController();
+  final reason = await showDialog<String>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: Text(AppStrings.tr('سبب الإرجاع', 'Return reason')),
+      content: TextField(
+        controller: controller,
+        autofocus: true,
+        minLines: 3,
+        maxLines: 5,
+        textAlign: TextAlign.start,
+        decoration: InputDecoration(
+          hintText: AppStrings.tr(
+            'اكتب سبب إرجاع المنتج...',
+            'Write the reason for returning the product...',
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(),
+          child: Text(AppStrings.tr('إلغاء', 'Cancel')),
+        ),
+        FilledButton(
+          onPressed: () {
+            final value = controller.text.trim();
+            if (value.isEmpty) return;
+            Navigator.of(dialogContext).pop(value);
+          },
+          child: Text(AppStrings.tr('إرسال عبر واتساب', 'Send via WhatsApp')),
+        ),
+      ],
+    ),
+  );
+  controller.dispose();
+  if (reason == null || reason.isEmpty || !context.mounted) return;
+  await _openWhatsApp(_returnMessage(order, reason));
 }
 
 String _firstOrderProductName(Map<String, dynamic> order) {

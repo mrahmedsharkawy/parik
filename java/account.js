@@ -26,7 +26,7 @@
     const placeholders = {
       'pf-name': ['أدخل اسمك', 'Enter your name'],
       'pf-address': ['أدخل عنوانك', 'Enter your address'],
-      'pf-password': ['أدخل كلمة السر', 'Enter your password'],
+      'pf-password': ['أدخل كلمة السر الحالية', 'Enter your current password'],
       'pf-new-password': ['أدخل كلمة السر الجديدة', 'Enter your new password'],
       'pf-confirm-password': ['أعد كتابة كلمة السر الجديدة', 'Re-enter your new password'],
       'scInput': ['اكتب سؤالك هنا...', 'Type your question here...'],
@@ -852,7 +852,7 @@
     } catch(e) { return 0; }
   }
 
-  function renderCashback() {
+  async function renderCashback() {
     const balEl = document.getElementById('cbBalance');
     const hist  = document.getElementById('cbHistory');
     const sym   = accText('د.إ', 'AED');
@@ -874,6 +874,15 @@
     });
 
     const orders = (() => { try { return JSON.parse(localStorage.getItem('x2_orders')||'[]'); } catch(e) { return []; } })();
+    let remoteSummary = null;
+    try {
+      if ((localStorage.getItem('x2_token') || localStorage.getItem('x2_refresh_token')) && window.sbFetch) {
+        remoteSummary = await window.sbFetch('rpc/get_my_cashback_summary', {
+          method: 'POST',
+          body: '{}'
+        });
+      }
+    } catch(e) {}
 
     // حساب الرصيد الحقيقي من الطلبات (فقط غير المنتهية)
     const now = Date.now();
@@ -957,7 +966,8 @@
 
     // الرصيد = فقط الطلبات المسلّمة التي مر عليها 30 يوم ولم تُستخدم
     const ordersBalance = validOrders.reduce((s,o) => s + getCbAmount(o), 0);
-    const displayBalance = ordersBalance;
+    const remoteBalance = remoteSummary && Number(remoteSummary.balance);
+    const displayBalance = Number.isFinite(remoteBalance) ? remoteBalance : ordersBalance;
 
     try {
       const storedCashback = JSON.parse(localStorage.getItem(CASHBACK_KEY) || '{}');
@@ -1024,18 +1034,20 @@
     const progressLabel  = document.getElementById('cbProgressLabel');
 
     if (displayBalance >= COUPON_MIN) {
-      let storedCoupon = null;
-      try { storedCoupon = JSON.parse(localStorage.getItem('x2_coupon_code') || 'null'); } catch(e) {}
-      if (!storedCoupon || storedCoupon.used) {
-        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-        let code = 'CB-';
-        for (let i=0;i<6;i++) code += chars[Math.floor(Math.random()*chars.length)];
-        storedCoupon = { code, amount: displayBalance, used: false, generated: new Date().toISOString() };
-        localStorage.setItem('x2_coupon_code', JSON.stringify(storedCoupon));
-      } else {
-        storedCoupon.amount = displayBalance;
-        localStorage.setItem('x2_coupon_code', JSON.stringify(storedCoupon));
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      const orderNumbers = remoteSummary && Array.isArray(remoteSummary.order_numbers)
+        ? remoteSummary.order_numbers.map(String)
+        : validOrders.map(o => String(o.id || o.orderNumber || o.order_number || '').replace(/^#/, ''));
+      const seedText = orderNumbers.join('|') + displayBalance.toFixed(2);
+      let seed = 0;
+      for (let i=0; i<seedText.length; i++) seed = (Math.imul(seed, 31) + seedText.charCodeAt(i)) & 0x7fffffff;
+      let code = 'CB-';
+      for (let i=0; i<6; i++) {
+        seed = (Math.imul(seed, 1103515245) + 12345) & 0x7fffffff;
+        code += chars[seed % chars.length];
       }
+      const storedCoupon = { code, amount: displayBalance, used: false, generated: new Date().toISOString() };
+      localStorage.setItem('x2_coupon_code', JSON.stringify(storedCoupon));
       if (couponSection)   couponSection.style.display   = 'block';
       if (progressSection) progressSection.style.display  = 'none';
       if (couponCodeEl)    couponCodeEl.textContent = storedCoupon.code;
@@ -1484,6 +1496,7 @@
 
   window.saveProfile = function() {
     const oldProfile = (() => { try { return JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}'); } catch(e) { return {}; } })();
+    delete oldProfile.password;
     const accountEmail = String(getJwtEmail() || oldProfile.email || document.getElementById('pf-email').value || '').trim().toLowerCase();
     const phone = normalizeUaePhone(document.getElementById('pf-phone').value);
     if (!phone) {
@@ -1496,8 +1509,7 @@
       name: document.getElementById('pf-name').value.trim(),
       email: accountEmail,
       address: document.getElementById('pf-address').value.trim(),
-      phone,
-      password: document.getElementById('pf-password').value
+      phone
     };
     document.getElementById('pf-email').value = accountEmail;
     document.getElementById('pf-phone').value = formatUaePhoneInput(phone);
@@ -1513,12 +1525,13 @@
     alert('✅ تم حفظ التغييرات');
   };
 
-  window.changePassword = function() {
+  window.changePassword = async function() {
+    const currentPassword = document.getElementById('pf-password').value;
     const newPassword = document.getElementById('pf-new-password').value;
     const confirmPassword = document.getElementById('pf-confirm-password').value;
     const profile = getProfile();
 
-    if (!newPassword || !confirmPassword) {
+    if (!currentPassword || !newPassword || !confirmPassword) {
       alert('⚠️ من فضلك املأ كل حقول تغيير كلمة السر');
       return;
     }
@@ -1531,13 +1544,23 @@
       return;
     }
 
-    const updated = { ...profile, password: newPassword };
-    try { localStorage.setItem(PROFILE_KEY, JSON.stringify(updated)); } catch(e) {}
-    const passwordField = document.getElementById('pf-password');
-    if (passwordField) passwordField.value = newPassword;
-    document.getElementById('pf-new-password').value = '';
-    document.getElementById('pf-confirm-password').value = '';
-    alert('✅ تم تغيير كلمة السر بنجاح');
+    const email = String(getJwtEmail() || profile.email || '').trim().toLowerCase();
+    if (!email || !window.Supabase || !window.Supabase.Auth) {
+      alert('❌ تعذر التحقق من الحساب. سجل الدخول مرة أخرى.');
+      return;
+    }
+    try {
+      const auth = await window.Supabase.Auth.signIn(email, currentPassword);
+      if (!auth || !auth.access_token) throw new Error('تعذر التحقق من كلمة السر الحالية');
+      await window.Supabase.Auth.updatePassword(auth.access_token, newPassword);
+      localStorage.setItem('x2_token', auth.access_token);
+      document.getElementById('pf-password').value = '';
+      document.getElementById('pf-new-password').value = '';
+      document.getElementById('pf-confirm-password').value = '';
+      alert('✅ تم تغيير كلمة السر بنجاح');
+    } catch(e) {
+      alert('❌ كلمة السر الحالية غير صحيحة أو تعذر تغيير كلمة السر');
+    }
   };
 
   window.togglePasswordField = function(inputId, button) {
@@ -1808,7 +1831,7 @@
     if (m) { m.style.display = 'none'; }
   };
   window.doLogout = function() {
-    const keysToRemove = ['x2_profile','x2_token','x2_orders','x2_cart','x2_cashback','x2_orders_synced','x2_logged','x2_coupon_applied','x2_coupon_code','x2_order_counter'];
+    const keysToRemove = ['x2_profile','x2_token','x2_refresh_token','x2_token_expires_at','x2_orders','x2_cart','x2_cashback','x2_orders_synced','x2_logged','x2_coupon_applied','x2_coupon_code','x2_order_counter'];
     keysToRemove.forEach(k => localStorage.removeItem(k));
     sessionStorage.clear();
     window.location.href = 'login.html?logout=1';
@@ -1850,7 +1873,18 @@
         if (a.notes)    { const el=document.getElementById('addr-notes');    if(el) el.value=a.notes; }
       }
       document.getElementById('pf-phone').value = formatUaePhoneInput(p.phone);
-      if (p.password) document.getElementById('pf-password').value = p.password;
+      if (Object.prototype.hasOwnProperty.call(p, 'password')) {
+        delete p.password;
+        localStorage.setItem(PROFILE_KEY, JSON.stringify(p));
+      }
+      document.getElementById('pf-password').value = '';
+      try {
+        const users = JSON.parse(localStorage.getItem('x2_users') || '[]');
+        if (Array.isArray(users)) {
+          users.forEach(user => { delete user.pass; delete user.password; });
+          localStorage.setItem('x2_users', JSON.stringify(users));
+        }
+      } catch(e) {}
       updateSidebarProfile(p);
     } catch(e) {}
   document.addEventListener('click', function(e) {
@@ -1921,8 +1955,13 @@
     try {
       const profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}');
       const reviewName = String(profile.name || '').trim();
-      if (reviewName && window.sbFetch) {
-        const rows = await window.sbFetch('reviews?name=eq.' + encodeURIComponent(reviewName) + '&order=date.desc&limit=200');
+      const reviewEmail = String(profile.email || getJwtEmail() || '').trim().toLowerCase();
+      if ((reviewName || reviewEmail) && window.sbFetch) {
+        const filters = [];
+        if (reviewEmail) filters.push('customer_email.eq.' + reviewEmail);
+        if (reviewName) filters.push('name.eq.' + reviewName);
+        const endpoint = 'reviews?or=(' + filters.map(encodeURIComponent).join(',') + ')&order=date.desc&limit=200';
+        const rows = await window.sbFetch(endpoint);
         publishedReviews = (Array.isArray(rows) ? rows : []).map(row => ({
           id: row.id,
           pid: String(row.product_id || ''),
@@ -1934,6 +1973,48 @@
         }));
       }
     } catch(e) { publishedReviews = []; }
+
+    try {
+      const profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}');
+      const customerEmail = String(profile.email || getJwtEmail() || '').trim().toLowerCase();
+      if (customerEmail && window.sbFetch) {
+        for (const review of localReviews) {
+          const alreadyRemote = publishedReviews.some(row =>
+            String(row.pid || '') === String(review.pid || '') &&
+            String(row.text || '').trim() === String(review.text || '').trim() &&
+            Number(row.rating || 5) === Number(review.rating || 5)
+          );
+          if (alreadyRemote || !/^\d+$/.test(String(review.pid || ''))) continue;
+          try {
+            await window.sbFetch('reviews', {
+              method: 'POST',
+              prefer: 'return=minimal',
+              body: JSON.stringify({
+                product_id: String(review.pid),
+                name: String(profile.name || review.name || accText('زائر', 'Guest')),
+                rating: Number(review.rating || 5),
+                text: String(review.text || '').trim(),
+                customer_email: customerEmail,
+                order_id: String(review.orderId || '') || null,
+                date: review.date || new Date().toISOString()
+              })
+            });
+          } catch(e) {}
+        }
+      }
+    } catch(e) {}
+
+    try {
+      const ids = new Set(localReviews.concat(publishedReviews).map(review => String(review.pid || '')).filter(Boolean));
+      if (window.Supabase && window.Supabase.Products && typeof window.Supabase.Products.getById === 'function') {
+        await Promise.all(Array.from(ids).filter(id => !pMap[id]).map(async id => {
+          try {
+            const product = await window.Supabase.Products.getById(id);
+            if (product) addProductsToMap([product], pMap);
+          } catch(e) {}
+        }));
+      }
+    } catch(e) {}
 
     const localKeys = new Set(localReviews.map(rv => [String(rv.pid||''), String(rv.text||''), String(rv.date||'').slice(0, 19)].join('|')));
     publishedReviews = publishedReviews.filter(rv => !localKeys.has([String(rv.pid||''), String(rv.text||''), String(rv.date||'').slice(0, 19)].join('|')));
@@ -2030,7 +2111,7 @@
       return;
     }
 
-    listEl.innerHTML = pendingHtml + publishedHtml + reviewsHtml;
+    listEl.innerHTML = publishedHtml + reviewsHtml + pendingHtml;
     listEl.querySelectorAll('[data-review-stars]').forEach(starsBox => {
       let selected = 5;
       starsBox.addEventListener('click', event => {
@@ -2065,7 +2146,7 @@
     } catch(e) { alert(accText('تعذر حفظ التقييم على هذا الجهاز', 'Could not save the review on this device')); return; }
     try {
       if (window.sbFetch && /^\d+$/.test(String(entry.pid))) {
-        await window.sbFetch('reviews', { method:'POST', prefer:'return=minimal', body: JSON.stringify({ product_id:String(entry.pid), name:review.name, rating, text }) });
+        await window.sbFetch('reviews', { method:'POST', prefer:'return=minimal', body: JSON.stringify({ product_id:String(entry.pid), name:review.name, rating, text, customer_email:String(profile.email || '').trim().toLowerCase() || null, order_id:String(entry.orderId || '') || null }) });
       }
     } catch(e) {}
     renderReviews();

@@ -1,4 +1,5 @@
 import '../config/app_config.dart';
+import '../config/locale_config.dart';
 
 class CategoryItem {
   const CategoryItem({
@@ -21,7 +22,11 @@ class CategoryItem {
   final bool active;
   final int sortOrder;
 
-  String get displayName => nameAr.trim().isNotEmpty ? nameAr : nameEn;
+  String get displayName {
+    final primary = BariqLocaleConfig.isEnglish ? nameEn : nameAr;
+    final fallback = BariqLocaleConfig.isEnglish ? nameAr : nameEn;
+    return primary.trim().isNotEmpty ? primary.trim() : fallback.trim();
+  }
   String get imageUrl => _categoryImageUrl(_fallbackImage([slug, nameEn, nameAr], image.isNotEmpty ? image : icon));
 
   factory CategoryItem.fromRow(Map<String, dynamic> row) => CategoryItem(
@@ -57,7 +62,11 @@ class SubcategoryItem {
   final bool active;
   final int sortOrder;
 
-  String get displayName => nameAr.trim().isNotEmpty ? nameAr : nameEn;
+  String get displayName {
+    final primary = BariqLocaleConfig.isEnglish ? nameEn : nameAr;
+    final fallback = BariqLocaleConfig.isEnglish ? nameAr : nameEn;
+    return primary.trim().isNotEmpty ? primary.trim() : fallback.trim();
+  }
   String get imageUrl => _categoryImageUrl(_fallbackImage([slug, nameEn, nameAr], image));
 
   factory SubcategoryItem.fromRow(Map<String, dynamic> row) => SubcategoryItem(

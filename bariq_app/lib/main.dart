@@ -34,9 +34,11 @@ class BariqApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final state = AppStateScope.of(context);
+    final state = AppStateScope.read(context);
 
-    return MaterialApp(
+    return ValueListenableBuilder<String>(
+      valueListenable: state.languageListenable,
+      builder: (context, _, __) => MaterialApp(
       debugShowCheckedModeBanner: false,
       title: state.isEnglish ? 'Bariq Gifts' : 'بريق',
       locale: Locale(state.language),
@@ -65,7 +67,8 @@ class BariqApp extends StatelessWidget {
         );
       },
       theme: AppTheme.light,
-      home: const AppShell(),
+        home: const AppShell(),
+      ),
     );
   }
 }

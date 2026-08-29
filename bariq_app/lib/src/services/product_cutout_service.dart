@@ -18,6 +18,10 @@ class ProductCutoutService {
     return _sessionFuture ??= _runtime.createSessionFromAsset(_modelAsset);
   }
 
+  Future<void> warmUp() async {
+    await _session();
+  }
+
   Future<Uint8List> removeBackground(Uint8List sourceBytes) async {
     final source = im.decodeImage(sourceBytes);
     if (source == null) throw const FormatException('Unsupported product image');
@@ -105,7 +109,48 @@ class ProductCutoutService {
         source.setPixelRgba(x, y, rgb.$1, rgb.$2, rgb.$3, pixel.a);
       }
     }
-    return Uint8List.fromList(im.encodePng(source, level: 6));
+    return Uint8List.fromList(im.encodePng(source, level: 1));
+  }
+
+  Future<Uint8List> recolorAsync(
+    Uint8List cutoutBytes,
+    String filterName,
+  ) async {
+    if (filterName == 'original') return cutoutBytes;
+    final source = im.decodeImage(cutoutBytes);
+    if (source == null) throw const FormatException('Unsupported cutout image');
+    final target = switch (filterName) {
+      'gold' => (43.0, .78),
+      'navy' => (220.0, .72),
+      'rose' => (345.0, .58),
+      'green' => (138.0, .55),
+      'warm' => (30.0, .56),
+      'cool' => (205.0, .48),
+      'mono' => (0.0, 0.0),
+      _ => (0.0, 0.0),
+    };
+
+    for (var y = 0; y < source.height; y++) {
+      for (var x = 0; x < source.width; x++) {
+        final pixel = source.getPixel(x, y);
+        if (pixel.a < 10) continue;
+        final old = _rgbToHsv(
+          pixel.r.toDouble(),
+          pixel.g.toDouble(),
+          pixel.b.toDouble(),
+        );
+        var saturation = filterName == 'mono'
+            ? 0.0
+            : old.$2 * .28 + target.$2 * .72;
+        if (old.$2 < .10) saturation *= .30;
+        if (old.$3 < .18) saturation *= .50;
+        final rgb = _hsvToRgb(target.$1, saturation.clamp(0.0, 1.0), old.$3);
+        source.setPixelRgba(x, y, rgb.$1, rgb.$2, rgb.$3, pixel.a);
+      }
+      if (y % 8 == 0) await Future<void>.delayed(Duration.zero);
+    }
+    await Future<void>.delayed(Duration.zero);
+    return Uint8List.fromList(im.encodePng(source, level: 0));
   }
 
   Uint8List recolorPreview(Uint8List cutoutBytes, String filterName) {
@@ -141,6 +186,27 @@ class ProductCutoutService {
     return {
       for (final name in filterNames) name: recolor(previewBytes, name),
     };
+  }
+
+  Future<Map<String, Uint8List>> recolorPreviewsAsync(
+    Uint8List cutoutBytes,
+    Iterable<String> filterNames,
+  ) async {
+    final source = im.decodeImage(cutoutBytes);
+    if (source == null) throw const FormatException('Unsupported cutout image');
+    final scale = 110 / (source.width > source.height ? source.width : source.height);
+    final preview = im.copyResize(
+      source,
+      width: (source.width * scale).round().clamp(1, 110),
+      height: (source.height * scale).round().clamp(1, 110),
+      interpolation: im.Interpolation.linear,
+    );
+    final previewBytes = Uint8List.fromList(im.encodePng(preview, level: 0));
+    final result = <String, Uint8List>{};
+    for (final name in filterNames) {
+      result[name] = await recolorAsync(previewBytes, name);
+    }
+    return result;
   }
 
   (double, double, double) _rgbToHsv(double red, double green, double blue) {
@@ -258,7 +324,7 @@ class ProductCutoutService {
     }
 
     final trimmed = _trimTransparentBounds(output);
-    return Uint8List.fromList(im.encodePng(trimmed, level: 6));
+    return Uint8List.fromList(im.encodePng(trimmed, level: 1));
   }
 
   double aspectRatio(Uint8List imageBytes) {
@@ -418,16 +484,35 @@ class ProductCutoutService {
     for (var index = 0; index < length; index++) {
       if (alpha[index] >= 104) strong[index] = 1;
     }
+
+    // Summed-area table keeps the exact 5x5 support test while avoiding
+    // 25 pixel reads for every mask pixel.
+    final integralStride = width + 1;
+    final supportIntegral = Int32List((width + 1) * (height + 1));
+    for (var y = 0; y < height; y++) {
+      var rowSum = 0;
+      final sourceRow = y * width;
+      final integralRow = (y + 1) * integralStride;
+      final previousRow = y * integralStride;
+      for (var x = 0; x < width; x++) {
+        rowSum += strong[sourceRow + x];
+        supportIntegral[integralRow + x + 1] =
+            supportIntegral[previousRow + x + 1] + rowSum;
+      }
+    }
     for (var y = 2; y < height - 2; y++) {
       for (var x = 2; x < width - 2; x++) {
         final index = y * width + x;
         if (strong[index] == 0) continue;
-        var neighbours = 0;
-        for (var yy = -2; yy <= 2; yy++) {
-          for (var xx = -2; xx <= 2; xx++) {
-            if (strong[index + yy * width + xx] != 0) neighbours++;
-          }
-        }
+        final left = x - 2;
+        final right = x + 2;
+        final top = y - 2;
+        final bottom = y + 2;
+        final neighbours =
+            supportIntegral[(bottom + 1) * integralStride + right + 1] -
+            supportIntegral[top * integralStride + right + 1] -
+            supportIntegral[(bottom + 1) * integralStride + left] +
+            supportIntegral[top * integralStride + left];
         if (neighbours >= 8) solid[index] = 1;
       }
       if (y % 64 == 0) await Future<void>.delayed(Duration.zero);

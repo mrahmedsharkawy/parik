@@ -23,7 +23,8 @@
   const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
   async function sbReviews(method, body){
-    const headers = {apikey: SB_KEY, Authorization: 'Bearer '+SB_KEY, 'Content-Type': 'application/json'};
+    const accessToken = localStorage.getItem('x2_token') || SB_KEY;
+    const headers = {apikey: SB_KEY, Authorization: 'Bearer '+accessToken, 'Content-Type': 'application/json'};
     if(method==='POST') headers['Prefer'] = 'return=minimal';
     const res = await fetch(SB_URL+'/rest/v1/reviews?product_id=eq.'+encodeURIComponent(pid)+'&order=date.desc',
       {method, headers, body: body ? JSON.stringify(body) : undefined});
@@ -104,14 +105,14 @@
   document.getElementById('rvSubmit').addEventListener('click', async ()=>{
     const text=document.getElementById('rvText').value.trim();
     if(!text){ alert(tr('writeFirst')); return; }
-    let name=tr('visitor'); try{ const p=JSON.parse(localStorage.getItem('x2_profile')||'{}'); if(p.name) name=p.name; }catch(e){}
+    let name=tr('visitor'), customerEmail=''; try{ const p=JSON.parse(localStorage.getItem('x2_profile')||'{}'); if(p.name) name=p.name; customerEmail=String(p.email||'').trim().toLowerCase(); }catch(e){}
     const btn = document.getElementById('rvSubmit');
     btn.disabled = true; btn.textContent = tr('sending');
     try{
       const res = await fetch(SB_URL+'/rest/v1/reviews', {
         method:'POST',
-        headers:{apikey:SB_KEY, Authorization:'Bearer '+SB_KEY, 'Content-Type':'application/json', Prefer:'return=minimal'},
-        body: JSON.stringify({product_id:pid, name, rating:picked, text})
+        headers:{apikey:SB_KEY, Authorization:'Bearer '+(localStorage.getItem('x2_token')||SB_KEY), 'Content-Type':'application/json', Prefer:'return=minimal'},
+        body: JSON.stringify({product_id:pid, name, rating:picked, text, customer_email:customerEmail||null})
       });
       if(!res.ok) throw new Error(await res.text());
       document.getElementById('rvText').value=''; picked=5; paint();

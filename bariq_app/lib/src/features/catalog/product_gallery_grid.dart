@@ -13,7 +13,7 @@ class ProductGalleryGrid extends StatelessWidget {
     final width = MediaQuery.sizeOf(context).width;
     if (width >= 700) {
       return Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: Directionality.of(context),
         child: GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -24,7 +24,9 @@ class ProductGalleryGrid extends StatelessWidget {
             mainAxisSpacing: 8,
             childAspectRatio: .70,
           ),
-          itemBuilder: (context, index) => BariqProductCard(product: products[index]),
+          itemBuilder: (context, index) => RepaintBoundary(
+            child: BariqProductCard(product: products[index]),
+          ),
         ),
       );
     }
@@ -40,7 +42,7 @@ class ProductGalleryGrid extends StatelessWidget {
     }
 
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: Directionality.of(context),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -64,7 +66,7 @@ class _ProductGalleryColumn extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         for (final product in products) ...[
-          BariqProductCard(product: product),
+          RepaintBoundary(child: BariqProductCard(product: product)),
           const SizedBox(height: 8),
         ],
       ],

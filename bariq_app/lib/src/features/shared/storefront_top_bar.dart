@@ -67,19 +67,19 @@ class StorefrontTopBar extends StatelessWidget {
                 child: Container(
                   height: 38,
                   padding: const EdgeInsets.symmetric(horizontal: 12),
-                  alignment: Alignment.centerRight,
+                  alignment: AlignmentDirectional.centerStart,
                   decoration: BoxDecoration(
                     color: const Color(0xFFF5F7FB),
                     borderRadius: BorderRadius.circular(11),
                     border: Border.all(color: Colors.white.withValues(alpha: .35)),
                   ),
                   child: Directionality(
-                    textDirection: TextDirection.rtl,
+                    textDirection: Directionality.of(context),
                     child: Text(
                       placeholder,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.right,
+                      textAlign: TextAlign.start,
                       style: const TextStyle(color: Color(0xFF8D96A8), fontSize: 11.5, fontWeight: FontWeight.w800),
                     ),
                   ),

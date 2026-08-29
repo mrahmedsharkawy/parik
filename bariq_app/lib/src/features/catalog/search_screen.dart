@@ -239,6 +239,7 @@ class _SearchScreenState extends State<SearchScreen>
       bottomNavigationBar: BariqBottomNav(
         selected: 4,
         cartCount: state.cartCount,
+        notificationCount: state.notificationCount,
         english: state.isEnglish,
         onTap: (index) => Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => AppShell(initialIndex: index)),
@@ -279,8 +280,7 @@ class _SearchScreenState extends State<SearchScreen>
                       AppStrings.searchHeader,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      textAlign:
-                          state.isEnglish ? TextAlign.left : TextAlign.right,
+                      textAlign: TextAlign.start,
                       style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 12,
@@ -305,8 +305,7 @@ class _SearchScreenState extends State<SearchScreen>
               child: TextField(
                 controller: _controller,
                 autofocus: true,
-                textAlign:
-                    state.isEnglish ? TextAlign.left : TextAlign.right,
+                textAlign: TextAlign.start,
                 textInputAction: TextInputAction.search,
                 onChanged: _onChanged,
                 onSubmitted: _startSearch,

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../models/product.dart';
 import '../../services/supabase_catalog_service.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/app_strings.dart';
 import '../catalog/product_gallery_grid.dart';
 import '../catalog/search_screen.dart';
 import '../shared/storefront_top_bar.dart';
@@ -76,11 +77,12 @@ class _OffersScreenState extends State<OffersScreen> {
         child: FutureBuilder<List<Product>>(
           future: _future,
           builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
+            if (snapshot.connectionState == ConnectionState.waiting &&
+                !snapshot.hasData) {
               return const Center(child: CircularProgressIndicator(color: AppTheme.gold));
             }
-            if (snapshot.hasError) {
-              return Center(child: Text('تعذر تحميل العروض\n${snapshot.error}', textAlign: TextAlign.center));
+            if (snapshot.hasError && !snapshot.hasData) {
+              return Center(child: Text('${AppStrings.tr('تعذر تحميل العروض', 'Unable to load offers')}\n${snapshot.error}', textAlign: TextAlign.center));
             }
 
             final deals = _deals.isNotEmpty ? _deals.toList() : (snapshot.data ?? const <Product>[]);
@@ -96,7 +98,7 @@ class _OffersScreenState extends State<OffersScreen> {
               },
               child: CustomScrollView(
                 slivers: [
-                StorefrontTopBarSliver(placeholder: 'إبحث في العروض...', onSearch: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SearchScreen()))),
+                StorefrontTopBarSliver(placeholder: AppStrings.tr('إبحث في العروض...', 'Search offers...'), onSearch: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SearchScreen()))),
                 SliverToBoxAdapter(child: SizedBox(width: double.infinity, child: _FlashHero(maxDiscount: maxDiscount, count: deals.length, active: widget.active))),
                 SliverToBoxAdapter(
                   child: SizedBox(
@@ -105,10 +107,10 @@ class _OffersScreenState extends State<OffersScreen> {
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                       children: [
-                        _SortChip(label: 'أعلى خصم', icon: Icons.local_fire_department_rounded, value: 'discount', current: _sort, onTap: _setSort),
-                        _SortChip(label: 'أقل سعر', icon: Icons.arrow_upward_rounded, value: 'price_asc', current: _sort, onTap: _setSort),
-                        _SortChip(label: 'أعلى سعر', icon: Icons.arrow_downward_rounded, value: 'price_desc', current: _sort, onTap: _setSort),
-                        _SortChip(label: 'أكثر توفيراً', icon: Icons.savings_outlined, value: 'saving', current: _sort, onTap: _setSort),
+                        _SortChip(label: AppStrings.tr('أعلى خصم', 'Highest discount'), icon: Icons.local_fire_department_rounded, value: 'discount', current: _sort, onTap: _setSort),
+                        _SortChip(label: AppStrings.tr('أقل سعر', 'Lowest price'), icon: Icons.arrow_upward_rounded, value: 'price_asc', current: _sort, onTap: _setSort),
+                        _SortChip(label: AppStrings.tr('أعلى سعر', 'Highest price'), icon: Icons.arrow_downward_rounded, value: 'price_desc', current: _sort, onTap: _setSort),
+                        _SortChip(label: AppStrings.tr('أكثر توفيراً', 'Best savings'), icon: Icons.savings_outlined, value: 'saving', current: _sort, onTap: _setSort),
                       ],
                     ),
                   ),
@@ -120,7 +122,7 @@ class _OffersScreenState extends State<OffersScreen> {
                       children: [
                         const Text('🔥'),
                         const SizedBox(width: 5),
-                        const Text('كل المنتجات عليها خصم', style: TextStyle(color: AppTheme.navy, fontSize: 16, fontWeight: FontWeight.w900)),
+                        Text(AppStrings.tr('كل المنتجات عليها خصم', 'All discounted products'), style: const TextStyle(color: AppTheme.navy, fontSize: 16, fontWeight: FontWeight.w900)),
                         const Spacer(),
                         Container(height: 1, width: 78, color: AppTheme.gold),
                       ],
@@ -149,10 +151,7 @@ class _OffersScreenState extends State<OffersScreen> {
     );
   }
 
-  void _setSort(String value) => setState(() {
-        _sort = value;
-        _future = _loadFirstPage();
-      });
+  void _setSort(String value) => setState(() => _sort = value);
 
   String get _supabaseSort {
     if (_sort == 'price_asc') return 'price_asc';
@@ -206,7 +205,7 @@ class _FlashHeroState extends State<_FlashHero> {
   void _startTimer() {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (!mounted) return;
+      if (!mounted || !TickerMode.of(context)) return;
       setState(() {
         _firePulse = !_firePulse;
         if (_remaining <= Duration.zero) {
@@ -271,16 +270,16 @@ class _FlashHeroState extends State<_FlashHero> {
             children: [
               _AnimatedFire(active: !_firePulse, size: 28),
               const SizedBox(width: 10),
-              const Text.rich(
+              Text.rich(
                 TextSpan(
                   children: [
-                    TextSpan(text: 'عروض '),
-                    TextSpan(text: 'حصرية', style: TextStyle(color: AppTheme.gold)),
-                    TextSpan(text: ' خاطفة'),
+                    TextSpan(text: AppStrings.tr('عروض ', 'Exclusive ')),
+                    TextSpan(text: AppStrings.tr('حصرية', 'flash'), style: const TextStyle(color: AppTheme.gold)),
+                    TextSpan(text: AppStrings.tr(' خاطفة', ' offers')),
                   ],
                 ),
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900, height: 1.1),
+                style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900, height: 1.1),
               ),
               const SizedBox(width: 10),
               _AnimatedFire(active: _firePulse, size: 28),
@@ -290,33 +289,33 @@ class _FlashHeroState extends State<_FlashHero> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text('على منتجات مختارة', style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w800)),
+              Text(AppStrings.tr('على منتجات مختارة', 'On selected products'), style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w800)),
               const SizedBox(width: 16),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
                 decoration: BoxDecoration(color: AppTheme.gold, borderRadius: BorderRadius.circular(999)),
-                child: Text('حتى ${widget.maxDiscount}% خصم', style: const TextStyle(color: AppTheme.navy, fontSize: 15.5, fontWeight: FontWeight.w900)),
+                child: Text(AppStrings.tr('حتى ${widget.maxDiscount}% خصم', 'Up to ${widget.maxDiscount}% off'), style: const TextStyle(color: AppTheme.navy, fontSize: 15.5, fontWeight: FontWeight.w900)),
               ),
             ],
           ),
           const SizedBox(height: 13),
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.alarm_rounded, color: AppTheme.gold, size: 14),
-              SizedBox(width: 5),
-              Text('تنتهي العروض خلال', style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w800)),
+              const Icon(Icons.alarm_rounded, color: AppTheme.gold, size: 14),
+              const SizedBox(width: 5),
+              Text(AppStrings.tr('تنتهي العروض خلال', 'Offers end in'), style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w800)),
             ],
           ),
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _TimerUnit(value: hours, label: 'ساعة'),
+              _TimerUnit(value: hours, label: AppStrings.tr('ساعة', 'Hours')),
               const _TimerSeparator(),
-              _TimerUnit(value: minutes, label: 'دقيقة'),
+              _TimerUnit(value: minutes, label: AppStrings.tr('دقيقة', 'Minutes')),
               const _TimerSeparator(),
-              _TimerUnit(value: seconds, label: 'ثانية'),
+              _TimerUnit(value: seconds, label: AppStrings.tr('ثانية', 'Seconds')),
             ],
           ),
           const SizedBox(height: 13),
@@ -324,7 +323,7 @@ class _FlashHeroState extends State<_FlashHero> {
             TextSpan(
               children: [
                 TextSpan(text: '${widget.count} ', style: const TextStyle(color: AppTheme.gold, fontSize: 14, fontWeight: FontWeight.w900)),
-                const TextSpan(text: 'منتج عليهم عرض الآن'),
+                TextSpan(text: AppStrings.tr('منتج عليهم عرض الآن', 'products on sale now')),
               ],
             ),
             style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w800),

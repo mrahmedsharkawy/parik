@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/app_config.dart';
+import '../utils/app_strings.dart';
 
 class AccountService {
   AccountService({SupabaseClient? client}) : _client = client ?? Supabase.instance.client;
@@ -240,6 +241,13 @@ class AccountService {
         redirectTo: 'bariqapp://login-callback/',
       );
   Future<void> signOut() => _client.auth.signOut();
+  Future<AuthResponse> verifyCurrentPassword(String password) {
+    final email = user?.email?.trim();
+    if (email == null || email.isEmpty) {
+      throw const AuthException('No signed-in user email is available.');
+    }
+    return _client.auth.signInWithPassword(email: email, password: password);
+  }
   Future<UserResponse> updatePassword(String password) => _client.auth.updateUser(UserAttributes(password: password));
 
 Future<List<Map<String, dynamic>>> fetchOrders({
@@ -282,6 +290,26 @@ Future<List<Map<String, dynamic>>> fetchOrders({
   Future<CustomerCashbackCoupon?> fetchAvailableCashbackCoupon({
     List<Map<String, dynamic>>? orders,
   }) async {
+    try {
+      final result = await _client.rpc('get_my_cashback_summary');
+      if (result is Map) {
+        final balance = _double(result['balance']);
+        final rawNumbers = result['order_numbers'];
+        final orderNumbers = rawNumbers is List
+            ? rawNumbers.map((value) => '$value').where((value) => value.isNotEmpty).toList(growable: false)
+            : const <String>[];
+        if (balance > 0 && orderNumbers.isNotEmpty) {
+          final entries = orderNumbers.map((number) => _CustomerCashbackEntry(orderNumber: number, amount: 0)).toList(growable: false);
+          return CustomerCashbackCoupon(
+            code: _cashbackCouponCodeForCustomer(entries, balance),
+            balance: balance,
+            orderNumbers: orderNumbers,
+          );
+        }
+      }
+    } on PostgrestException {
+      // Compatibility fallback for projects that have not applied the summary RPC yet.
+    }
     final source = orders ?? await fetchOrders();
     final codeEntries = <_CustomerCashbackEntry>[];
     final availableEntries = <_CustomerCashbackEntry>[];
@@ -322,26 +350,36 @@ Future<List<Map<String, dynamic>>> fetchOrders({
     );
   }
 
-  Future<List<Map<String, dynamic>>> fetchInvoices({List<Map<String, dynamic>>? orders}) async {
+  Future<AccountInvoicePage> fetchInvoices({
+    List<Map<String, dynamic>>? orders,
+    int offset = 0,
+    int limit = pageSize,
+  }) async {
     final email = user?.email?.trim().toLowerCase() ?? '';
-    if (email.isEmpty) return const [];
+    if (email.isEmpty) return const AccountInvoicePage();
     final out = <Map<String, dynamic>>[];
     final seen = <String>{};
+    final pageLimit = limit.clamp(1, pageSize).toInt();
+    final orderPage = offset == 0 && orders != null
+        ? orders
+        : await fetchOrders(offset: offset, limit: pageLimit);
 
-    for (final order in orders ?? const <Map<String, dynamic>>[]) {
+    for (final order in orderPage) {
       final invoice = invoiceFromOrder(order);
       if (invoice == null) continue;
       final key = '${invoice['invoice_number'] ?? invoice['orderNumber'] ?? order['id']}';
       if (seen.add(key)) out.add({'order': order, 'invoice': invoice});
     }
 
+    var erpPageLength = 0;
     try {
       final rows = await _client
           .from('erp_invoices')
           .select('*')
-          .or('customer->>email.eq.$email,customer->>phone.eq.${user?.phone ?? ''}')
+          .ilike('customer->>email', email)
           .order('invoice_date', ascending: false)
-          .range(0, pageSize - 1);
+          .range(offset, offset + pageLimit - 1);
+      erpPageLength = rows.length;
       for (final row in rows) {
         final invoice = Map<String, dynamic>.from(row as Map);
         final key = '${invoice['invoice_number'] ?? invoice['id']}';
@@ -360,7 +398,11 @@ Future<List<Map<String, dynamic>>> fetchOrders({
       final bd = DateTime.tryParse('${bi['invoice_date'] ?? bi['created_at'] ?? ''}') ?? DateTime.fromMillisecondsSinceEpoch(0);
       return bd.compareTo(ad);
     });
-    return out;
+    return AccountInvoicePage(
+      items: out,
+      nextOffset: offset + pageLimit,
+      hasMore: orderPage.length == pageLimit || erpPageLength == pageLimit,
+    );
   }
 
   Future<List<AccountNotification>> fetchNotifications({
@@ -396,6 +438,62 @@ Future<List<Map<String, dynamic>>> fetchOrders({
     }
     final out = byId.values.toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return out.take(pageSize).toList(growable: false);
+  }
+
+  Future<int> fetchUnreadNotificationCount({
+    required List<Map<String, dynamic>> orders,
+    required List<CustomerOccasion> occasions,
+    required CustomerProfile profile,
+  }) async {
+    final email = (profile.email.isNotEmpty ? profile.email : user?.email ?? '').trim().toLowerCase();
+    if (email.isEmpty) return 0;
+    final state = await _fetchNotificationState(email);
+    final readIds = _stringSet(state['read_ids']);
+    final deletedIds = _stringSet(state['deleted_ids']);
+
+    var remoteCount = 0;
+    try {
+      final response = await _client
+          .from('notifications')
+          .select('id')
+          .or('is_read.eq.false,is_read.is.null')
+          .count(CountOption.exact);
+      remoteCount = response.count;
+    } on PostgrestException {
+      try {
+        final response = await _client
+            .from('notifications')
+            .select('id')
+            .count(CountOption.exact);
+        remoteCount = response.count;
+      } on PostgrestException {
+        remoteCount = 0;
+      }
+    }
+
+    bool generatedId(String id) =>
+        id.startsWith('order-') ||
+        id.startsWith('cashback-') ||
+        id.startsWith('occasion-') ||
+        id.startsWith('cart-open-');
+    final hiddenRemoteIds = <String>{
+      ...readIds.where((id) => !generatedId(id)),
+      ...deletedIds.where((id) => !generatedId(id)),
+    };
+    remoteCount = (remoteCount - hiddenRemoteIds.length).clamp(0, 1 << 30).toInt();
+
+    final generatedCount = _generatedCustomerNotifications(
+      orders: orders,
+      occasions: occasions,
+      deletedIds: deletedIds,
+      readIds: readIds,
+    ).where((item) => !item.read).length;
+    final cart = await _cartNotification(
+      email: email,
+      deletedIds: deletedIds,
+      readIds: readIds,
+    );
+    return remoteCount + generatedCount + (cart != null && !cart.read ? 1 : 0);
   }
 
   Future<void> markNotificationsRead(Iterable<AccountNotification> notifications) async {
@@ -649,7 +747,7 @@ Future<List<Map<String, dynamic>>> fetchOrders({
     try {
       final rows = await _client
           .from('notifications')
-          .select('id,type,icon,title,msg,body,order_id,is_read,read,created_at,user_id,customer_email,customer_phone,url,status,order_status,amount,cashback')
+          .select('id,type,icon,title,msg,body,order_id,is_read,created_at,user_id,customer_email,customer_phone,url,status,order_status,amount,data')
           .order('created_at', ascending: false)
           .range(offset, offset + pageSize - 1);
       return List<Map<String, dynamic>>.from(rows.map((row) => Map<String, dynamic>.from(row as Map)));
@@ -895,6 +993,18 @@ Future<List<Map<String, dynamic>>> fetchOrders({
   static String _amount(double value) => value % 1 == 0 ? value.toStringAsFixed(0) : value.toStringAsFixed(2);
 }
 
+class AccountInvoicePage {
+  const AccountInvoicePage({
+    this.items = const <Map<String, dynamic>>[],
+    this.nextOffset = 0,
+    this.hasMore = false,
+  });
+
+  final List<Map<String, dynamic>> items;
+  final int nextOffset;
+  final bool hasMore;
+}
+
 class AccountNotification {
   const AccountNotification({
     required this.id,
@@ -906,6 +1016,8 @@ class AccountNotification {
     required this.createdAt,
     this.orderId = '',
     this.url = '',
+    this.imageUrl = '',
+    this.productId = '',
     this.read = false,
   });
 
@@ -917,6 +1029,8 @@ class AccountNotification {
   final String message;
   final String orderId;
   final String url;
+  final String imageUrl;
+  final String productId;
   final bool read;
   final DateTime createdAt;
 
@@ -930,15 +1044,23 @@ class AccountNotification {
       message: message,
       orderId: orderId,
       url: url,
+      imageUrl: imageUrl,
+      productId: productId,
       read: read ?? this.read,
       createdAt: createdAt,
     );
   }
 
   factory AccountNotification.fromRow(Map<String, dynamic> row) {
+    final rawData = row['data'];
+    final data = rawData is Map ? Map<String, dynamic>.from(rawData) : const <String, dynamic>{};
     final rawType = '${row['type'] ?? 'push'}'.trim();
-    final rawTitle = '${row['title'] ?? ''}'.trim();
-    final rawMessage = '${row['msg'] ?? row['body'] ?? row['message'] ?? ''}'.trim();
+    final arabicTitle = '${row['title'] ?? ''}'.trim();
+    final englishTitle = '${data['title_en'] ?? ''}'.trim();
+    final rawTitle = AppStrings.en && englishTitle.isNotEmpty ? englishTitle : arabicTitle;
+    final arabicMessage = '${row['msg'] ?? row['body'] ?? row['message'] ?? ''}'.trim();
+    final englishMessage = '${data['body_en'] ?? ''}'.trim();
+    final rawMessage = AppStrings.en && englishMessage.isNotEmpty ? englishMessage : arabicMessage;
     final orderId = '${row['order_id'] ?? row['orderId'] ?? ''}'.replaceAll('#', '').trim();
     final status = '${row['status'] ?? row['order_status'] ?? ''}'.trim().toLowerCase();
     final type = rawType.isEmpty ? (status.isNotEmpty ? 'order_status' : 'push') : rawType;
@@ -953,6 +1075,8 @@ class AccountNotification {
       message: rawMessage.isEmpty && type == 'order_status' ? AccountService._orderStatusMessage(status, orderId) : rawMessage,
       orderId: orderId,
       url: '${row['url'] ?? ''}',
+      imageUrl: '${data['image'] ?? data['image_url'] ?? ''}'.trim(),
+      productId: '${data['product_id'] ?? ''}'.trim(),
       read: row['is_read'] == true || row['read'] == true,
       createdAt: DateTime.tryParse('${row['created_at'] ?? ''}') ?? DateTime.now(),
     );

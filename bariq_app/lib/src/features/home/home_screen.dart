@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:ui' as ui;
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 
 import '../../models/category.dart';
 import '../../models/app_runtime_settings.dart';
@@ -13,6 +16,7 @@ import '../../services/supabase_catalog_service.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/catalog_filters.dart';
+import '../../utils/app_strings.dart';
 import '../account/account_screen.dart';
 import '../catalog/product_gallery_grid.dart';
 import '../catalog/product_card.dart';
@@ -34,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final _appSettings = AppSettingsService();
   final _bannerController = PageController();
   late Future<_HomeData> _future;
-  int _bannerIndex = 0;
+  final ValueNotifier<int> _bannerIndex = ValueNotifier<int>(0);
   String? _categoryId;
   String? _subcategoryId;
   bool _showFloatingBars = false;
@@ -51,6 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    _bannerIndex.dispose();
     _bannerController.dispose();
     super.dispose();
   }
@@ -139,22 +144,32 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF7F8FA),
-      body: SafeArea(
-        bottom: false,
-        child: FutureBuilder<_HomeData>(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+      ),
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF7F8FA),
+        extendBodyBehindAppBar: true,
+        body: SafeArea(
+          top: false,
+          bottom: false,
+          child: FutureBuilder<_HomeData>(
           future: _future,
           builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
+            if (snapshot.connectionState == ConnectionState.waiting &&
+                !snapshot.hasData) {
               return const _LoadingHome();
             }
-            if (snapshot.hasError) {
+            if (snapshot.hasError && !snapshot.hasData) {
               return _HomeError(error: snapshot.error, onRetry: _refresh);
             }
 
             final data = snapshot.data!;
             final appState = AppStateScope.of(context);
+            final headerBanners = data.appSettings.bannersForLanguage(appState.language);
             if (data.appSettings.maintenanceMode) {
               return _MaintenanceHome(
                 message: data.appSettings.maintenanceMessage,
@@ -196,18 +211,27 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: CustomScrollView(
                   slivers: [
                         SliverToBoxAdapter(
-                          child: _SiteHeader(
-                            onSearch: _openSearch,
-                            onImageSearch: data.appSettings
-                                    .featureEnabled('image_search')
-                                ? _openImageSearch
-                                : null,
-                            onFavorites: data.appSettings
-                                    .featureEnabled('favorites')
-                                ? () => widget.onOpenAccountSection
-                                    ?.call(AccountSection.favorites)
-                                : null,
-                            onNotifications: () => widget.onOpenAccountSection?.call(AccountSection.notifications),
+                          child: ValueListenableBuilder<int>(
+                            valueListenable: _bannerIndex,
+                            builder: (context, bannerIndex, _) => _SiteHeader(
+                              bannerUrl: headerBanners.isEmpty
+                                  ? ''
+                                  : headerBanners[bannerIndex
+                                      .clamp(0, headerBanners.length - 1)
+                                      .toInt()],
+                              onSearch: _openSearch,
+                              onImageSearch: data.appSettings
+                                      .featureEnabled('image_search')
+                                  ? _openImageSearch
+                                  : null,
+                              onFavorites: data.appSettings
+                                      .featureEnabled('favorites')
+                                  ? () => widget.onOpenAccountSection
+                                      ?.call(AccountSection.favorites)
+                                  : null,
+                              onNotifications: () => widget.onOpenAccountSection
+                                  ?.call(AccountSection.notifications),
+                            ),
                           ),
                         ),
                     if (data.appSettings.announcementEnabled &&
@@ -220,20 +244,31 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     SliverToBoxAdapter(
-                      child: _TopShowcase(
-                        controller: _bannerController,
-                        index: _bannerIndex,
-                        onChanged: (index) => setState(() => _bannerIndex = index),
-                        subcategories: data.subcategories,
-                        selectedId: _subcategoryId,
-                        onTap: (id) => _reloadProducts(subcategoryId: id == _subcategoryId ? null : id),
-                        appSettings: data.appSettings,
-                        language: appState.language,
+                      child: ValueListenableBuilder<int>(
+                        valueListenable: _bannerIndex,
+                        builder: (context, bannerIndex, _) => _TopShowcase(
+                          controller: _bannerController,
+                          index: bannerIndex,
+                          onChanged: (index) => _bannerIndex.value = index,
+                          subcategories: data.subcategories,
+                          selectedId: _subcategoryId,
+                          onTap: (id) => _reloadProducts(subcategoryId: id == _subcategoryId ? null : id),
+                          appSettings: data.appSettings,
+                          language: appState.language,
+                        ),
                       ),
                     ),
                     const SliverToBoxAdapter(child: _ServiceStrip()),
+                    if (data.appSettings.promoBanners
+                        .where((item) => item.enabled && item.imageUrl.isNotEmpty)
+                        .isNotEmpty)
+                      SliverToBoxAdapter(
+                        child: _PromoBannerRow(
+                          banners: data.appSettings.promoBanners,
+                        ),
+                      ),
                     if (data.appSettings.sectionEnabled('daily_picks')) ...[
-                      SliverToBoxAdapter(child: _SectionTitle(title: 'اختيارات اليوم', leading: '☀️', action: 'عرض الكل 🔥')),
+                      SliverToBoxAdapter(child: _SectionTitle(title: AppStrings.dailyPicks, leading: '☀️', action: '${AppStrings.viewAll} 🔥')),
                       SliverToBoxAdapter(child: _TodayScroller(products: today.take(8).toList())),
                     ],
                     if (data.appSettings.sectionEnabled('categories'))
@@ -311,6 +346,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             );
           },
+          ),
         ),
       ),
     );
@@ -405,12 +441,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
 class _SiteHeader extends StatefulWidget {
   const _SiteHeader({
+    required this.bannerUrl,
     required this.onSearch,
     required this.onImageSearch,
     required this.onFavorites,
     required this.onNotifications,
   });
 
+  final String bannerUrl;
   final VoidCallback onSearch;
   final VoidCallback? onImageSearch;
   final VoidCallback? onFavorites;
@@ -421,12 +459,75 @@ class _SiteHeader extends StatefulWidget {
 }
 
 class _SiteHeaderState extends State<_SiteHeader> {
+  static final Map<String, Color> _topColorCache = <String, Color>{};
   late Future<int> _notificationsFuture;
+  Color _bannerTopColor = const Color(0xFFD5BCA6);
 
   @override
   void initState() {
     super.initState();
     _notificationsFuture = _loadNotificationCount();
+    _readBannerTopColor();
+  }
+
+  @override
+  void didUpdateWidget(covariant _SiteHeader oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.bannerUrl != widget.bannerUrl) {
+      _readBannerTopColor();
+    }
+  }
+
+  Future<void> _readBannerTopColor() async {
+    final source = widget.bannerUrl.trim();
+    if (source.isEmpty) return;
+    final cachedColor = _topColorCache[source];
+    if (cachedColor != null) {
+      if (mounted) setState(() => _bannerTopColor = cachedColor);
+      return;
+    }
+    final ImageProvider originalProvider = source.startsWith('assets/')
+        ? AssetImage(source)
+        : CachedNetworkImageProvider(source);
+    final ImageProvider provider = ResizeImage(originalProvider, width: 96);
+    final stream = provider.resolve(ImageConfiguration.empty);
+    late final ImageStreamListener listener;
+    listener = ImageStreamListener((info, _) async {
+      stream.removeListener(listener);
+      try {
+        final bytes = await info.image.toByteData(format: ui.ImageByteFormat.rawRgba);
+        if (bytes == null) return;
+        final width = info.image.width;
+        final sampleHeight = info.image.height.clamp(1, 2).toInt();
+        var red = 0;
+        var green = 0;
+        var blue = 0;
+        var count = 0;
+        final step = (width ~/ 80).clamp(1, width).toInt();
+        for (var y = 0; y < sampleHeight; y += 2) {
+          for (var x = 0; x < width; x += step) {
+            final offset = ((y * width) + x) * 4;
+            red += bytes.getUint8(offset);
+            green += bytes.getUint8(offset + 1);
+            blue += bytes.getUint8(offset + 2);
+            count++;
+          }
+        }
+        if (count == 0) return;
+        final color = Color.fromARGB(
+          255,
+          red ~/ count,
+          green ~/ count,
+          blue ~/ count,
+        );
+        _topColorCache[source] = color;
+        if (!mounted || widget.bannerUrl.trim() != source) return;
+        setState(() => _bannerTopColor = color);
+      } catch (_) {
+        // Keep the neutral fallback if pixel access is unavailable.
+      }
+    }, onError: (_, __) => stream.removeListener(listener));
+    stream.addListener(listener);
   }
 
   Future<int> _loadNotificationCount() async {
@@ -446,11 +547,23 @@ class _SiteHeaderState extends State<_SiteHeader> {
   Widget build(BuildContext context) {
     final appState = AppStateScope.of(context);
     final favoriteCount = appState.favoriteIds.length.clamp(0, 99).toInt();
-    return Container(
-      color: AppTheme.navy,
-      padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-      child: Column(
-        children: [
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 220),
+            color: widget.bannerUrl.isEmpty ? AppTheme.navy : _bannerTopColor,
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.fromLTRB(
+            12,
+            MediaQuery.paddingOf(context).top,
+            12,
+            2,
+          ),
+          child: Column(
+            children: [
           SizedBox(
             height: 42,
             child: Directionality(
@@ -463,13 +576,17 @@ class _SiteHeaderState extends State<_SiteHeader> {
                       count: favoriteCount,
                       onTap: widget.onFavorites!,
                     ),
-                  const Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text('Bariq', style: TextStyle(color: AppTheme.gold, fontSize: 23, fontWeight: FontWeight.w800, height: .86)),
-                        Text('Gifts', style: TextStyle(color: AppTheme.gold, fontSize: 10, fontWeight: FontWeight.w700, height: 1)),
-                      ],
+                  Expanded(
+                    child: ShaderMask(
+                      blendMode: BlendMode.srcIn,
+                      shaderCallback: AppTheme.goldGradient.createShader,
+                      child: const Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('Bariq', style: TextStyle(color: Colors.white, fontSize: 23, fontWeight: FontWeight.w800, height: .86)),
+                          Text('Gifts', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700, height: 1)),
+                        ],
+                      ),
                     ),
                   ),
                   FutureBuilder<int>(
@@ -507,14 +624,14 @@ class _SiteHeaderState extends State<_SiteHeader> {
                       child: Container(
                         height: 38,
                         padding: const EdgeInsets.symmetric(horizontal: 14),
-                        alignment: Alignment.centerRight,
+                        alignment: AlignmentDirectional.centerStart,
                         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
-                        child: const Text(
-                          'إبحث بالمناسبة',
+                        child: Text(
+                          AppStrings.searchHint,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.right,
-                          style: TextStyle(color: Color(0xFF9AA2B1), fontSize: 11.5, fontWeight: FontWeight.w800),
+                          textAlign: TextAlign.start,
+                          style: const TextStyle(color: Color(0xFF9AA2B1), fontSize: 11.5, fontWeight: FontWeight.w800),
                         ),
                       ),
                     ),
@@ -535,8 +652,10 @@ class _SiteHeaderState extends State<_SiteHeader> {
               ),
             ),
           ),
-        ],
-      ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -589,33 +708,25 @@ class _BannerSlider extends StatelessWidget {
     required this.controller,
     required this.index,
     required this.onChanged,
-    required this.bannerUrl,
+    required this.bannerUrls,
   });
 
   final PageController controller;
   final int index;
   final ValueChanged<int> onChanged;
-  final String bannerUrl;
-
-  static const _banners = [
-    'assets/home/banners/hero-1.webp',
-    'assets/home/banners/hero-2.webp',
-    'assets/home/banners/hero-3.webp',
-  ];
+  final List<String> bannerUrls;
 
   @override
   Widget build(BuildContext context) {
-    final banners = bannerUrl.isEmpty ? _banners : <String>[bannerUrl];
+    final banners = bannerUrls;
     return Container(
-      margin: const EdgeInsets.fromLTRB(3, 0, 3, 8),
+      margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: AppTheme.navy,
-        borderRadius: BorderRadius.circular(19),
-        border: Border.all(color: const Color(0xFFDFE4EE), width: 1),
       ),
       child: AspectRatio(
-        aspectRatio: 2.58,
+        aspectRatio: 2.72,
         child: Stack(
           fit: StackFit.expand,
           children: [
@@ -628,7 +739,7 @@ class _BannerSlider extends StatelessWidget {
                 final source = banners[i];
                 return BariqNetworkImage(
                   imageUrl: source,
-                  fit: BoxFit.cover,
+                  fit: BoxFit.fill,
                   placeholderColor: const Color(0xFFE9EDF4),
                   errorIconSize: 0,
                 );
@@ -648,23 +759,18 @@ class _BannerSlider extends StatelessWidget {
                     height: 6,
                     margin: const EdgeInsets.symmetric(horizontal: 3),
                     decoration: BoxDecoration(
-                      color: i == index ? Colors.white : Colors.white.withValues(alpha: .55),
+                      gradient: LinearGradient(
+                        colors: i == index
+                            ? const [AppTheme.goldLight, AppTheme.goldDark]
+                            : [
+                                AppTheme.goldLight.withValues(alpha: .7),
+                                AppTheme.gold.withValues(alpha: .7),
+                              ],
+                      ),
                       borderRadius: BorderRadius.circular(99),
                     ),
                   ),
                 ),
-              ),
-            ),
-            Positioned(
-              left: 96,
-              right: 96,
-              bottom: 28,
-              child: Row(
-                children: const [
-                  Expanded(child: _BannerPill(text: 'عروض خاطفة ⚡')),
-                  SizedBox(width: 10),
-                  Expanded(child: _BannerPill(text: 'عروض الشهر 🔥')),
-                ],
               ),
             ),
           ],
@@ -701,49 +807,29 @@ class _TopShowcase extends StatelessWidget {
       color: Colors.white,
       child: Stack(
         children: [
-          const Positioned(top: 0, left: 0, right: 0, height: 96, child: ColoredBox(color: AppTheme.navy)),
           Column(
             children: [
               if (appSettings.appBannersEnabled &&
                   appSettings.mainBannerEnabled &&
-                  appSettings.sectionEnabled('banners'))
+                  appSettings.sectionEnabled('banners') &&
+                  appSettings.bannersForLanguage(language).isNotEmpty)
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+                  padding: EdgeInsets.zero,
                   child: _BannerSlider(
                     controller: controller,
                     index: index,
                     onChanged: onChanged,
-                    bannerUrl: appSettings.bannerForLanguage(language),
+                    bannerUrls: appSettings.bannersForLanguage(language),
                   ),
                 ),
               Padding(
-                padding: const EdgeInsets.only(top: 10),
+                padding: const EdgeInsets.only(top: 18, bottom: 8),
                 child: _RoundCategories(subcategories: subcategories, selectedId: selectedId, onTap: onTap),
               ),
             ],
           ),
         ],
       ),
-    );
-  }
-}
-
-class _BannerPill extends StatelessWidget {
-  const _BannerPill({required this.text});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 34,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: AppTheme.navy.withValues(alpha: .92),
-        borderRadius: BorderRadius.circular(17),
-        boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 10, offset: Offset(0, 3))],
-      ),
-      child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w900)),
     );
   }
 }
@@ -759,49 +845,62 @@ class _RoundCategories extends StatelessWidget {
   Widget build(BuildContext context) {
     final visible = _occasionTiles(subcategories);
     return SizedBox(
-      height: 86,
+      height: 68,
       child: Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: Directionality.of(context),
         child: ListView.separated(
           padding: const EdgeInsets.symmetric(horizontal: 9),
           scrollDirection: Axis.horizontal,
           physics: const BouncingScrollPhysics(),
           itemCount: visible.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 9),
+          separatorBuilder: (_, __) => const SizedBox(width: 8),
           itemBuilder: (context, index) {
             final item = visible[index];
             final active = item.id != null && item.id == selectedId;
             return SizedBox(
-              width: 57,
+              width: 62,
               child: InkWell(
                 onTap: () => onTap(item.id),
-                borderRadius: BorderRadius.circular(36),
-                child: Column(
-                  children: [
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 160),
-                      width: 52,
-                      height: 52,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: AppTheme.navy,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: active ? AppTheme.gold : const Color(0xFFD4AF37), width: active ? 2 : 1),
-                        boxShadow: const [BoxShadow(color: Color(0x22000000), blurRadius: 8, offset: Offset(0, 3))],
-                      ),
-                      child: Icon(item.icon, color: AppTheme.gold, size: 27),
+                borderRadius: BorderRadius.circular(18),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 160),
+                  width: 62,
+                  height: 64,
+                  padding: const EdgeInsets.fromLTRB(4, 5, 4, 4),
+                  decoration: BoxDecoration(
+                    color: AppTheme.navy,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: active ? AppTheme.gold : const Color(0x243D5A84),
+                      width: active ? 2 : 1,
                     ),
-                    const SizedBox(height: 4),
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x2606152D),
+                        blurRadius: 8,
+                        offset: Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(item.icon, color: AppTheme.gold, size: 22),
+                      const SizedBox(height: 5),
+                      Text(
                         item.label,
                         textAlign: TextAlign.center,
-                        maxLines: 1,
-                        style: const TextStyle(color: AppTheme.navy, fontSize: 10, fontWeight: FontWeight.w900),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 9,
+                          height: 1.05,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             );
@@ -871,6 +970,127 @@ class _OccasionTile {
   final String? id;
 }
 
+class _PromoBannerRow extends StatefulWidget {
+  const _PromoBannerRow({required this.banners});
+
+  final List<AppPromoBanner> banners;
+
+  @override
+  State<_PromoBannerRow> createState() => _PromoBannerRowState();
+}
+
+class _PromoBannerRowState extends State<_PromoBannerRow> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted && TickerMode.of(context)) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final banners = widget.banners
+        .where((item) => item.enabled && item.imageUrl.isNotEmpty)
+        .take(2)
+        .toList(growable: false);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (var i = 0; i < banners.length; i++) ...[
+            if (i > 0) const SizedBox(width: 8),
+            Expanded(child: _PromoBannerCard(banner: banners[i])),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _PromoBannerCard extends StatelessWidget {
+  const _PromoBannerCard({required this.banner});
+
+  final AppPromoBanner banner;
+
+  @override
+  Widget build(BuildContext context) {
+    final remaining = banner.endsAt?.difference(DateTime.now()) ?? Duration.zero;
+    final safe = remaining.isNegative ? Duration.zero : remaining;
+    final hours = safe.inHours.toString().padLeft(2, '0');
+    final minutes = safe.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final seconds = safe.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(15),
+      child: AspectRatio(
+        aspectRatio: 1.72,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            BariqNetworkImage(imageUrl: banner.imageUrl, fit: BoxFit.cover),
+            const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: AlignmentDirectional.centerStart,
+                  end: AlignmentDirectional.centerEnd,
+                  colors: [Color(0xA812213C), Color(0x18000000)],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    banner.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w900),
+                  ),
+                  if (banner.subtitle.isNotEmpty)
+                    Text(
+                      banner.subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: Colors.white70, fontSize: 9.5, fontWeight: FontWeight.w700),
+                    ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xDDFFFFFF),
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: AppTheme.gold.withValues(alpha: .7)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.timer_outlined, size: 11, color: AppTheme.gold),
+                        const SizedBox(width: 3),
+                        Text('$hours:$minutes:$seconds', style: const TextStyle(color: AppTheme.navy, fontSize: 9, fontWeight: FontWeight.w900)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _ServiceStrip extends StatelessWidget {
   const _ServiceStrip();
 
@@ -901,7 +1121,7 @@ class _ServiceStrip extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(item.$1, color: i == 0 ? const Color(0xFFE4B84A) : i == 1 ? const Color(0xFFC7922E) : AppTheme.success, size: 16),
+                  Icon(item.$1, color: i < 2 ? AppTheme.gold : AppTheme.success, size: 16),
                   const SizedBox(width: 5),
                   Flexible(child: Text(item.$2, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppTheme.navy, fontSize: 10.2, fontWeight: FontWeight.w900))),
                   if (i != _items.length - 1) const SizedBox(width: 5),
@@ -949,13 +1169,13 @@ class _TodayScroller extends StatelessWidget {
   Widget build(BuildContext context) {
     if (products.isEmpty) return const SizedBox.shrink();
     return SizedBox(
-      height: 166,
+      height: 176,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 8),
         itemCount: products.length,
         separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (_, i) => SizedBox(width: 116, child: BariqProductCard(product: products[i], compact: true)),
+        itemBuilder: (_, i) => SizedBox(width: 122, child: BariqProductCard(product: products[i], compact: true)),
       ),
     );
   }
@@ -976,7 +1196,7 @@ class _FilterChips extends StatelessWidget {
       color: Colors.white,
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: Directionality.of(context),
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           physics: const BouncingScrollPhysics(),
@@ -1219,9 +1439,14 @@ class _AppAnnouncement extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(10, 8, 10, 2),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF8DF),
+        gradient: LinearGradient(
+          colors: [
+            AppTheme.goldLight.withValues(alpha: .22),
+            AppTheme.gold.withValues(alpha: .08),
+          ],
+        ),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE7CB67)),
+        border: Border.all(color: AppTheme.gold.withValues(alpha: .55)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1229,7 +1454,7 @@ class _AppAnnouncement extends StatelessWidget {
           if (title.isNotEmpty)
             Text(
               title,
-              textAlign: TextAlign.right,
+              textAlign: TextAlign.start,
               style: const TextStyle(
                 color: AppTheme.navy,
                 fontSize: 12,
@@ -1240,7 +1465,7 @@ class _AppAnnouncement extends StatelessWidget {
           if (body.isNotEmpty)
             Text(
               body,
-              textAlign: TextAlign.right,
+              textAlign: TextAlign.start,
               style: const TextStyle(
                 color: AppTheme.muted,
                 fontSize: 10.5,

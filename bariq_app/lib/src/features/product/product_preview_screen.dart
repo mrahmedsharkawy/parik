@@ -10,6 +10,8 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../services/product_cutout_service.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/app_strings.dart';
+import '../shared/bariq_network_image.dart';
 
 const _loadingMessages = <String>[
   'جاري تحميل موديل القص...',
@@ -38,6 +40,7 @@ class ProductPreviewScreen extends StatefulWidget {
 
 class _ProductPreviewScreenState extends State<ProductPreviewScreen> {
   static final Map<String, Uint8List> _cutoutCache = {};
+  static final Map<String, Uint8List> _recolorCache = {};
 
   final _picker = ImagePicker();
   final _stageKey = GlobalKey();
@@ -50,8 +53,6 @@ class _ProductPreviewScreenState extends State<ProductPreviewScreen> {
   String? _error;
   bool _loadingProduct = true;
   bool _processing = false;
-  int _backgroundPrepareGeneration = 0;
-  final Set<String> _failedBackgroundImages = {};
   double _productAspectRatio = 1;
   int _loadingMessageIndex = 0;
   Timer? _loadingMessageTimer;
@@ -61,6 +62,7 @@ class _ProductPreviewScreenState extends State<ProductPreviewScreen> {
   Offset _position = Offset.zero;
   double _scale = 1;
   double _rotation = 0;
+  double _tiltX = 0;
   double _baseScale = 1;
   double _baseRotation = 0;
   Offset _basePosition = Offset.zero;
@@ -84,7 +86,6 @@ class _ProductPreviewScreenState extends State<ProductPreviewScreen> {
 
   @override
   void dispose() {
-    _backgroundPrepareGeneration++;
     _loadingMessageTimer?.cancel();
     super.dispose();
   }
@@ -120,15 +121,6 @@ class _ProductPreviewScreenState extends State<ProductPreviewScreen> {
         _loadingProduct = false;
         _selectedColor = _colorPresets.first;
       });
-      await Future<void>.delayed(Duration.zero);
-      final previews = ProductCutoutService.instance.recolorPreviews(
-        readyCut,
-        _colorPresets.map((preset) => preset.key),
-      );
-      if (!mounted || _originalProductBytes != readyCut) return;
-      setState(() => _colorPreviewBytes = previews);
-      final generation = ++_backgroundPrepareGeneration;
-      unawaited(_prepareRemainingProductImages(generation));
     } catch (error) {
       if (!mounted) return;
       setState(() {
@@ -140,7 +132,6 @@ class _ProductPreviewScreenState extends State<ProductPreviewScreen> {
 
   Future<void> _selectProductImage(String url) async {
     if (url == _selectedProductImageUrl || _loadingProduct) return;
-    _backgroundPrepareGeneration++;
     setState(() {
       _selectedProductImageUrl = url;
       _productBytes = null;
@@ -151,46 +142,27 @@ class _ProductPreviewScreenState extends State<ProductPreviewScreen> {
     await _loadProduct();
   }
 
-  Future<void> _prepareRemainingProductImages(int generation) async {
-    await Future<void>.delayed(const Duration(milliseconds: 900));
-    for (final url in widget.productImageUrls) {
-      if (!mounted || generation != _backgroundPrepareGeneration) return;
-      if (url == _selectedProductImageUrl ||
-          _cutoutCache.containsKey(url) ||
-          _failedBackgroundImages.contains(url)) {
-        continue;
-      }
-      try {
-        final response =
-            await http.get(Uri.parse(url)).timeout(const Duration(seconds: 18));
-        if (!mounted || generation != _backgroundPrepareGeneration) return;
-        if (response.statusCode < 200 || response.statusCode >= 300) {
-          _failedBackgroundImages.add(url);
-          continue;
-        }
-        final cut = await ProductCutoutService.instance.removeBackground(
-          response.bodyBytes,
-        );
-        if (!mounted || generation != _backgroundPrepareGeneration) return;
-        _cutoutCache[url] = cut;
-        setState(() {});
-      } catch (_) {
-        _failedBackgroundImages.add(url);
-      }
-      await Future<void>.delayed(const Duration(milliseconds: 450));
-    }
-  }
-
   Future<void> _selectColor(_ColorPreset preset) async {
     final original = _originalProductBytes;
     if (original == null || _processing) return;
+    final cacheKey = '$_selectedProductImageUrl:${preset.key}';
+    final cached = _recolorCache[cacheKey];
+    if (cached != null) {
+      setState(() {
+        _productBytes = cached;
+        _selectedColor = preset;
+        _finalBytes = null;
+      });
+      return;
+    }
     setState(() => _processing = true);
     await Future<void>.delayed(Duration.zero);
     try {
-      final colored = ProductCutoutService.instance.recolor(
+      final colored = await ProductCutoutService.instance.recolorAsync(
         original,
         preset.key,
       );
+      _recolorCache[cacheKey] = colored;
       if (!mounted) return;
       setState(() {
         _productBytes = colored;
@@ -198,7 +170,9 @@ class _ProductPreviewScreenState extends State<ProductPreviewScreen> {
         _finalBytes = null;
       });
     } finally {
-      if (mounted) setState(() => _processing = false);
+      if (mounted) {
+        setState(() => _processing = false);
+      }
     }
   }
 
@@ -218,6 +192,7 @@ class _ProductPreviewScreenState extends State<ProductPreviewScreen> {
         _position = Offset.zero;
         _scale = 1;
         _rotation = 0;
+        _tiltX = 0;
         _error = null;
       });
     } catch (_) {
@@ -231,6 +206,7 @@ class _ProductPreviewScreenState extends State<ProductPreviewScreen> {
       _position = Offset.zero;
       _scale = 1;
       _rotation = 0;
+      _tiltX = 0;
       _finalBytes = null;
     });
   }
@@ -274,20 +250,20 @@ class _ProductPreviewScreenState extends State<ProductPreviewScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
-          'جرّب المنتج في مكانك',
-          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900),
+        title: Text(
+          AppStrings.tr('جرّب المنتج في مكانك', 'Try the product in your space'),
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900),
         ),
         actions: [
           IconButton(
-            tooltip: 'إعادة ضبط',
+            tooltip: AppStrings.tr('إعادة ضبط', 'Reset'),
             onPressed: ready ? _resetPlacement : null,
             icon: const Icon(Icons.center_focus_strong_rounded),
           ),
         ],
       ),
       body: Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: Directionality.of(context),
         child: Stack(
           children: [
             ListView(
@@ -315,6 +291,7 @@ class _ProductPreviewScreenState extends State<ProductPreviewScreen> {
                     position: _position,
                     scale: _scale,
                     rotation: _rotation,
+                    tiltX: _tiltX,
                     onScaleStart: (details) {
                       _baseScale = _scale;
                       _baseRotation = _rotation;
@@ -355,12 +332,20 @@ class _ProductPreviewScreenState extends State<ProductPreviewScreen> {
                   onPlus: () => setState(() => _scale = (_scale * 1.14).clamp(.35, 4.0)),
                   onRotateLeft: () => setState(() => _rotation -= math.pi / 18),
                   onRotateRight: () => setState(() => _rotation += math.pi / 18),
+                  onForward: () => setState(() {
+                    _tiltX = (_tiltX - math.pi / 36).clamp(-.52, .52);
+                    _finalBytes = null;
+                  }),
+                  onBackward: () => setState(() {
+                    _tiltX = (_tiltX + math.pi / 36).clamp(-.52, .52);
+                    _finalBytes = null;
+                  }),
                 ),
                 const SizedBox(height: 10),
                 OutlinedButton.icon(
                   onPressed: _productBytes == null ? null : _recutProduct,
                   icon: const Icon(Icons.auto_fix_high_rounded, size: 17),
-                  label: const Text('إعادة قص المنتج'),
+                  label: Text(AppStrings.tr('إعادة قص المنتج', 'Remove background again')),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppTheme.navy,
                     side: const BorderSide(color: AppTheme.line),
@@ -372,7 +357,7 @@ class _ProductPreviewScreenState extends State<ProductPreviewScreen> {
                 FilledButton.icon(
                   onPressed: ready ? _createFinalPreview : null,
                   icon: const Icon(Icons.check_rounded, size: 17),
-                  label: const Text('إنشاء المعاينة'),
+                  label: Text(AppStrings.tr('إنشاء المعاينة', 'Create preview')),
                   style: FilledButton.styleFrom(
                     backgroundColor: AppTheme.navy,
                     minimumSize: const Size.fromHeight(42),
@@ -429,7 +414,7 @@ class _Header extends StatelessWidget {
             productName,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.right,
+            textAlign: TextAlign.start,
             style: const TextStyle(color: AppTheme.navy, fontSize: 13, fontWeight: FontWeight.w900),
           ),
         ],
@@ -457,13 +442,13 @@ class _UploadCard extends StatelessWidget {
         children: [
           const Icon(Icons.add_photo_alternate_outlined, color: AppTheme.gold, size: 38),
           const SizedBox(height: 8),
-          const Text(
-            'ارفع أو صوّر المكان',
+          Text(
+            AppStrings.tr('ارفع أو صوّر المكان', 'Upload or photograph your space'),
             style: TextStyle(color: AppTheme.navy, fontSize: 14, fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 5),
-          const Text(
-            'اختار صورة المكان ثم حرّك المنتج فوقها واضبط حجمه واتجاهه.',
+          Text(
+            AppStrings.tr('اختار صورة المكان ثم حرّك المنتج فوقها واضبط حجمه واتجاهه.', 'Choose a photo, then move, resize and rotate the product.'),
             textAlign: TextAlign.center,
             style: TextStyle(color: AppTheme.muted, fontSize: 11, fontWeight: FontWeight.w700),
           ),
@@ -474,7 +459,7 @@ class _UploadCard extends StatelessWidget {
                 child: FilledButton.icon(
                   onPressed: onCamera,
                   icon: const Icon(Icons.photo_camera_outlined, size: 18),
-                  label: const Text('تصوير'),
+                  label: Text(AppStrings.tr('تصوير', 'Camera')),
                 ),
               ),
               const SizedBox(width: 8),
@@ -482,7 +467,7 @@ class _UploadCard extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: onGallery,
                   icon: const Icon(Icons.photo_library_outlined, size: 18),
-                  label: const Text('رفع صورة'),
+                  label: Text(AppStrings.tr('رفع صورة', 'Upload photo')),
                 ),
               ),
             ],
@@ -531,9 +516,9 @@ class _ProductImagesPicker extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text(
-          'اختر صورة المنتج',
-          textAlign: TextAlign.right,
+        Text(
+          AppStrings.tr('اختر صورة المنتج', 'Choose product image'),
+          textAlign: TextAlign.start,
           style: TextStyle(
             color: AppTheme.navy,
             fontSize: 11,
@@ -569,7 +554,11 @@ class _ProductImagesPicker extends StatelessWidget {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: prepared == null
-                        ? Image.network(url, fit: BoxFit.cover)
+                        ? BariqNetworkImage(
+                            imageUrl: url,
+                            fit: BoxFit.cover,
+                            errorIconSize: 16,
+                          )
                         : Image.memory(
                             prepared,
                             fit: BoxFit.contain,
@@ -604,9 +593,9 @@ class _ProductColorsPicker extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text(
-          'تغيير لون المنتج',
-          textAlign: TextAlign.right,
+        Text(
+          AppStrings.tr('تغيير لون المنتج', 'Change product color'),
+          textAlign: TextAlign.start,
           style: TextStyle(
             color: AppTheme.navy,
             fontSize: 11,
@@ -624,6 +613,7 @@ class _ProductColorsPicker extends StatelessWidget {
             itemBuilder: (context, index) {
               final preset = _colorPresets[index];
               final active = identical(selected, preset);
+              final preview = previewBytes[preset.key] ?? productBytes;
               return GestureDetector(
                 onTap: productBytes == null ? null : () => onSelected(preset),
                 child: AnimatedContainer(
@@ -641,13 +631,27 @@ class _ProductColorsPicker extends StatelessWidget {
                   child: Column(
                     children: [
                       Expanded(
-                        child: previewBytes[preset.key] == null
+                        child: preview == null
                             ? const Icon(Icons.image_outlined, color: AppTheme.muted)
-                            : Image.memory(
-                                previewBytes[preset.key]!,
-                                fit: BoxFit.contain,
-                                gaplessPlayback: true,
-                              ),
+                            : preset.key == 'original'
+                                ? Image.memory(
+                                    preview,
+                                    fit: BoxFit.contain,
+                                    gaplessPlayback: true,
+                                  )
+                                : ColorFiltered(
+                                    colorFilter: ColorFilter.mode(
+                                      _previewTint(preset.key),
+                                      preset.key == 'mono'
+                                          ? BlendMode.saturation
+                                          : BlendMode.color,
+                                    ),
+                                    child: Image.memory(
+                                      preview,
+                                      fit: BoxFit.contain,
+                                      gaplessPlayback: true,
+                                    ),
+                                  ),
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -672,6 +676,19 @@ class _ProductColorsPicker extends StatelessWidget {
   }
 }
 
+Color _previewTint(String key) {
+  return switch (key) {
+    'gold' => const Color(0xFFB8923A),
+    'navy' => const Color(0xFF183A73),
+    'rose' => const Color(0xFFB94B72),
+    'green' => const Color(0xFF27885A),
+    'warm' => const Color(0xFFB8753E),
+    'cool' => const Color(0xFF4A7FA8),
+    'mono' => Colors.grey,
+    _ => Colors.transparent,
+  };
+}
+
 class _PreviewStage extends StatelessWidget {
   const _PreviewStage({
     required this.repaintKey,
@@ -681,6 +698,7 @@ class _PreviewStage extends StatelessWidget {
     required this.position,
     required this.scale,
     required this.rotation,
+    required this.tiltX,
     required this.onScaleStart,
     required this.onScaleUpdate,
   });
@@ -692,6 +710,7 @@ class _PreviewStage extends StatelessWidget {
   final Offset position;
   final double scale;
   final double rotation;
+  final double tiltX;
   final GestureScaleStartCallback onScaleStart;
   final GestureScaleUpdateCallback onScaleUpdate;
 
@@ -776,12 +795,18 @@ class _PreviewStage extends StatelessWidget {
                                         ),
                                       ),
                                     ),
-                                    Image.memory(
-                                      productBytes,
-                                      width: productWidth,
-                                      height: productHeight,
-                                      fit: BoxFit.contain,
-                                      gaplessPlayback: true,
+                                    Transform(
+                                      alignment: Alignment.center,
+                                      transform: Matrix4.identity()
+                                        ..setEntry(3, 2, .0015)
+                                        ..rotateX(tiltX),
+                                      child: Image.memory(
+                                        productBytes,
+                                        width: productWidth,
+                                        height: productHeight,
+                                        fit: BoxFit.contain,
+                                        gaplessPlayback: true,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -824,6 +849,8 @@ class _ToolsRow extends StatelessWidget {
     required this.onPlus,
     required this.onRotateLeft,
     required this.onRotateRight,
+    required this.onForward,
+    required this.onBackward,
   });
 
   final bool enabled;
@@ -833,6 +860,8 @@ class _ToolsRow extends StatelessWidget {
   final VoidCallback onPlus;
   final VoidCallback onRotateLeft;
   final VoidCallback onRotateRight;
+  final VoidCallback onForward;
+  final VoidCallback onBackward;
 
   @override
   Widget build(BuildContext context) {
@@ -843,6 +872,18 @@ class _ToolsRow extends StatelessWidget {
       (Icons.add_rounded, 'تكبير', enabled, onPlus),
       (Icons.rotate_left_rounded, 'يسار', enabled, onRotateLeft),
       (Icons.rotate_right_rounded, 'يمين', enabled, onRotateRight),
+      (
+        Icons.keyboard_arrow_up_rounded,
+        AppStrings.tr('ميل أمامي', 'Tilt forward'),
+        enabled,
+        onForward,
+      ),
+      (
+        Icons.keyboard_arrow_down_rounded,
+        AppStrings.tr('ميل خلفي', 'Tilt backward'),
+        enabled,
+        onBackward,
+      ),
     ];
 
     return SizedBox(
@@ -913,7 +954,7 @@ class _Message extends StatelessWidget {
       ),
       child: Text(
         text,
-        textAlign: TextAlign.right,
+        textAlign: TextAlign.start,
         style: TextStyle(
           color: error ? const Color(0xFFA13333) : AppTheme.navy,
           fontSize: 11,

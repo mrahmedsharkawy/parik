@@ -10,12 +10,14 @@ class BariqBottomNav extends StatelessWidget {
     required this.cartCount,
     required this.english,
     required this.onTap,
+    this.notificationCount = 0,
     this.compact = false,
   });
 
   final int selected;
   final int cartCount;
   final bool english;
+  final int notificationCount;
   final ValueChanged<int> onTap;
   final bool compact;
 
@@ -113,15 +115,19 @@ class BariqBottomNav extends StatelessWidget {
                             curve: Curves.easeOutCubic,
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
-                              color: active ? const Color(0xFF455F90).withValues(alpha: .92) : Colors.transparent,
-                              borderRadius: BorderRadius.circular(24),
-                              border: active ? Border.all(color: Colors.white.withValues(alpha: .2)) : null,
+                              color: Colors.transparent,
+                              shape: BoxShape.circle,
+                              border: active
+                                  ? Border.all(
+                                      color: AppTheme.gold,
+                                      width: 1.4,
+                                    )
+                                  : null,
                               boxShadow: [
                                 if (active)
-                                  const BoxShadow(
-                                    color: Color(0x263D5F99),
-                                    blurRadius: 12,
-                                    offset: Offset(0, 3),
+                                  BoxShadow(
+                                    color: AppTheme.gold.withValues(alpha: .2),
+                                    blurRadius: 8,
                                   ),
                               ],
                             ),
@@ -134,10 +140,11 @@ class BariqBottomNav extends StatelessWidget {
                                 else
                                   Icon(
                                     item.$1,
-                                    color: active ? Colors.white : _iconColors[index],
+                                    color: active ? AppTheme.gold : _iconColors[index],
                                     size: compact ? 21 : 24,
                                   ),
-                                if (index == 0 && cartCount > 0)
+                                if ((index == 0 && cartCount > 0) ||
+                                    (index == 1 && notificationCount > 0))
                                   PositionedDirectional(
                                     top: -10,
                                     end: -13,
@@ -152,7 +159,7 @@ class BariqBottomNav extends StatelessWidget {
                                         border: Border.all(color: const Color(0xFF22385E), width: 1),
                                       ),
                                       child: Text(
-                                        '$cartCount',
+                                        '${index == 0 ? cartCount : notificationCount}',
                                         style: const TextStyle(
                                           color: AppTheme.navy,
                                           fontSize: 8.5,

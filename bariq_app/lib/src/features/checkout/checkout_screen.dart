@@ -7,6 +7,7 @@ import '../../config/app_config.dart';
 import '../../models/product.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/app_strings.dart';
 import '../catalog/search_screen.dart';
 import '../shared/bariq_bottom_nav.dart';
 import '../shared/storefront_top_bar.dart';
@@ -73,8 +74,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
 
     final money = NumberFormat.currency(
-      locale: 'ar_AE',
-      symbol: 'د.إ',
+      locale: AppStrings.currencyLocale,
+      symbol: AppStrings.currencySymbol,
       decimalDigits: 0,
     );
 
@@ -84,6 +85,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       bottomNavigationBar: BariqBottomNav(
         selected: 0,
         cartCount: state.cartCount,
+        notificationCount: state.notificationCount,
         english: state.isEnglish,
         onTap: (index) => Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(
@@ -98,7 +100,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           slivers: [
             StorefrontTopBarSliver(
               showBack: true,
-              placeholder: 'إبحث بالصورة أو الاسم أو المناسبة',
+              placeholder: AppStrings.searchHeader,
               onSearch: () => Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => const SearchScreen(),
@@ -111,9 +113,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 delegate: SliverChildListDelegate([
                   const _GreenNotice(),
                   const SizedBox(height: 24),
-                  const Text(
-                    'بيانات التواصل',
-                    textAlign: TextAlign.right,
+                  Text(
+                    AppStrings.tr('بيانات التواصل', 'Contact information'),
+                    textAlign: TextAlign.start,
                     style: TextStyle(
                       color: AppTheme.navy,
                       fontSize: 15.5,
@@ -123,35 +125,35 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   const SizedBox(height: 12),
                   _Field(
                     controller: _name,
-                    label: 'الاسم الكامل',
+                    label: AppStrings.tr('الاسم الكامل', 'Full name'),
                     icon: Icons.person_outline,
                   ),
                   _Field(
                     controller: _phone,
-                    label: 'رقم الهاتف',
+                    label: AppStrings.tr('رقم الهاتف', 'Phone number'),
                     icon: Icons.phone_outlined,
                     keyboard: TextInputType.phone,
                   ),
                   _Field(
                     controller: _email,
-                    label: 'البريد الإلكتروني',
+                    label: AppStrings.tr('البريد الإلكتروني', 'Email address'),
                     icon: Icons.email_outlined,
                     keyboard: TextInputType.emailAddress,
                   ),
                   _Field(
                     controller: _city,
-                    label: 'الإمارة / المدينة',
+                    label: AppStrings.tr('الإمارة / المدينة', 'Emirate / city'),
                     icon: Icons.location_city_outlined,
                   ),
                   _Field(
                     controller: _address,
-                    label: 'العنوان',
+                    label: AppStrings.tr('العنوان', 'Address'),
                     icon: Icons.location_on_outlined,
                   ),
                   const SizedBox(height: 22),
-                  const Text(
-                    'ملخص الطلب',
-                    textAlign: TextAlign.right,
+                  Text(
+                    AppStrings.tr('ملخص الطلب', 'Order summary'),
+                    textAlign: TextAlign.start,
                     style: TextStyle(
                       color: AppTheme.navy,
                       fontSize: 15.5,
@@ -176,7 +178,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           Flexible(
                             child: Text(
                               '${item.$1.displayName} × ${item.$2}',
-                              textAlign: TextAlign.right,
+                              textAlign: TextAlign.start,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
@@ -201,8 +203,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         ),
                       ),
                       const Spacer(),
-                      const Text(
-                        'الإجمالي',
+                      Text(
+                        AppStrings.tr('الإجمالي', 'Total'),
                         style: TextStyle(
                           color: AppTheme.navy,
                           fontSize: 15,
@@ -225,8 +227,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     ),
                     child: Text(
                       _sending
-                          ? 'جاري تجهيز الطلب...'
-                          : 'تأكيد الطلب عبر واتساب (${items.fold<int>(0, (sum, item) => sum + item.$2)} قطعة)',
+                          ? AppStrings.tr('جاري تجهيز الطلب...', 'Preparing order...')
+                          : AppStrings.tr('تأكيد الطلب عبر واتساب (${items.fold<int>(0, (sum, item) => sum + item.$2)} قطعة)', 'Confirm via WhatsApp (${items.fold<int>(0, (sum, item) => sum + item.$2)} items)'),
                       style: const TextStyle(
                         fontWeight: FontWeight.w900,
                       ),
@@ -270,22 +272,22 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final address = _address.text.trim();
 
     if (name.isEmpty) {
-      _showMessage('من فضلك أدخل اسمك');
+      _showMessage(AppStrings.tr('من فضلك أدخل اسمك', 'Please enter your name'));
       return;
     }
 
     if (phone.isEmpty) {
-      _showMessage('من فضلك أدخل رقم هاتفك');
+      _showMessage(AppStrings.tr('من فضلك أدخل رقم هاتفك', 'Please enter your phone number'));
       return;
     }
 
     if (city.isEmpty) {
-      _showMessage('من فضلك أدخل المدينة');
+      _showMessage(AppStrings.tr('من فضلك أدخل المدينة', 'Please enter your city'));
       return;
     }
 
     if (address.isEmpty) {
-      _showMessage('من فضلك أدخل العنوان');
+      _showMessage(AppStrings.tr('من فضلك أدخل العنوان', 'Please enter your address'));
       return;
     }
 
@@ -336,11 +338,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       );
 
       if (!opened && mounted) {
-        _showMessage('تعذر فتح واتساب.');
+        _showMessage(AppStrings.tr('تعذر فتح واتساب.', 'Unable to open WhatsApp.'));
       }
     } catch (_) {
       if (mounted) {
-        _showMessage('تعذر تجهيز الطلب حالياً.');
+        _showMessage(AppStrings.tr('تعذر تجهيز الطلب حالياً.', 'Unable to prepare the order right now.'));
       }
     } finally {
       if (mounted) {
@@ -402,9 +404,9 @@ class _Field extends StatelessWidget {
       child: TextField(
         controller: controller,
         keyboardType: keyboard,
-        textAlign: TextAlign.right,
+        textAlign: TextAlign.start,
         decoration: InputDecoration(
-          labelText: label,
+          labelText: AppStrings.auto(label),
           prefixIcon: Icon(icon),
           filled: true,
           fillColor: const Color(0xFFF8F9FB),
@@ -435,7 +437,7 @@ class _InfoSection extends StatelessWidget {
         children: [
           Text(
             title,
-            textAlign: TextAlign.right,
+            textAlign: TextAlign.start,
             style: const TextStyle(
               color: AppTheme.navy,
               fontSize: 16,
@@ -445,7 +447,7 @@ class _InfoSection extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             text,
-            textAlign: TextAlign.right,
+            textAlign: TextAlign.start,
             style: const TextStyle(
               color: AppTheme.muted,
               height: 1.8,

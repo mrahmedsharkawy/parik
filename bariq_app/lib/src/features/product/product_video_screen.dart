@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../theme/app_theme.dart';
+import '../../utils/app_strings.dart';
 
 class ProductVideoScreen extends StatefulWidget {
   const ProductVideoScreen({
@@ -72,14 +73,14 @@ class _ProductVideoScreenState extends State<ProductVideoScreen> {
         future: _initializing,
         builder: (context, snapshot) {
           if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(
+            return Center(
               child: CircularProgressIndicator(color: AppTheme.gold),
             );
           }
 
           if (!_controller.value.isInitialized) {
-            return const Center(
-              child: Text('تعذر تشغيل الفيديو', style: TextStyle(color: Colors.white)),
+            return Center(
+              child: Text(AppStrings.tr('تعذر تشغيل الفيديو', 'Unable to play video'), style: const TextStyle(color: Colors.white)),
             );
           }
 

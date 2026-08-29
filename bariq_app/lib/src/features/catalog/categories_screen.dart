@@ -4,6 +4,7 @@ import '../../models/product.dart';
 import '../../services/supabase_catalog_service.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/app_strings.dart';
 import '../shared/bariq_network_image.dart';
 import 'product_gallery_grid.dart';
 
@@ -20,7 +21,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('جميع الفئات')),
+    appBar: AppBar(title: Text(AppStrings.auto('جميع الفئات'))),
     body: FutureBuilder<List<CategoryItem>>(
       future: _categories,
       builder: (_, snap) {
