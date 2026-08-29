@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
 import '../../models/category.dart';
+import '../../models/app_runtime_settings.dart';
 import '../../models/product.dart';
 import '../../models/site_settings.dart';
 import '../../services/account_service.dart';
+import '../../services/app_settings_service.dart';
 import '../../services/supabase_catalog_service.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_theme.dart';
@@ -29,6 +31,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final _catalog = SupabaseCatalogService();
+  final _appSettings = AppSettingsService();
   final _bannerController = PageController();
   late Future<_HomeData> _future;
   int _bannerIndex = 0;
@@ -57,22 +60,25 @@ class _HomeScreenState extends State<HomeScreen> {
       _catalog.fetchCategories(),
       _catalog.fetchSubcategories(),
       _catalog.fetchSettings(),
+      _appSettings.fetch(),
     ]);
     final settings = setupValues[2] as SiteSettings;
+    final appSettings = setupValues[3] as AppRuntimeSettings;
     _productSort = settings.productSort;
     final products = await _catalog.fetchProductsPage(
-      limit: SupabaseCatalogService.pageSize,
+      limit: appSettings.homePageSize,
       sort: _productSort,
     );
     _products
       ..clear()
       ..addAll(products);
-    _hasMoreProducts = _products.length == SupabaseCatalogService.pageSize;
+    _hasMoreProducts = _products.length == appSettings.homePageSize;
     return _HomeData(
       products: _products,
       categories: setupValues[0] as List<CategoryItem>,
       subcategories: setupValues[1] as List<SubcategoryItem>,
       settings: settings,
+      appSettings: appSettings,
     );
   }
 
@@ -148,6 +154,13 @@ class _HomeScreenState extends State<HomeScreen> {
             }
 
             final data = snapshot.data!;
+            final appState = AppStateScope.of(context);
+            if (data.appSettings.maintenanceMode) {
+              return _MaintenanceHome(
+                message: data.appSettings.maintenanceMessage,
+                onRetry: _refresh,
+              );
+            }
             final allProducts = _storeProducts(_products.toList(), data.settings.productSort);
             final selectedCategory = _selectedCategory(data.categories, _categoryId);
             final selectedSubcategories = selectedCategory == null ? const <SubcategoryItem>[] : data.subcategories.where((item) => item.categoryId == selectedCategory.id).toList();
@@ -185,11 +198,27 @@ class _HomeScreenState extends State<HomeScreen> {
                         SliverToBoxAdapter(
                           child: _SiteHeader(
                             onSearch: _openSearch,
-                            onImageSearch: _openImageSearch,
-                            onFavorites: () => widget.onOpenAccountSection?.call(AccountSection.favorites),
+                            onImageSearch: data.appSettings
+                                    .featureEnabled('image_search')
+                                ? _openImageSearch
+                                : null,
+                            onFavorites: data.appSettings
+                                    .featureEnabled('favorites')
+                                ? () => widget.onOpenAccountSection
+                                    ?.call(AccountSection.favorites)
+                                : null,
                             onNotifications: () => widget.onOpenAccountSection?.call(AccountSection.notifications),
                           ),
                         ),
+                    if (data.appSettings.announcementEnabled &&
+                        (data.appSettings.announcementTitle.isNotEmpty ||
+                            data.appSettings.announcementBody.isNotEmpty))
+                      SliverToBoxAdapter(
+                        child: _AppAnnouncement(
+                          title: data.appSettings.announcementTitle,
+                          body: data.appSettings.announcementBody,
+                        ),
+                      ),
                     SliverToBoxAdapter(
                       child: _TopShowcase(
                         controller: _bannerController,
@@ -198,18 +227,23 @@ class _HomeScreenState extends State<HomeScreen> {
                         subcategories: data.subcategories,
                         selectedId: _subcategoryId,
                         onTap: (id) => _reloadProducts(subcategoryId: id == _subcategoryId ? null : id),
+                        appSettings: data.appSettings,
+                        language: appState.language,
                       ),
                     ),
                     const SliverToBoxAdapter(child: _ServiceStrip()),
-                    SliverToBoxAdapter(child: _SectionTitle(title: 'اختيارات اليوم', leading: '☀️', action: 'عرض الكل 🔥')),
-                    SliverToBoxAdapter(child: _TodayScroller(products: today.take(8).toList())),
-                    SliverToBoxAdapter(
-                      child: _FilterChips(
-                        categories: data.categories,
-                        selectedId: _categoryId,
-                        onTap: (id) => _reloadProducts(categoryId: id),
+                    if (data.appSettings.sectionEnabled('daily_picks')) ...[
+                      SliverToBoxAdapter(child: _SectionTitle(title: 'اختيارات اليوم', leading: '☀️', action: 'عرض الكل 🔥')),
+                      SliverToBoxAdapter(child: _TodayScroller(products: today.take(8).toList())),
+                    ],
+                    if (data.appSettings.sectionEnabled('categories'))
+                      SliverToBoxAdapter(
+                        child: _FilterChips(
+                          categories: data.categories,
+                          selectedId: _categoryId,
+                          onTap: (id) => _reloadProducts(categoryId: id),
+                        ),
                       ),
-                    ),
                     if (selectedSubcategories.isNotEmpty)
                       SliverToBoxAdapter(
                         child: _SubcategoryImageStrip(
@@ -378,8 +412,8 @@ class _SiteHeader extends StatefulWidget {
   });
 
   final VoidCallback onSearch;
-  final VoidCallback onImageSearch;
-  final VoidCallback onFavorites;
+  final VoidCallback? onImageSearch;
+  final VoidCallback? onFavorites;
   final VoidCallback onNotifications;
 
   @override
@@ -423,11 +457,12 @@ class _SiteHeaderState extends State<_SiteHeader> {
               textDirection: TextDirection.ltr,
               child: Row(
                 children: [
-                  _HeaderIconButton(
-                    icon: Icons.favorite_border_rounded,
-                    count: favoriteCount,
-                    onTap: widget.onFavorites,
-                  ),
+                  if (widget.onFavorites != null)
+                    _HeaderIconButton(
+                      icon: Icons.favorite_border_rounded,
+                      count: favoriteCount,
+                      onTap: widget.onFavorites!,
+                    ),
                   const Expanded(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -484,16 +519,18 @@ class _SiteHeaderState extends State<_SiteHeader> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 6),
-                  SizedBox(
-                    width: 38,
-                    child: IconButton(
-                      onPressed: widget.onImageSearch,
-                      icon: const Icon(Icons.camera_alt_outlined, color: Color(0xFFBFD3F2), size: 24),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints.tightFor(width: 38, height: 38),
+                  if (widget.onImageSearch != null) ...[
+                    const SizedBox(width: 6),
+                    SizedBox(
+                      width: 38,
+                      child: IconButton(
+                        onPressed: widget.onImageSearch,
+                        icon: const Icon(Icons.camera_alt_outlined, color: Color(0xFFBFD3F2), size: 24),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints.tightFor(width: 38, height: 38),
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),
@@ -548,11 +585,17 @@ class _HeaderIconButton extends StatelessWidget {
 }
 
 class _BannerSlider extends StatelessWidget {
-  const _BannerSlider({required this.controller, required this.index, required this.onChanged});
+  const _BannerSlider({
+    required this.controller,
+    required this.index,
+    required this.onChanged,
+    required this.bannerUrl,
+  });
 
   final PageController controller;
   final int index;
   final ValueChanged<int> onChanged;
+  final String bannerUrl;
 
   static const _banners = [
     'assets/home/banners/hero-1.webp',
@@ -562,6 +605,7 @@ class _BannerSlider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final banners = bannerUrl.isEmpty ? _banners : <String>[bannerUrl];
     return Container(
       margin: const EdgeInsets.fromLTRB(3, 0, 3, 8),
       clipBehavior: Clip.antiAlias,
@@ -578,12 +622,15 @@ class _BannerSlider extends StatelessWidget {
             PageView.builder(
               controller: controller,
               reverse: true,
-              itemCount: _banners.length,
+              itemCount: banners.length,
               onPageChanged: onChanged,
               itemBuilder: (context, i) {
-                return Image.asset(
-                  _banners[i],
+                final source = banners[i];
+                return BariqNetworkImage(
+                  imageUrl: source,
                   fit: BoxFit.cover,
+                  placeholderColor: const Color(0xFFE9EDF4),
+                  errorIconSize: 0,
                 );
               },
             ),
@@ -594,7 +641,7 @@ class _BannerSlider extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
-                  _banners.length,
+                  banners.length,
                   (i) => AnimatedContainer(
                     duration: const Duration(milliseconds: 180),
                     width: i == index ? 24 : 10,
@@ -635,6 +682,8 @@ class _TopShowcase extends StatelessWidget {
     required this.subcategories,
     required this.selectedId,
     required this.onTap,
+    required this.appSettings,
+    required this.language,
   });
 
   final PageController controller;
@@ -643,6 +692,8 @@ class _TopShowcase extends StatelessWidget {
   final List<SubcategoryItem> subcategories;
   final String? selectedId;
   final ValueChanged<String?> onTap;
+  final AppRuntimeSettings appSettings;
+  final String language;
 
   @override
   Widget build(BuildContext context) {
@@ -653,10 +704,18 @@ class _TopShowcase extends StatelessWidget {
           const Positioned(top: 0, left: 0, right: 0, height: 96, child: ColoredBox(color: AppTheme.navy)),
           Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
-                child: _BannerSlider(controller: controller, index: index, onChanged: onChanged),
-              ),
+              if (appSettings.appBannersEnabled &&
+                  appSettings.mainBannerEnabled &&
+                  appSettings.sectionEnabled('banners'))
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+                  child: _BannerSlider(
+                    controller: controller,
+                    index: index,
+                    onChanged: onChanged,
+                    bannerUrl: appSettings.bannerForLanguage(language),
+                  ),
+                ),
               Padding(
                 padding: const EdgeInsets.only(top: 10),
                 child: _RoundCategories(subcategories: subcategories, selectedId: selectedId, onTap: onTap),
@@ -1138,10 +1197,98 @@ class _HomeData {
     required this.categories,
     required this.subcategories,
     required this.settings,
+    required this.appSettings,
   });
 
   final List<Product> products;
   final List<CategoryItem> categories;
   final List<SubcategoryItem> subcategories;
   final SiteSettings settings;
+  final AppRuntimeSettings appSettings;
+}
+
+class _AppAnnouncement extends StatelessWidget {
+  const _AppAnnouncement({required this.title, required this.body});
+
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(10, 8, 10, 2),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF8DF),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE7CB67)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (title.isNotEmpty)
+            Text(
+              title,
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                color: AppTheme.navy,
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          if (title.isNotEmpty && body.isNotEmpty) const SizedBox(height: 3),
+          if (body.isNotEmpty)
+            Text(
+              body,
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                color: AppTheme.muted,
+                fontSize: 10.5,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MaintenanceHome extends StatelessWidget {
+  const _MaintenanceHome({required this.message, required this.onRetry});
+
+  final String message;
+  final Future<void> Function() onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.construction_rounded, color: AppTheme.gold, size: 48),
+            const SizedBox(height: 12),
+            Text(
+              message.isEmpty
+                  ? 'نقوم حاليًا بتحسين التطبيق، سنعود بعد قليل.'
+                  : message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: AppTheme.navy,
+                fontSize: 14,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 14),
+            OutlinedButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('تحديث'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

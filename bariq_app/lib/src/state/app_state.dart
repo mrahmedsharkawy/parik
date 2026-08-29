@@ -5,8 +5,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../config/locale_config.dart';
 import '../models/cart_item.dart';
+import '../models/app_runtime_settings.dart';
 import '../models/product.dart';
 import '../services/local_store.dart';
+import '../services/app_settings_service.dart';
 import '../services/supabase_catalog_service.dart';
 import '../services/user_sync_service.dart';
 
@@ -15,13 +17,16 @@ class AppState extends ChangeNotifier {
     SupabaseCatalogService? catalog,
     LocalStore? store,
     UserSyncService? sync,
+    AppSettingsService? appSettings,
   })  : _catalog = catalog ?? SupabaseCatalogService(),
         _store = store ?? LocalStore(),
-        _sync = sync ?? UserSyncService();
+        _sync = sync ?? UserSyncService(),
+        _appSettingsService = appSettings ?? AppSettingsService();
 
   final SupabaseCatalogService _catalog;
   final LocalStore _store;
   final UserSyncService _sync;
+  final AppSettingsService _appSettingsService;
 
   final Map<String, CartItem> _cart = {};
   final Map<String, Product> _favoriteProducts = {};
@@ -29,6 +34,7 @@ class AppState extends ChangeNotifier {
 
   String _language = 'ar';
   String _currency = 'AED';
+  AppRuntimeSettings _runtimeSettings = AppRuntimeSettings.defaults;
 
   bool _initialized = false;
   bool _initializing = false;
@@ -36,6 +42,7 @@ class AppState extends ChangeNotifier {
   bool get initialized => _initialized;
   String get language => _language;
   String get currency => _currency;
+  AppRuntimeSettings get runtimeSettings => _runtimeSettings;
   bool get isEnglish => _language == 'en';
   TextDirection get textDirection =>
       isEnglish ? TextDirection.ltr : TextDirection.rtl;
@@ -63,6 +70,7 @@ class AppState extends ChangeNotifier {
       BariqLocaleConfig.setLanguage(_language);
 
       _currency = _normalizeCurrency(prefs.getString('currency'));
+      _runtimeSettings = await _appSettingsService.fetch();
 
       final localLines = await _store.loadCartLines();
       final legacyIds = localLines.isEmpty
@@ -99,6 +107,11 @@ class AppState extends ChangeNotifier {
     } finally {
       _initializing = false;
     }
+  }
+
+  Future<void> refreshRuntimeSettings() async {
+    _runtimeSettings = await _appSettingsService.fetch();
+    notifyListeners();
   }
 
   Future<void> _syncRemoteState() async {

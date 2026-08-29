@@ -44,7 +44,6 @@ class _AppShellState extends State<AppShell> {
     }
 
     final state = AppStateScope.of(context);
-
     _pages[_index] ??= _buildPage(_index);
 
     return Scaffold(

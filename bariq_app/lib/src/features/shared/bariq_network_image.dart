@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 class BariqNetworkImage extends StatelessWidget {
@@ -35,20 +36,15 @@ class BariqNetworkImage extends StatelessWidget {
       );
     }
 
-    return Image.network(
-      imageUrl,
+    return CachedNetworkImage(
+      imageUrl: imageUrl,
       width: width,
       height: height,
       fit: fit,
-      filterQuality: FilterQuality.medium,
-      gaplessPlayback: true,
-      cacheWidth: width == null ? null : (width! * MediaQuery.devicePixelRatioOf(context)).round(),
-      cacheHeight: height == null ? null : (height! * MediaQuery.devicePixelRatioOf(context)).round(),
-      loadingBuilder: (context, child, loadingProgress) {
-        if (loadingProgress == null) return child;
-        return ColoredBox(color: placeholderColor);
-      },
-      errorBuilder: (_, __, ___) => _ImageFallback(color: placeholderColor, errorIconSize: errorIconSize),
+      fadeInDuration: const Duration(milliseconds: 160),
+      placeholder: (_, __) => ColoredBox(color: placeholderColor),
+      errorWidget: (_, __, ___) =>
+          _ImageFallback(color: placeholderColor, errorIconSize: errorIconSize),
     );
   }
 }

@@ -109,16 +109,29 @@ class _ProductScreenState extends State<ProductScreen> {
           onToggleDesc: () => setState(() => _descExpanded = !_descExpanded),
           onCustomize: () => _sendCustomization(product),
           onPickCustomizationImage: _pickCustomizationImage,
-          onPreview: () => _openPreview(product),
-          onAddToCart: () {
+          onPreview: AppStateScope.of(context)
+                  .runtimeSettings
+                  .featureEnabled('product_preview')
+              ? () => _openPreview(product)
+              : null,
+          onAddToCart: AppStateScope.of(context)
+                  .runtimeSettings
+                  .featureEnabled('cart')
+              ? () {
             AppStateScope.of(context).addToCart(product, quantity: _quantity);
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('تمت إضافة المنتج إلى السلة')),
             );
-          },
+          }
+              : null,
           onOrder: () => _sendOrder(product),
           onShare: () => _share(product),
-          onVideo: product.videoUrls.isEmpty ? null : () => _openVideo(product),
+          onVideo: product.videoUrls.isEmpty ||
+                  !AppStateScope.of(context)
+                      .runtimeSettings
+                      .featureEnabled('video')
+              ? null
+              : () => _openVideo(product),
           onNavCompactChanged: (value) => setState(() => _navCompact = value),
         );
       },
@@ -243,11 +256,14 @@ class _ProductScreenState extends State<ProductScreen> {
   }
 
   Future<void> _openPreview(Product product) async {
+    final selectedImageIndex = _index.clamp(0, product.images.length - 1);
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => ProductPreviewScreen(
           productId: product.id,
           productName: product.displayName,
+          productImageUrl: product.images[selectedImageIndex],
+          productImageUrls: product.images,
         ),
       ),
     );
@@ -420,8 +436,8 @@ class _ProductView extends StatelessWidget {
   final VoidCallback onToggleDesc;
   final VoidCallback onCustomize;
   final VoidCallback onPickCustomizationImage;
-  final VoidCallback onPreview;
-  final VoidCallback onAddToCart;
+  final VoidCallback? onPreview;
+  final VoidCallback? onAddToCart;
   final VoidCallback onOrder;
   final VoidCallback onShare;
   final VoidCallback? onVideo;
@@ -532,18 +548,20 @@ class _ProductView extends StatelessWidget {
                               icon: const Icon(Icons.ios_share_outlined,
                                   color: Color(0xFF3478F6), size: 21),
                             ),
-                            IconButton(
-                              onPressed: () => state.toggleFavorite(product),
-                              icon: Icon(
-                                state.isFavorite(product.id)
-                                    ? Icons.favorite_rounded
-                                    : Icons.favorite_border_rounded,
-                                color: state.isFavorite(product.id)
-                                    ? const Color(0xFFE34D59)
-                                    : AppTheme.navy,
-                                size: 22,
+                            if (state.runtimeSettings
+                                .featureEnabled('favorites'))
+                              IconButton(
+                                onPressed: () => state.toggleFavorite(product),
+                                icon: Icon(
+                                  state.isFavorite(product.id)
+                                      ? Icons.favorite_rounded
+                                      : Icons.favorite_border_rounded,
+                                  color: state.isFavorite(product.id)
+                                      ? const Color(0xFFE34D59)
+                                      : AppTheme.navy,
+                                  size: 22,
+                                ),
                               ),
-                            ),
                           ],
                         ),
                         const SizedBox(width: 10),
@@ -682,7 +700,7 @@ class _ProductView extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    OutlinedButton.icon(
+                    if (onAddToCart != null) OutlinedButton.icon(
                       onPressed: onAddToCart,
                       icon: const Icon(Icons.shopping_cart_outlined,
                           color: AppTheme.gold, size: 16),
@@ -731,10 +749,14 @@ class _ProductView extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    _PreviewTryButton(onTap: onPreview),
-                    const SizedBox(height: 20),
-                    _ReviewsBox(productId: product.id),
-                    const SizedBox(height: 12),
+                    if (onPreview != null) ...[
+                      _PreviewTryButton(onTap: onPreview!),
+                      const SizedBox(height: 20),
+                    ],
+                    if (state.runtimeSettings.featureEnabled('reviews')) ...[
+                      _ReviewsBox(productId: product.id),
+                      const SizedBox(height: 12),
+                    ],
                     _ProductImageGrid(images: images),
                     const SizedBox(height: 12),
                     _DescriptionBox(
@@ -1415,18 +1437,22 @@ class _ReviewsBoxState extends State<_ReviewsBox> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: List.generate(5, (index) {
               final star = index + 1;
-              return IconButton(
-                onPressed: () => setState(() => _rating = star),
-                icon: Icon(
-                  star <= _rating
-                      ? Icons.star_rounded
-                      : Icons.star_border_rounded,
-                  color: AppTheme.gold,
-                  size: 16,
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => setState(() => _rating = star),
+                child: SizedBox(
+                  width: 17,
+                  height: 22,
+                  child: Center(
+                    child: Icon(
+                      star <= _rating
+                          ? Icons.star_rounded
+                          : Icons.star_border_rounded,
+                      color: AppTheme.gold,
+                      size: 14,
+                    ),
+                  ),
                 ),
-                padding: EdgeInsets.zero,
-                constraints:
-                    const BoxConstraints.tightFor(width: 20, height: 20),
               );
             }),
           ),
