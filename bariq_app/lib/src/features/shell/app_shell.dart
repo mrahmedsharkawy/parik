@@ -22,7 +22,7 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   late int _index;
-  bool _navCompact = false;
+  final ValueNotifier<bool> _navCompact = ValueNotifier<bool>(false);
 
   late final List<Widget?> _pages;
 
@@ -32,15 +32,12 @@ class _AppShellState extends State<AppShell> {
     _index = widget.initialIndex ??
         const int.fromEnvironment('BARIQ_INITIAL_TAB', defaultValue: 4);
     _pages = List<Widget?>.filled(5, null)..[_index] = _buildPage(_index);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _warmTabs());
   }
 
-  Future<void> _warmTabs() async {
-    for (final index in const [3, 2, 0, 1]) {
-      await Future<void>.delayed(const Duration(milliseconds: 650));
-      if (!mounted || _pages[index] != null) continue;
-      setState(() => _pages[index] = _buildPage(index));
-    }
+  @override
+  void dispose() {
+    _navCompact.dispose();
+    super.dispose();
   }
 
   @override
@@ -61,8 +58,8 @@ class _AppShellState extends State<AppShell> {
         onNotification: (notification) {
           final compact = notification.direction == ScrollDirection.reverse;
           final expanded = notification.direction == ScrollDirection.forward;
-          if ((compact && !_navCompact) || (expanded && _navCompact)) {
-            setState(() => _navCompact = compact);
+          if ((compact && !_navCompact.value) || (expanded && _navCompact.value)) {
+            _navCompact.value = compact;
           }
           return false;
         },
@@ -79,20 +76,23 @@ class _AppShellState extends State<AppShell> {
           ),
         ),
       ),
-      bottomNavigationBar: BariqBottomNav(
-        selected: _index,
-        cartCount: state.cartCount,
-        notificationCount: state.notificationCount,
-        english: state.isEnglish,
-        compact: _navCompact,
-        onTap: (index) {
-          if (index == _index) return;
-          setState(() {
-            _navCompact = false;
-            _index = index;
-            _pages[index] ??= _buildPage(index);
-          });
-        },
+      bottomNavigationBar: ValueListenableBuilder<bool>(
+        valueListenable: _navCompact,
+        builder: (context, compact, _) => BariqBottomNav(
+          selected: _index,
+          cartCount: state.cartCount,
+          notificationCount: state.notificationCount,
+          english: state.isEnglish,
+          compact: compact,
+          onTap: (index) {
+            if (index == _index) return;
+            _navCompact.value = false;
+            setState(() {
+              _index = index;
+              _pages[index] ??= _buildPage(index);
+            });
+          },
+        ),
       ),
     );
   }
@@ -108,6 +108,7 @@ class _AppShellState extends State<AppShell> {
   }
 
   void _openAccountSection(AccountSection section) {
+    _navCompact.value = false;
     setState(() {
       _index = 1;
       _pages[1] = AccountScreen(initialSection: section);
@@ -116,6 +117,7 @@ class _AppShellState extends State<AppShell> {
 
   void _selectTab(int index) {
     if (index == _index) return;
+    _navCompact.value = false;
     setState(() {
       _index = index;
       _pages[index] ??= _buildPage(index);

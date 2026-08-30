@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -43,7 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final ValueNotifier<int> _bannerIndex = ValueNotifier<int>(0);
   String? _categoryId;
   String? _subcategoryId;
-  bool _showFloatingBars = false;
+  final ValueNotifier<bool> _showFloatingBars = ValueNotifier<bool>(false);
   bool _loadingProducts = false;
   bool _hasMoreProducts = true;
   final List<Product> _products = [];
@@ -58,6 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _bannerIndex.dispose();
+    _showFloatingBars.dispose();
     _bannerController.dispose();
     super.dispose();
   }
@@ -199,10 +201,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     onNotification: (notification) {
                       final metrics = notification.metrics;
                       if (notification is UserScrollNotification) {
-                        if (notification.direction == ScrollDirection.forward && metrics.pixels > 160 && !_showFloatingBars) {
-                          setState(() => _showFloatingBars = true);
-                        } else if ((notification.direction == ScrollDirection.reverse || metrics.pixels <= 24) && _showFloatingBars) {
-                          setState(() => _showFloatingBars = false);
+                        if (notification.direction == ScrollDirection.forward && metrics.pixels > 460 && !_showFloatingBars.value) {
+                          _showFloatingBars.value = true;
+                        } else if ((notification.direction == ScrollDirection.reverse || metrics.pixels <= 360) && _showFloatingBars.value) {
+                          _showFloatingBars.value = false;
                         }
                       }
                       if (metrics.pixels > metrics.maxScrollExtent - 900) {
@@ -246,18 +248,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     SliverToBoxAdapter(
-                      child: ValueListenableBuilder<int>(
-                        valueListenable: _bannerIndex,
-                        builder: (context, bannerIndex, _) => _TopShowcase(
-                          controller: _bannerController,
-                          index: bannerIndex,
-                          onChanged: (index) => _bannerIndex.value = index,
-                          subcategories: data.subcategories,
-                          selectedId: _subcategoryId,
-                          onTap: (id) => _reloadProducts(subcategoryId: id == _subcategoryId ? null : id),
-                          appSettings: data.appSettings,
-                          language: appState.language,
-                        ),
+                      child: _TopShowcase(
+                        controller: _bannerController,
+                        indexNotifier: _bannerIndex,
+                        subcategories: data.subcategories,
+                        selectedId: _subcategoryId,
+                        onTap: (id) => _reloadProducts(subcategoryId: id == _subcategoryId ? null : id),
+                        appSettings: data.appSettings,
+                        language: appState.language,
                       ),
                     ),
                     const SliverToBoxAdapter(child: _ServiceStrip()),
@@ -308,39 +306,43 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                   ),
-                  Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    child: IgnorePointer(
-                      ignoring: !_showFloatingBars,
-                      child: AnimatedSlide(
-                        offset: _showFloatingBars ? Offset.zero : const Offset(0, -1.08),
-                        duration: const Duration(milliseconds: 180),
-                        curve: Curves.easeOutCubic,
-                        child: AnimatedOpacity(
-                          opacity: _showFloatingBars ? 1 : 0,
-                          duration: const Duration(milliseconds: 120),
-                          child: Material(
-                            color: Colors.white,
-                            elevation: 5,
-                            shadowColor: const Color(0x1A000000),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                StorefrontTopBar(
-                                  placeholder: 'إبحث في الفئات',
-                                  onSearch: _openSearch,
-                                ),
-                                _FilterChips(
-                                  categories: data.categories,
-                                  selectedId: _categoryId,
-                                  onTap: (id) => _reloadProducts(categoryId: id),
-                                ),
-                              ],
-                            ),
+                  ValueListenableBuilder<bool>(
+                    valueListenable: _showFloatingBars,
+                    builder: (context, visible, child) => Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: IgnorePointer(
+                        ignoring: !visible,
+                        child: AnimatedSlide(
+                          offset: visible ? Offset.zero : const Offset(0, -1.08),
+                          duration: const Duration(milliseconds: 180),
+                          curve: Curves.easeOutCubic,
+                          child: AnimatedOpacity(
+                            opacity: visible ? 1 : 0,
+                            duration: const Duration(milliseconds: 120),
+                            child: child,
                           ),
                         ),
+                      ),
+                    ),
+                    child: Material(
+                      color: Colors.white,
+                      elevation: 5,
+                      shadowColor: const Color(0x1A000000),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          StorefrontTopBar(
+                            placeholder: 'إبحث في الفئات',
+                            onSearch: _openSearch,
+                          ),
+                          _FilterChips(
+                            categories: data.categories,
+                            selectedId: _categoryId,
+                            onTap: (id) => _reloadProducts(categoryId: id),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -464,20 +466,41 @@ class _SiteHeaderState extends State<_SiteHeader> {
   static final Map<String, Color> _topColorCache = <String, Color>{};
   late Future<int> _notificationsFuture;
   Color _bannerTopColor = const Color(0xFFD5BCA6);
+  Timer? _bannerColorTimer;
 
   @override
   void initState() {
     super.initState();
     _notificationsFuture = _loadNotificationCount();
-    _readBannerTopColor();
+    _scheduleBannerTopColor();
   }
 
   @override
   void didUpdateWidget(covariant _SiteHeader oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.bannerUrl != widget.bannerUrl) {
-      _readBannerTopColor();
+      _scheduleBannerTopColor();
     }
+  }
+
+  @override
+  void dispose() {
+    _bannerColorTimer?.cancel();
+    super.dispose();
+  }
+
+  void _scheduleBannerTopColor() {
+    _bannerColorTimer?.cancel();
+    final source = widget.bannerUrl.trim();
+    final cachedColor = _topColorCache[source];
+    if (cachedColor != null) {
+      _bannerTopColor = cachedColor;
+      return;
+    }
+    _bannerColorTimer = Timer(
+      const Duration(milliseconds: 240),
+      _readBannerTopColor,
+    );
   }
 
   Future<void> _readBannerTopColor() async {
@@ -705,22 +728,83 @@ class _HeaderIconButton extends StatelessWidget {
   }
 }
 
-class _BannerSlider extends StatelessWidget {
+class _BannerSlider extends StatefulWidget {
   const _BannerSlider({
     required this.controller,
-    required this.index,
-    required this.onChanged,
+    required this.indexNotifier,
     required this.bannerUrls,
   });
 
   final PageController controller;
-  final int index;
-  final ValueChanged<int> onChanged;
+  final ValueNotifier<int> indexNotifier;
   final List<String> bannerUrls;
 
   @override
+  State<_BannerSlider> createState() => _BannerSliderState();
+}
+
+class _BannerSliderState extends State<_BannerSlider> {
+  final Set<String> _warmedImages = <String>{};
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _warmAround(widget.indexNotifier.value);
+  }
+
+  @override
+  void didUpdateWidget(covariant _BannerSlider oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_sameBannerUrls(oldWidget.bannerUrls, widget.bannerUrls)) {
+      _warmedImages.clear();
+      _warmAround(widget.indexNotifier.value);
+    }
+  }
+
+  bool _sameBannerUrls(List<String> first, List<String> second) {
+    if (identical(first, second)) return true;
+    if (first.length != second.length) return false;
+    for (var i = 0; i < first.length; i++) {
+      if (first[i] != second[i]) return false;
+    }
+    return true;
+  }
+
+  void _warmAround(int index) {
+    if (widget.bannerUrls.isEmpty) return;
+    final safeIndex = index.clamp(0, widget.bannerUrls.length - 1).toInt();
+    final candidates = <int>{
+      safeIndex,
+      (safeIndex + 1) % widget.bannerUrls.length,
+      (safeIndex - 1 + widget.bannerUrls.length) % widget.bannerUrls.length,
+    };
+    for (final imageIndex in candidates) {
+      final source = widget.bannerUrls[imageIndex];
+      if (source.isEmpty || !_warmedImages.add(source)) continue;
+      final ImageProvider originalProvider = source.startsWith('assets/')
+          ? AssetImage(source)
+          : kIsWeb
+              ? NetworkImage(source)
+              : CachedNetworkImageProvider(source);
+      final provider = ResizeImage.resizeIfNeeded(
+        1200,
+        480,
+        originalProvider,
+      );
+      precacheImage(provider, context).catchError((_) {});
+    }
+  }
+
+  void _handlePageChanged(int index) {
+    if (widget.indexNotifier.value != index) {
+      widget.indexNotifier.value = index;
+    }
+    _warmAround(index);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final banners = bannerUrls;
+    final banners = widget.bannerUrls;
     return Container(
       margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
@@ -733,17 +817,23 @@ class _BannerSlider extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             PageView.builder(
-              controller: controller,
+              controller: widget.controller,
               reverse: true,
+              allowImplicitScrolling: true,
+              physics: const PageScrollPhysics(),
               itemCount: banners.length,
-              onPageChanged: onChanged,
+              onPageChanged: _handlePageChanged,
               itemBuilder: (context, i) {
                 final source = banners[i];
-                return BariqNetworkImage(
-                  imageUrl: source,
-                  fit: BoxFit.fill,
-                  placeholderColor: const Color(0xFFE9EDF4),
-                  errorIconSize: 0,
+                return RepaintBoundary(
+                  child: BariqNetworkImage(
+                    imageUrl: source,
+                    fit: BoxFit.fill,
+                    placeholderColor: const Color(0xFFE9EDF4),
+                    errorIconSize: 0,
+                    cacheWidth: 1200,
+                    cacheHeight: 480,
+                  ),
                 );
               },
             ),
@@ -751,25 +841,28 @@ class _BannerSlider extends StatelessWidget {
               left: 0,
               right: 0,
               bottom: 8,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  banners.length,
-                  (i) => AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    width: i == index ? 24 : 10,
-                    height: 6,
-                    margin: const EdgeInsets.symmetric(horizontal: 3),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: i == index
-                            ? const [AppTheme.goldLight, AppTheme.goldDark]
-                            : [
-                                AppTheme.goldLight.withValues(alpha: .7),
-                                AppTheme.gold.withValues(alpha: .7),
-                              ],
+              child: ValueListenableBuilder<int>(
+                valueListenable: widget.indexNotifier,
+                builder: (context, index, _) => Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(
+                    banners.length,
+                    (i) => AnimatedContainer(
+                      duration: const Duration(milliseconds: 140),
+                      width: i == index ? 24 : 10,
+                      height: 6,
+                      margin: const EdgeInsets.symmetric(horizontal: 3),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: i == index
+                              ? const [AppTheme.goldLight, AppTheme.goldDark]
+                              : [
+                                  AppTheme.goldLight.withValues(alpha: .7),
+                                  AppTheme.gold.withValues(alpha: .7),
+                                ],
+                        ),
+                        borderRadius: BorderRadius.circular(99),
                       ),
-                      borderRadius: BorderRadius.circular(99),
                     ),
                   ),
                 ),
@@ -785,8 +878,7 @@ class _BannerSlider extends StatelessWidget {
 class _TopShowcase extends StatelessWidget {
   const _TopShowcase({
     required this.controller,
-    required this.index,
-    required this.onChanged,
+    required this.indexNotifier,
     required this.subcategories,
     required this.selectedId,
     required this.onTap,
@@ -795,8 +887,7 @@ class _TopShowcase extends StatelessWidget {
   });
 
   final PageController controller;
-  final int index;
-  final ValueChanged<int> onChanged;
+  final ValueNotifier<int> indexNotifier;
   final List<SubcategoryItem> subcategories;
   final String? selectedId;
   final ValueChanged<String?> onTap;
@@ -819,8 +910,7 @@ class _TopShowcase extends StatelessWidget {
                   padding: EdgeInsets.zero,
                   child: _BannerSlider(
                     controller: controller,
-                    index: index,
-                    onChanged: onChanged,
+                    indexNotifier: indexNotifier,
                     bannerUrls: appSettings.bannersForLanguage(language),
                   ),
                 ),
@@ -1063,7 +1153,12 @@ class _PromoBannerCard extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            BariqNetworkImage(imageUrl: banner.imageUrl, fit: BoxFit.cover),
+            BariqNetworkImage(
+              imageUrl: banner.imageUrl,
+              fit: BoxFit.cover,
+              cacheWidth: 640,
+              cacheHeight: 420,
+            ),
             const DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(

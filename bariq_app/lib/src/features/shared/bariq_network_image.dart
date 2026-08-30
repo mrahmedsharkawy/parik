@@ -12,6 +12,8 @@ class BariqNetworkImage extends StatelessWidget {
     this.alignment = Alignment.center,
     this.placeholderColor = const Color(0xFFF4F5F7),
     this.errorIconSize = 28,
+    this.cacheWidth,
+    this.cacheHeight,
   });
 
   final String imageUrl;
@@ -21,6 +23,8 @@ class BariqNetworkImage extends StatelessWidget {
   final Alignment alignment;
   final Color placeholderColor;
   final double errorIconSize;
+  final int? cacheWidth;
+  final int? cacheHeight;
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +39,8 @@ class BariqNetworkImage extends StatelessWidget {
         height: height,
         fit: fit,
         alignment: alignment,
+        cacheWidth: cacheWidth,
+        cacheHeight: cacheHeight,
         filterQuality: FilterQuality.medium,
         errorBuilder: (_, __, ___) => _ImageFallback(color: placeholderColor, errorIconSize: errorIconSize),
       );
@@ -49,6 +55,8 @@ class BariqNetworkImage extends StatelessWidget {
         alignment: alignment,
         filterQuality: FilterQuality.low,
         gaplessPlayback: true,
+        cacheWidth: cacheWidth,
+        cacheHeight: cacheHeight,
         webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
         errorBuilder: (_, __, ___) =>
             _ImageFallback(color: placeholderColor, errorIconSize: errorIconSize),
@@ -62,6 +70,8 @@ class BariqNetworkImage extends StatelessWidget {
       fit: fit,
       alignment: alignment,
       fadeInDuration: const Duration(milliseconds: 160),
+      memCacheWidth: cacheWidth,
+      memCacheHeight: cacheHeight,
       placeholder: (_, __) => ColoredBox(color: placeholderColor),
       errorWidget: (_, __, ___) =>
           _ImageFallback(color: placeholderColor, errorIconSize: errorIconSize),

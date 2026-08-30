@@ -13,10 +13,12 @@ import '../../state/app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/app_strings.dart';
 import '../auth/login_screen.dart';
+import '../affiliate/affiliate_screen.dart';
 import '../catalog/product_gallery_grid.dart';
 import '../catalog/search_screen.dart';
 import '../offers/offers_screen.dart';
 import '../product/product_screen.dart';
+import '../policies/policies_screen.dart';
 import '../shared/bariq_network_image.dart';
 import '../shared/storefront_top_bar.dart';
 
@@ -379,6 +381,18 @@ class _AccountScreenState extends State<AccountScreen> {
               await Future.wait([appState.refreshWishlist(), appState.refreshRecentlyViewed()]);
               if (mounted) setState(() => _future = _load());
             }
+          },
+          onAffiliate: () {
+            Navigator.of(context).pop();
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const AffiliateScreen()),
+            );
+          },
+          onPolicies: () {
+            Navigator.of(context).pop();
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const PoliciesScreen()),
+            );
           },
           onLogout: user == null
               ? null
@@ -2277,12 +2291,14 @@ class _ChatBubble extends StatelessWidget {
 }
 
 class _AccountMenuSheet extends StatelessWidget {
-  const _AccountMenuSheet({required this.email, required this.settings, required this.selected, required this.onSelect, required this.onLogin, required this.onLogout});
+  const _AccountMenuSheet({required this.email, required this.settings, required this.selected, required this.onSelect, required this.onLogin, required this.onAffiliate, required this.onPolicies, required this.onLogout});
   final String? email;
   final SiteSettings settings;
   final AccountSection selected;
   final ValueChanged<AccountSection> onSelect;
   final VoidCallback onLogin;
+  final VoidCallback onAffiliate;
+  final VoidCallback onPolicies;
   final VoidCallback? onLogout;
 
   @override
@@ -2328,6 +2344,8 @@ class _AccountMenuSheet extends StatelessWidget {
                   const SizedBox(height: 14),
                   for (final item in items)
                     _MenuRow(label: item.$1, icon: item.$2, active: selected == item.$3, onTap: () => onSelect(item.$3)),
+                  _MenuRow(label: 'برنامج شركاء بريق', icon: Icons.handshake_rounded, active: false, onTap: onAffiliate),
+                  _MenuRow(label: 'السياسات والشروط', icon: Icons.description_outlined, active: false, onTap: onPolicies),
                   const SizedBox(height: 12),
                   _SocialBar(links: settings.socialLinks),
                   const SizedBox(height: 12),

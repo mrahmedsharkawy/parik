@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'src/config/app_config.dart';
 import 'src/features/shell/app_shell.dart';
+import 'src/services/affiliate_service.dart';
 import 'src/state/app_state.dart';
 import 'src/theme/app_theme.dart';
 
@@ -27,6 +28,24 @@ Future<void> main() async {
 
   // Cart/wishlist/language/account sync must never block first paint.
   unawaited(state.initialize());
+
+  final launchUri = Uri.base;
+  final partnerCode = launchUri.queryParameters['ref']?.trim() ?? '';
+  if (partnerCode.isNotEmpty) {
+    final segments = launchUri.pathSegments;
+    final productIndex = segments.indexWhere((segment) => segment == 'product');
+    final productId = productIndex >= 0 && productIndex + 1 < segments.length
+        ? segments[productIndex + 1]
+        : (launchUri.queryParameters['id'] ?? '');
+    unawaited(
+      AffiliateService().captureAttribution(
+        code: partnerCode,
+        productId: productId,
+        source: 'app_link',
+        landingPath: launchUri.path,
+      ),
+    );
+  }
 }
 
 class BariqApp extends StatelessWidget {

@@ -70,6 +70,9 @@ class SupabaseCatalogService {
           .order('price', ascending: true),
       'rating' => query.order('rating', ascending: false),
       'name_az' => query.order('name_ar', ascending: true),
+      'catalog' => query
+          .order('sort_order', ascending: true)
+          .order('created_at', ascending: false),
       _ => query
           .order('created_at', ascending: false),
     };
@@ -163,6 +166,25 @@ class SupabaseCatalogService {
         .order('created_at', ascending: false)
         .range(offset, offset + pageSize - 1);
 
+    return _parseProducts(rows);
+  }
+
+  Future<List<Product>> searchProductsByImageFile(
+    String fileStem, {
+    int limit = pageSize,
+  }) async {
+    final safeStem = fileStem
+        .trim()
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9_-]+'), '');
+    if (safeStem.length < 4) return const <Product>[];
+    final rows = await _client
+        .from('products')
+        .select(productColumns)
+        .eq('active', true)
+        .ilike('image', '%$safeStem%')
+        .order('sort_order', ascending: true)
+        .limit(_safeLimit(limit));
     return _parseProducts(rows);
   }
 

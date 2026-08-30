@@ -468,6 +468,7 @@ class _ProductView extends StatelessWidget {
       backgroundColor: Colors.white,
       extendBody: true,
       body: SafeArea(
+        top: false,
         bottom: false,
         child: NotificationListener<UserScrollNotification>(
           onNotification: (notification) {
@@ -484,6 +485,7 @@ class _ProductView extends StatelessWidget {
             slivers: [
               StorefrontTopBarSliver(
                 showBack: true,
+                primaryStyle: true,
                 placeholder: AppStrings.searchHeader,
                 onSearch: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const SearchScreen()),

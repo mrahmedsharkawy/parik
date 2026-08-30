@@ -557,6 +557,21 @@ const SupaCustomers = {
           items: order.items || [],
           cashback: order.cashback || 5,
           cashback_status: order.cashbackStatus || "pending",
+          affiliate_referral_id:
+            order.affiliateReferralId ||
+            (() => {
+              try {
+                const stored = JSON.parse(
+                  localStorage.getItem("bariq_affiliate_referral_v1") || "null",
+                );
+                return stored && stored.id &&
+                  (!stored.expiresAt || Date.parse(stored.expiresAt) > Date.now())
+                  ? stored.id
+                  : null;
+              } catch (e) {
+                return null;
+              }
+            })(),
         }),
       });
     },
@@ -1610,3 +1625,41 @@ function isAdminPagePath() {
       "1" === localStorage.getItem("x2_logged") &&
       SupaUserSync.pull();
   }));
+
+// First-party affiliate attribution. It records only when a shared link has
+// a ref code and stores the opaque referral id for the later order insert.
+(function captureAffiliateReferral() {
+  try {
+    const params = new URLSearchParams(location.search);
+    const code = (params.get("ref") || "").trim().toUpperCase();
+    if (!code || !window.sbFetch) return;
+    const sessionKey = "bariq_affiliate_session_v1";
+    let sessionId = sessionStorage.getItem(sessionKey);
+    if (!sessionId) {
+      sessionId = (crypto.randomUUID ? crypto.randomUUID() :
+        Date.now().toString(36) + Math.random().toString(36).slice(2));
+      sessionStorage.setItem(sessionKey, sessionId);
+    }
+    const pathMatch = location.pathname.match(/\/product\/(\d+)/);
+    const productId = params.get("id") || (pathMatch && pathMatch[1]) || null;
+    window.sbFetch("rpc/affiliate_record_click", {
+      method: "POST",
+      body: JSON.stringify({
+        p_code: code,
+        p_session_key: sessionId,
+        p_product_id: productId,
+        p_source: params.get("utm_source") || "shared_link",
+        p_landing_path: location.pathname + location.search,
+      }),
+    }).then(function (rows) {
+      const row = Array.isArray(rows) ? rows[0] : rows;
+      const referralId = row && typeof row === "object" ? row.referral_id : row;
+      if (!referralId) return;
+      localStorage.setItem("bariq_affiliate_referral_v1", JSON.stringify({
+        id: referralId,
+        expiresAt: null,
+        code: code,
+      }));
+    }).catch(function () {});
+  } catch (e) {}
+})();

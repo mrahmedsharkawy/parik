@@ -5,6 +5,7 @@ import '../config/app_config.dart';
 import '../models/product.dart';
 import '../models/site_settings.dart';
 import 'account_service.dart';
+import 'affiliate_service.dart';
 import 'supabase_catalog_service.dart';
 
 class WhatsAppOrderLine {
@@ -62,6 +63,7 @@ class WhatsAppOrderService {
   final SupabaseClient _client;
   final AccountService _account;
   final SupabaseCatalogService _catalog;
+  final AffiliateService _affiliate = AffiliateService();
 
   Future<WhatsAppOrderResult> submitAndOpen({
     required List<WhatsAppOrderLine> lines,
@@ -239,6 +241,7 @@ class WhatsAppOrderService {
     required String notes,
     String? couponCode,
   }) async {
+    final referralId = await _affiliate.storedReferralId();
     final body = <String, dynamic>{
       'order_number': orderNumber,
       'customer_name': customer.name,
@@ -253,6 +256,7 @@ class WhatsAppOrderService {
       'items': lines.map(_lineToOrderItem).toList(growable: false),
       'cashback': 5,
       'cashback_status': 'pending',
+      if (referralId != null) 'affiliate_referral_id': referralId,
     };
     if (couponCode != null && couponCode.trim().isNotEmpty) {
       body['coupon_code'] = couponCode.trim().toUpperCase();
@@ -263,6 +267,7 @@ class WhatsAppOrderService {
 
   Future<void> _insertOrderWithSchemaFallback(Map<String, dynamic> body) async {
     final removable = [
+      'affiliate_referral_id',
       'coupon_code',
       'cashback_status',
       'cashback',

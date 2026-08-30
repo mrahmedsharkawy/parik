@@ -67,6 +67,8 @@ class _SiteGridProductCard extends StatelessWidget {
                       child: BariqNetworkImage(
                         imageUrl: product.images.first,
                         fit: BoxFit.cover,
+                        cacheWidth: 560,
+                        cacheHeight: 560,
                       ),
                     ),
                     if (discount > 0)
@@ -227,6 +229,8 @@ class _CompactTodayProductCard extends StatelessWidget {
                         imageUrl: product.images.first,
                         fit: BoxFit.contain,
                         errorIconSize: 18,
+                        cacheWidth: 360,
+                        cacheHeight: 300,
                       ),
                     ),
                   ],
