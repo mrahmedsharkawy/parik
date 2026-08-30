@@ -190,7 +190,7 @@ begin
   if length(base)<3 then base := 'BARIQ'; end if;
   base := left(base,8);
   loop
-    candidate := base || upper(substr(encode(gen_random_bytes(4),'hex'),1,5));
+    candidate := base || upper(substr(replace(gen_random_uuid()::text,'-',''),1,5));
     exit when not exists(select 1 from public.affiliate_partners where partner_code=candidate);
   end loop;
   return candidate;
@@ -227,7 +227,7 @@ begin
   if partner.id is null then return null; end if;
   select * into settings from public.affiliate_settings where id=true and enabled=true;
   if settings.id is null then return null; end if;
-  session_digest := encode(digest(p_session_key,'sha256'),'hex');
+  session_digest := md5(p_session_key);
   insert into public.affiliate_referrals(partner_id,product_id,session_hash,source,landing_path,expires_at)
   values(partner.id,nullif(p_product_id,''),session_digest,left(coalesce(p_source,'link'),40),left(coalesce(p_landing_path,''),500),now()+make_interval(days=>settings.attribution_days))
   on conflict(partner_id,session_hash) do update set product_id=coalesce(excluded.product_id,public.affiliate_referrals.product_id),source=excluded.source,landing_path=excluded.landing_path,expires_at=excluded.expires_at

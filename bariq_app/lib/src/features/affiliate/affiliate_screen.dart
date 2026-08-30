@@ -165,8 +165,20 @@ class _AffiliateScreenState extends State<AffiliateScreen> {
   }
 
   Future<void> _login() async {
-    final ok = await Navigator.of(context).push<bool>(MaterialPageRoute(builder: (_) => const LoginScreen()));
-    if (ok == true && mounted) await _refresh();
+    await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+    );
+    if (!mounted || _service.user == null) return;
+
+    // Resolve the affiliate state immediately after Auth returns. A customer
+    // without a partner profile should continue to the application form,
+    // while an existing partner goes straight to their dashboard/status page.
+    final next = await _load();
+    if (!mounted) return;
+    setState(() => _future = Future.value(next));
+    if (next.dashboard?.partner == null) {
+      await _openApplication(next.settings);
+    }
   }
 
   Future<void> _openApplication(AffiliateSettings settings) async {
