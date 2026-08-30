@@ -57,8 +57,8 @@
       body.erp-nav-open .erp-sidebar-overlay { display: block !important; }
     }
   </style>
-  <script src="/java/supabase.js?v=20260818-v2" defer></script>
-  <script src="/java/erp-treasury-v2.js?v=202608170412" defer></script>
+  <script src="/java/supabase.js?v=20260830-treasury-fix" defer></script>
+  <script src="/java/erp-treasury-v2.js?v=202608301930" defer></script>
 
 <style>
 /* Unified ERP sidebar footer */
@@ -139,13 +139,22 @@
 @media(max-width:700px){.erp-edit-grid{grid-template-columns:1fr}}
 @media print{
   .erp-sidebar,.erp-topbar,.erp-page-head,.erp-order-tools,.erp-safe-actions,.erp-print-btn,
-  #erpExportTreasuryCsv,.erp-edit-modal,.erp-treasury-warning form,.erp-card form{display:none!important}
+#erpExportTreasuryCsv,.erp-edit-modal,.erp-treasury-warning form,.erp-card form{display:none!important}
   body{background:#fff!important}
   .erp-main,.erp-content{width:100%!important;max-width:none!important;margin:0!important;padding:0!important}
   .erp-card{box-shadow:none!important;border:1px solid #ddd!important;break-inside:avoid}
   .erp-table-wrap{max-height:none!important;overflow:visible!important}
   .erp-table-wrap thead th{position:static!important}
 }
+</style>
+
+<style id="erpTreasuryLegacyActionGuard">
+/* The current safe enhancer owns these actions. Never show legacy text
+   delete buttons even if an older treasury renderer is restored from cache. */
+#erpFixedAssetsRows [data-delete-row-table],
+#erpFixedAssetsRows [data-delete-row-id],
+#erpBankAccountsRows [data-delete-row-table],
+#erpBankAccountsRows [data-delete-row-id]{display:none!important}
 </style>
 
 </head>
@@ -448,6 +457,20 @@
     'cancelled_by','deleted_by'
   ]);
 
+  /* Nullable database fields lose their JavaScript type when their value is
+     null. Keep the important Supabase column types here so the editor never
+     sends an empty string to integer/numeric/uuid columns. */
+  const FIELD_TYPES={
+    useful_life_years:'integer',installments_count:'integer',installment_number:'integer',
+    purchase_price:'number',down_payment:'number',financed_amount:'number',
+    current_value:'number',salvage_value:'number',annual_depreciation:'number',
+    book_value:'number',original_amount:'number',paid_amount:'number',
+    remaining_amount:'number',installment_amount:'number',collected_amount:'number',
+    amount:'number',balance:'number',capital_amount:'number',reserve_amount:'number',
+    value:'number',supplier_id:'uuid',source_id:'uuid',destination_id:'uuid',
+    asset_id:'uuid',record_id:'uuid'
+  };
+
   let currentEdit=null;
   const cache=new Map();
 
@@ -513,7 +536,9 @@
     if(!cfg)throw new Error('هذا الجدول غير مربوط بقاعدة البيانات.');
     const src=await resolveSource(cfg);
     if(!src)throw new Error('تعذر تحديد جدول Supabase الخاص بهذا السجل.');
-    const rec=bestRecordForRow(row,src.rows);
+    const exactId=row.dataset.safeRecordId || row.dataset.recordId;
+    const rec=(exactId && src.rows.find(item=>String(item.id)===String(exactId))) ||
+      bestRecordForRow(row,src.rows);
     if(!rec||!rec.id)throw new Error('تعذر تحديد السجل بدقة. حدّث الصفحة وحاول مرة أخرى.');
     return {table:src.table,record:rec};
   }
@@ -544,17 +569,13 @@
     rows.forEach(row=>{
       if(row.dataset.safeEnhanced==='1')return;
 
-      /* Bank accounts: remove legacy text delete button ("حذف"),
-         keep only the compact edit/delete icons. */
-      if(tbody.id==='erpBankAccountsRows'){
-        row.querySelectorAll('button,a').forEach(el=>{
-          if(el.matches('[data-safe-edit],[data-safe-delete]'))return;
-          const label=(el.textContent||'').replace(/\s+/g,' ').trim();
-          if(label==='حذف' || label.includes('حذف')){
-            el.remove();
-          }
-        });
+      /* Preserve the exact database id, then remove the legacy delete action.
+         The safe action below is the single source for edit/delete. */
+      const legacyAction=row.querySelector('[data-delete-row-id]');
+      if(legacyAction?.dataset.deleteRowId){
+        row.dataset.safeRecordId=legacyAction.dataset.deleteRowId;
       }
+      row.querySelectorAll('[data-delete-row-table],[data-delete-row-id]').forEach(el=>el.remove());
       const headCount=table.tHead?.rows?.[0]?.cells?.length||0;
       let cell=row.cells[row.cells.length-1];
       const hasActionHead=headCount===row.cells.length && table.tHead && norm(table.tHead.rows[0].cells[headCount-1]?.textContent).includes('اجراء');
@@ -623,7 +644,8 @@
       const label=document.createElement('label');
       label.textContent=key;
       let input;
-      if(typeof value==='boolean'){
+      const fieldType=FIELD_TYPES[key] || typeof value;
+      if(fieldType==='boolean'){
         input=document.createElement('select');
         input.innerHTML='<option value="true">true</option><option value="false">false</option>';
         input.value=String(value);
@@ -632,12 +654,12 @@
         input.value=value??'';
       }else{
         input=document.createElement('input');
-        input.type=typeof value==='number'?'number':'text';
-        if(input.type==='number')input.step='any';
+        input.type=(fieldType==='number'||fieldType==='integer')?'number':'text';
+        if(input.type==='number')input.step=fieldType==='integer'?'1':'any';
         input.value=value??'';
       }
       input.dataset.field=key;
-      input.dataset.type=typeof value;
+      input.dataset.type=fieldType;
       label.appendChild(input);
       grid.appendChild(label);
     });
@@ -670,10 +692,36 @@
       const payload={};
       document.querySelectorAll('#erpSafeEditGrid [data-field]').forEach(input=>{
         const key=input.dataset.field,type=input.dataset.type;
-        let value=input.value;
+        let value=String(input.value??'').trim();
         if(type==='number')value=value===''?null:Number(value);
+        if(type==='integer')value=value===''?null:Number(value);
+        if(type==='uuid')value=value===''?null:value;
         if(type==='boolean')value=value==='true';
+        if((type==='number'||type==='integer') && value!==null && !Number.isFinite(value)){
+          throw new Error('القيمة المدخلة في '+key+' ليست رقمًا صحيحًا.');
+        }
+        if(type==='integer' && value!==null && !Number.isInteger(value)){
+          throw new Error('القيمة المدخلة في '+key+' يجب أن تكون رقمًا صحيحًا بدون كسور.');
+        }
         payload[key]=value;
+      });
+      /* Final schema-aware guard. This also protects records opened from an
+         older cached renderer whose nullable columns were tagged as text. */
+      Object.entries(FIELD_TYPES).forEach(([key,type])=>{
+        if(!Object.prototype.hasOwnProperty.call(payload,key))return;
+        const raw=payload[key];
+        if(raw==='' || raw===undefined){
+          payload[key]=null;
+          return;
+        }
+        if(type==='number' || type==='integer'){
+          const numeric=Number(raw);
+          if(!Number.isFinite(numeric))throw new Error('القيمة المدخلة في '+key+' ليست رقمًا صحيحًا.');
+          if(type==='integer' && !Number.isInteger(numeric)){
+            throw new Error('القيمة المدخلة في '+key+' يجب أن تكون رقمًا صحيحًا بدون كسور.');
+          }
+          payload[key]=numeric;
+        }
       });
       await window.sbFetch(currentEdit.table+'?id=eq.'+encodeURIComponent(currentEdit.record.id),{
         method:'PATCH',

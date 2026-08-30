@@ -350,6 +350,32 @@ Future<List<Map<String, dynamic>>> fetchOrders({
     );
   }
 
+  Future<void> claimCashbackOrders(Iterable<String> orderNumbers) async {
+    final email = user?.email?.trim();
+    if (email == null || email.isEmpty) throw const AuthException('No signed-in user email is available.');
+    final candidates = <String>{};
+    for (final value in orderNumbers) {
+      final clean = value.trim().replaceFirst('#', '');
+      if (clean.isEmpty) continue;
+      candidates
+        ..add(clean)
+        ..add('#$clean');
+    }
+    if (candidates.isEmpty) throw StateError('No cashback orders were supplied.');
+
+    final rows = await _client
+        .from('orders')
+        .update({'cashback_status': 'claimed'})
+        .eq('customer_email', email)
+        .eq('status', 'delivered')
+        .or('cashback_status.neq.claimed,cashback_status.is.null')
+        .inFilter('order_number', candidates.toList(growable: false))
+        .select('order_number');
+    if (rows.isEmpty) {
+      throw StateError('Cashback balance could not be claimed.');
+    }
+  }
+
   Future<AccountInvoicePage> fetchInvoices({
     List<Map<String, dynamic>>? orders,
     int offset = 0,

@@ -73,6 +73,7 @@ class WhatsAppOrderService {
     bool customizationRequest = false,
     double discount = 0,
     String? couponCode,
+    List<String> cashbackOrderNumbers = const <String>[],
   }) async {
     if (_client.auth.currentUser == null) {
       throw const WhatsAppOrderLoginRequired();
@@ -114,6 +115,20 @@ class WhatsAppOrderService {
       ),
       couponCode: couponCode,
     );
+    if (finalDiscount > 0 && couponCode != null && couponCode.trim().isNotEmpty) {
+      try {
+        await _account.claimCashbackOrders(cashbackOrderNumbers);
+      } catch (_) {
+        try {
+          await _client
+              .from('orders')
+              .delete()
+              .eq('order_number', orderNumber)
+              .eq('customer_email', resolvedCustomer.email);
+        } catch (_) {}
+        rethrow;
+      }
+    }
 
     final message = _buildMessage(
       orderNumber: orderNumber,
@@ -230,7 +245,7 @@ class WhatsAppOrderService {
       'customer_phone': customer.phone,
       'customer_email': customer.email,
       'total': total,
-      'status': 'confirmed',
+      'status': 'processing',
       'payment_method': 'whatsapp',
       'payment_status': 'pending',
       'shipping_cost': 0,
@@ -371,6 +386,8 @@ class WhatsAppOrderService {
       '',
       'الإجمالي قبل الخصم: ${_money(subtotal)}',
       'الخصم: ${_money(discount)}',
+      if (couponCode != null && couponCode.trim().isNotEmpty)
+        'كود الكاش باك: ${couponCode.trim().toUpperCase()}',
       '',
       'الإجمالي النهائي: ${_money(total)}',
     ].join('\n');

@@ -249,6 +249,35 @@ async function cachedSbFetch(path, ttl, opts) {
 async function sbFetch(path, opts) {
   const retry = !(opts = opts || {}).__retriedAuth,
     adminSession = hasAdminSession();
+  /* Treasury asset records contain nullable numeric/uuid columns. Older
+     cached UI code used to serialize blank inputs as "", which Postgres
+     correctly rejects for integer columns with 22P02. Sanitize at the final
+     Data API boundary so every asset PATCH is safe regardless of its caller. */
+  if (/^erp_fixed_assets(?:\?|$)/.test(String(path || "")) &&
+      String(opts.method || "GET").toUpperCase() === "PATCH" && opts.body) {
+    try {
+      const assetPayload = typeof opts.body === "string" ? JSON.parse(opts.body) : opts.body;
+      if (assetPayload && typeof assetPayload === "object" && !Array.isArray(assetPayload)) {
+        ["useful_life_years"].forEach(function (key) {
+          if (assetPayload[key] === "" || assetPayload[key] === undefined) assetPayload[key] = null;
+          else if (assetPayload[key] !== null) assetPayload[key] = Number(assetPayload[key]);
+        });
+        ["supplier_id"].forEach(function (key) {
+          if (assetPayload[key] === "" || assetPayload[key] === undefined) assetPayload[key] = null;
+        });
+        ["purchase_price", "down_payment", "financed_amount", "current_value",
+          "salvage_value", "annual_depreciation", "book_value"].forEach(function (key) {
+          if (!Object.prototype.hasOwnProperty.call(assetPayload, key)) return;
+          if (assetPayload[key] === "" || assetPayload[key] === undefined) assetPayload[key] = null;
+          else if (assetPayload[key] !== null) assetPayload[key] = Number(assetPayload[key]);
+        });
+        opts.body = JSON.stringify(assetPayload);
+      }
+    } catch (sanitizeError) {
+      console.error("[Treasury] Invalid asset update payload", sanitizeError);
+      throw sanitizeError;
+    }
+  }
   let storedToken = getStoredAuthToken();
   if (!storedToken && !adminSession && !opts.forceAnon)
     storedToken = await refreshUserToken();

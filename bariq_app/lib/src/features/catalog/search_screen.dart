@@ -28,6 +28,8 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen>
     with AutomaticKeepAliveClientMixin {
   static const _pageSize = SupabaseCatalogService.pageSize;
+  static const _imageSearchScanLimit = 360;
+  static const _imageSearchConcurrency = 6;
 
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
@@ -196,15 +198,33 @@ class _SearchScreenState extends State<SearchScreen>
       final target = _imageSignature(pickedBytes);
       if (target == null) throw Exception(AppStrings.imageSearchUnavailable);
 
-      final products = await _service.fetchProductsPage(limit: _pageSize);
       final scored = <({Product product, double score})>[];
+      var offset = 0;
+      while (offset < _imageSearchScanLimit) {
+        if (!mounted || generation != _requestGeneration) return;
+        final products = await _service.fetchProductsPage(
+          offset: offset,
+          limit: _pageSize,
+          sort: 'newest',
+        );
+        if (products.isEmpty) break;
 
-      for (final product in products) {
-        final imageUrl = product.images.isEmpty ? '' : product.images.first;
-        if (imageUrl.isEmpty) continue;
-        final signature = await _networkImageSignature(imageUrl);
-        if (signature == null) continue;
-        scored.add((product: product, score: _signatureDiff(target, signature)));
+        for (var start = 0; start < products.length; start += _imageSearchConcurrency) {
+          final end = math.min(start + _imageSearchConcurrency, products.length);
+          final matches = await Future.wait(
+            products.sublist(start, end).map((product) async {
+              final imageUrl = product.images.isEmpty ? '' : product.images.first;
+              if (imageUrl.isEmpty) return null;
+              final signature = await _networkImageSignature(imageUrl);
+              if (signature == null) return null;
+              return (product: product, score: _signatureDiff(target, signature));
+            }),
+          );
+          scored.addAll(matches.whereType<({Product product, double score})>());
+        }
+
+        offset += products.length;
+        if (products.length < _pageSize) break;
       }
 
       scored.sort((a, b) => a.score.compareTo(b.score));
@@ -399,9 +419,19 @@ class _SearchScreenState extends State<SearchScreen>
   _ImageSignature? _imageSignature(List<int> bytes) {
     final decoded = image_lib.decodeImage(Uint8List.fromList(bytes));
     if (decoded == null) return null;
-    final resized = image_lib.copyResize(decoded, width: 12, height: 12);
+    final oriented = image_lib.bakeOrientation(decoded);
+    final side = math.min(oriented.width, oriented.height);
+    final square = image_lib.copyCrop(
+      oriented,
+      x: (oriented.width - side) ~/ 2,
+      y: (oriented.height - side) ~/ 2,
+      width: side,
+      height: side,
+    );
+    final resized = image_lib.copyResize(square, width: 16, height: 16);
     final blocks = List<double>.filled(27, 0);
     final counts = List<int>.filled(9, 0);
+    final luminance = <double>[];
     var r = 0.0;
     var g = 0.0;
     var b = 0.0;
@@ -414,9 +444,10 @@ class _SearchScreenState extends State<SearchScreen>
         final red = pixel.r.toDouble();
         final green = pixel.g.toDouble();
         final blue = pixel.b.toDouble();
+        luminance.add((red * .299) + (green * .587) + (blue * .114));
         final int block =
-            math.min<int>(2, y ~/ 4) * 3 +
-            math.min<int>(2, x ~/ 4);
+            math.min<int>(2, y * 3 ~/ resized.height) * 3 +
+            math.min<int>(2, x * 3 ~/ resized.width);
         r += red;
         g += green;
         b += blue;
@@ -436,7 +467,13 @@ class _SearchScreenState extends State<SearchScreen>
       blocks[i * 3 + 2] /= counts[i];
     }
 
-    return _ImageSignature(avg: [r / count, g / count, b / count], blocks: blocks);
+    final meanLuminance = luminance.reduce((a, b) => a + b) / luminance.length;
+    final structure = luminance.map((value) => value - meanLuminance).toList(growable: false);
+    return _ImageSignature(
+      avg: [r / count, g / count, b / count],
+      blocks: blocks,
+      structure: structure,
+    );
   }
 
   Future<_ImageSignature?> _networkImageSignature(String url) async {
@@ -479,13 +516,20 @@ class _SearchScreenState extends State<SearchScreen>
     for (var i = 0; i < a.blocks.length; i++) {
       grid += (a.blocks[i] - b.blocks[i]).abs() / 255;
     }
-    return (avg * .35) + ((grid / a.blocks.length) * .65);
+    var structure = 0.0;
+    final length = math.min(a.structure.length, b.structure.length);
+    for (var i = 0; i < length; i++) {
+      structure += (a.structure[i] - b.structure[i]).abs() / 255;
+    }
+    final structureDiff = length == 0 ? 1.0 : structure / length;
+    return (avg * .15) + ((grid / a.blocks.length) * .35) + (structureDiff * .5);
   }
 }
 
 class _ImageSignature {
-  const _ImageSignature({required this.avg, required this.blocks});
+  const _ImageSignature({required this.avg, required this.blocks, required this.structure});
 
   final List<double> avg;
   final List<double> blocks;
+  final List<double> structure;
 }

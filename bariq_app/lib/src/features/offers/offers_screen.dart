@@ -11,9 +11,10 @@ import '../catalog/search_screen.dart';
 import '../shared/storefront_top_bar.dart';
 
 class OffersScreen extends StatefulWidget {
-  const OffersScreen({super.key, this.active = true});
+  const OffersScreen({super.key, this.active = true, this.showBack = false});
 
   final bool active;
+  final bool showBack;
 
   @override
   State<OffersScreen> createState() => _OffersScreenState();
@@ -98,7 +99,7 @@ class _OffersScreenState extends State<OffersScreen> {
               },
               child: CustomScrollView(
                 slivers: [
-                StorefrontTopBarSliver(placeholder: AppStrings.tr('إبحث في العروض...', 'Search offers...'), onSearch: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SearchScreen()))),
+                StorefrontTopBarSliver(showBack: widget.showBack, placeholder: AppStrings.tr('إبحث في العروض...', 'Search offers...'), onSearch: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SearchScreen()))),
                 SliverToBoxAdapter(child: SizedBox(width: double.infinity, child: _FlashHero(maxDiscount: maxDiscount, count: deals.length, active: widget.active))),
                 SliverToBoxAdapter(
                   child: SizedBox(

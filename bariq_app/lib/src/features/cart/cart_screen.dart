@@ -31,6 +31,7 @@ class _CartScreenState extends State<CartScreen> {
       SupabaseCatalogService().fetchProducts(limit: 12);
   final _orderService = WhatsAppOrderService();
   bool _sendingOrder = false;
+  _AppliedCashback? _appliedCashback;
 
   Future<void> _confirmViaWhatsApp() async {
     final state = AppStateScope.of(context);
@@ -42,6 +43,9 @@ class _CartScreenState extends State<CartScreen> {
         lines: state.cartItems
             .map((item) => WhatsAppOrderLine(product: item.product, quantity: item.quantity))
             .toList(growable: false),
+        discount: _appliedCashback?.amount ?? 0,
+        couponCode: _appliedCashback?.code,
+        cashbackOrderNumbers: _appliedCashback?.orderNumbers ?? const <String>[],
       );
       if (!mounted) return;
       if (!result.opened) {
@@ -114,7 +118,11 @@ class _CartScreenState extends State<CartScreen> {
                     const SizedBox(height: 12),
                     for (final item in items) _CartLine(item: item),
                     const SizedBox(height: 26),
-                    _CashbackSummary(total: state.cartTotal, count: state.cartCount),
+                    _CashbackSummary(
+                      total: state.cartTotal,
+                      count: state.cartCount,
+                      onChanged: (value) => _appliedCashback = value,
+                    ),
                     const SizedBox(height: 16),
                     FilledButton(
                       onPressed: _sendingOrder ? null : _confirmViaWhatsApp,
@@ -468,10 +476,11 @@ class _Qty extends StatelessWidget {
 }
 
 class _CashbackSummary extends StatefulWidget {
-  const _CashbackSummary({required this.total, required this.count});
+  const _CashbackSummary({required this.total, required this.count, required this.onChanged});
 
   final double total;
   final int count;
+  final ValueChanged<_AppliedCashback?> onChanged;
 
   @override
   State<_CashbackSummary> createState() => _CashbackSummaryState();
@@ -524,6 +533,11 @@ class _CashbackSummaryState extends State<_CashbackSummary> {
         _ok = true;
         _message = 'تم تطبيق خصم ${amount.toStringAsFixed(2)} د.إ';
       });
+      widget.onChanged(_AppliedCashback(
+        code: coupon.code,
+        amount: amount,
+        orderNumbers: coupon.orderNumbers,
+      ));
     } catch (_) {
       if (mounted) _showMessage('تعذر تطبيق الكود، حاول مرة أخرى', false);
     } finally {
@@ -537,6 +551,7 @@ class _CashbackSummaryState extends State<_CashbackSummary> {
       _message = value;
       _ok = ok;
     });
+    widget.onChanged(null);
   }
 
   @override
@@ -880,6 +895,14 @@ class _SummaryState extends State<_Summary> {
       ),
     );
   }
+}
+
+class _AppliedCashback {
+  const _AppliedCashback({required this.code, required this.amount, required this.orderNumbers});
+
+  final String code;
+  final double amount;
+  final List<String> orderNumbers;
 }
 
 class _SummaryRow extends StatelessWidget {

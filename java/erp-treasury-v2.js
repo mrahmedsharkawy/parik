@@ -417,11 +417,11 @@
     const target = $("erpBankAccountsRows");
     if (!target) return;
     target.innerHTML = state.bankAccounts.length ? state.bankAccounts.map((a) => `
-      <tr>
+      <tr data-record-id="${esc(a.id)}">
         <td>${esc(a.bank_name)}</td>
         <td>${esc(a.account_name || "-")}</td>
         <td><b class="erp-amount">${MoneyUtils.fmt(a.balance)}</b></td>
-        <td><button class="erp-danger-mini" type="button" data-delete-row-table="erp_bank_accounts" data-delete-row-id="${esc(a.id)}">حذف</button></td>
+        <td></td>
       </tr>`).join("") : '<tr><td colspan="4">لا توجد حسابات بنكية مسجلة.</td></tr>';
   }
 
@@ -429,13 +429,13 @@
     const target = $("erpFixedAssetsRows");
     if (!target) return;
     target.innerHTML = state.fixedAssets.length ? state.fixedAssets.map((a) => `
-      <tr>
+      <tr data-record-id="${esc(a.id)}">
         <td>${esc(a.name)} ${a.serial_number ? `<small>(${esc(a.serial_number)})</small>` : ""}</td>
         <td>${MoneyUtils.fmt(a.purchase_price)}</td>
         <td>${MoneyUtils.fmt(a.financed_amount)}</td>
         <td>${MoneyUtils.fmt(a.current_value || a.purchase_price || 0)}</td>
         <td><span class="erp-status">${esc(a.status)}</span></td>
-        <td><button class="erp-danger-mini" type="button" data-delete-row-table="erp_fixed_assets" data-delete-row-id="${esc(a.id)}">حذف</button></td>
+        <td></td>
       </tr>`).join("") : '<tr><td colspan="6">لا توجد أصول مسجلة.</td></tr>';
   }
 

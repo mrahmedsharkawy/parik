@@ -21,6 +21,8 @@ import '../account/account_screen.dart';
 import '../catalog/product_gallery_grid.dart';
 import '../catalog/product_card.dart';
 import '../catalog/search_screen.dart';
+import '../offers/monthly_deals_screen.dart';
+import '../offers/offers_screen.dart';
 import '../shared/bariq_network_image.dart';
 import '../shared/storefront_top_bar.dart';
 
@@ -1009,18 +1011,39 @@ class _PromoBannerRowState extends State<_PromoBannerRow> {
         children: [
           for (var i = 0; i < banners.length; i++) ...[
             if (i > 0) const SizedBox(width: 8),
-            Expanded(child: _PromoBannerCard(banner: banners[i])),
+            Expanded(
+              child: _PromoBannerCard(
+                banner: banners[i],
+                onTap: () => _openBanner(banners[i]),
+              ),
+            ),
           ],
         ],
+      ),
+    );
+  }
+
+  void _openBanner(AppPromoBanner banner) {
+    final text = '${banner.title} ${banner.subtitle}'.toLowerCase();
+    final isMonthly =
+        text.contains('الشهر') ||
+        text.contains('monthly') ||
+        text.contains('month');
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => isMonthly
+            ? const MonthlyDealsScreen()
+            : const OffersScreen(showBack: true),
       ),
     );
   }
 }
 
 class _PromoBannerCard extends StatelessWidget {
-  const _PromoBannerCard({required this.banner});
+  const _PromoBannerCard({required this.banner, required this.onTap});
 
   final AppPromoBanner banner;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -1029,9 +1052,13 @@ class _PromoBannerCard extends StatelessWidget {
     final hours = safe.inHours.toString().padLeft(2, '0');
     final minutes = safe.inMinutes.remainder(60).toString().padLeft(2, '0');
     final seconds = safe.inSeconds.remainder(60).toString().padLeft(2, '0');
-    return ClipRRect(
+    return Material(
+      color: Colors.transparent,
       borderRadius: BorderRadius.circular(15),
-      child: AspectRatio(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: AspectRatio(
         aspectRatio: 1.72,
         child: Stack(
           fit: StackFit.expand,
@@ -1085,6 +1112,7 @@ class _PromoBannerCard extends StatelessWidget {
               ),
             ),
           ],
+        ),
         ),
       ),
     );
