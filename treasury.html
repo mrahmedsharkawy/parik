@@ -471,6 +471,35 @@
     asset_id:'uuid',record_id:'uuid'
   };
 
+  const FIELD_LABELS={
+    name:'اسم الأصل',category:'التصنيف',purchase_price:'سعر الشراء',
+    purchase_date:'تاريخ الشراء',payment_method:'طريقة الدفع',
+    down_payment:'الدفعة المقدمة',financed_amount:'المبلغ الممول',
+    current_value:'القيمة الحالية',status:'الحالة',serial_number:'الرقم التسلسلي',
+    supplier_id:'المورد',depreciation_method:'طريقة الإهلاك',
+    useful_life_years:'العمر الإنتاجي بالسنوات',salvage_value:'قيمة الخردة',
+    annual_depreciation:'الإهلاك السنوي',book_value:'القيمة الدفترية',notes:'ملاحظات',
+    bank_name:'اسم البنك',account_name:'اسم الحساب',account_number:'رقم الحساب',
+    balance:'الرصيد',currency:'العملة',active:'نشط',creditor:'الدائن',
+    reason:'السبب',original_amount:'القيمة الأصلية',paid_amount:'المبلغ المدفوع',
+    installment_amount:'قيمة القسط',installments_count:'عدد الأقساط',
+    due_date:'تاريخ الاستحقاق',party_name:'اسم الجهة',party_type:'نوع الجهة',
+    collected_amount:'المبلغ المحصل'
+  };
+
+  const FIELD_OPTIONS={
+    payment_method:[
+      ['cash','نقدي'],['bank_transfer','تحويل بنكي'],
+      ['installment','تقسيط'],['financing','تمويل']
+    ],
+    status:[
+      ['active','نشط'],['sold','مباع'],['disposed','مستبعد'],
+      ['maintenance','صيانة'],['paid','مسدد'],['overdue','متأخر'],
+      ['defaulted','متعثر'],['collected','محصل'],['partial','جزئي']
+    ],
+    depreciation_method:[['none','بدون إهلاك'],['straight_line','القسط الثابت']]
+  };
+
   let currentEdit=null;
   const cache=new Map();
 
@@ -638,16 +667,35 @@
 
   function openEdit(table,record){
     currentEdit={table,record};
+    const title=document.querySelector('#erpSafeEditModal .erp-edit-dialog h3');
+    if(title)title.textContent=table==='erp_fixed_assets'?'✏️ تعديل الأصل':'✏️ تعديل السجل';
     const grid=document.getElementById('erpSafeEditGrid');
     grid.innerHTML='';
     editableFields(record).forEach(([key,value])=>{
       const label=document.createElement('label');
-      label.textContent=key;
+      label.textContent=FIELD_LABELS[key] || key;
       let input;
       const fieldType=FIELD_TYPES[key] || typeof value;
-      if(fieldType==='boolean'){
+      if(FIELD_OPTIONS[key]){
         input=document.createElement('select');
-        input.innerHTML='<option value="true">true</option><option value="false">false</option>';
+        const knownValues=new Set();
+        FIELD_OPTIONS[key].forEach(([optionValue,optionLabel])=>{
+          knownValues.add(optionValue);
+          const option=document.createElement('option');
+          option.value=optionValue;
+          option.textContent=optionLabel;
+          input.appendChild(option);
+        });
+        if(value!=null && value!=='' && !knownValues.has(String(value))){
+          const option=document.createElement('option');
+          option.value=String(value);
+          option.textContent=String(value);
+          input.appendChild(option);
+        }
+        input.value=value??'';
+      }else if(fieldType==='boolean'){
+        input=document.createElement('select');
+        input.innerHTML='<option value="true">نعم</option><option value="false">لا</option>';
         input.value=String(value);
       }else if(String(value??'').length>80){
         input=document.createElement('textarea');
