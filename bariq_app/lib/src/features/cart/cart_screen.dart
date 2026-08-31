@@ -27,11 +27,47 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
-  late final Future<List<Product>> _suggestions =
-      SupabaseCatalogService().fetchProducts(limit: 12);
+  final _catalog = SupabaseCatalogService();
+  late Future<List<Product>> _suggestions;
+  final List<Product> _suggestionItems = [];
+  bool _loadingSuggestions = false;
+  bool _hasMoreSuggestions = true;
   final _orderService = WhatsAppOrderService();
   bool _sendingOrder = false;
   _AppliedCashback? _appliedCashback;
+
+  @override
+  void initState() {
+    super.initState();
+    _suggestions = _loadSuggestionPage();
+  }
+
+  Future<List<Product>> _loadSuggestionPage() async {
+    if (_loadingSuggestions || !_hasMoreSuggestions) {
+      return List.unmodifiable(_suggestionItems);
+    }
+    _loadingSuggestions = true;
+    try {
+      final page = await _catalog.fetchProductsPage(
+        offset: _suggestionItems.length,
+        limit: SupabaseCatalogService.pageSize,
+        sort: 'catalog',
+      );
+      final ids = _suggestionItems.map((item) => item.id).toSet();
+      _suggestionItems.addAll(page.where((item) => ids.add(item.id)));
+      _hasMoreSuggestions = page.length == SupabaseCatalogService.pageSize;
+      return List.unmodifiable(_suggestionItems);
+    } finally {
+      _loadingSuggestions = false;
+    }
+  }
+
+  Future<void> _loadMoreSuggestions() async {
+    if (_loadingSuggestions || !_hasMoreSuggestions) return;
+    final next = _loadSuggestionPage();
+    setState(() => _suggestions = next);
+    await next;
+  }
 
   Future<void> _confirmViaWhatsApp() async {
     final state = AppStateScope.of(context);
@@ -87,7 +123,17 @@ class _CartScreenState extends State<CartScreen> {
       backgroundColor: const Color(0xFFF4F5F7),
       body: SafeArea(
         bottom: false,
-        child: CustomScrollView(
+        child: NotificationListener<ScrollNotification>(
+          onNotification: (notification) {
+            if (notification.depth == 0 &&
+                notification.metrics.axis == Axis.vertical &&
+                notification.metrics.pixels >=
+                    notification.metrics.maxScrollExtent - 1000) {
+              _loadMoreSuggestions();
+            }
+            return false;
+          },
+          child: CustomScrollView(
           slivers: [
             StorefrontTopBarSliver(
               placeholder: AppStrings.searchHeader,
@@ -156,6 +202,7 @@ class _CartScreenState extends State<CartScreen> {
               ),
             ),
           ],
+          ),
         ),
       ),
     );
@@ -1147,7 +1194,6 @@ class _SuggestedProducts extends StatelessWidget {
       builder: (context, snapshot) {
         final products = (snapshot.data ?? const <Product>[])
             .where((product) => product.active)
-            .take(8)
             .toList();
         if (snapshot.connectionState == ConnectionState.waiting &&
             products.isEmpty) {

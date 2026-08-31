@@ -11,10 +11,11 @@ import '../product/product_screen.dart';
 import '../shared/bariq_network_image.dart';
 
 class BariqProductCard extends StatelessWidget {
-  const BariqProductCard({super.key, required this.product, this.compact = false});
+  const BariqProductCard({super.key, required this.product, this.compact = false, this.tablet = false});
 
   final Product product;
   final bool compact;
+  final bool tablet;
 
   @override
   Widget build(BuildContext context) {
@@ -27,15 +28,16 @@ class BariqProductCard extends StatelessWidget {
       return _CompactTodayProductCard(product: product, money: money);
     }
 
-    return _SiteGridProductCard(product: product, money: money);
+    return _SiteGridProductCard(product: product, money: money, tablet: tablet);
   }
 }
 
 class _SiteGridProductCard extends StatelessWidget {
-  const _SiteGridProductCard({required this.product, required this.money});
+  const _SiteGridProductCard({required this.product, required this.money, required this.tablet});
 
   final Product product;
   final NumberFormat money;
+  final bool tablet;
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +64,7 @@ class _SiteGridProductCard extends StatelessWidget {
                 Stack(
                   children: [
                     SizedBox(
-                      height: 204,
+                      height: tablet ? 170 : 204,
                       width: double.infinity,
                       child: BariqNetworkImage(
                         imageUrl: product.images.first,
@@ -181,7 +183,7 @@ class _SiteGridProductCard extends StatelessWidget {
             ),
             PositionedDirectional(
               end: 8,
-              bottom: 8,
+              bottom: tablet ? 38 : 8,
               child: _FloatingCartButton(onTap: () => state.addToCart(product)),
             ),
           ],
@@ -229,11 +231,11 @@ class _CompactTodayProductCard extends StatelessWidget {
                 Stack(
                   children: [
                     SizedBox(
-                      height: 110,
+                      height: 94,
                       width: double.infinity,
                       child: BariqNetworkImage(
                         imageUrl: product.images.first,
-                        fit: BoxFit.contain,
+                        fit: BoxFit.cover,
                         errorIconSize: 18,
                         cacheWidth: 360,
                         cacheHeight: 300,
@@ -243,7 +245,7 @@ class _CompactTodayProductCard extends StatelessWidget {
                 ),
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(6, 4, 6, 32),
+                    padding: const EdgeInsets.fromLTRB(5, 4, 5, 29),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -293,8 +295,8 @@ class _CompactTodayProductCard extends StatelessWidget {
                 ),
               ),
             PositionedDirectional(
-              end: 8,
-              bottom: 7,
+                end: 6,
+                bottom: 5,
               child: _FloatingCartButton(
                 onTap: () => state.addToCart(product),
                 compact: true,
@@ -302,12 +304,16 @@ class _CompactTodayProductCard extends StatelessWidget {
             ),
             if (discount > 0)
               PositionedDirectional(
-                start: 8,
-                bottom: 7,
+                start: 6,
+                bottom: 5,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    gradient: AppTheme.goldGradient,
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Color(0xFFF0D982), Color(0xFFD0A846), Color(0xFFA97920)],
+                    ),
                     borderRadius: BorderRadius.circular(9),
                   ),
                   child: Text(

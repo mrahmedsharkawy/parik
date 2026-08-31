@@ -129,6 +129,27 @@ class AffiliateService {
     });
   }
 
+  Future<AffiliatePartner> updateProfile(Map<String, dynamic> payload) async {
+    final raw = await _client.rpc(
+      'affiliate_update_profile',
+      params: {'p_payload': payload},
+    );
+    final row = raw is List ? raw.first : raw;
+    return AffiliatePartner.fromJson(Map<String, dynamic>.from(row as Map));
+  }
+
+  Future<AffiliatePartner> terminateContract({String reason = ''}) async {
+    final raw = await _client.rpc(
+      'affiliate_terminate_contract',
+      params: {'p_reason': reason},
+    );
+    final row = raw is List ? raw.first : raw;
+    return AffiliatePartner.fromJson(Map<String, dynamic>.from(row as Map));
+  }
+
+  String partnerLink(String partnerCode) =>
+      '${AppConfig.siteUrl}/?ref=${Uri.encodeQueryComponent(partnerCode)}';
+
   String productLink(String productId, String partnerCode) =>
       '${AppConfig.siteUrl}/product/$productId?ref=${Uri.encodeQueryComponent(partnerCode)}';
 
@@ -205,9 +226,19 @@ class AffiliatePartner {
     required this.status,
     required this.level,
     required this.avatarUrl,
+    required this.phone,
+    required this.emirate,
+    required this.instagram,
+    required this.tiktok,
+    required this.otherSocial,
+    required this.marketingMethod,
+    required this.payoutMethod,
+    required this.payoutDetails,
     this.commissionOverride,
   });
   final String id, code, fullName, accountName, email, status, level, avatarUrl;
+  final String phone, emirate, instagram, tiktok, otherSocial, marketingMethod, payoutMethod;
+  final Map<String, dynamic> payoutDetails;
   final double? commissionOverride;
   bool get active => status == 'active';
   factory AffiliatePartner.fromJson(Map<String, dynamic> row) => AffiliatePartner(
@@ -219,6 +250,16 @@ class AffiliatePartner {
         status: '${row['status'] ?? 'pending'}',
         level: '${row['level'] ?? 'partner'}',
         avatarUrl: '${row['avatar_url'] ?? ''}',
+        phone: '${row['phone'] ?? ''}',
+        emirate: '${row['emirate'] ?? ''}',
+        instagram: '${row['instagram'] ?? ''}',
+        tiktok: '${row['tiktok'] ?? ''}',
+        otherSocial: '${row['other_social'] ?? ''}',
+        marketingMethod: '${row['marketing_method'] ?? ''}',
+        payoutMethod: '${row['payout_method'] ?? ''}',
+        payoutDetails: row['payout_details'] is Map
+            ? Map<String, dynamic>.from(row['payout_details'] as Map)
+            : const {},
         commissionOverride: row['commission_override'] == null
             ? null
             : _double(row['commission_override']),

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart' hide TextDirection;
@@ -21,6 +23,7 @@ import '../product/product_screen.dart';
 import '../policies/policies_screen.dart';
 import '../shared/bariq_network_image.dart';
 import '../shared/storefront_top_bar.dart';
+import '../shell/app_shell.dart';
 
 enum AccountSection { orders, profile, offers, notifications, reviews, wallet, favorites, address, payments, invoices, occasions, support }
 enum _OrderFilter { all, processing, shipped, delivered, returns }
@@ -42,6 +45,7 @@ class _AccountScreenState extends State<AccountScreen> {
   _OrderFilter _orderFilter = _OrderFilter.all;
   String _orderQuery = '';
   bool _syncedWishlist = false;
+  bool _signedOutOptimistically = false;
   final List<Product> _offers = [];
   int _offersOffset = 0;
   bool _offersLoading = false;
@@ -110,12 +114,35 @@ class _AccountScreenState extends State<AccountScreen> {
       search: _orderQuery,
     );
     final productsFuture = _catalog.fetchProducts(limit: SupabaseCatalogService.pageSize);
-    final orders = await ordersFuture;
-    final profile = await _account.fetchProfile(orders: orders);
-    final occasions = await _account.fetchOccasions();
+    final profileFuture = _account.fetchProfile();
+    final occasionsFuture = _account.fetchOccasions();
+    final settingsFuture = _catalog.fetchSettings();
+    final first = await Future.wait<dynamic>([
+      ordersFuture,
+      profileFuture,
+      occasionsFuture,
+    ]);
+    final orders = first[0] as List<Map<String, dynamic>>;
+    final profile = first[1] as CustomerProfile;
+    final occasions = first[2] as List<CustomerOccasion>;
+    final orderProductIds = orders
+        .map(_firstOrderItem)
+        .map(_orderItemProductId)
+        .where((id) => id.isNotEmpty)
+        .toSet();
+    final orderProductsFuture = _catalog.fetchProductsByIds(orderProductIds);
     final notificationsFuture = _account.fetchNotifications(orders: orders, occasions: occasions, profile: profile);
     final notificationCountFuture = _account.fetchUnreadNotificationCount(orders: orders, occasions: occasions, profile: profile);
-    final invoicePage = await _account.fetchInvoices(orders: orders, offset: 0, limit: AccountService.pageSize);
+    final invoiceFuture = _account.fetchInvoices(orders: orders, offset: 0, limit: AccountService.pageSize);
+    final second = await Future.wait<dynamic>([
+      notificationsFuture,
+      notificationCountFuture,
+      invoiceFuture,
+      productsFuture,
+      settingsFuture,
+      orderProductsFuture,
+    ]);
+    final invoicePage = second[2] as AccountInvoicePage;
     final invoices = invoicePage.items;
     _invoiceOrders = orders;
     if (_invoices.isEmpty) {
@@ -126,15 +153,19 @@ class _AccountScreenState extends State<AccountScreen> {
         WidgetsBinding.instance.addPostFrameCallback((_) => _loadMoreInvoices());
       }
     }
+    final products = <String, Product>{
+      for (final product in second[3] as List<Product>) product.id: product,
+      for (final product in second[5] as List<Product>) product.id: product,
+    }.values.toList(growable: false);
     return _AccountData(
       orders: orders,
       invoices: invoices,
       occasions: occasions,
-      notifications: await notificationsFuture,
-      notificationCount: await notificationCountFuture,
-      products: await productsFuture,
+      notifications: second[0] as List<AccountNotification>,
+      notificationCount: second[1] as int,
+      products: products,
       profile: profile,
-      settings: await _catalog.fetchSettings(),
+      settings: second[4] as SiteSettings,
     );
   }
 
@@ -158,6 +189,47 @@ class _AccountScreenState extends State<AccountScreen> {
     if (_section == AccountSection.wallet) await _loadMoreWalletOrders();
     if (_section == AccountSection.invoices && _invoices.isEmpty) await _loadMoreInvoices();
     await next;
+  }
+
+  void _completeLogin(AppState appState) {
+    if (!mounted) return;
+    setState(() {
+      _signedOutOptimistically = false;
+      _future = _load();
+    });
+    unawaited(() async {
+      try {
+        await Future.wait([
+          appState.refreshWishlist(),
+          appState.refreshRecentlyViewed(),
+        ]);
+      } catch (_) {}
+    }());
+  }
+
+  Future<void> _logoutImmediately() async {
+    if (!mounted) return;
+    setState(() {
+      _signedOutOptimistically = true;
+      _invoices.clear();
+      _invoiceOrders = const [];
+      _walletOrders.clear();
+      _cashbackCoupon = null;
+      _future = Future.value(const _AccountData(
+        orders: [], invoices: [], occasions: [], notifications: [],
+        notificationCount: 0, products: [], profile: CustomerProfile(),
+      ));
+    });
+    try {
+      await _account.signOut();
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _signedOutOptimistically = false;
+          _future = _load();
+        });
+      }
+    }
   }
 
   void _select(AccountSection section) {
@@ -257,7 +329,7 @@ class _AccountScreenState extends State<AccountScreen> {
   @override
   Widget build(BuildContext context) {
     final appState = AppStateScope.of(context);
-    final user = _account.user;
+    final user = _signedOutOptimistically ? null : _account.user;
     return Scaffold(
       backgroundColor: const Color(0xFFF2F3F6),
       body: Directionality(
@@ -348,14 +420,12 @@ class _AccountScreenState extends State<AccountScreen> {
                                 setState(() => _orderFilter = filter),
                             onOrderSearch: (value) =>
                                 setState(() => _orderQuery = value),
+                            onSelectSection: _select,
                             onSupport: () => _select(AccountSection.support),
                             onRefresh: _refresh,
                             onLogin: () async {
                               final ok = await Navigator.of(context).push<bool>(MaterialPageRoute(builder: (_) => const LoginScreen()));
-                              if (ok == true) {
-                                await Future.wait([appState.refreshWishlist(), appState.refreshRecentlyViewed()]);
-                                setState(() => _future = _load());
-                              }
+                              if (ok == true) _completeLogin(appState);
                             },
                           ),
                       ],
@@ -393,10 +463,7 @@ class _AccountScreenState extends State<AccountScreen> {
           onLogin: () async {
             Navigator.of(context).pop();
             final ok = await Navigator.of(context).push<bool>(MaterialPageRoute(builder: (_) => const LoginScreen()));
-            if (ok == true) {
-              await Future.wait([appState.refreshWishlist(), appState.refreshRecentlyViewed()]);
-              if (mounted) setState(() => _future = _load());
-            }
+            if (ok == true) _completeLogin(appState);
           },
           onAffiliate: () {
             Navigator.of(context).pop();
@@ -414,8 +481,7 @@ class _AccountScreenState extends State<AccountScreen> {
               ? null
               : () async {
                   Navigator.of(context).pop();
-                  await _account.signOut();
-                  if (mounted) setState(() => _future = _load());
+                  await _logoutImmediately();
                 },
         ),
       ),
@@ -526,7 +592,7 @@ class _QuickActions extends StatelessWidget {
 }
 
 class _SectionBody extends StatelessWidget {
-  const _SectionBody({required this.section, required this.userEmail, required this.orders, required this.invoices, required this.invoicesLoading, required this.occasions, required this.notifications, required this.notificationCount, required this.orderFilter, required this.orderQuery, required this.profile, required this.products, required this.offers, required this.offersLoading, required this.walletOrders, required this.walletLoading, required this.cashbackCoupon, required this.favorites, required this.onOrderFilter, required this.onOrderSearch, required this.onSupport, required this.onRefresh, required this.onLogin});
+  const _SectionBody({required this.section, required this.userEmail, required this.orders, required this.invoices, required this.invoicesLoading, required this.occasions, required this.notifications, required this.notificationCount, required this.orderFilter, required this.orderQuery, required this.profile, required this.products, required this.offers, required this.offersLoading, required this.walletOrders, required this.walletLoading, required this.cashbackCoupon, required this.favorites, required this.onOrderFilter, required this.onOrderSearch, required this.onSelectSection, required this.onSupport, required this.onRefresh, required this.onLogin});
 
   final AccountSection section;
   final String? userEmail;
@@ -548,6 +614,7 @@ class _SectionBody extends StatelessWidget {
   final List<Product> favorites;
   final ValueChanged<_OrderFilter> onOrderFilter;
   final ValueChanged<String> onOrderSearch;
+  final ValueChanged<AccountSection> onSelectSection;
   final VoidCallback onSupport;
   final Future<void> Function() onRefresh;
   final VoidCallback onLogin;
@@ -555,10 +622,10 @@ class _SectionBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return switch (section) {
-      AccountSection.orders => _OrdersSection(orders: orders, selectedFilter: orderFilter, query: orderQuery, userEmail: userEmail, onFilter: onOrderFilter, onSearch: onOrderSearch, onSupport: onSupport, onLogin: onLogin),
+      AccountSection.orders => _OrdersSection(orders: orders, products: products, selectedFilter: orderFilter, query: orderQuery, userEmail: userEmail, onFilter: onOrderFilter, onSearch: onOrderSearch, onSupport: onSupport, onLogin: onLogin),
       AccountSection.profile => _ProfileSection(profile: profile, email: userEmail, onLogin: onLogin),
       AccountSection.offers => _OffersSection(products: offers, loading: offersLoading),
-      AccountSection.notifications => _NotificationsSection(notifications: notifications, unreadCount: notificationCount, onRefresh: onRefresh, onLogin: onLogin, signedIn: userEmail != null),
+      AccountSection.notifications => _NotificationsSection(notifications: notifications, unreadCount: notificationCount, onRefresh: onRefresh, onLogin: onLogin, onSelectSection: onSelectSection, signedIn: userEmail != null),
       AccountSection.reviews => _ReviewsSection(orders: orders, products: products, userEmail: userEmail),
       AccountSection.wallet => _WalletSection(orders: walletOrders, loading: walletLoading, coupon: cashbackCoupon),
       AccountSection.favorites => _FavoritesSection(products: favorites, onClear: AppStateScope.of(context).clearFavorites),
@@ -572,8 +639,9 @@ class _SectionBody extends StatelessWidget {
 }
 
 class _OrdersSection extends StatelessWidget {
-  const _OrdersSection({required this.orders, required this.selectedFilter, required this.query, required this.userEmail, required this.onFilter, required this.onSearch, required this.onSupport, required this.onLogin});
+  const _OrdersSection({required this.orders, required this.products, required this.selectedFilter, required this.query, required this.userEmail, required this.onFilter, required this.onSearch, required this.onSupport, required this.onLogin});
   final List<Map<String, dynamic>> orders;
+  final List<Product> products;
   final _OrderFilter selectedFilter;
   final String query;
   final String? userEmail;
@@ -585,6 +653,7 @@ class _OrdersSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final filteredOrders = orders.where((order) => _matchesOrderFilter(order, selectedFilter) && _matchesOrderSearch(order, query)).toList();
+    final productsById = {for(final product in products) product.id:product};
     return Column(
       children: [
         Column(
@@ -608,7 +677,7 @@ class _OrdersSection extends StatelessWidget {
         else if (filteredOrders.isEmpty)
           const _EmptyPanel(title: 'لا توجد طلبات في هذه الحالة', subtitle: 'اختار حالة أخرى من الشريط.')
         else
-          for (final order in filteredOrders) _OrderCard(order: order),
+          for (final order in filteredOrders) _OrderCard(order: order, productsById: productsById),
       ],
     );
   }
@@ -740,20 +809,22 @@ class _BuyerProtection extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
       decoration: BoxDecoration(color: const Color(0xFFEFFFF0), borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFFC9EBCD))),
-      child: Row(children: [const Icon(Icons.shield_outlined, color: Color(0xFF14833B), size: 18), const SizedBox(width: 8), Expanded(child: Text(AppStrings.auto('ضمان الطلب | استرداد مجاني وجودة حديثة'), textAlign: TextAlign.start, style: const TextStyle(color: Color(0xFF14833B), fontSize: 11, fontWeight: FontWeight.w800)))]),
+      child: Row(children: [const Icon(Icons.shield_outlined, color: Color(0xFF14833B), size: 18), const SizedBox(width: 8), Expanded(child: Text(AppStrings.tr('ضمان الطلب | استرداد مجاني وجودة حديثة', 'Order guarantee | Free returns and assured quality'), textAlign: TextAlign.start, style: const TextStyle(color: Color(0xFF14833B), fontSize: 11, fontWeight: FontWeight.w800)))]),
     );
   }
 }
 
 class _OrderCard extends StatelessWidget {
-  const _OrderCard({required this.order});
+  const _OrderCard({required this.order,required this.productsById});
   final Map<String, dynamic> order;
+  final Map<String, Product> productsById;
 
   @override
   Widget build(BuildContext context) {
     final money = NumberFormat.currency(locale: 'ar_AE', symbol: 'د.إ', decimalDigits: 0);
     final first = _firstOrderItem(order);
-    final name = '${first['title'] ?? first['name'] ?? order['notes'] ?? 'طلب بريق'}';
+    final product = productsById[_orderItemProductId(first)];
+    final name = product?.displayName ?? _localizedOrderItemName(first, order);
     final number = '${order['order_number'] ?? order['id'] ?? ''}';
     final rawStatus = order['status'];
     final status = _statusLabel(rawStatus);
@@ -1089,7 +1160,7 @@ class _OffersSection extends StatelessWidget {
 }
 
 class _NotificationsSection extends StatefulWidget {
-  const _NotificationsSection({required this.notifications, required this.unreadCount, required this.onRefresh, required this.onLogin, required this.signedIn});
+  const _NotificationsSection({required this.notifications, required this.unreadCount, required this.onRefresh, required this.onLogin, required this.onSelectSection, required this.signedIn});
 
   final List<AccountNotification> notifications;
   final int unreadCount;
@@ -1168,7 +1239,8 @@ class _NotificationsSectionState extends State<_NotificationsSection> {
           else if (widget.notifications.isEmpty)
             const _EmptyPanel(title: 'لا توجد إشعارات حتى الآن', subtitle: 'ستظهر هنا تحديثات طلباتك والعروض والمناسبات.')
           else
-            for (final item in widget.notifications) _NotificationTile(notification: item),
+            for (final item in widget.notifications)
+              _NotificationTile(notification: item, onSelectSection: widget.onSelectSection),
         ],
       ),
     );
@@ -1176,12 +1248,18 @@ class _NotificationsSectionState extends State<_NotificationsSection> {
 }
 
 class _NotificationTile extends StatelessWidget {
-  const _NotificationTile({required this.notification});
+  const _NotificationTile({required this.notification, required this.onSelectSection});
 
   final AccountNotification notification;
+  final ValueChanged<AccountSection> onSelectSection;
 
   Future<void> _open(BuildContext context) async {
+    if (!notification.read) {
+      unawaited(AccountService().markNotificationsRead(<AccountNotification>[notification]));
+    }
     final uri = Uri.tryParse(notification.url.trim());
+    final type = notification.type.trim().toLowerCase();
+    final path = (uri?.path ?? notification.url).trim().toLowerCase();
     var productId = notification.productId.trim();
     productId = productId.isNotEmpty ? productId : (uri?.queryParameters['id'] ?? uri?.queryParameters['product_id'] ?? '').trim();
     final segments = uri?.pathSegments ?? const <String>[];
@@ -1191,17 +1269,55 @@ class _NotificationTile extends StatelessWidget {
       await Navigator.of(context).push(MaterialPageRoute(builder: (_) => ProductScreen(productId: productId)));
       return;
     }
-    if (notification.type == 'offer' || segments.any((segment) => segment.toLowerCase().contains('offer'))) {
-      await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const OffersScreen(showBack: true)));
+    if (type == 'abandoned_cart' || type == 'cart' || path.contains('/cart')) {
+      AppShellNavigation.openTab(context, 0);
       return;
     }
-    if (notification.url.trim().isNotEmpty) await _openExternalUrl(notification.url);
+    if (type == 'cashback' || path.contains('cashback') || path.contains('wallet')) {
+      onSelectSection(AccountSection.wallet);
+      return;
+    }
+    if (type == 'order_status' || type == 'order_update' || type == 'order' || notification.orderId.isNotEmpty || path.contains('/order')) {
+      onSelectSection(AccountSection.orders);
+      return;
+    }
+    if (type == 'occasion' || path.contains('occasion')) {
+      onSelectSection(AccountSection.occasions);
+      return;
+    }
+    if (type.contains('affiliate') || path.contains('affiliate') || path.contains('partner')) {
+      await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AffiliateScreen()));
+      return;
+    }
+    if (type == 'offer' || type == 'promotion' || type == 'campaign' || path.contains('offer')) {
+      AppShellNavigation.openTab(context, 2);
+      return;
+    }
+    if (type == 'favorite' || type == 'wishlist' || path.contains('favorite') || path.contains('wishlist')) {
+      onSelectSection(AccountSection.favorites);
+      return;
+    }
+    if (type == 'invoice' || path.contains('invoice')) {
+      onSelectSection(AccountSection.invoices);
+      return;
+    }
+    if (type == 'review' || path.contains('review')) {
+      onSelectSection(AccountSection.reviews);
+      return;
+    }
+    if (type == 'profile' || path.contains('profile')) {
+      onSelectSection(AccountSection.profile);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final date = DateFormat('d MMMM، h:mm a', 'ar_AE').format(notification.createdAt);
-    final interactive = notification.productId.trim().isNotEmpty || notification.url.trim().isNotEmpty || notification.type == 'offer';
+    final type = notification.type.trim().toLowerCase();
+    final interactive = notification.productId.trim().isNotEmpty ||
+        notification.url.trim().isNotEmpty ||
+        notification.orderId.trim().isNotEmpty ||
+        const <String>{'abandoned_cart', 'cart', 'cashback', 'order_status', 'order_update', 'order', 'occasion', 'affiliate_approved', 'affiliate', 'offer', 'promotion', 'campaign', 'favorite', 'wishlist', 'invoice', 'review', 'profile'}.contains(type);
     return InkWell(
       onTap: interactive ? () => _open(context) : null,
       borderRadius: BorderRadius.circular(9),
@@ -2398,6 +2514,7 @@ class _AccountMenuSheet extends StatelessWidget {
   final AccountSection selected;
   final ValueChanged<AccountSection> onSelect;
   final VoidCallback onLogin;
+  final ValueChanged<AccountSection> onSelectSection;
   final VoidCallback onAffiliate;
   final VoidCallback onPolicies;
   final VoidCallback? onLogout;
@@ -3621,6 +3738,37 @@ Map<String, dynamic> _firstOrderItem(Map<String, dynamic> order) {
   final items = order['items'];
   if (items is List && items.isNotEmpty && items.first is Map) return Map<String, dynamic>.from(items.first as Map);
   return const <String, dynamic>{};
+}
+
+String _orderItemProductId(Map<String, dynamic> item) => '${item['productId'] ?? item['product_id'] ?? item['id'] ?? ''}'.trim();
+
+String _localizedOrderItemName(
+  Map<String, dynamic> item,
+  Map<String, dynamic> order,
+) {
+  final id = _orderItemProductId(item);
+  if (AppStrings.en) {
+    final english = _firstText([
+      item['name_en'],
+      item['title_en'],
+      item['product_name_en'],
+      order['product_name_en'],
+    ]);
+    return english.isNotEmpty
+        ? english
+        : id.isNotEmpty
+            ? 'Bariq product #$id'
+            : 'Bariq order';
+  }
+  return _firstText([
+    item['name_ar'],
+    item['title_ar'],
+    item['title'],
+    item['name'],
+    item['product_name'],
+    order['notes'],
+    'طلب بريق',
+  ]);
 }
 
 String _date(Object? raw) {

@@ -22,10 +22,10 @@ class ProductGalleryGrid extends StatelessWidget {
             crossAxisCount: 3,
             crossAxisSpacing: 8,
             mainAxisSpacing: 8,
-            childAspectRatio: .70,
+            childAspectRatio: .82,
           ),
           itemBuilder: (context, index) => RepaintBoundary(
-            child: BariqProductCard(product: products[index]),
+            child: BariqProductCard(product: products[index], tablet: true),
           ),
         ),
       );

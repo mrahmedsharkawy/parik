@@ -30,7 +30,7 @@ class BariqBottomNav extends StatelessWidget {
       ];
 
   static const _iconColors = [
-    Color(0xFFBFD3F2),
+    Colors.white,
     Color(0xFFE8EDF7),
     AppTheme.gold,
     Color(0xFFD7E6FF),

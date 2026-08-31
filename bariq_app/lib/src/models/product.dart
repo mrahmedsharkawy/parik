@@ -57,7 +57,34 @@ class Product {
   String get displayName {
     final primary = BariqLocaleConfig.isEnglish ? nameEn : nameAr;
     final fallback = BariqLocaleConfig.isEnglish ? nameAr : nameEn;
-    return primary.trim().isNotEmpty ? primary : fallback;
+    if (primary.trim().isNotEmpty) return primary;
+    if (BariqLocaleConfig.isEnglish) return _englishNameFallback(fallback, id);
+    return fallback;
+  }
+
+  static String _englishNameFallback(String arabic, String id) {
+    final value = arabic.trim();
+    final count = RegExp(r'\d+').firstMatch(value)?.group(0);
+    final material = value.contains('اكريليك') || value.contains('أكريليك')
+        ? 'Acrylic'
+        : value.contains('جلد')
+            ? 'Leather'
+            : value.contains('فوركس')
+                ? 'Forex'
+                : value.contains('خشب')
+                    ? 'Wooden'
+                    : value.contains('ورق')
+                        ? 'Paper'
+                        : '';
+    if (value.contains('مواليد') || value.contains('مولود')) {
+      return [if (count != null) '$count-Piece', if (material.isNotEmpty) material, 'Newborn Set'].join(' ');
+    }
+    if (value.contains('تيست') || value.toLowerCase() == 'test') return 'Test Product';
+    if (material.isNotEmpty) {
+      return [if (count != null) '$count-Piece', material, 'Gift Set'].join(' ');
+    }
+    final shortId = id.length > 8 ? id.substring(0, 8) : id;
+    return shortId.isEmpty ? 'Bariq Product' : 'Bariq Product $shortId';
   }
 
   String get description {

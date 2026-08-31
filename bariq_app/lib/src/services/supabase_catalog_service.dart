@@ -17,6 +17,7 @@ class SupabaseCatalogService {
   static const Duration _cacheLife = Duration(minutes: 2);
   static final Map<String, Product> _productCache = <String, Product>{};
   static final Map<String, DateTime> _productCachedAt = <String, DateTime>{};
+  static final Set<String> _fullProductIds = <String>{};
   static final Map<String, List<CategoryItem>> _categoryCache =
       <String, List<CategoryItem>>{};
   static final Map<String, DateTime> _categoryCachedAt = <String, DateTime>{};
@@ -245,6 +246,7 @@ class SupabaseCatalogService {
     final cached = _productCache[id];
     final cachedAt = _productCachedAt[id];
     if (cached != null && cachedAt != null &&
+        _fullProductIds.contains(id) &&
         DateTime.now().difference(cachedAt) < _cacheLife) {
       return cached;
     }
@@ -256,7 +258,7 @@ class SupabaseCatalogService {
 
     if (row == null) return null;
     final product = Product.fromSupabase(Map<String, dynamic>.from(row));
-    _rememberProduct(product);
+    _rememberProduct(product, full: true);
     return product;
   }
 
@@ -451,8 +453,10 @@ class SupabaseCatalogService {
     return products;
   }
 
-  void _rememberProduct(Product product) {
+  void _rememberProduct(Product product, {bool full = false}) {
+    if (!full && _fullProductIds.contains(product.id)) return;
     _productCache[product.id] = product;
     _productCachedAt[product.id] = DateTime.now();
+    if (full) _fullProductIds.add(product.id);
   }
 }

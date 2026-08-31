@@ -5,7 +5,9 @@
 <script src="/java/trusted-types.js?v=20260806c"></script>
 <script src="/java/affiliate-head.js?v=20260803a"></script>
   <meta charset="UTF-8" />
-  <script src="/java/auth-reset.js"></script>
+<script src="/java/auth-reset.js"></script>
+<script src="/java/supabase.js?v=affiliate-current-20260831"></script>
+<link rel="stylesheet" href="/style/affiliate-current.css?v=20260831">
   <title data-i18n="التسويق بالعمولة - Bariq">التسويق بالعمولة - Bariq</title>
   <meta name="theme-color" content="#152546">
   <link rel="icon" type="image/png" sizes="96x96" href="/assets/icon-96.png?v=site-icon-20260727">
@@ -298,89 +300,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <main>
     <div id="searchResults" style="margin-top: 10px;"></div>
-  <div class="affiliate-dashboard-ar" style="display:none;">
-    <!-- محتوى لوحة التحكم بدون القائمة الجانبية والرسم البياني -->
-    <section class="affiliate-dashboard-section">
-      <button id="logout-btn" class="affiliate-logout-btn">تسجيل الخروج</button>
-      <h2 class="affiliate-dashboard-title">لوحة تحكم المسوّق</h2>
-      <div class="affiliate-dashboard-cards">
-        <div class="affiliate-card affiliate-card-total">
-          <div class="affiliate-card-label">إجمالي الأرباح</div>
-          <div id="total-earnings" class="affiliate-card-value">٠٫٠٠ د.إ</div>
-        </div>
-        <div class="affiliate-card affiliate-card-pending">
-          <div class="affiliate-card-label">الأرباح المعلقة</div>
-          <div id="pending-earnings" class="affiliate-card-value">٠٫٠٠ د.إ</div>
-        </div>
-        <div class="affiliate-card affiliate-card-withdraw">
-          <button id="withdraw-btn" class="affiliate-withdraw-btn">سحب الأرباح</button>
-        </div>
-      </div>
-      <div class="affiliate-dashboard-details">
-        <div class="affiliate-details-main">
-          <div class="affiliate-details-label">رابط الإحالة الخاص بك:</div>
-          <input id="affiliate-link" type="text" readonly value="">
-          <div class="affiliate-details-label" style="margin-top:18px;">عدد المبيعات</div>
-          <div id="affiliate-sales-count" class="affiliate-sales-count">0</div>
-        </div>
-        <div class="affiliate-details-transactions">
-          <div class="affiliate-details-label">المعاملات الأخيرة</div>
-          <table>
-            <thead>
-              <tr>
-                <th>التاريخ</th>
-                <th>المبلغ</th>
-                <th>الحالة</th>
-              </tr>
-            </thead>
-            <tbody id="transactions-table">
-              <!-- سيتم تعبئتها ديناميكياً -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-  </div>
-  <div id="affiliate-auth" class="affiliate-auth" style="display:none;">
-    <h3 class="affiliate-auth-title">تسجيل الدخول أو إنشاء حساب مسوّق</h3>
-    <form id="login-form" class="affiliate-auth-form">
-      <label for="login-email">الإيميل</label>
-      <input type="email" id="login-email" required>
-      <label for="login-pass">كلمة المرور</label>
-      <input type="password" id="login-pass" required>
-      <button type="submit" class="affiliate-auth-btn">تسجيل الدخول</button>
-    </form>
-    <div class="affiliate-auth-or"></div>
-    <form id="register-form" class="affiliate-auth-form">
-      <label for="reg-email">الإيميل</label>
-      <input type="email" id="reg-email" required>
-      <label for="reg-pass">كلمة المرور</label>
-      <input type="password" id="reg-pass" required>
-      <label for="reg-name">الاسم</label>
-      <input type="text" id="reg-name" required>
-      <button type="submit" class="affiliate-auth-btn affiliate-auth-btn-register">إنشاء حساب جديد</button>
-    </form>
-  </div>
-
-  <!-- نافذة إعادة تعيين كلمة المرور الجديدة -->
-<div id="reset-pass-modal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.25);z-index:99999;">
-  <div style="background:#fff;max-width:350px;margin:100px auto;padding:28px 18px;border-radius:12px;box-shadow:0 2px 12px #0002;position:relative;">
-    <button id="close-reset-modal" style="position:absolute;left:10px;top:10px;background:none;border:none;font-size:1.3em;cursor:pointer;">×</button>
-    <h4 style="color:#D4AF37;text-align:center;margin-bottom:18px;">إعادة تعيين كلمة المرور</h4>
-    <form id="reset-pass-form">
-      <label for="reset-email">أدخل بريدك الإلكتروني:</label>
-      <input type="email" id="reset-email" required style="width:100%;margin-bottom:12px;padding:8px 10px;border-radius:6px;border:1px solid #ddd;">
-      <label for="reset-username">اسم المستخدم:</label>
-      <input type="text" id="reset-username" required style="width:100%;margin-bottom:12px;padding:8px 10px;border-radius:6px;border:1px solid #ddd;">
-      <label for="reset-oldpass">كلمة السر القديمة أو أي كلمة سر استخدمتها من قبل:</label>
-      <input type="password" id="reset-oldpass" required style="width:100%;margin-bottom:12px;padding:8px 10px;border-radius:6px;border:1px solid #ddd;">
-      <label for="reset-newpass">كلمة السر الجديدة:</label>
-      <input type="password" id="reset-newpass" required style="width:100%;margin-bottom:12px;padding:8px 10px;border-radius:6px;border:1px solid #ddd;">
-      <button type="submit" class="affiliate-auth-btn" style="margin-top:8px;">تغيير كلمة المرور</button>
-    </form>
-    <div id="reset-pass-msg" style="margin-top:12px;text-align:center;color:#0673d8;font-weight:bold;"></div>
-  </div>
-</div>
+  <section id="affiliateCurrentApp" class="affiliate-current-app" aria-live="polite">
+    <div class="affiliate-loading"><span></span><p>جاري تحميل حساب الشريك...</p></div>
+  </section>
 </main>
 
 
@@ -506,6 +428,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="/mobile-nav-bar/main-navbar.js?v=mobile-nav-20260806-rtl-pill-fix6" defer></script>
 <script src="/java/push-welcome.js?v=push-welcome-20260806-hardened" defer></script>
 <script src="/java/abandoned-cart.js?v=abandoned-cart-20260730a" defer></script>
+<script src="/java/affiliate-current.js?v=20260831" defer></script>
 <script type="module" src="./java/Products.min.js?v=products-20260803-progressive-cart"></script> <!-- ده يفضل يفضل في الآخر -->
 </body>
 </html>

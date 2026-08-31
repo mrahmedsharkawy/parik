@@ -12,16 +12,42 @@
 .affiliate-ok{color:#157347!important;background:#e8faf4!important;border-color:#cdeee2!important}
 .affiliate-list-card{margin-top:12px}
 .toast{display:none}
+.affiliate-auth-gate{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:20px;background:linear-gradient(135deg,#eef4ff 0%,#f8fbff 48%,#eefbf7 100%)}
+.affiliate-auth-card{width:min(430px,100%);padding:30px;border:1px solid #dce5f2;border-radius:24px;background:#fff;box-shadow:0 24px 70px rgba(15,35,72,.14)}
+.affiliate-auth-mark{display:grid;place-items:center;width:58px;height:58px;margin:0 auto 14px;border-radius:18px;background:#172f5b;color:#d5a72d;font-size:1.45rem;font-weight:1000}
+.affiliate-auth-card h2{margin:0 0 6px;text-align:center;color:#172f5b}
+.affiliate-auth-card p{margin:0 0 22px;text-align:center;color:#7a879c}
+.affiliate-auth-card label{display:block;margin-top:12px;color:#33415d;font-weight:800}
+.affiliate-auth-card input{width:100%;box-sizing:border-box;margin-top:7px;padding:13px 14px;border:1px solid #d7dfec;border-radius:12px;background:#f9fbff;font:inherit;direction:ltr;text-align:left}
+.affiliate-auth-card input:focus{outline:2px solid rgba(213,167,45,.25);border-color:#d5a72d}
+.affiliate-auth-submit{width:100%;margin-top:18px}
+.affiliate-auth-message{min-height:24px;margin-top:10px;color:#b42318;text-align:center;font-weight:700}
+.affiliate-auth-back{display:block;margin-top:8px;text-align:center;color:#62708a;text-decoration:none}
+[hidden]{display:none!important}
 @media(max-width:820px){.affiliate-form{grid-template-columns:1fr 1fr}}
 @media(max-width:560px){.affiliate-form{grid-template-columns:1fr}}
 </style>
   <link rel="stylesheet" href="/style/admin-pro.css?v=20260830">
 </head>
 <body>
+<div id="adminGate" class="affiliate-auth-gate">
+  <form id="adminLoginForm" class="affiliate-auth-card" autocomplete="on">
+    <div class="affiliate-auth-mark">B</div>
+    <h2>تسجيل دخول إدارة الشركاء</h2>
+    <p>استخدم نفس حساب الأدمن الخاص بلوحة بريق.</p>
+    <label for="loginEmail">البريد الإلكتروني<input id="loginEmail" name="email" type="email" autocomplete="username" required></label>
+    <label for="loginPassword">كلمة المرور<input id="loginPassword" name="password" type="password" autocomplete="current-password" required></label>
+    <button id="loginBtn" class="btn btn-navy affiliate-auth-submit" type="submit">تسجيل الدخول</button>
+    <div id="loginMsg" class="affiliate-auth-message" role="alert" aria-live="polite"></div>
+    <a class="affiliate-auth-back" href="/admin.html">العودة للوحة الأدمن</a>
+  </form>
+</div>
+<div id="affiliateAdminApp" hidden>
 <div class="topbar">
   <h1>🤝 إدارة برنامج شركاء بريق <span class="badge">Bariq</span></h1>
   <div class="actions">
     <a href="/admin.html" class="btn btn-ghost btn-sm">↩ العودة للوحة</a>
+    <button id="logoutBtn" type="button" class="btn btn-ghost btn-sm">تسجيل الخروج</button>
   </div>
 </div>
 <main class="wrap">
@@ -36,9 +62,66 @@
   <section id="policies" class="panel"><div class="card"><h2>السياسات والشروط</h2><div class="affiliate-form"><input id="policySlug" placeholder="slug"><input id="policyTitleAr" placeholder="العنوان العربي"><input id="policyTitleEn" placeholder="English title"><textarea id="policyBodyAr" placeholder="النص العربي"></textarea><textarea id="policyBodyEn" placeholder="English body"></textarea><button class="btn btn-gold" onclick="savePolicy()">إضافة / تحديث</button></div><div id="policyList"></div></div></section>
   <section id="assets" class="panel"><div class="card"><h2>مواد التسويق</h2><div class="affiliate-form"><input id="assetProduct" placeholder="Product ID"><select id="assetType"><option>image</option><option>video</option><option>copy</option><option>short_description</option></select><input id="assetUrl" placeholder="Media URL"><input id="assetTitleAr" placeholder="العنوان"><input id="assetTitleEn" placeholder="Title"><textarea id="assetContentAr" placeholder="النص التسويقي"></textarea><textarea id="assetContentEn" placeholder="Marketing copy"></textarea><button class="btn btn-gold" onclick="saveAsset()">إضافة المادة</button></div><div id="assetList"></div></div></section>
 </main><div id="toast" class="toast"></div>
+</div>
 <script>
 const PAGE=20,state={partners:0,products:0,commissions:0,withdrawals:0,audit:0};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const byId=id=>document.getElementById(id);
+let affiliateRefreshTimer=null;
+function hasAdminSession(){
+  try{
+    if(typeof restoreAdminSession==='function')restoreAdminSession();
+    return sessionStorage.getItem('admin_ok')==='1'&&!!(sessionStorage.getItem('admin_token')||sessionStorage.getItem('admin_refresh_token'));
+  }catch(_){return false}
+}
+async function verifyAdminSession(){
+  if(!hasAdminSession())return false;
+  try{
+    const admins=await sbFetch('admins?select=id,active&active=eq.true&limit=1',{requireAuth:true});
+    return Array.isArray(admins)&&admins.length>0;
+  }catch(_){return false}
+}
+function showAdminGate(message=''){
+  byId('affiliateAdminApp').hidden=true;
+  byId('adminGate').hidden=false;
+  byId('loginMsg').textContent=message;
+}
+function showAffiliateAdmin(){
+  byId('adminGate').hidden=true;
+  byId('affiliateAdminApp').hidden=false;
+}
+async function loginAdmin(event){
+  event?.preventDefault();
+  const email=byId('loginEmail').value.trim();
+  const password=byId('loginPassword').value;
+  const button=byId('loginBtn');
+  if(!email||!password)return showAdminGate('أدخل البريد الإلكتروني وكلمة المرور.');
+  button.disabled=true;
+  button.textContent='جاري التحقق...';
+  byId('loginMsg').textContent='';
+  try{
+    const auth=await Supabase.Auth.signIn(email,password);
+    sessionStorage.setItem('admin_ok','1');
+    sessionStorage.setItem('admin_token',auth.access_token||'');
+    sessionStorage.setItem('admin_refresh_token',auth.refresh_token||'');
+    if(typeof rememberAdminSession==='function')rememberAdminSession(email,auth);
+    const admins=await sbFetch('admins?email=eq.'+encodeURIComponent(email)+'&active=eq.true&limit=1',{requireAuth:true});
+    if(!Array.isArray(admins)||!admins.length)throw new Error('هذا الحساب غير مصرح له بدخول لوحة الأدمن.');
+    showAffiliateAdmin();
+    await init();
+    startAffiliateRefresh();
+  }catch(error){
+    if(typeof clearAdminSession==='function')clearAdminSession();
+    showAdminGate(error?.message||'فشل تسجيل الدخول. تأكد من البيانات وحاول مرة أخرى.');
+  }finally{
+    button.disabled=false;
+    button.textContent='تسجيل الدخول';
+  }
+}
+function startAffiliateRefresh(){
+  if(affiliateRefreshTimer)return;
+  affiliateRefreshTimer=setInterval(()=>{if(!document.hidden&&byId('partners')?.classList.contains('active'))loadPartners()},15000);
+}
 function toast(s){const x=document.getElementById('toast');x.textContent=s;x.style.display='block';setTimeout(()=>x.style.display='none',2200)}
 document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tabs button').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===b.dataset.tab));});
 async function rows(table,select='*',offset=0){return sbFetch(`${table}?select=${encodeURIComponent(select)}&order=created_at.desc&limit=${PAGE}&offset=${offset}`)}
@@ -47,7 +130,7 @@ async function loadPartners(reset=true){if(reset){state.partners=0;partnersRows.
 <button class="btn btn-danger" onclick="partnerStatus('${p.id}','rejected')">رفض</button>
 <button class="btn" onclick="partnerStatus('${p.id}','suspended')">إيقاف</button>
 <button class="btn btn-ghost" onclick="editPartner('${p.id}')">تعديل</button>
-<button class="btn btn-danger" onclick="removeRow('affiliate_partners','${p.id}',loadPartners)">حذف</button>
+${p.status==='terminated'?'<button class="btn" disabled>التعاقد منتهي</button>':`<button class="btn btn-danger" onclick="terminatePartner('${p.id}')">إنهاء التعاقد</button>`}
 </td></tr>`).join(''));return data}
 async function loadProducts(reset=true){if(reset){state.products=0;productsRows.innerHTML=''}const data=await sbFetch(`products?select=id,name_ar,name_en,price,affiliate_enabled,affiliate_commission_rate&active=eq.true&order=created_at.desc&limit=${PAGE}&offset=${state.products}`);state.products+=data.length;productsRows.insertAdjacentHTML('beforeend',data.map(p=>`<tr><td><b>${esc(p.name_ar||p.name_en||('منتج '+p.id))}</b></td><td>${Number(p.price||0).toFixed(2)} AED</td><td><input type="checkbox" ${p.affiliate_enabled?'checked':''} onchange="patchProduct('${p.id}',{affiliate_enabled:this.checked})"></td><td><input style="width:90px" min="0" max="100" type="number" value="${p.affiliate_commission_rate??''}" onchange="patchProduct('${p.id}',{affiliate_commission_rate:this.value===''?null:Number(this.value)})"></td></tr>`).join(''));return data}
 async function loadCommissions(reset=true){if(reset){state.commissions=0;commissionsRows.innerHTML=''}const data=await rows('affiliate_commissions','*',state.commissions);state.commissions+=data.length;commissionsRows.insertAdjacentHTML('beforeend',data.map(c=>`<tr><td>#${esc(c.order_number)}</td><td>${esc(c.partner_id)}</td><td>${Number(c.eligible_amount).toFixed(2)}</td><td>${Number(c.commission_rate).toFixed(2)}%</td><td>${Number(c.commission_amount).toFixed(2)}</td><td><span class="affiliate-status">${esc(c.status)}</span></td>
@@ -66,6 +149,14 @@ async function loadAudit(reset=true){if(reset){state.audit=0;auditRows.innerHTML
 async function patch(table,id,data){await sbFetch(`${table}?id=eq.${encodeURIComponent(id)}`,{method:'PATCH',body:JSON.stringify(data)});toast('تم الحفظ')}
 async function patchProduct(id,data){await sbFetch(`products?id=eq.${encodeURIComponent(id)}`,{method:'PATCH',body:JSON.stringify(data)});toast('تم حفظ إعداد المنتج')}
 async function partnerStatus(id,status){await patch('affiliate_partners',id,{status,reviewed_at:new Date().toISOString()});loadPartners()}
+async function terminatePartner(id){
+  if(!confirm('هل تريد إنهاء تعاقد هذا الشريك؟ ستتوقف روابطه وأدوات التسويق مع الاحتفاظ بسجل المبيعات والعمولات.'))return;
+  const reason=prompt('سبب إنهاء التعاقد (اختياري)','');
+  if(reason===null)return;
+  await patch('affiliate_partners',id,{status:'terminated',terminated_at:new Date().toISOString(),termination_reason:reason.trim(),reviewed_at:new Date().toISOString()});
+  toast('تم إنهاء التعاقد وإيقاف حساب الشريك');
+  loadPartners();
+}
 async function withdrawStatus(id,status){await patch('affiliate_withdrawals',id,{status});loadWithdrawals()}
 function more(type){({partners:loadPartners,products:loadProducts,commissions:loadCommissions,withdrawals:loadWithdrawals})[type](false)}
 async function loadSettings(){const x=(await sbFetch('affiliate_settings?id=eq.true&limit=1'))[0]||{};defaultRate.value=x.default_commission_rate??10;attrDays.value=x.attribution_days??30;minWithdrawal.value=x.minimum_withdrawal??100}
@@ -173,5 +264,20 @@ async function editWithdrawal(id){
 
 async function removeRow(table,id,cb){if(!confirm('تأكيد الحذف؟'))return;await sbFetch(`${table}?id=eq.${id}`,{method:'DELETE'});toast('تم الحذف');cb()}
 async function init(){try{const [p,,c,w]=await Promise.all([loadPartners(),loadProducts(),loadCommissions(),loadWithdrawals(),loadSettings(),loadPolicies(),loadAssets(),loadAudit()]);stats.innerHTML=[['الشركاء',p.length],['العمولات',c.length],['طلبات السحب',w.length],['بانتظار المراجعة',p.filter(x=>x.status==='pending').length]].map(x=>`<div class="stat"><div class="muted">${x[0]}</div><b>${x[1]}</b></div>`).join('')}catch(e){toast('تعذر التحميل: '+e.message)}}
-window.addEventListener('DOMContentLoaded',()=>{init();setInterval(()=>{if(document.getElementById('partners').classList.contains('active'))loadPartners()},15000)});
+window.addEventListener('DOMContentLoaded',async()=>{
+  byId('adminLoginForm').addEventListener('submit',loginAdmin);
+  byId('logoutBtn').addEventListener('click',()=>{
+    if(affiliateRefreshTimer)clearInterval(affiliateRefreshTimer);
+    if(typeof clearAdminSession==='function')clearAdminSession();
+    location.reload();
+  });
+  if(await verifyAdminSession()){
+    showAffiliateAdmin();
+    await init();
+    startAffiliateRefresh();
+  }else{
+    if(typeof clearAdminSession==='function')clearAdminSession();
+    showAdminGate();
+  }
+});
 </script></body></html>

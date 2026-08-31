@@ -834,7 +834,7 @@ Future<List<Map<String, dynamic>>> fetchOrders({
           source: 'generated',
           type: 'order_status',
           icon: _orderStatusIcon(status),
-          title: 'تحديث على طلب رقم #$orderKey',
+          title: AppStrings.tr('تحديث على طلب رقم #$orderKey', 'Update on order #$orderKey'),
           message: _orderStatusMessage(status, orderKey),
           orderId: orderKey,
           read: readIds.contains(statusId) || order['read'] == true || order['notif_seen'] == true,
@@ -852,10 +852,12 @@ Future<List<Map<String, dynamic>>> fetchOrders({
             source: 'generated',
             type: 'cashback',
             icon: '🤑',
-            title: cbStatus == 'earned' || cbStatus == 'claimed' ? 'تم إضافة كاش باك' : 'كاش باك بانتظارك',
+            title: cbStatus == 'earned' || cbStatus == 'claimed'
+                ? AppStrings.tr('تم إضافة كاش باك', 'Cashback added')
+                : AppStrings.tr('كاش باك بانتظارك', 'Your cashback is waiting'),
             message: cbStatus == 'earned' || cbStatus == 'claimed'
-                ? 'تم إضافة ${_amount(cashback)} د.إ كاش باك في حسابك من طلبك رقم #$orderKey.'
-                : 'حصلت على ${_amount(cashback)} د.إ كاش باك من طلبك رقم #$orderKey. سيتم تفعيله بعد اعتماد الطلب.',
+                ? AppStrings.tr('تم إضافة ${_amount(cashback)} د.إ كاش باك في حسابك من طلبك رقم #$orderKey.', '${_amount(cashback)} AED cashback was added from order #$orderKey.')
+                : AppStrings.tr('حصلت على ${_amount(cashback)} د.إ كاش باك من طلبك رقم #$orderKey. سيتم تفعيله بعد اعتماد الطلب.', 'You earned ${_amount(cashback)} AED cashback from order #$orderKey. It will be activated after order approval.'),
             orderId: orderKey,
             read: readIds.contains(cbId),
             createdAt: createdAt.add(const Duration(seconds: 1)),
@@ -876,8 +878,8 @@ Future<List<Map<String, dynamic>>> fetchOrders({
         source: 'generated',
         type: 'occasion',
         icon: '🎉',
-        title: days == 0 ? 'مناسبة اليوم' : 'تذكير بمناسبة قريبة',
-        message: '${occasion.name} · ${occasion.personName} ${days == 0 ? 'اليوم' : 'بعد $days يوم'}',
+        title: AppStrings.tr(days == 0 ? 'مناسبة اليوم' : 'تذكير بمناسبة قريبة', days == 0 ? "Today's occasion" : 'Upcoming occasion reminder'),
+        message: AppStrings.tr('${occasion.name} · ${occasion.personName} ${days == 0 ? 'اليوم' : 'بعد $days يوم'}', '${occasion.name} · ${occasion.personName} ${days == 0 ? 'today' : 'in $days days'}'),
         read: readIds.contains(id),
         createdAt: DateTime.now().subtract(Duration(minutes: days.clamp(0, 999).toInt())),
       ));
@@ -910,8 +912,8 @@ Future<List<Map<String, dynamic>>> fetchOrders({
         source: 'generated',
         type: 'abandoned_cart',
         icon: '🛒',
-        title: 'سلتك في انتظارك',
-        message: 'لديك $count ${count == 1 ? 'منتج' : 'منتجات'} في السلة. كمل طلبك قبل نفاد العرض.',
+        title: AppStrings.tr('سلتك في انتظارك', 'Your cart is waiting'),
+        message: AppStrings.tr('لديك $count ${count == 1 ? 'منتج' : 'منتجات'} في السلة. كمل طلبك قبل نفاد العرض.', 'You have $count ${count == 1 ? 'product' : 'products'} in your cart. Complete your order before the offer ends.'),
         read: readIds.contains(id),
         createdAt: DateTime.tryParse(updatedAt) ?? DateTime.now(),
       );
@@ -983,15 +985,15 @@ Future<List<Map<String, dynamic>>> fetchOrders({
 
   static String _orderStatusMessage(String status, String orderKey) {
     return switch (status) {
-      'delivered' => 'طلبك رقم #$orderKey وصل بنجاح 🎉',
-      'shipped' => 'طلبك رقم #$orderKey في الطريق إليك',
-      'ready' => 'طلبك رقم #$orderKey جاهز وبانتظارك 🎉',
-      'manufacturing' => 'طلبك رقم #$orderKey يتم تصنيعه الآن بعناية ✨',
-      'confirmed' => 'طلبك رقم #$orderKey تم تأكيده وسيجهز قريبا 🎉',
-      'cancelled' => 'طلبك رقم #$orderKey تم إلغاؤه',
-      'returned' => 'تمت معالجة إرجاع طلبك رقم #$orderKey',
-      'pending' => 'طلبك رقم #$orderKey قيد المراجعة الآن',
-      _ => 'جاري تجهيز طلبك رقم #$orderKey',
+      'delivered' => AppStrings.tr('طلبك رقم #$orderKey وصل بنجاح 🎉', 'Your order #$orderKey was delivered successfully 🎉'),
+      'shipped' => AppStrings.tr('طلبك رقم #$orderKey في الطريق إليك', 'Your order #$orderKey is on the way'),
+      'ready' => AppStrings.tr('طلبك رقم #$orderKey جاهز وبانتظارك 🎉', 'Your order #$orderKey is ready 🎉'),
+      'manufacturing' => AppStrings.tr('طلبك رقم #$orderKey يتم تصنيعه الآن بعناية ✨', 'Your order #$orderKey is being carefully prepared ✨'),
+      'confirmed' => AppStrings.tr('طلبك رقم #$orderKey تم تأكيده وسيجهز قريبا 🎉', 'Your order #$orderKey has been confirmed 🎉'),
+      'cancelled' => AppStrings.tr('طلبك رقم #$orderKey تم إلغاؤه', 'Your order #$orderKey was cancelled'),
+      'returned' => AppStrings.tr('تمت معالجة إرجاع طلبك رقم #$orderKey', 'The return for order #$orderKey was processed'),
+      'pending' => AppStrings.tr('طلبك رقم #$orderKey قيد المراجعة الآن', 'Your order #$orderKey is under review'),
+      _ => AppStrings.tr('جاري تجهيز طلبك رقم #$orderKey', 'Your order #$orderKey is being prepared'),
     };
   }
 
@@ -1081,14 +1083,32 @@ class AccountNotification {
     final rawData = row['data'];
     final data = rawData is Map ? Map<String, dynamic>.from(rawData) : const <String, dynamic>{};
     final rawType = '${row['type'] ?? 'push'}'.trim();
-    final arabicTitle = '${row['title'] ?? ''}'.trim();
-    final englishTitle = '${data['title_en'] ?? ''}'.trim();
-    final rawTitle = AppStrings.en && englishTitle.isNotEmpty ? englishTitle : arabicTitle;
-    final arabicMessage = '${row['msg'] ?? row['body'] ?? row['message'] ?? ''}'.trim();
-    final englishMessage = '${data['body_en'] ?? ''}'.trim();
-    final rawMessage = AppStrings.en && englishMessage.isNotEmpty ? englishMessage : arabicMessage;
     final orderId = '${row['order_id'] ?? row['orderId'] ?? ''}'.replaceAll('#', '').trim();
     final status = '${row['status'] ?? row['order_status'] ?? ''}'.trim().toLowerCase();
+    final storedTitle = '${row['title'] ?? ''}'.trim();
+    final storedMessage = '${row['msg'] ?? row['body'] ?? row['message'] ?? ''}'.trim();
+    final explicitArabicTitle = '${data['title_ar'] ?? data['titleAr'] ?? row['title_ar'] ?? ''}'.trim();
+    final explicitEnglishTitle = '${data['title_en'] ?? data['titleEn'] ?? row['title_en'] ?? ''}'.trim();
+    final arabicTitle = explicitArabicTitle.isNotEmpty
+        ? explicitArabicTitle
+        : (_containsArabic(storedTitle) ? storedTitle : _legacyArabicTitle(storedTitle, rawType, orderId));
+    final englishTitle = explicitEnglishTitle.isNotEmpty
+        ? explicitEnglishTitle
+        : (!_containsArabic(storedTitle) ? storedTitle : _legacyEnglishTitle(storedTitle, rawType, orderId));
+    final rawTitle = AppStrings.en
+        ? englishTitle
+        : arabicTitle;
+    final explicitArabicMessage = '${data['body_ar'] ?? data['bodyAr'] ?? row['body_ar'] ?? ''}'.trim();
+    final explicitEnglishMessage = '${data['body_en'] ?? data['bodyEn'] ?? row['body_en'] ?? ''}'.trim();
+    final arabicMessage = explicitArabicMessage.isNotEmpty
+        ? explicitArabicMessage
+        : (_containsArabic(storedMessage) ? storedMessage : _legacyArabicMessage(storedMessage, rawType, status, orderId));
+    final englishMessage = explicitEnglishMessage.isNotEmpty
+        ? explicitEnglishMessage
+        : (!_containsArabic(storedMessage) ? storedMessage : _legacyEnglishMessage(storedMessage, rawType, status, orderId));
+    final rawMessage = AppStrings.en
+        ? englishMessage
+        : arabicMessage;
     final type = rawType.isEmpty ? (status.isNotEmpty ? 'order_status' : 'push') : rawType;
     final icon = '${row['icon'] ?? ''}'.trim();
     final id = '${row['id'] ?? '${type}_${orderId}_${row['created_at'] ?? DateTime.now().toIso8601String()}'}';
@@ -1109,10 +1129,74 @@ class AccountNotification {
   }
 
   static String _fallbackTitle(String type, String status, String orderId) {
-    if (type == 'cashback') return 'تم إضافة كاش باك';
-    if (type == 'order_status') return orderId.isEmpty ? 'تحديث على طلبك' : 'تحديث على طلب رقم #$orderId';
+    if (type == 'cashback') return AppStrings.tr('تم إضافة كاش باك', 'Cashback added');
+    if (type == 'order_status') return AppStrings.tr(orderId.isEmpty ? 'تحديث على طلبك' : 'تحديث على طلب رقم #$orderId', orderId.isEmpty ? 'Order update' : 'Update on order #$orderId');
+    if (type == 'occasion') return AppStrings.tr('تذكير بمناسبة', 'Occasion reminder');
+    return AppStrings.tr('إشعار جديد', 'New notification');
+  }
+
+  static bool _containsArabic(String value) => RegExp(r'[\u0600-\u06FF]').hasMatch(value);
+
+  static String _legacyArabicTitle(String english, String type, String orderId) {
+    final value = english.toLowerCase();
+    if (value.contains('cart') || type == 'abandoned_cart') return 'سلتك في انتظارك';
+    if (value.contains('cashback') && (value.contains('added') || value.contains('earned'))) return 'تم إضافة كاش باك';
+    if (value.contains('cashback') || type == 'cashback') return 'كاش باك بانتظارك';
+    if (value.contains('order') || type == 'order_status' || type == 'order_update') {
+      return orderId.isEmpty ? 'تحديث على طلبك' : 'تحديث على طلب رقم #$orderId';
+    }
+    if (value.contains('partner') || type == 'affiliate_approved') return 'تم قبولك في برنامج شركاء بريق';
     if (type == 'occasion') return 'تذكير بمناسبة';
     return 'إشعار جديد';
+  }
+
+  static String _legacyArabicMessage(String english, String type, String status, String orderId) {
+    final value = english.toLowerCase();
+    if (type == 'order_status' || type == 'order_update' || value.contains('order')) {
+      return AccountService._orderStatusMessage(status, orderId);
+    }
+    if (type == 'abandoned_cart' || value.contains('cart')) {
+      return 'لديك منتجات في السلة. أكمل طلبك قبل انتهاء العرض.';
+    }
+    if (type == 'cashback' || value.contains('cashback')) {
+      return orderId.isEmpty
+          ? 'سيتم تفعيل الكاش باك بعد اعتماد الطلب.'
+          : 'حصلت على كاش باك من طلبك رقم #$orderId. سيتم تفعيله بعد اعتماد الطلب.';
+    }
+    if (type == 'affiliate_approved' || value.contains('partner')) {
+      return 'يمكنك الآن الدخول إلى لوحة الشريك وروابطك وعمولاتك.';
+    }
+    return 'افتح الإشعار لعرض أحدث التفاصيل.';
+  }
+
+  static String _legacyEnglishTitle(String arabic, String type, String orderId) {
+    if (arabic.contains('سلتك')) return 'Your cart is waiting';
+    if (arabic.contains('كاش باك') && arabic.contains('بانتظار')) return 'Your cashback is waiting';
+    if (arabic.contains('كاش باك')) return 'Cashback added';
+    if (arabic.contains('تحديث') || type == 'order_status' || type == 'order_update') {
+      return orderId.isEmpty ? 'Order update' : 'Update on order #$orderId';
+    }
+    if (arabic.contains('شركاء بريق')) return 'You have been accepted into the Bariq Partners Program';
+    if (type == 'occasion') return 'Occasion reminder';
+    return 'New notification';
+  }
+
+  static String _legacyEnglishMessage(String arabic, String type, String status, String orderId) {
+    if (type == 'order_status' || type == 'order_update') {
+      return AccountService._orderStatusMessage(status, orderId);
+    }
+    if (arabic.contains('سلة') || type == 'abandoned_cart') {
+      return 'You have products waiting in your cart. Complete your order before the offer ends.';
+    }
+    if (arabic.contains('كاش باك') || type == 'cashback') {
+      return orderId.isEmpty
+          ? 'Your cashback will be activated after order approval.'
+          : 'Your cashback from order #$orderId will be activated after order approval.';
+    }
+    if (arabic.contains('شركاء بريق')) {
+      return 'You can now access your partner dashboard, links and commissions.';
+    }
+    return 'Open the notification to view the latest details.';
   }
 }
 

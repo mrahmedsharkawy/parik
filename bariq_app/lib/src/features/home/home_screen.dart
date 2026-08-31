@@ -57,6 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String _productSort = 'daily_random';
   String? _scheduledPopupId;
   bool _popupShownThisSession = false;
+  bool _runtimeRefreshStarted = false;
 
   @override
   void initState() {
@@ -112,6 +113,30 @@ class _HomeScreenState extends State<HomeScreen> {
     await next;
   }
 
+  void _refreshRuntimeSettingsInBackground(_HomeData current) {
+    if (_runtimeRefreshStarted) return;
+    _runtimeRefreshStarted = true;
+    unawaited(() async {
+      final latest = await _appSettings.fetch(forceRefresh: true);
+      if (!mounted) return;
+      final oldPopup = current.appSettings.popupCampaign;
+      final newPopup = latest.popupCampaign;
+      final changed = latest.updatedAt != current.appSettings.updatedAt ||
+          oldPopup.id != newPopup.id ||
+          oldPopup.enabled != newPopup.enabled;
+      if (!changed) return;
+      setState(() {
+        _future = Future.value(_HomeData(
+          products: _products,
+          categories: current.categories,
+          subcategories: current.subcategories,
+          settings: current.settings,
+          appSettings: latest,
+        ));
+      });
+    }());
+  }
+
   void _schedulePopup(AppPopupCampaign campaign, bool english) {
     if (!campaign.activeNow || _popupShownThisSession ||
         _scheduledPopupId == campaign.id) return;
@@ -132,6 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
           },
         ),
       );
+      await _markPopupShown(campaign);
     });
   }
 
@@ -139,18 +165,29 @@ class _HomeScreenState extends State<HomeScreen> {
     if (campaign.frequency == 'session') return true;
     final prefs = await SharedPreferences.getInstance();
     final identity = campaign.id.isEmpty ? campaign.hashCode : campaign.id;
-    final key = 'bariq_popup_$identity';
+    final key = 'bariq_popup_v2_$identity';
     final previous = prefs.getString(key);
     final today = DateTime.now();
     if (campaign.frequency == 'daily') {
       final stamp = '${today.year}-${today.month}-${today.day}';
       if (previous == stamp) return false;
-      await prefs.setString(key, stamp);
       return true;
     }
     if (previous == 'seen') return false;
-    await prefs.setString(key, 'seen');
     return true;
+  }
+
+  Future<void> _markPopupShown(AppPopupCampaign campaign) async {
+    if (campaign.frequency == 'session') return;
+    final prefs = await SharedPreferences.getInstance();
+    final identity = campaign.id.isEmpty ? campaign.hashCode : campaign.id;
+    final key = 'bariq_popup_v2_$identity';
+    if (campaign.frequency == 'daily') {
+      final today = DateTime.now();
+      await prefs.setString(key, '${today.year}-${today.month}-${today.day}');
+    } else {
+      await prefs.setString(key, 'seen');
+    }
   }
 
   void _openPopupLink(String rawLink) {
@@ -260,6 +297,7 @@ class _HomeScreenState extends State<HomeScreen> {
             }
 
             final data = snapshot.data!;
+            _refreshRuntimeSettingsInBackground(data);
             final appState = AppStateScope.of(context);
             final headerBanners = data.appSettings.bannersForLanguage(appState.language);
             _schedulePopup(data.appSettings.popupCampaign, appState.isEnglish);
@@ -1153,8 +1191,8 @@ class _RoundCategories extends StatelessWidget {
     for (final spec in specs) {
       for (final item in source) {
         if (used.contains(item.id)) continue;
-        if (item.displayName.contains(spec.label)) {
-          ordered.add(_OccasionTile(label: item.displayName, icon: spec.icon, id: item.id));
+        if (item.nameAr.contains(spec.label)) {
+          ordered.add(_OccasionTile(label: _occasionLabel(item), icon: spec.icon, id: item.id));
           used.add(item.id);
           break;
         }
@@ -1163,11 +1201,27 @@ class _RoundCategories extends StatelessWidget {
 
     final rest = source
         .where((item) => !used.contains(item.id))
-        .map((item) => _OccasionTile(label: item.displayName, icon: _iconFor(item.displayName), id: item.id))
+        .map((item) => _OccasionTile(label: _occasionLabel(item), icon: _iconFor(item.nameAr), id: item.id))
         .toList()
       ..sort((a, b) => a.label.compareTo(b.label));
 
     return [...ordered, ...rest];
+  }
+
+  String _occasionLabel(SubcategoryItem item) {
+    if (!AppStrings.en) return item.nameAr.isNotEmpty ? item.nameAr : item.displayName;
+    if (item.nameEn.trim().isNotEmpty) return item.nameEn.trim();
+    final arabic = item.nameAr.trim();
+    const fallback = <String, String>{
+      'مواليد': 'Newborn',
+      'حج': 'Hajj',
+      'العيد': 'Eid',
+      'تخرج': 'Graduation',
+      'عيد الأم': "Mother's Day",
+      'حق الليلة': 'Haq Al-Laila',
+      'اليوم الوطني': 'National Day',
+    };
+    return fallback[arabic] ?? item.displayName;
   }
 
   IconData _iconFor(String label) {
@@ -1433,13 +1487,13 @@ class _TodayScroller extends StatelessWidget {
   Widget build(BuildContext context) {
     if (products.isEmpty) return const SizedBox.shrink();
     return SizedBox(
-      height: 176,
+      height: 160,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 8),
         itemCount: products.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (_, i) => SizedBox(width: 122, child: BariqProductCard(product: products[i], compact: true)),
+        separatorBuilder: (_, __) => const SizedBox(width: 7),
+        itemBuilder: (_, i) => SizedBox(width: 114, child: BariqProductCard(product: products[i], compact: true)),
       ),
     );
   }
