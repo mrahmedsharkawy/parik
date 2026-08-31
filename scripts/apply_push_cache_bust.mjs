@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const ROOT = process.cwd();
-const VERSION = "push-vapid-20260821-final";
+const VERSION = "push-apple-resubscribe-20260831";
 const TEXT_EXTENSIONS = new Set([".html", ".js", ".mjs"]);
 
 function walk(dir) {
@@ -25,20 +25,20 @@ for (const file of walk(ROOT)) {
   // Cache-bust every direct reference, including prerendered product pages.
   text = text.replace(
     /\/java\/notifications(?:\.min)?\.js\?v=[^"'\s<)]+/g,
-    `/java/notifications.js?v=${VERSION}`
+    `/java/notifications.js?v=push-apple-resubscribe-20260831
   );
 
   if (file.endsWith(path.join("java", "index-idle-loader.js"))) {
     text = text.replace(
       /\/java\/notifications(?:\.min)?\.js\?v=[^"'\s<)]+/g,
-      `/java/notifications.js?v=${VERSION}`
+      `/java/notifications.js?v=push-apple-resubscribe-20260831
     );
   }
 
   if (file.endsWith("sw.js")) {
     text = text.replace(
       /const CACHE\s*=\s*['"][^'"]+['"];/,
-      `const CACHE = 'bariq-v408-push-final';`
+      `const CACHE = 'bariq-v411-apple-push-resubscribe';`
     );
 
     // Make push runtime scripts network-first so a stale SW cannot pin old VAPID code.

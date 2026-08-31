@@ -14,13 +14,7 @@ import '../features/shell/app_shell.dart';
 
 @pragma('vm:entry-point')
 Future<void> bariqFirebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  if (Firebase.apps.isEmpty) {
-    await Firebase.initializeApp(
-      options: NativePushService.isConfigured
-          ? NativePushService.firebaseOptions
-          : null,
-    );
-  }
+  await NativePushService.ensureFirebaseInitialized();
 }
 
 class NativePushService {
@@ -50,8 +44,22 @@ class NativePushService {
         iosBundleId: _iosBundleId.isEmpty ? null : _iosBundleId,
       );
 
+  static Future<FirebaseApp> ensureFirebaseInitialized() async {
+    if (Firebase.apps.isNotEmpty) return Firebase.apps.first;
+    try {
+      // Android/iOS read their bundled google-services configuration here.
+      // Passing the same options again can create a duplicate native default app.
+      return await Firebase.initializeApp();
+    } on FirebaseException catch (error) {
+      if (error.code == 'duplicate-app') return Firebase.app();
+      if (!isConfigured) rethrow;
+      return Firebase.initializeApp(options: firebaseOptions);
+    }
+  }
+
   StreamSubscription<String>? _tokenSubscription;
   StreamSubscription<AuthState>? _authSubscription;
+  StreamSubscription<RemoteMessage>? _foregroundMessageSubscription;
   StreamSubscription<RemoteMessage>? _messageOpenedSubscription;
   bool _initialized = false;
 
@@ -65,11 +73,7 @@ class NativePushService {
     _initialized = true;
 
     try {
-      if (Firebase.apps.isEmpty) {
-        await Firebase.initializeApp(
-          options: isConfigured ? firebaseOptions : null,
-        );
-      }
+      await ensureFirebaseInitialized();
       FirebaseMessaging.onBackgroundMessage(
         bariqFirebaseMessagingBackgroundHandler,
       );
@@ -89,6 +93,9 @@ class NativePushService {
       _authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen(
         (_) => unawaited(_registerCurrentToken()),
       );
+      _foregroundMessageSubscription = FirebaseMessaging.onMessage.listen(
+        _handleForegroundMessage,
+      );
       _messageOpenedSubscription = FirebaseMessaging.onMessageOpenedApp.listen(_handleOpenedMessage);
       final initialMessage = await messaging.getInitialMessage();
       if (initialMessage != null) {
@@ -98,6 +105,24 @@ class NativePushService {
       debugPrint('Native push initialization failed: $error\n$stackTrace');
       _initialized = false;
     }
+  }
+
+  void _handleForegroundMessage(RemoteMessage message) {
+    final context = navigatorKey.currentContext;
+    if (context == null) return;
+    final notification = message.notification;
+    final title = notification?.title ?? 'Bariq';
+    final body = notification?.body ?? '';
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        content: Text(body.isEmpty ? title : '$title\n$body'),
+        action: SnackBarAction(
+          label: 'فتح',
+          onPressed: () => _handleOpenedMessage(message),
+        ),
+      ),
+    );
   }
 
   void _handleOpenedMessage(RemoteMessage message) {
@@ -178,10 +203,13 @@ class NativePushService {
   }
 
   Future<void> _registerCurrentToken() async {
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) return;
     final token = await FirebaseMessaging.instance.getToken();
-    if (token != null && token.isNotEmpty) await _saveToken(token);
+    if (token != null && token.isNotEmpty) {
+      debugPrint('BARIQ_FCM_TOKEN=$token');
+      if (Supabase.instance.client.auth.currentUser != null) {
+        await _saveToken(token);
+      }
+    }
   }
 
   Future<void> _saveToken(String token) async {

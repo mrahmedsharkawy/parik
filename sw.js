@@ -1,5 +1,5 @@
 /* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v410-push-register';
+const CACHE = 'bariq-v411-apple-push-resubscribe';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',

@@ -314,6 +314,7 @@ class _CartLine extends StatelessWidget {
       child: Directionality(
         textDirection: Directionality.of(context),
         child: Stack(
+          clipBehavior: Clip.none,
           children: [
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -420,9 +421,12 @@ class _CartLine extends StatelessWidget {
             PositionedDirectional(
               end: 0,
               bottom: 0,
-              child: _Qty(
-                quantity: item.quantity,
-                onChanged: (value) => state.setQuantity(product.id, value),
+              child: Transform.translate(
+                offset: const Offset(0, 5),
+                child: _Qty(
+                  quantity: item.quantity,
+                  onChanged: (value) => state.setQuantity(product.id, value),
+                ),
               ),
             ),
           ],

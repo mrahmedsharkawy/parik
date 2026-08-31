@@ -7,7 +7,7 @@ var scripts=[
 '/java/instant-nav.js?v=instant-nav-20260728e',
 '/java/footer-pages.min.js?v=footer-pages-20260723',
 '/java/push-welcome.js?v=push-welcome-20260806-hardened',
-'/java/notifications.js?v=push-user-binding-r4',
+'/java/notifications.js?v=push-apple-resubscribe-20260831',
 '/java/abandoned-cart.js?v=abandoned-cart-edge-r4',
 '/java/index-campaign-popup.js?v=coupon-popup-20260804'
 ];
