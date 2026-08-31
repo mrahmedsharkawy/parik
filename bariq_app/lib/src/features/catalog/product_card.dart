@@ -1,9 +1,8 @@
 import 'dart:math' as Math;
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart' hide TextDirection;
-
 import '../../models/product.dart';
+import '../../services/currency_service.dart';
 import '../../state/app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/app_strings.dart';
@@ -19,11 +18,7 @@ class BariqProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final money = NumberFormat.currency(
-      locale: AppStrings.currencyLocale,
-      symbol: AppStrings.currencySymbol,
-      decimalDigits: 0,
-    );
+    final money = AppStateScope.of(context).money();
     if (compact) {
       return _CompactTodayProductCard(product: product, money: money);
     }
@@ -36,7 +31,7 @@ class _SiteGridProductCard extends StatelessWidget {
   const _SiteGridProductCard({required this.product, required this.money, required this.tablet});
 
   final Product product;
-  final NumberFormat money;
+  final CurrencyMoneyFormatter money;
   final bool tablet;
 
   @override
@@ -127,8 +122,8 @@ class _SiteGridProductCard extends StatelessWidget {
                                 color: const Color(0xFF192A48),
                                 child: Text(
                                   AppStrings.tr(
-                                    '↓ خصم إضافي ${(product.oldPrice - product.price).toStringAsFixed(2)} د.إ',
-                                    '↓ Extra ${(product.oldPrice - product.price).toStringAsFixed(2)} AED off',
+                                    '↓ خصم إضافي ${money.format(product.oldPrice - product.price)}',
+                                    '↓ Extra ${money.format(product.oldPrice - product.price)} off',
                                   ),
                                   textDirection: Directionality.of(context),
                                   style: const TextStyle(color: Colors.white, fontSize: 8, height: 1, fontWeight: FontWeight.w900),
@@ -206,7 +201,7 @@ class _CompactTodayProductCard extends StatelessWidget {
   const _CompactTodayProductCard({required this.product, required this.money});
 
   final Product product;
-  final NumberFormat money;
+  final CurrencyMoneyFormatter money;
 
   @override
   Widget build(BuildContext context) {

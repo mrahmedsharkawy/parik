@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart' hide TextDirection;
 import 'package:video_player/video_player.dart';
 
 import '../../config/app_config.dart';
@@ -546,8 +545,7 @@ class _ProductView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = AppStateScope.of(context);
-    final money =
-        NumberFormat.currency(locale: AppStrings.currencyLocale, symbol: AppStrings.currencySymbol, decimalDigits: 0);
+    final money = state.money();
     final images = product.images;
     final sold = 3000 + (product.id.hashCode.abs() % 2400);
 

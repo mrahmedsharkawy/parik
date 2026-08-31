@@ -9,6 +9,7 @@ import '../models/app_runtime_settings.dart';
 import '../models/product.dart';
 import '../services/local_store.dart';
 import '../services/app_settings_service.dart';
+import '../services/currency_service.dart';
 import '../services/supabase_catalog_service.dart';
 import '../services/user_sync_service.dart';
 
@@ -27,6 +28,7 @@ class AppState extends ChangeNotifier {
   final LocalStore _store;
   final UserSyncService _sync;
   final AppSettingsService _appSettingsService;
+  final CurrencyService _currencyService = CurrencyService();
 
   final Map<String, CartItem> _cart = {};
   final Map<String, Product> _favoriteProducts = {};
@@ -37,6 +39,7 @@ class AppState extends ChangeNotifier {
   String _language = 'ar';
   final ValueNotifier<String> languageListenable = ValueNotifier<String>('ar');
   String _currency = 'AED';
+  CurrencyRates _currencyRates = CurrencyRates.fallback;
   AppRuntimeSettings _runtimeSettings = AppRuntimeSettings.defaults;
   int _notificationCount = 0;
 
@@ -46,6 +49,7 @@ class AppState extends ChangeNotifier {
   bool get initialized => _initialized;
   String get language => _language;
   String get currency => _currency;
+  DateTime? get currencyRatesUpdatedAt => _currencyRates.updatedAt;
   AppRuntimeSettings get runtimeSettings => _runtimeSettings;
   int get notificationCount => _notificationCount;
   bool get isEnglish => _language == 'en';
@@ -78,6 +82,8 @@ class AppState extends ChangeNotifier {
       languageListenable.value = _language;
 
       _currency = _normalizeCurrency(prefs.getString('currency'));
+      _currencyRates = await _currencyService.loadCached();
+      unawaited(refreshCurrencyRates());
       _runtimeSettings = await _appSettingsService.fetch();
 
       final localLines = await _store.loadCartLines();
@@ -269,6 +275,33 @@ class AppState extends ChangeNotifier {
     await prefs.setString('currency', next);
 
     notifyListeners();
+    unawaited(refreshCurrencyRates());
+  }
+
+  CurrencyMoneyFormatter money({int decimalDigits = 0}) =>
+      CurrencyMoneyFormatter(
+        currency: _currency,
+        rate: _currencyRates.values[_currency] ?? 1,
+        english: isEnglish,
+        decimalDigits: decimalDigits,
+      );
+
+  double convertFromAed(double value) =>
+      value * (_currencyRates.values[_currency] ?? 1);
+
+  Future<void> refreshCurrencyRates() async {
+    final updated = _currencyRates.updatedAt;
+    if (updated != null &&
+        _currencyRates.values.containsKey(_currency) &&
+        DateTime.now().toUtc().difference(updated).inHours < 12) {
+      return;
+    }
+    try {
+      _currencyRates = await _currencyService.refresh();
+      notifyListeners();
+    } catch (_) {
+      // Continue with the last cached rate when the device is offline.
+    }
   }
 
   Future<void> addToCart(Product product, {int quantity = 1}) async {
@@ -459,19 +492,8 @@ class AppState extends ChangeNotifier {
       value == 'en' ? 'en' : 'ar';
 
   String _normalizeCurrency(String? value) {
-    const supported = {
-      'AED',
-      'USD',
-      'EUR',
-      'SAR',
-      'EGP',
-      'KWD',
-      'JOD',
-      'GBP',
-    };
-
     final next = (value ?? '').trim().toUpperCase();
-    return supported.contains(next) ? next : 'AED';
+    return CurrencyService.supported.contains(next) ? next : 'AED';
   }
 }
 

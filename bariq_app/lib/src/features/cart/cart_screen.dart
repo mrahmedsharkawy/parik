@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart' hide TextDirection;
 
 import '../../models/cart_item.dart';
 import '../../models/product.dart';
@@ -298,11 +297,7 @@ class _CartLine extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = AppStateScope.of(context);
     final product = item.product;
-    final money = NumberFormat.currency(
-      locale: AppStrings.currencyLocale,
-      symbol: AppStrings.currencySymbol,
-      decimalDigits: product.price >= 1000 ? 2 : 0,
-    );
+    final money = state.money(decimalDigits: product.price >= 1000 ? 2 : 0);
     final old = product.oldPrice > product.price ? product.oldPrice : 0;
     final discount = old > 0
         ? ((old - product.price) / old * 100).round().clamp(0, 99).toInt()
@@ -599,11 +594,8 @@ class _CashbackSummaryState extends State<_CashbackSummary> {
 
   @override
   Widget build(BuildContext context) {
-    final money = NumberFormat.currency(
-      locale: AppStrings.currencyLocale,
-      symbol: AppStrings.currencySymbol,
-      decimalDigits: widget.total >= 1000 ? 2 : 0,
-    );
+    final state = AppStateScope.of(context);
+    final money = state.money(decimalDigits: widget.total >= 1000 ? 2 : 0);
     final grandTotal = (widget.total - _discount).clamp(0, double.infinity).toDouble();
 
     return Directionality(
@@ -850,14 +842,11 @@ class _SummaryState extends State<_Summary> {
 
   @override
   Widget build(BuildContext context) {
+    final state = AppStateScope.of(context);
     final total = widget.total;
     final count = widget.count;
     final grandTotal = (total - _couponDiscount).clamp(0, double.infinity).toDouble();
-    final money = NumberFormat.currency(
-      locale: AppStrings.currencyLocale,
-      symbol: AppStrings.currencySymbol,
-      decimalDigits: total >= 1000 ? 2 : 0,
-    );
+    final money = state.money(decimalDigits: total >= 1000 ? 2 : 0);
     return Directionality(
       textDirection: Directionality.of(context),
       child: Column(

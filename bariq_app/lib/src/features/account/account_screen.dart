@@ -820,11 +820,13 @@ class _OrderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final money = NumberFormat.currency(locale: 'ar_AE', symbol: 'د.إ', decimalDigits: 0);
+    final money = AppStateScope.of(context).money();
     final first = _firstOrderItem(order);
     final product = productsById[_orderItemProductId(first)];
     final name = product?.displayName ?? _localizedOrderItemName(first, order);
-    final number = '${order['order_number'] ?? order['id'] ?? ''}';
+    final number = '${order['order_number'] ?? order['id'] ?? ''}'
+        .replaceAll('#', '')
+        .trim();
     final rawStatus = order['status'];
     final status = _statusLabel(rawStatus);
     final confirmed = _isConfirmedStatus(rawStatus);
@@ -1585,7 +1587,7 @@ class _WalletSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final money = NumberFormat.currency(locale: 'ar_AE', symbol: 'د.إ', decimalDigits: 2);
+    final money = AppStateScope.of(context).money(decimalDigits: 2);
     final entries = _cashbackEntries(orders);
     final loadedBalance = entries.where((entry) => entry.status == _CashbackStatus.earned).fold<double>(0, (sum, entry) => sum + entry.amount);
     final balance = coupon?.balance ?? loadedBalance;

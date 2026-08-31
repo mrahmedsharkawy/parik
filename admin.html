@@ -2265,10 +2265,31 @@ function firstMedia(p){
   push(p.images);push(p.img);push(p.image);push(p.videos);push(p.video);
   return arr[0]||'';
 }
-function renderProducts(){
+let adminProductsVisible = 20;
+let adminProductsFilterSignature = '';
+let adminProductsScrollWired = false;
+function ensureAdminProductsInfiniteScroll(){
+  const list = $('prodList');
+  if(!list || adminProductsScrollWired) return;
+  adminProductsScrollWired = true;
+  list.addEventListener('scroll', function(){
+    if(list.scrollTop + list.clientHeight < list.scrollHeight - 500) return;
+    const total = Number(list.dataset.filteredCount || 0);
+    if(adminProductsVisible >= total) return;
+    adminProductsVisible += 20;
+    renderProducts(true);
+  }, {passive:true});
+}
+function renderProducts(keepPosition = false){
   const q = ($('searchProd')?.value||'').toLowerCase().trim();
   const sort = $('sortProd')?.value || 'default';
   const stockF = $('stockFilter')?.value || '';
+  const filterSignature = [q, sort, stockF, catFilter].join('|');
+  if(filterSignature !== adminProductsFilterSignature){
+    adminProductsFilterSignature = filterSignature;
+    adminProductsVisible = 20;
+    keepPosition = false;
+  }
   $('prodCount').textContent = products.length;
   renderCatCounts();
   const cat = catFilter ? categories.find(c => (c.categorySlug||'').toLowerCase().trim()===catFilter) : null;
@@ -2299,7 +2320,11 @@ function renderProducts(){
   else if(sort === 'name_az') all = [...all].sort((a,b) => getT(a.name).localeCompare(getT(b.name), 'ar'));
   if(!all.length){ $('prodList').innerHTML='<div class="empty">لا توجد منتجات</div>'; return; }
 
-  $('prodList').innerHTML = all.map(p=>{
+  const productList = $('prodList');
+  const previousScrollTop = keepPosition ? productList.scrollTop : 0;
+  productList.dataset.filteredCount = String(all.length);
+  const visibleProducts = all.slice(0, adminProductsVisible);
+  productList.innerHTML = visibleProducts.map(p=>{
     const m = firstMedia(p);
     const thumb = isVideo(m) ? `<video src="${escAttr(m)}" muted></video>` : `<img src="${escAttr(m)}" onerror="this.style.opacity=.3">`;
     const cats = (Array.isArray(p.category)?p.category:[p.category]).filter(Boolean).map(c=>`<span class="chip">${esc(getT(c))}</span>`).join('');
@@ -2319,7 +2344,11 @@ function renderProducts(){
         <button class="btn-danger btn-sm" onclick="deleteProduct(${p.id})">حذف</button>
       </div>
     </div>`;
-  }).join('');
+  }).join('') + (visibleProducts.length < all.length
+    ? '<div class="empty" style="padding:10px">جارٍ عرض المزيد تلقائيًا...</div>'
+    : '');
+  if(keepPosition) productList.scrollTop = previousScrollTop;
+  ensureAdminProductsInfiniteScroll();
 }
 
 /* ================= التصدير ================= */
@@ -2471,6 +2500,24 @@ let supaOrdersHasMore = true;
 let supaOrdersNextPage = 1;
 let supaOrdersTotalCount = 0;
 let supaOrdersBatchLoading = false;
+let adminOrdersObserver = null;
+
+function ensureAdminOrdersInfiniteScroll(){
+  const sentinel = $('ordPager');
+  if(!sentinel || adminOrdersObserver) return;
+  adminOrdersObserver = new IntersectionObserver(entries => {
+    if(entries.some(entry => entry.isIntersecting) && supaOrdersHasMore && !supaOrdersBatchLoading) loadMoreAdminOrders();
+  }, { root: null, rootMargin: '700px 0px', threshold: 0 });
+  adminOrdersObserver.observe(sentinel);
+}
+
+function scheduleAdminOrdersFill(){
+  requestAnimationFrame(() => {
+    const sentinel = $('ordPager');
+    if(!sentinel || !supaOrdersHasMore || supaOrdersBatchLoading) return;
+    if(sentinel.getBoundingClientRect().top < window.innerHeight + 700) loadMoreAdminOrders();
+  });
+}
 
 function normalizeAdminArea(value) {
   const raw = String(value || '').trim();
@@ -2594,9 +2641,8 @@ async function fetchAdminOrdersBatch(reset = false) {
 
 async function loadMoreAdminOrders() {
   if (supaOrdersBatchLoading || !supaOrdersHasMore) return;
-  const previousPages = Math.max(1, Math.ceil(supaOrdersCache.length / ORDER_PAGE_SIZE));
+  renderOrdPager();
   await fetchAdminOrdersBatch(false);
-  ordPage = Math.min(previousPages + 1, Math.max(1, Math.ceil(supaOrdersCache.length / ORDER_PAGE_SIZE)));
   renderStats();
   renderOrders();
 }
@@ -3461,13 +3507,8 @@ function renderOrders(){
   }
 
   // ترقيم الصفحات
-  const totalPages = Math.max(1, Math.ceil(orders.length / ORDER_PAGE_SIZE));
-  if(ordPage>totalPages) ordPage=totalPages;
-  if(ordPage<1) ordPage=1;
-  const pageOrders = orders.slice((ordPage-1)*ORDER_PAGE_SIZE, (ordPage-1)*ORDER_PAGE_SIZE + ORDER_PAGE_SIZE);
-
   const money = n => (Math.round(n*100)/100).toLocaleString('ar-EG');
-  $('ordList').innerHTML = pageOrders.map(o=>{
+  $('ordList').innerHTML = orders.map(o=>{
     const st = STATUS[o.status]||STATUS.pending;
     const opts = Object.keys(STATUS).map(k=>`<option value="${k}" ${k===o.status?'selected':''}>${STATUS[k].label}</option>`).join('');
     const orderNum = o.orderNumber || o.order_number || o.id;
@@ -3496,26 +3537,17 @@ function renderOrders(){
     </div>`;
   }).join('');
 
-  renderOrdPager(totalPages);
+  renderOrdPager();
 }
-function renderOrdPager(totalPages){
+function renderOrdPager(){
   const pager = $('ordPager');
   if(!pager) return;
-  const pages = [];
-  for(let i=1;i<=totalPages;i++){
-    if(i===1 || i===totalPages || (i>=ordPage-1 && i<=ordPage+1)) pages.push(i);
-    else if(pages[pages.length-1] !== '…') pages.push('…');
-  }
-  let html = `<button onclick="gotoOrderPage(${ordPage-1})" ${ordPage===1?'disabled':''}>‹</button>`;
-  html += pages.map(n=> n==='…'
-    ? `<span class="dots">…</span>`
-    : `<button class="${n===ordPage?'active':''}" onclick="gotoOrderPage(${n})">${n}</button>`
-  ).join('');
-  html += `<button onclick="gotoOrderPage(${ordPage+1})" ${ordPage===totalPages?'disabled':''}>›</button>`;
-  if(supaOrdersHasMore) html += `<button class="btn-navy" onclick="loadMoreAdminOrders()" ${supaOrdersBatchLoading?'disabled':''}>${supaOrdersBatchLoading?'جارٍ التحميل...':'تحميل 20 طلب إضافي'}</button>`;
-  pager.innerHTML = html;
+  pager.innerHTML = supaOrdersHasMore
+    ? `<span style="padding:9px 14px;color:#7a8296;font-weight:700">${supaOrdersBatchLoading?'جارٍ تحميل الطلبات...':'مرّر لأسفل لتحميل المزيد'}</span>`
+    : '';
+  ensureAdminOrdersInfiniteScroll();
+  scheduleAdminOrdersFill();
 }
-function gotoOrderPage(p){ ordPage=p; renderOrders(); $('ordList').scrollIntoView({behavior:'smooth',block:'nearest'}); }
 function exportOrders(){ download('orders.json', JSON.stringify(getOrders(),null,2)); toast('تم تنزيل orders.json'); }
 
 /* ================= أدوات نص ================= */
