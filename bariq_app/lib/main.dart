@@ -61,6 +61,7 @@ class BariqApp extends StatelessWidget {
       valueListenable: state.languageListenable,
       builder: (context, _, __) => MaterialApp(
       debugShowCheckedModeBanner: false,
+      navigatorKey: NativePushService.navigatorKey,
       title: state.isEnglish ? 'Bariq Gifts' : 'بريق',
       locale: Locale(state.language),
       supportedLocales: const [

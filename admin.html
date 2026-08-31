@@ -2449,7 +2449,7 @@ function exportComments(){ download('reviews.json', JSON.stringify(_sbReviews,nu
 const LS_ORDERS = 'admin_orders';
 let currentPeriod = 'day';
 let ordPage = 1;               // صفحة الطلبات الحالية
-const ORDER_PAGE_SIZE = 50;    // عدد الطلبات في كل صفحة
+const ORDER_PAGE_SIZE = 20;    // تحميل وعرض 20 طلب في كل دفعة
 const STATUS = {
   pending:       {label:'قيد الانتظار',       cls:'st-pending'},
   processing:    {label:'قيد المعالجة',       cls:'st-pending'},
@@ -2467,6 +2467,10 @@ const REALIZED = ['confirmed','shipped','delivered'];
 // كاش الطلبات من Supabase
 let supaOrdersCache = [];
 let ordersLoaded = false;
+let supaOrdersHasMore = true;
+let supaOrdersNextPage = 1;
+let supaOrdersTotalCount = 0;
+let supaOrdersBatchLoading = false;
 
 function normalizeAdminArea(value) {
   const raw = String(value || '').trim();
@@ -2557,6 +2561,46 @@ function remoteOrderToAdminOrder(r) {
   };
 }
 
+async function fetchAdminOrdersBatch(reset = false) {
+  if (supaOrdersBatchLoading || (!reset && !supaOrdersHasMore)) return [];
+  supaOrdersBatchLoading = true;
+  if (reset) {
+    supaOrdersCache = [];
+    supaOrdersNextPage = 1;
+    supaOrdersHasMore = true;
+    supaOrdersTotalCount = 0;
+  }
+  try {
+    const result = await window.Supabase.Orders.getPage({
+      page: supaOrdersNextPage,
+      pageSize: 20,
+      sort: 'created_at.desc',
+      includeCount: true,
+      countMode: 'planned'
+    });
+    const remote = result && Array.isArray(result.data) ? result.data : [];
+    const mapped = remote.map(remoteOrderToAdminOrder);
+    const seen = new Set(supaOrdersCache.map(order => String(order.srcId || order.id || '')));
+    supaOrdersCache.push(...mapped.filter(order => !seen.has(String(order.srcId || order.id || ''))));
+    supaOrdersTotalCount = Number.isFinite(Number(result && result.count)) ? Number(result.count) : Math.max(supaOrdersTotalCount, supaOrdersCache.length);
+    supaOrdersHasMore = Boolean(result && result.hasMore) && (supaOrdersTotalCount <= 0 || supaOrdersCache.length < supaOrdersTotalCount);
+    if (remote.length) supaOrdersNextPage += 1;
+    ordersLoaded = true;
+    return mapped;
+  } finally {
+    supaOrdersBatchLoading = false;
+  }
+}
+
+async function loadMoreAdminOrders() {
+  if (supaOrdersBatchLoading || !supaOrdersHasMore) return;
+  const previousPages = Math.max(1, Math.ceil(supaOrdersCache.length / ORDER_PAGE_SIZE));
+  await fetchAdminOrdersBatch(false);
+  ordPage = Math.min(previousPages + 1, Math.max(1, Math.ceil(supaOrdersCache.length / ORDER_PAGE_SIZE)));
+  renderStats();
+  renderOrders();
+}
+
 // انتظار تحميل Supabase
 function waitForSupabase(timeout = 5000) {
   return new Promise((resolve) => {
@@ -2633,10 +2677,9 @@ async function loadOrdersFromSupabase() {
   }
   
   try {
-    const remote = await window.Supabase.Orders.getAll(1000); // للتشخيص
+    const remote = await fetchAdminOrdersBatch(true);
     
     if (remote && Array.isArray(remote)) {
-      supaOrdersCache = remote.map(remoteOrderToAdminOrder);
       ordersLoaded = true;
       return supaOrdersCache;
     } else if (remote === null || remote === undefined) {
@@ -2689,10 +2732,9 @@ async function syncStoreOrders(silent){
   
   // جلب الطلبات من Supabase مباشرة
   try {
-    const remote = await window.Supabase.Orders.getAll(1000);
+    const remote = await fetchAdminOrdersBatch(true);
     
     if (remote && Array.isArray(remote) && remote.length > 0) {
-      supaOrdersCache = remote.map(remoteOrderToAdminOrder);
       ordersLoaded = true;
       renderStats();
       renderOrders();
@@ -3078,7 +3120,7 @@ function splitInvoiceNotes(notes){
 function visibleOrderNotes(notes){ return splitInvoiceNotes(notes).base; }
 function getOrderInvoice(order){ return order && order.invoice || splitInvoiceNotes(order && order.notes).invoice; }
 function orderPublicNumber(order){ return order && (order.orderNumber || order.order_number || order.id) || ''; }
-function cleanOrderNumber(value){ return String(value == null ? '' : value).replace(/#/g, '').trim(); }
+function cleanOrderNumber(value){ return String(value == null ? '' : value).replace(/[#＃♯№]/g, '').trim(); }
 function invoiceLink(order){
   const number = orderPublicNumber(order);
   return 'https://bariqgifts.com/account?section=invoices&order=' + encodeURIComponent(number) + '&invoice=' + encodeURIComponent(number);
@@ -3410,11 +3452,11 @@ function renderOrders(){
     });
   }
 
-  $('ordCount').textContent = getOrders().length;
+  $('ordCount').textContent = supaOrdersTotalCount > 0 ? supaOrdersTotalCount : getOrders().length;
 
   if(!orders.length){
     $('ordList').innerHTML='<div class="empty">لا توجد طلبات مطابقة</div>';
-    if($('ordPager')) $('ordPager').innerHTML='';
+    renderOrdPager(1);
     return;
   }
 
@@ -3459,7 +3501,6 @@ function renderOrders(){
 function renderOrdPager(totalPages){
   const pager = $('ordPager');
   if(!pager) return;
-  if(totalPages<=1){ pager.innerHTML=''; return; }
   const pages = [];
   for(let i=1;i<=totalPages;i++){
     if(i===1 || i===totalPages || (i>=ordPage-1 && i<=ordPage+1)) pages.push(i);
@@ -3471,6 +3512,7 @@ function renderOrdPager(totalPages){
     : `<button class="${n===ordPage?'active':''}" onclick="gotoOrderPage(${n})">${n}</button>`
   ).join('');
   html += `<button onclick="gotoOrderPage(${ordPage+1})" ${ordPage===totalPages?'disabled':''}>›</button>`;
+  if(supaOrdersHasMore) html += `<button class="btn-navy" onclick="loadMoreAdminOrders()" ${supaOrdersBatchLoading?'disabled':''}>${supaOrdersBatchLoading?'جارٍ التحميل...':'تحميل 20 طلب إضافي'}</button>`;
   pager.innerHTML = html;
 }
 function gotoOrderPage(p){ ordPage=p; renderOrders(); $('ordList').scrollIntoView({behavior:'smooth',block:'nearest'}); }

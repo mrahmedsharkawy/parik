@@ -39,6 +39,12 @@ class BariqBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Keep the navigation in semantic reading order and let the active
+    // language decide which side that order starts from.
+    final displayIndexes = List<int>.generate(
+      _items.length,
+      (index) => _items.length - 1 - index,
+    );
     final width = MediaQuery.sizeOf(context).width;
     final normalHeight = width < 360 ? 54.0 : 59.0;
     final height = compact ? 47.0 : normalHeight;
@@ -95,9 +101,9 @@ class BariqBottomNav extends StatelessWidget {
               ],
             ),
             child: Directionality(
-              textDirection: TextDirection.ltr,
+              textDirection: english ? TextDirection.ltr : TextDirection.rtl,
               child: Row(
-                children: List.generate(_items.length, (index) {
+                children: displayIndexes.map((index) {
                   final active = selected == index;
                   final item = _items[index];
 
@@ -176,7 +182,7 @@ class BariqBottomNav extends StatelessWidget {
                       ),
                     ),
                   );
-                }),
+                }).toList(growable: false),
               ),
             ),
           ),

@@ -18,7 +18,6 @@ import '../auth/login_screen.dart';
 import '../affiliate/affiliate_screen.dart';
 import '../catalog/product_gallery_grid.dart';
 import '../catalog/search_screen.dart';
-import '../offers/offers_screen.dart';
 import '../product/product_screen.dart';
 import '../policies/policies_screen.dart';
 import '../shared/bariq_network_image.dart';
@@ -1166,6 +1165,7 @@ class _NotificationsSection extends StatefulWidget {
   final int unreadCount;
   final Future<void> Function() onRefresh;
   final VoidCallback onLogin;
+  final ValueChanged<AccountSection> onSelectSection;
   final bool signedIn;
 
   @override
@@ -1307,6 +1307,18 @@ class _NotificationTile extends StatelessWidget {
     }
     if (type == 'profile' || path.contains('profile')) {
       onSelectSection(AccountSection.profile);
+      return;
+    }
+    if (type == 'address' || path.contains('address')) {
+      onSelectSection(AccountSection.address);
+      return;
+    }
+    if (type == 'payment' || path.contains('payment')) {
+      onSelectSection(AccountSection.payments);
+      return;
+    }
+    if (type == 'support' || path.contains('support')) {
+      onSelectSection(AccountSection.support);
     }
   }
 
@@ -1317,7 +1329,7 @@ class _NotificationTile extends StatelessWidget {
     final interactive = notification.productId.trim().isNotEmpty ||
         notification.url.trim().isNotEmpty ||
         notification.orderId.trim().isNotEmpty ||
-        const <String>{'abandoned_cart', 'cart', 'cashback', 'order_status', 'order_update', 'order', 'occasion', 'affiliate_approved', 'affiliate', 'offer', 'promotion', 'campaign', 'favorite', 'wishlist', 'invoice', 'review', 'profile'}.contains(type);
+        const <String>{'abandoned_cart', 'cart', 'cashback', 'order_status', 'order_update', 'order', 'occasion', 'affiliate_approved', 'affiliate', 'offer', 'promotion', 'campaign', 'favorite', 'wishlist', 'invoice', 'review', 'profile', 'address', 'payment', 'support'}.contains(type);
     return InkWell(
       onTap: interactive ? () => _open(context) : null,
       borderRadius: BorderRadius.circular(9),
@@ -2514,7 +2526,6 @@ class _AccountMenuSheet extends StatelessWidget {
   final AccountSection selected;
   final ValueChanged<AccountSection> onSelect;
   final VoidCallback onLogin;
-  final ValueChanged<AccountSection> onSelectSection;
   final VoidCallback onAffiliate;
   final VoidCallback onPolicies;
   final VoidCallback? onLogout;

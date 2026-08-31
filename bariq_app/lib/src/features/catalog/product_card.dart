@@ -183,7 +183,7 @@ class _SiteGridProductCard extends StatelessWidget {
             ),
             PositionedDirectional(
               end: 8,
-              bottom: tablet ? 38 : 8,
+              bottom: 8,
               child: _FloatingCartButton(onTap: () => state.addToCart(product)),
             ),
           ],

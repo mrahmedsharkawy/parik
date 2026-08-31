@@ -42,6 +42,8 @@ class _HomeScreenState extends State<HomeScreen> {
   final _catalog = SupabaseCatalogService();
   final _appSettings = AppSettingsService();
   final _bannerController = PageController();
+  final _categoryScrollController = ScrollController();
+  final _floatingCategoryScrollController = ScrollController();
   late Future<_HomeData> _future;
   final ValueNotifier<int> _bannerIndex = ValueNotifier<int>(0);
   final GlobalKey _categoryStripKey = GlobalKey();
@@ -58,6 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _scheduledPopupId;
   bool _popupShownThisSession = false;
   bool _runtimeRefreshStarted = false;
+  int _productSwipeDirection = 1;
 
   @override
   void initState() {
@@ -70,7 +73,53 @@ class _HomeScreenState extends State<HomeScreen> {
     _bannerIndex.dispose();
     _showFloatingBars.dispose();
     _bannerController.dispose();
+    _categoryScrollController.dispose();
+    _floatingCategoryScrollController.dispose();
     super.dispose();
+  }
+
+  void _selectAdjacentCategory(
+    List<CategoryItem> categories,
+    DragEndDetails details,
+  ) {
+    if (_loadingProducts || categories.isEmpty) return;
+    final velocity = details.primaryVelocity ?? 0;
+    if (velocity.abs() < 220) return;
+
+    final currentIndex = _categoryId == null
+        ? 0
+        : categories.indexWhere((item) => item.id == _categoryId) + 1;
+    final rtl = Directionality.of(context) == TextDirection.rtl;
+    final forward = rtl ? velocity > 0 : velocity < 0;
+    final nextIndex = (currentIndex + (forward ? 1 : -1))
+        .clamp(0, categories.length)
+        .toInt();
+    if (nextIndex == currentIndex) return;
+
+    final category = nextIndex == 0 ? null : categories[nextIndex - 1];
+    _productSwipeDirection = forward ? 1 : -1;
+    _scrollToCategory(nextIndex);
+    unawaited(_reloadProducts(
+      categoryId: category?.id,
+      categoryName: category?.nameAr,
+    ));
+  }
+
+  void _scrollToCategory(int index) {
+    for (final controller in [
+      _categoryScrollController,
+      _floatingCategoryScrollController,
+    ]) {
+      if (!controller.hasClients) continue;
+      final target = (index * 95.0)
+          .clamp(0.0, controller.position.maxScrollExtent)
+          .toDouble();
+      controller.animateTo(
+        target,
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOutCubic,
+      );
+    }
   }
 
   Future<_HomeData> _load({bool forceSettingsRefresh = false}) async {
@@ -419,8 +468,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: _FilterChips(
                             categories: data.categories,
                             selectedId: _categoryId,
+                            controller: _categoryScrollController,
                             onTap: (id) {
                               final category = _selectedCategory(data.categories, id);
+                              _productSwipeDirection = 0;
                               _reloadProducts(
                                 categoryId: id,
                                 categoryName: category?.nameAr,
@@ -449,9 +500,31 @@ class _HomeScreenState extends State<HomeScreen> {
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(6, 8, 6, 104),
-                        child: ProductGalleryGrid(
-                          key: ValueKey('${_categoryId ?? 'all'}:${_subcategoryId ?? 'all'}:${pagedProducts.length}'),
-                          products: pagedProducts,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.translucent,
+                          onHorizontalDragEnd: (details) =>
+                              _selectAdjacentCategory(data.categories, details),
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 260),
+                            switchInCurve: Curves.easeOutCubic,
+                            switchOutCurve: Curves.easeInCubic,
+                            transitionBuilder: (child, animation) {
+                              final direction = _productSwipeDirection == 0
+                                  ? 0.0
+                                  : _productSwipeDirection.toDouble();
+                              return SlideTransition(
+                                position: Tween<Offset>(
+                                  begin: Offset(direction, 0),
+                                  end: Offset.zero,
+                                ).animate(animation),
+                                child: FadeTransition(opacity: animation, child: child),
+                              );
+                            },
+                            child: ProductGalleryGrid(
+                              key: ValueKey('${_categoryId ?? 'all'}:${_subcategoryId ?? 'all'}'),
+                              products: pagedProducts,
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -499,8 +572,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           _FilterChips(
                             categories: data.categories,
                             selectedId: _categoryId,
+                            controller: _floatingCategoryScrollController,
                             onTap: (id) {
                               final category = _selectedCategory(data.categories, id);
+                              _productSwipeDirection = 0;
                               _reloadProducts(
                                 categoryId: id,
                                 categoryName: category?.nameAr,
@@ -1500,10 +1575,11 @@ class _TodayScroller extends StatelessWidget {
 }
 
 class _FilterChips extends StatelessWidget {
-  const _FilterChips({required this.categories, required this.selectedId, required this.onTap});
+  const _FilterChips({required this.categories, required this.selectedId, required this.controller, required this.onTap});
 
   final List<CategoryItem> categories;
   final String? selectedId;
+  final ScrollController controller;
   final ValueChanged<String?> onTap;
 
   @override
@@ -1516,6 +1592,7 @@ class _FilterChips extends StatelessWidget {
       child: Directionality(
         textDirection: Directionality.of(context),
         child: ListView.separated(
+          controller: controller,
           scrollDirection: Axis.horizontal,
           physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.symmetric(horizontal: 8),
