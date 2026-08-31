@@ -11,6 +11,7 @@ class AppRuntimeSettings {
     required this.features,
     required this.homeSections,
     required this.promoBanners,
+    required this.popupCampaign,
     required this.maintenanceMode,
     required this.maintenanceMessage,
     required this.announcementEnabled,
@@ -33,6 +34,7 @@ class AppRuntimeSettings {
     features: {},
     homeSections: [],
     promoBanners: [],
+    popupCampaign: AppPopupCampaign.disabled,
     maintenanceMode: false,
     maintenanceMessage: '',
     announcementEnabled: false,
@@ -54,6 +56,7 @@ class AppRuntimeSettings {
   final Map<String, bool> features;
   final List<AppHomeSection> homeSections;
   final List<AppPromoBanner> promoBanners;
+  final AppPopupCampaign popupCampaign;
   final bool maintenanceMode;
   final String maintenanceMessage;
   final bool announcementEnabled;
@@ -116,6 +119,7 @@ class AppRuntimeSettings {
               .take(2)
               .toList(growable: false)
           : const [],
+      popupCampaign: AppPopupCampaign.fromMap(_map(config['popup_campaign'])),
       maintenanceMode: config['maintenance_mode'] == true,
       maintenanceMessage: '${config['maintenance_message'] ?? ''}',
       announcementEnabled: announcement['enabled'] == true,
@@ -155,26 +159,98 @@ class AppRuntimeSettings {
   }
 }
 
+class AppPopupCampaign {
+  const AppPopupCampaign({
+    required this.id,
+    required this.enabled,
+    required this.type,
+    required this.frequency,
+    required this.imageUrl,
+    required this.titleAr,
+    required this.titleEn,
+    required this.bodyAr,
+    required this.bodyEn,
+    required this.buttonAr,
+    required this.buttonEn,
+    required this.link,
+    required this.startsAt,
+    required this.endsAt,
+  });
+
+  static const disabled = AppPopupCampaign(
+    id: '', enabled: false, type: 'campaign', frequency: 'once', imageUrl: '',
+    titleAr: '', titleEn: '', bodyAr: '', bodyEn: '', buttonAr: '',
+    buttonEn: '', link: '', startsAt: null, endsAt: null,
+  );
+
+  final String id;
+  final bool enabled;
+  final String type;
+  final String frequency;
+  final String imageUrl;
+  final String titleAr;
+  final String titleEn;
+  final String bodyAr;
+  final String bodyEn;
+  final String buttonAr;
+  final String buttonEn;
+  final String link;
+  final DateTime? startsAt;
+  final DateTime? endsAt;
+
+  bool get activeNow {
+    if (!enabled) return false;
+    final now = DateTime.now();
+    if (startsAt != null && now.isBefore(startsAt!)) return false;
+    if (endsAt != null && now.isAfter(endsAt!)) return false;
+    return imageUrl.isNotEmpty || titleAr.isNotEmpty || titleEn.isNotEmpty ||
+        bodyAr.isNotEmpty || bodyEn.isNotEmpty;
+  }
+
+  factory AppPopupCampaign.fromMap(Map<String, dynamic> map) => AppPopupCampaign(
+        id: '${map['id'] ?? ''}'.trim(),
+        enabled: map['enabled'] == true,
+        type: '${map['type'] ?? 'campaign'}',
+        frequency: '${map['frequency'] ?? 'once'}',
+        imageUrl: '${map['url'] ?? ''}'.trim(),
+        titleAr: '${map['title_ar'] ?? ''}'.trim(),
+        titleEn: '${map['title_en'] ?? ''}'.trim(),
+        bodyAr: '${map['body_ar'] ?? ''}'.trim(),
+        bodyEn: '${map['body_en'] ?? ''}'.trim(),
+        buttonAr: '${map['button_ar'] ?? ''}'.trim(),
+        buttonEn: '${map['button_en'] ?? ''}'.trim(),
+        link: '${map['link'] ?? ''}'.trim(),
+        startsAt: DateTime.tryParse('${map['starts_at'] ?? ''}')?.toLocal(),
+        endsAt: DateTime.tryParse('${map['ends_at'] ?? ''}')?.toLocal(),
+      );
+}
+
 class AppPromoBanner {
   const AppPromoBanner({
     required this.enabled,
     required this.imageUrl,
-    required this.title,
-    required this.subtitle,
+    required this.titleAr,
+    required this.titleEn,
+    required this.subtitleAr,
+    required this.subtitleEn,
     required this.endsAt,
   });
 
   final bool enabled;
   final String imageUrl;
-  final String title;
-  final String subtitle;
+  final String titleAr;
+  final String titleEn;
+  final String subtitleAr;
+  final String subtitleEn;
   final DateTime? endsAt;
 
   factory AppPromoBanner.fromMap(Map<String, dynamic> map) => AppPromoBanner(
         enabled: map['enabled'] != false,
         imageUrl: '${map['url'] ?? ''}'.trim(),
-        title: '${map['title'] ?? ''}'.trim(),
-        subtitle: '${map['subtitle'] ?? ''}'.trim(),
+        titleAr: '${map['title_ar'] ?? map['title'] ?? ''}'.trim(),
+        titleEn: '${map['title_en'] ?? ''}'.trim(),
+        subtitleAr: '${map['subtitle_ar'] ?? map['subtitle'] ?? ''}'.trim(),
+        subtitleEn: '${map['subtitle_en'] ?? ''}'.trim(),
         endsAt: DateTime.tryParse('${map['ends_at'] ?? ''}')?.toLocal(),
       );
 }

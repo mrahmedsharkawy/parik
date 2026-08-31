@@ -87,12 +87,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         cartCount: state.cartCount,
         notificationCount: state.notificationCount,
         english: state.isEnglish,
-        onTap: (index) => Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(
-            builder: (_) => AppShell(initialIndex: index),
-          ),
-          (route) => false,
-        ),
+        onTap: (index) => AppShellNavigation.openTab(context, index),
       ),
       body: SafeArea(
         bottom: false,
@@ -235,20 +230,20 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     ),
                   ),
                   const SizedBox(height: 26),
-                  const _InfoSection(
-                    title: 'خيارات الدفع الآمنة',
+                  _InfoSection(
+                    title: AppStrings.tr('خيارات الدفع الآمنة', 'Secure payment options'),
                     text:
-                        'نلتزم بحماية معلومات الدفع الخاصة بك، وسيتم تأكيد طريقة الدفع المناسبة قبل تنفيذ الطلب.',
+                        AppStrings.tr('نلتزم بحماية معلومات الدفع الخاصة بك، وسيتم تأكيد طريقة الدفع المناسبة قبل تنفيذ الطلب.', 'We protect your payment information and confirm the appropriate payment method before processing the order.'),
                   ),
-                  const _InfoSection(
-                    title: 'تأمين الخصوصية',
+                  _InfoSection(
+                    title: AppStrings.tr('تأمين الخصوصية', 'Privacy protection'),
                     text:
-                        'نحن نحمي معلوماتك لأنها ذات أهمية بالنسبة لنا. لن نحتفظ بمعلوماتك الشخصية أو نشاركها إلا حسب سياسة الخصوصية.',
+                        AppStrings.tr('نحن نحمي معلوماتك لأنها ذات أهمية بالنسبة لنا. لن نحتفظ بمعلوماتك الشخصية أو نشاركها إلا حسب سياسة الخصوصية.', 'We protect your information and only retain or share it according to our privacy policy.'),
                   ),
-                  const _InfoSection(
-                    title: 'سياسة الإرجاع',
+                  _InfoSection(
+                    title: AppStrings.tr('سياسة الإرجاع', 'Return policy'),
                     text:
-                        'قبل إرجاع المنتجات ضمن شروطنا، سيتم توضيح خطوات الإرجاع وكيفية استرداد المبلغ.',
+                        AppStrings.tr('قبل إرجاع المنتجات ضمن شروطنا، سيتم توضيح خطوات الإرجاع وكيفية استرداد المبلغ.', 'Return steps and refund details are explained in our return policy.'),
                   ),
                 ]),
               ),

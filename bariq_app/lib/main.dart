@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'src/config/app_config.dart';
 import 'src/features/shell/app_shell.dart';
 import 'src/services/affiliate_service.dart';
+import 'src/services/native_push_service.dart';
 import 'src/state/app_state.dart';
 import 'src/theme/app_theme.dart';
 
@@ -28,6 +29,7 @@ Future<void> main() async {
 
   // Cart/wishlist/language/account sync must never block first paint.
   unawaited(state.initialize());
+  unawaited(NativePushService.instance.initialize());
 
   final launchUri = Uri.base;
   final partnerCode = launchUri.queryParameters['ref']?.trim() ?? '';

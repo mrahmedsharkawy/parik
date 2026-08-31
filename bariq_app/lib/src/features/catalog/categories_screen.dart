@@ -6,6 +6,9 @@ import '../../state/app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/app_strings.dart';
 import '../shared/bariq_network_image.dart';
+import '../shared/storefront_page_bottom_nav.dart';
+import '../shared/storefront_top_bar.dart';
+import 'search_screen.dart';
 import 'product_gallery_grid.dart';
 
 class CategoriesScreen extends StatefulWidget {
@@ -21,13 +24,18 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(AppStrings.auto('جميع الفئات'))),
+    extendBody: true,
+    appBar: StorefrontPageAppBar(
+      placeholder: AppStrings.searchHeader,
+      onSearch: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SearchScreen())),
+    ),
+    bottomNavigationBar: const StorefrontPageBottomNav(selected: 3),
     body: FutureBuilder<List<CategoryItem>>(
       future: _categories,
       builder: (_, snap) {
         if (snap.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator(color: AppTheme.gold));
         final cats = snap.data ?? [];
-        if (cats.isEmpty) return const Center(child: Text('لا توجد فئات متاحة'));
+        if (cats.isEmpty) return Center(child: Text(AppStrings.tr('لا توجد فئات متاحة', 'No categories available')));
         return GridView.builder(
           padding: const EdgeInsets.fromLTRB(12, 12, 12, 100),
           itemCount: cats.length,
@@ -75,13 +83,18 @@ class _CategoryDetailsScreenState extends State<CategoryDetailsScreen> {
   @override void initState() { super.initState(); _subs = _catalog.fetchSubcategories(categoryId: widget.category.id); }
 
   @override Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(widget.category.displayName)),
+    extendBody: true,
+    appBar: StorefrontPageAppBar(
+      placeholder: AppStrings.searchHeader,
+      onSearch: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SearchScreen())),
+    ),
+    bottomNavigationBar: const StorefrontPageBottomNav(selected: 3),
     body: FutureBuilder<List<SubcategoryItem>>(
       future: _subs,
       builder: (_, snap) {
         if (snap.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator(color: AppTheme.gold));
         final subs = snap.data ?? [];
-        if (subs.isEmpty) return const Center(child: Text('لا توجد أقسام فرعية'));
+        if (subs.isEmpty) return Center(child: Text(AppStrings.tr('لا توجد أقسام فرعية', 'No subcategories available')));
         return ListView.separated(
           padding: const EdgeInsets.fromLTRB(12, 12, 12, 100),
           itemCount: subs.length,
@@ -108,13 +121,18 @@ class SubcategoryProductsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final catalog = SupabaseCatalogService();
     return Scaffold(
-      appBar: AppBar(title: Text(subcategory.displayName)),
+      extendBody: true,
+      appBar: StorefrontPageAppBar(
+        placeholder: AppStrings.searchHeader,
+        onSearch: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SearchScreen())),
+      ),
+      bottomNavigationBar: const StorefrontPageBottomNav(selected: 3),
       body: FutureBuilder<List<Product>>(
         future: catalog.fetchBySubcategory(subcategory.id),
         builder: (_, snap) {
           if (snap.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator(color: AppTheme.gold));
           final products = snap.data ?? [];
-          if (products.isEmpty) return const Center(child: Text('لا توجد منتجات في هذا القسم حالياً'));
+          if (products.isEmpty) return Center(child: Text(AppStrings.tr('لا توجد منتجات في هذا القسم حالياً', 'No products are available in this category')));
           return SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(6, 10, 6, 100),
             child: ProductGalleryGrid(products: products.take(24).toList()),

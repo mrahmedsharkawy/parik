@@ -16,6 +16,7 @@ import '../../theme/app_theme.dart';
 import '../../utils/app_strings.dart';
 import '../shared/bariq_bottom_nav.dart';
 import '../shared/bariq_network_image.dart';
+import '../shared/storefront_top_bar.dart';
 import '../shell/app_shell.dart';
 import '../account/account_screen.dart';
 import 'categories_screen.dart';
@@ -403,7 +404,7 @@ class _SearchScreenState extends State<SearchScreen>
         _error = error;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('تعذر البحث بالصورة: $error')),
+        SnackBar(content: Text(AppStrings.tr('تعذر البحث بالصورة: $error', 'Unable to search by image: $error'))),
       );
     }
   }
@@ -422,64 +423,17 @@ class _SearchScreenState extends State<SearchScreen>
         cartCount: state.cartCount,
         notificationCount: state.notificationCount,
         english: state.isEnglish,
-        onTap: (index) => Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => AppShell(initialIndex: index)),
-          (route) => false,
-        ),
+        onTap: (index) => AppShellNavigation.openTab(context, index),
       ),
       body: SafeArea(
         bottom: false,
         child: Column(
           children: [
-            Container(
-              color: AppTheme.navy,
-              padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-              child: Row(
-                children: [
-                  IconButton(
-                    onPressed: () => Navigator.of(context).maybePop(),
-                    icon: Icon(
-                      state.isEnglish
-                          ? Icons.chevron_right_rounded
-                          : Icons.chevron_left_rounded,
-                      color: Colors.white,
-                      size: 27,
-                    ),
-                    padding: EdgeInsets.zero,
-                    constraints:
-                        const BoxConstraints.tightFor(width: 36, height: 36),
-                  ),
-                  const SizedBox(width: 4),
-                  const Icon(
-                    Icons.search_rounded,
-                    color: Colors.white,
-                    size: 27,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      AppStrings.searchHeader,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.start,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Bariq',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ],
-              ),
+            StorefrontTopBar(
+              showBack: true,
+              placeholder: AppStrings.searchHeader,
+              onSearch: () => _startSearch(),
+              onImageSearch: _startImageSearch,
             ),
             Padding(
               padding: const EdgeInsets.all(10),
@@ -546,7 +500,7 @@ class _SearchScreenState extends State<SearchScreen>
         _visibleCategories.isEmpty &&
         _visibleSubcategories.isEmpty &&
         _matchingOrders.isEmpty) {
-      return Center(child: Text(_imageMode ? 'لا توجد نتائج قريبة من الصورة' : AppStrings.noResults));
+      return Center(child: Text(_imageMode ? AppStrings.tr('لا توجد نتائج قريبة من الصورة', 'No visually similar results found') : AppStrings.noResults));
     }
 
     return SingleChildScrollView(
@@ -753,7 +707,7 @@ class _SearchScreenState extends State<SearchScreen>
                   color: AppTheme.gold,
                 ),
                 title: Text(
-                  '${AppStrings.tr('طلب', 'Order')} #${order['order_number'] ?? order['id'] ?? ''}',
+                  '${AppStrings.tr('طلب', 'Order')} #${'${order['order_number'] ?? order['id'] ?? ''}'.replaceAll('#', '').trim()}',
                   textAlign: TextAlign.start,
                   style: const TextStyle(
                     color: AppTheme.navy,

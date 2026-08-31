@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -72,6 +74,8 @@ class WhatsAppOrderService {
     String customText = '',
     String customNotes = '',
     String customImagePath = '',
+    Uint8List? customImageBytes,
+    String customImageName = 'customization.png',
     bool customizationRequest = false,
     double discount = 0,
     String? couponCode,
@@ -89,6 +93,14 @@ class WhatsAppOrderService {
     }
 
     final orderNumber = await _reserveOrderNumber();
+    var resolvedCustomImagePath = customImagePath;
+    if (customImageBytes != null && customImageBytes.isNotEmpty) {
+      resolvedCustomImagePath = await _uploadOrderImage(
+        orderNumber: orderNumber,
+        bytes: customImageBytes,
+        fileName: customImageName,
+      );
+    }
     final profile = await _safeProfile();
     final resolvedCustomer = _resolveCustomer(profile, customer);
     final subtotal = safeLines.fold<double>(
@@ -113,7 +125,7 @@ class WhatsAppOrderService {
         notes: notes,
         customText: customText,
         customNotes: customNotes,
-        customImagePath: customImagePath,
+        customImagePath: resolvedCustomImagePath,
       ),
       couponCode: couponCode,
     );
@@ -142,7 +154,7 @@ class WhatsAppOrderService {
       couponCode: couponCode,
       customText: customText,
       customNotes: customNotes,
-      customImagePath: customImagePath,
+      customImagePath: resolvedCustomImagePath,
       notes: notes,
       customizationRequest: customizationRequest,
     );
@@ -152,6 +164,34 @@ class WhatsAppOrderService {
     );
     final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
     return WhatsAppOrderResult(opened: opened, orderNumber: orderNumber);
+  }
+
+  Future<String> _uploadOrderImage({
+    required String orderNumber,
+    required Uint8List bytes,
+    required String fileName,
+  }) async {
+    final cleanOrder = orderNumber.replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '');
+    final cleanName = fileName
+        .replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '-')
+        .replaceAll(RegExp(r'-+'), '-');
+    final path = 'custom-orders/${cleanOrder.isEmpty ? DateTime.now().millisecondsSinceEpoch : cleanOrder}/'
+        '${DateTime.now().millisecondsSinceEpoch}-${cleanName.isEmpty ? 'preview.png' : cleanName}';
+    final lowerName = cleanName.toLowerCase();
+    final contentType = lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg')
+        ? 'image/jpeg'
+        : lowerName.endsWith('.webp')
+            ? 'image/webp'
+            : 'image/png';
+    await _client.storage.from('products').uploadBinary(
+          path,
+          bytes,
+          fileOptions: FileOptions(
+            contentType: contentType,
+            upsert: false,
+          ),
+        );
+    return _client.storage.from('products').getPublicUrl(path);
   }
 
   Future<CustomerProfile> _safeProfile() async {
@@ -324,7 +364,7 @@ class WhatsAppOrderService {
       if (customNotes.trim().isNotEmpty)
         'تفاصيل التخصيص: ${customNotes.trim()}',
       if (customImagePath.trim().isNotEmpty)
-        'صورة التخصيص على جهاز العميل: ${customImagePath.trim()}',
+        'رابط صورة التخصيص: ${customImagePath.trim()}',
     ].join('\n');
   }
 
@@ -430,7 +470,7 @@ class WhatsAppOrderService {
       if (customText.trim().isNotEmpty) 'النص المطلوب: ${customText.trim()}',
       if (customNotes.trim().isNotEmpty) 'ملاحظات التخصيص: ${customNotes.trim()}',
       if (customImagePath.trim().isNotEmpty)
-        'صورة التخصيص محفوظة على جهاز العميل: ${customImagePath.trim()}',
+        'رابط صورة التخصيص: ${customImagePath.trim()}',
     ].join('\n');
   }
 

@@ -56,14 +56,10 @@ class _CartScreenState extends State<CartScreen> {
       }
       await state.clearCart();
       if (!mounted) return;
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (_) => const AppShell(
-            initialIndex: 1,
-            accountInitialSection: AccountSection.orders,
-          ),
-        ),
-        (route) => false,
+      AppShellNavigation.openTab(
+        context,
+        1,
+        accountSection: AccountSection.orders,
       );
     } on WhatsAppOrderLoginRequired {
       if (!mounted) return;
@@ -76,7 +72,7 @@ class _CartScreenState extends State<CartScreen> {
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('تعذر تأكيد الطلب: $error')),
+        SnackBar(content: Text(AppStrings.tr('تعذر تأكيد الطلب: $error', 'Unable to confirm order: $error'))),
       );
     } finally {
       if (mounted) setState(() => _sendingOrder = false);
@@ -175,8 +171,8 @@ class _ShippingNote extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: const BoxDecoration(color: Color(0xFFEFFFF0)),
-      child: const Text(
-        'يتم تحديد الشحن بعد تأكيد الطلب في واتساب مع فريق المبيعات 🚚',
+      child: Text(
+        AppStrings.tr('يتم تحديد الشحن بعد تأكيد الطلب في واتساب مع فريق المبيعات 🚚', 'Shipping is confirmed on WhatsApp with the sales team 🚚'),
         textAlign: TextAlign.center,
         style: TextStyle(
           color: Color(0xFF087A2D),
@@ -214,8 +210,8 @@ class _SelectAll extends StatelessWidget {
               size: 21,
             ),
             const SizedBox(width: 8),
-            const Text(
-              'تحديد الكل',
+            Text(
+              AppStrings.tr('تحديد الكل', 'Select all'),
               style: TextStyle(
                 color: AppTheme.navy,
                 fontWeight: FontWeight.w900,
@@ -223,7 +219,7 @@ class _SelectAll extends StatelessWidget {
             ),
             const Spacer(),
             Text(
-              'المحدد: $count',
+              AppStrings.tr('المحدد: $count', 'Selected: $count'),
               style: const TextStyle(
                 color: AppTheme.navy,
                 fontWeight: FontWeight.w900,
@@ -233,7 +229,7 @@ class _SelectAll extends StatelessWidget {
             TextButton.icon(
               onPressed: onClear,
               icon: const Icon(Icons.delete_outline_rounded, size: 18),
-              label: const Text('حذف المحدد'),
+              label: Text(AppStrings.tr('حذف المحدد', 'Delete selected')),
               style: TextButton.styleFrom(
                 foregroundColor: AppTheme.navy,
                 padding: EdgeInsets.zero,
@@ -315,8 +311,8 @@ class _CartLine extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 3),
-                      const Text(
-                        'متبقي القليل، العرض قريباً ينتهي',
+                      Text(
+                        AppStrings.tr('متبقي القليل، العرض قريباً ينتهي', 'Only a few left, the offer ends soon'),
                         textAlign: TextAlign.start,
                         style: TextStyle(
                           color: Colors.redAccent,
@@ -325,8 +321,8 @@ class _CartLine extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 1),
-                      const Text(
-                        'سريع بشرائك قبل نفاذ الكمية!',
+                      Text(
+                        AppStrings.tr('سريع بشرائك قبل نفاذ الكمية!', 'Order quickly before it sells out!'),
                         textAlign: TextAlign.start,
                         style: TextStyle(
                           color: Colors.redAccent,
@@ -441,11 +437,11 @@ class _Qty extends StatelessWidget {
           IconButton(
             onPressed: () => onChanged(quantity - 1),
             icon: const Icon(Icons.remove, size: 14),
-            constraints: const BoxConstraints.tightFor(width: 30, height: 26),
+            constraints: const BoxConstraints.tightFor(width: 24, height: 26),
             padding: EdgeInsets.zero,
           ),
           SizedBox(
-            width: 34,
+            width: 24,
             child: Text(
               '$quantity',
               textAlign: TextAlign.center,
@@ -459,13 +455,13 @@ class _Qty extends StatelessWidget {
           IconButton(
             onPressed: () => onChanged(quantity + 1),
             icon: const Icon(Icons.add, size: 14),
-            constraints: const BoxConstraints.tightFor(width: 30, height: 26),
+            constraints: const BoxConstraints.tightFor(width: 24, height: 26),
             padding: EdgeInsets.zero,
           ),
-          const Padding(
-            padding: EdgeInsetsDirectional.only(end: 8),
+          Padding(
+            padding: const EdgeInsetsDirectional.only(end: 4),
             child: Text(
-              'الكمية',
+              AppStrings.tr('الكمية', 'Quantity'),
               style: TextStyle(fontSize: 9, color: AppTheme.muted),
             ),
           ),
@@ -504,7 +500,7 @@ class _CashbackSummaryState extends State<_CashbackSummary> {
   Future<void> _applyCoupon() async {
     final code = _couponController.text.trim().toUpperCase();
     if (code.isEmpty) {
-      _showMessage('أدخل كود الخصم أولاً', false);
+      _showMessage(AppStrings.tr('أدخل كود الخصم أولاً', 'Enter the discount code first'), false);
       return;
     }
 
@@ -518,20 +514,20 @@ class _CashbackSummaryState extends State<_CashbackSummary> {
       if (!mounted) return;
 
       if (coupon == null || coupon.code.toUpperCase() != code) {
-        _showMessage('الكود غير صحيح أو لا يوجد كاش باك متاح', false);
+        _showMessage(AppStrings.tr('الكود غير صحيح أو لا يوجد كاش باك متاح', 'Invalid code or no cashback is available'), false);
         return;
       }
 
       final amount = coupon.balance.clamp(0, widget.total).toDouble();
       if (amount <= 0) {
-        _showMessage('لا يوجد خصم متاح لهذا الكوبون', false);
+        _showMessage(AppStrings.tr('لا يوجد خصم متاح لهذا الكوبون', 'No discount is available for this coupon'), false);
         return;
       }
 
       setState(() {
         _discount = amount;
         _ok = true;
-        _message = 'تم تطبيق خصم ${amount.toStringAsFixed(2)} د.إ';
+        _message = AppStrings.tr('تم تطبيق خصم ${amount.toStringAsFixed(2)} د.إ', 'A discount of ${amount.toStringAsFixed(2)} AED was applied');
       });
       widget.onChanged(_AppliedCashback(
         code: coupon.code,
@@ -539,7 +535,7 @@ class _CashbackSummaryState extends State<_CashbackSummary> {
         orderNumbers: coupon.orderNumbers,
       ));
     } catch (_) {
-      if (mounted) _showMessage('تعذر تطبيق الكود، حاول مرة أخرى', false);
+      if (mounted) _showMessage(AppStrings.tr('تعذر تطبيق الكود، حاول مرة أخرى', 'Unable to apply the code. Try again'), false);
     } finally {
       if (mounted) setState(() => _applying = false);
     }
@@ -580,11 +576,11 @@ class _CashbackSummaryState extends State<_CashbackSummary> {
           const SizedBox(height: 14),
           _SummaryRow(label: AppStrings.tr('السعر الفرعي', 'Subtotal'), value: money.format(widget.total)),
           _SummaryRow(
-            label: 'الخصم',
-            value: _discount > 0 ? '-${money.format(_discount)}' : 'يتم تحديده لاحقاً',
+            label: AppStrings.tr('الخصم', 'Discount'),
+            value: _discount > 0 ? '-${money.format(_discount)}' : AppStrings.tr('يتم تحديده لاحقاً', 'Calculated later'),
             valueColor: _discount > 0 ? const Color(0xFF16833A) : AppTheme.navy,
           ),
-          const _SummaryRow(label: 'رسوم الشحن', value: 'يتم تحديده لاحقاً'),
+          _SummaryRow(label: AppStrings.tr('رسوم الشحن', 'Shipping'), value: AppStrings.tr('يتم تحديده لاحقاً', 'Calculated later')),
           const SizedBox(height: 10),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -610,8 +606,8 @@ class _CashbackSummaryState extends State<_CashbackSummary> {
                           color: Colors.white,
                         ),
                       )
-                    : const Text(
-                        'تطبيق',
+                    : Text(
+                        AppStrings.tr('تطبيق', 'Apply'),
                         style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
                       ),
               ),
@@ -631,7 +627,7 @@ class _CashbackSummaryState extends State<_CashbackSummary> {
                       fontWeight: FontWeight.w800,
                     ),
                     decoration: InputDecoration(
-                      hintText: 'كود الخصم (CB-XXXXXX)',
+                      hintText: AppStrings.tr('كود الخصم (CB-XXXXXX)', 'Discount code (CB-XXXXXX)'),
                       hintStyle: const TextStyle(
                         color: AppTheme.muted,
                         fontSize: 12,
@@ -658,24 +654,39 @@ class _CashbackSummaryState extends State<_CashbackSummary> {
             ],
           ),
           const SizedBox(height: 6),
-          Text(
-            _message.isEmpty ? 'الكود موجود في حسابك ← قسم الكاش باك' : _message,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: _message.isEmpty
-                  ? AppTheme.gold
-                  : _ok
-                      ? const Color(0xFF16833A)
-                      : const Color(0xFFC62828),
-              fontSize: 10.5,
-              fontWeight: FontWeight.w800,
+          InkWell(
+            onTap: _message.isEmpty
+                ? () => AppShellNavigation.openTab(
+                      context,
+                      1,
+                      accountSection: AccountSection.wallet,
+                    )
+                : null,
+            borderRadius: BorderRadius.circular(6),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              child: Text(
+                _message.isEmpty ? AppStrings.tr('الكود موجود في حسابك ← قسم الكاش باك', 'Find the code in your account → Cashback') : _message,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: _message.isEmpty
+                      ? AppTheme.gold
+                      : _ok
+                          ? const Color(0xFF16833A)
+                          : const Color(0xFFC62828),
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w800,
+                  decoration: _message.isEmpty ? TextDecoration.underline : null,
+                  decorationColor: AppTheme.gold,
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 18),
           Row(
             children: [
-              const Text(
-                'الإجمالي',
+              Text(
+                AppStrings.tr('الإجمالي', 'Total'),
                 style: TextStyle(
                   color: AppTheme.navy,
                   fontSize: 15,
@@ -696,7 +707,7 @@ class _CashbackSummaryState extends State<_CashbackSummary> {
           ),
           const SizedBox(height: 8),
           Text(
-            'تأكيد الطلب يتم على واتساب لإكمال البيانات وتحديد اللون والمقاس والدفع عند الاستلام أو تحويل بنكي. عدد القطع: ${widget.count}',
+            AppStrings.tr('تأكيد الطلب يتم على واتساب لإكمال البيانات وتحديد اللون والمقاس والدفع عند الاستلام أو تحويل بنكي. عدد القطع: ${widget.count}', 'Confirm through WhatsApp to complete details, color, size and payment. Items: ${widget.count}'),
             textAlign: TextAlign.start,
             style: const TextStyle(
               color: AppTheme.muted,
@@ -741,7 +752,7 @@ class _SummaryState extends State<_Summary> {
       setState(() {
         _couponDiscount = 0;
         _couponOk = false;
-        _couponMessage = 'أدخل كود الخصم أولاً';
+        _couponMessage = AppStrings.tr('أدخل كود الخصم أولاً', 'Enter the discount code first');
       });
       return;
     }
@@ -758,7 +769,7 @@ class _SummaryState extends State<_Summary> {
         setState(() {
           _couponDiscount = 0;
           _couponOk = false;
-          _couponMessage = 'الكود غير صحيح أو لا يوجد كاش باك متاح';
+          _couponMessage = AppStrings.tr('الكود غير صحيح أو لا يوجد كاش باك متاح', 'Invalid code or no cashback is available');
         });
         return;
       }
@@ -768,7 +779,7 @@ class _SummaryState extends State<_Summary> {
         setState(() {
           _couponDiscount = 0;
           _couponOk = false;
-          _couponMessage = 'لا يوجد خصم متاح لهذا الكوبون';
+          _couponMessage = AppStrings.tr('لا يوجد خصم متاح لهذا الكوبون', 'No discount is available for this coupon');
         });
         return;
       }
@@ -776,14 +787,14 @@ class _SummaryState extends State<_Summary> {
       setState(() {
         _couponDiscount = amount;
         _couponOk = true;
-        _couponMessage = 'تم تطبيق خصم ${amount.toStringAsFixed(2)} د.إ';
+        _couponMessage = AppStrings.tr('تم تطبيق خصم ${amount.toStringAsFixed(2)} د.إ', 'A discount of ${amount.toStringAsFixed(2)} AED was applied');
       });
     } catch (_) {
       if (!mounted) return;
       setState(() {
         _couponDiscount = 0;
         _couponOk = false;
-        _couponMessage = 'تعذر تطبيق الكود، حاول مرة أخرى';
+        _couponMessage = AppStrings.tr('تعذر تطبيق الكود، حاول مرة أخرى', 'Unable to apply the code. Try again');
       });
     } finally {
       if (mounted) setState(() => _applyingCoupon = false);
@@ -805,8 +816,8 @@ class _SummaryState extends State<_Summary> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
-            'ملخص الطلب',
+          Text(
+            AppStrings.tr('ملخص الطلب', 'Order summary'),
             textAlign: TextAlign.start,
             style: TextStyle(
               color: AppTheme.navy,
@@ -815,9 +826,9 @@ class _SummaryState extends State<_Summary> {
             ),
           ),
           const SizedBox(height: 16),
-          _SummaryRow(label: 'السعر الفرعي', value: money.format(total)),
-          const _SummaryRow(label: 'الخصم', value: 'يتم تحديده لاحقاً'),
-          const _SummaryRow(label: 'رسوم الشحن', value: 'يتم تحديده لاحقاً'),
+          _SummaryRow(label: AppStrings.tr('السعر الفرعي', 'Subtotal'), value: money.format(total)),
+          _SummaryRow(label: AppStrings.tr('الخصم', 'Discount'), value: AppStrings.tr('يتم تحديده لاحقاً', 'Calculated later')),
+          _SummaryRow(label: AppStrings.tr('رسوم الشحن', 'Shipping'), value: AppStrings.tr('يتم تحديده لاحقاً', 'Calculated later')),
           const SizedBox(height: 10),
           Row(
             children: [
@@ -830,18 +841,18 @@ class _SummaryState extends State<_Summary> {
                     borderRadius: BorderRadius.circular(6),
                   ),
                 ),
-                child: const Text('تطبيق'),
+                child: Text(AppStrings.tr('تطبيق', 'Apply')),
               ),
               const SizedBox(width: 8),
-              const Expanded(
+              Expanded(
                 child: SizedBox(
                   height: 42,
                   child: TextField(
                     textAlign: TextAlign.start,
                     decoration: InputDecoration(
-                      hintText: 'كود الخصم (CB-XXXXXX)',
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12),
-                      border: OutlineInputBorder(),
+                      hintText: AppStrings.tr('كود الخصم (CB-XXXXXX)', 'Discount code (CB-XXXXXX)'),
+                       contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                       border: const OutlineInputBorder(),
                     ),
                   ),
                 ),
@@ -849,20 +860,33 @@ class _SummaryState extends State<_Summary> {
             ],
           ),
           const SizedBox(height: 6),
-          const Text(
-            'الكود موجود في حسابك ← قسم الكاش باك',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: AppTheme.gold,
-              fontSize: 10.5,
-              fontWeight: FontWeight.w800,
+          InkWell(
+            onTap: () => AppShellNavigation.openTab(
+              context,
+              1,
+              accountSection: AccountSection.wallet,
+            ),
+            borderRadius: BorderRadius.circular(6),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              child: Text(
+                AppStrings.tr('الكود موجود في حسابك ← قسم الكاش باك', 'Find the code in your account → Cashback'),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: AppTheme.gold,
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w800,
+                  decoration: TextDecoration.underline,
+                  decorationColor: AppTheme.gold,
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 18),
           Row(
             children: [
-              const Text(
-                'الإجمالي',
+               Text(
+                AppStrings.tr('الإجمالي', 'Total'),
                 style: TextStyle(
                   color: AppTheme.navy,
                   fontSize: 15.5,
@@ -883,7 +907,7 @@ class _SummaryState extends State<_Summary> {
           ),
           const SizedBox(height: 8),
           Text(
-            'تأكيد الطلب يتم على واتساب لإكمال البيانات وتحديد اللون والمقاس والدفع عند الاستلام أو تحويل بنكي. عدد القطع: $count',
+            AppStrings.tr('تأكيد الطلب يتم على واتساب لإكمال البيانات وتحديد اللون والمقاس والدفع عند الاستلام أو تحويل بنكي. عدد القطع: $count', 'Confirm through WhatsApp to complete details, color, size and payment. Items: $count'),
             textAlign: TextAlign.start,
             style: const TextStyle(
               color: AppTheme.muted,
@@ -945,8 +969,8 @@ class _SecurityInfo extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _SecuritySection(
-            title: 'خيارات الدفع الآمنة',
-            body: 'نلتزم بحماية معلومات الدفع الخاصة بك.',
+            title: AppStrings.tr('خيارات الدفع الآمنة', 'Secure payment options'),
+            body: AppStrings.tr('نلتزم بحماية معلومات الدفع الخاصة بك.', 'We are committed to protecting your payment information.'),
             logos: [
               'assets/pay/googlepay.webp',
               'assets/pay/applepay.webp',
@@ -958,14 +982,14 @@ class _SecurityInfo extends StatelessWidget {
             ],
           ),
           _SecuritySection(
-            title: 'تأمين الخصوصية',
+            title: AppStrings.tr('تأمين الخصوصية', 'Privacy protection'),
             body:
-                'حماية خصوصيتك أمر بالغ الأهمية بالنسبة لنا. لن نحتفظ بمعلوماتك الشخصية أو نشاركها إلا حسب سياسة الخصوصية.',
+                AppStrings.tr('حماية خصوصيتك أمر بالغ الأهمية بالنسبة لنا. لن نحتفظ بمعلوماتك الشخصية أو نشاركها إلا حسب سياسة الخصوصية.', 'Protecting your privacy is important to us. We only retain or share personal information according to our privacy policy.'),
           ),
           _SecuritySection(
-            title: 'سياسة الإرجاع',
+            title: AppStrings.tr('سياسة الإرجاع', 'Return policy'),
             body:
-                'قبل إرجاع المنتجات ضمن شروطنا، سيتم توضيح خطوات الإرجاع وكيفية استرداد المبلغ في صفحة سياسة الإرجاع.',
+                AppStrings.tr('قبل إرجاع المنتجات ضمن شروطنا، سيتم توضيح خطوات الإرجاع وكيفية استرداد المبلغ في صفحة سياسة الإرجاع.', 'Return steps and refund details are explained in the return policy.'),
           ),
         ],
       ),

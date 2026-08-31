@@ -5,6 +5,7 @@ import '../../state/app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/app_strings.dart';
 import '../shared/storefront_top_bar.dart';
+import '../shared/storefront_page_bottom_nav.dart';
 
 class PoliciesScreen extends StatefulWidget {
   const PoliciesScreen({super.key});
@@ -15,6 +16,7 @@ class PoliciesScreen extends StatefulWidget {
 class _PoliciesScreenState extends State<PoliciesScreen> {
   final _service = AffiliateService();
   late Future<List<StorePolicy>> _future = _service.fetchPolicies();
+  String? _expandedPolicy;
 
   Future<void> _refresh() async {
     final next = _service.fetchPolicies();
@@ -27,6 +29,8 @@ class _PoliciesScreenState extends State<PoliciesScreen> {
     final english = AppStateScope.of(context).isEnglish;
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6FA),
+      extendBody: true,
+      bottomNavigationBar: const StorefrontPageBottomNav(selected: 1),
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -71,9 +75,12 @@ class _PoliciesScreenState extends State<PoliciesScreen> {
                             _PolicyRow(
                               policy: item,
                               english: english,
-                              onTap: () => Navigator.of(context).push(
-                                MaterialPageRoute(builder: (_) => PolicyDetailsScreen(policy: item)),
-                              ),
+                              expanded: _expandedPolicy == item.slug,
+                              onTap: () => setState(() {
+                                _expandedPolicy = _expandedPolicy == item.slug
+                                    ? null
+                                    : item.slug;
+                              }),
                             ),
                       ],
                     ),
@@ -98,23 +105,37 @@ class PolicyDetailsScreen extends StatelessWidget {
     final body = english && policy.bodyEn.trim().isNotEmpty ? policy.bodyEn : policy.bodyAr;
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6FA),
-      appBar: AppBar(title: Text(title), backgroundColor: AppTheme.navy, foregroundColor: Colors.white),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppTheme.line)),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(title, textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.navy, fontSize: 20, fontWeight: FontWeight.w900)),
-              const SizedBox(height: 6),
-              Text('${english ? 'Version' : 'الإصدار'} ${policy.version}', textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.muted, fontSize: 11)),
-              const Divider(height: 28),
-              Text(body, textAlign: TextAlign.start, style: const TextStyle(color: Color(0xFF38445C), height: 1.9, fontSize: 14)),
-            ],
-          ),
+      extendBody: true,
+      bottomNavigationBar: const StorefrontPageBottomNav(selected: 1),
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            StorefrontTopBar(
+              showBack: true,
+              placeholder: AppStrings.searchHeader,
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppTheme.line)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(title, textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.navy, fontSize: 20, fontWeight: FontWeight.w900)),
+                      const SizedBox(height: 6),
+                      Text('${english ? 'Version' : 'الإصدار'} ${policy.version}', textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.muted, fontSize: 11)),
+                      const Divider(height: 28),
+                      Text(body, textAlign: TextAlign.start, style: const TextStyle(color: Color(0xFF38445C), height: 1.9, fontSize: 14)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -122,20 +143,68 @@ class PolicyDetailsScreen extends StatelessWidget {
 }
 
 class _PolicyRow extends StatelessWidget {
-  const _PolicyRow({required this.policy, required this.english, required this.onTap});
+  const _PolicyRow({required this.policy, required this.english, required this.expanded, required this.onTap});
   final StorePolicy policy;
   final bool english;
+  final bool expanded;
   final VoidCallback onTap;
   @override
   Widget build(BuildContext context) => Card(
         margin: const EdgeInsets.only(bottom: 10),
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14), side: const BorderSide(color: AppTheme.line)),
-        child: ListTile(
-          onTap: onTap,
-          leading: CircleAvatar(backgroundColor: AppTheme.gold.withValues(alpha: .13), child: const Icon(Icons.description_outlined, color: AppTheme.gold)),
-          title: Text(english && policy.titleEn.isNotEmpty ? policy.titleEn : policy.titleAr, textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.navy, fontWeight: FontWeight.w900)),
-          trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 15),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          children: [
+            ListTile(
+              onTap: onTap,
+              leading: CircleAvatar(backgroundColor: AppTheme.gold.withValues(alpha: .13), child: const Icon(Icons.description_outlined, color: AppTheme.gold)),
+              title: Text(english && policy.titleEn.isNotEmpty ? policy.titleEn : policy.titleAr, textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.navy, fontWeight: FontWeight.w900)),
+              trailing: AnimatedRotation(
+                turns: expanded ? .25 : 0,
+                duration: const Duration(milliseconds: 180),
+                child: const Icon(Icons.arrow_forward_ios_rounded, size: 15),
+              ),
+            ),
+            AnimatedCrossFade(
+              duration: const Duration(milliseconds: 200),
+              crossFadeState: expanded
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
+              firstChild: const SizedBox(width: double.infinity),
+              secondChild: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                decoration: const BoxDecoration(color: Colors.white),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Divider(height: 1),
+                    const SizedBox(height: 12),
+                    if (policy.version.trim().isNotEmpty) ...[
+                      Text(
+                        '${english ? 'Version' : 'الإصدار'} ${policy.version}',
+                        textAlign: TextAlign.start,
+                        style: const TextStyle(color: AppTheme.muted, fontSize: 10.5),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                    Text(
+                      english && policy.bodyEn.trim().isNotEmpty
+                          ? policy.bodyEn
+                          : policy.bodyAr,
+                      textAlign: TextAlign.start,
+                      style: const TextStyle(
+                        color: Color(0xFF38445C),
+                        height: 1.8,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       );
 }

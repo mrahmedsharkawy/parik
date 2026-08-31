@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../models/category.dart';
 import '../../models/app_runtime_settings.dart';
@@ -24,6 +25,7 @@ import '../catalog/product_card.dart';
 import '../catalog/search_screen.dart';
 import '../offers/monthly_deals_screen.dart';
 import '../offers/offers_screen.dart';
+import '../product/product_screen.dart';
 import '../shared/bariq_network_image.dart';
 import '../shared/storefront_top_bar.dart';
 
@@ -42,13 +44,19 @@ class _HomeScreenState extends State<HomeScreen> {
   final _bannerController = PageController();
   late Future<_HomeData> _future;
   final ValueNotifier<int> _bannerIndex = ValueNotifier<int>(0);
+  final GlobalKey _categoryStripKey = GlobalKey();
   String? _categoryId;
   String? _subcategoryId;
+  String? _categoryFilterName;
+  String? _subcategoryFilterName;
   final ValueNotifier<bool> _showFloatingBars = ValueNotifier<bool>(false);
   bool _loadingProducts = false;
   bool _hasMoreProducts = true;
   final List<Product> _products = [];
+  final List<Product> _dailyProducts = [];
   String _productSort = 'daily_random';
+  String? _scheduledPopupId;
+  bool _popupShownThisSession = false;
 
   @override
   void initState() {
@@ -64,21 +72,28 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  Future<_HomeData> _load() async {
+  Future<_HomeData> _load({bool forceSettingsRefresh = false}) async {
+    // Start the first visible product page immediately. Waiting for settings,
+    // categories and banners before issuing this request adds a full network
+    // round-trip to every cold home-page open.
     final setupValues = await Future.wait([
       _catalog.fetchCategories(),
       _catalog.fetchSubcategories(),
       _catalog.fetchSettings(),
-      _appSettings.fetch(),
+      _appSettings.fetch(forceRefresh: forceSettingsRefresh),
+      _catalog.fetchProductsPage(
+        limit: SupabaseCatalogService.pageSize,
+        sort: _productSort,
+      ),
     ]);
     final settings = setupValues[2] as SiteSettings;
     final appSettings = setupValues[3] as AppRuntimeSettings;
     _productSort = settings.productSort;
-    final products = await _catalog.fetchProductsPage(
-      limit: appSettings.homePageSize,
-      sort: _productSort,
-    );
+    final products = setupValues[4] as List<Product>;
     _products
+      ..clear()
+      ..addAll(products);
+    _dailyProducts
       ..clear()
       ..addAll(products);
     _hasMoreProducts = _products.length == appSettings.homePageSize;
@@ -92,15 +107,84 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _refresh() async {
-    final next = _load();
+    final next = _load(forceSettingsRefresh: true);
     setState(() => _future = next);
     await next;
   }
 
-  Future<void> _reloadProducts({String? categoryId, String? subcategoryId}) async {
+  void _schedulePopup(AppPopupCampaign campaign, bool english) {
+    if (!campaign.activeNow || _popupShownThisSession ||
+        _scheduledPopupId == campaign.id) return;
+    _scheduledPopupId = campaign.id;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted || !await _canShowPopup(campaign)) return;
+      _popupShownThisSession = true;
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        barrierColor: Colors.black54,
+        builder: (dialogContext) => _CampaignPopup(
+          campaign: campaign,
+          english: english,
+          onAction: () {
+            Navigator.of(dialogContext).pop();
+            _openPopupLink(campaign.link);
+          },
+        ),
+      );
+    });
+  }
+
+  Future<bool> _canShowPopup(AppPopupCampaign campaign) async {
+    if (campaign.frequency == 'session') return true;
+    final prefs = await SharedPreferences.getInstance();
+    final identity = campaign.id.isEmpty ? campaign.hashCode : campaign.id;
+    final key = 'bariq_popup_$identity';
+    final previous = prefs.getString(key);
+    final today = DateTime.now();
+    if (campaign.frequency == 'daily') {
+      final stamp = '${today.year}-${today.month}-${today.day}';
+      if (previous == stamp) return false;
+      await prefs.setString(key, stamp);
+      return true;
+    }
+    if (previous == 'seen') return false;
+    await prefs.setString(key, 'seen');
+    return true;
+  }
+
+  void _openPopupLink(String rawLink) {
+    if (!mounted) return;
+    final link = rawLink.trim();
+    if (link.isEmpty) return;
+    final uri = Uri.tryParse(link);
+    final productId = uri?.queryParameters['id'] ?? '';
+    if (link.contains('product') && productId.isNotEmpty) {
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => ProductScreen(productId: productId),
+      ));
+    } else if (link.contains('monthly')) {
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => const MonthlyDealsScreen(),
+      ));
+    } else if (link.contains('offer')) {
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => const OffersScreen(showBack: true),
+      ));
+    }
+  }
+
+  Future<void> _reloadProducts({
+    String? categoryId,
+    String? subcategoryId,
+    String? categoryName,
+    String? subcategoryName,
+  }) async {
     setState(() {
       _categoryId = categoryId;
       _subcategoryId = subcategoryId;
+      _categoryFilterName = categoryName;
+      _subcategoryFilterName = subcategoryName;
       _loadingProducts = true;
       _hasMoreProducts = true;
       _products.clear();
@@ -110,6 +194,8 @@ class _HomeScreenState extends State<HomeScreen> {
         limit: SupabaseCatalogService.pageSize,
         categoryId: categoryId,
         subcategoryId: subcategoryId,
+        categoryName: categoryName,
+        subcategoryName: subcategoryName,
         sort: _productSort,
       );
       if (!mounted) return;
@@ -132,6 +218,8 @@ class _HomeScreenState extends State<HomeScreen> {
         limit: SupabaseCatalogService.pageSize,
         categoryId: _categoryId,
         subcategoryId: _subcategoryId,
+        categoryName: _categoryFilterName,
+        subcategoryName: _subcategoryFilterName,
         sort: _productSort,
       );
       if (!mounted) return;
@@ -174,6 +262,7 @@ class _HomeScreenState extends State<HomeScreen> {
             final data = snapshot.data!;
             final appState = AppStateScope.of(context);
             final headerBanners = data.appSettings.bannersForLanguage(appState.language);
+            _schedulePopup(data.appSettings.popupCampaign, appState.isEnglish);
             if (data.appSettings.maintenanceMode) {
               return _MaintenanceHome(
                 message: data.appSettings.maintenanceMessage,
@@ -189,7 +278,10 @@ class _HomeScreenState extends State<HomeScreen> {
               if (subcategory != null && !matchesSubcategory(product, subcategory)) return false;
               return true;
             }).toList(), data.settings.productSort);
-            final today = _dailyPicks(allProducts, data.settings.dailyPicks);
+            final today = _dailyPicks(
+              _storeProducts(_dailyProducts, data.settings.productSort),
+              data.settings.dailyPicks,
+            );
             final pagedProducts = products;
 
             return RefreshIndicator(
@@ -200,12 +292,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   NotificationListener<ScrollNotification>(
                     onNotification: (notification) {
                       final metrics = notification.metrics;
-                      if (notification is UserScrollNotification) {
-                        if (notification.direction == ScrollDirection.forward && metrics.pixels > 460 && !_showFloatingBars.value) {
-                          _showFloatingBars.value = true;
-                        } else if ((notification.direction == ScrollDirection.reverse || metrics.pixels <= 360) && _showFloatingBars.value) {
-                          _showFloatingBars.value = false;
+                      final categoryContext = _categoryStripKey.currentContext;
+                      final categoryBox = categoryContext?.findRenderObject();
+                      if (categoryBox is RenderBox && categoryBox.hasSize) {
+                        final categoryTop = categoryBox.localToGlobal(Offset.zero).dy;
+                        final shouldShow = categoryTop <= 96 && metrics.pixels > 0;
+                        if (_showFloatingBars.value != shouldShow) {
+                          _showFloatingBars.value = shouldShow;
                         }
+                      } else if (metrics.pixels <= 4 && _showFloatingBars.value) {
+                        _showFloatingBars.value = false;
                       }
                       if (metrics.pixels > metrics.maxScrollExtent - 900) {
                         unawaited(_loadMoreProducts());
@@ -253,7 +349,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         indexNotifier: _bannerIndex,
                         subcategories: data.subcategories,
                         selectedId: _subcategoryId,
-                        onTap: (id) => _reloadProducts(subcategoryId: id == _subcategoryId ? null : id),
+                        onTap: (id) {
+                          final nextId = id == _subcategoryId ? null : id;
+                          final subcategory = _selectedSubcategory(data.subcategories, nextId);
+                          _reloadProducts(
+                            subcategoryId: nextId,
+                            subcategoryName: subcategory?.nameAr,
+                          );
+                        },
                         appSettings: data.appSettings,
                         language: appState.language,
                       ),
@@ -269,14 +372,23 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     if (data.appSettings.sectionEnabled('daily_picks')) ...[
                       SliverToBoxAdapter(child: _SectionTitle(title: AppStrings.dailyPicks, leading: '☀️', action: '${AppStrings.viewAll} 🔥')),
-                      SliverToBoxAdapter(child: _TodayScroller(products: today.take(8).toList())),
+                      SliverToBoxAdapter(child: _TodayScroller(products: today.take(12).toList())),
                     ],
                     if (data.appSettings.sectionEnabled('categories'))
                       SliverToBoxAdapter(
-                        child: _FilterChips(
-                          categories: data.categories,
-                          selectedId: _categoryId,
-                          onTap: (id) => _reloadProducts(categoryId: id),
+                        child: KeyedSubtree(
+                          key: _categoryStripKey,
+                          child: _FilterChips(
+                            categories: data.categories,
+                            selectedId: _categoryId,
+                            onTap: (id) {
+                              final category = _selectedCategory(data.categories, id);
+                              _reloadProducts(
+                                categoryId: id,
+                                categoryName: category?.nameAr,
+                              );
+                            },
+                          ),
                         ),
                       ),
                     if (selectedSubcategories.isNotEmpty)
@@ -284,7 +396,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: _SubcategoryImageStrip(
                           subcategories: selectedSubcategories,
                           selectedId: _subcategoryId,
-                          onTap: (id) => _reloadProducts(categoryId: _categoryId, subcategoryId: id == _subcategoryId ? null : id),
+                          onTap: (id) {
+                            final nextId = id == _subcategoryId ? null : id;
+                            final subcategory = _selectedSubcategory(data.subcategories, nextId);
+                            _reloadProducts(
+                              categoryId: _categoryId,
+                              categoryName: _categoryFilterName,
+                              subcategoryId: nextId,
+                              subcategoryName: subcategory?.nameAr,
+                            );
+                          },
                         ),
                       ),
                     SliverToBoxAdapter(
@@ -334,13 +455,19 @@ class _HomeScreenState extends State<HomeScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           StorefrontTopBar(
-                            placeholder: 'إبحث في الفئات',
+                            placeholder: AppStrings.tr('إبحث في الفئات', 'Search categories'),
                             onSearch: _openSearch,
                           ),
                           _FilterChips(
                             categories: data.categories,
                             selectedId: _categoryId,
-                            onTap: (id) => _reloadProducts(categoryId: id),
+                            onTap: (id) {
+                              final category = _selectedCategory(data.categories, id);
+                              _reloadProducts(
+                                categoryId: id,
+                                categoryName: category?.nameAr,
+                              );
+                            },
                           ),
                         ],
                       ),
@@ -383,7 +510,9 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Product> _dailyPicks(List<Product> products, List<String> ids) {
     if (ids.isEmpty) {
       final picked = products.where((product) => product.featured || product.discountPercent > 0).toList();
-      return picked.isNotEmpty ? picked : products;
+      if (picked.isEmpty) return products;
+      final pickedIds = picked.map((product) => product.id).toSet();
+      return [...picked, ...products.where((product) => pickedIds.add(product.id))];
     }
 
     final byId = {for (final product in products) product.id: product};
@@ -392,7 +521,9 @@ class _HomeScreenState extends State<HomeScreen> {
       final product = byId[id];
       if (product != null) ordered.add(product);
     }
-    return ordered.isNotEmpty ? ordered : products;
+    if (ordered.isEmpty) return products;
+    final orderedIds = ordered.map((product) => product.id).toSet();
+    return [...ordered, ...products.where((product) => orderedIds.add(product.id))];
   }
 
   List<Product> _storeProducts(List<Product> products, String mode) {
@@ -465,7 +596,7 @@ class _SiteHeader extends StatefulWidget {
 class _SiteHeaderState extends State<_SiteHeader> {
   static final Map<String, Color> _topColorCache = <String, Color>{};
   late Future<int> _notificationsFuture;
-  Color _bannerTopColor = const Color(0xFFD5BCA6);
+  Color _bannerTopColor = AppTheme.navy;
   Timer? _bannerColorTimer;
 
   @override
@@ -604,7 +735,7 @@ class _SiteHeaderState extends State<_SiteHeader> {
                   Expanded(
                     child: ShaderMask(
                       blendMode: BlendMode.srcIn,
-                      shaderCallback: AppTheme.goldGradient.createShader,
+                      shaderCallback: AppTheme.logoGoldGradient.createShader,
                       child: const Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -667,7 +798,7 @@ class _SiteHeaderState extends State<_SiteHeader> {
                       width: 38,
                       child: IconButton(
                         onPressed: widget.onImageSearch,
-                        icon: const Icon(Icons.camera_alt_outlined, color: Color(0xFFBFD3F2), size: 24),
+                        icon: const Icon(Icons.camera_alt_outlined, color: Colors.white, size: 24),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints.tightFor(width: 38, height: 38),
                       ),
@@ -781,6 +912,10 @@ class _BannerSliderState extends State<_BannerSlider> {
     for (final imageIndex in candidates) {
       final source = widget.bannerUrls[imageIndex];
       if (source.isEmpty || !_warmedImages.add(source)) continue;
+      // The web renderer paints remote media through an HTML image element.
+      // A separate NetworkImage precache performs a second CORS byte request
+      // and can delay the actual visible banner after a browser refresh.
+      if (kIsWeb && !source.startsWith('assets/')) continue;
       final ImageProvider originalProvider = source.startsWith('assets/')
           ? AssetImage(source)
           : kIsWeb
@@ -1114,7 +1249,7 @@ class _PromoBannerRowState extends State<_PromoBannerRow> {
   }
 
   void _openBanner(AppPromoBanner banner) {
-    final text = '${banner.title} ${banner.subtitle}'.toLowerCase();
+    final text = '${banner.titleAr} ${banner.titleEn} ${banner.subtitleAr} ${banner.subtitleEn}'.toLowerCase();
     final isMonthly =
         text.contains('الشهر') ||
         text.contains('monthly') ||
@@ -1137,6 +1272,12 @@ class _PromoBannerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final title = AppStrings.en
+        ? (banner.titleEn.isNotEmpty ? banner.titleEn : AppStrings.auto(banner.titleAr))
+        : (banner.titleAr.isNotEmpty ? banner.titleAr : banner.titleEn);
+    final subtitle = AppStrings.en
+        ? (banner.subtitleEn.isNotEmpty ? banner.subtitleEn : AppStrings.auto(banner.subtitleAr))
+        : (banner.subtitleAr.isNotEmpty ? banner.subtitleAr : banner.subtitleEn);
     final remaining = banner.endsAt?.difference(DateTime.now()) ?? Duration.zero;
     final safe = remaining.isNegative ? Duration.zero : remaining;
     final hours = safe.inHours.toString().padLeft(2, '0');
@@ -1174,14 +1315,14 @@ class _PromoBannerCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    banner.title,
+                    title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w900),
                   ),
-                  if (banner.subtitle.isNotEmpty)
+                  if (subtitle.isNotEmpty)
                     Text(
-                      banner.subtitle,
+                      subtitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(color: Colors.white70, fontSize: 9.5, fontWeight: FontWeight.w700),
@@ -1236,7 +1377,7 @@ class _ServiceStrip extends StatelessWidget {
         boxShadow: const [BoxShadow(color: Color(0x0B000000), blurRadius: 9, offset: Offset(0, 2))],
       ),
       child: Directionality(
-        textDirection: TextDirection.ltr,
+        textDirection: Directionality.of(context),
         child: Row(
           children: List.generate(_items.length, (i) {
             final item = _items[i];
@@ -1246,7 +1387,7 @@ class _ServiceStrip extends StatelessWidget {
                 children: [
                   Icon(item.$1, color: i < 2 ? AppTheme.gold : AppTheme.success, size: 16),
                   const SizedBox(width: 5),
-                  Flexible(child: Text(item.$2, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppTheme.navy, fontSize: 10.2, fontWeight: FontWeight.w900))),
+                  Flexible(child: Text(AppStrings.auto(item.$2), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppTheme.navy, fontSize: 10.2, fontWeight: FontWeight.w900))),
                   if (i != _items.length - 1) const SizedBox(width: 5),
                   if (i != _items.length - 1) Container(width: 1, height: 20, color: AppTheme.line),
                 ],
@@ -1315,9 +1456,9 @@ class _FilterChips extends StatelessWidget {
   Widget build(BuildContext context) {
     final items = categories;
     return Container(
-      height: 50,
+      height: 40,
       color: Colors.white,
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 3),
       child: Directionality(
         textDirection: Directionality.of(context),
         child: ListView.separated(
@@ -1331,7 +1472,7 @@ class _FilterChips extends StatelessWidget {
             final category = all ? null : items[i - 1];
             final active = all ? selectedId == null : category!.id == selectedId;
             return _HomeCategoryChip(
-              label: all ? 'الكل' : category!.displayName,
+              label: all ? AppStrings.tr('الكل', 'All') : category!.displayName,
               imageUrl: category?.imageUrl,
               all: all,
               active: active,
@@ -1367,7 +1508,7 @@ class _HomeCategoryChip extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 140),
         width: 88,
-        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
         decoration: BoxDecoration(
           color: active ? const Color(0xFFFFFBF0) : Colors.white,
           borderRadius: BorderRadius.circular(18),
@@ -1382,8 +1523,8 @@ class _HomeCategoryChip extends StatelessWidget {
               ClipOval(
                 child: BariqNetworkImage(
                   imageUrl: imageUrl ?? '',
-                  width: 24,
-                  height: 24,
+                  width: 20,
+                  height: 20,
                   fit: BoxFit.cover,
                   errorIconSize: 15,
                 ),
@@ -1501,6 +1642,109 @@ class _SubcategoryImageItem extends StatelessWidget {
   }
 }
 
+class _CampaignPopup extends StatelessWidget {
+  const _CampaignPopup({
+    required this.campaign,
+    required this.english,
+    required this.onAction,
+  });
+
+  final AppPopupCampaign campaign;
+  final bool english;
+  final VoidCallback onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    final title = english && campaign.titleEn.isNotEmpty
+        ? campaign.titleEn
+        : campaign.titleAr;
+    final body = english && campaign.bodyEn.isNotEmpty
+        ? campaign.bodyEn
+        : campaign.bodyAr;
+    final button = english && campaign.buttonEn.isNotEmpty
+        ? campaign.buttonEn
+        : campaign.buttonAr;
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 28),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+      clipBehavior: Clip.antiAlias,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 430),
+        child: Stack(
+          children: [
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (campaign.imageUrl.isNotEmpty)
+                  CachedNetworkImage(
+                    imageUrl: campaign.imageUrl,
+                    fit: BoxFit.cover,
+                    fadeInDuration: const Duration(milliseconds: 120),
+                    placeholder: (_, __) => const SizedBox(
+                      height: 190,
+                      child: Center(child: CircularProgressIndicator(
+                        color: AppTheme.gold, strokeWidth: 2,
+                      )),
+                    ),
+                    errorWidget: (_, __, ___) => const SizedBox.shrink(),
+                  ),
+                if (title.isNotEmpty || body.isNotEmpty || campaign.link.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (title.isNotEmpty)
+                          Text(title, textAlign: TextAlign.start,
+                            style: const TextStyle(color: AppTheme.navy,
+                              fontSize: 19, fontWeight: FontWeight.w900)),
+                        if (title.isNotEmpty && body.isNotEmpty)
+                          const SizedBox(height: 7),
+                        if (body.isNotEmpty)
+                          Text(body, textAlign: TextAlign.start,
+                            style: const TextStyle(color: AppTheme.muted,
+                              fontSize: 13, height: 1.5, fontWeight: FontWeight.w600)),
+                        if (campaign.link.isNotEmpty) ...[
+                          const SizedBox(height: 14),
+                          FilledButton(
+                            onPressed: onAction,
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppTheme.navy,
+                              minimumSize: const Size.fromHeight(45),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14))),
+                            child: Text(button.isEmpty
+                                ? (english ? 'View now' : 'عرض الآن')
+                                : button),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+            PositionedDirectional(
+              top: 8,
+              end: 8,
+              child: Material(
+                color: Colors.black54,
+                shape: const CircleBorder(),
+                child: IconButton(
+                  visualDensity: VisualDensity.compact,
+                  color: Colors.white,
+                  icon: const Icon(Icons.close_rounded),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _LoadingHome extends StatelessWidget {
   const _LoadingHome();
 
@@ -1524,11 +1768,11 @@ class _HomeError extends StatelessWidget {
         const SizedBox(height: 220),
         const Icon(Icons.cloud_off, size: 54, color: AppTheme.navy),
         const SizedBox(height: 12),
-        const Text('تعذر تحميل المنتجات', textAlign: TextAlign.center, style: TextStyle(color: AppTheme.navy, fontSize: 17, fontWeight: FontWeight.w900)),
+        Text(AppStrings.tr('تعذر تحميل المنتجات', 'Unable to load products'), textAlign: TextAlign.center, style: const TextStyle(color: AppTheme.navy, fontSize: 17, fontWeight: FontWeight.w900)),
         const SizedBox(height: 8),
         Text('$error', textAlign: TextAlign.center, style: const TextStyle(color: AppTheme.muted, fontSize: 11)),
         const SizedBox(height: 14),
-        Center(child: FilledButton(onPressed: () => onRetry(), child: const Text('إعادة المحاولة'))),
+        Center(child: FilledButton(onPressed: () => onRetry(), child: Text(AppStrings.retry))),
       ],
     );
   }
@@ -1619,7 +1863,7 @@ class _MaintenanceHome extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               message.isEmpty
-                  ? 'نقوم حاليًا بتحسين التطبيق، سنعود بعد قليل.'
+                  ? AppStrings.tr('نقوم حاليًا بتحسين التطبيق، سنعود بعد قليل.', 'We are improving the app and will be back shortly.')
                   : message,
               textAlign: TextAlign.center,
               style: const TextStyle(
@@ -1632,7 +1876,7 @@ class _MaintenanceHome extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('تحديث'),
+              label: Text(AppStrings.tr('تحديث', 'Refresh')),
             ),
           ],
         ),

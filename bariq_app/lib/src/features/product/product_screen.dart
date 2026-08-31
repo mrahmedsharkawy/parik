@@ -1,10 +1,11 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart' hide TextDirection;
-import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../config/app_config.dart';
@@ -23,6 +24,7 @@ import '../catalog/product_gallery_grid.dart';
 import '../catalog/search_screen.dart';
 import '../shared/bariq_network_image.dart';
 import '../shared/bariq_bottom_nav.dart';
+import '../shared/storefront_page_bottom_nav.dart';
 import '../shared/storefront_top_bar.dart';
 import '../shell/app_shell.dart';
 import 'product_preview_screen.dart';
@@ -43,7 +45,8 @@ class _ProductScreenState extends State<ProductScreen> {
   final _orderService = WhatsAppOrderService();
   final _imageController = PageController();
   late Future<Product?> _future;
-  Future<List<Product>>? _relatedFuture;
+  Future<_RelatedData>? _relatedFuture;
+  bool _loadingMoreRelated = false;
   int _index = 0;
   int _quantity = 1;
   bool _descExpanded = false;
@@ -52,6 +55,8 @@ class _ProductScreenState extends State<ProductScreen> {
   String _customText = '';
   String _customNotes = '';
   String _customImagePath = '';
+  Uint8List? _customImageBytes;
+  String _customImageName = 'customization.png';
   String _recordedProductId = '';
 
   @override
@@ -78,13 +83,20 @@ class _ProductScreenState extends State<ProductScreen> {
             snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             backgroundColor: Colors.white,
+            appBar: StorefrontPageAppBar(),
+            bottomNavigationBar: StorefrontPageBottomNav(selected: 4),
             body:
                 Center(child: CircularProgressIndicator(color: AppTheme.gold)),
           );
         }
 
         if (product == null) {
-          return Scaffold(body: Center(child: Text(AppStrings.tr('تعذر تحميل المنتج', 'Unable to load product'))));
+          return Scaffold(
+            backgroundColor: Colors.white,
+            appBar: const StorefrontPageAppBar(),
+            bottomNavigationBar: const StorefrontPageBottomNav(selected: 4),
+            body: Center(child: Text(AppStrings.tr('تعذر تحميل المنتج', 'Unable to load product'))),
+          );
         }
 
         if (_recordedProductId != product.id) {
@@ -94,15 +106,7 @@ class _ProductScreenState extends State<ProductScreen> {
           });
         }
 
-        _relatedFuture ??=
-            _service.fetchProducts(limit: SupabaseCatalogService.pageSize).then(
-                  (items) => items
-                      .where((item) =>
-                          item.id != product.id &&
-                          item.categoryId == product.categoryId)
-                      .take(6)
-                      .toList(growable: false),
-                );
+        _relatedFuture ??= _loadRelatedProducts(product);
 
         return _ProductView(
           product: product,
@@ -116,6 +120,7 @@ class _ProductScreenState extends State<ProductScreen> {
           customImagePath: _customImagePath,
           navCompact: _navCompact,
           relatedFuture: _relatedFuture!,
+          onLoadMoreRelated: () => _loadMoreRelatedProducts(product),
           onImageChanged: (value) => setState(() => _index = value),
           onQuantityChanged: (value) =>
               setState(() => _quantity = value.clamp(1, 99)),
@@ -133,7 +138,7 @@ class _ProductScreenState extends State<ProductScreen> {
               ? () {
             AppStateScope.of(context).addToCart(product, quantity: _quantity);
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('تمت إضافة المنتج إلى السلة')),
+              SnackBar(content: Text(AppStrings.tr('تمت إضافة المنتج إلى السلة', 'Product added to cart'))),
             );
           }
               : null,
@@ -180,8 +185,8 @@ class _ProductScreenState extends State<ProductScreen> {
                         icon: const Icon(Icons.close_rounded),
                       ),
                       const Spacer(),
-                      const Text(
-                        'تخصيص الطلب',
+                      Text(
+                        AppStrings.tr('تخصيص الطلب', 'Customize order'),
                         style: TextStyle(
                           color: AppTheme.navy,
                           fontSize: 14,
@@ -194,9 +199,9 @@ class _ProductScreenState extends State<ProductScreen> {
                   TextField(
                     controller: textController,
                     textAlign: TextAlign.start,
-                    decoration: const InputDecoration(
-                      labelText: 'الاسم / النص المطلوب على المنتج',
-                      hintText: 'مثال: ديار',
+                    decoration: InputDecoration(
+                      labelText: AppStrings.tr('الاسم / النص المطلوب على المنتج', 'Name / text required on the product'),
+                      hintText: AppStrings.tr('مثال: ديار', 'Example: Sarah'),
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -205,8 +210,8 @@ class _ProductScreenState extends State<ProductScreen> {
                     icon: const Icon(Icons.camera_alt_outlined),
                     label: Text(
                       _customImagePath.isEmpty
-                          ? 'رفع صورة التخصيص'
-                          : 'تم اختيار صورة التخصيص',
+                          ? AppStrings.tr('رفع صورة التخصيص', 'Upload customization image')
+                          : AppStrings.tr('تم اختيار صورة التخصيص', 'Customization image selected'),
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -215,10 +220,10 @@ class _ProductScreenState extends State<ProductScreen> {
                     textAlign: TextAlign.start,
                     minLines: 3,
                     maxLines: 5,
-                    decoration: const InputDecoration(
-                      labelText: 'تفاصيل أو ملاحظات التخصيص',
+                    decoration: InputDecoration(
+                      labelText: AppStrings.tr('تفاصيل أو ملاحظات التخصيص', 'Customization details or notes'),
                       hintText:
-                          'الألوان، المقاس، المناسبة، أي تفاصيل إضافية...',
+                          AppStrings.tr('الألوان، المقاس، المناسبة، أي تفاصيل إضافية...', 'Colors, size, occasion and any additional details...'),
                     ),
                   ),
                   const SizedBox(height: 14),
@@ -232,7 +237,7 @@ class _ProductScreenState extends State<ProductScreen> {
                       ),
                     ),
                     icon: const Icon(Icons.check_rounded),
-                    label: const Text('إرسال الطلب والتخصيص الجديد',
+                    label: Text(AppStrings.tr('إرسال الطلب والتخصيص الجديد', 'Send order and customization'),
                         style: TextStyle(fontWeight: FontWeight.w900)),
                   ),
                 ],
@@ -262,9 +267,15 @@ class _ProductScreenState extends State<ProductScreen> {
       maxWidth: 1800,
     );
     if (!mounted || image == null) return;
-    setState(() => _customImagePath = image.path);
+    final bytes = await image.readAsBytes();
+    if (!mounted) return;
+    setState(() {
+      _customImagePath = image.path;
+      _customImageBytes = bytes;
+      _customImageName = image.name;
+    });
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('تم حفظ صورة التخصيص على جهازك')),
+      SnackBar(content: Text(AppStrings.tr('تم حفظ صورة التخصيص على جهازك', 'Customization image saved to your device'))),
     );
   }
 
@@ -273,6 +284,7 @@ class _ProductScreenState extends State<ProductScreen> {
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => ProductPreviewScreen(
+          product: product,
           productId: product.id,
           productName: product.displayName,
           productImageUrl: product.images[selectedImageIndex],
@@ -304,22 +316,20 @@ class _ProductScreenState extends State<ProductScreen> {
         customText: _customText,
         customNotes: _customNotes,
         customImagePath: _customImagePath,
+        customImageBytes: _customImageBytes,
+        customImageName: _customImageName,
       );
       if (!mounted) return;
       if (!result.opened) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تعذر فتح واتساب.')),
+          SnackBar(content: Text(AppStrings.tr('تعذر فتح واتساب.', 'Unable to open WhatsApp.'))),
         );
         return;
       }
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (_) => const AppShell(
-            initialIndex: 1,
-            accountInitialSection: AccountSection.orders,
-          ),
-        ),
-        (route) => false,
+      AppShellNavigation.openTab(
+        context,
+        1,
+        accountSection: AccountSection.orders,
       );
     } on WhatsAppOrderLoginRequired {
       if (!mounted) return;
@@ -332,7 +342,7 @@ class _ProductScreenState extends State<ProductScreen> {
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('تعذر تجهيز الطلب: $error')),
+        SnackBar(content: Text(AppStrings.tr('تعذر تجهيز الطلب: $error', 'Unable to prepare order: $error'))),
       );
     } finally {
       if (mounted) setState(() => _sendingOrder = false);
@@ -351,23 +361,21 @@ class _ProductScreenState extends State<ProductScreen> {
         customText: _customText,
         customNotes: _customNotes,
         customImagePath: _customImagePath,
+        customImageBytes: _customImageBytes,
+        customImageName: _customImageName,
         customizationRequest: true,
       );
       if (!mounted) return;
       if (!result.opened) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تعذر فتح واتساب.')),
+          SnackBar(content: Text(AppStrings.tr('تعذر فتح واتساب.', 'Unable to open WhatsApp.'))),
         );
         return;
       }
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (_) => const AppShell(
-            initialIndex: 1,
-            accountInitialSection: AccountSection.orders,
-          ),
-        ),
-        (route) => false,
+      AppShellNavigation.openTab(
+        context,
+        1,
+        accountSection: AccountSection.orders,
       );
     } on WhatsAppOrderLoginRequired {
       if (!mounted) return;
@@ -380,7 +388,7 @@ class _ProductScreenState extends State<ProductScreen> {
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('تعذر تجهيز طلب التخصيص: $error')),
+        SnackBar(content: Text(AppStrings.tr('تعذر تجهيز طلب التخصيص: $error', 'Unable to prepare customization order: $error'))),
       );
     } finally {
       if (mounted) setState(() => _sendingOrder = false);
@@ -388,10 +396,75 @@ class _ProductScreenState extends State<ProductScreen> {
   }
 
   Future<void> _share(Product product) async {
-    await launchUrl(
-      Uri.parse('${AppConfig.siteUrl}/product/${product.id}'),
-      mode: LaunchMode.externalApplication,
+    await Clipboard.setData(
+      ClipboardData(text: '${AppConfig.siteUrl}/product/${product.id}'),
     );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(AppStrings.tr('تم نسخ رابط المنتج', 'Product link copied')),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  Future<_RelatedData> _loadRelatedProducts(Product product) async {
+    final terms = product.categoryTerms
+        .map((value) => value.trim())
+        .where((value) => value.isNotEmpty)
+        .toList(growable: false);
+    final values = await Future.wait([
+      _service.fetchRelatedProductsPage(
+        categoryTerms: terms,
+        limit: SupabaseCatalogService.pageSize,
+      ),
+      _service.fetchRelatedProductsCount(terms),
+    ]);
+    final items = (values[0] as List<Product>)
+        .where((item) => item.id != product.id)
+        .toList(growable: true);
+    final sourceTerms = terms.toSet();
+    items.sort((a, b) {
+      final aScore = a.categoryTerms.where(sourceTerms.contains).length;
+      final bScore = b.categoryTerms.where(sourceTerms.contains).length;
+      return bScore.compareTo(aScore);
+    });
+    final rawTotal = values[1] as int;
+    return _RelatedData(
+      products: items,
+      total: (rawTotal - 1).clamp(0, rawTotal),
+      rawLoaded: SupabaseCatalogService.pageSize,
+    );
+  }
+
+  Future<void> _loadMoreRelatedProducts(Product product) async {
+    if (_loadingMoreRelated || _relatedFuture == null) return;
+    _loadingMoreRelated = true;
+    try {
+      final current = await _relatedFuture!;
+      if (current.products.length >= current.total) return;
+      final terms = product.categoryTerms
+          .map((value) => value.trim())
+          .where((value) => value.isNotEmpty)
+          .toList(growable: false);
+      final next = await _service.fetchRelatedProductsPage(
+        categoryTerms: terms,
+        offset: current.rawLoaded,
+        limit: SupabaseCatalogService.pageSize,
+      );
+      final knownIds = current.products.map((item) => item.id).toSet();
+      final more = next
+          .where((item) => item.id != product.id && knownIds.add(item.id))
+          .toList(growable: false);
+      final updated = _RelatedData(
+        products: [...current.products, ...more],
+        total: current.total,
+        rawLoaded: current.rawLoaded + next.length,
+      );
+      if (mounted) setState(() => _relatedFuture = Future.value(updated));
+    } finally {
+      _loadingMoreRelated = false;
+    }
   }
 }
 
@@ -407,6 +480,18 @@ class _CustomizationResult {
   final String imagePath;
 }
 
+class _RelatedData {
+  const _RelatedData({
+    required this.products,
+    required this.total,
+    required this.rawLoaded,
+  });
+
+  final List<Product> products;
+  final int total;
+  final int rawLoaded;
+}
+
 class _ProductView extends StatelessWidget {
   const _ProductView({
     required this.product,
@@ -420,6 +505,7 @@ class _ProductView extends StatelessWidget {
     required this.customImagePath,
     required this.navCompact,
     required this.relatedFuture,
+    required this.onLoadMoreRelated,
     required this.onImageChanged,
     required this.onQuantityChanged,
     required this.onToggleDesc,
@@ -443,7 +529,8 @@ class _ProductView extends StatelessWidget {
   final String customNotes;
   final String customImagePath;
   final bool navCompact;
-  final Future<List<Product>> relatedFuture;
+  final Future<_RelatedData> relatedFuture;
+  final VoidCallback onLoadMoreRelated;
   final ValueChanged<int> onImageChanged;
   final ValueChanged<int> onQuantityChanged;
   final VoidCallback onToggleDesc;
@@ -468,24 +555,39 @@ class _ProductView extends StatelessWidget {
       backgroundColor: Colors.white,
       extendBody: true,
       body: SafeArea(
-        top: false,
         bottom: false,
-        child: NotificationListener<UserScrollNotification>(
+        child: Stack(
+          children: [
+            NotificationListener<ScrollNotification>(
           onNotification: (notification) {
-            final compact = notification.direction == ScrollDirection.reverse;
-            final expanded = notification.direction == ScrollDirection.forward;
-            if (compact && !navCompact) {
-              onNavCompactChanged(true);
-            } else if (expanded && navCompact) {
-              onNavCompactChanged(false);
+            // Ignore the horizontal image/category lists. Listening to their
+            // notifications rebuilt the whole product page while dragging.
+            if (notification.depth != 0 ||
+                notification.metrics.axis != Axis.vertical) {
+              return false;
+            }
+            // Prefetch early so the next batch is normally ready before the
+            // related-products section becomes visible.
+            if (notification.metrics.pixels >=
+                notification.metrics.maxScrollExtent - 1400) {
+              onLoadMoreRelated();
+            }
+            if (notification is UserScrollNotification) {
+              final compact = notification.direction == ScrollDirection.reverse &&
+                  notification.metrics.pixels > 80;
+              final expanded = notification.direction == ScrollDirection.forward &&
+                  notification.metrics.pixels < 40;
+              if (compact && !navCompact) {
+                onNavCompactChanged(true);
+              } else if (expanded && navCompact) {
+                onNavCompactChanged(false);
+              }
             }
             return false;
           },
           child: CustomScrollView(
             slivers: [
               StorefrontTopBarSliver(
-                showBack: true,
-                primaryStyle: true,
                 placeholder: AppStrings.searchHeader,
                 onSearch: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const SearchScreen()),
@@ -519,11 +621,6 @@ class _ProductView extends StatelessWidget {
                                   errorIconSize: 55,
                                 ),
                               ),
-                              if (onVideo != null)
-                                _FloatingVideoThumb(
-                                  url: product.videoUrls.first,
-                                  onTap: onVideo!,
-                                ),
                             ],
                           ),
                         ),
@@ -552,34 +649,11 @@ class _ProductView extends StatelessWidget {
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
                     Row(
-                      textDirection: TextDirection.ltr,
+                      textDirection: state.isEnglish
+                          ? TextDirection.ltr
+                          : TextDirection.rtl,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              onPressed: onShare,
-                              icon: const Icon(Icons.ios_share_outlined,
-                                  color: Color(0xFF3478F6), size: 21),
-                            ),
-                            if (state.runtimeSettings
-                                .featureEnabled('favorites'))
-                              IconButton(
-                                onPressed: () => state.toggleFavorite(product),
-                                icon: Icon(
-                                  state.isFavorite(product.id)
-                                      ? Icons.favorite_rounded
-                                      : Icons.favorite_border_rounded,
-                                  color: state.isFavorite(product.id)
-                                      ? const Color(0xFFE34D59)
-                                      : AppTheme.navy,
-                                  size: 22,
-                                ),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(width: 10),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -625,7 +699,7 @@ class _ProductView extends StatelessWidget {
                                         style: TextStyle(fontSize: 12)),
                                     const SizedBox(width: 4),
                                     Text(
-                                      '+${(sold / 1000).toStringAsFixed(1)}k تم بيع',
+                                      AppStrings.tr('+${(sold / 1000).toStringAsFixed(1)}k تم بيع', '+${(sold / 1000).toStringAsFixed(1)}k sold'),
                                       textDirection: TextDirection.ltr,
                                       style: const TextStyle(
                                           color: AppTheme.muted,
@@ -637,6 +711,31 @@ class _ProductView extends StatelessWidget {
                               ),
                             ],
                           ),
+                        ),
+                        const SizedBox(width: 10),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              onPressed: onShare,
+                              icon: const Icon(Icons.ios_share_outlined,
+                                  color: Color(0xFF3478F6), size: 21),
+                            ),
+                            if (state.runtimeSettings
+                                .featureEnabled('favorites'))
+                              IconButton(
+                                onPressed: () => state.toggleFavorite(product),
+                                icon: Icon(
+                                  state.isFavorite(product.id)
+                                      ? Icons.favorite_rounded
+                                      : Icons.favorite_border_rounded,
+                                  color: state.isFavorite(product.id)
+                                      ? const Color(0xFFE34D59)
+                                      : AppTheme.navy,
+                                  size: 22,
+                                ),
+                              ),
+                          ],
                         ),
                       ],
                     ),
@@ -789,30 +888,48 @@ class _ProductView extends StatelessWidget {
                       onPickImage: onPickCustomizationImage,
                     ),
                     const SizedBox(height: 24),
-                    Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: Text(
-                        AppStrings.tr('منتجات مشابهة', 'Similar products'),
-                        style: TextStyle(
-                            color: AppTheme.navy,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w900),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    FutureBuilder<List<Product>>(
+                    FutureBuilder<_RelatedData>(
                       future: relatedFuture,
                       builder: (context, snapshot) {
-                        final related = snapshot.data ?? const <Product>[];
-                        if (related.isEmpty) return const SizedBox.shrink();
-                        return ProductGalleryGrid(products: related);
+                        final related = snapshot.data;
+                        if (related == null) {
+                          return const Center(child: CircularProgressIndicator(color: AppTheme.gold, strokeWidth: 2));
+                        }
+                        if (related.products.isEmpty) return const SizedBox.shrink();
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  AppStrings.tr('منتجات مشابهة', 'Similar products'),
+                                  style: const TextStyle(color: AppTheme.navy, fontSize: 14, fontWeight: FontWeight.w900),
+                                ),
+                                const Spacer(),
+                                Text(
+                                  AppStrings.tr('${related.total} منتج', '${related.total} products'),
+                                  style: const TextStyle(color: AppTheme.muted, fontSize: 11, fontWeight: FontWeight.w800),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            ProductGalleryGrid(products: related.products),
+                          ],
+                        );
                       },
                     ),
                   ]),
                 ),
               ),
             ],
-          ),
+            ),
+            ),
+            if (onVideo != null)
+              _FloatingVideoThumb(
+                url: product.videoUrls.first,
+                onTap: onVideo!,
+              ),
+          ],
         ),
       ),
       bottomNavigationBar: BariqBottomNav(
@@ -822,10 +939,7 @@ class _ProductView extends StatelessWidget {
         english: state.isEnglish,
         compact: navCompact,
         onTap: (tab) {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => AppShell(initialIndex: tab)),
-            (route) => false,
-          );
+          AppShellNavigation.openTab(context, tab);
         },
       ),
     );
@@ -1015,7 +1129,7 @@ class _FloatingVideoThumbState extends State<_FloatingVideoThumb> {
           final maxY =
               (constraints.maxHeight - height).clamp(0.0, double.infinity);
           final effectiveOffset = _offset ??
-              Offset(maxX - 12, (constraints.maxHeight - height) / 2 + 32);
+              Offset(maxX - 12, (constraints.maxHeight * .18).clamp(72.0, 150.0));
           final left = effectiveOffset.dx.clamp(0.0, maxX);
           final top = effectiveOffset.dy.clamp(0.0, maxY);
 
@@ -1216,7 +1330,7 @@ class _CustomizationPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final uploadLabel =
-        imagePath.isEmpty ? 'رفع صور التخصيص' : 'تم اختيار صورة التخصيص';
+        imagePath.isEmpty ? AppStrings.tr('رفع صور التخصيص', 'Upload customization images') : AppStrings.tr('تم اختيار صورة التخصيص', 'Customization image selected');
 
     return Container(
       padding: const EdgeInsets.all(13),
@@ -1280,8 +1394,8 @@ class _CustomizationPanel extends StatelessWidget {
             ),
             const SizedBox(height: 12),
           ],
-          const Text(
-            'ملاحظات التخصيص',
+          Text(
+            AppStrings.tr('ملاحظات التخصيص', 'Customization notes'),
             textAlign: TextAlign.start,
             style: TextStyle(
                 color: AppTheme.navy,
@@ -1305,7 +1419,7 @@ class _CustomizationPanel extends StatelessWidget {
                     ? customNotes
                     : customText.isNotEmpty
                         ? customText
-                        : 'اكتب اللون، المقاس، العبارة المطلوبة، أماكن الصور، أو أي تفاصيل مهمة...',
+                        : AppStrings.tr('اكتب اللون، المقاس، العبارة المطلوبة، أماكن الصور، أو أي تفاصيل مهمة...', 'Enter the color, size, requested text, image placement or other important details...'),
                 textAlign: TextAlign.start,
                 style: TextStyle(
                   color: (customText.isNotEmpty || customNotes.isNotEmpty)
@@ -1362,7 +1476,7 @@ class _ReviewsBoxState extends State<_ReviewsBox> {
         productId: widget.productId,
         name: customerName.isNotEmpty
             ? customerName
-            : (user?.email?.split('@').first ?? 'زائر'),
+            : (user?.email?.split('@').first ?? AppStrings.tr('زائر', 'Guest')),
         rating: _rating,
         text: text,
       );
@@ -1372,12 +1486,12 @@ class _ReviewsBoxState extends State<_ReviewsBox> {
         _future = ReviewService().fetchByProduct(widget.productId);
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تم إرسال التقييم')),
+        SnackBar(content: Text(AppStrings.tr('تم إرسال التقييم', 'Review submitted'))),
       );
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('تعذر إرسال التقييم: $error')),
+        SnackBar(content: Text(AppStrings.tr('تعذر إرسال التقييم: $error', 'Unable to submit review: $error'))),
       );
     } finally {
       if (mounted) setState(() => _sending = false);
@@ -1532,7 +1646,7 @@ class _ReviewLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rating = (review['rating'] as num?)?.toDouble() ?? 5;
-    final name = '${review['customer_name'] ?? review['name'] ?? 'عميل بريق'}';
+    final name = '${review['customer_name'] ?? review['name'] ?? AppStrings.tr('عميل بريق', 'Bariq customer')}';
     final comment = '${review['comment'] ?? review['text'] ?? ''}'.trim();
 
     return Padding(

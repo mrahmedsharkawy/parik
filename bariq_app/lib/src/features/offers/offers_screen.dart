@@ -9,6 +9,7 @@ import '../../utils/app_strings.dart';
 import '../catalog/product_gallery_grid.dart';
 import '../catalog/search_screen.dart';
 import '../shared/storefront_top_bar.dart';
+import '../shared/storefront_page_bottom_nav.dart';
 
 class OffersScreen extends StatefulWidget {
   const OffersScreen({super.key, this.active = true, this.showBack = false});
@@ -73,6 +74,10 @@ class _OffersScreenState extends State<OffersScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8FA),
+      extendBody: widget.showBack,
+      bottomNavigationBar: widget.showBack
+          ? const StorefrontPageBottomNav(selected: 2)
+          : null,
       body: SafeArea(
         bottom: false,
         child: FutureBuilder<List<Product>>(
@@ -357,7 +362,11 @@ class _AnimatedFire extends StatelessWidget {
               BoxShadow(color: Colors.deepOrangeAccent.withValues(alpha: active ? .42 : .18), blurRadius: active ? 18 : 8),
             ],
           ),
-          child: Icon(Icons.local_fire_department_rounded, color: const Color(0xFFFF6A3A), size: size),
+          child: Text(
+            '🔥',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: size, height: 1),
+          ),
         ),
       ),
     );

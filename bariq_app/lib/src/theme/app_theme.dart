@@ -13,6 +13,18 @@ class AppTheme {
     end: Alignment.bottomRight,
     colors: [goldLight, gold, goldDark],
   );
+  static const logoGoldGradient = LinearGradient(
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+    colors: [
+      Color(0xFF81530A),
+      Color(0xFFFFE7A0),
+      Color(0xFFD5A52B),
+      Color(0xFFFFF1B8),
+      Color(0xFF8D6113),
+    ],
+    stops: [0, .22, .5, .76, 1],
+  );
   static const canvas = Color(0xFFFFFFFF);
   static const ink = Color(0xFF111827);
   static const muted = Color(0xFF6B7280);

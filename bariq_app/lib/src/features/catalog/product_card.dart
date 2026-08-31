@@ -67,8 +67,8 @@ class _SiteGridProductCard extends StatelessWidget {
                       child: BariqNetworkImage(
                         imageUrl: product.images.first,
                         fit: BoxFit.cover,
-                        cacheWidth: 560,
-                        cacheHeight: 560,
+                        cacheWidth: 360,
+                        cacheHeight: 420,
                       ),
                     ),
                     if (discount > 0)
@@ -78,7 +78,7 @@ class _SiteGridProductCard extends StatelessWidget {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                           decoration: const BoxDecoration(color: Color(0xFF273241), borderRadius: BorderRadius.only(bottomRight: Radius.circular(4))),
-                          child: Text('خصم $discount%', style: const TextStyle(color: Colors.white, fontSize: 9.5, height: 1, fontWeight: FontWeight.w900)),
+                          child: Text(AppStrings.tr('خصم $discount%', '$discount% off'), style: const TextStyle(color: Colors.white, fontSize: 9.5, height: 1, fontWeight: FontWeight.w900)),
                         ),
                       ),
                   ],
@@ -124,7 +124,10 @@ class _SiteGridProductCard extends StatelessWidget {
                                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                                 color: const Color(0xFF192A48),
                                 child: Text(
-                                  '↓ خصم إضافي ${(product.oldPrice - product.price).toStringAsFixed(2)} د.إ',
+                                  AppStrings.tr(
+                                    '↓ خصم إضافي ${(product.oldPrice - product.price).toStringAsFixed(2)} د.إ',
+                                    '↓ Extra ${(product.oldPrice - product.price).toStringAsFixed(2)} AED off',
+                                  ),
                                   textDirection: Directionality.of(context),
                                   style: const TextStyle(color: Colors.white, fontSize: 8, height: 1, fontWeight: FontWeight.w900),
                                 ),
@@ -150,7 +153,10 @@ class _SiteGridProductCard extends StatelessWidget {
                             const Text('🔥', style: TextStyle(fontSize: 10)),
                             const SizedBox(width: 4),
                             Text(
-                              '+${(sold / 1000).toStringAsFixed(1)}k تم بيع',
+                              AppStrings.tr(
+                                '+${(sold / 1000).toStringAsFixed(1)}k تم بيع',
+                                '+${(sold / 1000).toStringAsFixed(1)}k sold',
+                              ),
                               textDirection: TextDirection.ltr,
                               style: const TextStyle(color: Color(0xFF667085), fontSize: 9.5, fontWeight: FontWeight.w700),
                             ),
@@ -173,8 +179,8 @@ class _SiteGridProductCard extends StatelessWidget {
                 ),
               ],
             ),
-            Positioned(
-              left: 8,
+            PositionedDirectional(
+              end: 8,
               bottom: 8,
               child: _FloatingCartButton(onTap: () => state.addToCart(product)),
             ),
@@ -286,8 +292,8 @@ class _CompactTodayProductCard extends StatelessWidget {
                   onTap: () => state.toggleFavorite(product),
                 ),
               ),
-            Positioned(
-              left: 8,
+            PositionedDirectional(
+              end: 8,
               bottom: 7,
               child: _FloatingCartButton(
                 onTap: () => state.addToCart(product),
@@ -295,8 +301,8 @@ class _CompactTodayProductCard extends StatelessWidget {
               ),
             ),
             if (discount > 0)
-              Positioned(
-                right: 8,
+              PositionedDirectional(
+                start: 8,
                 bottom: 7,
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),

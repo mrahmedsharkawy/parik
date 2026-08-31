@@ -9,6 +9,8 @@ import '../../services/account_service.dart';
 import '../../theme/app_theme.dart';
 
 import '../../utils/app_strings.dart';
+import '../shared/storefront_page_bottom_nav.dart';
+import '../shared/storefront_top_bar.dart';
 
 class LoginScreen extends StatefulWidget {
 
@@ -122,7 +124,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (email.isEmpty || password.isEmpty) {
 
-      _show('أدخل البريد الإلكتروني وكلمة المرور');
+      _show(AppStrings.tr('أدخل البريد الإلكتروني وكلمة المرور', 'Enter your email and password'));
 
       return;
 
@@ -154,7 +156,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     } on TimeoutException {
 
-      _show('الاتصال بحساب بريق أخذ وقت أطول من المتوقع. حاول مرة أخرى بعد ثواني.');
+      _show(AppStrings.tr('الاتصال بحساب بريق أخذ وقت أطول من المتوقع. حاول مرة أخرى بعد ثواني.', 'Connecting to your Bariq account took longer than expected. Try again in a few seconds.'));
 
     } on AuthException catch (error) {
 
@@ -182,17 +184,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
         } else {
 
-          _show('البريد الإلكتروني أو كلمة المرور غير صحيحة');
+          _show(AppStrings.tr('البريد الإلكتروني أو كلمة المرور غير صحيحة', 'Incorrect email or password'));
 
         }
 
       } else if (message.contains('email not confirmed')) {
 
-        _show('أكد بريدك الإلكتروني أولاً ثم سجّل الدخول');
+        _show(AppStrings.tr('أكد بريدك الإلكتروني أولاً ثم سجّل الدخول', 'Confirm your email before signing in'));
 
       } else {
 
-        _show('تعذر تسجيل الدخول: ${error.message}');
+        _show(AppStrings.tr('تعذر تسجيل الدخول: ${error.message}', 'Unable to sign in: ${error.message}'));
 
       }
 
@@ -200,13 +202,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (error is TimeoutException) {
 
-        _show('الاتصال بحساب بريق أخذ وقت أطول من المتوقع. حاول مرة أخرى بعد ثواني.');
+        _show(AppStrings.tr('الاتصال بحساب بريق أخذ وقت أطول من المتوقع. حاول مرة أخرى بعد ثواني.', 'Connecting to your Bariq account took longer than expected. Try again in a few seconds.'));
 
         return;
 
       }
 
-      _show('تعذر تسجيل الدخول: $error');
+      _show(AppStrings.tr('تعذر تسجيل الدخول: $error', 'Unable to sign in: $error'));
 
     } finally {
 
@@ -226,7 +228,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (name.isEmpty || phone.isEmpty || address.isEmpty) {
 
-      _show('اكتب الاسم ورقم الهاتف والعنوان');
+      _show(AppStrings.tr('اكتب الاسم ورقم الهاتف والعنوان', 'Enter your name, phone number and address'));
 
       return;
 
@@ -254,7 +256,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (response.session != null) {
 
-        _show('تم إنشاء الحساب وتسجيل الدخول بنجاح');
+        _show(AppStrings.tr('تم إنشاء الحساب وتسجيل الدخول بنجاح', 'Account created and signed in successfully'));
 
         _finishLogin();
 
@@ -262,7 +264,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
         _show(
 
-          'تم إنشاء الحساب. تحقق من بريدك الإلكتروني لتأكيد الحساب ثم سجّل الدخول.',
+          AppStrings.tr('تم إنشاء الحساب. تحقق من بريدك الإلكتروني لتأكيد الحساب ثم سجّل الدخول.', 'Account created. Check your email to confirm it, then sign in.'),
 
         );
 
@@ -288,17 +290,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
           message.contains('exists')) {
 
-        _show('هذا البريد الإلكتروني مسجّل بالفعل. جرّب تسجيل الدخول.');
+        _show(AppStrings.tr('هذا البريد الإلكتروني مسجّل بالفعل. جرّب تسجيل الدخول.', 'This email is already registered. Try signing in.'));
 
       } else {
 
-        _show('تعذر إنشاء الحساب: ${error.message}');
+        _show(AppStrings.tr('تعذر إنشاء الحساب: ${error.message}', 'Unable to create account: ${error.message}'));
 
       }
 
     } catch (error) {
 
-      _show('تعذر إنشاء الحساب: $error');
+      _show(AppStrings.tr('تعذر إنشاء الحساب: $error', 'Unable to create account: $error'));
 
     } finally {
 
@@ -320,7 +322,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (!ok && mounted) {
 
-        _show('تعذر فتح تسجيل الدخول بحساب Google');
+        _show(AppStrings.tr('تعذر فتح تسجيل الدخول بحساب Google', 'Unable to open Google sign-in'));
 
         setState(() => _googleLoading = false);
 
@@ -334,7 +336,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (mounted) {
 
-        _show('تعذر تسجيل الدخول بحساب Google: $error');
+        _show(AppStrings.tr('تعذر تسجيل الدخول بحساب Google: $error', 'Unable to sign in with Google: $error'));
 
         setState(() => _googleLoading = false);
 
@@ -350,7 +352,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (email.isEmpty) {
 
-      _show('أدخل بريدك الإلكتروني أولاً');
+      _show(AppStrings.tr('أدخل بريدك الإلكتروني أولاً', 'Enter your email first'));
 
       return;
 
@@ -360,11 +362,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
       await _service.resetPassword(email);
 
-      _show('تم إرسال رابط استعادة كلمة المرور إلى بريدك');
+      _show(AppStrings.tr('تم إرسال رابط استعادة كلمة المرور إلى بريدك', 'A password reset link was sent to your email'));
 
     } catch (error) {
 
-      _show('تعذر إرسال رابط الاستعادة: $error');
+      _show(AppStrings.tr('تعذر إرسال رابط الاستعادة: $error', 'Unable to send reset link: $error'));
 
     }
 
@@ -414,13 +416,20 @@ class _LoginScreenState extends State<LoginScreen> {
 
         backgroundColor: const Color(0xFFF7F7F8),
 
+        extendBody: true,
+
+        bottomNavigationBar: const StorefrontPageBottomNav(selected: 1),
+
         body: SafeArea(
 
           child: Column(
 
             children: [
 
-              _TopBar(onBack: () => Navigator.of(context).maybePop()),
+              StorefrontTopBar(
+                showBack: true,
+                placeholder: AppStrings.searchHeader,
+              ),
 
               Expanded(
 

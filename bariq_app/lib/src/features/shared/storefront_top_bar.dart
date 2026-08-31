@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/app_theme.dart';
+import '../../utils/app_strings.dart';
+import '../shell/app_shell.dart';
+
+String _headerPlaceholder(String value) => value == 'إبحث في Bariq'
+    ? AppStrings.tr('إبحث في Bariq', 'Search Bariq')
+    : value;
 
 class StorefrontTopBar extends StatelessWidget {
   const StorefrontTopBar({
@@ -49,8 +55,8 @@ class StorefrontTopBar extends StatelessWidget {
                 width: 36,
                 height: 40,
                 child: IconButton(
-                  onPressed: showBack ? () => Navigator.of(context).maybePop() : (onImageSearch ?? onSearch),
-                  icon: Icon(showBack ? Icons.chevron_left_rounded : Icons.camera_alt_outlined, color: showBack ? Colors.white : const Color(0xFFBFD3F2), size: 24),
+                  onPressed: onImageSearch ?? onSearch,
+                  icon: const Icon(Icons.camera_alt_outlined, color: Colors.white, size: 24),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints.tightFor(width: 36, height: 36),
                 ),
@@ -71,7 +77,7 @@ class StorefrontTopBar extends StatelessWidget {
             ),
             Positioned(
               left: 88,
-              right: showBack && onImageSearch != null ? 124 : 82,
+              right: 82,
               child: InkWell(
                 onTap: onSearch,
                 borderRadius: BorderRadius.circular(11),
@@ -87,7 +93,7 @@ class StorefrontTopBar extends StatelessWidget {
                   child: Directionality(
                     textDirection: Directionality.of(context),
                     child: Text(
-                      placeholder,
+                      _headerPlaceholder(placeholder),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.start,
@@ -97,26 +103,58 @@ class StorefrontTopBar extends StatelessWidget {
                 ),
               ),
             ),
-            if (showBack && onImageSearch != null)
-              Positioned(
-                right: 80,
-                child: SizedBox(
-                  width: 36,
-                  height: 40,
-                  child: IconButton(
-                    onPressed: onImageSearch,
-                    icon: const Icon(Icons.camera_alt_outlined, color: Color(0xFFBFD3F2), size: 23),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+            Positioned(
+              right: 8,
+              child: InkWell(
+                onTap: () => AppShellNavigation.openTab(context, 4),
+                borderRadius: BorderRadius.circular(7),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 5),
+                  child: Text(
+                    trailingTitle,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 19,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ),
               ),
-            Positioned(right: 8, child: Text(trailingTitle, style: const TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w900))),
+            ),
           ],
         ),
       ),
     );
   }
+}
+
+/// Preferred-size adapter for standalone Scaffold routes. It keeps the same
+/// storefront header while Scaffold supplies the device status-bar inset.
+class StorefrontPageAppBar extends StatelessWidget implements PreferredSizeWidget {
+  const StorefrontPageAppBar({
+    super.key,
+    this.placeholder = 'إبحث في Bariq',
+    this.onSearch,
+    this.onImageSearch,
+  });
+
+  final String placeholder;
+  final VoidCallback? onSearch;
+  final VoidCallback? onImageSearch;
+
+  @override
+  Size get preferredSize => const Size.fromHeight(StorefrontTopBar.height);
+
+  @override
+  Widget build(BuildContext context) => Align(
+        alignment: Alignment.bottomCenter,
+        child: StorefrontTopBar(
+          showBack: true,
+          placeholder: placeholder,
+          onSearch: onSearch,
+          onImageSearch: onImageSearch,
+        ),
+      );
 }
 
 class _PrimaryStorefrontHeader extends StatelessWidget {
@@ -232,7 +270,7 @@ class _PrimaryStorefrontHeader extends StatelessWidget {
                             child: Directionality(
                               textDirection: Directionality.of(context),
                               child: Text(
-                                placeholder,
+                                _headerPlaceholder(placeholder),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 textAlign: TextAlign.start,
@@ -254,7 +292,7 @@ class _PrimaryStorefrontHeader extends StatelessWidget {
                             onPressed: onImageSearch,
                             icon: const Icon(
                               Icons.camera_alt_outlined,
-                              color: Color(0xFFBFD3F2),
+                              color: Colors.white,
                               size: 24,
                             ),
                             padding: EdgeInsets.zero,

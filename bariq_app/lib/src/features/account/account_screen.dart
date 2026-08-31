@@ -79,6 +79,22 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   @override
+  void didUpdateWidget(covariant AccountScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialSection == widget.initialSection ||
+        _section == widget.initialSection) {
+      return;
+    }
+    _section = widget.initialSection;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (_section == AccountSection.offers) _loadMoreOffers();
+      if (_section == AccountSection.wallet) _loadMoreWalletOrders();
+      if (_section == AccountSection.invoices) _loadMoreInvoices();
+    });
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_syncedWishlist) return;
@@ -307,7 +323,7 @@ class _AccountScreenState extends State<AccountScreen> {
                             !snapshot.hasData)
                           const Padding(padding: EdgeInsets.all(28), child: Center(child: CircularProgressIndicator(color: AppTheme.gold)))
                         else if (snapshot.hasError)
-                          _EmptyPanel(title: 'تعذر تحميل بيانات الحساب', subtitle: '${snapshot.error}')
+                          _EmptyPanel(title: AppStrings.tr('تعذر تحميل بيانات الحساب', 'Unable to load account data'), subtitle: '${snapshot.error}')
                         else
                           _SectionBody(
                             section: _section,
@@ -432,11 +448,11 @@ class _MenuHeader extends StatelessWidget {
         height: 60,
         padding: const EdgeInsets.symmetric(horizontal: 14),
         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
-        child: const Stack(
+        child: Stack(
           alignment: Alignment.center,
           children: [
             Positioned(left: 0, child: Icon(Icons.chevron_left_rounded, color: AppTheme.muted)),
-            Text('القائمة والإعدادات', style: TextStyle(color: Color(0xFF222222), fontSize: 15, fontWeight: FontWeight.w900)),
+            Text(AppStrings.tr('القائمة والإعدادات', 'Menu and settings'), style: const TextStyle(color: Color(0xFF222222), fontSize: 15, fontWeight: FontWeight.w900)),
             Positioned(right: 0, child: Icon(Icons.menu_rounded, color: Color(0xFF222222))),
           ],
         ),
@@ -624,9 +640,9 @@ class _SelfService extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('الخدمة الذاتية', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w900)),
+                  Text(AppStrings.tr('الخدمة الذاتية', 'Self service'), style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w900)),
                   SizedBox(height: 5),
-                  Text('تتبع طلبك، الإرجاع، الدفع وأكثر بخطوة واحدة', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white70, fontSize: 11)),
+                  Text(AppStrings.tr('تتبع طلبك، الإرجاع، الدفع وأكثر بخطوة واحدة', 'Track orders, returns, payments and more in one place'), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white70, fontSize: 11)),
                 ],
               ),
             ),
@@ -651,7 +667,7 @@ class _SearchBox extends StatelessWidget {
       onChanged: onChanged,
       textAlign: TextAlign.start,
       decoration: InputDecoration(
-        hintText: 'اسم المنتج / رقم الطلب الخاص بالطلب / رقم ...',
+        hintText: AppStrings.tr('اسم المنتج / رقم الطلب الخاص بالطلب / رقم ...', 'Product name / order number / phone...'),
         prefixIcon: const Icon(Icons.search, color: AppTheme.gold),
         filled: true,
         fillColor: Colors.white,
@@ -701,7 +717,7 @@ class _OrderTabs extends StatelessWidget {
                       border: Border(bottom: BorderSide(color: item.$2 == selected ? AppTheme.gold : Colors.transparent, width: 2.4)),
                     ),
                     child: Text(
-                      item.$1,
+                      AppStrings.auto(item.$1),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(color: item.$2 == selected ? AppTheme.gold : AppTheme.navy, fontSize: 10.5, fontWeight: FontWeight.w900),
@@ -724,7 +740,7 @@ class _BuyerProtection extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
       decoration: BoxDecoration(color: const Color(0xFFEFFFF0), borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFFC9EBCD))),
-      child: const Row(children: [Icon(Icons.shield_outlined, color: Color(0xFF14833B), size: 18), SizedBox(width: 8), Expanded(child: Text('ضمان الطلب | استرداد مجاني وجودة حديثة', textAlign: TextAlign.start, style: TextStyle(color: Color(0xFF14833B), fontSize: 11, fontWeight: FontWeight.w800)))]),
+      child: Row(children: [const Icon(Icons.shield_outlined, color: Color(0xFF14833B), size: 18), const SizedBox(width: 8), Expanded(child: Text(AppStrings.auto('ضمان الطلب | استرداد مجاني وجودة حديثة'), textAlign: TextAlign.start, style: const TextStyle(color: Color(0xFF14833B), fontSize: 11, fontWeight: FontWeight.w800)))]),
     );
   }
 }
@@ -768,7 +784,7 @@ class _OrderCard extends StatelessWidget {
                   children: [
                     Text(name, textAlign: TextAlign.start, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppTheme.navy, fontSize: 13, fontWeight: FontWeight.w900)),
                     const SizedBox(height: 3),
-                    Text('رقم الطلب: $number', textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.muted, fontSize: 10)),
+                    Text(AppStrings.tr('رقم الطلب: $number', 'Order number: $number'), textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.muted, fontSize: 10)),
                     const Spacer(),
                     Align(
                       alignment: AlignmentDirectional.centerStart,
@@ -811,14 +827,14 @@ class _OrderCard extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         _OrderAction(
-                          label: 'تتبع',
+                          label: AppStrings.tr('تتبع', 'Track'),
                           color: AppTheme.gold,
                           icon: '📦',
                           onTap: () => _openWhatsApp(_trackingMessage(order)),
                         ),
                         const SizedBox(width: 10),
                         _OrderAction(
-                          label: 'إرجاع',
+                          label: AppStrings.tr('إرجاع', 'Return'),
                           color: Colors.redAccent,
                           icon: '↩',
                           onTap: () => _requestReturn(context, order),
@@ -915,11 +931,11 @@ class _ProfileSectionState extends State<_ProfileSection> {
         _phone.text = _formatPhone(saved.phone);
         _saving = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم حفظ التغييرات')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppStrings.tr('تم حفظ التغييرات', 'Changes saved'))));
     } catch (error) {
       if (!mounted) return;
       setState(() => _saving = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('تعذر حفظ البيانات: $error')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppStrings.tr('تعذر حفظ البيانات: $error', 'Unable to save data: $error'))));
     }
   }
 
@@ -927,15 +943,15 @@ class _ProfileSectionState extends State<_ProfileSection> {
     final currentPassword = _currentPassword.text;
     final password = _newPassword.text;
     if (currentPassword.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('أدخل كلمة السر الحالية أولًا')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppStrings.tr('أدخل كلمة السر الحالية أولًا', 'Enter your current password first'))));
       return;
     }
     if (password.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('كلمة السر الجديدة يجب أن تكون 6 أحرف على الأقل')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppStrings.tr('كلمة السر الجديدة يجب أن تكون 6 أحرف على الأقل', 'The new password must be at least 6 characters'))));
       return;
     }
     if (password != _confirmPassword.text) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('كلمة السر الجديدة وتأكيدها غير متطابقين')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppStrings.tr('كلمة السر الجديدة وتأكيدها غير متطابقين', 'The new password and confirmation do not match'))));
       return;
     }
     setState(() => _changingPassword = true);
@@ -947,18 +963,18 @@ class _ProfileSectionState extends State<_ProfileSection> {
       _newPassword.clear();
       _confirmPassword.clear();
       setState(() => _changingPassword = false);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم تغيير كلمة السر بنجاح')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppStrings.tr('تم تغيير كلمة السر بنجاح', 'Password changed successfully'))));
     } catch (error) {
       if (!mounted) return;
       setState(() => _changingPassword = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('تعذر تغيير كلمة السر: $error')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppStrings.tr('تعذر تغيير كلمة السر: $error', 'Unable to change password: $error'))));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final signedIn = widget.email != null;
-    final name = _name.text.trim().isEmpty ? (signedIn ? widget.email!.split('@').first : 'زائر') : _name.text.trim();
+    final name = _name.text.trim().isEmpty ? (signedIn ? widget.email!.split('@').first : AppStrings.tr('زائر', 'Guest')) : _name.text.trim();
     final emailText = _email.text.trim();
     return _Panel(
       child: Column(
@@ -975,7 +991,7 @@ class _ProfileSectionState extends State<_ProfileSection> {
           ]),
           const SizedBox(height: 18),
           if (!signedIn)
-            FilledButton(onPressed: widget.onLogin, style: FilledButton.styleFrom(backgroundColor: AppTheme.navy, minimumSize: const Size.fromHeight(46)), child: const Text('تسجيل الدخول'))
+            FilledButton(onPressed: widget.onLogin, style: FilledButton.styleFrom(backgroundColor: AppTheme.navy, minimumSize: const Size.fromHeight(46)), child: Text(AppStrings.login))
           else ...[
             _ProfileField(label: 'الاسم الكامل', controller: _name, hint: 'أدخل اسمك'),
             _ProfileField(label: 'البريد الإلكتروني', controller: _email, hint: 'البريد الإلكتروني', readOnly: true),
@@ -994,7 +1010,7 @@ class _ProfileSectionState extends State<_ProfileSection> {
                   child: OutlinedButton(
                     onPressed: () => setState(() => _showCurrentPassword = !_showCurrentPassword),
                     style: OutlinedButton.styleFrom(minimumSize: const Size(0, 48)),
-                    child: Text(_showCurrentPassword ? 'إخفاء' : 'إظهار'),
+                    child: Text(_showCurrentPassword ? AppStrings.tr('إخفاء', 'Hide') : AppStrings.tr('إظهار', 'Show')),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -1008,23 +1024,23 @@ class _ProfileSectionState extends State<_ProfileSection> {
                 ),
               ],
             ),
-            FilledButton(onPressed: _saving ? null : _save, style: FilledButton.styleFrom(backgroundColor: AppTheme.navy, minimumSize: const Size.fromHeight(46)), child: Text(_saving ? 'جاري الحفظ...' : 'حفظ التغييرات 💾')),
+            FilledButton(onPressed: _saving ? null : _save, style: FilledButton.styleFrom(backgroundColor: AppTheme.navy, minimumSize: const Size.fromHeight(46)), child: Text(_saving ? AppStrings.tr('جاري الحفظ...', 'Saving...') : AppStrings.tr('حفظ التغييرات 💾', 'Save changes 💾'))),
             const SizedBox(height: 18),
-            const SizedBox(width: double.infinity, child: Text('قسم الأمان', textAlign: TextAlign.start, style: TextStyle(color: AppTheme.muted, fontSize: 12, fontWeight: FontWeight.w800))),
+            SizedBox(width: double.infinity, child: Text(AppStrings.tr('قسم الأمان', 'Security'), textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.muted, fontSize: 12, fontWeight: FontWeight.w800))),
             const SizedBox(height: 8),
             Row(
               children: [
-                Expanded(child: Text('تغيير كلمة السر', textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.navy, fontSize: 15, fontWeight: FontWeight.w900))),
+                Expanded(child: Text(AppStrings.tr('تغيير كلمة السر', 'Change password'), textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.navy, fontSize: 15, fontWeight: FontWeight.w900))),
                 OutlinedButton(
                   onPressed: () => setState(() => _showPassword = !_showPassword),
-                  child: Text(_showPassword ? 'إخفاء' : 'إظهار'),
+                  child: Text(_showPassword ? AppStrings.tr('إخفاء', 'Hide') : AppStrings.tr('إظهار', 'Show')),
                 ),
               ],
             ),
             const SizedBox(height: 10),
             _ProfileField(label: 'كلمة السر الجديدة', controller: _newPassword, hint: 'أدخل كلمة السر الجديدة', obscureText: !_showPassword),
             _ProfileField(label: 'تأكيد كلمة السر الجديدة', controller: _confirmPassword, hint: 'أعد كتابة كلمة السر الجديدة', obscureText: !_showPassword),
-            FilledButton(onPressed: _changingPassword ? null : _changePassword, style: FilledButton.styleFrom(backgroundColor: AppTheme.navy, minimumSize: const Size.fromHeight(46)), child: Text(_changingPassword ? 'جاري التغيير...' : 'تغيير كلمة السر 🔒')),
+            FilledButton(onPressed: _changingPassword ? null : _changePassword, style: FilledButton.styleFrom(backgroundColor: AppTheme.navy, minimumSize: const Size.fromHeight(46)), child: Text(_changingPassword ? AppStrings.tr('جاري التغيير...', 'Changing...') : AppStrings.tr('تغيير كلمة السر 🔒', 'Change password 🔒'))),
           ],
         ],
       ),
@@ -1048,17 +1064,17 @@ class _OffersSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(
+          SizedBox(
             width: double.infinity,
-            child: Text('العروض والخصومات', textAlign: TextAlign.start, style: TextStyle(color: AppTheme.navy, fontSize: 18, fontWeight: FontWeight.w900)),
+            child: Text(AppStrings.tr('العروض والخصومات', 'Offers and discounts'), textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.navy, fontSize: 18, fontWeight: FontWeight.w900)),
           ),
           const SizedBox(height: 4),
-          const SizedBox(
+          SizedBox(
             width: double.infinity,
-            child: Text('كل المنتجات اللي عليها خصم في مكان واحد', textAlign: TextAlign.start, style: TextStyle(color: AppTheme.muted, fontSize: 12)),
+            child: Text(AppStrings.tr('كل المنتجات اللي عليها خصم في مكان واحد', 'All discounted products in one place'), textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.muted, fontSize: 12)),
           ),
           const SizedBox(height: 10),
-          Align(alignment: Alignment.centerLeft, child: _Badge(text: '${products.length} عرض', color: AppTheme.navy, bg: const Color(0xFFF1F3F6))),
+          Align(alignment: AlignmentDirectional.centerEnd, child: _Badge(text: AppStrings.tr('${products.length} عرض', '${products.length} offers'), color: AppTheme.navy, bg: const Color(0xFFF1F3F6))),
           const SizedBox(height: 10),
           if (products.isEmpty && !loading) const _EmptyPanel(title: 'لا توجد عروض حالياً', subtitle: '') else ProductGalleryGrid(products: products),
           if (loading)
@@ -1129,7 +1145,7 @@ class _NotificationsSectionState extends State<_NotificationsSection> {
               TextButton.icon(
                 onPressed: _busy || widget.notifications.isEmpty ? null : _clear,
                 icon: const Icon(Icons.delete_outline_rounded, size: 15),
-                label: const Text('مسح'),
+                label: Text(AppStrings.tr('مسح', 'Clear')),
                 style: TextButton.styleFrom(foregroundColor: Colors.redAccent, minimumSize: const Size(0, 34), padding: const EdgeInsets.symmetric(horizontal: 8)),
               ),
               if (unread > 0) ...[
@@ -1137,10 +1153,10 @@ class _NotificationsSectionState extends State<_NotificationsSection> {
                 TextButton(
                   onPressed: _busy ? null : _markRead,
                   style: TextButton.styleFrom(foregroundColor: AppTheme.gold, minimumSize: const Size(0, 34), padding: const EdgeInsets.symmetric(horizontal: 8)),
-                  child: const Text('تحديد كمقروء', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900)),
+                  child: Text(AppStrings.tr('تحديد كمقروء', 'Mark as read'), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900)),
                 ),
                 const SizedBox(width: 6),
-                _Badge(text: '$unread جديد', color: Colors.white, bg: AppTheme.gold),
+                _Badge(text: AppStrings.tr('$unread جديد', '$unread new'), color: Colors.white, bg: AppTheme.gold),
               ],
               const Spacer(),
               const _SectionTitle(icon: '🔔', title: 'الإشعارات'),
@@ -1176,7 +1192,7 @@ class _NotificationTile extends StatelessWidget {
       return;
     }
     if (notification.type == 'offer' || segments.any((segment) => segment.toLowerCase().contains('offer'))) {
-      await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const OffersScreen()));
+      await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const OffersScreen(showBack: true)));
       return;
     }
     if (notification.url.trim().isNotEmpty) await _openExternalUrl(notification.url);
@@ -1247,18 +1263,65 @@ class _ReviewsSection extends StatefulWidget {
 
 class _ReviewsSectionState extends State<_ReviewsSection> {
   final _reviews = ReviewService();
-  late Future<List<Map<String, dynamic>>> _publishedFuture;
+  final _catalog = SupabaseCatalogService();
+  final _account = AccountService();
+  late Future<_ReviewSectionData> _reviewDataFuture;
 
   @override
   void initState() {
     super.initState();
-    _publishedFuture = _loadPublished();
+    _reviewDataFuture = _loadReviewData();
   }
 
   Future<List<Map<String, dynamic>>> _loadPublished() => _reviews.fetchMine(
         email: widget.userEmail,
         legacyNames: _reviewNames(),
       );
+
+  Future<_ReviewSectionData> _loadReviewData() async {
+    final results = await Future.wait<dynamic>([
+      _loadPublished(),
+      _account.fetchOrders(status: 'delivered', limit: AccountService.pageSize),
+    ]);
+    final published = results[0] as List<Map<String, dynamic>>;
+    final deliveredOrders = results[1] as List<Map<String, dynamic>>;
+    final reviewOrders = <Map<String, dynamic>>[];
+    final seenOrders = <String>{};
+    for (final order in <Map<String, dynamic>>[
+      ...deliveredOrders,
+      ...widget.orders.where((order) => _statusGroup(order['status']) == _OrderFilter.delivered),
+    ]) {
+      final key = '${order['id'] ?? order['order_number'] ?? ''}'.trim();
+      if (key.isEmpty || seenOrders.add(key)) reviewOrders.add(order);
+    }
+    final productIds = <String>{
+      for (final row in published)
+        if ('${row['product_id'] ?? ''}'.trim().isNotEmpty)
+          '${row['product_id']}'.trim(),
+    };
+    for (final order in reviewOrders) {
+      final items = order['items'];
+      if (items is! List) continue;
+      for (final raw in items) {
+        if (raw is! Map) continue;
+        final item = Map<String, dynamic>.from(raw);
+        final id = '${item['productId'] ?? item['product_id'] ?? item['id'] ?? ''}'.trim();
+        if (id.isNotEmpty) productIds.add(id);
+      }
+    }
+    final productsById = <String, Product>{
+      for (final product in widget.products) product.id: product,
+    };
+    final missingIds = productIds.where((id) => !productsById.containsKey(id));
+    for (final product in await _catalog.fetchProductsByIds(missingIds)) {
+      productsById[product.id] = product;
+    }
+    return _ReviewSectionData(
+      published: published,
+      productsById: productsById,
+      orders: reviewOrders,
+    );
+  }
 
   List<String> _reviewNames() {
     final names = <String>{};
@@ -1282,11 +1345,13 @@ class _ReviewsSectionState extends State<_ReviewsSection> {
 
   @override
   Widget build(BuildContext context) {
-    final pending = _pendingReviewItems();
-    return FutureBuilder<List<Map<String, dynamic>>>(
-      future: _publishedFuture,
+    return FutureBuilder<_ReviewSectionData>(
+      future: _reviewDataFuture,
       builder: (context, snapshot) {
-        final published = snapshot.data ?? const <Map<String, dynamic>>[];
+        final data = snapshot.data;
+        final published = data?.published ?? const <Map<String, dynamic>>[];
+        final productsById = data?.productsById ?? const <String, Product>{};
+        final pending = _pendingReviewItems(productsById, data?.orders ?? const []);
         final reviewedIds = published.map((row) => '${row['product_id'] ?? ''}').toSet();
         final pendingVisible = pending.where((entry) => !reviewedIds.contains(entry.productId)).toList();
         return _Panel(
@@ -1295,7 +1360,7 @@ class _ReviewsSectionState extends State<_ReviewsSection> {
             children: [
               Row(
                 children: [
-                  _Badge(text: '${published.length + pendingVisible.length} تقييم', color: AppTheme.muted, bg: const Color(0xFFF0F1F3)),
+                  _Badge(text: AppStrings.tr('${published.length + pendingVisible.length} تقييم', '${published.length + pendingVisible.length} reviews'), color: AppTheme.muted, bg: const Color(0xFFF0F1F3)),
                   const Spacer(),
                   const _SectionTitle(icon: '⭐', title: 'تقييماتي'),
                 ],
@@ -1308,15 +1373,19 @@ class _ReviewsSectionState extends State<_ReviewsSection> {
                   const _EmptyPanel(title: 'لم تكتب أي تقييم بعد', subtitle: 'ستظهر هنا المنتجات التي تم تسليمها لتقييم مشترياتك')
                 else ...[
                   if (published.isNotEmpty) ...[
-                    const Align(alignment: AlignmentDirectional.centerStart, child: Text('تعليقاتك المنشورة', style: TextStyle(color: AppTheme.navy, fontSize: 12, fontWeight: FontWeight.w900))),
+                    Align(alignment: AlignmentDirectional.centerStart, child: Text(AppStrings.tr('تعليقاتك المنشورة', 'Your published reviews'), style: const TextStyle(color: AppTheme.navy, fontSize: 12, fontWeight: FontWeight.w900))),
                     const SizedBox(height: 10),
-                    for (final row in published) _PublishedReviewCard(row: row, product: _productById('${row['product_id'] ?? ''}')),
+                    for (final row in published)
+                      _PublishedReviewCard(
+                        row: row,
+                        product: productsById['${row['product_id'] ?? ''}'],
+                      ),
                   ],
                   if (pendingVisible.isNotEmpty) ...[
                     if (published.isNotEmpty) const SizedBox(height: 14),
-                    const Align(
+                    Align(
                       alignment: AlignmentDirectional.centerStart,
-                      child: Text('منتجات تم تسليمها - قيّم مشترياتك', textAlign: TextAlign.start, style: TextStyle(color: AppTheme.navy, fontSize: 12, fontWeight: FontWeight.w900)),
+                      child: Text(AppStrings.tr('منتجات تم تسليمها - قيّم مشترياتك', 'Delivered products - review your purchases'), textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.navy, fontSize: 12, fontWeight: FontWeight.w900)),
                     ),
                     const SizedBox(height: 12),
                     for (final entry in pendingVisible)
@@ -1325,7 +1394,7 @@ class _ReviewsSectionState extends State<_ReviewsSection> {
                         name: _reviewName(),
                         onSubmitted: () {
                           setState(() {
-                            _publishedFuture = _loadPublished();
+                            _reviewDataFuture = _loadReviewData();
                           });
                         },
                       ),
@@ -1339,10 +1408,12 @@ class _ReviewsSectionState extends State<_ReviewsSection> {
     );
   }
 
-  List<_ReviewEntry> _pendingReviewItems() {
-    final productsById = {for (final product in widget.products) product.id: product};
+  List<_ReviewEntry> _pendingReviewItems(
+    Map<String, Product> productsById,
+    List<Map<String, dynamic>> orders,
+  ) {
     final out = <_ReviewEntry>[];
-    for (final order in widget.orders) {
+    for (final order in orders) {
       if (_statusGroup(order['status']) != _OrderFilter.delivered) continue;
       final items = order['items'];
       if (items is! List) continue;
@@ -1350,7 +1421,7 @@ class _ReviewsSectionState extends State<_ReviewsSection> {
         final item = items[i];
         if (item is! Map) continue;
         final map = Map<String, dynamic>.from(item);
-        final pid = '${map['id'] ?? map['productId'] ?? map['product_id'] ?? ''}'.trim();
+        final pid = '${map['productId'] ?? map['product_id'] ?? map['id'] ?? ''}'.trim();
         if (pid.isEmpty) continue;
         final product = productsById[pid];
         out.add(_ReviewEntry(
@@ -1364,12 +1435,18 @@ class _ReviewsSectionState extends State<_ReviewsSection> {
     return out;
   }
 
-  Product? _productById(String id) {
-    for (final product in widget.products) {
-      if (product.id == id) return product;
-    }
-    return null;
-  }
+}
+
+class _ReviewSectionData {
+  const _ReviewSectionData({
+    required this.published,
+    required this.productsById,
+    required this.orders,
+  });
+
+  final List<Map<String, dynamic>> published;
+  final Map<String, Product> productsById;
+  final List<Map<String, dynamic>> orders;
 }
 
 class _WalletSection extends StatelessWidget {
@@ -1388,6 +1465,10 @@ class _WalletSection extends StatelessWidget {
     final couponCode = coupon?.code ?? _cashbackCouponCode(entries, balance);
     return Column(
       children: [
+        if (couponReady) ...[
+          _CashbackCoupon(balance: balance, code: couponCode),
+          const SizedBox(height: 12),
+        ],
         Container(
           width: double.infinity,
           padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
@@ -1395,11 +1476,11 @@ class _WalletSection extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(width: double.infinity, child: Text('رصيد كاش باك', textAlign: TextAlign.start, style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w800))),
+              SizedBox(width: double.infinity, child: Text(AppStrings.tr('رصيد كاش باك', 'Cashback balance'), textAlign: TextAlign.start, style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w800))),
               const SizedBox(height: 8),
               SizedBox(width: double.infinity, child: Text(money.format(balance), textAlign: TextAlign.start, textDirection: TextDirection.ltr, style: const TextStyle(color: AppTheme.gold, fontSize: 24, fontWeight: FontWeight.w900))),
               const SizedBox(height: 6),
-              const SizedBox(width: double.infinity, child: Text('🎁 تحصل على 5 د.إ مع كل طلب', textAlign: TextAlign.start, style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w800))),
+              SizedBox(width: double.infinity, child: Text(AppStrings.tr('🎁 تحصل على 5 د.إ مع كل طلب', '🎁 Earn 5 AED with every order'), textAlign: TextAlign.start, style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w800))),
             ],
           ),
         ),
@@ -1423,9 +1504,7 @@ class _WalletSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        if (couponReady)
-          _CashbackCoupon(balance: balance, code: couponCode)
-        else
+        if (!couponReady)
           _CashbackProgress(balance: balance),
       ],
     );
@@ -1449,7 +1528,7 @@ class _FavoritesSection extends StatelessWidget {
                 onPressed: onClear,
                 style: TextButton.styleFrom(foregroundColor: AppTheme.muted, padding: EdgeInsets.zero, minimumSize: const Size(54, 30)),
                 icon: const Icon(Icons.delete_outline_rounded, size: 15),
-                label: const Text('مسح', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                label: Text(AppStrings.tr('مسح', 'Clear'), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
               ),
             const Spacer(),
             const _SectionTitle(icon: '💗', title: 'المفضلة'),
@@ -1553,11 +1632,11 @@ class _AddressSectionState extends State<_AddressSection> {
         _profile = saved;
         _saving = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم حفظ العنوان')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppStrings.tr('تم حفظ العنوان', 'Address saved'))));
     } catch (error) {
       if (!mounted) return;
       setState(() => _saving = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('تعذر حفظ العنوان: $error')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppStrings.tr('تعذر حفظ العنوان: $error', 'Unable to save address: $error'))));
     }
   }
 
@@ -1583,7 +1662,7 @@ class _AddressSectionState extends State<_AddressSection> {
             FilledButton(
               onPressed: _saving ? null : _save,
               style: FilledButton.styleFrom(backgroundColor: AppTheme.navy, minimumSize: const Size.fromHeight(44), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
-              child: Text(_saving ? 'جاري الحفظ...' : 'حفظ العنوان 💾'),
+              child: Text(_saving ? AppStrings.tr('جاري الحفظ...', 'Saving...') : AppStrings.tr('حفظ العنوان 💾', 'Save address 💾')),
             ),
           ],
         ],
@@ -1599,7 +1678,7 @@ class _PaymentsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return _Panel(
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const _SectionTitle(icon: '💳', title: 'طرق الدفع'),
+        _SectionTitle(icon: '💳', title: AppStrings.auto('طرق الدفع')),
         const SizedBox(height: 12),
         const _PaymentMethodCard(
           title: 'بطاقة ائتمان / مدى',
@@ -1634,7 +1713,7 @@ class _PaymentsSection extends StatelessWidget {
           assets: ['assets/pay/tamara.webp', 'assets/pay/tabby.webp'],
         ),
         const SizedBox(height: 4),
-        const Center(child: Text('جميع المعاملات مشفرة وآمنة 100% 🔒', style: TextStyle(color: AppTheme.muted, fontSize: 11, fontWeight: FontWeight.w700))),
+        Center(child: Text(AppStrings.tr('جميع المعاملات مشفرة وآمنة 100% 🔒', 'All transactions are encrypted and 100% secure 🔒'), style: const TextStyle(color: AppTheme.muted, fontSize: 11, fontWeight: FontWeight.w700))),
       ]),
     );
   }
@@ -1696,7 +1775,7 @@ class _PaymentMethodCard extends StatelessWidget {
                         child: Text.rich(
                           TextSpan(
                             children: [
-                              TextSpan(text: '${item.$3} ${item.$1} ', style: const TextStyle(color: AppTheme.muted, fontWeight: FontWeight.w700)),
+                              TextSpan(text: '${item.$3} ${AppStrings.auto(item.$1)} ', style: const TextStyle(color: AppTheme.muted, fontWeight: FontWeight.w700)),
                               TextSpan(text: item.$2, style: const TextStyle(color: Color(0xFF343A46), fontWeight: FontWeight.w900)),
                             ],
                           ),
@@ -1706,13 +1785,13 @@ class _PaymentMethodCard extends StatelessWidget {
                         ),
                       ),
                     const SizedBox(height: 3),
-                    const Text('بعد التحويل أرسل إيصال الدفع عبر واتساب', textAlign: TextAlign.start, style: TextStyle(color: AppTheme.muted, fontSize: 10)),
+                    Text(AppStrings.tr('بعد التحويل أرسل إيصال الدفع عبر واتساب', 'After the transfer, send the payment receipt via WhatsApp'), textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.muted, fontSize: 10)),
                   ],
                 ],
               ),
             ),
             const SizedBox(width: 10),
-            const _Badge(text: 'متاح', color: Color(0xFF14833B), bg: Color(0xFFDFF3E4)),
+            _Badge(text: AppStrings.auto('متاح'), color: const Color(0xFF14833B), bg: const Color(0xFFDFF3E4)),
           ],
         ),
       ),
@@ -1751,11 +1830,11 @@ class _InvoicesSection extends StatelessWidget {
           children: [
             const _SectionTitle(icon: '🧾', title: 'فواتيري'),
             const Spacer(),
-            OutlinedButton(onPressed: () => onRefresh(), style: OutlinedButton.styleFrom(minimumSize: const Size(52, 36), padding: const EdgeInsets.symmetric(horizontal: 12)), child: const Text('تحديث', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800))),
+            OutlinedButton(onPressed: () => onRefresh(), style: OutlinedButton.styleFrom(minimumSize: const Size(52, 36), padding: const EdgeInsets.symmetric(horizontal: 12)), child: Text(AppStrings.tr('تحديث', 'Refresh'), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800))),
           ],
         ),
         const SizedBox(height: 4),
-        const SizedBox(width: double.infinity, child: Text('افتح الفاتورة لعرض بيانات التحويل ونسخ كل بند منفرداً.', textAlign: TextAlign.start, style: TextStyle(color: AppTheme.muted, fontSize: 11))),
+        SizedBox(width: double.infinity, child: Text(AppStrings.tr('افتح الفاتورة لعرض بيانات التحويل ونسخ كل بند منفرداً.', 'Open an invoice to view transfer details and copy each item.'), textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.muted, fontSize: 11))),
         const SizedBox(height: 12),
         if (invoices.isEmpty)
           const _EmptyPanel(title: 'لا توجد فواتير محفوظة حتى الآن', subtitle: 'الفواتير المرسلة من الأدمن ستظهر هنا تلقائياً.')
@@ -1849,11 +1928,11 @@ class _OccasionsSectionState extends State<_OccasionsSection> {
     final day = int.tryParse(_day.text.trim()) ?? 0;
     final year = int.tryParse(_year.text.trim());
     if (name.isEmpty || person.isEmpty || day <= 0) {
-      _snack('اكتب اسم المناسبة والشخص واليوم.');
+      _snack(AppStrings.tr('اكتب اسم المناسبة والشخص واليوم.', 'Enter the occasion, person and day.'));
       return;
     }
     if (day > _monthLength(year ?? DateTime.now().year, _month)) {
-      _snack('اليوم غير مناسب للشهر المختار.');
+      _snack(AppStrings.tr('اليوم غير مناسب للشهر المختار.', 'The day is invalid for the selected month.'));
       return;
     }
     setState(() => _saving = true);
@@ -1875,11 +1954,11 @@ class _OccasionsSectionState extends State<_OccasionsSection> {
       );
       if (!mounted) return;
       _reset();
-      _snack('تم حفظ المناسبة.');
+      _snack(AppStrings.tr('تم حفظ المناسبة.', 'Occasion saved.'));
       await widget.onRefresh();
     } catch (error) {
       if (!mounted) return;
-      _snack('تعذر حفظ المناسبة: $error');
+      _snack(AppStrings.tr('تعذر حفظ المناسبة: $error', 'Unable to save occasion: $error'));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -1891,11 +1970,11 @@ class _OccasionsSectionState extends State<_OccasionsSection> {
       await _service.deleteOccasion(occasion.id);
       if (!mounted) return;
       if (_id == occasion.id) _reset();
-      _snack('تم حذف المناسبة.');
+      _snack(AppStrings.tr('تم حذف المناسبة.', 'Occasion deleted.'));
       await widget.onRefresh();
     } catch (error) {
       if (!mounted) return;
-      _snack('تعذر حذف المناسبة: $error');
+      _snack(AppStrings.tr('تعذر حذف المناسبة: $error', 'Unable to delete occasion: $error'));
     } finally {
       if (mounted) setState(() => _deleting = false);
     }
@@ -1917,13 +1996,13 @@ class _OccasionsSectionState extends State<_OccasionsSection> {
         children: [
           Row(
             children: [
-              OutlinedButton(onPressed: () => widget.onRefresh(), style: OutlinedButton.styleFrom(minimumSize: const Size(52, 36), padding: const EdgeInsets.symmetric(horizontal: 12)), child: const Text('تحديث', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800))),
+              OutlinedButton(onPressed: () => widget.onRefresh(), style: OutlinedButton.styleFrom(minimumSize: const Size(52, 36), padding: const EdgeInsets.symmetric(horizontal: 12)), child: Text(AppStrings.tr('تحديث', 'Refresh'), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800))),
               const Spacer(),
               const _SectionTitle(icon: '🎉', title: 'مناسباتك الخاصة'),
             ],
           ),
           const SizedBox(height: 8),
-          const SizedBox(width: double.infinity, child: Text('احفظ مناسبات الأشخاص المهمين، وبريق يذكرك قبلها.', textAlign: TextAlign.start, style: TextStyle(color: AppTheme.muted, fontSize: 12))),
+          SizedBox(width: double.infinity, child: Text(AppStrings.tr('احفظ مناسبات الأشخاص المهمين، وبريق يذكرك قبلها.', 'Save important occasions and Bariq will remind you in advance.'), textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.muted, fontSize: 12))),
           const SizedBox(height: 14),
           if (!signedIn)
             _EmptyPanel(title: 'سجل الدخول لحفظ مناسباتك', subtitle: '', action: 'تسجيل الدخول', onAction: widget.onLogin)
@@ -1940,20 +2019,20 @@ class _OccasionsSectionState extends State<_OccasionsSection> {
               ],
             ),
             _ProfileField(label: 'السنة (اختياري)', controller: _year, hint: 'اختياري', keyboardType: TextInputType.number),
-            _OccasionDropdown<int>(label: 'التذكير قبل المناسبة', value: selectedRemind, items: const [1, 3, 7, 14, 30], labelFor: (value) => 'قبل $value ${value == 1 ? 'يوم' : 'أيام'}', onChanged: (value) => setState(() => _remind = value ?? 7)),
+            _OccasionDropdown<int>(label: 'التذكير قبل المناسبة', value: selectedRemind, items: const [1, 3, 7, 14, 30], labelFor: (value) => AppStrings.tr('قبل $value ${value == 1 ? 'يوم' : 'أيام'}', '$value ${value == 1 ? 'day' : 'days'} before'), onChanged: (value) => setState(() => _remind = value ?? 7)),
             CheckboxListTile(
               value: _enabled,
               onChanged: (value) => setState(() => _enabled = value ?? true),
               contentPadding: EdgeInsets.zero,
               controlAffinity: ListTileControlAffinity.leading,
               activeColor: AppTheme.gold,
-              title: const Text('تفعيل التذكير لهذه المناسبة', textAlign: TextAlign.start, style: TextStyle(color: AppTheme.navy, fontSize: 12, fontWeight: FontWeight.w800)),
+              title: Text(AppStrings.tr('تفعيل التذكير لهذه المناسبة', 'Enable reminder for this occasion'), textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.navy, fontSize: 12, fontWeight: FontWeight.w800)),
             ),
             Row(
               children: [
-                OutlinedButton(onPressed: _reset, child: const Text('إلغاء')),
+                OutlinedButton(onPressed: _reset, child: Text(AppStrings.cancel)),
                 const SizedBox(width: 8),
-                Expanded(child: FilledButton(onPressed: _saving ? null : _save, style: FilledButton.styleFrom(backgroundColor: AppTheme.navy, minimumSize: const Size.fromHeight(44)), child: Text(_saving ? 'جاري الحفظ...' : 'حفظ المناسبة'))),
+                Expanded(child: FilledButton(onPressed: _saving ? null : _save, style: FilledButton.styleFrom(backgroundColor: AppTheme.navy, minimumSize: const Size.fromHeight(44)), child: Text(_saving ? AppStrings.tr('جاري الحفظ...', 'Saving...') : AppStrings.tr('حفظ المناسبة', 'Save occasion')))),
               ],
             ),
             const SizedBox(height: 16),
@@ -1962,7 +2041,7 @@ class _OccasionsSectionState extends State<_OccasionsSection> {
             else
               for (final occasion in rows) _OccasionRow(occasion: occasion, deleting: _deleting, onEdit: () => _edit(occasion), onDelete: () => _delete(occasion)),
             const SizedBox(height: 6),
-            const Text('التذكيرات مربوطة بنظام إشعارات الموقع عبر جدول customer_occasions.', textAlign: TextAlign.start, style: TextStyle(color: AppTheme.muted, fontSize: 10.5)),
+            Text(AppStrings.tr('التذكيرات مربوطة بنظام إشعارات الموقع عبر جدول customer_occasions.', 'Reminders are linked to the notification system.'), textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.muted, fontSize: 10.5)),
           ],
         ],
       ),
@@ -2055,21 +2134,23 @@ const _occasionTypes = ['birthday', 'newborn', 'graduation', 'anniversary', 'eng
 
 String _occasionTypeLabel(String value) {
   return switch (value) {
-    'birthday' => 'عيد ميلاد',
-    'newborn' => 'مولود جديد',
-    'graduation' => 'تخرج',
-    'anniversary' => 'ذكرى / زواج',
-    'engagement' => 'خطوبة',
-    'wedding' => 'زواج',
-    'mother_day' => 'عيد الأم',
-    'national_day' => 'اليوم الوطني',
-    'eid' => 'العيد',
-    _ => 'مناسبة',
+    'birthday' => AppStrings.tr('عيد ميلاد', 'Birthday'),
+    'newborn' => AppStrings.tr('مولود جديد', 'Newborn'),
+    'graduation' => AppStrings.tr('تخرج', 'Graduation'),
+    'anniversary' => AppStrings.tr('ذكرى / زواج', 'Anniversary'),
+    'engagement' => AppStrings.tr('خطوبة', 'Engagement'),
+    'wedding' => AppStrings.tr('زواج', 'Wedding'),
+    'mother_day' => AppStrings.tr('عيد الأم', "Mother's Day"),
+    'national_day' => AppStrings.tr('اليوم الوطني', 'National Day'),
+    'eid' => AppStrings.tr('العيد', 'Eid'),
+    _ => AppStrings.tr('مناسبة', 'Occasion'),
   };
 }
 
 String _monthName(int value) {
-  const months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+  final months = AppStrings.en
+      ? const ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+      : const ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
   return months[(value - 1).clamp(0, 11).toInt()];
 }
 
@@ -2114,9 +2195,18 @@ class _SupportSection extends StatefulWidget {
 
 class _SupportSectionState extends State<_SupportSection> {
   final _controller = TextEditingController();
-  final List<_ChatMessage> _messages = [
-    const _ChatMessage(text: 'مرحباً بك! 👋 أنا Ahmed مساعد، كيف يمكنني مساعدتك اليوم؟\n\nاختر من الأسئلة الشائعة أدناه أو اكتب سؤالك مباشرة.', bot: true),
-  ];
+  final List<_ChatMessage> _messages = [];
+
+  String get _welcomeMessage => AppStrings.tr(
+        'مرحباً بك! 👋 أنا Ahmed مساعد، كيف يمكنني مساعدتك اليوم؟\n\nاختر من الأسئلة الشائعة أدناه أو اكتب سؤالك مباشرة.',
+        'Welcome! 👋 I am Ahmed, your assistant. How can I help you today?\n\nChoose a common question below or type your question.',
+      );
+
+  @override
+  void initState() {
+    super.initState();
+    _messages.add(_ChatMessage(text: _welcomeMessage, bot: true));
+  }
 
   @override
   void dispose() {
@@ -2136,6 +2226,17 @@ class _SupportSectionState extends State<_SupportSection> {
 
   String _answer(String value) {
     final text = value.toLowerCase();
+    if (AppStrings.en) {
+      if (text.contains('تتبع') || text.contains('طلبي')) return 'Open My orders to see the latest status, order number and expected delivery date. If your order is delayed, contact us on WhatsApp.';
+      if (text.contains('ارجع') || text.contains('ارجاع') || text.contains('إرجاع')) return 'You can return an eligible product within 10 days of delivery. Send the order number and product photos to our team on WhatsApp.';
+      if (text.contains('دفع')) return 'We accept cards, Apple Pay, Google Pay, bank transfer, cash on delivery in selected areas, Tabby and Tamara.';
+      if (text.contains('توصيل') || text.contains('شحن')) return 'UAE delivery normally takes 2–7 business days. You will receive an update when the order is shipped.';
+      if (text.contains('خصم') || text.contains('كود')) return 'Current discounts and coupons are available in the Offers section.';
+      if (text.contains('تغليف') || text.contains('هدايا')) return 'Gift wrapping is available for many products. Add the request to your order notes or contact us on WhatsApp.';
+      if (text.contains('عنوان')) return 'You can change the delivery address before shipment by sending your order number and new address to our team.';
+      if (text.contains('موظف') || text.contains('حقيقي') || text.contains('واتساب')) return 'I will connect you with our support team now. Tap the WhatsApp button to continue.';
+      return 'Thanks for your question. Contact our support team on WhatsApp for accurate assistance.';
+    }
     if (text.contains('تتبع') || text.contains('طلبي')) return 'لتتبع طلبك، اذهب لقسم **طلباتي** من القائمة، ستجد آخر حالة لكل طلب مع رقمه وتاريخ التوصيل المتوقع. 📦\n\nإذا مضى أكثر من 7 أيام ولم يصلك، تواصل معنا على واتساب مباشرة.';
     if (text.contains('ارجع') || text.contains('ارجاع') || text.contains('إرجاع')) return 'يمكنك الإرجاع خلال **10 أيام** من تاريخ الاستلام بشرط أن يكون المنتج بحالته الأصلية.\n\n**خطوات الإرجاع:**\n1️⃣ راسلنا على واتساب برقم طلبك\n2️⃣ أرسل صور للمنتج\n3️⃣ سنحدد موعد الاستلام\n\nالإرجاع مجاني 🎉';
     if (text.contains('دفع')) return 'نقبل طرق دفع متعددة:\n\n💳 فيزا / ماستركارد / أمريكان إكسبريس\n📱 Apple Pay / Google Pay\n🏦 تحويل بنكي\n💵 الدفع عند الاستلام (مناطق محددة)\n\nجميع المعاملات مشفرة وآمنة 100% 🔒';
@@ -2171,7 +2272,7 @@ class _SupportSectionState extends State<_SupportSection> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(name, textAlign: TextAlign.start, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w900)),
-                      const Text('متاح', textAlign: TextAlign.start, style: TextStyle(color: Color(0xFF8AF0A5), fontSize: 11, fontWeight: FontWeight.w800)),
+                      Text(AppStrings.auto('متاح'), textAlign: TextAlign.start, style: const TextStyle(color: Color(0xFF8AF0A5), fontSize: 11, fontWeight: FontWeight.w800)),
                     ],
                   ),
                   const Spacer(),
@@ -2179,10 +2280,10 @@ class _SupportSectionState extends State<_SupportSection> {
                     onPressed: () => setState(() {
                       _messages
                         ..clear()
-                        ..add(const _ChatMessage(text: 'مرحباً بك! 👋 أنا Ahmed مساعد، كيف يمكنني مساعدتك اليوم؟\n\nاختر من الأسئلة الشائعة أدناه أو اكتب سؤالك مباشرة.', bot: true));
+                        ..add(_ChatMessage(text: _welcomeMessage, bot: true));
                     }),
                     icon: const Icon(Icons.delete_outline, size: 14),
-                    label: const Text('مسح'),
+                    label: Text(AppStrings.auto('مسح')),
                     style: TextButton.styleFrom(foregroundColor: Colors.white70, backgroundColor: Colors.white.withValues(alpha: .1), padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6)),
                   ),
                 ],
@@ -2216,7 +2317,7 @@ class _SupportSectionState extends State<_SupportSection> {
                         _openWhatsApp('مرحبا بريق، أحتاج مساعدة من خدمة العملاء');
                       } : () => _send(item),
                       style: OutlinedButton.styleFrom(foregroundColor: AppTheme.navy, side: const BorderSide(color: AppTheme.gold), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999))),
-                      child: Text(item, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900)),
+                      child: Text(AppStrings.auto(item), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900)),
                     ),
                 ],
               ),
@@ -2578,18 +2679,18 @@ class _ReviewFormCardState extends State<_ReviewFormCard> {
   Future<void> _submit() async {
     final text = _controller.text.trim();
     if (text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('اكتب تعليقك أولاً')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppStrings.tr('اكتب تعليقك أولاً', 'Write your review first'))));
       return;
     }
     setState(() => _saving = true);
     try {
       await _service.submit(productId: widget.entry.productId, name: widget.name, rating: _rating, text: text, orderId: widget.entry.orderId);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم إرسال التقييم')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppStrings.tr('تم إرسال التقييم', 'Review submitted'))));
       widget.onSubmitted();
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('تعذر إرسال التقييم: $error')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppStrings.tr('تعذر إرسال التقييم: $error', 'Unable to submit review: $error'))));
       setState(() => _saving = false);
     }
   }
@@ -2612,7 +2713,7 @@ class _ReviewFormCardState extends State<_ReviewFormCard> {
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(widget.entry.title, textAlign: TextAlign.start, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppTheme.navy, fontWeight: FontWeight.w900)),
                   const SizedBox(height: 3),
-                  Text('طلب رقم ${widget.entry.orderId}', textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.muted, fontSize: 10)),
+                  Text(AppStrings.tr('طلب رقم ${widget.entry.orderId}', 'Order ${widget.entry.orderId}'), textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.muted, fontSize: 10)),
                 ]),
               ),
             ],
@@ -2638,7 +2739,7 @@ class _ReviewFormCardState extends State<_ReviewFormCard> {
             maxLines: 3,
             textAlign: TextAlign.start,
             decoration: InputDecoration(
-              hintText: 'اكتب تعليقك عن المنتج...',
+              hintText: AppStrings.tr('اكتب تعليقك عن المنتج...', 'Write your review...'),
               filled: true,
               fillColor: const Color(0xFFFAFBFD),
               contentPadding: const EdgeInsets.all(10),
@@ -2652,14 +2753,14 @@ class _ReviewFormCardState extends State<_ReviewFormCard> {
               OutlinedButton.icon(
                 onPressed: null,
                 icon: const Icon(Icons.photo_camera_outlined, size: 15),
-                label: const Text('إضافة صورة'),
+                label: Text(AppStrings.tr('إضافة صورة', 'Add photo')),
                 style: OutlinedButton.styleFrom(disabledForegroundColor: AppTheme.muted, side: const BorderSide(color: AppTheme.line)),
               ),
               const Spacer(),
               FilledButton(
                 onPressed: _saving ? null : _submit,
                 style: FilledButton.styleFrom(backgroundColor: AppTheme.navy),
-                child: Text(_saving ? 'جاري الإرسال...' : 'إرسال التقييم'),
+                child: Text(_saving ? AppStrings.tr('جاري الإرسال...', 'Sending...') : AppStrings.tr('إرسال التقييم', 'Submit review')),
               ),
             ],
           ),
@@ -2679,6 +2780,7 @@ class _PublishedReviewCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final rating = _reviewRating(row['rating']);
     final productId = '${row['product_id'] ?? ''}';
+    final orderId = '${row['order_id'] ?? row['order_number'] ?? ''}'.trim();
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(10),
@@ -2691,7 +2793,16 @@ class _PublishedReviewCard extends StatelessWidget {
             children: [
               if (product != null) _Thumb(image: product!.imageUrl, size: 48) else const Icon(Icons.inventory_2_outlined, color: AppTheme.muted, size: 38),
               const SizedBox(width: 10),
-              Expanded(child: Text(product?.displayName ?? 'منتج #$productId', textAlign: TextAlign.start, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppTheme.navy, fontWeight: FontWeight.w900))),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(product?.displayName ?? AppStrings.tr('منتج #$productId', 'Product #$productId'), textAlign: TextAlign.start, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppTheme.navy, fontWeight: FontWeight.w900)),
+                    if (orderId.isNotEmpty)
+                      Text(AppStrings.tr('طلب رقم $orderId', 'Order $orderId'), textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.muted, fontSize: 10)),
+                  ],
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -2701,7 +2812,7 @@ class _PublishedReviewCard extends StatelessWidget {
             Text('${row['text']}', textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.navy, fontSize: 12, height: 1.5)),
           ],
           const SizedBox(height: 6),
-          const Text('منشور', style: TextStyle(color: AppTheme.muted, fontSize: 10)),
+          Text(AppStrings.tr('منشور', 'Published'), style: const TextStyle(color: AppTheme.muted, fontSize: 10)),
         ],
       ),
     );
@@ -2736,7 +2847,7 @@ class _CashbackLine extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('طلب #${entry.orderNumber}', textAlign: TextAlign.start, style: const TextStyle(color: Color(0xFF111111), fontSize: 13, fontWeight: FontWeight.w900)),
+              Text(AppStrings.tr('طلب #${entry.orderNumber.replaceAll('#', '').trim()}', 'Order #${entry.orderNumber.replaceAll('#', '').trim()}'), textAlign: TextAlign.start, style: const TextStyle(color: Color(0xFF111111), fontSize: 13, fontWeight: FontWeight.w900)),
               const SizedBox(height: 4),
               Row(
                 textDirection: Directionality.of(context),
@@ -2779,36 +2890,42 @@ class _CashbackCoupon extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(color: const Color(0xFF177D43), borderRadius: BorderRadius.circular(10)),
-      child: Column(
-        children: [
-          const Text('🎉 كوبون خصم جاهز!', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w900)),
-          const SizedBox(height: 4),
-          Text('رصيدك ${balance.toStringAsFixed(2)} د.إ — استخدم الكود في السلة', textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w800)),
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-            decoration: BoxDecoration(border: Border.all(color: Colors.white54, style: BorderStyle.solid), borderRadius: BorderRadius.circular(8)),
-            child: Row(
-              children: [
-                OutlinedButton(
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(text: code));
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم النسخ')));
-                  },
-                  style: OutlinedButton.styleFrom(foregroundColor: Colors.white, side: const BorderSide(color: Colors.white70)),
-                  child: const Text('📋 نسخ'),
-                ),
-                const Spacer(),
-                SelectableText(code, textDirection: TextDirection.ltr, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
-              ],
+      clipBehavior: Clip.antiAlias,
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          initiallyExpanded: false,
+          iconColor: Colors.white,
+          collapsedIconColor: Colors.white,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+          childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+          title: Text(AppStrings.tr('🎉 كوبون خصم جاهز!', '🎉 Your discount coupon is ready!'), textAlign: TextAlign.start, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w900)),
+          subtitle: Text(AppStrings.tr('رصيدك ${balance.toStringAsFixed(2)} د.إ — اضغط لإظهار الكود', 'Your balance is ${balance.toStringAsFixed(2)} AED — tap to show the code'), textAlign: TextAlign.start, style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w800)),
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(border: Border.all(color: Colors.white54), borderRadius: BorderRadius.circular(8)),
+              child: Row(
+                children: [
+                  OutlinedButton(
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: code));
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppStrings.tr('تم النسخ', 'Copied'))));
+                    },
+                    style: OutlinedButton.styleFrom(foregroundColor: Colors.white, side: const BorderSide(color: Colors.white70)),
+                    child: Text(AppStrings.tr('📋 نسخ', '📋 Copy')),
+                  ),
+                  const Spacer(),
+                  SelectableText(code, textDirection: TextDirection.ltr, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          const Text('يُستخدم مرة واحدة فقط · الخصم يُطبَّق في السلة', textAlign: TextAlign.center, style: TextStyle(color: Colors.white70, fontSize: 10)),
-        ],
+            const SizedBox(height: 8),
+            Text(AppStrings.tr('يُستخدم مرة واحدة فقط · الخصم يُطبَّق في السلة', 'One-time use only · Discount is applied in the cart'), textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70, fontSize: 10)),
+          ],
+        ),
       ),
     );
   }
@@ -2828,7 +2945,7 @@ class _CashbackProgress extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(width: double.infinity, child: Text('اجمع 5 د.إ كاش باك واحصل على كوبون خصم', textAlign: TextAlign.start, style: TextStyle(color: AppTheme.navy, fontSize: 13, fontWeight: FontWeight.w900))),
+          SizedBox(width: double.infinity, child: Text(AppStrings.tr('اجمع 5 د.إ كاش باك واحصل على كوبون خصم', 'Collect 5 AED cashback and receive a discount coupon'), textAlign: TextAlign.start, style: const TextStyle(color: AppTheme.navy, fontSize: 13, fontWeight: FontWeight.w900))),
           const SizedBox(height: 10),
           ClipRRect(
             borderRadius: BorderRadius.circular(999),
@@ -2907,7 +3024,7 @@ List<_CashbackEntry> _cashbackEntries(List<Map<String, dynamic>> orders) {
     final expiresAt = _cashbackExpiry(order);
     final daysLeft = expiresAt == null ? 0 : (expiresAt.difference(DateTime.now()).inHours / 24).ceil().clamp(0, 999).toInt();
     entries.add(_CashbackEntry(
-      orderNumber: key.replaceFirst('#', ''),
+      orderNumber: key.replaceAll('#', ''),
       amount: amount,
       status: status,
       dateLabel: _date(order['created_at'] ?? order['date']),
@@ -3353,7 +3470,7 @@ class _EmptyPanel extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 18),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
               ),
-              child: Text(action!, style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w900)),
+              child: Text(AppStrings.auto(action!), style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w900)),
             ),
           ],
         ]),
@@ -3389,7 +3506,7 @@ class _Badge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
-      child: Text(text, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w900)),
+      child: Text(AppStrings.auto(text), style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w900)),
     );
   }
 }
@@ -3509,20 +3626,9 @@ Map<String, dynamic> _firstOrderItem(Map<String, dynamic> order) {
 String _date(Object? raw) {
   final createdAt = DateTime.tryParse('$raw');
   if (createdAt == null) return '';
-  const months = [
-    'يناير',
-    'فبراير',
-    'مارس',
-    'أبريل',
-    'مايو',
-    'يونيو',
-    'يوليو',
-    'أغسطس',
-    'سبتمبر',
-    'أكتوبر',
-    'نوفمبر',
-    'ديسمبر',
-  ];
+  final months = AppStrings.en
+      ? const ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+      : const ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
   return '${createdAt.day} ${months[createdAt.month - 1]} ${createdAt.year}';
 }
 
@@ -3570,12 +3676,12 @@ _OrderFilter _statusGroup(Object? value) {
 }
 
 String _statusLabel(Object? value) {
-  if (_isConfirmedStatus(value)) return 'مؤكد';
+  if (_isConfirmedStatus(value)) return AppStrings.tr('مؤكد', 'Confirmed');
   return switch (_statusGroup(value)) {
-    _OrderFilter.shipped => 'تم الشحن',
-    _OrderFilter.delivered => 'تم التوصيل',
-    _OrderFilter.returns => 'مرتجع',
-    _ => 'قيد المعالجة',
+    _OrderFilter.shipped => AppStrings.tr('تم الشحن', 'Shipped'),
+    _OrderFilter.delivered => AppStrings.tr('تم التوصيل', 'Delivered'),
+    _OrderFilter.returns => AppStrings.tr('مرتجع', 'Returned'),
+    _ => AppStrings.tr('قيد المعالجة', 'Processing'),
   };
 }
 
@@ -3591,9 +3697,9 @@ String _invoiceRowKey(Map<String, dynamic> row) {
 }
 
 String _orderNumber(Map<String, dynamic> order) {
-  final value = '${order['order_number'] ?? order['orderNumber'] ?? order['id'] ?? ''}'.trim();
-  if (value.isEmpty) return '#';
-  return value.startsWith('#') ? value : '#$value';
+  final value = '${order['order_number'] ?? order['orderNumber'] ?? order['id'] ?? ''}'.replaceAll('#', '').trim();
+  if (value.isEmpty) return '';
+  return '#$value';
 }
 
 String _trackingMessage(Map<String, dynamic> order) {

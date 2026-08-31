@@ -3078,6 +3078,7 @@ function splitInvoiceNotes(notes){
 function visibleOrderNotes(notes){ return splitInvoiceNotes(notes).base; }
 function getOrderInvoice(order){ return order && order.invoice || splitInvoiceNotes(order && order.notes).invoice; }
 function orderPublicNumber(order){ return order && (order.orderNumber || order.order_number || order.id) || ''; }
+function cleanOrderNumber(value){ return String(value == null ? '' : value).replace(/#/g, '').trim(); }
 function invoiceLink(order){
   const number = orderPublicNumber(order);
   return 'https://bariqgifts.com/account?section=invoices&order=' + encodeURIComponent(number) + '&invoice=' + encodeURIComponent(number);
@@ -3369,7 +3370,7 @@ function renderInvoices(){
     const statusOptions = Object.keys(STATUS).map(k=>`<option value="${k}" ${k===o.status?'selected':''}>${STATUS[k].label}</option>`).join('');
     return `<div class="ord-row">
       <div class="oinfo" style="flex:1">
-        <div style="display:flex;align-items:center;gap:4px;flex-wrap:nowrap;white-space:nowrap"><b style="color:var(--navy)">#${esc(orderNum)}</b> ${inv ? '<span class="status-badge st-confirmed" style="font-size:.6rem;padding:1px 6px;line-height:1.45">فاتورة محفوظة</span>' : '<span class="status-badge st-pending" style="font-size:.6rem;padding:1px 6px;line-height:1.45">بدون فاتورة</span>'} <span class="status-badge ${st.cls}" style="font-size:.6rem;padding:1px 6px;line-height:1.45">${st.label}</span> ${invoiceEarnedBadge(o)}</div>
+        <div style="display:flex;align-items:center;gap:4px;flex-wrap:nowrap;white-space:nowrap"><b style="color:var(--navy)">#${esc(cleanOrderNumber(orderNum))}</b> ${inv ? '<span class="status-badge st-confirmed" style="font-size:.6rem;padding:1px 6px;line-height:1.45">فاتورة محفوظة</span>' : '<span class="status-badge st-pending" style="font-size:.6rem;padding:1px 6px;line-height:1.45">بدون فاتورة</span>'} <span class="status-badge ${st.cls}" style="font-size:.6rem;padding:1px 6px;line-height:1.45">${st.label}</span> ${invoiceEarnedBadge(o)}</div>
         <div style="font-size:.9rem;margin-top:4px">${esc(o.customer || 'بدون اسم')} ${o.phone ? `<small style="color:#7a8296"> · ${esc(o.phone)}</small>` : ''}</div>
         <div style="font-size:.8rem;color:#7a8296;margin-top:3px">الإجمالي: ${formatMoney(o.total)} · المطلوب: ${due}</div>
       </div>
@@ -3432,7 +3433,7 @@ function renderOrders(){
     return `<div class="ord-row">
       <div class="oinfo" style="flex:1">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-          <span style="background:var(--navy);color:#fff;padding:2px 8px;border-radius:4px;font-size:.75rem;font-weight:700">#${orderNum}</span>
+          <span style="background:var(--navy);color:#fff;padding:2px 8px;border-radius:4px;font-size:.75rem;font-weight:700">#${esc(cleanOrderNumber(orderNum))}</span>
           <span class="status-badge ${st.cls}" style="font-size:.7rem">${st.label}</span>
         </div>
         <b style="color:var(--navy);font-size:.95rem">${esc(custName)}</b> 

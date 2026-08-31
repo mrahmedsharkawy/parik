@@ -419,6 +419,23 @@ grant select on public.affiliate_settings,public.store_policies to anon,authenti
 grant select on public.affiliate_partners,public.affiliate_commissions,public.affiliate_withdrawals,public.affiliate_ledger,public.affiliate_marketing_assets to authenticated;
 grant select,insert,update,delete on public.affiliate_settings,public.affiliate_partners,public.affiliate_referrals,public.affiliate_commissions,public.affiliate_withdrawals,public.affiliate_ledger,public.affiliate_marketing_assets,public.store_policies,public.affiliate_audit_log to authenticated;
 
+drop policy if exists "affiliate settings public read" on public.affiliate_settings;
+drop policy if exists "published policies public read" on public.store_policies;
+drop policy if exists "partner reads own profile" on public.affiliate_partners;
+drop policy if exists "partner reads own commissions" on public.affiliate_commissions;
+drop policy if exists "partner reads own withdrawals" on public.affiliate_withdrawals;
+drop policy if exists "partner reads own ledger" on public.affiliate_ledger;
+drop policy if exists "active partners read marketing assets" on public.affiliate_marketing_assets;
+drop policy if exists "affiliate admin settings" on public.affiliate_settings;
+drop policy if exists "affiliate admin partners" on public.affiliate_partners;
+drop policy if exists "affiliate admin referrals" on public.affiliate_referrals;
+drop policy if exists "affiliate admin commissions" on public.affiliate_commissions;
+drop policy if exists "affiliate admin withdrawals" on public.affiliate_withdrawals;
+drop policy if exists "affiliate admin ledger" on public.affiliate_ledger;
+drop policy if exists "affiliate admin assets" on public.affiliate_marketing_assets;
+drop policy if exists "affiliate admin policies" on public.store_policies;
+drop policy if exists "affiliate admin audit read" on public.affiliate_audit_log;
+
 create policy "affiliate settings public read" on public.affiliate_settings for select to anon,authenticated using (true);
 create policy "published policies public read" on public.store_policies for select to anon,authenticated using (published=true);
 create policy "partner reads own profile" on public.affiliate_partners for select to authenticated using (user_id=(select auth.uid()) or public.affiliate_is_admin());

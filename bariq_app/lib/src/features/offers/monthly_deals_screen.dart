@@ -9,6 +9,7 @@ import '../../utils/app_strings.dart';
 import '../catalog/product_gallery_grid.dart';
 import '../catalog/search_screen.dart';
 import '../shared/storefront_top_bar.dart';
+import '../shared/storefront_page_bottom_nav.dart';
 
 class MonthlyDealsScreen extends StatefulWidget {
   const MonthlyDealsScreen({super.key});
@@ -91,6 +92,8 @@ class _MonthlyDealsScreenState extends State<MonthlyDealsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8FA),
+      extendBody: true,
+      bottomNavigationBar: const StorefrontPageBottomNav(selected: 2),
       body: SafeArea(
         bottom: false,
         child: FutureBuilder<void>(

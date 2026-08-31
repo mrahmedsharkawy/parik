@@ -1,0 +1,32 @@
+{
+  "project_info": {
+    "project_number": "901812088277",
+    "project_id": "bariq-gifts",
+    "storage_bucket": "bariq-gifts.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:901812088277:android:c5b96f5c8d0b52b8f0e15c",
+        "android_client_info": {
+          "package_name": "com.bariqgifts.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCEmH_GYXb6XWlBVqdVyhUKGZ-VYf_jV7M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
+
+
+

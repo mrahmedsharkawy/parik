@@ -7,6 +7,7 @@ import '../../models/category.dart';
 import '../../models/product.dart';
 import '../../services/supabase_catalog_service.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/app_strings.dart';
 import '../catalog/product_gallery_grid.dart';
 import '../catalog/search_screen.dart';
 import '../shared/bariq_network_image.dart';
@@ -24,9 +25,12 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   late Future<_Data> _future;
   String? _categoryId;
   String? _subcategoryId;
+  String? _categoryFilterName;
+  String? _subcategoryFilterName;
   bool _showCategoryFilters = true;
   bool _loadingProducts = false;
   bool _hasMoreProducts = true;
+  int _totalProducts = 0;
   final List<Product> _products = [];
 
   @override
@@ -40,11 +44,13 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       _service.fetchCategories(),
       _service.fetchSubcategories(),
       _service.fetchProductsPage(limit: SupabaseCatalogService.pageSize),
+      _service.fetchProductsCount(),
     ]);
     _products
       ..clear()
       ..addAll(values[2] as List<Product>);
     _hasMoreProducts = _products.length == SupabaseCatalogService.pageSize;
+    _totalProducts = values[3] as int;
     return _Data(
       categories: values[0] as List<CategoryItem>,
       subcategories: values[1] as List<SubcategoryItem>,
@@ -52,23 +58,42 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     );
   }
 
-  Future<void> _reloadProducts({String? categoryId, String? subcategoryId}) async {
+  Future<void> _reloadProducts({
+    String? categoryId,
+    String? subcategoryId,
+    String? categoryName,
+    String? subcategoryName,
+  }) async {
     setState(() {
       _categoryId = categoryId;
       _subcategoryId = subcategoryId;
+      _categoryFilterName = categoryName;
+      _subcategoryFilterName = subcategoryName;
       _loadingProducts = true;
       _hasMoreProducts = true;
       _products.clear();
     });
     try {
-      final page = await _service.fetchProductsPage(
-        limit: SupabaseCatalogService.pageSize,
-        categoryId: categoryId,
-        subcategoryId: subcategoryId,
-      );
+      final values = await Future.wait([
+        _service.fetchProductsPage(
+          limit: SupabaseCatalogService.pageSize,
+          categoryId: categoryId,
+          subcategoryId: subcategoryId,
+          categoryName: categoryName,
+          subcategoryName: subcategoryName,
+        ),
+        _service.fetchProductsCount(
+          categoryId: categoryId,
+          subcategoryId: subcategoryId,
+          categoryName: categoryName,
+          subcategoryName: subcategoryName,
+        ),
+      ]);
+      final page = values[0] as List<Product>;
       if (!mounted) return;
       setState(() {
         _products.addAll(page);
+        _totalProducts = values[1] as int;
         _hasMoreProducts = page.length == SupabaseCatalogService.pageSize;
         _loadingProducts = false;
       });
@@ -86,6 +111,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         limit: SupabaseCatalogService.pageSize,
         categoryId: _categoryId,
         subcategoryId: _subcategoryId,
+        categoryName: _categoryFilterName,
+        subcategoryName: _subcategoryFilterName,
       );
       if (!mounted) return;
       final ids = _products.map((item) => item.id).toSet();
@@ -112,12 +139,12 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               return const Center(child: CircularProgressIndicator(color: AppTheme.gold));
             }
             if (snapshot.hasError) {
-              return _ErrorView(message: 'تعذر تحميل الفئات\n${snapshot.error}');
+              return _ErrorView(message: '${AppStrings.tr('تعذر تحميل الفئات', 'Unable to load categories')}\n${snapshot.error}');
             }
 
             final data = snapshot.data!;
             final categories = data.categories;
-            if (categories.isEmpty) return const _ErrorView(message: 'لا توجد فئات');
+            if (categories.isEmpty) return _ErrorView(message: AppStrings.tr('لا توجد فئات', 'No categories found'));
             CategoryItem? selectedCategory;
             if (_categoryId != null) {
               for (final item in categories) {
@@ -139,8 +166,11 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
             return Column(
               children: [
                 StorefrontTopBar(
-                  placeholder: 'إبحث في الفئات',
+                  placeholder: AppStrings.tr('إبحث في الفئات', 'Search categories'),
                   onSearch: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SearchScreen())),
+                  onImageSearch: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const SearchScreen(startWithImageSearch: true)),
+                  ),
                 ),
                 AnimatedSize(
                   duration: const Duration(milliseconds: 170),
@@ -154,7 +184,17 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                             selectedId: _categoryId,
                             onTap: (id) {
                               _showCategoryFilters = true;
-                              unawaited(_reloadProducts(categoryId: id));
+                              CategoryItem? category;
+                              for (final item in categories) {
+                                if (item.id == id) {
+                                  category = item;
+                                  break;
+                                }
+                              }
+                              unawaited(_reloadProducts(
+                                categoryId: id,
+                                categoryName: category?.nameAr,
+                              ));
                             },
                           ),
                         )
@@ -181,8 +221,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                       slivers: [
                         SliverToBoxAdapter(
                           child: _PageTitle(
-                            crumb: selected == null ? 'الكل' : 'الكل › ${selected.displayName}',
-                            title: selected == null ? 'جميع الفئات' : selected.displayName,
+                            crumb: selected == null ? AppStrings.tr('الكل', 'All') : '${AppStrings.tr('الكل', 'All')} › ${selected.displayName}',
+                            title: selected == null ? AppStrings.tr('جميع الفئات', 'All categories') : selected.displayName,
                             showBack: selected != null,
                             onBack: () => _reloadProducts(),
                           ),
@@ -194,7 +234,10 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                               delegate: SliverChildBuilderDelegate(
                                 (context, index) => _MainCategoryCard(
                                   category: categories[index],
-                                  onTap: () => _reloadProducts(categoryId: categories[index].id),
+                                  onTap: () => _reloadProducts(
+                                    categoryId: categories[index].id,
+                                    categoryName: categories[index].nameAr,
+                                  ),
                                 ),
                                 childCount: categories.length,
                               ),
@@ -219,6 +262,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                                     onTap: () => _reloadProducts(
                                       categoryId: _categoryId,
                                       subcategoryId: sub.id == _subcategoryId ? null : sub.id,
+                                      categoryName: _categoryFilterName,
+                                      subcategoryName: sub.id == _subcategoryId ? null : sub.nameAr,
                                     ),
                                   );
                                 },
@@ -239,12 +284,12 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                                 children: [
                                   const Text('🛍️'),
                                   const SizedBox(width: 5),
-                                  Text(_subcategoryId == null ? selected.displayName : 'المنتجات', style: const TextStyle(color: AppTheme.navy, fontSize: 15, fontWeight: FontWeight.w900)),
+                                  Text(_subcategoryId == null ? selected.displayName : AppStrings.tr('المنتجات', 'Products'), style: const TextStyle(color: AppTheme.navy, fontSize: 15, fontWeight: FontWeight.w900)),
                                   const Spacer(),
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                                     decoration: BoxDecoration(color: const Color(0xFFF1F3F6), borderRadius: BorderRadius.circular(999)),
-                                    child: Text('${visibleProducts.length} منتج', style: const TextStyle(color: AppTheme.muted, fontSize: 11, fontWeight: FontWeight.w800)),
+                                    child: Text(AppStrings.tr('$_totalProducts منتج', '$_totalProducts products'), style: const TextStyle(color: AppTheme.muted, fontSize: 11, fontWeight: FontWeight.w800)),
                                   ),
                                 ],
                               ),
@@ -304,7 +349,7 @@ class _CategoryFilters extends StatelessWidget {
               final category = all ? null : categories[index - 1];
               final active = all ? selectedId == null : category!.id == selectedId;
               return _CategoryFilterTile(
-                label: all ? 'الكل' : category!.displayName,
+                label: all ? AppStrings.tr('الكل', 'All') : category!.displayName,
                 imageUrl: category?.imageUrl,
                 active: active,
                 all: all,
@@ -430,7 +475,7 @@ class _PageTitle extends StatelessWidget {
               OutlinedButton.icon(
                 onPressed: onBack,
                 icon: const Icon(Icons.arrow_forward, size: 16),
-                label: const Text('العودة للفئات'),
+                label: Text(AppStrings.tr('العودة للفئات', 'Back to categories')),
                 style: OutlinedButton.styleFrom(foregroundColor: AppTheme.navy, side: const BorderSide(color: AppTheme.line)),
               )
             else

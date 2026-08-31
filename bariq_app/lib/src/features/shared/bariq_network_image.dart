@@ -57,7 +57,10 @@ class BariqNetworkImage extends StatelessWidget {
         gaplessPlayback: true,
         cacheWidth: cacheWidth,
         cacheHeight: cacheHeight,
-        webHtmlElementStrategy: WebHtmlElementStrategy.fallback,
+        // Rendering every catalog image as a separate HTML platform view makes
+        // long Flutter lists stutter. Supabase public assets support CORS, so
+        // keep images inside the Flutter renderer for smooth compositing.
+        webHtmlElementStrategy: WebHtmlElementStrategy.never,
         errorBuilder: (_, __, ___) =>
             _ImageFallback(color: placeholderColor, errorIconSize: errorIconSize),
       );

@@ -36,8 +36,13 @@ class ReviewService {
     if (cleanEmail.isNotEmpty) {
       await addRows(_fetchByField('customer_email', cleanEmail));
     }
-    for (final name in legacyNames.map((value) => value.trim()).where((value) => value.isNotEmpty).toSet()) {
-      await addRows(_fetchByField('name', name));
+    // Old rows may not have user_id/email. Only use the legacy display-name
+    // lookup when no owned rows were found; combining both can leak reviews
+    // from another customer who happens to have the same name.
+    if (results.isEmpty) {
+      for (final name in legacyNames.map((value) => value.trim()).where((value) => value.isNotEmpty).toSet()) {
+        await addRows(_fetchByField('name', name));
+      }
     }
     results.sort((a, b) => '${b['date'] ?? b['created_at'] ?? ''}'.compareTo('${a['date'] ?? a['created_at'] ?? ''}'));
     return results;

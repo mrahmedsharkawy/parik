@@ -7,13 +7,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:share_plus/share_plus.dart';
 
+import '../../models/product.dart';
 import '../../services/product_cutout_service.dart';
+import '../../services/whatsapp_order_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/app_strings.dart';
 import '../shared/bariq_network_image.dart';
+import '../shared/storefront_page_bottom_nav.dart';
+import '../shared/storefront_top_bar.dart';
+import '../account/account_screen.dart';
+import '../auth/login_screen.dart';
+import '../shell/app_shell.dart';
 
 const _loadingMessages = <String>[
+  'Loading cutout model...',
+  'Removing product background...',
+  'Cleaning product edges...',
+  'Preparing product preview...',
+];
+const _loadingMessagesAr = <String>[
   'جاري تحميل موديل القص...',
   'جاري قص صورة المنتج...',
   'جاري تنظيف حواف المنتج...',
@@ -23,12 +37,14 @@ const _loadingMessages = <String>[
 class ProductPreviewScreen extends StatefulWidget {
   const ProductPreviewScreen({
     super.key,
+    required this.product,
     required this.productId,
     required this.productName,
     required this.productImageUrl,
     required this.productImageUrls,
   });
 
+  final Product product;
   final String productId;
   final String productName;
   final String productImageUrl;
@@ -43,6 +59,7 @@ class _ProductPreviewScreenState extends State<ProductPreviewScreen> {
   static final Map<String, Uint8List> _recolorCache = {};
 
   final _picker = ImagePicker();
+  final _orderService = WhatsAppOrderService();
   final _stageKey = GlobalKey();
 
   Uint8List? _placeImageBytes;
@@ -125,7 +142,7 @@ class _ProductPreviewScreenState extends State<ProductPreviewScreen> {
       if (!mounted) return;
       setState(() {
         _loadingProduct = false;
-        _error = 'تعذر تشغيل موديل قص المنتج: $error';
+        _error = AppStrings.tr('تعذر تشغيل موديل قص المنتج: $error', 'Unable to run the product cutout model: $error');
       });
     }
   }
@@ -197,7 +214,7 @@ class _ProductPreviewScreenState extends State<ProductPreviewScreen> {
       });
     } catch (_) {
       if (!mounted) return;
-      setState(() => _error = 'تعذر فتح الصورة. تأكد من صلاحيات الكاميرا أو الصور.');
+      setState(() => _error = AppStrings.tr('تعذر فتح الصورة. تأكد من صلاحيات الكاميرا أو الصور.', 'Unable to open the image. Check camera or photo permissions.'));
     }
   }
 
@@ -237,10 +254,71 @@ class _ProductPreviewScreenState extends State<ProductPreviewScreen> {
       setState(() => _finalBytes = data.buffer.asUint8List());
     } catch (_) {
       if (!mounted) return;
-      setState(() => _error = 'تعذر إنشاء المعاينة النهائية. حاول مرة أخرى.');
+      setState(() => _error = AppStrings.tr('تعذر إنشاء المعاينة النهائية. حاول مرة أخرى.', 'Unable to create the final preview. Try again.'));
     } finally {
       if (mounted) setState(() => _processing = false);
     }
+  }
+
+  Future<void> _askSales() async {
+    final bytes = _finalBytes;
+    if (bytes == null || _processing) return;
+    setState(() {
+      _processing = true;
+      _error = null;
+    });
+    try {
+      final result = await _orderService.submitAndOpen(
+        lines: [WhatsAppOrderLine(product: widget.product, quantity: 1)],
+        notes: 'طلب معاينة المنتج في مكان العميل',
+        customNotes: 'تم إنشاء المعاينة داخل تطبيق بريق وإرفاق رابطها.',
+        customImageBytes: bytes,
+        customImageName: 'preview-${widget.productId}.png',
+        customizationRequest: true,
+      );
+      if (!mounted) return;
+      if (!result.opened) {
+        setState(() => _error = AppStrings.tr('تم تسجيل الطلب، لكن تعذر فتح واتساب.', 'Order saved, but WhatsApp could not be opened.'));
+        return;
+      }
+      AppShellNavigation.openTab(
+        context,
+        1,
+        accountSection: AccountSection.orders,
+      );
+    } on WhatsAppOrderLoginRequired {
+      if (!mounted) return;
+      final loggedIn = await Navigator.of(context).push<bool>(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
+      if (loggedIn == true && mounted) {
+        setState(() => _processing = false);
+        await _askSales();
+      }
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _error = AppStrings.tr('تعذر إرسال المعاينة: $error', 'Unable to send preview: $error'));
+    } finally {
+      if (mounted) setState(() => _processing = false);
+    }
+  }
+
+  Future<void> _sharePreview() async {
+    final bytes = _finalBytes;
+    if (bytes == null) return;
+    await Share.shareXFiles(
+      [
+        XFile.fromData(
+          bytes,
+          mimeType: 'image/png',
+          name: 'bariq-preview-${widget.productId}.png',
+        ),
+      ],
+      text: AppStrings.tr(
+        'معاينة ${widget.productName} في مكانك من بريق',
+        '${widget.productName} preview in your space from Bariq',
+      ),
+    );
   }
 
   @override
@@ -249,34 +327,38 @@ class _ProductPreviewScreenState extends State<ProductPreviewScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: Text(
-          AppStrings.tr('جرّب المنتج في مكانك', 'Try the product in your space'),
-          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900),
-        ),
-        actions: [
-          IconButton(
-            tooltip: AppStrings.tr('إعادة ضبط', 'Reset'),
-            onPressed: ready ? _resetPlacement : null,
-            icon: const Icon(Icons.center_focus_strong_rounded),
-          ),
-        ],
+      extendBody: true,
+      appBar: StorefrontPageAppBar(
+        placeholder: AppStrings.searchHeader,
       ),
+      bottomNavigationBar: const StorefrontPageBottomNav(selected: 4),
+      floatingActionButton: ready
+          ? FloatingActionButton.small(
+              tooltip: AppStrings.tr('إعادة ضبط', 'Reset'),
+              onPressed: _resetPlacement,
+              backgroundColor: AppTheme.navy,
+              foregroundColor: AppTheme.gold,
+              child: const Icon(Icons.center_focus_strong_rounded),
+            )
+          : null,
       body: Directionality(
         textDirection: Directionality.of(context),
         child: Stack(
           children: [
             ListView(
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 22),
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 132),
               children: [
                 _Header(productName: widget.productName),
                 const SizedBox(height: 10),
                 if (_loadingProduct)
                   _LoadingCard(
-                    text: _loadingMessages[_loadingMessageIndex],
+                    text: AppStrings.tr(
+                      _loadingMessagesAr[_loadingMessageIndex],
+                      _loadingMessages[_loadingMessageIndex],
+                    ),
                   )
                 else if (_productBytes == null)
-                  _Message(text: _error ?? 'صورة المنتج غير جاهزة.', error: true)
+                  _Message(text: _error ?? AppStrings.tr('صورة المنتج غير جاهزة.', 'Product image is not ready.'), error: true)
                 else if (_placeImageBytes == null)
                   _UploadCard(
                     onCamera: () => _pickPlace(ImageSource.camera),
@@ -370,10 +452,43 @@ class _ProductPreviewScreenState extends State<ProductPreviewScreen> {
                     borderRadius: BorderRadius.circular(14),
                     child: Image.memory(_finalBytes!, fit: BoxFit.contain),
                   ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: _askSales,
+                          icon: const Icon(Icons.support_agent_rounded, size: 18),
+                          label: Text(AppStrings.tr('إرسال لفريق مبيعات بريق', 'Send to Bariq sales')),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFF16864B),
+                            minimumSize: const Size.fromHeight(42),
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _sharePreview,
+                          icon: const Icon(Icons.ios_share_rounded, size: 18),
+                          label: Text(AppStrings.tr('مشاركة المعاينة', 'Share preview')),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppTheme.navy,
+                            minimumSize: const Size.fromHeight(42),
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            side: const BorderSide(color: AppTheme.navy),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
                 const SizedBox(height: 8),
-                const Text(
-                  'اسحب المنتج بإصبع واحد. استخدم إصبعين للتكبير والتصغير والتدوير.',
+                Text(
+                  AppStrings.tr('اسحب المنتج بإصبع واحد. استخدم إصبعين للتكبير والتصغير والتدوير.', 'Drag with one finger. Use two fingers to zoom and rotate.'),
                   textAlign: TextAlign.center,
                   style: TextStyle(color: AppTheme.muted, fontSize: 11, fontWeight: FontWeight.w700),
                 ),
@@ -496,6 +611,21 @@ const _colorPresets = <_ColorPreset>[
   _ColorPreset('mono', 'أبيض وأسود'),
 ];
 
+String _colorPresetName(_ColorPreset preset) {
+  final english = switch (preset.key) {
+    'original' => 'Original',
+    'gold' => 'Gold',
+    'navy' => 'Navy',
+    'rose' => 'Rose',
+    'green' => 'Green',
+    'warm' => 'Warm',
+    'cool' => 'Cool',
+    'mono' => 'Black & white',
+    _ => preset.name,
+  };
+  return AppStrings.tr(preset.name, english);
+}
+
 class _ProductImagesPicker extends StatelessWidget {
   const _ProductImagesPicker({
     required this.urls,
@@ -530,7 +660,7 @@ class _ProductImagesPicker extends StatelessWidget {
           height: 58,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            reverse: true,
+            reverse: false,
             itemCount: urls.length,
             separatorBuilder: (_, __) => const SizedBox(width: 7),
             itemBuilder: (context, index) {
@@ -607,7 +737,7 @@ class _ProductColorsPicker extends StatelessWidget {
           height: 82,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            reverse: true,
+            reverse: false,
             itemCount: _colorPresets.length,
             separatorBuilder: (_, __) => const SizedBox(width: 7),
             itemBuilder: (context, index) {
@@ -655,7 +785,7 @@ class _ProductColorsPicker extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        preset.name,
+                        _colorPresetName(preset),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -752,8 +882,8 @@ class _PreviewStage extends StatelessWidget {
                             child: Image.memory(
                               placeImageBytes,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => const Center(
-                                child: Text('تعذر عرض صورة المكان', style: TextStyle(color: Colors.white)),
+                              errorBuilder: (_, __, ___) => Center(
+                                child: Text(AppStrings.tr('تعذر عرض صورة المكان', 'Unable to display the room image'), style: const TextStyle(color: Colors.white)),
                               ),
                             ),
                           ),
@@ -817,14 +947,14 @@ class _PreviewStage extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const Positioned(
+                  Positioned(
                     bottom: 10,
                     child: DecoratedBox(
-                      decoration: BoxDecoration(color: Color(0x99000000), borderRadius: BorderRadius.all(Radius.circular(999))),
+                      decoration: const BoxDecoration(color: Color(0x99000000), borderRadius: BorderRadius.all(Radius.circular(999))),
                       child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         child: Text(
-                          'اسحب وقرّب بإصبعين',
+                          AppStrings.tr('اسحب وقرّب بإصبعين', 'Drag and pinch with two fingers'),
                           style: TextStyle(color: Colors.white, fontSize: 10.5, fontWeight: FontWeight.w800),
                         ),
                       ),
@@ -866,12 +996,12 @@ class _ToolsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final actions = [
-      (Icons.photo_library_outlined, 'صورة', true, onGallery),
-      (Icons.photo_camera_outlined, 'كاميرا', true, onCamera),
-      (Icons.remove_rounded, 'تصغير', enabled, onMinus),
-      (Icons.add_rounded, 'تكبير', enabled, onPlus),
-      (Icons.rotate_left_rounded, 'يسار', enabled, onRotateLeft),
-      (Icons.rotate_right_rounded, 'يمين', enabled, onRotateRight),
+      (Icons.photo_library_outlined, AppStrings.tr('صورة', 'Photo'), true, onGallery),
+      (Icons.photo_camera_outlined, AppStrings.tr('كاميرا', 'Camera'), true, onCamera),
+      (Icons.remove_rounded, AppStrings.tr('تصغير', 'Zoom out'), enabled, onMinus),
+      (Icons.add_rounded, AppStrings.tr('تكبير', 'Zoom in'), enabled, onPlus),
+      (Icons.rotate_left_rounded, AppStrings.tr('يسار', 'Left'), enabled, onRotateLeft),
+      (Icons.rotate_right_rounded, AppStrings.tr('يمين', 'Right'), enabled, onRotateRight),
       (
         Icons.keyboard_arrow_up_rounded,
         AppStrings.tr('ميل أمامي', 'Tilt forward'),

@@ -1,5 +1,6 @@
 import '../config/app_config.dart';
 import '../config/locale_config.dart';
+import '../utils/app_strings.dart';
 
 class CategoryItem {
   const CategoryItem({
@@ -25,7 +26,14 @@ class CategoryItem {
   String get displayName {
     final primary = BariqLocaleConfig.isEnglish ? nameEn : nameAr;
     final fallback = BariqLocaleConfig.isEnglish ? nameAr : nameEn;
-    return primary.trim().isNotEmpty ? primary.trim() : fallback.trim();
+    if (primary.trim().isNotEmpty) {
+      return BariqLocaleConfig.isEnglish
+          ? primary.trim()
+          : _arabicCategoryName(primary.trim());
+    }
+    return BariqLocaleConfig.isEnglish
+        ? AppStrings.auto(fallback.trim())
+        : _arabicCategoryName(fallback.trim());
   }
   String get imageUrl => _categoryImageUrl(_fallbackImage([slug, nameEn, nameAr], image.isNotEmpty ? image : icon));
 
@@ -65,7 +73,14 @@ class SubcategoryItem {
   String get displayName {
     final primary = BariqLocaleConfig.isEnglish ? nameEn : nameAr;
     final fallback = BariqLocaleConfig.isEnglish ? nameAr : nameEn;
-    return primary.trim().isNotEmpty ? primary.trim() : fallback.trim();
+    if (primary.trim().isNotEmpty) {
+      return BariqLocaleConfig.isEnglish
+          ? primary.trim()
+          : _arabicCategoryName(primary.trim());
+    }
+    return BariqLocaleConfig.isEnglish
+        ? AppStrings.auto(fallback.trim())
+        : _arabicCategoryName(fallback.trim());
   }
   String get imageUrl => _categoryImageUrl(_fallbackImage([slug, nameEn, nameAr], image));
 
@@ -84,6 +99,47 @@ class SubcategoryItem {
 int _toInt(Object? value) {
   if (value is num) return value.toInt();
   return int.tryParse('$value') ?? 0;
+}
+
+String _arabicCategoryName(String value) {
+  const names = {
+    'occasions': 'مناسبات',
+    'acrylic': 'أكريليك',
+    'paper': 'ورق',
+    'forex': 'فوركس',
+    'wood': 'خشب',
+    'leather': 'جلد',
+    'sticker': 'استيكر',
+    'stickers': 'استيكرات',
+    'ramadan': 'رمضان',
+    'bags': 'شنط',
+    'benches': 'مقاعد',
+    'born in': 'مواليد',
+    'born-in': 'مواليد',
+    'box': 'بوكس',
+    'boxes': 'بوكسات',
+    'censer': 'مباخر',
+    'trays': 'صواني',
+    'stand': 'استاند',
+    'stands': 'استاندات',
+    'cups': 'أكواب',
+    'tissues': 'مناديل',
+    'models': 'مجسمات',
+    'rotations': 'دوارات',
+    'tables': 'طاولات',
+    'chairs': 'كراسي',
+    'cabinets': 'خزائن',
+    'national day': 'اليوم الوطني',
+    'haq al-laila': 'حق الليلة',
+    "mother's day": 'عيد الأم',
+    'graduation': 'تخرج',
+    'eid': 'العيد',
+    'hajj': 'حج',
+    'flag day': 'يوم العلم',
+    'valentine': 'عيد الحب',
+  };
+  final trimmed = value.trim();
+  return names[trimmed.toLowerCase()] ?? trimmed;
 }
 
 String _rowSlug(Map<String, dynamic> row) {

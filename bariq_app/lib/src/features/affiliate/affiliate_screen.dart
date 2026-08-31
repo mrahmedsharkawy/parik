@@ -9,7 +9,9 @@ import '../../state/app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/app_strings.dart';
 import '../auth/login_screen.dart';
+import '../catalog/search_screen.dart';
 import '../shared/bariq_network_image.dart';
+import '../shared/storefront_page_bottom_nav.dart';
 import '../shared/storefront_top_bar.dart';
 
 class AffiliateScreen extends StatefulWidget {
@@ -108,10 +110,20 @@ class _AffiliateScreenState extends State<AffiliateScreen> {
     final english = AppStateScope.of(context).isEnglish;
     return Scaffold(
       backgroundColor: const Color(0xFFF3F5F9),
+      extendBody: true,
+      bottomNavigationBar: const StorefrontPageBottomNav(selected: 1),
       body: SafeArea(
         bottom: false,
         child: Column(children: [
-          StorefrontTopBar(showBack: true, placeholder: AppStrings.searchHeader),
+          StorefrontTopBar(
+            placeholder: AppStrings.searchHeader,
+            onSearch: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const SearchScreen()),
+            ),
+            onImageSearch: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const SearchScreen(startWithImageSearch: true)),
+            ),
+          ),
           Expanded(
             child: FutureBuilder<_AffiliatePageData>(
               future: _future,

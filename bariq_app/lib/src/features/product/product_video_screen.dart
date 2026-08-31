@@ -3,6 +3,8 @@ import 'package:video_player/video_player.dart';
 
 import '../../theme/app_theme.dart';
 import '../../utils/app_strings.dart';
+import '../shared/storefront_page_bottom_nav.dart';
+import '../shared/storefront_top_bar.dart';
 
 class ProductVideoScreen extends StatefulWidget {
   const ProductVideoScreen({
@@ -61,14 +63,9 @@ class _ProductVideoScreenState extends State<ProductVideoScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        title: Text(
-          widget.title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
-        ),
-      ),
+      extendBody: true,
+      appBar: StorefrontPageAppBar(placeholder: widget.title),
+      bottomNavigationBar: const StorefrontPageBottomNav(selected: 4),
       body: FutureBuilder<void>(
         future: _initializing,
         builder: (context, snapshot) {
