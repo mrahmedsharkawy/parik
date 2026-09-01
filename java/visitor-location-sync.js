@@ -2,7 +2,7 @@
   'use strict';
 
   var SUPABASE_URL = window.SUPABASE_URL || 'https://knleehjjejfeobcmpwnw.supabase.co';
-  var ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+  var ANON = 'sb_publishable_VPSO9nbXg5eVNMj03KpgdA_VSOuMDHw';
   var TRACK_API = SUPABASE_URL + '/functions/v1/visitor-track';
 
   function isAdminPage() {

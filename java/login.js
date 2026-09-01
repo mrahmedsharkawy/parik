@@ -1,7 +1,7 @@
   /* === Auth Logic === */
   const PROFILE_KEY = 'x2_profile';
   const _SB_URL = 'https://knleehjjejfeobcmpwnw.supabase.co';
-  const _SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+  const _SB_ANON = 'sb_publishable_VPSO9nbXg5eVNMj03KpgdA_VSOuMDHw';
 
   function switchTab(tab) {
     document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='register')));

@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getSupabaseSecretKey } from '../_shared/supabase_keys.ts';
 const ALLOWED=['https://bariqgifts.com','https://www.bariqgifts.com','https://admin.bariqgifts.com'];
 function cors(req){const o=req.headers.get('origin')||'';return {'Access-Control-Allow-Origin':ALLOWED.includes(o)?o:ALLOWED[0],'Access-Control-Allow-Headers':'authorization,apikey,content-type,x-client-info','Access-Control-Allow-Methods':'POST,OPTIONS','Vary':'Origin'};}
 function allowed(req){const o=req.headers.get('origin')||'';const r=req.headers.get('referer')||'';return !o || ALLOWED.includes(o) || ALLOWED.some(x=>r.startsWith(x+'/'));}
@@ -11,7 +12,7 @@ Deno.serve(async req=>{
  try{
   const body=await req.json(); const endpoint=String(body.endpoint||'').trim();
   if(!endpoint)return new Response(JSON.stringify({error:'endpoint required'}),{status:400,headers:{...cors(req),'Content-Type':'application/json'}});
-  const sb=createClient(Deno.env.get('SUPABASE_URL')??'',Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')??'');
+  const sb=createClient(Deno.env.get('SUPABASE_URL')??'',getSupabaseSecretKey());
   const currentVapid=String(Deno.env.get('VAPID_PUBLIC_KEY')||'').trim();
   const {data:sub,error:subErr}=await sb.from('push_subscriptions').select('endpoint,vapid_public_key,user_phone,user_email,user_lang,user_id').eq('endpoint',endpoint).maybeSingle();
   if(subErr)throw subErr;

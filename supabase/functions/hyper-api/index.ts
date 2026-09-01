@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import webpush from 'npm:web-push@3.6.7';
+import { getSupabaseSecretKey } from '../_shared/supabase_keys.ts';
 
 const ALLOWED_ORIGINS = ['https://bariqgifts.com','https://www.bariqgifts.com','https://admin.bariqgifts.com'];
 function cors(req){const o=req.headers.get('origin')||'';return {'Access-Control-Allow-Origin':ALLOWED_ORIGINS.includes(o)?o:ALLOWED_ORIGINS[0],'Access-Control-Allow-Headers':'authorization, x-client-info, apikey, content-type','Access-Control-Allow-Methods':'POST, OPTIONS','Vary':'Origin'};}
@@ -8,6 +9,7 @@ function trustedOrigin(req){const o=req.headers.get('origin')||'';if(ALLOWED_ORI
 function token(req){const m=(req.headers.get('authorization')||'').match(/^Bearer\s+(.+)$/i);return m?m[1].trim():'';}
 async function requireAdmin(req,sb){const t=token(req);if(!t)return false;const {data,error}=await sb.auth.getUser(t);const u=data?.user;if(error||!u)return false;let q=await sb.from('admins').select('id').eq('active',true).eq('user_id',u.id).maybeSingle();if(!q.error&&q.data)return true;q=await sb.from('admins').select('id').eq('active',true).eq('email',u.email||'').maybeSingle();return !q.error&&!!q.data;}
 function publicAdminOrder(p){return p?.type==='admin_new_order'&&p?.user_email==='__bariq_admin_orders__@bariq.local'&&!p?.user_phone;}
+function hasSecretApiKey(req){const expected=getSupabaseSecretKey();const supplied=String(req.headers.get('apikey')||'').trim();return !!expected&&supplied===expected;}
 function lang(v){return String(v||'').toLowerCase().startsWith('en')?'en':'ar';}
 function orderText(status,orderId,l){const s=String(status||'processing').toLowerCase(),id=String(orderId||'').trim();const ar={pending:['⏳','طلبك قيد المراجعة','طلبك يُراجع الآن'],processing:['🔄','طلبك قيد المعالجة','جارٍ تجهيز طلبك'],confirmed:['✅','تم تأكيد طلبك','تم تأكيد طلبك وسيُجهز قريباً 🎉'],manufacturing:['🔨','طلبك في مرحلة التصنيع','طلبك يُصنع الآن بعناية ✨'],ready:['🎁','طلبك جاهز للاستلام','طلبك جاهز وبانتظارك 🎉'],shipped:['🚚','تم شحن طلبك','طلبك في الطريق إليك'],delivered:['✅','تم توصيل طلبك','طلبك وصل بنجاح 🎉'],cancelled:['❌','تم إلغاء طلبك','تم إلغاء طلبك'],returned:['↩️','تمت عملية الإرجاع','تمت معالجة إرجاع طلبك']};const en={pending:['⏳','Your order is under review','Your order is being reviewed'],processing:['🔄','Your order is being processed','We are preparing your order'],confirmed:['✅','Your order is confirmed','Your order has been confirmed 🎉'],manufacturing:['🔨','Your order is in production','Your order is being carefully made ✨'],ready:['🎁','Your order is ready','Your order is ready 🎉'],shipped:['🚚','Your order has shipped','Your order is on its way'],delivered:['✅','Your order was delivered','Your order was delivered successfully 🎉'],cancelled:['❌','Your order was cancelled','Your order was cancelled'],returned:['↩️','Return processed','Your return was processed']};const x=(l==='en'?en:ar)[s]||(l==='en'?en.processing:ar.processing);return {status:s,icon:x[0],title:`${x[0]} ${x[1]}`,body:`${x[2]}${id?(l==='en'?` #${id.replace(/^#/,'')}`:` رقم ${id}`):''}`};}
 
@@ -21,9 +23,9 @@ Deno.serve(async req=>{
   const VAPID_EMAIL=String(Deno.env.get('VAPID_EMAIL')||'mailto:admin@bariq.store').trim();
   if(!VAPID_PRIVATE||!VAPID_PUBLIC)return new Response(JSON.stringify({error:'Missing VAPID key'}),{status:500,headers:{...cors(req),'Content-Type':'application/json'}});
   webpush.setVapidDetails(VAPID_EMAIL,VAPID_PUBLIC,VAPID_PRIVATE);
-  const sb=createClient(Deno.env.get('SUPABASE_URL')??'',Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')??'');
+  const sb=createClient(Deno.env.get('SUPABASE_URL')??'',getSupabaseSecretKey());
   const isPublic=publicAdminOrder(p);
-  if(isPublic&&!trustedOrigin(req))return new Response(JSON.stringify({error:'Trusted origin required'}),{status:403,headers:{...cors(req),'Content-Type':'application/json'}});
+  if(isPublic&&(!trustedOrigin(req)||!hasSecretApiKey(req)))return new Response(JSON.stringify({error:'Server authorization required'}),{status:403,headers:{...cors(req),'Content-Type':'application/json'}});
   if(!isPublic&&!(await requireAdmin(req,sb)))return new Response(JSON.stringify({error:'Admin authorization required'}),{status:401,headers:{...cors(req),'Content-Type':'application/json'}});
 
   const fields='endpoint,p256dh,auth,user_lang,vapid_public_key';

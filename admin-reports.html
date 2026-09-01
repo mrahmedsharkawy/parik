@@ -110,7 +110,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     const REPORTS_SOUND_KEY = 'x2_admin_reports_push_sound';
     const ADMIN_PUSH_EMAIL = '__bariq_admin_orders__@bariq.local';
     const ADMIN_PUSH_VAPID_PUBLIC_KEY = 'BMr4ZWTwS2DgL12mxYFjLM9rmnljnJpY_tsFtWtKxgS2d_z36lcg3sLfIQfOFbX1Tw0ITNG3pB4hJeGI-YEZFHE';
-    const REPORTS_SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+    const REPORTS_SUPABASE_ANON = 'sb_publishable_VPSO9nbXg5eVNMj03KpgdA_VSOuMDHw';
     let allOrders = [];
     let currentPeriod = 'all';
 
@@ -200,7 +200,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       };
       const res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/functions/v1/push-register', {
         method:'POST',
-        headers:{apikey:REPORTS_SUPABASE_ANON,Authorization:'Bearer '+REPORTS_SUPABASE_ANON,'Content-Type':'application/json'},
+        headers:{apikey:REPORTS_SUPABASE_ANON,'Content-Type':'application/json'},
         body:JSON.stringify(payload)
       });
       return res.ok;
@@ -239,7 +239,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         reportsPushStatus('جارٍ إرسال اختبار...', false);
         const resp = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/functions/v1/hyper-api', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', apikey: REPORTS_SUPABASE_ANON, Authorization: 'Bearer ' + REPORTS_SUPABASE_ANON },
+          headers: { 'Content-Type': 'application/json', apikey: REPORTS_SUPABASE_ANON },
           body: JSON.stringify({
             title: 'admin_new_order',
             body: 'طلب جديد #TEST-1001\nالعميل: عميل تجريبي | المنتج: هدية مخصصة | السعر: 150 AED\nاضغط لفتح الطلب',
@@ -351,7 +351,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       }
     }
     async function getReportsAdmin(userId, email, token){
-      const headers = { apikey: REPORTS_SUPABASE_ANON, Authorization: 'Bearer ' + (token || REPORTS_SUPABASE_ANON), 'Content-Type': 'application/json' };
+      const headers = { apikey: REPORTS_SUPABASE_ANON, ...(token ? { Authorization: 'Bearer ' + token } : {}), 'Content-Type': 'application/json' };
       async function query(path){
         const res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/admins?' + path + '&active=eq.true&limit=1', { headers });
         const rows = await res.json().catch(() => []);

@@ -3,7 +3,7 @@
 if(window.__bariqAbandonedCartV4)return;
 window.__bariqAbandonedCartV4=true;
 
-var ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYXNlIiwicmVmIjoia25sZWhqampIamZlb2JjbXB3bnciLCJyb2xlIjoiYW5vbiIsImlhdCI6MTc4NDAyOTU3MCwiZXhwIjoyMDk5NjA1NTcwfQ.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+var ANON_KEY='sb_publishable_VPSO9nbXg5eVNMj03KpgdA_VSOuMDHw';
 var API='https://knleehjjejfeobcmpwnw.supabase.co/functions/v1/abandoned-cart-sync';
 var timer=0,lastKey='',lastAt=0;
 

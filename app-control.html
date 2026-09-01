@@ -211,12 +211,10 @@ async function sendAppNotification(){
   try{
     const file=$('appNotifImage').files&&$('appNotifImage').files[0],image=await uploadAppNotificationImage(file),icon=$('appNotifIcon').value.trim()||appNotifDefaultIcon(type),payload={type,icon,title:titleAr,msg:bodyAr,body:bodyAr,url,status:'sent',data:{audience:'app',image,title_en:titleEn||titleAr,body_en:bodyEn||bodyAr,product_id:productId,app_url:url},is_read:false,created_at:new Date().toISOString()};
     status.textContent='جاري الإرسال لصندوق التطبيق والهاتف...';
-    await sbFetch('notifications',{method:'POST',prefer:'return=representation',body:JSON.stringify(payload),requireAuth:true});
-    const pushPayload={title:titleAr,title_ar:titleAr,title_en:titleEn||titleAr,body:bodyAr,body_ar:bodyAr,body_en:bodyEn||bodyAr,url,image,data:{type,icon,product_id:productId,app_url:url}};
-    const results=await Promise.allSettled([invokePushFunction('send-native-push',pushPayload),invokePushFunction('send-push',{title:titleAr,body:bodyAr,url,image})]);
-    const native=results[0].status==='fulfilled'?results[0].value:null,web=results[1].status==='fulfilled'?results[1].value:null;
+    const pushPayload={broadcast:true,type,icon,product_id:productId,title:titleAr,title_ar:titleAr,title_en:titleEn||titleAr,body:bodyAr,body_ar:bodyAr,body_en:bodyEn||bodyAr,url,image,data:{audience:'app',app_url:url}};
+    const native=await invokePushFunction('send-native-push',pushPayload),web=native&&native.web;
     $('appNotifTitleAr').value='';$('appNotifTitleEn').value='';$('appNotifBodyAr').value='';$('appNotifBodyEn').value='';$('appNotifUrl').value='';$('appNotifProductId').value='';$('appNotifImage').value='';$('appNotifPreview').removeAttribute('src');$('appNotifPreview').style.display='none';
-    status.textContent='تم الحفظ · الهاتف '+(native?native.sent:0)+' · الموقع '+(web?web.sent:0);status.className=(native||web)?'status ok':'status warn';toast(status.textContent);await loadMetrics();
+    status.textContent='تم الحفظ · الهاتف '+(native&&native.native?native.native.sent:0)+' · الموقع '+(web?web.sent:0);status.className=native?'status ok':'status warn';toast(status.textContent);await loadMetrics();
   }catch(e){status.textContent='تعذر الإرسال: '+(e.message||e);status.className='status warn'}finally{button.disabled=false}
 }
 $('appNotifType').addEventListener('change',()=>{$('appNotifIcon').value=appNotifDefaultIcon($('appNotifType').value)});$('appNotifImage').addEventListener('change',()=>{const file=$('appNotifImage').files&&$('appNotifImage').files[0];if(!file)return;$('appNotifPreview').src=URL.createObjectURL(file);$('appNotifPreview').style.display='block'});$('sendAppNotifBtn').onclick=sendAppNotification;

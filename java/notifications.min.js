@@ -7,7 +7,7 @@ var VAPID_PUBLIC_KEY='BMr4ZWTwS2DgL12mxYFjLM9rmnljnJpY_tsFtWtKxgS2d_z36lcg3sLfIQ
 var VAPID_VERSION='vapid-BMr4-20260822-r5';
 var SERVICE_WORKER_URL='/sw.js?v=412-push-user-binding';
 var SUPABASE_URL='https://knleehjjejfeobcmpwnw.supabase.co';
-var SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYXNlIiwicmVmIjoia25sZWhqampIamZlb2JjbXB3bnciLCJyb2xlIjoiYW5vbiIsImlhdCI6MTc4NDAyOTU3MCwiZXhwIjoyMDk5NjA1NTcwfQ.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+var SUPABASE_ANON_KEY='sb_publishable_VPSO9nbXg5eVNMj03KpgdA_VSOuMDHw';
 var MARKER='bariq_push_vapid_version';
 
 function toKey(v){var p=v+'='.repeat((4-v.length%4)%4),b=atob(p.replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from([].map.call(b,function(c){return c.charCodeAt(0)}));}
@@ -32,7 +32,7 @@ async function bestToken(){
 async function save(sub){
  var p256dh=sub.getKey('p256dh'),auth=sub.getKey('auth');if(!p256dh||!auth)return false;
  var p=profile(),token=await bestToken();
- var r=await fetch(SUPABASE_URL+'/functions/v1/push-register',{method:'POST',headers:{apikey:SUPABASE_ANON_KEY,Authorization:'Bearer '+(token||SUPABASE_ANON_KEY),'Content-Type':'application/json'},body:JSON.stringify({endpoint:sub.endpoint,p256dh:btoa(String.fromCharCode.apply(null,new Uint8Array(p256dh))),auth:btoa(String.fromCharCode.apply(null,new Uint8Array(auth))),user_phone:phone(p.phone||''),user_email:String(p.email||p.authEmail||'').trim().toLowerCase(),user_lang:lang(),vapid_public_key:VAPID_PUBLIC_KEY})});
+ var r=await fetch(SUPABASE_URL+'/functions/v1/push-register',{method:'POST',headers:{apikey:SUPABASE_ANON_KEY,...(token ? { Authorization: "Bearer " + token } : {}),'Content-Type':'application/json'},body:JSON.stringify({endpoint:sub.endpoint,p256dh:btoa(String.fromCharCode.apply(null,new Uint8Array(p256dh))),auth:btoa(String.fromCharCode.apply(null,new Uint8Array(auth))),user_phone:phone(p.phone||''),user_email:String(p.email||p.authEmail||'').trim().toLowerCase(),user_lang:lang(),vapid_public_key:VAPID_PUBLIC_KEY})});
  var txt=await r.text();console.log('[BARIQ_PUSH] register',r.status,txt);if(!r.ok)return false;localStorage.setItem(MARKER,VAPID_VERSION);return true;
 }
 async function ensure(force){

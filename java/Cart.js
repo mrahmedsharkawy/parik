@@ -899,7 +899,7 @@ initX2Cart() || document.addEventListener("DOMContentLoaded", initX2Cart, { once
                     address: profile.address_full || null
                 }).then(() => {
                     if (!appliedCouponForOrder) return;
-                    const anon = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E";
+                    const anon = "sb_publishable_VPSO9nbXg5eVNMj03KpgdA_VSOuMDHw";
                     return fetch("https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/orders?order_number=eq." + encodeURIComponent(orderId), {
                         method: "PATCH",
                         headers: { apikey: anon, Authorization: "Bearer " + anon, "Content-Type": "application/json", Prefer: "return=minimal" },

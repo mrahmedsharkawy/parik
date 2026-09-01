@@ -1,0 +1,27 @@
+project_id = "knleehjjejfeobcmpwnw"
+
+# New publishable/secret API keys are opaque, not JWTs. Each function performs
+# its own user/admin/origin/cron authorization where required.
+[functions.bot-llm]
+verify_jwt = false
+
+[functions.push-register]
+verify_jwt = false
+
+[functions.hyper-api]
+verify_jwt = false
+
+[functions.send-push]
+verify_jwt = false
+
+[functions.send-native-push]
+verify_jwt = false
+
+[functions.abandoned-cart-sync]
+verify_jwt = false
+
+[functions.abandoned-cart-reminder]
+verify_jwt = false
+
+[functions.occasion-reminders]
+verify_jwt = false

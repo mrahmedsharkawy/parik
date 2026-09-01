@@ -8,6 +8,7 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import webpush from 'npm:web-push@3.6.7';
+import { getSupabaseSecretKey } from '../_shared/supabase_keys.ts';
 
 // Security improvement: restrict CORS to bariqgifts.com domains only
 const ALLOWED_ORIGINS = [
@@ -60,7 +61,7 @@ Deno.serve(async (req) => {
     // جلب المشتركين من Supabase
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      getSupabaseSecretKey()
     );
 
     if (!(await requireAdmin(req, supabase))) {

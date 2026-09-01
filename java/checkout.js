@@ -113,7 +113,7 @@
 
   async function notifyAdminNewOrder(order) {
     try {
-      const ANON_PUSH = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+      const ANON_PUSH = 'sb_publishable_VPSO9nbXg5eVNMj03KpgdA_VSOuMDHw';
       const totalText = (Number(order.total) || 0).toLocaleString('en-US', { maximumFractionDigits: 2 }) + ' AED';
       const firstItem = order.items && order.items[0] || {};
       const productName = firstItem.name || firstItem.title || firstItem.productName || 'Product';

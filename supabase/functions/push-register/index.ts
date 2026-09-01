@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getSupabaseSecretKey } from '../_shared/supabase_keys.ts';
 
 const ALLOWED_ORIGINS = [
   'https://bariqgifts.com',
@@ -49,7 +50,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const serviceRole = String(Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '').trim();
+    const serviceRole = getSupabaseSecretKey();
     const supabaseUrl = String(Deno.env.get('SUPABASE_URL') || '').trim();
     const supabase = createClient(supabaseUrl, serviceRole);
 

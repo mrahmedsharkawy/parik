@@ -2203,7 +2203,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                 }
             }
             async function uploadCustomizationFile(file) {
-                const anonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E";
+                const anonKey = "sb_publishable_VPSO9nbXg5eVNMj03KpgdA_VSOuMDHw";
                 const safeName = String(file.name || "custom-image").replace(/[^a-z0-9._-]+/gi, "-").slice(-80) || "custom-image.jpg";
                 const fileName = `custom-orders/${String(orderId).replace(/[^0-9a-z_-]+/gi, "") || Date.now()}/${Date.now()}-${Math.random().toString(36).slice(2)}-${safeName}`;
                 const res = await fetch("https://knleehjjejfeobcmpwnw.supabase.co/storage/v1/object/products/" + fileName, {

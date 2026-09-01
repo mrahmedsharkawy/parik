@@ -1,15 +1,53 @@
 // @ts-nocheck
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import webpush from 'npm:web-push@3.6.7';
-const INTERNAL='bariq-cart-cron-20260822';
-const ALLOWED=['https://bariqgifts.com','https://www.bariqgifts.com','https://admin.bariqgifts.com'];
-function cors(req){const o=req.headers.get('origin')||'';return {'Access-Control-Allow-Origin':ALLOWED.includes(o)?o:ALLOWED[0],'Access-Control-Allow-Headers':'authorization,apikey,content-type,x-cron-secret','Access-Control-Allow-Methods':'POST,OPTIONS','Vary':'Origin'};}
-function access(req){const env=String(Deno.env.get('ABANDONED_CART_CRON_SECRET')||'').trim(),h=String(req.headers.get('x-cron-secret')||'').trim(),b=String(req.headers.get('authorization')||'').replace(/^Bearer\s+/i,'').trim();return (env&&(h===env||b===env))||h===INTERNAL;}
-function lang(v){return String(v||'').toLowerCase().startsWith('en')?'en':'ar'}
-function text(r){const l=lang(r.user_lang),c=Math.max(1,+r.cart_count||1),n=String(r.first_product_name||'').trim();return l==='en'?{title:'🛍️✨ Your cart misses you!',body:n?`🎁 ${n} is still waiting in your cart 💛 Complete your order before it sells out! 🛒🔥`:`🛒 You have ${c} item${c===1?'':'s'} waiting for you 💛 Complete your order before they sell out! 🎁`}:{title:'🛍️✨ نسيت حاجة حلوة في سلتك!',body:n?`🎁 ${n} لسه مستنيك في السلة 💛 كمّل طلبك دلوقتي قبل ما الكمية تخلص! 🛒🔥`:`🛒 عندك ${c} منتج${c>1?'ات':''} مستنيينك 💛✨ كمّل طلبك قبل نفاد الكمية 🎁`}}
-Deno.serve(async req=>{if(req.method==='OPTIONS')return new Response('ok',{headers:cors(req)});if(req.method!=='POST')return new Response(JSON.stringify({error:'Method not allowed'}),{status:405,headers:{...cors(req),'Content-Type':'application/json'}});if(!access(req))return new Response(JSON.stringify({error:'Scheduler authorization required'}),{status:401,headers:{...cors(req),'Content-Type':'application/json'}});try{
- const sb=createClient(Deno.env.get('SUPABASE_URL')??'',Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')??'');const pub=String(Deno.env.get('VAPID_PUBLIC_KEY')||'').trim(),priv=String(Deno.env.get('VAPID_PRIVATE_KEY')||'').trim(),mail=String(Deno.env.get('VAPID_EMAIL')||'mailto:admin@bariq.store').trim();if(!pub||!priv)throw new Error('Missing VAPID keys');webpush.setVapidDetails(mail,pub,priv);
- const {data:rows,error}=await sb.from('abandoned_carts').select('id,endpoint,user_lang,cart_count,first_product_name,first_product_image,send_attempts').eq('status','pending').lte('scheduled_at',new Date().toISOString()).lt('send_attempts',3).order('scheduled_at',{ascending:true}).limit(100);if(error)throw error;if(!rows?.length)return new Response(JSON.stringify({sent:0,failed:0,cleared:0,due:0}),{headers:{...cors(req),'Content-Type':'application/json'}});
- const eps=[...new Set(rows.map(r=>String(r.endpoint||'').trim()).filter(Boolean))];const {data:subs,error:se}=await sb.from('push_subscriptions').select('endpoint,p256dh,auth,user_lang,vapid_public_key').in('endpoint',eps);if(se)throw se;const map=new Map((subs||[]).map(s=>[String(s.endpoint||'').trim(),s]));let sent=0,failed=0,cleared=0;
- for(const r of rows){const s=map.get(String(r.endpoint||'').trim());if(!s||String(s.vapid_public_key||'').trim()!==pub){cleared++;await sb.from('abandoned_carts').update({status:'cleared',updated_at:new Date().toISOString(),last_error:'missing or legacy subscription'}).eq('id',r.id);continue}const l=lang(s.user_lang||r.user_lang),t=text({...r,user_lang:l});try{await webpush.sendNotification({endpoint:s.endpoint,keys:{p256dh:s.p256dh,auth:s.auth}},JSON.stringify({title:t.title,body:t.body,url:'/Cart',image:r.first_product_image||null,type:'abandoned_cart',iconText:'🛒',emoji:'🛒',lang:l}),{TTL:86400,urgency:'high'});sent++;await sb.from('abandoned_carts').update({status:'notified',notified_at:new Date().toISOString(),updated_at:new Date().toISOString(),last_error:''}).eq('id',r.id)}catch(e){failed++;const code=e?.statusCode||0;console.error('ABANDONED_CART_PUSH_FAILED',{statusCode:code,body:e?.body||null,message:e?.message||String(e)});if(code===404||code===410){await sb.from('push_subscriptions').delete().eq('endpoint',s.endpoint);await sb.from('abandoned_carts').update({status:'cleared',updated_at:new Date().toISOString(),last_error:`expired ${code}`}).eq('id',r.id)}else await sb.from('abandoned_carts').update({send_attempts:Number(r.send_attempts||0)+1,updated_at:new Date().toISOString(),last_error:String(e?.body||e?.message||e).slice(0,400)}).eq('id',r.id)}}
- return new Response(JSON.stringify({sent,failed,cleared,due:rows.length}),{headers:{...cors(req),'Content-Type':'application/json'}})}catch(e){return new Response(JSON.stringify({error:e?.message||String(e)}),{status:500,headers:{...cors(req),'Content-Type':'application/json'}})}});
+import { getSupabaseSecretKey } from '../_shared/supabase_keys.ts';
+import { dispatchNotification } from '../_shared/notification_dispatch.ts';
+
+const INTERNAL = 'bariq-cart-cron-20260822';
+const ALLOWED = ['https://bariqgifts.com', 'https://www.bariqgifts.com', 'https://admin.bariqgifts.com'];
+function cors(req) { const origin=req.headers.get('origin')||''; return {'Access-Control-Allow-Origin':ALLOWED.includes(origin)?origin:ALLOWED[0],'Access-Control-Allow-Headers':'authorization,apikey,content-type,x-cron-secret','Access-Control-Allow-Methods':'POST,OPTIONS','Vary':'Origin'}; }
+function access(req) { const env=String(Deno.env.get('ABANDONED_CART_CRON_SECRET')||'').trim(), header=String(req.headers.get('x-cron-secret')||'').trim(), bearer=String(req.headers.get('authorization')||'').replace(/^Bearer\s+/i,'').trim(); return (env&&(header===env||bearer===env))||header===INTERNAL; }
+function language(value) { return String(value||'').toLowerCase().startsWith('en')?'en':'ar'; }
+function message(row) {
+  const english=language(row.user_lang)==='en', count=Math.max(1,Number(row.cart_count)||1), name=String(row.first_product_name||'').trim();
+  if (english) return {title:'🛍️ Your cart misses you!',body:name?`🎁 ${name} is still waiting in your cart. Complete your order before it sells out!`:`You have ${count} item${count===1?'':'s'} waiting in your cart.`};
+  return {title:'🛍️ نسيت حاجة حلوة في سلتك!',body:name?`🎁 ${name} ما زال في سلتك. أكمل طلبك قبل نفاد الكمية!`:`لديك ${count} منتج في السلة بانتظارك.`};
+}
+
+Deno.serve(async(req)=>{
+  if(req.method==='OPTIONS') return new Response('ok',{headers:cors(req)});
+  if(req.method!=='POST') return new Response(JSON.stringify({error:'Method not allowed'}),{status:405,headers:{...cors(req),'Content-Type':'application/json'}});
+  if(!access(req)) return new Response(JSON.stringify({error:'Scheduler authorization required'}),{status:401,headers:{...cors(req),'Content-Type':'application/json'}});
+  try {
+    const supabase=createClient(Deno.env.get('SUPABASE_URL')||'',getSupabaseSecretKey());
+    const {data:rows,error}=await supabase.from('abandoned_carts').select('id,endpoint,user_email,user_phone,user_lang,cart_count,first_product_name,first_product_image,send_attempts').eq('status','pending').lte('scheduled_at',new Date().toISOString()).lt('send_attempts',3).order('scheduled_at',{ascending:true}).limit(100);
+    if(error) throw error;
+    if(!rows?.length) return new Response(JSON.stringify({sent:0,failed:0,due:0}),{headers:{...cors(req),'Content-Type':'application/json'}});
+    const endpoints=[...new Set(rows.map((row)=>String(row.endpoint||'').trim()).filter(Boolean))];
+    const {data:subscriptions,error:subscriptionsError}=await supabase.from('push_subscriptions').select('endpoint,user_id,user_email,user_phone,user_lang').in('endpoint',endpoints);
+    if(subscriptionsError) throw subscriptionsError;
+    const byEndpoint=new Map((subscriptions||[]).map((row)=>[String(row.endpoint||'').trim(),row]));
+    let sent=0,failed=0;
+    for(const row of rows) {
+      const subscription=byEndpoint.get(String(row.endpoint||'').trim())||{};
+      const target={user_id:subscription.user_id||null,user_email:row.user_email||subscription.user_email||null,user_phone:row.user_phone||subscription.user_phone||null};
+      if(!target.user_id&&!target.user_email&&!target.user_phone) {
+        failed++;
+        await supabase.from('abandoned_carts').update({send_attempts:Number(row.send_attempts||0)+1,last_error:'missing customer identity',updated_at:new Date().toISOString()}).eq('id',row.id);
+        continue;
+      }
+      const text=message({...row,user_lang:subscription.user_lang||row.user_lang});
+      try {
+        await dispatchNotification(supabase,{...target,title:text.title,body:text.body,type:'abandoned_cart',icon:'🛒',url:'/Cart',image:row.first_product_image||null});
+        sent++;
+        await supabase.from('abandoned_carts').update({status:'notified',notified_at:new Date().toISOString(),updated_at:new Date().toISOString(),last_error:''}).eq('id',row.id);
+      } catch(error) {
+        failed++;
+        await supabase.from('abandoned_carts').update({send_attempts:Number(row.send_attempts||0)+1,last_error:String(error?.message||error).slice(0,400),updated_at:new Date().toISOString()}).eq('id',row.id);
+      }
+    }
+    return new Response(JSON.stringify({sent,failed,due:rows.length}),{headers:{...cors(req),'Content-Type':'application/json'}});
+  } catch(error) {
+    return new Response(JSON.stringify({error:error?.message||String(error)}),{status:500,headers:{...cors(req),'Content-Type':'application/json'}});
+  }
+});

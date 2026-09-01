@@ -378,20 +378,21 @@ async function readSupabaseConfig() {
     process.env.BARIQ_SUPABASE_URL ||
     process.env.SUPABASE_URL ||
     (local.match(/SUPABASE_URL\s*=\s*"([^"]+)"/) || [])[1];
-  const anon =
+  const publishableKey =
+    process.env.BARIQ_SUPABASE_PUBLISHABLE_KEY ||
+    process.env.SUPABASE_PUBLISHABLE_KEY ||
     process.env.BARIQ_SUPABASE_ANON_KEY ||
     process.env.SUPABASE_ANON_KEY ||
     (local.match(/SUPABASE_ANON\s*=\s*"([^"]+)"/s) || [])[1];
-  if (!url || !anon) throw new Error("Missing Supabase URL or anon key.");
-  return { url, anon };
+  if (!url || !publishableKey) throw new Error("Missing Supabase URL or publishable key.");
+  return { url, publishableKey };
 }
 
 async function sbGet(config, table, params = "") {
   const endpoint = `${config.url}/rest/v1/${table}${params ? `?${params}` : ""}`;
   const res = await fetch(endpoint, {
     headers: {
-      apikey: config.anon,
-      Authorization: `Bearer ${config.anon}`,
+      apikey: config.publishableKey,
       Accept: "application/json",
     },
   });

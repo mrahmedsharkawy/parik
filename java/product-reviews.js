@@ -10,7 +10,7 @@
   const pid = getProductIdFromUrl();
   if(!pid) return;
   const SB_URL = 'https://knleehjjejfeobcmpwnw.supabase.co';
-  const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+  const SB_KEY = 'sb_publishable_VPSO9nbXg5eVNMj03KpgdA_VSOuMDHw';
   let picked = 5;
   const SHOW = 3;
   const lang = (localStorage.getItem('lang') || document.documentElement.lang || 'ar') === 'en' ? 'en' : 'ar';

@@ -11,10 +11,15 @@ create or replace function public.notify_admin_new_order_push()
 returns trigger
 language plpgsql
 security definer
-set search_path = public, extensions
+set search_path = pg_catalog
 as $$
 declare
-  anon_key text := 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+  secret_key text := (
+    select decrypted_secret
+    from vault.decrypted_secrets
+    where name = 'bariq_supabase_secret_key'
+    limit 1
+  );
   order_ref text := coalesce(new.order_number, new.id::text);
   item_count int := 1;
   customer text := coalesce(nullif(new.customer_name, ''), 'Customer');
@@ -37,8 +42,7 @@ begin
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'Origin', 'https://bariqgifts.com',
-      'apikey', anon_key,
-      'Authorization', 'Bearer ' || anon_key
+      'apikey', secret_key
     ),
     body := jsonb_build_object(
       'title', 'admin_new_order',
@@ -61,6 +65,8 @@ exception when others then
   return new;
 end;
 $$;
+
+revoke execute on function public.notify_admin_new_order_push() from public, anon, authenticated;
 
 drop trigger if exists orders_admin_new_order_push on public.orders;
 create trigger orders_admin_new_order_push

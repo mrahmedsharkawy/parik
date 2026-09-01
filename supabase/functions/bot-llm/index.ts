@@ -2,10 +2,12 @@
 // Bariq AI Sales Assistant V4 — knowledge-first + waiting-state aware routing
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { OpenAI } from "https://deno.land/x/openai@v4.20.1/mod.ts";
+import { getSupabasePublishableKey, getSupabaseSecretKey } from "../_shared/supabase_keys.ts";
 
 const SB_URL = Deno.env.get("SUPABASE_URL") || "https://knleehjjejfeobcmpwnw.supabase.co";
-const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || Deno.env.get("SUPABASE_SERVICE_KEY") || "";
-const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "";
+const SERVICE_KEY = getSupabaseSecretKey();
+const ANON_KEY = getSupabasePublishableKey();
+const LEGACY_ANON_KEY = String(Deno.env.get("SUPABASE_ANON_KEY") || "").trim();
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") || "";
 
 const ORIGINS = new Set([
@@ -52,6 +54,22 @@ function headers(req: Request) {
     "Content-Type": "application/json",
     "Vary": "Origin",
   };
+}
+
+async function isAllowedCaller(req: Request) {
+  const apiKey = String(req.headers.get("apikey") || "").trim();
+  if (apiKey && (apiKey === ANON_KEY || apiKey === LEGACY_ANON_KEY)) return true;
+
+  const authorization = String(req.headers.get("authorization") || "").trim();
+  if (!authorization.toLowerCase().startsWith("bearer ") || !ANON_KEY) return false;
+  try {
+    const response = await fetch(`${SB_URL}/auth/v1/user`, {
+      headers: { apikey: ANON_KEY, Authorization: authorization },
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
 }
 
 function json(req: Request, payload: unknown, status = 200) {
@@ -186,11 +204,17 @@ async function rpcSearch(req: Request, message: string, ctx: any) {
   const incomingAuth = req.headers.get("authorization") || "";
   const incomingApiKey = req.headers.get("apikey") || "";
   const key = SERVICE_KEY || incomingApiKey || ANON_KEY;
-  const auth = SERVICE_KEY ? `Bearer ${SERVICE_KEY}` : incomingAuth || (key ? `Bearer ${key}` : "");
-  if (!key || !auth) return [];
+  if (!key) return [];
+  const requestHeaders: Record<string, string> = {
+    apikey: key,
+    "Content-Type": "application/json",
+  };
+  if (!SERVICE_KEY && incomingAuth.toLowerCase().startsWith("bearer ")) {
+    requestHeaders.Authorization = incomingAuth;
+  }
   const res = await fetch(`${SB_URL}/rest/v1/rpc/bot_knowledge_search`, {
     method: "POST",
-    headers: { apikey: key, Authorization: auth, "Content-Type": "application/json" },
+    headers: requestHeaders,
     body: JSON.stringify({ p_message: ctx.normalized || message, p_context: ctx, p_limit: 30 }),
   });
   if (!res.ok) {
@@ -299,6 +323,7 @@ function decision(req: Request, message: string, ctx: any, rows: any[], imageDes
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: headers(req) });
   if (req.method !== "POST") return json(req, { error: "Method not allowed" }, 405);
+  if (!(await isAllowedCaller(req))) return json(req, { error: "Unauthorized" }, 401);
   let body: any = {};
   try {
     body = await req.json();

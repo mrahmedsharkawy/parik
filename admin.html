@@ -1477,7 +1477,7 @@ async function refreshAdminToken() {
   try {
     const res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/auth/v1/token?grant_type=refresh_token', {
       method: 'POST',
-      headers: { 'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E', 'Content-Type': 'application/json' },
+      headers: { 'apikey': 'sb_publishable_VPSO9nbXg5eVNMj03KpgdA_VSOuMDHw', 'Content-Type': 'application/json' },
       body: JSON.stringify({ refresh_token: refreshToken })
     });
     const data = await res.json();
@@ -1531,7 +1531,7 @@ async function requireAdminWriteToken(){
 }
 
 async function getAdminAccount(userId, email, token) {
-  const anon = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+  const anon = 'sb_publishable_VPSO9nbXg5eVNMj03KpgdA_VSOuMDHw';
   const headers = { apikey: anon, Authorization: 'Bearer ' + (token || anon), 'Content-Type': 'application/json' };
   async function query(path) {
     const res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/admins?' + path + '&active=eq.true&limit=1', { headers });
@@ -1616,7 +1616,7 @@ async function loadPushSubscribersCount() {
   const hasCachedCount = cached && cached !== '0' && cached !== '?';
   if (hasCachedCount) el.innerHTML = `🔔 المشتركون في الإشعارات: <b style="color:var(--gold);font-size:1rem">${cached}</b> مشترك`;
   try {
-    const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+    const ANON = 'sb_publishable_VPSO9nbXg5eVNMj03KpgdA_VSOuMDHw';
     const adminToken = await getValidAdminToken();
     if (!adminToken) throw new Error('Admin token required');
     const res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/push_subscriptions?select=id&limit=1', {
@@ -1867,7 +1867,7 @@ async function uploadProductImageToStorage(dataUrl) {
   const match = String(dataUrl || '').match(/^data:([^;]+);base64,(.+)$/);
   if (!match) throw new Error('صيغة الصورة غير صالحة');
   const token = await getValidAdminToken();
-  const anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+  const anonKey = 'sb_publishable_VPSO9nbXg5eVNMj03KpgdA_VSOuMDHw';
   const authToken = token || anonKey;
   const mime = match[1] || 'image/jpeg';
   const ext = (mime.split('/')[1] || 'jpg').replace('jpeg', 'jpg').replace(/[^a-z0-9]/gi, '') || 'jpg';
@@ -1966,7 +1966,7 @@ function hasProductDiscount(p){
 
 async function sendDiscountProductPush(product){
   if(!hasProductDiscount(product)) return;
-  const ANON_PUSH = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+  const ANON_PUSH = 'sb_publishable_VPSO9nbXg5eVNMj03KpgdA_VSOuMDHw';
   const name = getT(product.name) || 'منتج جديد';
   const price = parseFloat(product.price) || 0;
   const oldPrice = parseFloat(product.oldPrice) || 0;
@@ -2364,7 +2364,7 @@ function exportProducts(){ download('Products.json', JSON.stringify(products,nul
 
 /* ================= التعليقات (Supabase) ================= */
 const SB_REV_URL = 'https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/reviews';
-const SB_REV_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+const SB_REV_KEY = 'sb_publishable_VPSO9nbXg5eVNMj03KpgdA_VSOuMDHw';
 let _sbReviews = []; // كاش محلي للتعليقات المحملة
 
 async function loadSbReviews(){
@@ -2969,24 +2969,28 @@ async function changeOrderStatus(id, status){
       if (notif && (normalizedCustomerPhone || normalizedCustomerEmail)) {
         try {
           // ANON key كـ fallback إذا كان توكن الأدمن مفقود/منتهي (نفس نمط بقية الدوال في هذا الملف)
-          const ANON_PUSH = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+          const ANON_PUSH = 'sb_publishable_VPSO9nbXg5eVNMj03KpgdA_VSOuMDHw';
           const adminToken = (await getValidAdminToken()) || ANON_PUSH;
           // ملاحظة: لا نستثني جهاز الأدمن هنا لأن الإشعار موجَّه أصلاً لهاتف/إيميل
           // العميل تحديداً (وليس بثاً عاماً) — استثناء الجهاز كان يمنع وصول الإشعار
           // عندما يكون الأدمن يختبر الحساب بنفس رقمه/جهازه.
           const pushPayload = {
-            title:            'Bariq order update',
-            body:             `${status} - #${cleanOrderNum}`,
+            title:            notif.title,
+            title_ar:         notif.title,
+            body:             notif.body,
+            body_ar:          notif.body,
             url:              '/account.html?section=orders',
-            type:             'order_status_' + status,
+            type:             'order_status',
+            status:           status,
+            order_status:     status,
             orderStatus:      status,
-            orderId:          cleanOrderNum,
+            order_id:         cleanOrderNum,
             iconText:         notif.icon,
             emoji:            notif.icon
           };
           if (normalizedCustomerPhone) pushPayload.user_phone = normalizedCustomerPhone;
           if (normalizedCustomerEmail) pushPayload.user_email = normalizedCustomerEmail;
-          const pushResp = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/functions/v1/hyper-api', {
+          const pushResp = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/functions/v1/send-native-push', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -2997,7 +3001,8 @@ async function changeOrderStatus(id, status){
           });
           if (!pushResp.ok) throw new Error(await pushResp.text());
           const pushResult = await pushResp.json().catch(() => null);
-          if (!pushResult || !pushResult.sent) {
+          const delivered = Number(pushResult?.native?.sent || 0) + Number(pushResult?.web?.sent || 0);
+          if (!pushResult || (!pushResult.inbox && delivered === 0)) {
             console.warn('No customer push subscribers matched this order:', pushResult);
             toast('⚠️ لم يتم تسليم الإشعار: ' + (pushResult?.message || pushResult?.error || 'لا يوجد اشتراك مطابق للعميل'));
           } else {
@@ -4321,7 +4326,7 @@ async function renderVisitorsStats() {
   const todayEl = $('visitorsTodayCount');
   const allEl   = $('visitorsAllCount');
   const locEl   = $('visitorsLocations');
-  const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+  const ANON = 'sb_publishable_VPSO9nbXg5eVNMj03KpgdA_VSOuMDHw';
 
   // استخدم JWT الأدمن مع تجديد تلقائي عند الانتهاء
   const adminToken = await getValidAdminToken() || ANON;
@@ -4496,7 +4501,7 @@ function emAdMatchesWidget(a, filter){
 }
 async function emFetchVisitors(){
   const cached = getVisitors();
-  const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+  const ANON = 'sb_publishable_VPSO9nbXg5eVNMj03KpgdA_VSOuMDHw';
   try {
     const adminToken = await getValidAdminToken() || ANON;
     const headers = { apikey: ANON, Authorization: 'Bearer ' + adminToken };
@@ -4662,7 +4667,7 @@ async function clearVisitors() {
   if (!confirm('مسح سجل الزيارات؟')) return;
   localStorage.removeItem(LS_VISITORS);
   localStorage.removeItem(LS_VISITOR_AREAS);
-  const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+  const ANON = 'sb_publishable_VPSO9nbXg5eVNMj03KpgdA_VSOuMDHw';
   try {
     const adminToken = await getValidAdminToken() || ANON;
     await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/visitors?visited_at=not.is.null', {
@@ -5019,7 +5024,7 @@ function adminPushSetStatus(message, ok) {
 }
 
 async function saveAdminPushSubscription(sub) {
-  const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+  const ANON = 'sb_publishable_VPSO9nbXg5eVNMj03KpgdA_VSOuMDHw';
   const p256dh = sub.getKey('p256dh');
   const auth = sub.getKey('auth');
   const payload = {
@@ -5088,7 +5093,7 @@ async function enableAdminOrderPush() {
 }
 
 async function sendAdminOrderPushTest() {
-  const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+  const ANON = 'sb_publishable_VPSO9nbXg5eVNMj03KpgdA_VSOuMDHw';
   try {
     adminPushSetStatus('جارٍ إرسال اختبار للأدمن...', false);
     const resp = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/functions/v1/hyper-api', {
@@ -5137,7 +5142,7 @@ async function sendPushNotification() {
 
   statusEl.textContent = '⏳ جارٍ جلب المشتركين...';
 
-  const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+  const ANON = 'sb_publishable_VPSO9nbXg5eVNMj03KpgdA_VSOuMDHw';
   let subscriptions = [];
   try {
     const res = await fetch('https://knleehjjejfeobcmpwnw.supabase.co/rest/v1/push_subscriptions?select=endpoint,p256dh,auth', {
@@ -5866,7 +5871,7 @@ function toggleSuggested(id, checked) { if(checked) suggestedIds.add(String(id))
 async function saveSuggested() {
   const ids = [...suggestedIds];
   localStorage.setItem(LS_SUGGESTED, JSON.stringify(ids));
-  const anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+  const anonKey = 'sb_publishable_VPSO9nbXg5eVNMj03KpgdA_VSOuMDHw';
   try {
     if (window.Supabase && window.Supabase.Settings) {
       await window.Supabase.Settings.save({ suggested_products: ids });
@@ -5986,7 +5991,7 @@ async function renderReports() {
   let totalCustomers = 0;
   let visitorStats = { total: 0, today: 0 };
   try {
-    const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubGVlaGpqZWpmZW9iY21wd253Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjk1NzAsImV4cCI6MjA5OTYwNTU3MH0.Q5Peb8CXDYNSPtQJGK6meij4vFRfOUq9qFz4rHBXE8E';
+    const ANON = 'sb_publishable_VPSO9nbXg5eVNMj03KpgdA_VSOuMDHw';
     const countHdr = (url) => fetch(url, {
       headers: { apikey: ANON, Authorization: 'Bearer ' + ANON, Prefer: 'count=exact' }
     }).then(r => parseInt(r.headers.get('content-range')?.split('/')?.[1] || '0'));
