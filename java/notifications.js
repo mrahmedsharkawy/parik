@@ -51,3 +51,51 @@ window.subscribeToPush=subscribeToPush;window.getPushStatus=getPushStatus;window
 window.addEventListener('bariq:session-restored',function(){if(Notification.permission==='granted')ensure(false).catch(function(){})});
 window.addEventListener('pageshow',function(){if(Notification.permission==='granted')ensure(false).catch(function(){})});
 })();
+
+/* Keep the website notification counter and installed-PWA badge in sync with
+   push messages saved by the service worker. */
+(function(){
+'use strict';
+function localItems(){try{return JSON.parse(localStorage.getItem('x2_notifications')||'[]')}catch(_){return[]}}
+function applyCount(count,notify){
+ count=Math.max(0,Number(count)||0);
+ window.__accountCount=count?String(count):'';
+ document.querySelectorAll('.account-badge').forEach(function(el){el.setAttribute('data-count',count?String(count):'0')});
+ if(notify!==false)try{window.dispatchEvent(new CustomEvent('x2:notif-updated',{detail:{count:count}}))}catch(_){}
+ try{
+  if(count>0&&'setAppBadge'in navigator)navigator.setAppBadge(count).catch(function(){});
+  else if(!count&&'clearAppBadge'in navigator)navigator.clearAppBadge().catch(function(){});
+ }catch(_){}
+ if('serviceWorker'in navigator&&navigator.serviceWorker.controller){
+  navigator.serviceWorker.controller.postMessage({type:count>0?'SET_BADGE':'CLEAR_BADGE',count:count});
+ }
+}
+function mergePushItems(items){
+ var current=localItems(),byId=new Map(current.map(function(item){return[String(item&&item.id||''),item]})),changed=false;
+ (items||[]).forEach(function(item){
+  if(!item||!item.id||String(item.id).indexOf('__')===0||byId.has(String(item.id)))return;
+  byId.set(String(item.id),Object.assign({},item,{read:item.read===true}));changed=true;
+ });
+ var merged=Array.from(byId.values()).sort(function(a,b){return new Date(b.date||0)-new Date(a.date||0)}).slice(0,60);
+ if(changed)try{localStorage.setItem('x2_notifications',JSON.stringify(merged))}catch(_){}
+ applyCount(merged.filter(function(item){return item&&item.read!==true}).length);
+}
+function syncPushInbox(){
+ if(!('indexedDB'in window))return;
+ try{
+  var request=indexedDB.open('bariq-push-inbox');
+  request.onsuccess=function(){
+   var db=request.result;if(!db.objectStoreNames.contains('notifications')){db.close();return mergePushItems([])}
+   var tx=db.transaction('notifications','readonly'),all=tx.objectStore('notifications').getAll();
+   all.onsuccess=function(){mergePushItems(all.result||[])};tx.oncomplete=function(){db.close()};
+  };
+ }catch(_){mergePushItems([])}
+}
+if('serviceWorker'in navigator){navigator.serviceWorker.addEventListener('message',function(event){
+ if(event.data&&event.data.type==='X2_PUSH_NOTIFICATION'&&event.data.notification)mergePushItems([event.data.notification]);
+});}
+window.addEventListener('x2:notif-updated',function(event){
+ var count=event.detail&&Number(event.detail.count);if(Number.isFinite(count))applyCount(count,false);
+});
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',syncPushInbox,{once:true});else syncPushInbox();
+})();

@@ -133,13 +133,41 @@ async function sendFcm(supabase: any, input: any, userIds: string[]) {
         ...(target.topic ? { topic: target.topic } : { token: target.token }),
         notification: { title: text.title, body: text.body, ...(input.image ? { image: String(input.image) } : {}) },
         data,
-        android: { priority: 'high', notification: { channel_id: 'bariq_offers', sound: 'default' } },
-        apns: { payload: { aps: { sound: 'default', contentAvailable: true } } },
+        android: {
+          priority: 'high',
+          notification: {
+            channel_id: 'bariq_offers',
+            sound: 'default',
+            notification_count: Math.max(1, Number(input.badge_count || 1)),
+          },
+        },
+        apns: { payload: { aps: { sound: 'default', badge: Number(input.badge_count || 1), contentAvailable: true } } },
       } }),
     });
-    if (!response.ok) throw new Error(`FCM ${response.status}: ${await response.text()}`);
+    if (!response.ok) {
+      const detail = await response.text();
+      const error: any = new Error(`FCM ${response.status}: ${detail}`);
+      error.status = response.status;
+      error.detail = detail;
+      error.token = target.token || '';
+      throw error;
+    }
   }));
-  return { sent: results.filter((r) => r.status === 'fulfilled').length, failed: results.filter((r) => r.status === 'rejected').length, total: targets.length };
+  const rejected = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
+  const invalidTokens = rejected
+    .filter((result) => /UNREGISTERED|registration-token-not-registered|INVALID_ARGUMENT/i.test(clean(result.reason?.detail || result.reason?.message)))
+    .map((result) => clean(result.reason?.token))
+    .filter(Boolean);
+  if (invalidTokens.length) {
+    await supabase.from('app_device_tokens').update({ active: false }).in('token', invalidTokens);
+  }
+  return {
+    sent: results.filter((r) => r.status === 'fulfilled').length,
+    failed: rejected.length,
+    total: targets.length,
+    errors: rejected.slice(0, 3).map((result) => clean(result.reason?.message).slice(0, 500)),
+    invalid_tokens_disabled: invalidTokens.length,
+  };
 }
 
 async function saveInbox(supabase: any, input: any) {
