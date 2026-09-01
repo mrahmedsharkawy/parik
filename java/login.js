@@ -155,6 +155,12 @@
   async function syncCurrentPushSubscription(profile) {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) return false;
     try {
+      // The current push runtime owns subscription refresh and registration.
+      // Re-run it after login so an existing iPhone Web Push endpoint is bound
+      // immediately to the newly saved customer email and phone.
+      if (typeof window.ensureBariqPush === 'function') {
+        return !!(await window.ensureBariqPush(false));
+      }
       const reg = await navigator.serviceWorker.ready;
       const sub = await reg.pushManager.getSubscription();
       if (!sub) return false;
