@@ -37,6 +37,17 @@ powershell -ExecutionPolicy Bypass -File .\scripts\bariq-full-dr-backup.ps1 -Des
 The script aborts on a failed database or Storage copy and only prints success
 after writing a SHA-256 manifest.
 
+Install the Windows daily task (02:00 local time, retry when the device is next
+available, 45-day retention):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\install-bariq-daily-backup.ps1
+```
+
+Backups are written to `D:\BariqBackups`, outside the Git project. Backup file
+patterns are also blocked by `.gitignore`. The computer must be online and the
+Supabase CLI session must remain authenticated.
+
 ## Restore drill
 
 Never test a full restore on production. Create a separate Supabase recovery
@@ -44,4 +55,3 @@ project, restore schema before data, import Auth/Storage with official Supabase
 procedures, then compare table counts, Storage file counts, manifest hashes,
 foreign keys, sample orders/invoices, ERP balances, and application login. Log
 the drill date and result. Repeat quarterly and after major schema changes.
-

@@ -2,7 +2,9 @@ param(
   [Parameter(Mandatory = $true)]
   [ValidateNotNullOrEmpty()]
   [string]$Destination,
-  [string]$ProjectRef = 'knleehjjejfeobcmpwnw'
+  [string]$ProjectRef = 'knleehjjejfeobcmpwnw',
+  [ValidateRange(7, 365)]
+  [int]$RetentionDays = 45
 )
 
 $ErrorActionPreference = 'Stop'
@@ -71,4 +73,15 @@ Set-Content -LiteralPath (Join-Path $backupRoot 'manifest.sha256') -Value "$mani
 
 Write-Host "Verified DR backup created at: $backupRoot"
 Write-Host 'Keep this folder only on an encrypted destination and copy it to a second independent location.'
+
+# Delete only old, complete Bariq backups in the explicitly selected destination.
+$cutoff = (Get-Date).ToUniversalTime().AddDays(-$RetentionDays)
+Get-ChildItem -LiteralPath $resolvedDestination -Directory -Filter 'Bariq-DR-*' | Where-Object {
+  $_.LastWriteTimeUtc -lt $cutoff -and
+  (Test-Path -LiteralPath (Join-Path $_.FullName 'manifest.json')) -and
+  (Test-Path -LiteralPath (Join-Path $_.FullName 'manifest.sha256'))
+} | ForEach-Object {
+  Remove-Item -LiteralPath $_.FullName -Recurse -Force
+  Write-Host "Removed expired verified backup: $($_.Name)"
+}
 

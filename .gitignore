@@ -1,3 +1,11 @@
 .vercel
 .env*
 /bariq_app/
+
+# Bariq backup artifacts must never be committed or uploaded to GitHub.
+/backups/
+/BariqBackups/
+Bariq-DR-*/
+*.bariqbak
+*.bariqdr
+*.backup.zip
