@@ -69,7 +69,7 @@
         return false;
       }
       var reg=await navigator.serviceWorker.getRegistration('/');
-      if(!reg)reg=await navigator.serviceWorker.register('/sw.js?v=409-push-register',{updateViaCache:'none'});
+      if(!reg)reg=await navigator.serviceWorker.register('/sw.js?v=413-no-visible-push-duplicate',{updateViaCache:'none'});
       if(reg&&reg.update)reg.update().catch(function(){});
       await navigator.serviceWorker.ready;
       sendPushLanguageToServiceWorker();

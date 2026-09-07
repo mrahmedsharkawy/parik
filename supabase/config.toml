@@ -25,3 +25,6 @@ verify_jwt = false
 
 [functions.occasion-reminders]
 verify_jwt = false
+
+[functions.backup-control]
+verify_jwt = false

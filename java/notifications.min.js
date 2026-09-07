@@ -5,7 +5,7 @@ window.__bariqPushRuntimeV5=true;
 
 var VAPID_PUBLIC_KEY='BMr4ZWTwS2DgL12mxYFjLM9rmnljnJpY_tsFtWtKxgS2d_z36lcg3sLfIQfOFbX1Tw0ITNG3pB4hJeGI-YEZFHE';
 var VAPID_VERSION='vapid-BMr4-20260822-r5';
-var SERVICE_WORKER_URL='/sw.js?v=412-push-user-binding';
+var SERVICE_WORKER_URL='/sw.js?v=413-no-visible-push-duplicate';
 var SUPABASE_URL='https://knleehjjejfeobcmpwnw.supabase.co';
 var SUPABASE_ANON_KEY='sb_publishable_VPSO9nbXg5eVNMj03KpgdA_VSOuMDHw';
 var MARKER='bariq_push_vapid_version';

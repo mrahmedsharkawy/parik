@@ -317,7 +317,7 @@
   <a class="tab admin-external-link" href="/bot-admin.html" target="_blank" rel="noopener noreferrer" style="text-decoration:none">🤖 إدارة البوت</a>
   <a class="tab admin-external-link" href="/ads-studio" target="_blank" rel="noopener noreferrer" style="text-decoration:none">📣 Ads Studio</a>
   <a class="tab admin-external-link" href="/erp.html" target="_blank" rel="noopener noreferrer" style="text-decoration:none">ERB</a>
-  <button type="button" class="tab admin-backup-tab" onclick="downloadAdminBackup()">💾 Backup</button>
+  <a class="tab admin-backup-tab" href="/backup.html" style="text-decoration:none">💾 Backup</a>
 </div>
 
 <div class="wrap">
@@ -5067,7 +5067,7 @@ async function enableAdminOrderPush() {
       adminPushSetStatus('لم يتم منح إذن الإشعارات.', false);
       return;
     }
-    const reg = await navigator.serviceWorker.register('/sw.js?v=407', { updateViaCache: 'none' });
+    const reg = await navigator.serviceWorker.register('/sw.js?v=413-no-visible-push-duplicate', { updateViaCache: 'none' });
     if (reg.update) reg.update().catch(() => {});
     await navigator.serviceWorker.ready;
     let sub = await reg.pushManager.getSubscription();

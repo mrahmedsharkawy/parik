@@ -1,5 +1,5 @@
 /* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v411-apple-push-resubscribe';
+const CACHE = 'bariq-v413-no-visible-push-duplicate';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -623,6 +623,7 @@ function normalizePushNotificationData(data) {
 self.addEventListener('push', function(e) {
   e.waitUntil(
     (async () => {
+      let hasVisiblePage = false;
       let data = {};
       try {
         data = e.data ? e.data.json() : {};
@@ -670,6 +671,7 @@ self.addEventListener('push', function(e) {
         await savePushInboxItem(inboxItem);
         try {
           const pages = await clients.matchAll({ type: 'window', includeUncontrolled: true });
+          hasVisiblePage = pages.some(client => client.visibilityState === 'visible' || client.focused === true);
           pages.forEach(client => client.postMessage({ type: 'X2_PUSH_NOTIFICATION', notification: inboxItem }));
         } catch(e2) {}
         // Update the app badge count before showing the notification.
@@ -680,7 +682,10 @@ self.addEventListener('push', function(e) {
       } catch(err) {
         // تجاهل أي خطأ هنا — الأهم إظهار الإشعار نفسه بالمحتوى الصحيح
       }
-      await self.registration.showNotification(title, options);
+      // When the website is open, the notification is already delivered to its
+      // inbox above. Only show the operating-system notification while the site
+      // is closed or running in the background, so the customer sees it once.
+      if (!hasVisiblePage) await self.registration.showNotification(title, options);
     })()
   );
 });
