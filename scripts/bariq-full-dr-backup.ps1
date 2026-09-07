@@ -28,6 +28,7 @@ $dbRoot = Join-Path $backupRoot 'database'
 $storageRoot = Join-Path $backupRoot 'storage'
 $sourceRoot = Join-Path $backupRoot 'rebuild-source'
 New-Item -ItemType Directory -Path $dbRoot, $storageRoot, $sourceRoot -Force | Out-Null
+Set-Content -LiteralPath (Join-Path $backupRoot '.incomplete') -Value 'Backup is still running or failed and must not be restored.' -Encoding UTF8
 
 Write-Host 'Creating PostgreSQL schema dump...'
 & $supabaseCli.FullName db dump --linked --project-ref $ProjectRef --schema public,auth,storage --file (Join-Path $dbRoot 'schema.sql')
@@ -41,8 +42,28 @@ Write-Host 'Copying all Storage buckets...'
 foreach ($bucket in @('products', 'ai-models', 'app-assets')) {
   $bucketTarget = Join-Path $storageRoot $bucket
   New-Item -ItemType Directory -Path $bucketTarget -Force | Out-Null
-  & $supabaseCli.FullName storage cp --recursive --linked --project-ref $ProjectRef "ss:///$bucket" $bucketTarget
-  if ($LASTEXITCODE -ne 0) { throw "Storage copy failed for bucket: $bucket" }
+  $listFile = Join-Path $env:TEMP "bariq-storage-$bucket-$stamp.json"
+  $listErrorFile = "$listFile.err"
+  & $supabaseCli.FullName storage ls --experimental --recursive --linked --project-ref $ProjectRef "ss:///$bucket" 1> $listFile 2> $listErrorFile
+  if ($LASTEXITCODE -ne 0) { throw "Storage listing failed for bucket: $bucket" }
+  $listing = Get-Content -LiteralPath $listFile -Raw | ConvertFrom-Json
+  $paths = @($listing.paths | Where-Object { $_ -like "/$bucket/*" })
+  foreach ($remotePath in $paths) {
+    $relativePath = $remotePath.Substring($bucket.Length + 2)
+    if (-not $relativePath -or $relativePath.EndsWith('/')) { continue }
+    $localFile = Join-Path $bucketTarget ($relativePath.Replace('/', [IO.Path]::DirectorySeparatorChar))
+    $localDirectory = Split-Path -Parent $localFile
+    New-Item -ItemType Directory -Path $localDirectory -Force | Out-Null
+    $encodedPath = (($relativePath -split '/') | ForEach-Object { [Uri]::EscapeDataString($_) }) -join '/'
+    $downloadUrl = "https://$ProjectRef.supabase.co/storage/v1/object/public/$bucket/$encodedPath"
+    try {
+      Invoke-WebRequest -Uri $downloadUrl -OutFile $localFile -UseBasicParsing
+    } catch {
+      throw "Storage download failed for $remotePath. If this bucket is private, configure Supabase S3 credentials. $($_.Exception.Message)"
+    }
+  }
+  Remove-Item -LiteralPath $listFile, $listErrorFile -Force -ErrorAction SilentlyContinue
+  Write-Host "Copied $($paths.Count) Storage objects from $bucket."
 }
 
 Copy-Item -LiteralPath (Join-Path $projectRoot 'supabase') -Destination $sourceRoot -Recurse -Force
@@ -70,6 +91,7 @@ $manifest.files = @(Get-ChildItem -LiteralPath $backupRoot -File -Recurse | ForE
 $manifest | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $backupRoot 'manifest.json') -Encoding UTF8
 $manifestHash = (Get-FileHash -LiteralPath (Join-Path $backupRoot 'manifest.json') -Algorithm SHA256).Hash.ToLowerInvariant()
 Set-Content -LiteralPath (Join-Path $backupRoot 'manifest.sha256') -Value "$manifestHash  manifest.json" -Encoding ASCII
+Remove-Item -LiteralPath (Join-Path $backupRoot '.incomplete') -Force
 
 Write-Host "Verified DR backup created at: $backupRoot"
 Write-Host 'Keep this folder only on an encrypted destination and copy it to a second independent location.'
@@ -84,4 +106,3 @@ Get-ChildItem -LiteralPath $resolvedDestination -Directory -Filter 'Bariq-DR-*' 
   Remove-Item -LiteralPath $_.FullName -Recurse -Force
   Write-Host "Removed expired verified backup: $($_.Name)"
 }
-
