@@ -796,9 +796,9 @@ const SupaCustomers = {
     getAll: async function (limit) {
       const max = Math.min(
           Math.max(parseInt(limit || 20, 10) || 20, 1),
-          20,
+          5000,
         ),
-        pageSize = 20,
+        pageSize = Math.min(100, max),
         cacheKey = "active:" + max,
         cached = productListCache.get(cacheKey),
         all = [];

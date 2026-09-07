@@ -71,6 +71,8 @@
   .wrap{max-width:80%;margin:0 auto;padding:18px 22px 60px}
   .panel{display:none}
   .panel.active{display:block}
+  .backup-embed-panel{padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important}
+  .backup-admin-frame{display:block;width:100%;height:calc(100vh - 118px);min-height:720px;border:0;border-radius:18px;background:#f7f9fc}
 
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
   @media(max-width:820px){.grid{grid-template-columns:1fr}}
@@ -277,7 +279,7 @@
   }
 }
 </style>
-<script src="/java/supabase.js?v=supabase-20260820-safe-sync"></script></head>
+<script src="/java/supabase.js?v=admin-products-progressive-20260908"></script></head>
 <body>
 
 <!-- بوابة دخول بسيطة (حماية شكلية فقط) -->
@@ -317,7 +319,7 @@
   <a class="tab admin-external-link" href="/bot-admin.html" target="_blank" rel="noopener noreferrer" style="text-decoration:none">🤖 إدارة البوت</a>
   <a class="tab admin-external-link" href="/ads-studio" target="_blank" rel="noopener noreferrer" style="text-decoration:none">📣 Ads Studio</a>
   <a class="tab admin-external-link" href="/erp.html" target="_blank" rel="noopener noreferrer" style="text-decoration:none">ERB</a>
-  <a class="tab admin-backup-tab" href="/backup.html" style="text-decoration:none">💾 Backup</a>
+  <div class="tab admin-backup-tab" data-tab="backup" onclick="switchTab('backup')">💾 Backup</div>
 </div>
 
 <div class="wrap">
@@ -1410,6 +1412,11 @@
     </div>
   </div>
 
+  <!-- ============ النسخ الاحتياطي والاستعادة ============ -->
+  <div class="panel backup-embed-panel" id="panel-backup">
+    <iframe id="backupAdminFrame" class="backup-admin-frame" title="النسخ الاحتياطي والاستعادة" data-src="/backup.html?embed=1"></iframe>
+  </div>
+
 </div><!-- end wrap -->
 
 <div id="toast" class="toast"></div>
@@ -1600,6 +1607,10 @@ function switchTab(name){
   $('panel-'+name).classList.add('active');
   // حفظ التاب الحالي لاستعادته بعد الريفريش
   sessionStorage.setItem('admin_active_tab', name);
+  if(name==='backup'){
+    const frame=$('backupAdminFrame');
+    if(frame && !frame.src) frame.src=frame.dataset.src;
+  }
   if(name==='comments'){ fillProductSelects(); $('commentList').innerHTML='<div class="empty">جارٍ التحميل...</div>'; loadSbReviews().then(()=>renderComments()); }
   if(name==='orders'){ fillProductSelects(); syncStoreOrders(true); renderStats(); renderOrders(); if(!$('o-date').value) $('o-date').value = isoToLocalInput(new Date().toISOString()); }
   if(name==='invoices'){ syncStoreOrders(true).then(renderInvoices); }
