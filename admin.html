@@ -72,7 +72,7 @@
   .panel{display:none}
   .panel.active{display:block}
   .backup-embed-panel{padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important}
-  .backup-admin-frame{display:block;width:100%;height:calc(100vh - 118px);min-height:720px;border:0;border-radius:18px;background:#f7f9fc}
+  .backup-admin-frame{display:block;width:100%;height:720px;min-height:720px;border:0;border-radius:18px;background:#f7f9fc;overflow:hidden}
 
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
   @media(max-width:820px){.grid{grid-template-columns:1fr}}
@@ -1414,7 +1414,7 @@
 
   <!-- ============ النسخ الاحتياطي والاستعادة ============ -->
   <div class="panel backup-embed-panel" id="panel-backup">
-    <iframe id="backupAdminFrame" class="backup-admin-frame" title="النسخ الاحتياطي والاستعادة" data-src="/backup.html?embed=1"></iframe>
+    <iframe id="backupAdminFrame" class="backup-admin-frame" title="النسخ الاحتياطي والاستعادة" data-src="/backup.html?embed=1" scrolling="no" onload="fitBackupAdminFrame()"></iframe>
   </div>
 
 </div><!-- end wrap -->
@@ -2290,6 +2290,25 @@ function ensureAdminProductsInfiniteScroll(){
     adminProductsVisible += 20;
     renderProducts(true);
   }, {passive:true});
+}
+
+function fitBackupAdminFrame(){
+  const frame=$('backupAdminFrame');
+  if(!frame) return;
+  try{
+    const doc=frame.contentDocument;
+    if(!doc) return;
+    const resize=()=>requestAnimationFrame(()=>{
+      const height=Math.max(720,doc.documentElement.scrollHeight,doc.body?doc.body.scrollHeight:0);
+      frame.style.height=height+'px';
+    });
+    resize();
+    if(!frame._backupResizeObserver && window.ResizeObserver){
+      frame._backupResizeObserver=new ResizeObserver(resize);
+      frame._backupResizeObserver.observe(doc.documentElement);
+      if(doc.body) frame._backupResizeObserver.observe(doc.body);
+    }
+  }catch(e){ console.warn('Backup frame resize unavailable',e); }
 }
 function renderProducts(keepPosition = false){
   const q = ($('searchProd')?.value||'').toLowerCase().trim();
