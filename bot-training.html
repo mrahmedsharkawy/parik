@@ -616,6 +616,7 @@ function normalizeBasic(s){
 }
 function normalize(s){
   let t=String(s||'').toLowerCase();
+  t=t.replace(/(^|\s)(?:تخلاج|تخرح|تخرخ|تخريج)(?=\s|$)/g,'$1تخرج');
   DIALECT_NORMALIZE_RULES.forEach(([re,to])=>{t=t.replace(re,to)});
   t=t.replace(/[إأآٱ]/g,'ا').replace(/[ؤ]/g,'و').replace(/[ئ]/g,'ي')
    .replace(/ة/g,'ه').replace(/ى/g,'ي').replace(/[ًٌٍَُِّْـ]/g,'')
