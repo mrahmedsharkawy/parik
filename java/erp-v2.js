@@ -50,6 +50,7 @@
     hr: ["الموظفين", "ملفات الموظفين الداخلية بدون أي سحب من لوحة الأدمن."],
     payroll: ["الرواتب", "مسيرات الرواتب والحسابات الشهرية من ملفات الموظفين."],
     documents: ["المستندات", "إدارة المستندات والتنبيهات قبل الانتهاء."],
+    alerts: ["التنبيهات", "متابعة تنبيهات المخزون والمستندات ونظام ERP."],
     reports: ["التقارير", "تقارير مالية وتشغيلية مبنية على جداول النظام فقط."],
     settings: ["الصلاحيات", "صلاحيات نظام الإدارة وسجل التدقيق المقترح."],
   };
@@ -853,6 +854,7 @@
     renderHr();
     renderPayroll();
     renderDocuments();
+    renderAlerts();
     renderReports();
     renderSettings();
     renderTopProducts();
@@ -890,6 +892,7 @@
         title: "مخزون منخفض",
         text: `${m.name}: المتوفر ${num(m.current_stock, 3)} ${m.unit || ""}`,
         url: "/erp#/inventory",
+        view: "inventory",
       }));
     const documents = state.documents
       .filter((d) => daysUntil(d.expiry_date) <= Number(d.alert_days || 30))
@@ -897,13 +900,31 @@
         title: "مستند قريب الانتهاء",
         text: `${d.document_type || "مستند"} ينتهي في ${d.expiry_date || ""}`,
         url: "/erp#/documents",
+        view: "documents",
       }));
     const dbAlerts = state.alerts.map((a) => ({
       title: a.title || a.type || "تنبيه",
       text: a.message || a.description || "",
       url: "/erp#/dashboard",
+      view: "dashboard",
     }));
     return lowStock.concat(documents, dbAlerts);
+  }
+
+  function renderAlerts() {
+    const list = $("erpAlertsList");
+    if (!list) return;
+    const alerts = currentAlerts();
+    if (!alerts.length) {
+      list.innerHTML = '<div class="erp-empty">لا توجد تنبيهات حالية ✓</div>';
+      return;
+    }
+    list.innerHTML = alerts.map((alert) => `
+      <button class="erp-list-item" type="button" data-alert-view="${esc(alert.view || "dashboard")}" style="width:100%;text-align:right;cursor:pointer">
+        <span class="erp-list-icon">🔔</span>
+        <span><b>${esc(alert.title)}</b><small>${esc(alert.text)}</small></span>
+        <strong>عرض</strong>
+      </button>`).join("");
   }
 
   function updateNotificationBadge() {
@@ -1707,7 +1728,12 @@
     });
     $("erpOrderDateFrom")?.addEventListener("change", (event) => { state.orderDateFrom = event.target.value || ""; renderManualOrders(); });
     $("erpOrderDateTo")?.addEventListener("change", (event) => { state.orderDateTo = event.target.value || ""; renderManualOrders(); });
-    $("erpNotifyBtn").addEventListener("click", () => enableNotifications().catch((e) => toast(e.message)));
+    $("erpNotifyBtn").addEventListener("click", () => { setView("alerts"); renderAlerts(); });
+    $("erpEnableSystemNotifications")?.addEventListener("click", () => enableNotifications().catch((e) => toast(e.message)));
+    $("erpAlertsList")?.addEventListener("click", (event) => {
+      const item = event.target.closest("[data-alert-view]");
+      if (item) setView(item.dataset.alertView || "dashboard");
+    });
   }
 
   function renderSearch() {

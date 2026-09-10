@@ -11,7 +11,7 @@
   <link rel="manifest" href="/erp-manifest.json">
   <link rel="icon" type="image/png" sizes="96x96" href="/assets/icon-96.png?v=erp-20260813">
   <link rel="apple-touch-icon" href="/assets/icon.png?v=erp-20260813">
-  <link rel="stylesheet" href="/style/erp-v3.css?v=202608170455">
+  <link rel="stylesheet" href="/style/erp-v3.css?v=20260908-sidebar-fit">
   <style>
     /* Layout guard: ensure sidebar never hides main content */
     .erp-shell {
@@ -22,6 +22,26 @@
     }
     .erp-sidebar { grid-column: 2 !important; direction: rtl !important; }
     .erp-main { grid-column: 1 !important; grid-row: 1 !important; direction: rtl !important; min-width: 0 !important; }
+    @media (min-width: 901px) {
+      .erp-sidebar{overflow:hidden!important;gap:6px!important;padding-block:10px!important}
+      .erp-sidebar .erp-brand{min-height:48px!important;padding-block:5px!important}
+      .erp-sidebar .erp-nav{
+        min-height:0!important;
+        overflow:hidden!important;
+        gap:4px!important;
+        grid-template-rows:repeat(15,minmax(0,1fr))!important;
+        padding-bottom:2px!important;
+      }
+      .erp-sidebar .erp-nav-item{
+        height:100%!important;
+        min-height:0!important;
+        max-height:40px!important;
+        padding:0 10px!important;
+        border-radius:13px!important;
+        font-size:.78rem!important;
+      }
+      .erp-sidebar .erp-sidebar-footer{flex:0 0 auto!important;margin-top:2px!important;padding-top:5px!important}
+    }
     @media (max-width: 900px) {
       .erp-shell { grid-template-columns: 1fr !important; }
       .erp-sidebar { display: none !important; }
@@ -237,6 +257,7 @@
         <button class="erp-nav-item" data-view="hr" type="button"><span>👥</span><b>الموظفين</b></button>
         <button class="erp-nav-item" data-view="payroll" type="button"><span>💰</span><b>الرواتب</b></button>
         <button class="erp-nav-item" data-view="documents" type="button"><span>📁</span><b>المستندات</b></button>
+        <button class="erp-nav-item" data-view="alerts" type="button"><span>🔔</span><b>التنبيهات</b></button>
         <button class="erp-nav-item" data-view="reports" type="button"><span>📈</span><b>التقارير</b></button>
         <button class="erp-nav-item" data-view="settings" type="button"><span>⚙️</span><b>الصلاحيات</b></button>
       </nav>
@@ -455,6 +476,18 @@
           </div>
         </section>
 
+        <section class="erp-view" id="view-alerts">
+          <div class="erp-grid erp-grid-main">
+            <article class="erp-card" style="grid-column:1/-1">
+              <div class="erp-card-head">
+                <div><h2>🔔 تنبيهات النظام</h2><p>نقص المخزون، المستندات القريبة من الانتهاء وتنبيهات ERP.</p></div>
+                <button class="erp-primary" id="erpEnableSystemNotifications" type="button">تفعيل إشعارات الجهاز</button>
+              </div>
+              <div class="erp-list" id="erpAlertsList"></div>
+            </article>
+          </div>
+        </section>
+
         <section class="erp-view" id="view-reports">
           <div class="erp-grid erp-grid-main">
             <article class="erp-card"><div class="erp-card-head"><div><h2>تقارير مالية</h2><p>ربحية، مبيعات، ومصروفات حسب الفترة.</p></div><div class="erp-report-actions"><button class="erp-secondary" id="erpPrintReport" type="button">🖨️ طباعة</button><button class="erp-primary" id="erpExportCsv" type="button">تصدير CSV</button></div></div><div class="erp-table-wrap"><table><thead><tr><th>المؤشر</th><th>القيمة</th><th>ملاحظة</th></tr></thead><tbody id="erpReportRows"></tbody></table></div></article>
@@ -542,7 +575,7 @@
   </div>
 
   <script src="/java/supabase.js?v=20260818-v2" defer></script>
-  <script src="/java/erp-v2.js?v=20260817-final-v4" defer></script>
+  <script src="/java/erp-v2.js?v=20260908-alerts-page" defer></script>
   <script>
     (function () {
       function checkAuth() {
