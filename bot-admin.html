@@ -495,6 +495,7 @@ if(location.pathname==='/bot-admin.html'){
 }
 
 let questions=[];
+let remoteUnanswered=[];
 let botProducts=[];
 let botCategories=[];
 let botSubcategories=[];
@@ -1012,7 +1013,7 @@ async function loadProductsForBot(force=false){
   return botProductsLoadPromise;
 }
 async function loadAll(){
-  await Promise.all([loadQuestions(),loadProductsForBot(true)]);
+  await Promise.all([loadQuestions(),loadProductsForBot(true),loadRemoteUnanswered()]);
   await Promise.all([loadCustomerMemories(),loadConversationSummary()]);
   renderAll();
   toast('✅ تم تحديث بيانات البوت والمنتجات');
@@ -1030,7 +1031,7 @@ function renderDashboard(){
   const dbUn=questions.filter(x=>!x.answer||String(x.category||'')==='أسئلة تحتاج إجابة');
   const cats=new Set(questions.map(x=>x.category).filter(Boolean));
   $('sTotal').textContent=total;$('sActive').textContent=active;$('sUse').textContent=use;
-  $('sUn').textContent=Math.max(local.length,dbUn.length);$('sCats').textContent=cats.size;$('sProducts').textContent=botProducts.length;
+  $('sUn').textContent=Math.max(local.length,dbUn.length,remoteUnanswered.length);$('sCats').textContent=cats.size;$('sProducts').textContent=botProducts.length;
   const ratio=total?Math.round(active/total*100):0;
   $('health').innerHTML='<div style="display:flex;justify-content:space-between"><b>نشاط قاعدة المعرفة</b><span>'+ratio+'%</span></div><div class="progress"><i style="width:'+ratio+'%"></i></div><p class="meta">الأسئلة الفعالة '+active+' من '+total+'</p>';
   const top=[...questions].sort((a,b)=>(Number(b.usage_count)||0)-(Number(a.usage_count)||0)).slice(0,8);
@@ -1798,8 +1799,23 @@ function unansweredLocal(){
   const db=questions.filter(x=>!String(x.answer||'').trim())
     .map(x=>({text:x.question,count:Number(x.usage_count)||1,date:x.updated_at||'',dbId:x.id,savedToDb:true}));
   const merged=[...local];
+  remoteUnanswered.forEach(row=>{
+    const item={text:row.text,count:Number(row.count)||1,date:row.last_seen_at||row.created_at||'',unansweredId:row.id,savedToDb:true};
+    const hit=merged.find(x=>normalize(x.text)===normalize(item.text));
+    if(hit){hit.count=Math.max(hit.count||1,item.count);hit.dbId=item.dbId;hit.savedToDb=true}else merged.push(item);
+  });
   db.forEach(d=>{const hit=merged.find(x=>normalize(x.text)===normalize(d.text));if(hit){hit.count=Math.max(hit.count||1,d.count||1);hit.dbId=d.dbId;hit.savedToDb=true}else merged.push(d)});
   return merged.filter(x=>!hidden.has(normalize(x.text)));
+}
+
+async function loadRemoteUnanswered(){
+  try{
+    const rows=await window.sbFetch('bot_unanswered?status=eq.open&select=id,text,normalized_text,count,status,created_at,last_seen_at&order=last_seen_at.desc&limit=500');
+    remoteUnanswered=Array.isArray(rows)?rows:[];
+  }catch(e){
+    console.warn('loadRemoteUnanswered:',e.message);
+    remoteUnanswered=[];
+  }
 }
 function hideUnansweredText(text){
   const n=normalize(text);
