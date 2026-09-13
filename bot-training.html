@@ -3556,6 +3556,20 @@ async function handleLLMDecision(llm,raw,ctx,opts={}){
   const confidenceLabel=String(llm.confidence_label||'').toLowerCase();
   const isLow=llm.unanswered||confidenceLabel==='low'||Number(llm.confidence||0)<0.35;
   if(isLow&&!allowLow)return null;
+  /* The edge engine is the shared source of truth for live commerce results.
+     Render its final decision instead of recalculating it in this channel. */
+  if(llm.reply&&['product_price','quantity_price','multi_item_calc'].includes(String(llm.action||''))){
+    if(llm.entities&&typeof llm.entities==='object'){
+      if(llm.entities.last_product){
+        botState.lastProduct=llm.entities.last_product;
+        botState.lastUnitPrice=Number(llm.entities.last_unit_price||llm.entities.last_product.price||0)||botState.lastUnitPrice;
+      }
+      if(llm.entities.shopping_cart)botState.shoppingCart=llm.entities.shopping_cart;
+    }
+    return Array.isArray(llm.products)&&llm.products.length
+      ? {type:'products',text:llm.reply,products:llm.products,llm:true,systemAction:llm.action}
+      : {type:'answer',text:llm.reply,llm:true,systemAction:llm.action};
+  }
   if(llm.action==='answer'&&llm.reply){
     const item=questions.find(x=>Number(x.id)===Number(llm.knowledge_id));
     if(item){
@@ -3587,6 +3601,9 @@ async function handleLLMDecision(llm,raw,ctx,opts={}){
     if(item)return await handleConfiguredKnowledge(item);
   }
   if(llm.action==='product_search'){
+    if(Array.isArray(llm.products)&&llm.products.length){
+      return {type:'products',text:llm.reply||'لقيتلك أقرب منتجات 👇',products:llm.products,llm:true};
+    }
     const products=categoryBrowseIntent(raw)?await recommendCategoryProducts(raw,ctx):await recommendProducts(raw,ctx);
     if(products.length)return {type:'products',text:llm.reply||'لقيتلك أقرب منتجات 👇',products,llm:true};
   }
