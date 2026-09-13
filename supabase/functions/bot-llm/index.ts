@@ -296,7 +296,8 @@ function priceKnowledgeCompatible(message: string, item: any) {
 function intentKnowledge(message: string, rows: any[]) {
   const n = normalize(message);
   const introIntent = /^(?:انتو مين|انتم مين|من انتم|مين انتو|مين انتم|انت مين|مين انت|من انت|عرفني بنفسك|عرف نفسك|مين بريق(?: للهدايا)?|ما هو دورك|ايه دورك|دورك ايه|تقدر تعمل ايه|بتعمل ايه|who are you|what can you do)$/i;
-  if (!introIntent.test(n)) return null;
+  const deliveryIntent = /^(?:هل )?(?:عندكم|في|فيه)?\s*(?:خدمه )?(?:توصيل|شحن)(?: متاح)?\??$|^(?:بتوصلوا|توصلون|تشحنون)(?: لكل الامارات|للامارات)?\??$/i;
+  if (!introIntent.test(n) && !deliveryIntent.test(n)) return null;
 
   // Keep the customer-facing text owned by the knowledge base. This only
   // resolves dialect variants of the same intent; it never supplies an answer.
@@ -304,7 +305,8 @@ function intentKnowledge(message: string, rows: any[]) {
     if (!String(row?.answer || "").trim()) return false;
     const category = normalize(row?.category);
     const question = normalize(row?.question);
-    return category.includes("تعريف الشركه") || introIntent.test(question);
+    if (introIntent.test(n)) return category.includes("تعريف الشركه") || introIntent.test(question);
+    return /توصيل|شحن|delivery|shipping/.test(question) || /توصيل|شحن|delivery|shipping/.test(category);
   }) || null;
 }
 
