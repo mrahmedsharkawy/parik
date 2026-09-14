@@ -1,6 +1,6 @@
 import {readFileSync} from 'node:fs';
 
-const html=readFileSync(new URL('../bot-training.html',import.meta.url),'utf8');
+const html=readFileSync(new URL('../bot-admin.html',import.meta.url),'utf8');
 const key=html.match(/const ANON_KEY='([^']+)'/)?.[1];
 const headers={apikey:key,authorization:`Bearer ${key}`};
 const ar={newborn:'\u0645\u0648\u0627\u0644\u064a\u062f',cup:'\u0643\u0648\u0628',tea:'\u0627\u0644\u0634\u0627\u064a',coffee:'\u0627\u0644\u0642\u0647\u0648\u0629'};

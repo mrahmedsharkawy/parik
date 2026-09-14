@@ -91,6 +91,19 @@ test('a compound tea and coffee request overrides stale single-product context',
   assert.match(output.result.text,/10[^\n]*شاي/);
   assert.match(output.result.text,/10[^\n]*قهوه/);
 });
+test('a conversational opener cannot hide the first item in a compound quote',async()=>{
+  const pricedKnowledge=[
+    {id:811,question:'كم سعر كوباية الشاي',answer:'سعر كوباية الشاي 2 درهم للوحدة.',active:true,keywords:['كوباية','الشاي','سعر']},
+    {id:812,question:'كم سعر كوباية القهوة',answer:'سعر كوباية القهوة 1.5 درهم للوحدة.',active:true,keywords:['كوباية','القهوة','سعر']}
+  ];
+  const engine=createTrainingEngine({...io(),knowledge:pricedKnowledge,state:{sessionId:'opener',lastUnitPrice:65,lastPriceProductName:'صينية اكريليك'}});
+  const output=await engine.message('زين عايز 10 كوب شاي و 10 كوب قهوه');
+  assert.equal(output.result.systemAction,'MULTI_ITEM_CALC');
+  assert.match(output.result.text,/20\.00/);
+  assert.match(output.result.text,/15\.00/);
+  assert.match(output.result.text,/35\.00/);
+  assert.doesNotMatch(output.result.text,/650/);
+});
 test('an explicit newborn request cannot select a Ramadan knowledge action',async()=>{
   const routedKnowledge=[
     {id:19285,question:'عندكم رمضان',answer:'قسم رمضان',category:'روابط الفئات',active:true,keywords:['رمضان','قسم','منتجات'],input_type:'action',action_name:'CATEGORY_PRODUCTS',action_value:'https://bariqgifts.com/categories.html?category=Ramadan'},

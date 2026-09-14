@@ -1,13 +1,13 @@
-// Mechanical extraction: bot-training.html remains the trained source of truth.
+// Mechanical extraction: bot-admin.html is the only trained source of truth.
 // No intent, matching, pricing or conversation rules belong in this generator.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 const root = new URL('../', import.meta.url);
 export function trainingSource() {
-  const html = readFileSync(new URL('bot-training.html', root), 'utf8');
+  const html = readFileSync(new URL('bot-admin.html', root), 'utf8');
   const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
   const source = scripts.find(x => x[1].includes('async function processBotMessageCore('))?.[1];
-  if (!source) throw new Error('Trained engine script not found');
+  if (!source) throw new Error('Bot Admin engine script not found');
   const end = source.indexOf('let __botProcessingPromiseV7=null;');
   if (end < 0) throw new Error('Training bootstrap boundary changed; review extraction');
   return source.slice(0, end);

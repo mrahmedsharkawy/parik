@@ -62,11 +62,13 @@ test("canonical endpoint reloads the shared live knowledge and catalog", () => {
   assert.doesNotMatch(source, /new OpenAI|OPENAI_API_KEY|knowledgeFallback/);
 });
 
-test("website test UI and Meta both call the same canonical endpoint", () => {
-  const website = readFileSync(new URL("../bot-training.html", import.meta.url), "utf8");
+test("Bot Admin is the sole engine source used by Meta", () => {
+  const website = readFileSync(new URL("../bot-admin.html", import.meta.url), "utf8");
+  const extractor = readFileSync(new URL("../scripts/extract-training-engine.mjs", import.meta.url), "utf8");
   const webhook = readFileSync(new URL("../supabase/functions/meta-webhook/index.ts", import.meta.url), "utf8");
-  assert.match(website, /canonicalEnginePayload\(msg,conversation,botState,imageUrl/);
-  assert.match(website, /functions\/v1\/bot-llm/);
+  assert.match(website, /async function processBotMessageCore\(msg\)/);
+  assert.match(extractor, /new URL\('bot-admin\.html', root\)/);
+  assert.doesNotMatch(extractor, /new URL\('bot-training\.html', root\)/);
   assert.match(webhook, /functions\/v1\/bot-llm/);
   assert.doesNotMatch(webhook, /function (saveUnanswered|channelReply|knowledgeFallback|recommendProducts)\s*\(/);
 });

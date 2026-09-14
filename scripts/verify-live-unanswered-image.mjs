@@ -1,6 +1,6 @@
 import {readFileSync} from 'node:fs';
 
-const html=readFileSync(new URL('../bot-training.html',import.meta.url),'utf8');
+const html=readFileSync(new URL('../bot-admin.html',import.meta.url),'utf8');
 const key=html.match(/const ANON_KEY='([^']+)'/)?.[1];
 const endpoint='https://knleehjjejfeobcmpwnw.supabase.co/functions/v1/bot-llm';
 const headers={apikey:key,authorization:`Bearer ${key}`,'content-type':'application/json'};

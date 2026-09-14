@@ -1206,6 +1206,7 @@ function rank(msg,entities={}){
   const candidates=candidateKnowledge(msg,entities).map(e=>e.item);
   const rows=(candidates.length?candidates:questions).filter(x=>{
       if(!x.active)return false;
+      if(knowledgeCategoryConflictV41(msg,x))return false;
       const cfg=getBotConfig(x)||{};
       return String(x.answer||'').trim() || cfg.inputMode!=='answer' || cfg.linkedAction;
     })
@@ -4208,6 +4209,30 @@ function typoAwareQuestionScoreV4(message,question){
   return Math.max(token,whole);
 }
 
+function occasionSignalKeysV41(value){
+  const t=normalize(decodeActionValuePart(String(value||''))),keys=[];
+  const signals={
+    newborn:['مولود','مواليد','بيبي','baby','newborn','born in','born'],
+    graduation:['تخرج','graduation','graduate'],
+    ramadan:['رمضان','ramadan'],
+    birthday:['عيد ميلاد','ميلاد','birthday'],
+    wedding:['زواج','عرس','فرح','wedding'],
+    engagement:['خطوبه','خطوبة','engagement'],
+    eid:['عيد','eid','فطر','اضحي','اضحى']
+  };
+  Object.entries(signals).forEach(([key,terms])=>{if(terms.some(term=>hasWholeTerm(t,term)||t.includes(normalize(term))))keys.push(key);});
+  return [...new Set(keys)];
+}
+function knowledgeCategoryConflictV41(message,item){
+  const requested=occasionSignalKeysV41(message);
+  if(!requested.length)return false;
+  const cfg=getBotConfig(item)||{};
+  const actionValue=cfg.actionValue||item?.action_value||item?.actionValue||'';
+  const candidateText=[item?.question,item?.category,actionValue,...categoryTermsFromActionValue(actionValue)].filter(Boolean).join(' ');
+  const candidate=occasionSignalKeysV41(candidateText);
+  return candidate.length>0&&!candidate.some(k=>requested.includes(k));
+}
+
 function findKnowledgePriorityV4(msg,entities={}){
   const m=normalize(msg);
   if(!m)return null;
@@ -4236,12 +4261,14 @@ function findKnowledgePriorityV4(msg,entities={}){
      48 is plenty for typo recovery and keeps the UI responsive. */
   let candidates=candidateKnowledge(msg,entities)
     .filter(e=>e?.item && e.item.active!==false && String(e.item.answer||'').trim())
+    .filter(e=>!knowledgeCategoryConflictV41(msg,e.item))
     .slice(0,48);
 
   /* If token index has no useful candidates, sample only a small recent set. */
   if(!candidates.length){
     candidates=(knowledgeIndex||[])
       .filter(e=>e?.item && e.item.active!==false && String(e.item.answer||'').trim())
+      .filter(e=>!knowledgeCategoryConflictV41(msg,e.item))
       .slice(0,36);
   }
 
@@ -4582,6 +4609,10 @@ function extractRememberedUnitPriceV33(text){
 
 function rememberPricingContextV4(res){
   if(!res)return;
+
+  /* Calculated totals are not unit prices and must never replace the last
+     confirmed product price used by the next follow-up. */
+  if(['FOLLOWUP_QUANTITY_CALC','CONTEXT_CALC','MULTI_ITEM_CALC'].includes(String(res.systemAction||'')))return;
 
   const text=String(res.text||'');
   const unitPrice=extractRememberedUnitPriceV33(text);
@@ -5078,6 +5109,8 @@ function extractMultiItemPairsV56(raw){
     .replace(/\s+/g,' ')
     .trim();
 
+  s=s.replace(/^(?:(?:زين|تمام|طيب|طب|اوكي|أوكي|اوك|أوك)\s*[،,]?\s*)+/i,'').trim();
+
   /* Split on natural Emirati/Arabic connectors before a new quantity request:
      "أبغي 7 ... وأبا 6 ..."
      "3 ... و4 ..."
@@ -5088,7 +5121,7 @@ function extractMultiItemPairsV56(raw){
 
   const out=[];
   for(const ch0 of chunks){
-    let ch=ch0.replace(/^(?:ابغي|أبغي|ابي|أبي|ابا|أبا|اريد|أريد|عطني|اعطني|أعطني|هات(?:\s*لي)?|خد|خذ|محتاج)\s*/i,'').trim();
+    let ch=ch0.replace(/^(?:عايز|عاوز|عاوزه|ابغي|أبغي|ابي|أبي|ابا|أبا|اريد|أريد|عطني|اعطني|أعطني|هات(?:\s*لي)?|خد|خذ|محتاج)\s*/i,'').trim();
     const m=ch.match(/^(\d+(?:\.\d+)?)\s*(?:حبه|حبة|حبات|قطعه|قطعة|قطع|وحده|وحدة|pcs?|حبات)?\s*(.+)$/i);
     if(!m)continue;
     const qty=Number(m[1]);
@@ -5169,6 +5202,8 @@ function extractMultiItemPairsV24(raw){
     .replace(new RegExp('و(?=(?:عايز|عاوز|عاوزه|اريد|أريد|ابغي|أبغي|ابغى|أبغى|ابي|أبي|ابا|أبا|محتاج|عطني|اعطني|أعطني|هات|خد|خذ|خلي|لو|\\d))','gi'),' و ')
     .replace(/\s+/g,' ')
     .trim();
+
+  s=s.replace(/^(?:(?:زين|تمام|طيب|طب|اوكي|أوكي|اوك|أوك)\s*[،,]?\s*)+/i,'').trim();
 
   const startsAsPriceQuestion=/^(?:كم\s*سعر|كام\s*سعر|شو\s*سعر|سعر)\s+/i.test(s);
 
@@ -5258,6 +5293,7 @@ function kbPricingCanonV27(value){
     .map(w=>{
       /* إزالة "ال" للتسامح: الاكريليك = اكريليك */
       if(w.length>3 && w.startsWith('ال')) w=w.slice(2);
+      if(/^(?:كوباية|كوبايه|كوبيه|كبايه)$/.test(w))w='كوب';
       return w;
     })
     .join(' ')

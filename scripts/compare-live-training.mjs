@@ -1,6 +1,6 @@
 import {createHash} from 'node:crypto';
 import {trainingSource} from './extract-training-engine.mjs';
-const response=await fetch('https://bariqgifts.com/bot-training.html',{redirect:'follow'});
+const response=await fetch('https://bariqgifts.com/bot-admin.html',{redirect:'follow'});
 const live=await response.text();
 const scripts=[...live.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
 const source=scripts.find(x=>x[1].includes('async function processBotMessageCore('))?.[1]||'';
