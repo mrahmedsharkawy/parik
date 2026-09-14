@@ -6122,49 +6122,35 @@ function getReminderText(){
   return '';
 }
 
+let __canonicalAdapterPromise=null;
 let __botProcessingPromiseV7=null;
-
-async function processBotMessage(msg){
-  if(__botProcessingPromiseV7){
-    return {type:'clarify',text:'ثانية واحدة، أنا لسه بكمل الرسالة اللي قبلها.'};
-  }
-
+function canonicalAdapter(){
+  return __canonicalAdapterPromise||=(import('/supabase/functions/_shared/channel_adapter.mjs'));
+}
+async function processBotMessage(msg,imageUrl=''){
+  if(__botProcessingPromiseV7)return {type:'clarify',text:'ثانية واحدة، أنا لسه بكمل الرسالة اللي قبلها.'};
   __botProcessingPromiseV7=(async()=>{
-  try{
-    const res=await enforceKnowledgeOnlyResult(await processBotMessageCore(msg),msg);
-    if(res&&Array.isArray(res.products)&&res.products.length){
-      const p=res.products[0];
-      botState.productId=p.id||p.supabaseId||null;
-      botState.lastProduct={id:p.id||p.supabaseId||null,name:productName(p),price:Number(p.price)||0,link:productLink(p)};
-    }
-    rememberPricingContextV4(res);
-
-    /* V9: the assistant's output is the source of truth for what
-       the next customer message is expected to contain. */
-    if(res?.systemAction==='ASK_ORDER_NUMBER'){
-      clearNonOrderContextV17();
-      botState.waitingFor='order_number';
-      botState.expectedReply='order_number';
-      botState.topic='order';
-      botState.currentTopic='order_tracking';
-    }else if(res?.systemAction==='TRACK_ORDER'){
-      botState.waitingFor=null;
-      botState.expectedReply=null;
-    }else if(res?.type==='clarify'){
-      if(botState.waitingFor)botState.expectedReply=botState.waitingFor;
-    }
-
-    saveChatMemory();
-    return res||{type:'silent',text:''};
-  }catch(e){
-    console.error('Bot error:',e);
-    await persistUnanswered(String(msg||''));
-    return {type:'silent',text:''};
-  }finally{
-    __botProcessingPromiseV7=null;
-  }
+    try{
+      const {canonicalEnginePayload}=await canonicalAdapter();
+      const payload=canonicalEnginePayload(msg,conversation,botState,imageUrl,{channel:'website',conversation_id:botConversationId||null,test_mode:Boolean(window.__botParityTestMode)});
+      const adminToken=await getValidAdminToken();
+      const response=await fetch(SB+'/functions/v1/bot-llm',{
+        method:'POST',headers:{'Content-Type':'application/json',apikey:ANON_KEY,Authorization:'Bearer '+(adminToken||ANON_KEY)},
+        body:JSON.stringify(payload)
+      });
+      if(!response.ok)throw new Error('Canonical Bot Engine '+response.status);
+      const result=await response.json();
+      const nextState=result.state||result.context||result.entities;
+      if(nextState&&typeof nextState==='object')botState={...botState,...nextState};
+      lastBotDebug={...(result.debug||{}),engineVersion:result.engine_version||'',actionExecuted:result.action||''};
+      saveChatMemory();
+      return {...result,type:result.type||(result.reply?'answer':'silent'),text:String(result.reply||result.text||'')};
+    }catch(error){
+      console.error('Canonical Bot Engine unavailable:',error);
+      await persistUnanswered(String(msg||''));
+      return silentResult({engineError:true});
+    }finally{__botProcessingPromiseV7=null;}
   })();
-
   return await __botProcessingPromiseV7;
 }
 
@@ -6329,11 +6315,11 @@ async function sendPendingImage(comment=''){
     holder.innerHTML='<div class="avatar"></div><div class="bubble"><span class="typing-dots"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></span></div>';
 	    $('chat').appendChild(holder);scrollChatToBottom();
     const imageUrl=await uploadBotImage(data.file,data.previewUrl);
-    const result=await searchProductsByImage(imageUrl,caption,data.previewUrl);
+    const result=await processBotMessage(caption,imageUrl);
     if(result.products&&result.products.length){
       holder.remove();
       const text='';
-      const meta={result_type:'image_search',products:compactProductsForMemory(result.products),image_description:result.imageDescription};
+      const meta={result_type:'image_search',products:compactProductsForMemory(result.products),image_description:result.imageDescription||''};
       const el=document.createElement('div');
       el.className='msg bot';
       el.innerHTML=msgHtml('bot',text,meta);
@@ -6576,6 +6562,7 @@ function evaluate(sc,lastResult,lastAnswer){
 async function runScenario(sc){
   const snap=snapshot(),turns=[];let last=null,lastAnswer='',error='',latencies=[];
   try{
+    window.__botParityTestMode=true;
     if(typeof resetBotState==='function')resetBotState();
     try{conversation.length=0}catch(e){}
     for(let i=0;i<sc.steps.length;i++){
@@ -6589,7 +6576,7 @@ async function runScenario(sc){
       turns.push({role:'bot',text:lastAnswer,setup:i<sc.steps.length-1});
     }
   }catch(e){error=e.message||String(e)}
-  finally{restore(snap)}
+  finally{window.__botParityTestMode=false;restore(snap)}
   const ev=error?{pass:false,reason:error}:evaluate(sc,last,lastAnswer);
   return {scenario:sc,turns,pass:ev.pass,reason:ev.reason,error,latency:latencies.length?Math.round(latencies.reduce((a,b)=>a+b,0)/latencies.length):0};
 }

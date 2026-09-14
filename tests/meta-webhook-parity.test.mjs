@@ -35,7 +35,7 @@ test("channel adapter preserves an already-made engine decision", () => {
     assert.equal(adapted.reply, reply.trim(), message);
     assert.deepEqual(
       canonicalEnginePayload(message, [], entities),
-      { message, image_url: "", conversation: [], context: entities, rpc: true },
+      { message, image_url: "", conversation: [], context: { ...entities, current_state: entities }, rpc: true },
       message,
     );
   }
@@ -49,7 +49,6 @@ test("meta-webhook processing has no independent decision fallback", () => {
   }
   assert.match(processing, /askBot\(text, conversation, recent, imageUrl, channel\)/);
   assert.doesNotMatch(source, /function (knowledgeFallback|recommendProducts|matchPricedProduct|multiItemQuote|orderReply)\s*\(/);
-  assert.match(processing, /await saveUnanswered\(text, conversation\.id/);
   assert.match(processing, /await saveConversationState\(conversation, result/);
 });
 
@@ -58,5 +57,16 @@ test("canonical endpoint reloads the shared live knowledge and catalog", () => {
   assert.match(source, /await catalog\(\)/);
   assert.match(source, /all\("bot_knowledge",KNOWLEDGE/);
   assert.match(source, /createTrainingEngine\(\{\.\.\.data/);
+  assert.match(source, /persistUnanswered/);
+  assert.match(source, /context\.test_mode&&await verifiedAdmin\(req\)/);
   assert.doesNotMatch(source, /new OpenAI|OPENAI_API_KEY|knowledgeFallback/);
+});
+
+test("website test UI and Meta both call the same canonical endpoint", () => {
+  const website = readFileSync(new URL("../bot-training.html", import.meta.url), "utf8");
+  const webhook = readFileSync(new URL("../supabase/functions/meta-webhook/index.ts", import.meta.url), "utf8");
+  assert.match(website, /canonicalEnginePayload\(msg,conversation,botState,imageUrl/);
+  assert.match(website, /functions\/v1\/bot-llm/);
+  assert.match(webhook, /functions\/v1\/bot-llm/);
+  assert.doesNotMatch(webhook, /function (saveUnanswered|channelReply|knowledgeFallback|recommendProducts)\s*\(/);
 });

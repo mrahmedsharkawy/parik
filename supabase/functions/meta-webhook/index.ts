@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-import { canonicalEnginePayload, channelDecision } from "../_shared/channel_adapter.ts";
+import { BOT_RECENT_MESSAGE_LIMIT, canonicalEnginePayload, channelDecision } from "../_shared/channel_adapter.mjs";
 
 function envKey(jsonName: string, ...fallbackNames: string[]) {
   const raw = String(Deno.env.get(jsonName) || "").trim();
@@ -56,13 +56,6 @@ async function ensurePageSubscription() {
   if (!res.ok || payload?.success !== true) throw new Error(`Page subscription failed: ${res.status} ${JSON.stringify(payload)}`);
   pageSubscriptionReady = true;
   console.log("facebook page subscription ready");
-}
-
-function normalizeArabic(value: unknown) {
-  return String(value || "").toLowerCase()
-    .replace(/[إأآٱ]/g, "ا").replace(/ؤ/g, "و").replace(/ئ/g, "ي")
-    .replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/[\u064B-\u065F\u0670ـ]/g, "")
-    .replace(/[^\u0600-\u06FFa-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
 }
 
 function response(body: string, status = 200, contentType = "text/plain") {
@@ -161,7 +154,7 @@ async function recentMessages(conversationId: string) {
     select: "role,message,metadata,created_at",
     conversation_id: `eq.${conversationId}`,
     order: "created_at.desc",
-    limit: "12",
+    limit: String(BOT_RECENT_MESSAGE_LIMIT),
   });
   const res = await fetch(`${SUPABASE_URL}/rest/v1/bot_messages?${query}`, { headers: serviceHeaders() });
   const rows = res.ok ? await res.json() : [];
@@ -171,6 +164,12 @@ async function recentMessages(conversationId: string) {
 async function askBot(text: string, conversation: any, recent: any[], imageUrl = "", channel = "whatsapp") {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), BOT_TIMEOUT_MS);
+  const { current_topic: _oldTopic, waiting_for: _oldWaiting, channel: _oldChannel, sender_phone: _oldPhone, ...savedState } = conversation.state || {};
+  const canonicalState = {
+    ...savedState,
+    currentTopic: conversation.current_topic || savedState.currentTopic || "",
+    waitingFor: conversation.waiting_for ?? savedState.waitingFor ?? null,
+  };
   const res = await fetch(`${SUPABASE_URL}/functions/v1/bot-llm`, {
     method: "POST",
     headers: {
@@ -178,20 +177,11 @@ async function askBot(text: string, conversation: any, recent: any[], imageUrl =
       authorization: `Bearer ${PUBLISHABLE_KEY}`,
       "content-type": "application/json",
     },
-    body: JSON.stringify(canonicalEnginePayload(text, recent, {
-        ...(conversation.state || {}),
-        current_topic: conversation.current_topic || "",
-        waiting_for: conversation.waiting_for || "",
-        current_state: {
-          ...(conversation.state || {}),
-          currentTopic: conversation.current_topic || conversation.state?.currentTopic || "",
-          current_topic: conversation.current_topic || conversation.state?.current_topic || "",
-          waitingFor: conversation.waiting_for || conversation.state?.waitingFor || null,
-          waiting_for: conversation.waiting_for || conversation.state?.waiting_for || null,
-        },
+    body: JSON.stringify(canonicalEnginePayload(text, recent, canonicalState, imageUrl, {
         sender_phone: channel === "whatsapp" ? conversation.state?.sender_phone || conversation.phone || "" : "",
         channel,
-      }, imageUrl)),
+        conversation_id: conversation.id,
+      })),
     signal: controller.signal,
   }).finally(() => clearTimeout(timer));
   if (!res.ok) throw new Error(`bot-llm failed: ${res.status}`);
@@ -234,30 +224,6 @@ async function socialImageData(url: string) {
   if (bytes.length > 8 * 1024 * 1024) throw new Error("Social image is too large");
   const type = media.headers.get("content-type") || "image/jpeg";
   return `data:${type};base64,${bytesToBase64(bytes)}`;
-}
-
-async function saveUnanswered(text: string, conversationId: string, context: any) {
-  const normalizedText = normalizeArabic(text);
-  if (!normalizedText) return;
-  const query = new URLSearchParams({ select: "id,count", normalized_text: `eq.${normalizedText}`, limit: "1" });
-  const existingRes = await fetch(`${SUPABASE_URL}/rest/v1/bot_unanswered?${query}`, { headers: serviceHeaders() });
-  const existing = existingRes.ok ? (await existingRes.json().catch(() => []))[0] : null;
-  const now = new Date().toISOString();
-  if (existing?.id) {
-    const updateRes = await fetch(`${SUPABASE_URL}/rest/v1/bot_unanswered?id=eq.${encodeURIComponent(existing.id)}`, {
-      method: "PATCH",
-      headers: serviceHeaders(),
-      body: JSON.stringify({ count: Number(existing.count || 0) + 1, conversation_id: conversationId, context, status: "open", last_seen_at: now }),
-    });
-    if (!updateRes.ok) throw new Error(`unanswered update failed: ${updateRes.status} ${await updateRes.text()}`);
-    return;
-  }
-  const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/bot_unanswered`, {
-    method: "POST",
-    headers: serviceHeaders({ prefer: "resolution=merge-duplicates" }),
-    body: JSON.stringify({ text, normalized_text: normalizedText, count: 1, conversation_id: conversationId, context, status: "open", last_seen_at: now }),
-  });
-  if (!insertRes.ok) throw new Error(`unanswered insert failed: ${insertRes.status} ${await insertRes.text()}`);
 }
 
 async function sendWhatsApp(phoneId: string, to: string, text: string) {
@@ -315,35 +281,14 @@ async function saveAssistant(conversationId: string, incomingMessageId: string, 
   });
 }
 
-function channelReply(result: any) {
-  const base = String(result?.reply || "").trim();
-  const products = Array.isArray(result?.products) ? result.products.slice(0, 4) : [];
-  if (!products.length) return base;
-  const lines = products.map((product: any, index: number) => {
-    const name = String(product?.name_ar || product?.name || product?.name_en || `منتج ${index + 1}`).trim();
-    const amount = Number(product?.price);
-    const price = Number.isFinite(amount) && amount > 0 ? ` — ${amount.toFixed(2)} AED` : "";
-    const id = product?.id || product?.supabaseId;
-    const link = String(product?.link || (id ? `https://bariqgifts.com/product.html?id=${encodeURIComponent(id)}` : "")).trim();
-    return `${index + 1}. ${name}${price}${link ? `\n${link}` : ""}`;
-  });
-  return [base, lines.join("\n\n")].filter(Boolean).join("\n\n");
-}
-
 async function saveConversationState(conversation: any, result: any, reply: string, channel = "whatsapp") {
-  const entities = result?.entities || {};
-  let waitingFor = Object.prototype.hasOwnProperty.call(entities, "waiting_for")
-    ? String(entities.waiting_for || "")
-    : String(conversation?.waiting_for || "");
-  if (result?.action === "order_track" && !entities?.order_number) waitingFor = "order_number";
-  else if (result?.action === "order_track" && entities?.order_number) waitingFor = "";
-  else if (/شو المناسبه|ايه المناسبه|ما هي المناسبه/.test(normalizeArabic(reply))) waitingFor = "gift_occasion";
-  else if (entities?.occasion && waitingFor === "gift_occasion") waitingFor = "";
-  const state = { ...(conversation?.state || {}), ...entities, waiting_for: waitingFor, channel };
+  const state = result?.state || result?.context || result?.entities || conversation?.state || {};
+  const waitingFor = state.waitingFor ?? state.waiting_for ?? null;
+  const currentTopic = state.currentTopic ?? state.current_topic ?? state.topic ?? null;
   await fetch(`${SUPABASE_URL}/rest/v1/bot_conversations?id=eq.${encodeURIComponent(conversation.id)}`, {
     method: "PATCH",
     headers: serviceHeaders(),
-    body: JSON.stringify({ state, current_topic: entities?.topic || conversation?.current_topic || null, waiting_for: waitingFor || null, updated_at: new Date().toISOString() }),
+    body: JSON.stringify({ state, current_topic: currentTopic, waiting_for: waitingFor, updated_at: new Date().toISOString() }),
   });
 }
 
@@ -411,7 +356,7 @@ async function processWebhook(payload: any) {
         try {
           const canonical = channelDecision(await askBot(text, conversation, recent, imageUrl, channel));
           result = canonical.result;
-          reply = channelReply(canonical.result);
+          reply = canonical.reply;
         } catch (error) {
           // Never run an independent knowledge/product fallback here. A weak
           // adapter-side match must not override the canonical engine.
@@ -419,7 +364,6 @@ async function processWebhook(payload: any) {
           result = { action: "silent", unanswered: true, entities: context };
         }
         if (!reply || result?.silent || result?.action === "silent") {
-          await saveUnanswered(text, conversation.id, { ...context, source: channel });
           result = { ...result, action: "unanswered", entities: context };
           console.log(`${channel} bot decision`, JSON.stringify({ action: "unanswered", knowledge_id: result?.knowledge_id || null, has_reply: false }));
           await saveConversationState(conversation, result, "", channel);
