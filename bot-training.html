@@ -4547,6 +4547,13 @@ function extractRememberedUnitPriceV33(text){
 function rememberPricingContextV4(res){
   if(!res)return;
 
+  /* A calculated total is not a new unit price. Keep the established unit
+     price/product so consecutive quantity follow-ups remain correct. */
+  if(['FOLLOWUP_QUANTITY_CALC','CONTEXT_CALC','MULTI_ITEM_CALC'].includes(res.systemAction)){
+    saveChatMemory();
+    return;
+  }
+
   const text=String(res.text||'');
   const unitPrice=extractRememberedUnitPriceV33(text);
   if(!Number.isFinite(unitPrice)||unitPrice<=0)return;

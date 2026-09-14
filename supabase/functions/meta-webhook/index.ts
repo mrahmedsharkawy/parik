@@ -65,216 +65,6 @@ function normalizeArabic(value: unknown) {
     .replace(/[^\u0600-\u06FFa-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
 }
 
-function correctCommonTypos(value: string) {
-  return value
-    .replace(/(^|\s)(?:تخلاج|تخرح|تخرخ|تخريج)(?=\s|$)/g, "$1تخرج")
-    .replace(/(^|\s)(?:هداياا|هدايه)(?=\s|$)/g, "$1هدايا")
-    .replace(/(^|\s)(?:موالبدد|موالبد|موالبيد|مواليدد|مولدد|مولودد)(?=\s|$)/g, "$1مواليد");
-}
-
-const OCCASION_RULES: Array<[RegExp, string]> = [
-  [/اليوم\s*الوطني|يوم\s*وطني|national\s*day/, "اليوم الوطني"],
-  [/يوم\s*العلم|flag\s*day/, "يوم العلم"],
-  [/حق\s*الليله|حق\s*الليلة|حق\s*ليله|haq\s*al[-\s]*laila/, "حق الليلة"],
-  [/يوم\s*الام|عيد\s*الام|mother'?s?\s*day/, "يوم الأم"],
-  [/عيد\s*الفطر|الفطر/, "عيد الفطر"], [/عيد\s*الاضحي|الاضحي/, "عيد الأضحى"],
-  [/ميلاد/, "عيد ميلاد"], [/خطوب[هة]|خطبه/, "خطوبة"],
-  [/زواج|جواز|عرس|فرح/, "زواج"], [/تخرج|جامع[هة]/, "تخرج"],
-  [/ترقي[هة]/, "ترقية"], [/مولود|مواليد|بيبي|استقبال\s*مولود/, "مولود جديد"],
-  [/فالنتين|رومانسي/, "رومانسي"], [/رمضان|فطار|افطار/, "رمضان"],
-  [/حج/, "الحج"], [/شكر|تقدير/, "شكر وتقدير"], [/اعتذار|سوري/, "اعتذار"],
-  [/تهنئه|مبروك/, "تهنئة"], [/افتتاح|مشروع\s*جديد/, "افتتاح"],
-  [/سفر|وداع|هديه\s*سفر/, "سفر/وداع"], [/انجاز|نجاح/, "إنجاز"], [/عيد/, "عيد"],
-];
-
-function occasionFromText(text: string) {
-  return OCCASION_RULES.find(([pattern]) => pattern.test(text))?.[1] || "";
-}
-
-async function activeProducts() {
-  if (productCache.rows.length && Date.now() - productCache.at < 300000) return productCache.rows;
-  const query = new URLSearchParams({ select: PRODUCT_SELECT, active: "eq.true", limit: "500" });
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/products?${query}`, { headers: serviceHeaders() });
-  const rows = res.ok ? await res.json().catch(() => []) : [];
-  productCache = { at: Date.now(), rows: Array.isArray(rows) ? rows : [] };
-  return productCache.rows;
-}
-
-async function activeTaxonomy() {
-  if (Date.now() - taxonomyCache.at < 300000 && (taxonomyCache.categories.length || taxonomyCache.subcategories.length)) return taxonomyCache;
-  const headers = serviceHeaders();
-  const [categoryRes, subcategoryRes] = await Promise.all([
-    fetch(`${SUPABASE_URL}/rest/v1/categories?active=eq.true&limit=500`, { headers }),
-    fetch(`${SUPABASE_URL}/rest/v1/subcategories?active=eq.true&limit=500`, { headers }),
-  ]);
-  const categories = categoryRes.ok ? await categoryRes.json().catch(() => []) : [];
-  const subcategories = subcategoryRes.ok ? await subcategoryRes.json().catch(() => []) : [];
-  taxonomyCache = {
-    at: Date.now(),
-    categories: Array.isArray(categories) ? categories : [],
-    subcategories: Array.isArray(subcategories) ? subcategories : [],
-  };
-  return taxonomyCache;
-}
-
-function productName(product: any) {
-  return String(product?.name_ar || product?.name_en || product?.name || "منتج").trim();
-}
-
-function taxonomyDocument(row: any) {
-  return [row?.name_ar, row?.name_en, row?.name, row?.slug, row?.title_ar, row?.title_en, row?.description_ar, row?.description_en]
-    .filter(Boolean).join(" ");
-}
-
-function productDocument(product: any, taxonomy: { categories: any[]; subcategories: any[] } = taxonomyCache) {
-  const category = (taxonomy.categories || []).find((row: any) => String(row?.id) === String(product?.category_id || product?.categoryId || ""));
-  const subcategory = (taxonomy.subcategories || []).find((row: any) => String(row?.id) === String(product?.subcategory_id || product?.subcategoryId || ""));
-  return normalizeArabic([
-    productName(product), product?.description_ar, product?.description_en,
-    product?.categories, taxonomyDocument(category), taxonomyDocument(subcategory),
-  ].filter(Boolean).join(" "));
-}
-
-async function recommendProducts(text: string, entities: any = {}) {
-  // Only the current message may select an occasion. Never reuse a previous
-  // occasion to filter a fresh category/general message.
-  const occasion = occasionFromText(text) || (entities?.explicit_occasion ? String(entities?.occasion_label || entities?.occasion || "") : "");
-  const occasionTerms: Record<string, string[]> = {
-    "تخرج": ["تخرج", "graduation", "graduate"], "عيد ميلاد": ["ميلاد", "birthday"],
-    "زواج": ["زواج", "عرس", "فرح", "wedding"], "خطوبة": ["خطوبه", "engagement"],
-    "مولود جديد": ["مولود", "بيبي", "baby", "newborn"], "رمضان": ["رمضان", "ramadan"],
-    "عيد": ["عيد", "eid"], "عيد الفطر": ["فطر", "eid", "fitr"],
-    "عيد الأضحى": ["اضحي", "eid", "adha"], "اليوم الوطني": ["اليوم الوطني", "national day"],
-    "يوم العلم": ["يوم العلم", "flag day"], "يوم الأم": ["يوم الام", "mother"],
-  };
-  const genericStop = new Set(["عندكم", "اريد", "عايز", "هدايا", "هديه", "هدية", "منتجات", "مناسبه", "المناسبه"]);
-  const terms = normalizeArabic(text).split(" ").filter((x) => x.length > 2 && !genericStop.has(x));
-  const extra = [...new Set([
-    ...(occasionTerms[occasion] || []),
-    ...normalizeArabic(occasion).split(" ").filter(Boolean),
-    ...normalizeArabic(text).split(" ").filter((x) => x.length > 2 && !genericStop.has(x)),
-  ])];
-  const budget = Number(entities?.budget || 0);
-  const [products, taxonomy] = await Promise.all([activeProducts(), activeTaxonomy()]);
-  return products.map((product: any) => {
-    const doc = productDocument(product, taxonomy);
-    const price = Number(product?.price || 0);
-    // The catalogue contains made-to-order gifts whose stock is stored as 0.
-    // Active is the storefront source of truth; only a negative stock value is a hard exclusion.
-    if (Number(product?.stock ?? 1) < 0 || (budget > 0 && (!price || price > budget))) return { ...product, _score: -1 };
-    let score = 0;
-    terms.forEach((term) => { if (doc.includes(term)) score += 2; });
-    extra.forEach((term) => { if (doc.includes(normalizeArabic(term))) score += 8; });
-    // Featured only ranks an already matching product; it must never make an
-    // unrelated product eligible for another occasion/category.
-    if (score > 0 && product?.featured) score += 1;
-    return { ...product, _score: score };
-  }).filter((product: any) => product._score > 0)
-    .sort((a: any, b: any) => b._score - a._score || Number(a.price || 0) - Number(b.price || 0))
-    .slice(0, 4);
-}
-
-function productList(products: any[]) {
-  if (!products.length) return "";
-  return products.map((product, index) => {
-    const price = Number(product?.price || 0);
-    const link = `https://bariqgifts.com/product.html?id=${encodeURIComponent(product.id)}`;
-    return `${index + 1}. ${productName(product)}${price ? ` — ${price.toFixed(2)} AED` : ""}\n${link}`;
-  }).join("\n\n");
-}
-
-function priceIntent(text: string) {
-  return /سعر|بكم|بكام|كم\s*سعر|كام\s*سعر|price/.test(normalizeArabic(text));
-}
-
-async function matchPricedProduct(text: string) {
-  const stop = new Set(["سعر", "بكم", "بكام", "كام", "كم", "ايه", "شو", "هذا", "هاذا", "المنتج"]);
-  const terms = normalizeArabic(text).split(" ").filter((term) => term.length > 1 && !stop.has(term));
-  if (!terms.length) return null;
-  const ranked = (await activeProducts()).map((product: any) => {
-    const name = normalizeArabic(productName(product));
-    const score = terms.reduce((sum, term) => sum + (name.includes(term) ? 10 : productDocument(product).includes(term) ? 2 : 0), 0);
-    return { product, score };
-  }).filter((item) => item.score > 0).sort((a, b) => b.score - a.score);
-  return ranked[0]?.product || null;
-}
-
-function recentPricedProduct(recent: any[]) {
-  for (const item of [...recent].reverse()) {
-    const product = Array.isArray(item?.meta?.products) ? item.meta.products[0] : null;
-    if (product && Number(product.price) > 0) return product;
-  }
-  return null;
-}
-
-function checkoutIntent(text: string) {
-  const n = normalizeArabic(text);
-  return /(?:اعمل|سوي|سو|جهز|ثبت|اكد|كمل|تمم|خلص).*(?:الطلب|طلب)|(?:الطلب|طلب).*(?:تمام|ثبت|اكد|كمل|اعمل|سوي|جهز)/.test(n);
-}
-
-function contactFromText(text: string) {
-  const clean = String(text || "").trim().replace(/\s+/g, " ");
-  const separated = clean.match(/^(.+?)\s*(?:[-–—|،,])\s*(.+)$/);
-  if (separated) return { name: separated[1].replace(/^(?:الاسم|اسمي)\s*:?\s*/i, "").trim(), address: separated[2].replace(/^(?:العنوان|عنواني)\s*:?\s*/i, "").trim() };
-  const labeled = clean.match(/(?:الاسم|اسمي)\s*:?\s*(.+?)\s+(?:العنوان|عنواني)\s*:?\s*(.+)$/i);
-  return labeled ? { name: labeled[1].trim(), address: labeled[2].trim() } : null;
-}
-
-function cartSummary(cart: any[]) {
-  const lines = cart.map((item, index) => `${index + 1}) ${item.name} — ${item.qty} × ${Number(item.unitPrice).toFixed(2)} = ${(Number(item.qty) * Number(item.unitPrice)).toFixed(2)} درهم`);
-  const total = cart.reduce((sum, item) => sum + Number(item.qty) * Number(item.unitPrice), 0);
-  lines.push(`الإجمالي: ${total.toFixed(2)} درهم`);
-  return lines.join("\n");
-}
-
-function multiItemPairs(text: string) {
-  const normalized = String(text || "")
-    .replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)))
-    .replace(/[،,]+/g, " و ")
-    .replace(/و(?=(?:ابغي|أبغي|ابي|أبي|ابا|أبا|اريد|أريد|عطني|هات|ضيف|زود)\s*\d)/gi, " و ")
-    .replace(/\s+/g, " ").trim();
-  const chunks = normalized.split(/\s+و\s+/).map((x) => x.trim()).filter(Boolean);
-  const pairs: Array<{ qty: number; name: string }> = [];
-  for (const raw of chunks) {
-    const clean = raw.replace(/^(?:ابغي|أبغي|ابي|أبي|ابا|أبا|اريد|أريد|عطني|اعطني|أعطني|هات(?:\s*لي)?|خد|خذ|محتاج)\s*/i, "").trim();
-    const match = clean.match(/^(\d+(?:\.\d+)?)\s*(?:حبه|حبة|حبات|قطعه|قطعة|قطع|وحده|وحدة|pcs?)?\s*(.+)$/i);
-    if (!match) continue;
-    const qty = Number(match[1]);
-    const name = String(match[2] || "").replace(/\s+(?:بكم|بكام|كم|احسبهم|تحسبهم).*$/i, "").trim();
-    if (qty > 0 && name) pairs.push({ qty, name });
-  }
-  return pairs.length >= 2 ? pairs.slice(0, 12) : [];
-}
-
-async function multiItemQuote(text: string, existingCart: any[] = []) {
-  const pairs = multiItemPairs(text);
-  if (!pairs.length) return null;
-  const rows: any[] = [];
-  const missing: string[] = [];
-  for (const pair of pairs) {
-    const product = await matchPricedProduct(pair.name);
-    const price = Number(product?.price || 0);
-    if (!product || !price) { missing.push(pair.name); continue; }
-    rows.push({ qty: pair.qty, name: productName(product), unitPrice: price, subtotal: pair.qty * price, product_id: product.id || null });
-  }
-  if (missing.length) {
-    return {
-      reply: `فاهم الأصناف والكميات، بس ناقصني سعر: ${missing.join("، ")}. اكتب الاسم والمقاس زي قاعدة المعرفة وأنا أحسبهم كلهم.`,
-      cart: existingCart,
-      action: "multi_item_needs_price",
-    };
-  }
-  const cart = [...existingCart];
-  rows.forEach((row) => {
-    const found = cart.find((item: any) => String(item.product_id || "") === String(row.product_id || "") && Number(item.unitPrice) === row.unitPrice);
-    if (found) found.qty = Number(found.qty || 0) + row.qty;
-    else cart.push({ name: row.name, qty: row.qty, unitPrice: row.unitPrice, product_id: row.product_id });
-  });
-  const lines = rows.map((row) => `• ${row.qty} ${row.name} × ${row.unitPrice.toFixed(2)} درهم = ${row.subtotal.toFixed(2)} درهم`);
-  lines.push("", `💰 الإجمالي: ${rows.reduce((sum, row) => sum + row.subtotal, 0).toFixed(2)} درهم`, "", "إذا تبا تثبتهم كطلب قل «ثبت الطلب»، وإذا تبا تضيف منتج ثاني قولي.");
-  return { reply: lines.join("\n"), cart, action: "multi_item_calc" };
-}
-
 function response(body: string, status = 200, contentType = "text/plain") {
   return new Response(body, {
     status,
@@ -378,50 +168,6 @@ async function recentMessages(conversationId: string) {
   return rows.reverse().map((row: any) => ({ role: row.role, text: row.message, meta: row.metadata || {} }));
 }
 
-function orderReference(value: string) {
-  const western = String(value || "").replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)));
-  return western.match(/^\s*#?\s*(\d{3,10})\s*$/)?.[1] || "";
-}
-
-function statusLabel(value: unknown) {
-  const labels: Record<string, string> = {
-    new: "جديد", pending: "جديد", confirmed: "تم تأكيد الطلب ✅",
-    processing: "جاري تجهيز الطلب ⏳", manufacturing: "قيد التصنيع 🛠️",
-    shipped: "تم شحن الطلب 🚚", delivered: "تم توصيل الطلب 🎉",
-    cancelled: "تم إلغاء الطلب ❌", refunded: "تم استرجاع المبلغ",
-  };
-  const key = String(value || "").trim().toLowerCase();
-  return labels[key] || String(value || "قيد المعالجة");
-}
-
-function normalizedUaePhone(value: unknown) {
-  let digits = String(value || "").replace(/\D/g, "");
-  if (digits.startsWith("00")) digits = digits.slice(2);
-  if (digits.startsWith("0")) digits = `971${digits.slice(1)}`;
-  else if (digits.startsWith("5") && digits.length === 9) digits = `971${digits}`;
-  return digits;
-}
-
-async function orderReply(ref: string, senderPhone: string) {
-  const select = "id,order_number,customer_phone,total,status,created_at";
-  for (const value of [`#${ref}`, ref]) {
-    const query = new URLSearchParams({ select, order_number: `eq.${value}`, limit: "1" });
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?${query}`, { headers: serviceHeaders() });
-    const rows = res.ok ? await res.json().catch(() => []) : [];
-    if (rows[0]) {
-      const order = rows[0];
-      const ownerPhone = normalizedUaePhone(order.customer_phone);
-      if (!ownerPhone || ownerPhone !== normalizedUaePhone(senderPhone)) {
-        return { reply: "لقيت رقم الطلب، لكن حفاظًا على خصوصيتك لازم تراسلنا من رقم الهاتف المسجّل في الطلب، أو تطلب التحويل لموظف.", order: null };
-      }
-      const total = order.total != null ? `\n💰 إجمالي الطلب: ${Number(order.total).toFixed(2)} AED` : "";
-      const date = order.created_at ? `\n📅 تاريخ الطلب: ${new Date(order.created_at).toLocaleDateString("ar-EG")}` : "";
-      return { reply: `📦 حالة طلبك ${order.order_number || `#${ref}`}:\n${statusLabel(order.status)}${total}${date}`, order };
-    }
-  }
-  return { reply: `رقم الطلب #${ref} مش موجود عندنا. اتأكد من الرقم وابعتُه مرة تانية.`, order: null };
-}
-
 async function askBot(text: string, conversation: any, recent: any[], imageUrl = "", channel = "whatsapp") {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), BOT_TIMEOUT_MS);
@@ -436,7 +182,13 @@ async function askBot(text: string, conversation: any, recent: any[], imageUrl =
         ...(conversation.state || {}),
         current_topic: conversation.current_topic || "",
         waiting_for: conversation.waiting_for || "",
-        current_state: conversation.state || {},
+        current_state: {
+          ...(conversation.state || {}),
+          currentTopic: conversation.current_topic || conversation.state?.currentTopic || "",
+          current_topic: conversation.current_topic || conversation.state?.current_topic || "",
+          waitingFor: conversation.waiting_for || conversation.state?.waitingFor || null,
+          waiting_for: conversation.waiting_for || conversation.state?.waiting_for || null,
+        },
         sender_phone: channel === "whatsapp" ? conversation.state?.sender_phone || conversation.phone || "" : "",
         channel,
       }, imageUrl)),
@@ -485,7 +237,7 @@ async function socialImageData(url: string) {
 }
 
 async function saveUnanswered(text: string, conversationId: string, context: any) {
-  const normalizedText = correctCommonTypos(normalizeArabic(text));
+  const normalizedText = normalizeArabic(text);
   if (!normalizedText) return;
   const query = new URLSearchParams({ select: "id,count", normalized_text: `eq.${normalizedText}`, limit: "1" });
   const existingRes = await fetch(`${SUPABASE_URL}/rest/v1/bot_unanswered?${query}`, { headers: serviceHeaders() });
@@ -506,59 +258,6 @@ async function saveUnanswered(text: string, conversationId: string, context: any
     body: JSON.stringify({ text, normalized_text: normalizedText, count: 1, conversation_id: conversationId, context, status: "open", last_seen_at: now }),
   });
   if (!insertRes.ok) throw new Error(`unanswered insert failed: ${insertRes.status} ${await insertRes.text()}`);
-}
-
-async function knowledgeFallback(text: string, context: any) {
-  const occasion = occasionFromText(text);
-  const probes = occasion
-    ? [occasion, text]
-    : [text];
-  let best: any = null;
-  for (const probe of probes) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/bot_knowledge_search`, {
-      method: "POST",
-      headers: serviceHeaders(),
-      body: JSON.stringify({ p_message: probe, p_context: { ...(context || {}), occasion }, p_limit: occasion ? 80 : 5 }),
-    });
-    if (!res.ok) continue;
-    const rows = await res.json().catch(() => []);
-    const answered = Array.isArray(rows) ? rows.filter((row: any) => String(row?.answer || "").trim()) : [];
-    const specific = occasion
-      ? answered.find((row: any) => {
-        const document = normalizeArabic(JSON.stringify({
-          question: row?.question,
-          category: row?.category,
-          keywords: row?.keywords,
-          action_value: row?.action_value,
-          answer: row?.answer,
-        }));
-        const normalizedOccasion = normalizeArabic(occasion);
-        if (normalizedOccasion === "سفر وداع") return /سفر|وداع/.test(document);
-        return document.includes(normalizedOccasion);
-      })
-      : null;
-    const hit = specific || answered[0] || null;
-    if (specific) return {
-      action: "answer",
-      action_name: specific.action_name || "NONE",
-      knowledge_id: specific.id || null,
-      entities: { ...(context || {}), occasion },
-      reply: String(specific.answer || "").trim(),
-      confidence: 0.99,
-      confidence_label: "high",
-    };
-    if (hit && (!best || Number(hit.score || 0) > Number(best.score || 0))) best = hit;
-  }
-  if (!best || Number(best.score || 0) < 18) return null;
-  return {
-    action: "answer",
-    action_name: best.action_name || "NONE",
-    knowledge_id: best.id || null,
-    entities: context || {},
-    reply: String(best.answer || "").trim(),
-    confidence: Math.min(0.99, Math.max(0.6, Number(best.score || 0) / 55)),
-    confidence_label: "high",
-  };
 }
 
 async function sendWhatsApp(phoneId: string, to: string, text: string) {
@@ -614,6 +313,21 @@ async function saveAssistant(conversationId: string, incomingMessageId: string, 
       metadata: { channel, reply_to_message_id: incomingMessageId, meta_message_id: sendResult?.messages?.[0]?.id || sendResult?.message_id || null, products: result?.products || [] },
     }),
   });
+}
+
+function channelReply(result: any) {
+  const base = String(result?.reply || "").trim();
+  const products = Array.isArray(result?.products) ? result.products.slice(0, 4) : [];
+  if (!products.length) return base;
+  const lines = products.map((product: any, index: number) => {
+    const name = String(product?.name_ar || product?.name || product?.name_en || `منتج ${index + 1}`).trim();
+    const amount = Number(product?.price);
+    const price = Number.isFinite(amount) && amount > 0 ? ` — ${amount.toFixed(2)} AED` : "";
+    const id = product?.id || product?.supabaseId;
+    const link = String(product?.link || (id ? `https://bariqgifts.com/product.html?id=${encodeURIComponent(id)}` : "")).trim();
+    return `${index + 1}. ${name}${price}${link ? `\n${link}` : ""}`;
+  });
+  return [base, lines.join("\n\n")].filter(Boolean).join("\n\n");
 }
 
 async function saveConversationState(conversation: any, result: any, reply: string, channel = "whatsapp") {
@@ -697,7 +411,7 @@ async function processWebhook(payload: any) {
         try {
           const canonical = channelDecision(await askBot(text, conversation, recent, imageUrl, channel));
           result = canonical.result;
-          reply = canonical.reply;
+          reply = channelReply(canonical.result);
         } catch (error) {
           // Never run an independent knowledge/product fallback here. A weak
           // adapter-side match must not override the canonical engine.

@@ -1,7 +1,10 @@
 {
   "private": true,
   "scripts": {
-    "build": "node scripts/generate-seo.mjs",
-    "build:seo": "node scripts/generate-seo.mjs"
+    "build": "node scripts/extract-training-engine.mjs && node scripts/generate-seo.mjs",
+    "build:seo": "node scripts/generate-seo.mjs",
+    "build:bot": "node scripts/extract-training-engine.mjs",
+    "check:bot-sync": "node scripts/extract-training-engine.mjs --check",
+    "test:bot": "node --test tests/training-engine-parity.test.mjs tests/meta-webhook-parity.test.mjs"
   }
 }

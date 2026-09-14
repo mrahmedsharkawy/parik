@@ -26,7 +26,7 @@ const cases = [
   ["سؤال غير موجود نهائيًا", "silent", null, { topic: "general" }, ""],
 ];
 
-test("20 WhatsApp cases preserve the canonical engine decision exactly", () => {
+test("channel adapter preserves an already-made engine decision", () => {
   assert.equal(cases.length, 20);
   for (const [message, action, knowledge_id, entities, reply] of cases) {
     const engineResult = { action, knowledge_id, entities, reply };
@@ -48,4 +48,15 @@ test("meta-webhook processing has no independent decision fallback", () => {
     assert.equal(processing.includes(forbidden), false, forbidden);
   }
   assert.match(processing, /askBot\(text, conversation, recent, imageUrl, channel\)/);
+  assert.doesNotMatch(source, /function (knowledgeFallback|recommendProducts|matchPricedProduct|multiItemQuote|orderReply)\s*\(/);
+  assert.match(processing, /await saveUnanswered\(text, conversation\.id/);
+  assert.match(processing, /await saveConversationState\(conversation, result/);
+});
+
+test("canonical endpoint reloads the shared live knowledge and catalog", () => {
+  const source = readFileSync(new URL("../supabase/functions/bot-llm/index.ts", import.meta.url), "utf8");
+  assert.match(source, /await catalog\(\)/);
+  assert.match(source, /all\("bot_knowledge",KNOWLEDGE/);
+  assert.match(source, /createTrainingEngine\(\{\.\.\.data/);
+  assert.doesNotMatch(source, /new OpenAI|OPENAI_API_KEY|knowledgeFallback/);
 });

@@ -30,6 +30,7 @@ function originalPage(input){
   return vm.runInContext(`(function(){${trainingSource()}\n${boundary}\n})()`,context);
 }
 const plain=value=>JSON.parse(JSON.stringify(value));
+function comparable(value){const copy=plain(value);if(copy?.state?.lastQuote)delete copy.state.lastQuote.createdAt;return copy;}
 test('generated engine has no drift from trained source',()=>assert.equal(
   readFileSync(new URL('../supabase/functions/_shared/training-engine.generated.mjs',import.meta.url),'utf8'),generatedSource()));
 
@@ -49,7 +50,7 @@ test('20 real page/engine turns, preserving state, decisions and final text',asy
     for(const message of messages){
       const expected=await page.message(message);
       const actual=await engine.message(message);
-      assert.deepEqual(plain(actual),plain(expected),message);
+      assert.deepEqual(comparable(actual),comparable(expected),message);
       // Simulate an Edge Function cold start, not just in-process memory.
       engine=createTrainingEngine({...io(),...engine.snapshot()});
       count++;
@@ -68,4 +69,20 @@ test('sessions cannot share pricing state',async()=>{
   const a=createTrainingEngine(io()),b=createTrainingEngine(io());
   await a.message('كم سعر كوب الشاي');
   assert.equal(b.snapshot().state.lastUnitPrice,null);
+});
+test('a calculated total never replaces the remembered unit price',async()=>{
+  const engine=createTrainingEngine(io());
+  await engine.message('كم سعر كوب الشاي');
+  await engine.message('لو عايز 10');
+  const third=await engine.message('10 بكام');
+  assert.match(third.result.text,/20\.00/);
+  assert.equal(third.state.lastUnitPrice,2);
+});
+test('a knowledge edit is consumed without changing or rebuilding the engine',async()=>{
+  const before=createTrainingEngine({...io(),knowledge:[{id:700,question:'سؤال مباشر',answer:'الرد القديم',active:true,keywords:[]}]});
+  assert.equal((await before.message('سؤال مباشر')).result.text,'الرد القديم');
+  const after=createTrainingEngine({...io(),knowledge:[{id:700,question:'سؤال مباشر',answer:'الرد الجديد',active:true,keywords:[]}]});
+  const output=await after.message('سؤال مباشر');
+  assert.equal(output.result.text,'الرد الجديد');
+  assert.equal(output.result.match.id,700);
 });
