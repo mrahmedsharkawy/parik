@@ -22,4 +22,52 @@ function unansweredKey(value:string){return String(value||"").toLowerCase().repl
 async function persistUnanswered(message:string,context:any){const normalized=unansweredKey(message);if(!normalized)return;const q=new URLSearchParams({select:"id,count",normalized_text:`eq.${normalized}`,limit:"1"});const found=await fetch(`${SB}/rest/v1/bot_unanswered?${q}`,{headers:dbHeaders()});const existing=found.ok?(await found.json().catch(()=>[]))[0]:null;const now=new Date().toISOString(),conversationId=context.conversation_id||null,safeContext={current_state:context.current_state||{},channel:context.channel||"website"};if(existing?.id){const r=await fetch(`${SB}/rest/v1/bot_unanswered?id=eq.${encodeURIComponent(existing.id)}`,{method:"PATCH",headers:dbHeaders(),body:JSON.stringify({count:Number(existing.count||0)+1,conversation_id:conversationId,context:safeContext,status:"open",last_seen_at:now})});if(!r.ok)throw new Error(`unanswered update ${r.status}`);}else{const r=await fetch(`${SB}/rest/v1/bot_unanswered`,{method:"POST",headers:dbHeaders({prefer:"resolution=merge-duplicates"}),body:JSON.stringify({text:message,normalized_text:normalized,count:1,conversation_id:conversationId,context:safeContext,status:"open",last_seen_at:now})});if(!r.ok)throw new Error(`unanswered insert ${r.status}`);}}
 function envelope(out:any){const r=out.result||{},products=Array.isArray(r.products)?r.products:[];return {...r,reply:String(r.text||""),action:r.type==="silent"?"silent":String(r.systemAction||r.type||"answer").toLowerCase(),knowledge_id:r.knowledgeId||r.match?.id||null,entities:out.state||{},context:out.state||{},products,state:out.state||{},conversation:out.conversation||[],unanswered:Boolean(r.unanswered||r.type==="silent"),debug:out.debug||{},engine_version:BOT_ENGINE_VERSION};}
 
-serve(async(req)=>{if(req.method==="OPTIONS")return response(req,{ok:true});if(req.method!=="POST")return response(req,{error:"method not allowed"},405);if(!authorized(req))return response(req,{error:"unauthorized"},401);try{const body=await req.json(),message=String(body.message||"").trim().slice(0,4000);if(!message&&!body.image_url)return response(req,{error:"message required"},400);const context=body.context||{},data=await catalog();const engine=createTrainingEngine({...data,conversation:Array.isArray(body.conversation)?body.conversation:[],state:context.current_state||context,memories:context.memories||[],summary:context.conversation_summary||null,settings:{useLLM:false},sbFetch:dbAdapter(String(context.sender_phone||""))});let output;if(body.image_url){const image=await engine.image(String(body.image_url),message);output=envelope({result:{type:image.products?.length?"products":"silent",text:"",products:image.products||[],systemAction:"IMAGE_PRODUCT_SEARCH",liveData:true},...engine.snapshot()});}else output=envelope(await engine.message(message));if(output.engineError)throw new Error("canonical engine execution failed");if(output.unanswered&&!(context.test_mode&&await verifiedAdmin(req)))await persistUnanswered(message,context);if(PARITY_DEBUG)console.log("[BOT PARITY]",JSON.stringify({channel:context.channel||"website",message_length:message.length,conversation_length:Array.isArray(body.conversation)?body.conversation.length:0,action:output.action,knowledge_id:output.knowledge_id,reply_length:output.reply.length,engine_version:BOT_ENGINE_VERSION}));return response(req,output);}catch(error){console.error("training engine",error);return response(req,{error:"engine unavailable"},500);}});
+function trustedImageUrl(value:string){
+  if(value.startsWith("data:image/"))return value;
+  try{
+    const url=new URL(value,"https://bariqgifts.com/");
+    const host=url.hostname.toLowerCase();
+    if(host==="bariqgifts.com"||host==="www.bariqgifts.com"||host.endsWith(".supabase.co")||host.endsWith(".supabase.in")||host.endsWith(".fbcdn.net"))return url.href;
+  }catch(_error){}
+  return "";
+}
+async function imageBytes(source:string){
+  if(source.startsWith("data:image/")){
+    const comma=source.indexOf(",");if(comma<0)return null;
+    const head=source.slice(0,comma),payload=source.slice(comma+1);
+    if(!/;base64/i.test(head))return new TextEncoder().encode(decodeURIComponent(payload));
+    const binary=atob(payload),bytes=new Uint8Array(binary.length);
+    for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+    return bytes;
+  }
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),3500);
+  try{const r=await fetch(source,{signal:controller.signal});if(!r.ok)return null;const bytes=new Uint8Array(await r.arrayBuffer());return bytes.length<=8*1024*1024?bytes:null;}finally{clearTimeout(timer);}
+}
+async function edgeImageDescriptor(value:string,crop=.78){
+  try{
+    const source=trustedImageUrl(String(value||""));if(!source)return null;
+    const bytes=await imageBytes(source);if(!bytes)return null;
+    const isWebp=/^data:image\/webp/i.test(source)||/\.webp(?:$|[?#])/i.test(source);
+    let width=0,height=0,bitmap:any=null;
+    if(isWebp){
+      const {decode}=await import("npm:@jsquash/webp@1.5.0");
+      const decoded=await decode(bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength));
+      width=decoded.width;height=decoded.height;bitmap=decoded.data;
+    }else{
+      const {Image}=await import("npm:imagescript@1.3.0");
+      const image=await Image.decode(bytes);width=image.width;height=image.height;bitmap=image.bitmap;
+    }
+    if(!width||!height||!bitmap)return null;
+    const cw=Math.max(1,Math.floor(width*crop)),ch=Math.max(1,Math.floor(height*crop));
+    const cx=Math.floor((width-cw)/2),cy=Math.floor((height-ch)/2),out=[];
+    for(let y=0;y<18;y++)for(let x=0;x<18;x++){
+      const sx=Math.min(width-1,cx+Math.floor((x+.5)*cw/18));
+      const sy=Math.min(height-1,cy+Math.floor((y+.5)*ch/18));
+      const i=(sy*width+sx)*4;
+      out.push(bitmap[i]/255,bitmap[i+1]/255,bitmap[i+2]/255);
+    }
+    return out.length===18*18*3?out:null;
+  }catch(_error){return null;}
+}
+
+serve(async(req)=>{if(req.method==="OPTIONS")return response(req,{ok:true});if(req.method!=="POST")return response(req,{error:"method not allowed"},405);if(!authorized(req))return response(req,{error:"unauthorized"},401);try{const body=await req.json(),message=String(body.message||"").trim().slice(0,4000);if(!message&&!body.image_url)return response(req,{error:"message required"},400);const context=body.context||{},data=await catalog();const engine=createTrainingEngine({...data,conversation:Array.isArray(body.conversation)?body.conversation:[],state:context.current_state||context,memories:context.memories||[],summary:context.conversation_summary||null,settings:{useLLM:false},sbFetch:dbAdapter(String(context.sender_phone||"")),imageDescriptor:edgeImageDescriptor});const engineOutput=body.image_url?await engine.image(String(body.image_url),message):await engine.message(message);const output=envelope(engineOutput);if(output.engineError)throw new Error("canonical engine execution failed");if(output.unanswered&&!(context.test_mode&&await verifiedAdmin(req)))await persistUnanswered(message,context);if(PARITY_DEBUG)console.log("[BOT PARITY]",JSON.stringify({channel:context.channel||"website",message_length:message.length,conversation_length:Array.isArray(body.conversation)?body.conversation.length:0,action:output.action,knowledge_id:output.knowledge_id,reply_length:output.reply.length,engine_version:BOT_ENGINE_VERSION}));return response(req,output);}catch(error){console.error("training engine",error);return response(req,{error:"engine unavailable"},500);}});

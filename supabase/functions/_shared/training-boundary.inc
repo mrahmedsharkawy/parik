@@ -62,8 +62,23 @@ return {
       unanswered:[...unanswered],debug:structuredClone(lastBotDebug)};
   },
   async image(url,caption='') {
-    const result = await searchProductsByImage(url,caption);
-    return structuredClone(result);
+    const found = await searchProductsByImage(url,caption);
+    const products=found.products||[];
+    let text='';
+    if(products.length){
+      const p=products[0],link=productLink(p);
+      const absoluteLink=/^https?:\/\//i.test(link)?link:'https://bariqgifts.com/'+String(link||'').replace(/^\/?/,'');
+      text='لقيت المنتج المطابق للصورة:\n'+productName(p)+' — '+Number(p.price||0).toFixed(2)+' AED'+(absoluteLink?'\n'+absoluteLink:'');
+      botState.productId=p.id||p.supabaseId||null;
+      botState.lastProduct={id:p.id||p.supabaseId||null,name:productName(p),price:Number(p.price)||0,link:absoluteLink};
+      botState.lastUnitPrice=Number(p.price)||null;
+      botState.lastPriceProductName=productName(p);
+      botState.currentTopic='product_image';
+    }
+    const result={...found,type:products.length?'products':'silent',text,systemAction:'IMAGE_PRODUCT_SEARCH',liveData:true,unanswered:!products.length};
+    if(!products.length)await persistUnanswered('بحث بصورة: '+String(caption||'صورة مرفقة'));
+    if(text)conversation.push({role:'assistant',text,meta:{products:compactProductsForMemory(products)}});
+    return {result:structuredClone(result),state:structuredClone(botState),conversation:structuredClone(conversation),unanswered:[...unanswered],debug:structuredClone(lastBotDebug)};
   },
   snapshot(){return {state:structuredClone(botState),conversation:structuredClone(conversation),debug:structuredClone(lastBotDebug)};}
 };

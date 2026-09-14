@@ -1,0 +1,10 @@
+import {createHash} from 'node:crypto';
+import {trainingSource} from './extract-training-engine.mjs';
+const response=await fetch('https://bariqgifts.com/bot-training.html',{redirect:'follow'});
+const live=await response.text();
+const scripts=[...live.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
+const source=scripts.find(x=>x[1].includes('async function processBotMessageCore('))?.[1]||'';
+const end=source.indexOf('let __botProcessingPromiseV7=null;');
+const core=end>=0?source.slice(0,end):source;
+const hash=value=>createHash('sha256').update(value).digest('hex');
+console.log(JSON.stringify({http_status:response.status,live_length:live.length,live_core_hash:hash(core),local_core_hash:hash(trainingSource()),same:core===trainingSource(),live_has_canonical:live.includes('canonicalEnginePayload(msg,conversation,botState')}));

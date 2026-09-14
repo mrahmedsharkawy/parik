@@ -10,7 +10,7 @@
 <link rel="manifest" href="/bot-manifest.json">
 <link rel="apple-touch-icon" href="/assets/icon-96.png">
 <title>مساعد بريق — إدارة البوت V36 Natural Follow-up Language</title>
-<script src="/java/supabase.js?v=supabase-20260812-orders-getpage"></script>
+<script src="./java/supabase.js?v=supabase-20260812-orders-getpage"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 :root{--navy:#152546;--navy2:#0d1c38;--gold:#d4af37;--bg:#f4f6fb;--line:#e2e7ef;--muted:#748097;--ok:#18894a;--danger:#c0392b;--warn:#b7791f}
@@ -804,7 +804,7 @@ async function checkGate(){
   if(!email||!pass){msg.textContent='❌ أدخل الإيميل وكلمة المرور';return}
   btn.disabled=true;btn.textContent='⏳ جارٍ التحقق...';msg.textContent='';
   try{
-    if(!window.Supabase?.Auth?.signIn)throw new Error('ملف /java/supabase.js غير متصل');
+    if(!window.Supabase?.Auth?.signIn)throw new Error('ملف java/supabase.js غير متصل — افتح الصفحة من خادم محلي وليس file://');
     const auth=await window.Supabase.Auth.signIn(email,pass);
     const admin=await getAdminAccount(auth.user.id,email,auth.access_token);
     if(!admin){
@@ -1206,6 +1206,7 @@ function rank(msg,entities={}){
   const candidates=candidateKnowledge(msg,entities).map(e=>e.item);
   const rows=(candidates.length?candidates:questions).filter(x=>{
       if(!x.active)return false;
+      if(knowledgeCategoryConflictV41(msg,x))return false;
       const cfg=getBotConfig(x)||{};
       return String(x.answer||'').trim() || cfg.inputMode!=='answer' || cfg.linkedAction;
     })
@@ -4172,6 +4173,33 @@ function typoAwareQuestionScoreV4(message,question){
   return Math.max(token,whole);
 }
 
+/* An explicit occasion/category in the customer's message must never be
+   answered by a KB row configured for a different occasion. Generic words
+   such as "عندكم" are useful for recall, but cannot overrule this guard. */
+function occasionSignalKeysV41(value){
+  const t=normalize(decodeActionValuePart(String(value||''))),keys=[];
+  const signals={
+    newborn:['مولود','مواليد','بيبي','baby','newborn','born in','born'],
+    graduation:['تخرج','graduation','graduate'],
+    ramadan:['رمضان','ramadan'],
+    birthday:['عيد ميلاد','ميلاد','birthday'],
+    wedding:['زواج','عرس','فرح','wedding'],
+    engagement:['خطوبه','خطوبة','engagement'],
+    eid:['عيد','eid','فطر','اضحي','اضحى']
+  };
+  Object.entries(signals).forEach(([key,terms])=>{if(terms.some(term=>hasWholeTerm(t,term)||t.includes(normalize(term))))keys.push(key);});
+  return [...new Set(keys)];
+}
+function knowledgeCategoryConflictV41(message,item){
+  const requested=occasionSignalKeysV41(message);
+  if(!requested.length)return false;
+  const cfg=getBotConfig(item)||{};
+  const actionValue=cfg.actionValue||item?.action_value||item?.actionValue||'';
+  const candidateText=[item?.question,item?.category,actionValue,...categoryTermsFromActionValue(actionValue)].filter(Boolean).join(' ');
+  const candidate=occasionSignalKeysV41(candidateText);
+  return candidate.length>0&&!candidate.some(k=>requested.includes(k));
+}
+
 function findKnowledgePriorityV4(msg,entities={}){
   const m=normalize(msg);
   if(!m)return null;
@@ -4200,12 +4228,14 @@ function findKnowledgePriorityV4(msg,entities={}){
      48 is plenty for typo recovery and keeps the UI responsive. */
   let candidates=candidateKnowledge(msg,entities)
     .filter(e=>e?.item && e.item.active!==false && String(e.item.answer||'').trim())
+    .filter(e=>!knowledgeCategoryConflictV41(msg,e.item))
     .slice(0,48);
 
   /* If token index has no useful candidates, sample only a small recent set. */
   if(!candidates.length){
     candidates=(knowledgeIndex||[])
       .filter(e=>e?.item && e.item.active!==false && String(e.item.answer||'').trim())
+      .filter(e=>!knowledgeCategoryConflictV41(msg,e.item))
       .slice(0,36);
   }
 
@@ -5141,6 +5171,8 @@ function kbPricingCanonV27(value){
     .map(w=>{
       /* إزالة "ال" للتسامح: الاكريليك = اكريليك */
       if(w.length>3 && w.startsWith('ال')) w=w.slice(2);
+      /* Product-name spelling variants must resolve to the same KB item. */
+      if(/^(?:كوباية|كوبايه|كوبيه|كبايه)$/.test(w))w='كوب';
       return w;
     })
     .join(' ')
@@ -5764,6 +5796,15 @@ async function processBotMessageCore(msg){
   if(!raw)return silentResult();
   botState.lastMessage=raw;
 
+  /* A message containing two priced items is a new compound request, not a
+     quantity follow-up to whichever single product happened to be discussed
+     previously. Resolve it before the single-product continuation router. */
+  const compoundItemsV41=extractMultiItemPairsV24(raw);
+  if(compoundItemsV41.length>=2){
+    const compoundQuoteV41=await buildMultiItemQuoteV24(raw);
+    if(compoundQuoteV41)return compoundQuoteV41;
+  }
+
   /* V31 pricing continuation guard:
      A clear quantity follow-up to a confirmed last price must be handled
      before a generic KB row can reinterpret it as a new custom-order flow. */
@@ -6125,7 +6166,7 @@ function getReminderText(){
 let __canonicalAdapterPromise=null;
 let __botProcessingPromiseV7=null;
 function canonicalAdapter(){
-  return __canonicalAdapterPromise||=(import('/supabase/functions/_shared/channel_adapter.mjs'));
+  return __canonicalAdapterPromise||=(import('./supabase/functions/_shared/channel_adapter.mjs'));
 }
 async function processBotMessage(msg,imageUrl=''){
   if(__botProcessingPromiseV7)return {type:'clarify',text:'ثانية واحدة، أنا لسه بكمل الرسالة اللي قبلها.'};

@@ -78,6 +78,40 @@ test('a calculated total never replaces the remembered unit price',async()=>{
   assert.match(third.result.text,/20\.00/);
   assert.equal(third.state.lastUnitPrice,2);
 });
+test('a compound tea and coffee request overrides stale single-product context',async()=>{
+  const pricedKnowledge=[
+    {id:801,question:'كم سعر كوباية الشاي',answer:'سعر كوباية الشاي 2 درهم للوحدة.',active:true,keywords:['كوباية','الشاي','سعر']},
+    {id:802,question:'كم سعر كوباية القهوة',answer:'سعر كوباية القهوة 1.5 درهم للوحدة.',active:true,keywords:['كوباية','القهوة','سعر']}
+  ];
+  const engine=createTrainingEngine({...io(),knowledge:pricedKnowledge});
+  await engine.message('كم سعر كوب الشاي');
+  const output=await engine.message('عايز 10 كوب شاي و 10 كوب قهوه');
+  assert.equal(output.result.systemAction,'MULTI_ITEM_CALC');
+  assert.match(output.result.text,/35\.00/);
+  assert.match(output.result.text,/10[^\n]*شاي/);
+  assert.match(output.result.text,/10[^\n]*قهوه/);
+});
+test('an explicit newborn request cannot select a Ramadan knowledge action',async()=>{
+  const routedKnowledge=[
+    {id:19285,question:'عندكم رمضان',answer:'قسم رمضان',category:'روابط الفئات',active:true,keywords:['رمضان','قسم','منتجات'],input_type:'action',action_name:'CATEGORY_PRODUCTS',action_value:'https://bariqgifts.com/categories.html?category=Ramadan'},
+    {id:19153,question:'عندكم المناسبات - المواليد',answer:'قسم المواليد',category:'روابط الفئات',active:true,keywords:['المناسبات','المواليد','قسم','منتجات'],input_type:'info',action_value:'https://bariqgifts.com/categories.html?category=Occasions&subcategory=Born+in'}
+  ];
+  const engine=createTrainingEngine({...io(),knowledge:routedKnowledge,products:[]});
+  const output=await engine.message('عندكم هدايا مواليد');
+  assert.notEqual(output.result.match?.id,19285);
+  assert.notEqual(output.state.lastKnowledgeId,19285);
+  assert.doesNotMatch(output.result.text,/رمضان/);
+});
+test('image search returns the canonical product reply needed by text channels',async()=>{
+  const imageUrl='https://bariqgifts.com/assets/test-product.jpg';
+  const engine=createTrainingEngine({...io(),products:[{id:990,name_ar:'منتج الصورة',price:25,active:true,image:imageUrl}]});
+  const output=await engine.image(imageUrl,'أريد نفس المنتج');
+  assert.equal(output.result.systemAction,'IMAGE_PRODUCT_SEARCH');
+  assert.equal(output.result.products[0].id,990);
+  assert.match(output.result.text,/منتج الصورة/);
+  assert.match(output.result.text,/25\.00 AED/);
+  assert.match(output.result.text,/product\.html\?id=990/);
+});
 test('a knowledge edit is consumed without changing or rebuilding the engine',async()=>{
   const before=createTrainingEngine({...io(),knowledge:[{id:700,question:'سؤال مباشر',answer:'الرد القديم',active:true,keywords:[]}]});
   assert.equal((await before.message('سؤال مباشر')).result.text,'الرد القديم');
