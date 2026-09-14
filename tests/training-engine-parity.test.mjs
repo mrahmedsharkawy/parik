@@ -13,6 +13,10 @@ const knowledge = [
   [4,'كم سعر كوب القهوة','سعر كوب القهوة 3 درهم للوحدة.'],
   [5,'عندكم هدايا مواليد','متوفر هدايا مواليد حسب الطلب.'],
   [6,'عندكم هدايا تخرج','متوفر هدايا تخرج حسب الطلب.'],
+  [7,'كم سعر هالو كارد اكريليك 18 سم','سعر هالو كارد اكريليك 18 سم هو 45 درهم للوحدة.'],
+  [8,'كم سعر بوكس اكريليك 15x15 ارتفاع 5 سم','سعر بوكس اكريليك 15x15 ارتفاع 5 سم هو 30 درهم للوحدة.'],
+  [9,'تسوون تصميم خاص','أكيد، ننفذ حسب التصميم والتخصص.'],
+  [10,'كم مدة التصنيع','مدة التصنيع من يومين إلى 10 أيام حسب تفاصيل وكمية الطلب.'],
 ].map(([id,question,answer])=>({id,question,answer,active:true,keywords:[],category:'عام',usage_count:0}));
 const products=[{id:604,name_ar:'طقم مواليد أكريليك 10 قطع',price:590,active:true},
   {id:11,name_ar:'كوب الشاي',price:2,active:true},{id:12,name_ar:'كوب القهوة',price:3,active:true}];
@@ -103,6 +107,54 @@ test('a conversational opener cannot hide the first item in a compound quote',as
   assert.match(output.result.text,/15\.00/);
   assert.match(output.result.text,/35\.00/);
   assert.doesNotMatch(output.result.text,/650/);
+});
+test('a sales cart survives product additions, an unrelated interruption, and shorthand resume',async()=>{
+  const engine=createTrainingEngine(io());
+  await engine.message('كم سعر كوب الشاي');
+  await engine.message('عايز 10');
+  assert.equal((await engine.message('وعايز كمان 10 كوب قهوة')).result.systemAction,'CART_ADD_ITEM');
+  assert.equal((await engine.message('ضيف 2 هالو كارد اكريليك 18 سم')).result.systemAction,'CART_ADD_ITEM');
+  const fourth=await engine.message('وكمان 3 بوكس اكريليك 15x15 ارتفاع 5 سم');
+  assert.equal(fourth.result.systemAction,'CART_ADD_ITEM');
+  assert.match(fourth.result.text,/230\.00/);
+
+  const delivery=await engine.message('بالمناسبة عندكم توصيل لدبي؟');
+  assert.equal(delivery.result.text,'نعم، نوصل لجميع الإمارات.');
+  assert.equal(delivery.state.shoppingCart.length,4);
+
+  const resumed=await engine.message('طيب كنا وصلنا لكام؟');
+  assert.equal(resumed.result.systemAction,'CART_SUMMARY');
+  assert.match(resumed.result.text,/230\.00/);
+
+  const increased=await engine.message('زود الشاي 5 كمان');
+  assert.equal(increased.result.systemAction,'CART_ADD_ITEM');
+  assert.match(increased.result.text,/240\.00/);
+  assert.equal(increased.state.shoppingCart.find(x=>x.name.includes('شاي')).qty,15);
+
+  await engine.message('عندكم هدايا تخرج');
+  const returned=await engine.message('ارجع للطلب، الحساب كام؟');
+  assert.equal(returned.result.systemAction,'CART_SUMMARY');
+  assert.match(returned.result.text,/240\.00/);
+});
+test('custom-design knowledge and previous-order tracking do not erase the active sales cart',async()=>{
+  const engine=createTrainingEngine(io());
+  await engine.message('كم سعر كوب الشاي');
+  await engine.message('عايز 10');
+
+  const custom=await engine.message('تسوون تصميم خاص؟');
+  assert.match(custom.result.text,/التصميم والتخصص/);
+  const duration=await engine.message('كم مدة التصنيع؟');
+  assert.match(duration.result.text,/يومين.*10 أيام/);
+
+  const askOrder=await engine.message('فين طلبي القديم؟');
+  assert.match(askOrder.result.text,/رقم الطلب/);
+  const tracked=await engine.message('12345');
+  assert.equal(tracked.result.systemAction,'TRACK_ORDER');
+  assert.equal(tracked.state.shoppingCart.length,1);
+
+  const returned=await engine.message('نرجع للطلب، وصلنا لكام؟');
+  assert.equal(returned.result.systemAction,'CART_SUMMARY');
+  assert.match(returned.result.text,/20\.00/);
 });
 test('an explicit newborn request cannot select a Ramadan knowledge action',async()=>{
   const routedKnowledge=[
