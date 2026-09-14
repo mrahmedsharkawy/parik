@@ -17,6 +17,7 @@ const knowledge = [
   [8,'كم سعر بوكس اكريليك 15x15 ارتفاع 5 سم','سعر بوكس اكريليك 15x15 ارتفاع 5 سم هو 30 درهم للوحدة.'],
   [9,'تسوون تصميم خاص','أكيد، ننفذ حسب التصميم والتخصص.'],
   [10,'كم مدة التصنيع','مدة التصنيع من يومين إلى 10 أيام حسب تفاصيل وكمية الطلب.'],
+  [11,'شو سعر استاند دبل جلد 40 سم','سعر استاند دبل جلد 40 سم هو 170 درهم للوحدة.'],
 ].map(([id,question,answer])=>({id,question,answer,active:true,keywords:[],category:'عام',usage_count:0}));
 const products=[{id:604,name_ar:'طقم مواليد أكريليك 10 قطع',price:590,active:true},
   {id:11,name_ar:'كوب الشاي',price:2,active:true},{id:12,name_ar:'كوب القهوة',price:3,active:true}];
@@ -155,6 +156,27 @@ test('custom-design knowledge and previous-order tracking do not erase the activ
   const returned=await engine.message('نرجع للطلب، وصلنا لكام؟');
   assert.equal(returned.result.systemAction,'CART_SUMMARY');
   assert.match(returned.result.text,/20\.00/);
+});
+test('a conversational confirmation cannot apply the previous product price to a newly named product',async()=>{
+  const engine=createTrainingEngine(io());
+  await engine.message('كم سعر هالو كارد اكريليك 18 سم');
+  await engine.message('تمام لو عايز 2');
+  const switched=await engine.message('اه عايز 10 كوب شاي');
+  assert.equal(switched.result.systemAction,'CART_ADD_ITEM');
+  assert.match(switched.result.text,/كوب شاي/);
+  assert.match(switched.result.text,/10 × 2\.00 = 20\.00/);
+  assert.doesNotMatch(switched.result.text,/10 × 45\.00/);
+  assert.equal(switched.state.shoppingCart.length,2);
+});
+test('multi-product requests accept quantities written as Arabic words',async()=>{
+  const engine=createTrainingEngine(io());
+  await engine.message('شو سعر استاند دبل جلد 40 سم');
+  const output=await engine.message('اوك عايز 10 كوب شاي و واحد استاند دبل');
+  assert.equal(output.result.systemAction,'MULTI_ITEM_CALC');
+  assert.match(output.result.text,/10 كوب شاي/);
+  assert.match(output.result.text,/1 استاند دبل/);
+  assert.match(output.result.text,/190\.00/);
+  assert.equal(output.state.shoppingCart.length,2);
 });
 test('an explicit newborn request cannot select a Ramadan knowledge action',async()=>{
   const routedKnowledge=[
