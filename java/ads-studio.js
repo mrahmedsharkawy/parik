@@ -50,7 +50,12 @@ async function loadMetaStatus(){
     const data=await api("/api/meta/status");
     state.meta=data;
     $("#apiVersionField").value=data.api_version||"—";
-    if(!data.connected){$("#metaState").className="state state-warn";$("#metaState").textContent="ميتا غير متصل";$("#connectMetaBtn").hidden=false;clearKpis();renderCampaigns([]);return}
+    if(!data.connected){
+      $("#metaState").className="state state-warn";
+      $("#metaState").textContent=data.configured===false?"إعداد Meta غير مكتمل":data.reauthorization_required?"يلزم إعادة ربط Meta":"ميتا غير متصل";
+      $("#connectMetaBtn").hidden=false;
+      clearKpis();renderCampaigns([]);return
+    }
     $("#metaState").className="state state-ok";$("#metaState").textContent=`Meta Connected${data.user_name?` — ${data.user_name}`:""}`;$("#connectMetaBtn").hidden=true;
     await loadMetaAssets();
     await Promise.all([loadCampaigns(),loadInsights()]);
@@ -251,7 +256,10 @@ async function publish(){
 
 function bind(){
   $$("#studioNav button").forEach(b=>b.onclick=()=>{$$("#studioNav button").forEach(x=>x.classList.remove("active"));b.classList.add("active");$$(".view").forEach(v=>v.classList.remove("active"));$(`#view-${b.dataset.view}`).classList.add("active")});
-  $("#connectMetaBtn").onclick=()=>location.href="/api/meta/oauth-start";
+  $("#connectMetaBtn").onclick=()=>{
+    if(state.meta?.configured===false)return toast(`إعداد Meta ناقص: ${(state.meta.missing_configuration||[]).join("، ")}`);
+    location.href="/api/meta/oauth-start";
+  };
   $("#refreshBtn").onclick=async()=>{await loadProducts();await loadMetaStatus()};
   $("#rangeSelect").onchange=loadInsights;$("#productSearch").oninput=renderProducts;$("#categoryFilter").onchange=renderProducts;$("#productSort").onchange=renderProducts;
   $("#prevProducts").onclick=()=>{if(state.page>0){state.page--;loadProducts()}};$("#nextProducts").onclick=()=>{state.page++;loadProducts()};
