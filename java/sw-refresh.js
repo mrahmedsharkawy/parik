@@ -1,14 +1,14 @@
 (function () {
   if (!('serviceWorker' in navigator)) return;
 
-  var REFRESH_KEY = 'sw-v413-no-visible-push-duplicate';
+  var REFRESH_KEY = 'sw-v414-api-network-bypass';
   var refreshed = false;
 
   function clearOldCaches() {
     if (!('caches' in window)) return;
     caches.keys().then(function (keys) {
       keys.forEach(function (key) {
-        if (key !== 'bariq-v413-no-visible-push-duplicate') caches.delete(key).catch(function () {});
+        if (key !== 'bariq-v414-api-network-bypass') caches.delete(key).catch(function () {});
       });
     }).catch(function () {});
   }
@@ -85,7 +85,7 @@
   // Keep Tag Assistant preview sessions deterministic by disabling SW for debug URLs.
   if (disableServiceWorkerForGtmPreview()) return;
 
-  navigator.serviceWorker.register('/sw.js?v=413-no-visible-push-duplicate', { updateViaCache: 'none' }).then(function (reg) {
+  navigator.serviceWorker.register('/sw.js?v=414-api-network-bypass', { updateViaCache: 'none' }).then(function (reg) {
     clearOldCaches();
     requestActivation(reg);
     sendPushLanguage(reg);

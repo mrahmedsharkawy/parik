@@ -1,5 +1,5 @@
 /* Service Worker - Bariq PWA */
-const CACHE = 'bariq-v413-no-visible-push-duplicate';
+const CACHE = 'bariq-v414-api-network-bypass';
 let _badgeCount = 0;
 const STATIC_URLS = [
   '/',
@@ -247,6 +247,12 @@ self.addEventListener('activate', function(e) {
 self.addEventListener('fetch', function(e) {
   const url = e.request.url;
   const requestUrl = new URL(url);
+  // API routes must be handled by the server directly. Intercepting OAuth
+  // navigations here hides redirects (and previously replaced them with the
+  // generic offline page), which prevents Meta login from opening.
+  if (requestUrl.origin === self.location.origin && requestUrl.pathname.startsWith('/api/')) {
+    return;
+  }
   if (requestUrl.searchParams.has('gtm_debug') || requestUrl.searchParams.has('gtm_preview') || requestUrl.searchParams.has('gtm_auth') || requestUrl.searchParams.has('gtm_cookies_win')) {
     return;
   }
