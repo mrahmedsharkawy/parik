@@ -308,7 +308,7 @@
       name: "بريق للهدايا والإبداع",
       enName: "BARIQ GIFTS & CREATIVITY",
       phone: "+971544046084",
-      email: "sales@bariqgifts.com",
+      email: "info@bariqgifts.com",
       address: "راس الخيمه - الإمارات العربية المتحدة",
       website: "www.bariqgifts.com",
       logo: "/assets/blak.png",

@@ -63,7 +63,7 @@ Added:
 
 - `LocalBusiness` entity for Bariq using verified business information.
 - Phone/WhatsApp: `+971544046084`.
-- Email: `bariq.gifts@gmail.com`.
+- Email: `info@bariqgifts.com`.
 - Locality-level address: Ras Al Khaimah, United Arab Emirates.
 - UAE-wide service area.
 - Working hours: Saturday to Thursday, 9:00 AM to 7:00 PM; Friday closed.

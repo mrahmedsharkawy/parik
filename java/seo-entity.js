@@ -22,7 +22,7 @@
     logo:'https://bariqgifts.com/assets/logo.png',
     image:'https://bariqgifts.com/assets/logo.png',
     telephone:'+971544046084',
-    email:'bariq.gifts@gmail.com',
+    email:'info@bariqgifts.com',
     address:{
       '@type':'PostalAddress',
       addressLocality:'Ras Al Khaimah',
