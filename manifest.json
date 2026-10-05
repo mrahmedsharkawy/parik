@@ -28,14 +28,6 @@
   "categories": ["shopping", "lifestyle"],
   "prefer_related_applications": false,
   "display_override": ["standalone", "minimal-ui"],
-  "shortcuts": [
-    {
-      "name": "تقارير الأدمن",
-      "short_name": "التقارير",
-      "description": "ملخص مبيعات وطلبات Bariq",
-      "url": "/admin-reports.html",
-      "icons": [{ "src": "/assets/icon-96.png?v=site-icon-20260727", "sizes": "96x96", "type": "image/png" }]
-    }
-  ],
+  "shortcuts": [],
   "screenshots": []
 }

@@ -4,7 +4,7 @@
 
 <script src="/java/trusted-types.js?v=20260806c"></script>
 <script src="/java/account-head.js?v=20260803d"></script>
-<script src="/java/account-bindings.js?v=20260803b" defer></script>
+<script src="/java/account-bindings.js?v=20261005-delete-account" defer></script>
 <script src="/java/account-session-bridge.js?v=20260822-r6"></script>
 <script src="/java/account-user-isolation.js?v=20260822-r1"></script>
   <meta charset="UTF-8" />
@@ -1386,6 +1386,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div>
   </div>
 
+  <!-- مودال حذف الحساب نهائياً -->
+  <div id="deleteAccountModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.58);z-index:100000;align-items:center;justify-content:center;padding:20px">
+    <div style="background:#fff;border-radius:18px;padding:26px 22px;max-width:390px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.28);direction:rtl">
+      <div style="font-size:2.2rem;text-align:center;margin-bottom:8px">⚠️</div>
+      <h3 style="color:#b42318;font-size:1.08rem;text-align:center;margin:0 0 10px;font-weight:800">حذف الحساب نهائياً</h3>
+      <p style="color:#555;font-size:.84rem;margin:0 0 12px;line-height:1.75">سيتم حذف حساب الدخول والملف الشخصي والعناوين والإشعارات والمناسبات والصور نهائياً. ستبقى الفواتير والطلبات المطلوبة للمحاسبة بدون بياناتك الشخصية.</p>
+      <label for="deleteAccountConfirm" style="display:block;color:#344054;font-size:.8rem;font-weight:700;margin-bottom:6px">اكتب DELETE للتأكيد</label>
+      <input id="deleteAccountConfirm" type="text" autocomplete="off" spellcheck="false" style="width:100%;box-sizing:border-box;border:1.5px solid #d0d5dd;border-radius:9px;padding:11px 12px;font-size:.9rem;direction:ltr;text-align:left" placeholder="DELETE">
+      <div id="deleteAccountError" role="alert" style="display:none;color:#b42318;background:#fef3f2;border-radius:8px;padding:9px 10px;margin-top:10px;font-size:.78rem;line-height:1.5"></div>
+      <div style="display:flex;gap:10px;margin-top:18px">
+        <button type="button" data-acc-delete-cancel style="flex:1;padding:11px;border:1.5px solid #e4e7ec;border-radius:10px;background:#f9fafb;color:#475467;font-size:.86rem;font-weight:700;cursor:pointer">إلغاء</button>
+        <button type="button" id="deleteAccountConfirmButton" data-acc-delete-confirm style="flex:1;padding:11px;border:none;border-radius:10px;background:#d92d20;color:#fff;font-size:.86rem;font-weight:800;cursor:pointer">حذف نهائي</button>
+      </div>
+    </div>
+  </div>
+
   <!-- المحتوى الرئيسي -->
   <div class="acc-content">
 
@@ -1677,6 +1693,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="acc-form-group"><label data-i18n="ملاحظات التوصيل">ملاحظات التوصيل (اختياري)</label><input type="text" id="addr-notes" placeholder="بالقرب من سبينيس..."></div>
         <button class="acc-save-btn" data-acc-save-address>💾 <span data-i18n="حفظ العنوان">حفظ العنوان</span></button>
       </div>
+      <div class="acc-profile-card" style="margin-top:18px;border:1px solid #fda29b;background:#fffafa">
+        <h3 style="font-size:1rem;font-weight:800;color:#b42318;margin:0 0 9px">⚠️ حذف الحساب</h3>
+        <p style="font-size:.82rem;color:#667085;line-height:1.7;margin:0 0 14px">يحذف حسابك وبياناتك الشخصية نهائياً. لا يمكن التراجع بعد التأكيد.</p>
+        <button type="button" data-acc-delete-open style="border:1.5px solid #d92d20;border-radius:9px;background:#fff;color:#b42318;padding:10px 16px;font-size:.84rem;font-weight:800;cursor:pointer">حذف حسابي نهائياً</button>
+      </div>
     </div>
 
     <div id="section-invoices" style="display:none">
@@ -1807,7 +1828,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div><!-- end acc-content -->
 </div><!-- end acc-layout -->
 
-<script src="/java/account.js?v=20260824-session-r2" defer></script>
+<script src="/java/account.js?v=20261005-delete-account" defer></script>
 
 
 <footer class="site-footer">

@@ -1837,6 +1837,64 @@
     window.location.href = 'login.html?logout=1';
   };
 
+  window.showDeleteAccountModal = function() {
+    const modal = document.getElementById('deleteAccountModal');
+    const input = document.getElementById('deleteAccountConfirm');
+    const errorBox = document.getElementById('deleteAccountError');
+    if (input) input.value = '';
+    if (errorBox) { errorBox.style.display = 'none'; errorBox.textContent = ''; }
+    if (modal) modal.style.display = 'flex';
+    setTimeout(() => input && input.focus(), 50);
+  };
+
+  window.hideDeleteAccountModal = function() {
+    const modal = document.getElementById('deleteAccountModal');
+    if (modal) modal.style.display = 'none';
+  };
+
+  window.deleteAccountPermanently = async function() {
+    const input = document.getElementById('deleteAccountConfirm');
+    const errorBox = document.getElementById('deleteAccountError');
+    const button = document.getElementById('deleteAccountConfirmButton');
+    const showError = (message) => {
+      if (errorBox) { errorBox.textContent = message; errorBox.style.display = 'block'; }
+    };
+    if (!input || input.value.trim().toUpperCase() !== 'DELETE') {
+      showError('اكتب DELETE كما هي لتأكيد الحذف النهائي.');
+      return;
+    }
+
+    const token = typeof getStoredAuthToken === 'function' ? getStoredAuthToken() : localStorage.getItem('x2_token');
+    if (!token) {
+      showError('انتهت جلسة الدخول. سجل الدخول مرة أخرى ثم أعد المحاولة.');
+      return;
+    }
+
+    if (button) { button.disabled = true; button.textContent = 'جارٍ الحذف...'; button.style.opacity = '.65'; }
+    if (errorBox) errorBox.style.display = 'none';
+    try {
+      const response = await fetch(SUPABASE_URL + '/functions/v1/delete-account', {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_ANON,
+          Authorization: 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ confirmation: 'DELETE' })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result.deleted) throw new Error(result.error || 'delete_failed');
+
+      const keysToRemove = ['x2_profile','x2_token','x2_refresh_token','x2_token_expires_at','x2_orders','x2_cart','x2_cashback','x2_orders_synced','x2_logged','x2_coupon_applied','x2_coupon_code','x2_order_counter','x2_users'];
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      sessionStorage.clear();
+      window.location.href = 'login.html?account_deleted=1';
+    } catch (_) {
+      showError('تعذر حذف الحساب الآن. تأكد من الاتصال وحاول مرة أخرى، أو تواصل معنا للمساعدة.');
+      if (button) { button.disabled = false; button.textContent = 'حذف نهائي'; button.style.opacity = '1'; }
+    }
+  };
+
   // load profile
   window.logoutAccount = window.showLogoutModal;
 

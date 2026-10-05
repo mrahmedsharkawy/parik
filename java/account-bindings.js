@@ -24,6 +24,15 @@
     target = event.target.closest && event.target.closest('[data-acc-logout-confirm]');
     if (target) { call('doLogout'); return; }
 
+    target = event.target.closest && event.target.closest('[data-acc-delete-open]');
+    if (target) { call('showDeleteAccountModal'); return; }
+
+    target = event.target.closest && event.target.closest('[data-acc-delete-cancel]');
+    if (target) { call('hideDeleteAccountModal'); return; }
+
+    target = event.target.closest && event.target.closest('[data-acc-delete-confirm]');
+    if (target) { call('deleteAccountPermanently'); return; }
+
     target = event.target.closest && event.target.closest('[data-acc-sidebar-toggle]');
     if (target) {
       var sidebar = document.getElementById('accSidebar');
