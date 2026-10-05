@@ -20,9 +20,11 @@
 - [ ] Apple Developer membership is Active.
 - [ ] Register the final bundle ID in Apple Developer.
 - [ ] Create the App Store Connect app record.
-- [ ] Add a secure, user-confirmed account deletion flow inside Account settings.
-- [ ] Confirm which customer data is deleted and which order records must be retained legally.
-- [ ] Create a non-transparent 1024x1024 App Store icon from the approved Bariq brand artwork.
+- [x] Add a secure, user-confirmed account deletion flow inside Account settings.
+- [x] Confirm which customer data is deleted and which order records must be retained legally.
+- [x] Create a non-transparent 1024x1024 App Store icon from the approved Bariq brand artwork (`assets/app-store-icon-1024.png`).
+- [x] Prepare Arabic and English App Store metadata, review notes, permission copy, and provisional privacy answers (`docs/APP_STORE_METADATA.md`).
+- [x] Publish-ready Arabic and English privacy policy content is available at `/policy`, including account deletion and data-retention details.
 - [ ] Prepare iPhone screenshots using the final build.
 - [ ] Complete App Privacy answers from the actual data flows.
 - [ ] Add review notes and a working review account if login-only features need testing.
