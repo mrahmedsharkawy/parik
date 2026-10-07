@@ -66,6 +66,8 @@
 
     target = event.target.closest && event.target.closest('[data-acc-save-address]');
     if (target) { call('saveAddress'); return; }
+    target = event.target.closest && event.target.closest('[data-acc-use-location]');
+    if (target) { call('useCurrentLocation', target); return; }
 
     target = event.target.closest && event.target.closest('[data-acc-refresh-invoices]');
     if (target) { call('refreshAccountInvoices'); return; }

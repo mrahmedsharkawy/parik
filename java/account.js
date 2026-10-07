@@ -99,7 +99,9 @@
       email: String(customer.email || current.email || '').trim().toLowerCase(),
       phone: normalizeUaePhone(customer.phone || current.phone || ''),
       address: addressText || customer.city || current.address || '',
-      city: customer.city || current.city || ''
+      city: customer.city || current.city || '',
+      latitude: customer.latitude ?? current.latitude ?? '',
+      longitude: customer.longitude ?? current.longitude ?? ''
     };
   }
 
@@ -183,6 +185,8 @@
       email,
       city: profile.address || '',
       address: profile.address || '',
+      latitude: String(profile.latitude ?? '').trim() !== '' && Number.isFinite(Number(profile.latitude)) ? Number(profile.latitude) : null,
+      longitude: String(profile.longitude ?? '').trim() !== '' && Number.isFinite(Number(profile.longitude)) ? Number(profile.longitude) : null,
       active: true
     };
     if (phone) payload.phone = phone;
@@ -1463,6 +1467,8 @@
       phone: normalizeUaePhone(profile.phone || ''),
       address: profile.address || '',
       address_full: profile.address_full || null,
+      latitude: profile.latitude ?? profile.address_full?.latitude ?? '',
+      longitude: profile.longitude ?? profile.address_full?.longitude ?? '',
       ts: Date.now()
     };
     try {
@@ -1487,11 +1493,51 @@
     };
     try {
       const p = JSON.parse(localStorage.getItem('x2_profile') || '{}');
+      addr.latitude = p.latitude || p.address_full?.latitude || '';
+      addr.longitude = p.longitude || p.address_full?.longitude || '';
+      addr.location_url = addr.latitude && addr.longitude
+        ? 'https://www.google.com/maps?q=' + addr.latitude + ',' + addr.longitude
+        : '';
       p.address_full = addr;
       localStorage.setItem('x2_profile', JSON.stringify(p));
+      saveCustomerProfileToSupabase(p, p).catch(()=>{});
       syncProfileToUserSync(p, p).catch(()=>{});
     } catch(e) {}
     alert('✅ تم حفظ العنوان');
+  };
+
+  window.useCurrentLocation = function(button) {
+    if (!navigator.geolocation) {
+      alert('❌ تحديد الموقع غير مدعوم في هذا المتصفح. يمكنك كتابة العنوان يدويًا.');
+      return;
+    }
+    const original = button ? button.textContent : '';
+    if (button) { button.disabled = true; button.textContent = 'جاري تحديد الموقع...'; }
+    navigator.geolocation.getCurrentPosition(function(position) {
+      const latitude = Number(position.coords.latitude).toFixed(6);
+      const longitude = Number(position.coords.longitude).toFixed(6);
+      let profile = {};
+      try { profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}'); } catch(e) {}
+      profile.latitude = latitude;
+      profile.longitude = longitude;
+      profile.location_url = 'https://www.google.com/maps?q=' + latitude + ',' + longitude;
+      profile.address_full = { ...(profile.address_full || {}), latitude, longitude, location_url: profile.location_url };
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+      ['pf-location-status', 'addr-location-status'].forEach(function(id) {
+        const status = document.getElementById(id);
+        if (status) {
+          status.style.display = 'block';
+          status.textContent = '✅ تم تحديد موقع التوصيل: ' + latitude + ', ' + longitude + ' — اضغط حفظ لتأكيده.';
+        }
+      });
+      if (button) { button.disabled = false; button.textContent = original; }
+    }, function(error) {
+      if (button) { button.disabled = false; button.textContent = original; }
+      const message = error && error.code === 1
+        ? 'لم يتم منح إذن الموقع. يمكنك كتابة العنوان يدويًا.'
+        : 'تعذر تحديد الموقع الآن. تأكد من تشغيل خدمة الموقع وحاول مرة أخرى.';
+      alert('⚠️ ' + message);
+    }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
   };
 
   window.saveProfile = function() {
@@ -1929,6 +1975,17 @@
         if (a.building) { const el=document.getElementById('addr-building'); if(el) el.value=a.building; }
         if (a.zip)      { const el=document.getElementById('addr-zip');      if(el) el.value=a.zip; }
         if (a.notes)    { const el=document.getElementById('addr-notes');    if(el) el.value=a.notes; }
+        const latitude = p.latitude || a.latitude;
+        const longitude = p.longitude || a.longitude;
+        if (latitude && longitude) {
+          ['pf-location-status', 'addr-location-status'].forEach(function(id) {
+            const status = document.getElementById(id);
+            if (status) {
+              status.style.display = 'block';
+              status.textContent = '✅ موقع التوصيل محفوظ: ' + latitude + ', ' + longitude;
+            }
+          });
+        }
       }
       document.getElementById('pf-phone').value = formatUaePhoneInput(p.phone);
       if (Object.prototype.hasOwnProperty.call(p, 'password')) {

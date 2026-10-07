@@ -4,7 +4,7 @@
 
 <script src="/java/trusted-types.js?v=20260806c"></script>
 <script src="/java/account-head.js?v=20260803d"></script>
-<script src="/java/account-bindings.js?v=20261005-delete-account" defer></script>
+<script src="/java/account-bindings.js?v=20261007-delivery-location" defer></script>
 <script src="/java/account-session-bridge.js?v=20260822-r6"></script>
 <script src="/java/account-user-isolation.js?v=20260822-r1"></script>
   <meta charset="UTF-8" />
@@ -1473,6 +1473,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <div class="acc-form-group"><label data-i18n="الاسم الكامل">الاسم الكامل</label><input type="text" id="pf-name" placeholder="أدخل اسمك" data-i18n-placeholder="أدخل اسمك"></div>
           <div class="acc-form-group"><label data-i18n="البريد الإلكتروني">البريد الإلكتروني</label><input type="email" id="pf-email" placeholder="example@email.com"></div>
           <div class="acc-form-group"><label data-i18n="عنواني">العنوان</label><input type="text" id="pf-address" placeholder="أدخل عنوانك"></div>
+          <button type="button" class="acc-save-btn" data-acc-use-location style="margin-bottom:10px;background:#fff;color:#152546;border:1px solid #d4af37">📍 تحديد موقعي الحالي</button>
+          <div id="pf-location-status" style="display:none;margin:-2px 0 12px;color:#667085;font-size:.78rem;font-weight:700"></div>
           <div class="acc-form-group"><label data-i18n="رقم الهاتف">رقم الهاتف</label><input type="tel" id="pf-phone" value="+971 " placeholder="+971 XX XXX XXXX" inputmode="tel" dir="ltr" autocomplete="tel"></div>
           <div class="acc-form-group">
             <label data-i18n="كلمة السر الحالية">كلمة السر الحالية</label>
@@ -1691,6 +1693,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="acc-form-group"><label data-i18n="المبنى">المبنى / الشقة</label><input type="text" id="addr-building" placeholder="برج المارينا، شقة 504"></div>
         <div class="acc-form-group"><label data-i18n="الرمز البريدي">الرمز البريدي (اختياري)</label><input type="text" id="addr-zip" placeholder="00000"></div>
         <div class="acc-form-group"><label data-i18n="ملاحظات التوصيل">ملاحظات التوصيل (اختياري)</label><input type="text" id="addr-notes" placeholder="بالقرب من سبينيس..."></div>
+        <button type="button" class="acc-save-btn" data-acc-use-location style="margin-bottom:10px;background:#fff;color:#152546;border:1px solid #d4af37">📍 تحديد موقعي الحالي</button>
+        <div id="addr-location-status" style="display:none;margin:-2px 0 12px;color:#667085;font-size:.78rem;font-weight:700"></div>
         <button class="acc-save-btn" data-acc-save-address>💾 <span data-i18n="حفظ العنوان">حفظ العنوان</span></button>
       </div>
       <div class="acc-profile-card" style="margin-top:18px;border:1px solid #fda29b;background:#fffafa">
@@ -1828,7 +1832,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div><!-- end acc-content -->
 </div><!-- end acc-layout -->
 
-<script src="/java/account.js?v=20261005-delete-account" defer></script>
+<script src="/java/account.js?v=20261007-delivery-location" defer></script>
 
 
 <footer class="site-footer">

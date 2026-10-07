@@ -311,10 +311,6 @@
     label.style.color = l.c;
   }
 
-  async function loginWithoutEmailConfirmation(email, pass) {
-    return false;
-  }
-
   async function loginExistingAccountAfterSignup(email, pass, fallback) {
     try {
       const data = await window.Supabase.Auth.signIn(email, pass);
@@ -375,7 +371,17 @@
       }
 
       // حفظ الجلسة مع دمج بيانات العميل المخزنة سابقاً في customers
-      const profile = saveProfile({ ...customerData, name: customerData.name || name, email: user.email || customerData.email || email, phone: meta.phone || customerData.phone || repairedPhone || '', address: meta.address || customerData.address || '' });
+      const profile = buildProfile({ ...customerData, name: customerData.name || name, email: user.email || customerData.email || email, phone: meta.phone || customerData.phone || repairedPhone || '', address: meta.address || customerData.address || '' });
+
+      if (!profile.phone || !profile.address) {
+        localStorage.removeItem('x2_logged');
+        localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+        showGoogleProfileModal(profile);
+        if (btn) { btn.disabled = false; btn.textContent = 'تسجيل الدخول'; }
+        return;
+      }
+
+      saveProfile(profile);
 
       // مزامنة مع جدول customers
       try { await ensureCustomerSaved(profile); } catch(e) {}
@@ -387,26 +393,15 @@
     } catch(supaErr) {
       const msg = supaErr.message || '';
       if (msg.includes('Invalid login') || msg.includes('invalid') || msg.includes('credentials')) {
-        if (await loginWithoutEmailConfirmation(email, pass)) return;
-        showError('login-error', '❌ البريد الإلكتروني أو كلمة المرور غير صحيحة');
-      } else if (msg.includes('Email not confirmed')) {
         const existingCustomer = await findExistingCustomer(email, '');
-        if (existingCustomer) {
-          const customerData = customerProfileData(existingCustomer);
-          const profile = saveProfile({
-            ...customerData,
-            name: customerData.name || email.split('@')[0],
-            email: customerData.email || email,
-            phone: customerData.phone || '',
-            address: customerData.address || ''
-          });
-          rememberLocalUser(profile, pass);
-          showSuccess('تم تسجيل الدخول بنجاح! 🎉', 'مرحباً ' + (profile.name || email.split('@')[0]).split(' ')[0] + '! جارٍ تحويلك...');
-          setTimeout(() => { window.location.href = 'account.html'; }, 1200);
-          return;
-        }
-        if (await loginWithoutEmailConfirmation(email, pass)) return;
-        showError('login-error', '❌ البريد الإلكتروني مسجّل بالفعل. جرّب تسجيل الدخول أو تواصل معنا لاستعادة الحساب.');
+        showError(
+          'login-error',
+          existingCustomer
+            ? '❌ كلمة المرور غير صحيحة. جرّب مرة أخرى أو استخدم نسيت كلمة المرور.'
+            : '❌ هذا البريد الإلكتروني غير مسجل. أنشئ حسابًا جديدًا أو تأكد من البريد.'
+        );
+      } else if (msg.includes('Email not confirmed')) {
+        showError('login-error', '❌ أكّد بريدك الإلكتروني أولًا، ثم سجّل الدخول.');
       } else {
         showError('login-error', '❌ ' + msg);
       }
@@ -425,6 +420,7 @@
     const terms = document.getElementById('reg-terms').checked;
 
     if (!fullName) { showError('register-error', '⚠️ أدخل اسمك'); return; }
+    if (!address) { showError('register-error', '⚠️ أدخل عنوانك'); return; }
     if (!email)  { showError('register-error', '⚠️ أدخل البريد الإلكتروني'); return; }
     if (!/^\S+@\S+\.\S+$/.test(email)) { showError('register-error', '⚠️ البريد الإلكتروني غير صحيح'); return; }
     if (!phone)  { showError('register-error', '⚠️ أدخل رقم الهاتف'); return; }
@@ -450,12 +446,11 @@
         return;
       }
 
-      // حفظ كل بيانات العميل في حسابه (localStorage) بعد التسجيل
-      const profile = saveProfile({ name: fullName, email, phone, address });
-      rememberLocalUser(profile, pass);
-
       // حفظ في customers أيضاً والتأكد أنه ظهر في قاعدة العملاء
+      const profile = buildProfile({ name: fullName, email, phone, address });
       await ensureCustomerSaved(profile);
+      saveProfile(profile);
+      rememberLocalUser(profile, pass);
       const syncToken = await getProfileSyncToken(email, pass, signupData);
       syncProfileToUserSync(profile, syncToken).catch(()=>{});
 
@@ -464,25 +459,8 @@
 
     } catch(err) {
       if (isEmailRateLimitError(err)) {
-        const existingCustomer = await findExistingCustomer(email, phone);
-        if (existingCustomer) {
-          showError('register-error', '❌ هذا البريد الإلكتروني أو رقم الهاتف مسجّل بالفعل. جرّب تسجيل الدخول.');
-          if (btn) { btn.disabled = false; btn.textContent = 'إنشاء حساب جديد'; }
-          return;
-        }
-        const profile = buildProfile({ name: fullName, email, phone, address });
-        try {
-          await ensureCustomerSaved(profile);
-        } catch(saveErr) {
-          if (isDuplicateRegisterError(saveErr)) showError('register-error', duplicateRegisterMessage(saveErr));
-          else showError('register-error', '❌ تعذر حفظ العميل في قاعدة البيانات. حاول مرة أخرى بعد قليل.');
-          if (btn) { btn.disabled = false; btn.textContent = 'إنشاء حساب جديد'; }
-          return;
-        }
-        const savedProfile = saveProfile(profile);
-        rememberLocalUser(savedProfile, pass);
-        showSuccess('تم إنشاء حسابك! 🎉', 'مرحباً ' + fname + '! جارٍ تحويلك لحسابك...');
-        setTimeout(() => { window.location.href = 'account.html'; }, 1200);
+        showError('register-error', '❌ تم تجاوز حد إرسال البريد مؤقتًا. انتظر قليلًا ثم حاول مرة أخرى.');
+        if (btn) { btn.disabled = false; btn.textContent = 'إنشاء حساب جديد'; }
         return;
       }
 
@@ -534,6 +512,7 @@
     const address = String(document.getElementById('google-profile-address')?.value || '').trim();
     if (error) { error.textContent = ''; error.style.display = 'none'; }
     if (!phone) { if (error) showError('google-profile-error', '⚠️ من فضلك أدخل رقم الهاتف'); return; }
+    if (!/^\+971\d{8,9}$/.test(phone)) { if (error) showError('google-profile-error', '⚠️ أدخل رقم إماراتي صحيح بعد +971'); return; }
     if (!address) { if (error) showError('google-profile-error', '⚠️ من فضلك أدخل العنوان'); return; }
     let profile = {};
     try { profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}'); } catch(e) { profile = {}; }
@@ -541,8 +520,8 @@
     if (btn) { btn.disabled = true; btn.textContent = 'جارٍ الحفظ...'; }
     try {
       localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
-      localStorage.setItem('x2_logged', '1');
       await ensureCustomerSaved(profile);
+      localStorage.setItem('x2_logged', '1');
       syncProfileToUserSync(profile).catch(()=>{});
       window.location.href = 'index.html';
     } catch(e) {
@@ -633,13 +612,22 @@
       localStorage.setItem('x2_token', accessToken);
       if (refreshToken) localStorage.setItem('x2_refresh_token', refreshToken);
       localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
-      localStorage.setItem('x2_logged', '1');
-      const needsProfileCompletion = !existingCustomer;
+      if (oauthMode === 'login' && !existingCustomer) {
+        localStorage.removeItem('x2_token');
+        localStorage.removeItem('x2_refresh_token');
+        localStorage.removeItem('x2_logged');
+        localStorage.removeItem(PROFILE_KEY);
+        switchTab('login');
+        showError('login-error', '❌ هذا البريد غير مسجل في بريق. اختر إنشاء حساب جديد أولًا.');
+        return;
+      }
+      const needsProfileCompletion = !profile.phone || !profile.address;
       if (needsProfileCompletion) {
         localStorage.removeItem('x2_goto_section');
         showGoogleProfileModal(profile);
         return;
       }
+      localStorage.setItem('x2_logged', '1');
       try { await ensureCustomerSaved(profile); } catch(e) {}
       syncProfileToUserSync(profile, accessToken).catch(()=>{});
       showSuccess('مرحباً ' + (profile.fname || profile.name || '') + '!', 'تم تسجيل الدخول بنجاح.');
