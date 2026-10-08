@@ -1520,15 +1520,65 @@
     }
     const original = button ? button.textContent : '';
     if (button) { button.disabled = true; button.textContent = 'جاري تحديد الموقع...'; }
-    navigator.geolocation.getCurrentPosition(function(position) {
+    navigator.geolocation.getCurrentPosition(async function(position) {
       const latitude = Number(position.coords.latitude).toFixed(6);
       const longitude = Number(position.coords.longitude).toFixed(6);
+      const locationStatuses = ['pf-location-status', 'addr-location-status']
+        .map(function(id) { return document.getElementById(id); })
+        .filter(Boolean);
+      locationStatuses.forEach(function(status) {
+        status.style.display = 'block';
+        status.textContent = '⏳ تم تحديد الإحداثيات، جاري جلب تفاصيل العنوان...';
+      });
+
+      let resolvedAddress = null;
+      try {
+        const response = await fetch(
+          '/api/reverse-geocode?lat=' + encodeURIComponent(latitude) + '&lon=' + encodeURIComponent(longitude),
+          { headers: { Accept: 'application/json' } }
+        );
+        if (response.ok) resolvedAddress = await response.json();
+      } catch(e) {}
+
+      const address = resolvedAddress && resolvedAddress.address ? resolvedAddress.address : {};
+      const countryCode = String(address.country_code || '').toLowerCase();
+      const city = address.state || address.city || address.town || address.village || address.municipality || '';
+      const area = address.suburb || address.neighbourhood || address.quarter || address.city_district || address.district || '';
+      const street = address.road || address.pedestrian || address.residential || address.footway || '';
+      const building = Array.from(new Set([address.building, address.house_name, address.house_number].filter(Boolean))).join('، ');
+      const postcode = address.postcode || '';
+      const setAddressValue = function(id, value) {
+        const field = document.getElementById(id);
+        if (field && value) field.value = value;
+      };
+      const countryField = document.getElementById('addr-country');
+      if (countryField && countryCode && Array.from(countryField.options).some(function(option) { return option.value === countryCode; })) {
+        countryField.value = countryCode;
+      }
+      setAddressValue('addr-city', city);
+      setAddressValue('addr-area', area);
+      setAddressValue('addr-street', street);
+      setAddressValue('addr-building', building);
+      setAddressValue('addr-zip', postcode);
+      setAddressValue('pf-address', resolvedAddress && resolvedAddress.display_name);
       let profile = {};
       try { profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}'); } catch(e) {}
       profile.latitude = latitude;
       profile.longitude = longitude;
       profile.location_url = 'https://www.google.com/maps?q=' + latitude + ',' + longitude;
-      profile.address_full = { ...(profile.address_full || {}), latitude, longitude, location_url: profile.location_url };
+      profile.address = (resolvedAddress && resolvedAddress.display_name) || profile.address || '';
+      profile.address_full = {
+        ...(profile.address_full || {}),
+        country: countryCode || profile.address_full?.country || '',
+        city: city || profile.address_full?.city || '',
+        area: area || profile.address_full?.area || '',
+        street: street || profile.address_full?.street || '',
+        building: building || profile.address_full?.building || '',
+        zip: postcode || profile.address_full?.zip || '',
+        latitude,
+        longitude,
+        location_url: profile.location_url
+      };
       localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
       ['pf-location-status', 'addr-location-status'].forEach(function(id) {
         const status = document.getElementById(id);
@@ -1536,6 +1586,11 @@
           status.style.display = 'block';
           status.textContent = '✅ تم تحديد موقع التوصيل: ' + latitude + ', ' + longitude + ' — اضغط حفظ لتأكيده.';
         }
+      });
+      locationStatuses.forEach(function(status) {
+        status.textContent = resolvedAddress
+          ? '✅ تم ملء بيانات العنوان تلقائيًا — راجع رقم المبنى/الشقة ثم اضغط حفظ العنوان.'
+          : '✅ تم تحديد الإحداثيات — تعذر جلب اسم الشارع، اكتبه يدويًا ثم اضغط حفظ.';
       });
       if (button) { button.disabled = false; button.textContent = original; }
     }, function(error) {
