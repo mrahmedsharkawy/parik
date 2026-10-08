@@ -1507,6 +1507,13 @@
   };
 
   window.useCurrentLocation = function(button) {
+    // Older cart code installed an own `navigator.geolocation = null` shim.
+    // Remove that configurable shim so the browser's native implementation is visible.
+    try {
+      if (Object.prototype.hasOwnProperty.call(navigator, 'geolocation') && navigator.geolocation === null) {
+        delete navigator.geolocation;
+      }
+    } catch(e) {}
     if (!navigator.geolocation) {
       alert('❌ تحديد الموقع غير مدعوم في هذا المتصفح. يمكنك كتابة العنوان يدويًا.');
       return;

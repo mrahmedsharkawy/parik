@@ -1,10 +1,3 @@
-try {
-    Object.defineProperty(navigator, "geolocation", {
-        value: null,
-        configurable: true
-    });
-} catch (e) {}
-
 function x2VisitorAreaFallback() {
     try {
         const visitors = JSON.parse(localStorage.getItem("x2_visitors") || "[]"), v = Array.isArray(visitors) ? visitors.find(v => v && (v.city || v.country)) : null;
