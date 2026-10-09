@@ -1,0 +1,50 @@
+workflows:
+  bariq-ios-app-store:
+    name: Bariq iOS App Store
+    instance_type: mac_mini_m2
+    max_build_duration: 120
+    integrations:
+      app_store_connect: Bariq Apple
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.bariqgifts.app
+      vars:
+        APP_STORE_APPLE_ID: "6820217233"
+    cache:
+      cache_paths:
+        - $HOME/.pub-cache
+        - $HOME/Library/Caches/CocoaPods
+    scripts:
+      - name: Get Flutter packages
+        script: |
+          cd "$CM_BUILD_DIR/bariq_app"
+          flutter pub get
+      - name: Install CocoaPods dependencies
+        script: |
+          cd "$CM_BUILD_DIR/bariq_app/ios"
+          pod install
+      - name: Apply App Store signing profile
+        script: |
+          cd "$CM_BUILD_DIR/bariq_app"
+          xcode-project use-profiles --project "$CM_BUILD_DIR/bariq_app/ios/Runner.xcodeproj"
+      - name: Build signed IPA
+        script: |
+          cd "$CM_BUILD_DIR/bariq_app"
+          flutter build ipa \
+            --release \
+            --build-name=1.0.1 \
+            --build-number=1 \
+            --export-options-plist=ios/ExportOptions.plist
+    artifacts:
+      - bariq_app/build/ios/ipa/*.ipa
+      - bariq_app/build/ios/archive/*.xcarchive
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: false
+        submit_to_app_store: false

@@ -1,0 +1,11 @@
+{
+  "name": "Bariq Gifts",
+  "short_name": "Bariq",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#F6F7FA",
+  "theme_color": "#152546",
+  "description": "Bariq Gifts Flutter App",
+  "orientation": "portrait-primary",
+  "prefer_related_applications": false
+}

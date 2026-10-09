@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="LaunchTheme" parent="@android:style/Theme.Light.NoTitleBar">
+        <item name="android:windowSplashScreenBackground">@color/brand_black</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@color/splash_transparent</item>
+        <item name="android:windowSplashScreenBrandingImage">@mipmap/ic_launcher_foreground</item>
+    </style>
+</resources>

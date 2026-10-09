@@ -1,0 +1,369 @@
+
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Bariq App Preview</title>
+<style>
+:root{
+  --navy:#152546;
+  --navy2:#29426f;
+  --gold:#d4af37;
+  --ink:#17233c;
+  --muted:#778198;
+  --bg:#f6f7fa;
+  --line:#e7eaf0;
+  --white:#fff;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#dfe4ec;font-family:Tahoma,Arial,sans-serif;color:var(--ink)}
+.phone{
+  width:min(430px,100vw);
+  min-height:100vh;
+  margin:0 auto;
+  background:var(--bg);
+  position:relative;
+  overflow:hidden;
+  box-shadow:0 0 45px #0002;
+}
+.screen{display:none;min-height:100vh;padding-bottom:90px}
+.screen.active{display:block}
+.hero{
+  height:260px;
+  padding:18px 14px;
+  color:#fff;
+  background:linear-gradient(135deg,#0d213f,var(--navy),var(--navy2));
+  display:flex;flex-direction:column
+}
+.top{display:flex;align-items:center;gap:10px}
+.brand{font-weight:900;font-size:22px;letter-spacing:2px}
+.sub{font-size:11px;opacity:.78;margin-top:4px}
+.spacer{flex:1}
+.iconbtn{
+  width:40px;height:40px;border-radius:50%;border:0;background:#ffffff14;color:#fff;
+  font-size:20px;position:relative;cursor:pointer
+}
+.badge{
+  position:absolute;top:-3px;left:-3px;min-width:18px;height:18px;border-radius:9px;
+  background:var(--gold);color:var(--navy);font-size:10px;font-weight:900;
+  display:flex;align-items:center;justify-content:center
+}
+.search{
+  height:52px;background:#fff;border-radius:16px;margin-top:auto;display:flex;align-items:center;
+  padding:0 14px;color:var(--muted);gap:10px;cursor:pointer
+}
+.hero-note{text-align:center;font-size:13px;font-weight:800;margin-top:15px}
+.hero-note2{text-align:center;font-size:11px;opacity:.72;margin-top:7px}
+.section-title{font-size:18px;font-weight:900;color:var(--navy);padding:18px 14px 10px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:0 10px}
+.card{
+  background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;cursor:pointer
+}
+.img{
+  height:155px;background:linear-gradient(135deg,#f2f4f8,#e9edf4);
+  display:flex;align-items:center;justify-content:center;font-size:54px;position:relative
+}
+.discount{
+  position:absolute;top:7px;right:7px;background:var(--navy);color:#fff;
+  padding:4px 8px;border-radius:999px;font-size:11px;font-weight:900
+}
+.heart{
+  position:absolute;top:7px;left:7px;width:32px;height:32px;border-radius:50%;
+  background:#fff;display:flex;align-items:center;justify-content:center
+}
+.info{padding:9px}
+.name{font-size:12px;font-weight:900;min-height:32px}
+.price-row{display:flex;align-items:center;margin-top:8px}
+.price{font-weight:900;color:var(--navy)}
+.old{font-size:10px;color:var(--muted);text-decoration:line-through;margin-right:5px}
+.cart-mini{
+  margin-right:auto;width:34px;height:30px;border-radius:9px;border:0;background:#f5f6f9;color:var(--navy);cursor:pointer
+}
+.nav{
+  position:fixed;bottom:10px;left:50%;transform:translateX(-50%);
+  width:min(406px,calc(100vw - 24px));height:66px;background:var(--navy);
+  border-radius:34px;display:flex;padding:4px;z-index:30;box-shadow:0 14px 30px #0003
+}
+.nav button{
+  flex:1;border:0;background:transparent;color:#fff;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;font-size:10px;font-weight:800;gap:2px;cursor:pointer
+}
+.nav button .ico{font-size:21px}
+.nav button.active{color:var(--gold)}
+.appbar{
+  height:58px;background:#fff;display:flex;align-items:center;padding:0 14px;
+  border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10
+}
+.appbar h2{font-size:17px;margin:0;font-weight:900;color:var(--navy)}
+.listpad{padding:12px}
+.cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.cat{
+  background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 6px;
+  text-align:center;font-weight:900;font-size:12px;color:var(--navy);cursor:pointer
+}
+.cat .emoji{font-size:38px;display:block;margin-bottom:8px}
+.empty{
+  text-align:center;color:var(--muted);padding:55px 20px
+}
+.empty .big{font-size:72px}
+.account-card,.order-card,.summary{
+  background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px
+}
+.account-head{display:flex;align-items:center;gap:12px}
+.avatar{
+  width:52px;height:52px;border-radius:50%;background:var(--navy);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:22px
+}
+.metric-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.metric{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;text-align:center}
+.metric b{display:block;font-size:20px;color:var(--navy);margin:5px 0}
+.product-hero{
+  height:360px;background:linear-gradient(135deg,#f2f4f8,#e5e9f1);
+  display:flex;align-items:center;justify-content:center;font-size:100px
+}
+.product-body{padding:14px}
+.p-title{font-size:22px;font-weight:900;color:var(--navy);line-height:1.4}
+.p-price{font-size:24px;font-weight:900;color:var(--gold);margin-top:10px}
+.note{
+  margin-top:14px;background:#f4f8ff;border-radius:12px;padding:12px;font-weight:700;line-height:1.6;font-size:13px
+}
+.actions{
+  display:flex;gap:8px;margin-top:16px
+}
+.btn{
+  flex:1;min-height:50px;border-radius:12px;border:1px solid var(--gold);
+  font-weight:900;cursor:pointer
+}
+.btn.out{background:#fff;color:var(--navy)}
+.btn.fill{background:var(--navy);color:#fff;border-color:var(--navy)}
+.cart-item{
+  background:#fff;border:1px solid var(--line);border-radius:14px;padding:9px;
+  display:flex;gap:10px;margin-bottom:10px
+}
+.cart-thumb{
+  width:92px;height:100px;border-radius:10px;background:#eef1f6;display:flex;align-items:center;justify-content:center;font-size:40px
+}
+.qty{display:flex;align-items:center;gap:10px;margin-top:10px}
+.qty button{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:#fff}
+.form{padding:14px}
+.field{width:100%;height:48px;border:1px solid var(--line);border-radius:12px;background:#fff;padding:0 12px;margin-bottom:10px;font:inherit}
+textarea.field{height:100px;padding-top:12px}
+.search-wrap{padding:12px}
+.search-input{width:100%;height:50px;border:1px solid var(--line);border-radius:14px;padding:0 14px;font:inherit}
+.small{font-size:12px;color:var(--muted)}
+.gold{color:var(--gold)}
+.navy{color:var(--navy)}
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <section id="home" class="screen active">
+    <div class="hero">
+      <div class="top">
+        <div>
+          <div class="brand">BARIQ</div>
+          <div class="sub">بريق للهدايا والإبداع</div>
+        </div>
+        <div class="spacer"></div>
+        <button class="iconbtn" onclick="go('cart')">🛍️<span id="topBadge" class="badge">2</span></button>
+      </div>
+      <div class="search" onclick="go('search')">🔎 <span>ابحث عن هدية، أكريليك، مناسبة...</span><div class="spacer"></div>📷</div>
+      <div class="hero-note">هدايا مخصصة • مناسبات • مواليد • شركات</div>
+      <div class="hero-note2">نصنع فكرتك ونجهزها مع فريق بريق</div>
+    </div>
+    <div class="section-title">🔥 عروض اليوم</div>
+    <div class="grid">
+      <div class="card" onclick="openProduct('بوكس أكريليك فاخر','175','🎁')">
+        <div class="img">🎁<span class="discount">-20%</span><span class="heart">♡</span></div>
+        <div class="info"><div class="name">بوكس أكريليك فاخر مخصص</div><div class="price-row"><span class="price">175 د.إ</span><span class="old">220 د.إ</span><button class="cart-mini" onclick="event.stopPropagation();addCart()">🛒</button></div></div>
+      </div>
+      <div class="card" onclick="openProduct('ستاند مواليد مخصص','145','🍼')">
+        <div class="img">🍼<span class="discount">-12%</span><span class="heart">♡</span></div>
+        <div class="info"><div class="name">ستاند مواليد مخصص بالاسم</div><div class="price-row"><span class="price">145 د.إ</span><span class="old">165 د.إ</span><button class="cart-mini" onclick="event.stopPropagation();addCart()">🛒</button></div></div>
+      </div>
+    </div>
+
+    <div class="section-title">أحدث منتجات بريق</div>
+    <div class="grid">
+      <div class="card" onclick="openProduct('طاولة مناسبات فاخرة','350','✨')"><div class="img">✨<span class="heart">♡</span></div><div class="info"><div class="name">طاولة مناسبات فاخرة</div><div class="price-row"><span class="price">350 د.إ</span><button class="cart-mini" onclick="event.stopPropagation();addCart()">🛒</button></div></div></div>
+      <div class="card" onclick="openProduct('بوكس جلد مخصص','190','👜')"><div class="img">👜<span class="heart">♡</span></div><div class="info"><div class="name">بوكس جلد مخصص</div><div class="price-row"><span class="price">190 د.إ</span><button class="cart-mini" onclick="event.stopPropagation();addCart()">🛒</button></div></div></div>
+      <div class="card" onclick="openProduct('ستاند أكريليك ذهبي','220','💎')"><div class="img">💎<span class="discount">-15%</span><span class="heart">♡</span></div><div class="info"><div class="name">ستاند أكريليك ذهبي</div><div class="price-row"><span class="price">220 د.إ</span><button class="cart-mini" onclick="event.stopPropagation();addCart()">🛒</button></div></div></div>
+      <div class="card" onclick="openProduct('توزيعات مناسبات','95','🎀')"><div class="img">🎀<span class="heart">♡</span></div><div class="info"><div class="name">توزيعات مناسبات</div><div class="price-row"><span class="price">95 د.إ</span><button class="cart-mini" onclick="event.stopPropagation();addCart()">🛒</button></div></div></div>
+    </div>
+  </section>
+
+  <section id="categories" class="screen">
+    <div class="appbar"><h2>جميع الفئات</h2></div>
+    <div class="listpad">
+      <div class="cat-grid">
+        <div class="cat"> <span class="emoji">🎉</span>مناسبات</div>
+        <div class="cat"><span class="emoji">💎</span>أكريليك</div>
+        <div class="cat"><span class="emoji">📄</span>ورق</div>
+        <div class="cat"><span class="emoji">🖼️</span>فوركس</div>
+        <div class="cat"><span class="emoji">🪵</span>خشب</div>
+        <div class="cat"><span class="emoji">👜</span>جلد</div>
+        <div class="cat"><span class="emoji">🏷️</span>استيكر</div>
+        <div class="cat"><span class="emoji">🌙</span>رمضان</div>
+        <div class="cat"><span class="emoji">🍼</span>مواليد</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="offers" class="screen">
+    <div class="appbar"><h2>العروض 🔥</h2></div>
+    <div class="section-title">أعلى الخصومات</div>
+    <div class="grid">
+      <div class="card" onclick="openProduct('بوكس أكريليك فاخر','175','🎁')"><div class="img">🎁<span class="discount">-20%</span></div><div class="info"><div class="name">بوكس أكريليك فاخر</div><div class="price-row"><span class="price">175 د.إ</span><span class="old">220 د.إ</span></div></div></div>
+      <div class="card" onclick="openProduct('ستاند أكريليك ذهبي','220','💎')"><div class="img">💎<span class="discount">-15%</span></div><div class="info"><div class="name">ستاند أكريليك ذهبي</div><div class="price-row"><span class="price">220 د.إ</span><span class="old">260 د.إ</span></div></div></div>
+    </div>
+  </section>
+
+  <section id="account" class="screen">
+    <div class="appbar"><h2>حسابي</h2></div>
+    <div class="listpad">
+      <div class="account-card">
+        <div class="account-head">
+          <div class="avatar">👤</div>
+          <div><b class="navy">أهلاً بك في بريق</b><div class="small">سجل الدخول لعرض طلباتك وكاش باكك</div></div>
+          <div class="spacer"></div>
+          <button class="btn out" style="flex:0;padding:0 14px;min-height:38px" onclick="go('login')">دخول</button>
+        </div>
+      </div>
+      <div class="metric-row">
+        <div class="metric">🛒<b id="metricCart">2</b><span class="small">في السلة</span></div>
+        <div class="metric">❤️<b>3</b><span class="small">المفضلة</span></div>
+      </div>
+      <div class="section-title" style="padding-right:0">طلباتك</div>
+      <div class="order-card">
+        <b class="navy">BRQ-1001</b><div class="small">قيد المعالجة</div><div class="gold" style="margin-top:6px;font-weight:900">320 د.إ</div>
+      </div>
+      <div class="order-card">
+        <b class="navy">BRQ-0992</b><div class="small">تم الشحن</div><div class="gold" style="margin-top:6px;font-weight:900">190 د.إ</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="cart" class="screen">
+    <div class="appbar"><h2>السلة (<span id="cartTitleCount">2</span>)</h2></div>
+    <div class="listpad">
+      <div class="note" style="margin-top:0">🚚 يتم تحديد تكلفة الشحن وموعد التسليم بعد مراجعة الطلب مع فريق بريق.</div>
+      <div class="cart-item">
+        <div class="cart-thumb">🎁</div>
+        <div style="flex:1"><b class="navy">بوكس أكريليك فاخر</b><div class="gold" style="font-weight:900;margin-top:6px">175 د.إ</div><div class="qty"><button>-</button><b>1</b><button>+</button></div></div>
+      </div>
+      <div class="cart-item">
+        <div class="cart-thumb">🍼</div>
+        <div style="flex:1"><b class="navy">ستاند مواليد مخصص</b><div class="gold" style="font-weight:900;margin-top:6px">145 د.إ</div><div class="qty"><button>-</button><b>1</b><button>+</button></div></div>
+      </div>
+      <div class="summary"><b class="navy">الإجمالي</b><span style="float:left" class="gold"><b>320 د.إ</b></span></div>
+      <button class="btn fill" style="width:100%;margin-top:8px" onclick="go('checkout')">تأكيد الطلب</button>
+    </div>
+  </section>
+
+  <section id="product" class="screen">
+    <div class="appbar"><button class="iconbtn" style="background:#f3f5f8;color:var(--navy);margin-left:8px" onclick="go('home')">→</button><h2>تفاصيل المنتج</h2></div>
+    <div id="productEmoji" class="product-hero">🎁</div>
+    <div class="product-body">
+      <div id="productName" class="p-title">بوكس أكريليك فاخر مخصص</div>
+      <div id="productPrice" class="p-price">175 د.إ</div>
+      <div class="note">✨ يمكن تخصيص المنتج حسب المناسبة. يتم تأكيد الاسم واللون والمقاس والتفاصيل مع فريق بريق قبل التنفيذ.</div>
+      <div class="section-title" style="padding-right:0">وصف المنتج</div>
+      <div class="small" style="line-height:1.8;font-size:13px">منتج مخصص من بريق، يتم تصنيعه حسب تفاصيل العميل والمناسبة مع مراجعة نهائية قبل التنفيذ.</div>
+      <div class="actions">
+        <button class="btn out" onclick="addCart()">🛒 أضف للسلة</button>
+        <button class="btn fill" onclick="go('checkout')">اطلب مع فريق بريق</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="search" class="screen">
+    <div class="appbar"><button class="iconbtn" style="background:#f3f5f8;color:var(--navy);margin-left:8px" onclick="go('home')">→</button><h2>البحث</h2></div>
+    <div class="search-wrap">
+      <input id="searchInput" class="search-input" placeholder="اكتب اسم المنتج أو المناسبة" oninput="filterSearch()">
+    </div>
+    <div id="searchResults" class="grid">
+      <div class="card search-card" data-name="بوكس أكريليك فاخر" onclick="openProduct('بوكس أكريليك فاخر','175','🎁')"><div class="img">🎁</div><div class="info"><div class="name">بوكس أكريليك فاخر</div><div class="price">175 د.إ</div></div></div>
+      <div class="card search-card" data-name="ستاند مواليد مخصص" onclick="openProduct('ستاند مواليد مخصص','145','🍼')"><div class="img">🍼</div><div class="info"><div class="name">ستاند مواليد مخصص</div><div class="price">145 د.إ</div></div></div>
+      <div class="card search-card" data-name="بوكس جلد مخصص" onclick="openProduct('بوكس جلد مخصص','190','👜')"><div class="img">👜</div><div class="info"><div class="name">بوكس جلد مخصص</div><div class="price">190 د.إ</div></div></div>
+    </div>
+  </section>
+
+  <section id="login" class="screen">
+    <div class="appbar"><button class="iconbtn" style="background:#f3f5f8;color:var(--navy);margin-left:8px" onclick="go('account')">→</button><h2>تسجيل الدخول</h2></div>
+    <div class="form">
+      <div style="text-align:center;font-size:64px;margin:22px 0">🎁</div>
+      <div class="p-title" style="text-align:center;font-size:22px">مرحباً بك في بريق</div>
+      <input class="field" style="margin-top:22px" placeholder="البريد الإلكتروني">
+      <input class="field" type="password" placeholder="كلمة المرور">
+      <button class="btn fill" style="width:100%">دخول</button>
+      <button class="btn out" style="width:100%;margin-top:8px">إنشاء حساب جديد</button>
+    </div>
+  </section>
+
+  <section id="checkout" class="screen">
+    <div class="appbar"><button class="iconbtn" style="background:#f3f5f8;color:var(--navy);margin-left:8px" onclick="go('cart')">→</button><h2>تأكيد الطلب</h2></div>
+    <div class="form">
+      <div class="section-title" style="padding:4px 0 12px">بيانات التواصل</div>
+      <input class="field" placeholder="الاسم الكامل">
+      <input class="field" placeholder="رقم الهاتف">
+      <input class="field" placeholder="الإمارة / المدينة">
+      <textarea class="field" placeholder="تفاصيل التخصيص أو الملاحظات"></textarea>
+      <div class="note">لن يتم تنفيذ الطلب تلقائياً. سيراجع فريق بريق تفاصيل الاسم، اللون، المقاس، الشحن والدفع معك على واتساب قبل التصنيع.</div>
+      <button class="btn fill" style="width:100%;margin-top:14px">💬 إرسال الطلب لفريق بريق على واتساب</button>
+    </div>
+  </section>
+
+  <nav id="mainNav" class="nav">
+    <button data-screen="home" class="active" onclick="go('home')"><span class="ico">⌂</span>الرئيسية</button>
+    <button data-screen="categories" onclick="go('categories')"><span class="ico">▦</span>الفئات</button>
+    <button data-screen="offers" onclick="go('offers')"><span class="ico">🔥</span>العروض</button>
+    <button data-screen="account" onclick="go('account')"><span class="ico">♙</span>حسابي</button>
+    <button data-screen="cart" onclick="go('cart')"><span class="ico">🛍️</span>السلة</button>
+  </nav>
+
+</div>
+
+<script>
+let cartCount=2;
+const mainScreens=['home','categories','offers','account','cart'];
+
+function go(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const target=document.getElementById(id);
+  if(target) target.classList.add('active');
+
+  const nav=document.getElementById('mainNav');
+  nav.style.display=mainScreens.includes(id)?'flex':'none';
+
+  document.querySelectorAll('.nav button').forEach(b=>{
+    b.classList.toggle('active',b.dataset.screen===id);
+  });
+  window.scrollTo(0,0);
+}
+
+function openProduct(name,price,emoji){
+  document.getElementById('productName').textContent=name;
+  document.getElementById('productPrice').textContent=price+' د.إ';
+  document.getElementById('productEmoji').textContent=emoji;
+  go('product');
+}
+
+function addCart(){
+  cartCount++;
+  document.getElementById('topBadge').textContent=cartCount;
+  document.getElementById('metricCart').textContent=cartCount;
+  document.getElementById('cartTitleCount').textContent=cartCount;
+  alert('تمت الإضافة للسلة ✅');
+}
+
+function filterSearch(){
+  const q=document.getElementById('searchInput').value.trim().toLowerCase();
+  document.querySelectorAll('.search-card').forEach(c=>{
+    c.style.display=c.dataset.name.toLowerCase().includes(q)?'block':'none';
+  });
+}
+</script>
+</body>
+</html>

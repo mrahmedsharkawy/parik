@@ -1,6 +1,6 @@
 .vercel
 .env*
-/bariq_app/
+!/bariq_app/
 
 # Bariq backup artifacts must never be committed or uploaded to GitHub.
 /backups/
