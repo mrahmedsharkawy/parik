@@ -40,8 +40,7 @@ workflows:
             --build-number=1 \
             --export-options-plist=ios/ExportOptions.plist
     artifacts:
-      - bariq_app/build/ios/ipa/*.ipa
-      - bariq_app/build/ios/archive/*.xcarchive
+      - $CM_BUILD_DIR/bariq_app/build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
     publishing:
       app_store_connect:
