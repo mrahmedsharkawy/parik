@@ -73,14 +73,16 @@ class _OffersScreenState extends State<OffersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F8FA),
+      backgroundColor: AppTheme.navy,
       extendBody: widget.showBack,
       bottomNavigationBar: widget.showBack
           ? const StorefrontPageBottomNav(selected: 2)
           : null,
       body: SafeArea(
         bottom: false,
-        child: FutureBuilder<List<Product>>(
+        child: ColoredBox(
+          color: const Color(0xFFF7F8FA),
+          child: FutureBuilder<List<Product>>(
           future: _future,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting &&
@@ -152,6 +154,7 @@ class _OffersScreenState extends State<OffersScreen> {
               ),
             );
           },
+          ),
         ),
       ),
     );

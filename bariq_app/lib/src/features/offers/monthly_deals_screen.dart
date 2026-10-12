@@ -91,12 +91,14 @@ class _MonthlyDealsScreenState extends State<MonthlyDealsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F8FA),
+      backgroundColor: AppTheme.navy,
       extendBody: true,
       bottomNavigationBar: const StorefrontPageBottomNav(selected: 2),
       body: SafeArea(
         bottom: false,
-        child: FutureBuilder<void>(
+        child: ColoredBox(
+          color: const Color(0xFFF7F8FA),
+          child: FutureBuilder<void>(
           future: _initialLoad,
           builder: (context, snapshot) {
             return NotificationListener<ScrollNotification>(
@@ -230,6 +232,7 @@ class _MonthlyDealsScreenState extends State<MonthlyDealsScreen> {
               ),
             );
           },
+          ),
         ),
       ),
     );

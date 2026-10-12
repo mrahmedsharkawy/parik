@@ -111,23 +111,26 @@ class _AffiliateScreenState extends State<AffiliateScreen> {
   Widget build(BuildContext context) {
     final english = AppStateScope.of(context).isEnglish;
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F5F9),
+      backgroundColor: AppTheme.navy,
       extendBody: true,
       bottomNavigationBar: const StorefrontPageBottomNav(selected: 1),
       body: SafeArea(
         bottom: false,
-        child: Column(children: [
-          StorefrontTopBar(
-            placeholder: AppStrings.searchHeader,
-            onSearch: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const SearchScreen()),
+        child: ColoredBox(
+          color: const Color(0xFFF3F5F9),
+          child: Column(children: [
+            StorefrontTopBar(
+              placeholder: AppStrings.searchHeader,
+              onSearch: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const SearchScreen()),
+              ),
+              onImageSearch: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) =>
+                    const SearchScreen(startWithImageSearch: true)),
+              ),
             ),
-            onImageSearch: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const SearchScreen(startWithImageSearch: true)),
-            ),
-          ),
-          Expanded(
-            child: FutureBuilder<_AffiliatePageData>(
+            Expanded(
+              child: FutureBuilder<_AffiliatePageData>(
               future: _future,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) return const _AffiliateSkeleton();
@@ -139,9 +142,10 @@ class _AffiliateScreenState extends State<AffiliateScreen> {
                 if (!partner.active) return _PartnerStatus(partner: partner, english: english, onEdit: () => _openApplication(data.settings));
                 return _activeDashboard(data.dashboard!, data.settings, english);
               },
+              ),
             ),
-          ),
-        ]),
+          ]),
+        ),
       ),
     );
   }

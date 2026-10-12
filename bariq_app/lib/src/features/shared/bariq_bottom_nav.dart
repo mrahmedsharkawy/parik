@@ -52,12 +52,25 @@ class BariqBottomNav extends StatelessWidget {
     final maxWidth = compact
         ? (width - (horizontalInset * 2)).clamp(300.0, 430.0).toDouble()
         : (width >= 700 ? 620.0 : double.infinity);
-    return SafeArea(
-      minimum: EdgeInsets.fromLTRB(
-        compact ? 0 : 10,
+    final safePadding = MediaQuery.paddingOf(context);
+    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+    final minimumBottom = compact ? 9.0 : 7.0;
+    final bottomPadding = isIOS
+        ? (safePadding.bottom * .35).clamp(8.0, 14.0).toDouble()
+        : (safePadding.bottom > minimumBottom
+            ? safePadding.bottom
+            : minimumBottom);
+    final minimumHorizontal = compact ? 0.0 : 10.0;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        safePadding.left > minimumHorizontal
+            ? safePadding.left
+            : minimumHorizontal,
         0,
-        compact ? 0 : 10,
-        compact ? 9 : 7,
+        safePadding.right > minimumHorizontal
+            ? safePadding.right
+            : minimumHorizontal,
+        bottomPadding,
       ),
       child: Center(
         heightFactor: 1,

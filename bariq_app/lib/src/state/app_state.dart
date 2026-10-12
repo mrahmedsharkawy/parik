@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' as ui;
 
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -23,7 +24,11 @@ class AppState extends ChangeNotifier {
   })  : _catalog = catalog ?? SupabaseCatalogService(),
         _store = store ?? LocalStore(),
         _sync = sync ?? UserSyncService(),
-        _appSettingsService = appSettings ?? AppSettingsService();
+        _appSettingsService = appSettings ?? AppSettingsService() {
+    _language = _deviceLanguage();
+    BariqLocaleConfig.setLanguage(_language);
+    languageListenable.value = _language;
+  }
 
   final SupabaseCatalogService _catalog;
   final LocalStore _store;
@@ -86,7 +91,9 @@ class AppState extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       _pendingSync = await _store.loadPendingSync();
 
-      _language = _normalizeLanguage(prefs.getString('lang'));
+      // Respect an explicit customer choice. On a fresh installation, use the
+      // device language instead of forcing Arabic for everyone.
+      _language = _normalizeLanguage(prefs.getString('lang') ?? _language);
       BariqLocaleConfig.setLanguage(_language);
       languageListenable.value = _language;
 
@@ -554,6 +561,9 @@ class AppState extends ChangeNotifier {
   }
 
   String _normalizeLanguage(String? value) => value == 'en' ? 'en' : 'ar';
+
+  String _deviceLanguage() =>
+      ui.PlatformDispatcher.instance.locale.languageCode == 'ar' ? 'ar' : 'en';
 
   String _normalizeCurrency(String? value) {
     final next = (value ?? '').trim().toUpperCase();

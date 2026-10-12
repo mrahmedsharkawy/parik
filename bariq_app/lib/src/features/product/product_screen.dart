@@ -634,7 +634,9 @@ class _ProductView extends StatelessWidget {
                       child: Column(
                         children: [
                           SizedBox(
-                            height: MediaQuery.sizeOf(context).width * .78,
+                            height: (MediaQuery.sizeOf(context).width * .93)
+                                .clamp(340.0, 620.0)
+                                .toDouble(),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(16),
                               child: Stack(
@@ -647,11 +649,11 @@ class _ProductView extends StatelessWidget {
                                     itemBuilder: (context, i) =>
                                         BariqNetworkImage(
                                       imageUrl: images[i],
-                                      fit: BoxFit.cover,
+                                      fit: BoxFit.contain,
                                       placeholderColor: const Color(0xFFF2F3F6),
                                       errorIconSize: 55,
                                       cacheWidth: 1080,
-                                      cacheHeight: 900,
+                                      cacheHeight: 1200,
                                     ),
                                   ),
                                 ],
@@ -1182,8 +1184,9 @@ class _FloatingVideoThumbState extends State<_FloatingVideoThumb> {
     return Positioned.fill(
       child: LayoutBuilder(
         builder: (context, constraints) {
-          const width = 78.0;
-          const height = 104.0;
+          final width =
+              (constraints.maxWidth * .27).clamp(100.0, 132.0).toDouble();
+          final height = width * 1.32;
           final maxX =
               (constraints.maxWidth - width).clamp(0.0, double.infinity);
           final maxY =
