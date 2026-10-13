@@ -35,13 +35,6 @@ class AccountService {
     } on TimeoutException {
       response = await _signInLikeWebsite(cleanEmail, password);
     }
-    try {
-      await completeSignedInProfile().timeout(const Duration(seconds: 8));
-    } on TimeoutException {
-      // Do not block login if profile sync is slow; account screens refetch it.
-    } on PostgrestException {
-      // Auth succeeded, so profile sync failures should not keep the user stuck.
-    }
     return response;
   }
 
@@ -834,8 +827,10 @@ class AccountService {
     if (saved.name.trim().isNotEmpty) {
       payload['full_name'] = saved.name.trim();
     }
-    if (saved.phone.trim().isNotEmpty)
-      payload['phone'] = normalizeUaePhone(saved.phone);
+    // Saving an address must not rewrite the customer's phone number. Legacy
+    // customer rows can share an account identity, and updating the phone here
+    // can trip the database's unique-phone constraint even though the address
+    // itself is valid.
 
     final byEmail = await _client
         .from('customers')

@@ -151,9 +151,28 @@ class _LoginScreenState extends State<LoginScreen> {
 
       await _service.signIn(email, password);
 
-      final profile = await _service
-          .completeSignedInProfile()
-          .timeout(const Duration(seconds: 8));
+      CustomerProfile profile;
+      try {
+        profile = await _service
+            .completeSignedInProfile()
+            .timeout(const Duration(seconds: 8));
+      } on TimeoutException {
+        // Authentication already succeeded. A slow profile refresh must not
+        // report a false login failure or leave the user on the login screen.
+        if (_service.user != null) {
+          _finishLogin();
+          return;
+        }
+        rethrow;
+      } on PostgrestException {
+        // The authenticated session is authoritative; account data can refresh
+        // after navigation completes.
+        if (_service.user != null) {
+          _finishLogin();
+          return;
+        }
+        rethrow;
+      }
 
       if (!mounted) return;
 
