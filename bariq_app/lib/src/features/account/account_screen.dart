@@ -128,8 +128,9 @@ class _AccountScreenState extends State<AccountScreen> {
       status: _orderStatusValue(_orderFilter),
       search: _orderQuery,
     );
-    final productsFuture =
-        _catalog.fetchProducts(limit: SupabaseCatalogService.pageSize);
+    final productsFuture = _section == AccountSection.favorites
+        ? _catalog.fetchProducts(limit: SupabaseCatalogService.pageSize)
+        : Future.value(const <Product>[]);
     final profileFuture = _account.fetchProfile();
     final occasionsFuture = _account.fetchOccasions();
     final settingsFuture = _catalog.fetchSettings();
@@ -151,8 +152,10 @@ class _AccountScreenState extends State<AccountScreen> {
         orders: orders, occasions: occasions, profile: profile);
     final notificationCountFuture = _account.fetchUnreadNotificationCount(
         orders: orders, occasions: occasions, profile: profile);
-    final invoiceFuture = _account.fetchInvoices(
-        orders: orders, offset: 0, limit: AccountService.pageSize);
+    final invoiceFuture = _section == AccountSection.invoices
+        ? _account.fetchInvoices(
+            orders: orders, offset: 0, limit: AccountService.pageSize)
+        : Future.value(const AccountInvoicePage());
     final second = await Future.wait<dynamic>([
       notificationsFuture,
       notificationCountFuture,
@@ -1341,9 +1344,8 @@ class _ProfileSectionState extends State<_ProfileSection> {
     } catch (error) {
       if (!mounted) return;
       setState(() => _saving = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(AppStrings.tr(
-              'تعذر حفظ البيانات: $error', 'Unable to save data: $error'))));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AccountService.userFacingError(error))));
     }
   }
 
@@ -2401,9 +2403,8 @@ class _AddressSectionState extends State<_AddressSection> {
     } catch (error) {
       if (!mounted) return;
       setState(() => _saving = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(AppStrings.tr(
-              'تعذر حفظ العنوان: $error', 'Unable to save address: $error'))));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AccountService.userFacingError(error))));
     }
   }
 

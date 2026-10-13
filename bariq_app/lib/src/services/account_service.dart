@@ -21,6 +21,37 @@ class AccountService {
       '\u{0623}\u{062F}\u{062E}\u{0644} \u{0631}\u{0642}\u{0645} \u{0647}\u{0627}\u{062A}\u{0641} \u{0625}\u{0645}\u{0627}\u{0631}\u{0627}\u{062A}\u{064A} \u{0635}\u{062D}\u{064A}\u{062D} \u{0628}\u{0639}\u{062F} +971';
   static const _comma = '\u{060C} ';
 
+  static String userFacingError(Object error) {
+    final message = error.toString().toLowerCase();
+    if (message.contains('duplicate_phone') ||
+        (message.contains('phone') && message.contains('already'))) {
+      return AppStrings.tr(
+        'رقم الهاتف مسجل بالفعل في حساب آخر.',
+        'This phone number is already registered to another account.',
+      );
+    }
+    if (message.contains('duplicate_email') ||
+        (message.contains('email') &&
+            (message.contains('already') || message.contains('registered')))) {
+      return AppStrings.tr(
+        'البريد الإلكتروني مسجل بالفعل. جرّب تسجيل الدخول.',
+        'This email is already registered. Try signing in.',
+      );
+    }
+    if (message.contains('socket') ||
+        message.contains('network') ||
+        message.contains('timeout')) {
+      return AppStrings.tr(
+        'تعذر الاتصال بالإنترنت. تحقق من الشبكة وحاول مرة أخرى.',
+        'Unable to connect. Check your internet connection and try again.',
+      );
+    }
+    return AppStrings.tr(
+      'تعذر حفظ البيانات حاليًا. حاول مرة أخرى.',
+      'Unable to save the data right now. Please try again.',
+    );
+  }
+
   User? get user => _client.auth.currentUser;
   Future<AuthResponse> signIn(String email, String password) async {
     final cleanEmail = email.trim().toLowerCase();

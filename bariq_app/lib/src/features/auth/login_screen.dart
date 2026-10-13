@@ -461,7 +461,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     } catch (error) {
 
-      _show(AppStrings.tr('تعذر إنشاء الحساب: $error', 'Unable to create account: $error'));
+      _show(AccountService.userFacingError(error));
 
     } finally {
 
