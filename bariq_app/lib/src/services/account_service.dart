@@ -768,6 +768,7 @@ class AccountService {
     };
 
     Map<String, dynamic>? existing;
+    Map<String, dynamic>? phoneOwner;
     final byEmail = email.isNotEmpty
         ? await _client
             .from('customers')
@@ -777,14 +778,23 @@ class AccountService {
         : const [];
     if (byEmail is List && byEmail.isNotEmpty)
       existing = Map<String, dynamic>.from(byEmail.first as Map);
-    if (existing == null && phone.isNotEmpty) {
+    if (phone.isNotEmpty) {
       final byPhone = await _client
           .from('customers')
           .select('id')
           .eq('phone', phone)
           .limit(1);
       if (byPhone is List && byPhone.isNotEmpty)
-        existing = Map<String, dynamic>.from(byPhone.first as Map);
+        phoneOwner = Map<String, dynamic>.from(byPhone.first as Map);
+    }
+    if (existing == null) {
+      existing = phoneOwner;
+    } else if (phoneOwner != null &&
+        '${phoneOwner['id'] ?? ''}' != '${existing['id'] ?? ''}') {
+      // A legacy row already owns this phone. Keep the authenticated email row
+      // as the profile owner, but do not duplicate the unique phone value.
+      // user_sync still retains the phone for the signed-in user's profile.
+      payload.remove('phone');
     }
 
     if (existing != null && '${existing['id'] ?? ''}'.isNotEmpty) {
