@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -44,6 +45,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _googleLoading = false;
 
+  bool _appleLoading = false;
+
   bool _obscure = true;
 
   bool _closing = false;
@@ -65,9 +68,10 @@ class _LoginScreenState extends State<LoginScreen> {
       if (session == null) return;
 
       // Email/password sign-in is completed by _login below. Only consume the
-      // callback here while an external Google sign-in is in progress. A
+      // callback here while an external social sign-in is in progress. A
       // persisted initialSession must never validate newly typed credentials.
-      if (_googleLoading && event.event == AuthChangeEvent.signedIn) {
+      if ((_googleLoading || _appleLoading) &&
+          event.event == AuthChangeEvent.signedIn) {
 
         try {
 
@@ -83,7 +87,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
         if (!mounted) return;
 
-        setState(() => _googleLoading = false);
+        setState(() {
+          _googleLoading = false;
+          _appleLoading = false;
+        });
 
         // Only close this screen if it is still the visible route.
 
@@ -473,7 +480,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _google() async {
 
-    if (_googleLoading) return;
+    if (_googleLoading || _appleLoading) return;
 
     setState(() => _googleLoading = true);
 
@@ -500,6 +507,37 @@ class _LoginScreenState extends State<LoginScreen> {
         _show(AppStrings.tr('تعذر تسجيل الدخول بحساب Google: $error', 'Unable to sign in with Google: $error'));
 
         setState(() => _googleLoading = false);
+
+      }
+
+    }
+
+  }
+
+  Future<void> _apple() async {
+
+    if (_appleLoading || _googleLoading) return;
+
+    setState(() => _appleLoading = true);
+
+    try {
+
+      final ok = await _service.signInWithApple();
+
+      if (!ok && mounted) {
+        setState(() => _appleLoading = false);
+
+      }
+
+      // The auth-state listener completes the flow after native Apple sign-in.
+
+    } catch (error) {
+
+      if (mounted) {
+
+        _show(AppStrings.tr('تعذر تسجيل الدخول بحساب Apple: $error', 'Unable to sign in with Apple: $error'));
+
+        setState(() => _appleLoading = false);
 
       }
 
@@ -620,6 +658,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       googleLoading: _googleLoading,
 
+                      appleLoading: _appleLoading,
+
+                      showApple: !kIsWeb &&
+                          defaultTargetPlatform == TargetPlatform.iOS,
+
                       onMode: (value) => setState(() => _signup = value),
 
                       onTogglePassword: () =>
@@ -631,6 +674,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       onSubmit: _submit,
 
                       onGoogle: _google,
+
+                      onApple: _apple,
 
                     ),
 
@@ -746,6 +791,10 @@ class _LoginCard extends StatelessWidget {
 
     required this.googleLoading,
 
+    required this.appleLoading,
+
+    required this.showApple,
+
     required this.onMode,
 
     required this.onTogglePassword,
@@ -755,6 +804,8 @@ class _LoginCard extends StatelessWidget {
     required this.onSubmit,
 
     required this.onGoogle,
+
+    required this.onApple,
 
   });
 
@@ -776,6 +827,10 @@ class _LoginCard extends StatelessWidget {
 
   final bool googleLoading;
 
+  final bool appleLoading;
+
+  final bool showApple;
+
   final ValueChanged<bool> onMode;
 
   final VoidCallback onTogglePassword;
@@ -785,6 +840,8 @@ class _LoginCard extends StatelessWidget {
   final VoidCallback onSubmit;
 
   final VoidCallback onGoogle;
+
+  final VoidCallback onApple;
 
   @override
 
@@ -1125,6 +1182,20 @@ class _LoginCard extends StatelessWidget {
                   onPressed: onGoogle,
 
                 ),
+
+                if (showApple) ...[
+
+                  const SizedBox(height: 12),
+
+                  _AppleButton(
+
+                    loading: appleLoading,
+
+                    onPressed: onApple,
+
+                  ),
+
+                ],
 
               ],
 
@@ -1607,6 +1678,110 @@ class _GoogleButton extends StatelessWidget {
           ),
 
         ),
+
+      ),
+
+    );
+
+  }
+
+}
+
+class _AppleButton extends StatelessWidget {
+
+  const _AppleButton({
+
+    required this.loading,
+
+    required this.onPressed,
+
+  });
+
+  final bool loading;
+
+  final VoidCallback onPressed;
+
+  @override
+
+  Widget build(BuildContext context) {
+
+    return SizedBox(
+
+      width: double.infinity,
+
+      height: 44,
+
+      child: FilledButton(
+
+        onPressed: loading ? null : onPressed,
+
+        style: FilledButton.styleFrom(
+
+          backgroundColor: Colors.black,
+
+          foregroundColor: Colors.white,
+
+          disabledBackgroundColor: Colors.black87,
+
+          shape: RoundedRectangleBorder(
+
+            borderRadius: BorderRadius.circular(22),
+
+          ),
+
+        ),
+
+        child: loading
+
+            ? const SizedBox(
+
+                width: 20,
+
+                height: 20,
+
+                child: CircularProgressIndicator(
+
+                  strokeWidth: 2,
+
+                  color: Colors.white,
+
+                ),
+
+              )
+
+            : Directionality(
+
+                textDirection: TextDirection.ltr,
+
+                child: Row(
+
+                  mainAxisSize: MainAxisSize.min,
+
+                  children: [
+
+                    const Icon(Icons.apple, size: 22),
+
+                    const SizedBox(width: 10),
+
+                    Text(
+
+                      AppStrings.tr('المتابعة باستخدام Apple', 'Continue with Apple'),
+
+                      style: const TextStyle(
+
+                        fontSize: 12.5,
+
+                        fontWeight: FontWeight.w900,
+
+                      ),
+
+                    ),
+
+                  ],
+
+                ),
+
+              ),
 
       ),
 

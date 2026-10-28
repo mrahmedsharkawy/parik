@@ -123,11 +123,29 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Future<_AccountData> _load() async {
+    final requestedSection = _section;
     final ordersFuture = _account.fetchOrders(
       limit: AccountService.pageSize,
       status: _orderStatusValue(_orderFilter),
       search: _orderQuery,
     );
+
+    // Orders are the account landing section. Do not hold them behind profile,
+    // occasions, notifications, settings, invoices, or product lookups. Those
+    // sections load their own data when the customer opens them.
+    if (requestedSection == AccountSection.orders) {
+      final orders = await ordersFuture;
+      return _AccountData(
+        orders: orders,
+        invoices: const [],
+        occasions: const [],
+        notifications: const [],
+        notificationCount: 0,
+        products: const [],
+        profile: const CustomerProfile(),
+      );
+    }
+
     final productsFuture = _section == AccountSection.favorites
         ? _catalog.fetchProducts(limit: SupabaseCatalogService.pageSize)
         : Future.value(const <Product>[]);
@@ -284,7 +302,11 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   void _select(AccountSection section) {
-    setState(() => _section = section);
+    if (_section == section) return;
+    setState(() {
+      _section = section;
+      _future = _load();
+    });
     if (section == AccountSection.offers && _offers.isEmpty) {
       _loadMoreOffers();
     }
@@ -407,6 +429,7 @@ class _AccountScreenState extends State<AccountScreen> {
               ),
               Expanded(
                 child: FutureBuilder<_AccountData>(
+                  key: ValueKey(_section),
                   future: _future,
                   builder: (context, snapshot) {
                     final data = snapshot.data ??

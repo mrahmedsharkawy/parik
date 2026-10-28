@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:crypto/crypto.dart';
 import 'package:http/http.dart' as http;
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/app_config.dart';
@@ -264,6 +266,53 @@ class AccountService {
         redirectTo: 'bariqapp://login-callback/',
         queryParams: const {'prompt': 'select_account'},
       );
+
+  Future<bool> signInWithApple() async {
+    final rawNonce = _client.auth.generateRawNonce();
+    final hashedNonce = sha256.convert(utf8.encode(rawNonce)).toString();
+
+    try {
+      final credential = await SignInWithApple.getAppleIDCredential(
+        scopes: const [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+        nonce: hashedNonce,
+      );
+      final idToken = credential.identityToken;
+      if (idToken == null || idToken.isEmpty) {
+        throw const AuthException(
+          'Apple did not return an identity token.',
+        );
+      }
+
+      await _client.auth.signInWithIdToken(
+        provider: OAuthProvider.apple,
+        idToken: idToken,
+        nonce: rawNonce,
+      );
+
+      // Apple only returns the name on the first authorization, so preserve it
+      // in Supabase user metadata while it is available.
+      final fullName = [credential.givenName, credential.familyName]
+          .whereType<String>()
+          .map((part) => part.trim())
+          .where((part) => part.isNotEmpty)
+          .join(' ');
+      final savedName = _client.auth.currentUser?.userMetadata?['full_name']
+          ?.toString()
+          .trim();
+      if (fullName.isNotEmpty && (savedName == null || savedName.isEmpty)) {
+        await _client.auth.updateUser(
+          UserAttributes(data: {'full_name': fullName}),
+        );
+      }
+      return true;
+    } on SignInWithAppleAuthorizationException catch (error) {
+      if (error.code == AuthorizationErrorCode.canceled) return false;
+      rethrow;
+    }
+  }
 
   Future<void> resetPassword(String email) =>
       _client.auth.resetPasswordForEmail(
