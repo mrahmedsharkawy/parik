@@ -52,9 +52,34 @@ class AccountScreen extends StatefulWidget {
 }
 
 class _AccountScreenState extends State<AccountScreen> {
+  static const _defaultSettings = SiteSettings(
+      siteName: 'Bariq',
+      logo: '',
+      whatsapp: AppConfig.defaultWhatsApp,
+      currency: 'AED',
+      language: 'ar',
+      dailyPicks: [],
+      productSort: 'daily_random',
+      instagram: '',
+      facebook: '',
+      tiktok: '',
+      snapchat: '',
+      youtube: '',
+      twitter: '',
+      pinterest: '');
   final _account = AccountService();
   final _catalog = SupabaseCatalogService();
   late Future<_AccountData> _future;
+  _AccountData _cachedData = const _AccountData(
+      orders: [],
+      invoices: [],
+      occasions: [],
+      notifications: [],
+      notificationCount: 0,
+      products: [],
+      profile: CustomerProfile());
+  SiteSettings _siteSettings = _defaultSettings;
+  bool _hasLoadedData = false;
   late AccountSection _section;
   _OrderFilter _orderFilter = _OrderFilter.all;
   String _orderQuery = '';
@@ -88,7 +113,8 @@ class _AccountScreenState extends State<AccountScreen> {
   void initState() {
     super.initState();
     _section = widget.initialSection;
-    _future = _load();
+    _future = _loadAndRemember();
+    unawaited(_loadSiteSettings());
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_section == AccountSection.offers) _loadMoreOffers();
       if (_section == AccountSection.wallet) _loadMoreWalletOrders();
@@ -124,92 +150,97 @@ class _AccountScreenState extends State<AccountScreen> {
 
   Future<_AccountData> _load() async {
     final requestedSection = _section;
-    final ordersFuture = _account.fetchOrders(
-      limit: AccountService.pageSize,
-      status: _orderStatusValue(_orderFilter),
-      search: _orderQuery,
-    );
-
-    // Orders are the account landing section. Do not hold them behind profile,
-    // occasions, notifications, settings, invoices, or product lookups. Those
-    // sections load their own data when the customer opens them.
     if (requestedSection == AccountSection.orders) {
-      final orders = await ordersFuture;
-      return _AccountData(
-        orders: orders,
-        invoices: const [],
-        occasions: const [],
-        notifications: const [],
-        notificationCount: 0,
-        products: const [],
-        profile: const CustomerProfile(),
+      final orders = await _account.fetchOrders(
+        limit: AccountService.pageSize,
+        status: _orderStatusValue(_orderFilter),
+        search: _orderQuery,
+      );
+      return _cachedData.copyWith(orders: orders);
+    }
+
+    if (requestedSection == AccountSection.profile ||
+        requestedSection == AccountSection.address) {
+      final profile = await _account.fetchProfile();
+      return _cachedData.copyWith(profile: profile);
+    }
+
+    if (requestedSection == AccountSection.occasions) {
+      final values = await Future.wait<dynamic>([
+        _account.fetchProfile(),
+        _account.fetchOccasions(),
+      ]);
+      return _cachedData.copyWith(
+        profile: values[0] as CustomerProfile,
+        occasions: values[1] as List<CustomerOccasion>,
       );
     }
 
-    final productsFuture = _section == AccountSection.favorites
-        ? _catalog.fetchProducts(limit: SupabaseCatalogService.pageSize)
-        : Future.value(const <Product>[]);
-    final profileFuture = _account.fetchProfile();
-    final occasionsFuture = _account.fetchOccasions();
-    final settingsFuture = _catalog.fetchSettings();
-    final first = await Future.wait<dynamic>([
-      ordersFuture,
-      profileFuture,
-      occasionsFuture,
-    ]);
-    final orders = first[0] as List<Map<String, dynamic>>;
-    final profile = first[1] as CustomerProfile;
-    final occasions = first[2] as List<CustomerOccasion>;
-    final orderProductIds = orders
-        .map(_firstOrderItem)
-        .map(_orderItemProductId)
-        .where((id) => id.isNotEmpty)
-        .toSet();
-    final orderProductsFuture = _catalog.fetchProductsByIds(orderProductIds);
-    final notificationsFuture = _account.fetchNotifications(
-        orders: orders, occasions: occasions, profile: profile);
-    final notificationCountFuture = _account.fetchUnreadNotificationCount(
-        orders: orders, occasions: occasions, profile: profile);
-    final invoiceFuture = _section == AccountSection.invoices
-        ? _account.fetchInvoices(
-            orders: orders, offset: 0, limit: AccountService.pageSize)
-        : Future.value(const AccountInvoicePage());
-    final second = await Future.wait<dynamic>([
-      notificationsFuture,
-      notificationCountFuture,
-      invoiceFuture,
-      productsFuture,
-      settingsFuture,
-      orderProductsFuture,
-    ]);
-    final invoicePage = second[2] as AccountInvoicePage;
-    final invoices = invoicePage.items;
-    _invoiceOrders = orders;
-    if (_invoices.isEmpty) {
-      _invoices.addAll(invoices);
-      _invoiceOffset = invoicePage.nextOffset;
-      _invoicesHasMore = invoicePage.hasMore;
-      if (_section == AccountSection.invoices &&
-          _invoices.length < 6 &&
-          _invoicesHasMore) {
-        WidgetsBinding.instance
-            .addPostFrameCallback((_) => _loadMoreInvoices());
-      }
+    if (requestedSection == AccountSection.notifications) {
+      final values = await Future.wait<dynamic>([
+        _account.fetchOrders(limit: AccountService.pageSize),
+        _account.fetchProfile(),
+        _account.fetchOccasions(),
+      ]);
+      final orders = values[0] as List<Map<String, dynamic>>;
+      final profile = values[1] as CustomerProfile;
+      final occasions = values[2] as List<CustomerOccasion>;
+      final notificationValues = await Future.wait<dynamic>([
+        _account.fetchNotifications(
+            orders: orders, occasions: occasions, profile: profile),
+        _account.fetchUnreadNotificationCount(
+            orders: orders, occasions: occasions, profile: profile),
+      ]);
+      return _cachedData.copyWith(
+        orders: orders,
+        profile: profile,
+        occasions: occasions,
+        notifications:
+            notificationValues[0] as List<AccountNotification>,
+        notificationCount: notificationValues[1] as int,
+      );
     }
-    final products = <String, Product>{
-      for (final product in second[3] as List<Product>) product.id: product,
-      for (final product in second[5] as List<Product>) product.id: product,
-    }.values.toList(growable: false);
-    return _AccountData(
-      orders: orders,
-      invoices: invoices,
-      occasions: occasions,
-      notifications: second[0] as List<AccountNotification>,
-      notificationCount: second[1] as int,
-      products: products,
-      profile: profile,
-      settings: second[4] as SiteSettings,
-    );
+
+    if (requestedSection == AccountSection.reviews) {
+      final orders = await _account.fetchOrders(limit: AccountService.pageSize);
+      final productIds = orders
+          .map(_firstOrderItem)
+          .map(_orderItemProductId)
+          .where((id) => id.isNotEmpty)
+          .toSet();
+      final products = await _catalog.fetchProductsByIds(productIds);
+      return _cachedData.copyWith(orders: orders, products: products);
+    }
+
+    if (requestedSection == AccountSection.invoices) {
+      final orders = await _account.fetchOrders(limit: AccountService.pageSize);
+      final page = await _account.fetchInvoices(
+          orders: orders, offset: 0, limit: AccountService.pageSize);
+      _invoiceOrders = orders;
+      if (_invoices.isEmpty) {
+        _invoices.addAll(page.items);
+        _invoiceOffset = page.nextOffset;
+        _invoicesHasMore = page.hasMore;
+      }
+      return _cachedData.copyWith(orders: orders, invoices: page.items);
+    }
+
+    // Offers, wallet, favorites, payments, and support either use app state or
+    // their own paginated loader and should open immediately.
+    return _cachedData;
+  }
+
+  Future<_AccountData> _loadAndRemember() async {
+    final data = await _load();
+    _cachedData = data;
+    _hasLoadedData = true;
+    return data;
+  }
+
+  Future<void> _loadSiteSettings() async {
+    final settings = await _catalog.fetchSettings(preferCache: true);
+    if (!mounted) return;
+    setState(() => _siteSettings = settings);
   }
 
   Future<void> _refresh() async {
@@ -225,7 +256,7 @@ class _AccountScreenState extends State<AccountScreen> {
     _invoiceOrders = const [];
     _invoiceOffset = 0;
     _invoicesHasMore = true;
-    final next = _load();
+    final next = _loadAndRemember();
     setState(() => _future = next);
     if (_section == AccountSection.offers) await _loadMoreOffers();
     if (_section == AccountSection.wallet) await _loadMoreWalletOrders();
@@ -238,7 +269,7 @@ class _AccountScreenState extends State<AccountScreen> {
     if (!mounted) return;
     setState(() {
       _signedOutOptimistically = false;
-      _future = _load();
+      _future = _loadAndRemember();
     });
     unawaited(() async {
       try {
@@ -274,7 +305,7 @@ class _AccountScreenState extends State<AccountScreen> {
       if (mounted) {
         setState(() {
           _signedOutOptimistically = false;
-          _future = _load();
+          _future = _loadAndRemember();
         });
       }
     }
@@ -305,7 +336,7 @@ class _AccountScreenState extends State<AccountScreen> {
     if (_section == section) return;
     setState(() {
       _section = section;
-      _future = _load();
+      _future = _loadAndRemember();
     });
     if (section == AccountSection.offers && _offers.isEmpty) {
       _loadMoreOffers();
@@ -432,15 +463,7 @@ class _AccountScreenState extends State<AccountScreen> {
                   key: ValueKey(_section),
                   future: _future,
                   builder: (context, snapshot) {
-                    final data = snapshot.data ??
-                        const _AccountData(
-                            orders: [],
-                            invoices: [],
-                            occasions: [],
-                            notifications: [],
-                            notificationCount: 0,
-                            products: [],
-                            profile: CustomerProfile());
+                    final data = snapshot.data ?? _cachedData;
                     final favorites = appState.favoriteProducts;
                     final runtime = appState.runtimeSettings;
                     final visibleNotifications = runtime
@@ -492,7 +515,7 @@ class _AccountScreenState extends State<AccountScreen> {
                           children: [
                             _MenuHeader(
                                 onTap: () =>
-                                    _openMenu(context, user, data.settings)),
+                                    _openMenu(context, user, _siteSettings)),
                             const SizedBox(height: 14),
                             _QuickActions(
                               section: _section,
@@ -502,7 +525,7 @@ class _AccountScreenState extends State<AccountScreen> {
                             const SizedBox(height: 14),
                             if (snapshot.connectionState ==
                                     ConnectionState.waiting &&
-                                !snapshot.hasData)
+                                !_hasLoadedData)
                               const Padding(
                                   padding: EdgeInsets.all(28),
                                   child: Center(
@@ -514,7 +537,17 @@ class _AccountScreenState extends State<AccountScreen> {
                                       'تعذر تحميل بيانات الحساب',
                                       'Unable to load account data'),
                                   subtitle: '${snapshot.error}')
-                            else
+                            else ...[
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting)
+                                const Padding(
+                                  padding: EdgeInsets.only(bottom: 8),
+                                  child: LinearProgressIndicator(
+                                    color: AppTheme.gold,
+                                    backgroundColor: Color(0xFFE8E9ED),
+                                    minHeight: 2,
+                                  ),
+                                ),
                               _SectionBody(
                                 section: _section,
                                 userEmail: user?.email,
@@ -553,6 +586,7 @@ class _AccountScreenState extends State<AccountScreen> {
                                   if (ok == true) _completeLogin(appState);
                                 },
                               ),
+                            ],
                           ],
                         ),
                       ),
@@ -647,6 +681,28 @@ class _AccountData {
   final List<Product> products;
   final CustomerProfile profile;
   final SiteSettings settings;
+
+  _AccountData copyWith({
+    List<Map<String, dynamic>>? orders,
+    List<Map<String, dynamic>>? invoices,
+    List<CustomerOccasion>? occasions,
+    List<AccountNotification>? notifications,
+    int? notificationCount,
+    List<Product>? products,
+    CustomerProfile? profile,
+    SiteSettings? settings,
+  }) {
+    return _AccountData(
+      orders: orders ?? this.orders,
+      invoices: invoices ?? this.invoices,
+      occasions: occasions ?? this.occasions,
+      notifications: notifications ?? this.notifications,
+      notificationCount: notificationCount ?? this.notificationCount,
+      products: products ?? this.products,
+      profile: profile ?? this.profile,
+      settings: settings ?? this.settings,
+    );
+  }
 }
 
 class _MenuHeader extends StatelessWidget {
@@ -3796,7 +3852,14 @@ class _AccountMenuSheet extends StatelessWidget {
                       active: false,
                       onTap: onPolicies),
                   const SizedBox(height: 12),
-                  _SocialBar(links: settings.socialLinks),
+                  FutureBuilder<SiteSettings>(
+                    initialData: settings,
+                    future: SupabaseCatalogService()
+                        .fetchSettings(preferCache: true),
+                    builder: (context, snapshot) => _SocialBar(
+                      links: (snapshot.data ?? settings).socialLinks,
+                    ),
+                  ),
                   const SizedBox(height: 12),
                   _LocaleCurrencyControls(
                     language: appState.language,

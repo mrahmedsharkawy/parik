@@ -2,7 +2,7 @@ name: bariq_app
 description: Bariq Gifts mobile shopping app built with Flutter.
 publish_to: 'none'
 
-version: 1.0.3+6
+version: 1.0.3+7
 
 environment:
   sdk: '>=3.4.0 <4.0.0'

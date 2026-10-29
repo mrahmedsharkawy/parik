@@ -357,14 +357,20 @@ class _LoginScreenState extends State<LoginScreen> {
                         if (dialogContext.mounted) {
                           Navigator.of(dialogContext).pop(true);
                         }
-                      } catch (_) {
+                      } catch (error) {
                         if (dialogContext.mounted) {
+                          final rawError = error.toString().toLowerCase();
+                          final friendlyError =
+                              AccountService.userFacingError(error);
+                          final isPhoneError =
+                              rawError.contains('duplicate_phone') ||
+                                  (rawError.contains('phone') &&
+                                      (rawError.contains('already') ||
+                                          rawError.contains('duplicate')));
                           setDialogState(() {
                             saving = false;
-                            addressError = AppStrings.tr(
-                              'تعذر حفظ البيانات. حاول مرة أخرى.',
-                              'Unable to save the details. Try again.',
-                            );
+                            phoneError = isPhoneError ? friendlyError : null;
+                            addressError = isPhoneError ? null : friendlyError;
                           });
                         }
                       }
